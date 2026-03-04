@@ -24,14 +24,43 @@ priv struct FinalizeLayoutInput {
 }
 
 ///|
-/// Graphviz parity: postprocess pipeline aligned to refs/graphviz/lib/common/postproc.c
-/// (gv_postprocess) + dotgen/position.c (cluster/label spacing).
+/// Graphviz parity: pre-rotation assembly keeps dot_compute_bb + label/ratio
+/// interactions in one place before rankdir transforms are applied.
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_layout_graph(
+priv struct PreRotationLayoutData {
+  layout : DotLayoutGraph
+  rank_bbox : @geom.Rect
+  subgraph_base_bbox : @geom.Rect
+}
+
+///|
+fn root_cluster_padding_for_rankdir(
+  rankdir : RankDir,
+  root_cluster_padding : RootClusterPadding,
+) -> (Double, Double) {
+  // Graphviz parity: rankdir=BT flips top/bottom cluster padding
+  // because ranks are inverted before postprocess transform.
+  if rankdir == RankDir::BT {
+    (
+      root_cluster_padding.root_cluster_pad_bottom,
+      root_cluster_padding.root_cluster_pad_top,
+    )
+  } else {
+    (
+      root_cluster_padding.root_cluster_pad_top,
+      root_cluster_padding.root_cluster_pad_bottom,
+    )
+  }
+}
+
+///|
+/// Graphviz parity: assemble final pre-rotation layout in dot coordinate space
+/// before rankdir transforms and cluster mirror policy.
+/// Do not change behavior without updating fixtures/tests.
+fn build_pre_rotation_layout_data(
   input : FinalizeLayoutInput,
-) -> DotLayoutGraph {
+) -> PreRotationLayoutData {
   let graph = input.graph
-  let nodes = input.nodes
   let rankdir = input.rankdir
   let final_geometry =
     build_final_layout_geometry(
@@ -58,21 +87,11 @@ fn finalize_layout_graph(
       input.rank_ht1,
       input.rank_ht2,
     )
-  let root_cluster_padding =
-    compute_root_cluster_padding(graph, nodes, input.all_ranks, input.ranks)
-  // Graphviz parity: rankdir=BT flips top/bottom cluster padding (ranks are inverted).
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
-    if rankdir == RankDir::BT {
-      (
-        root_cluster_padding.root_cluster_pad_bottom,
-        root_cluster_padding.root_cluster_pad_top,
-      )
-    } else {
-      (
-        root_cluster_padding.root_cluster_pad_top,
-        root_cluster_padding.root_cluster_pad_bottom,
-      )
-    }
+    root_cluster_padding_for_rankdir(
+      rankdir,
+      compute_root_cluster_padding(graph, input.nodes, input.all_ranks, input.ranks),
+    )
   let bbox =
     apply_root_port_padding(
       graph,
@@ -122,27 +141,43 @@ fn finalize_layout_graph(
   let with_xlabels = apply_xlabels(graph, labeled, input.splines)
   let root_label_bbox =
     apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
-  let labeled_with_root = {
-    graph: with_xlabels.graph,
-    bbox: root_label_bbox.bbox,
-    label_pos: root_label_bbox.label_pos,
-    nodes: with_xlabels.nodes,
-    edges: with_xlabels.edges,
-    subgraphs: with_xlabels.subgraphs,
+  {
+    layout: {
+      graph: with_xlabels.graph,
+      bbox: root_label_bbox.bbox,
+      label_pos: root_label_bbox.label_pos,
+      nodes: with_xlabels.nodes,
+      edges: with_xlabels.edges,
+      subgraphs: with_xlabels.subgraphs,
+    },
+    rank_bbox: final_geometry.rank_bbox,
+    subgraph_base_bbox: subgraphs_and_bbox.base_bbox,
   }
+}
+
+///|
+/// Graphviz parity: postprocess pipeline aligned to refs/graphviz/lib/common/postproc.c
+/// (gv_postprocess) + dotgen/position.c (cluster/label spacing).
+/// Do not change behavior without updating fixtures/tests.
+fn finalize_layout_graph(
+  input : FinalizeLayoutInput,
+) -> DotLayoutGraph {
+  let graph = input.graph
+  let rankdir = input.rankdir
+  let pre_rotation = build_pre_rotation_layout_data(input)
   let rotated = if rankdir == RankDir::TB {
-    labeled_with_root
+    pre_rotation.layout
   } else {
-    rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
+    rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
   }
   let rotated =
     apply_cluster_lr_mirror_after_rotation(
       graph,
       rankdir,
       rotated,
-      labeled_with_root.bbox,
-      final_geometry.rank_bbox,
-      subgraphs_and_bbox.base_bbox,
+      pre_rotation.layout.bbox,
+      pre_rotation.rank_bbox,
+      pre_rotation.subgraph_base_bbox,
     )
   finalize_root_coordinates(
     graph,
