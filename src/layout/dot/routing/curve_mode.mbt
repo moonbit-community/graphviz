@@ -1367,13 +1367,15 @@ fn build_multi_point_routed_spline(
     { spline, raw_bezier: segmented_raw }
   } else {
     build_points_spline(
-      base,
-      adjusted,
-      tail_slope_for,
-      head_slope_for,
-      edge_force_segmented,
-      using_pathplan,
-      route_barriers,
+      {
+        base,
+        points: adjusted,
+        tail_slope_line: tail_slope_for,
+        head_slope_line: head_slope_for,
+        force_segmented: edge_force_segmented,
+        using_pathplan,
+        route_barriers,
+      },
     )
   }
 }

@@ -30,51 +30,58 @@ fn prefer_linear_for_flat_line(
 }
 
 ///|
+/// Graphviz parity: points-spline input keeps point set, endpoint slopes, and
+/// pathplan/segmented flags grouped for deterministic spline construction.
+pub(all) struct PointsSplineBuildInput {
+  base : EdgeRouteBase
+  points : Array[@geom.Point]
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  force_segmented : Bool
+  using_pathplan : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+}
+
+///|
 pub fn build_points_spline(
-  base : EdgeRouteBase,
-  points : Array[@geom.Point],
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  force_segmented : Bool,
-  using_pathplan : Bool,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
+  input : PointsSplineBuildInput,
 ) -> PointsSplineResult {
   let raw_bezier =
-    if using_pathplan {
+    if input.using_pathplan {
       @edge_spline.edge_spline_raw_for_points(
-        points,
-        tail_slope_line,
-        head_slope_line,
-        force_segmented,
-        route_barriers=route_barriers,
+        input.points,
+        input.tail_slope_line,
+        input.head_slope_line,
+        input.force_segmented,
+        route_barriers=input.route_barriers,
       )
     } else {
       []
     }
   let spline =
     @edge_spline.edge_spline_for_points(
-      base.edge,
-      points,
-      base.tail_clip_center,
-      base.head_clip_center,
-      base.tail_clip_size,
-      base.head_clip_size,
-      tail_slope_line,
-      head_slope_line,
-      force_segmented,
-      base.route_include_tail,
-      base.route_include_head,
-      tail_clip_enabled=base.tail_clip_enabled,
-      head_clip_enabled=base.head_clip_enabled,
-      tail_port_side=base.tail_port_side,
-      head_port_side=base.head_port_side,
-      route_barriers=route_barriers,
-      arrow_len_override=base.arrow_len_override,
-      tail_cluster_bbox=base.tail_cluster_bbox,
-      head_cluster_bbox=base.head_cluster_bbox,
-      parallel_offset=base.parallel_offset,
-      clip_swapped=base.swap_ends,
-      arrow_swapped=base.swap_ends,
+      input.base.edge,
+      input.points,
+      input.base.tail_clip_center,
+      input.base.head_clip_center,
+      input.base.tail_clip_size,
+      input.base.head_clip_size,
+      input.tail_slope_line,
+      input.head_slope_line,
+      input.force_segmented,
+      input.base.route_include_tail,
+      input.base.route_include_head,
+      tail_clip_enabled=input.base.tail_clip_enabled,
+      head_clip_enabled=input.base.head_clip_enabled,
+      tail_port_side=input.base.tail_port_side,
+      head_port_side=input.base.head_port_side,
+      route_barriers=input.route_barriers,
+      arrow_len_override=input.base.arrow_len_override,
+      tail_cluster_bbox=input.base.tail_cluster_bbox,
+      head_cluster_bbox=input.base.head_cluster_bbox,
+      parallel_offset=input.base.parallel_offset,
+      clip_swapped=input.base.swap_ends,
+      arrow_swapped=input.base.swap_ends,
     )
   { spline, raw_bezier }
 }
@@ -98,13 +105,15 @@ fn build_pathplan_points_spline(
   route_barriers : Array[(@geom.Point, @geom.Point)],
 ) -> PointsSplineResult {
   build_points_spline(
-    base,
-    pathplan_points,
-    tail_slope_line,
-    head_slope_line,
-    force_segmented,
-    true,
-    route_barriers,
+    {
+      base,
+      points: pathplan_points,
+      tail_slope_line,
+      head_slope_line,
+      force_segmented,
+      using_pathplan: true,
+      route_barriers,
+    },
   )
 }
 
@@ -217,13 +226,15 @@ fn build_flat_detour_spline(
   let vspace = detour.vspace
   let points_spline =
     build_points_spline(
-      base,
-      detour_points,
-      tail_slope_line,
-      head_slope_line,
-      true,
-      using_pathplan,
-      route_barriers,
+      {
+        base,
+        points: detour_points,
+        tail_slope_line,
+        head_slope_line,
+        force_segmented: true,
+        using_pathplan,
+        route_barriers,
+      },
     )
   let raw_bezier = points_spline.raw_bezier
   let mut detour_spline = points_spline.spline
@@ -277,13 +288,15 @@ fn detour_spline_if_any(
       )
     Some(
       build_points_spline(
-        base,
-        detour_points,
-        tail_slope_line,
-        head_slope_line,
-        true,
-        using_pathplan,
-        route_barriers,
+        {
+          base,
+          points: detour_points,
+          tail_slope_line,
+          head_slope_line,
+          force_segmented: true,
+          using_pathplan,
+          route_barriers,
+        },
       ),
     )
   } else {
