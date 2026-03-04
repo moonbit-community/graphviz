@@ -54,16 +54,18 @@ fn compute_dot_routing_stage(
   // stage payload while preserving precompute->edge-solve->output order.
   let precompute_data =
     build_routing_precompute_data(
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      routing_positions_state,
-      routing_label_ports_map,
-      routing_cluster_bboxes,
-      routing_sizes,
-      enable_complex_tuning,
+      {
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+        positions_state: routing_positions_state,
+        label_ports_map: routing_label_ports_map,
+        cluster_bboxes: routing_cluster_bboxes,
+        sizes: routing_sizes,
+        enable_complex_tuning,
+      },
     )
   let port_pad_below = precompute_data.port_pad_below
   let port_pad_above = precompute_data.port_pad_above
