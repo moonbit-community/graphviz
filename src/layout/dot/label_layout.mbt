@@ -629,17 +629,31 @@ fn vnode_is_merged(
 ///|
 /// Graphviz parity: recover_slack aligned to refs/graphviz/lib/dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
-fn recover_slack_vnodes(
-  edge : @cgraph.Edge,
-  ordered_vnodes : Array[String],
-  boxes : Array[@geom.Rect],
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_sizes : Map[String, NodeSize],
-  adjacency : @routesplines.PathAdjacency,
+priv struct RecoverSlackVnodesInput {
+  edge : @cgraph.Edge
+  ordered_vnodes : Array[String]
+  boxes : Array[@geom.Rect]
+  ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_sizes : Map[String, NodeSize]
+  adjacency : @routesplines.PathAdjacency
+}
+
+///|
+fn recover_slack_vnodes_from_input(
+  input : RecoverSlackVnodesInput,
 ) -> Unit {
+  let edge = input.edge
+  let ordered_vnodes = input.ordered_vnodes
+  let boxes = input.boxes
+  let ranks = input.ranks
+  let vnode_ranks = input.vnode_ranks
+  let rank_y = input.rank_y
+  let vnode_positions = input.vnode_positions
+  let vnode_sizes = input.vnode_sizes
+  let adjacency = input.adjacency
   if ordered_vnodes.length() == 0 || boxes.length() == 0 {
     return ()
   }
@@ -688,6 +702,33 @@ fn recover_slack_vnodes(
         vnode_size_from_widths_with_h(half, half, size.height_pt)
     }
   }
+}
+
+///|
+fn recover_slack_vnodes(
+  edge : @cgraph.Edge,
+  ordered_vnodes : Array[String],
+  boxes : Array[@geom.Rect],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_sizes : Map[String, NodeSize],
+  adjacency : @routesplines.PathAdjacency,
+) -> Unit {
+  recover_slack_vnodes_from_input(
+    {
+      edge,
+      ordered_vnodes,
+      boxes,
+      ranks,
+      vnode_ranks,
+      rank_y,
+      vnode_positions,
+      vnode_sizes,
+      adjacency,
+    },
+  )
 }
 
 ///|
