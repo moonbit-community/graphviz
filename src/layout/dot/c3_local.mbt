@@ -1347,30 +1347,25 @@ priv struct ClusterLocalReorderDispatchContext {
 }
 
 ///|
-/// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
-/// but only mutates rank entries that belong to that cluster.
+/// Graphviz parity: prepared cluster-local reorder run keeps assembled inputs
+/// and runtime config paired before mincross execution.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_cluster_rank_group(
+priv struct ClusterLocalReorderPreparedRun {
+  input_phase_output : ClusterLocalReorderRunInputsOutput
+  run_config : ClusterLocalReorderRunConfig
+}
+
+///|
+/// Graphviz parity: cluster-local pass assembles reorder inputs and run config
+/// from one dispatch/local context pair before invoking mincross.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_reorder_prepared_run(
   cluster : String,
-  expanded_clusters : Map[String, Bool],
   cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
-  fixed_positions : Map[String, Double],
+  expanded_clusters : Map[String, Bool],
+  local_context : ClusterLocalReorderContext,
   dispatch_context : ClusterLocalReorderDispatchContext,
-) -> Unit {
-  let local_context = match build_cluster_local_reorder_context(
-    cluster,
-    cluster_graph,
-    groups,
-    dispatch_context.node_order,
-    dispatch_context.neighbor_sources.source_out_neighbors,
-    dispatch_context.vnode_info.vnode_clusters,
-    fixed_positions,
-    dispatch_context.order_with_vnodes,
-  ) {
-    Some(value) => value
-    None => return ()
-  }
+) -> ClusterLocalReorderPreparedRun {
   let input_phase_output =
     build_local_reorder_inputs(
       {
@@ -1404,11 +1399,47 @@ fn reorder_cluster_rank_group(
     empty_cluster_skeleton: dispatch_context.empty_cluster_skeleton,
     fixed_ranks: dispatch_context.fixed_ranks,
   }
+  { input_phase_output, run_config }
+}
+
+///|
+/// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
+/// but only mutates rank entries that belong to that cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_cluster_rank_group(
+  cluster : String,
+  expanded_clusters : Map[String, Bool],
+  cluster_graph : @cgraph.Graph,
+  groups : Map[Int, Array[String]],
+  fixed_positions : Map[String, Double],
+  dispatch_context : ClusterLocalReorderDispatchContext,
+) -> Unit {
+  let local_context = match build_cluster_local_reorder_context(
+    cluster,
+    cluster_graph,
+    groups,
+    dispatch_context.node_order,
+    dispatch_context.neighbor_sources.source_out_neighbors,
+    dispatch_context.vnode_info.vnode_clusters,
+    fixed_positions,
+    dispatch_context.order_with_vnodes,
+  ) {
+    Some(value) => value
+    None => return ()
+  }
+  let prepared_run =
+    build_cluster_local_reorder_prepared_run(
+      cluster,
+      cluster_graph,
+      expanded_clusters,
+      local_context,
+      dispatch_context,
+    )
   let reorder_output =
     run_cluster_rank_reorder(
       local_context,
-      input_phase_output,
-      run_config,
+      prepared_run.input_phase_output,
+      prepared_run.run_config,
     )
   if !reorder_output.has_internal_constraints {
     return ()
