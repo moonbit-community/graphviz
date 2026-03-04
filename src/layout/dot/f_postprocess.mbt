@@ -1067,46 +1067,13 @@ fn apply_root_margin_x(
 }
 
 ///|
-fn scale_layout_point(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
-  { x: point.x * sx, y: point.y * sy }
-}
-
-///|
 fn scale_layout_point_rounded(
   point : @geom.Point,
   sx : Double,
   sy : Double,
 ) -> @geom.Point {
-  { x: (point.x * sx).round(), y: (point.y * sy).round() }
-}
-
-///|
-fn scale_layout_optional_point(
-  point : @geom.Point?,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point? {
-  match point {
-    Some(value) => Some(scale_layout_point(value, sx, sy))
-    None => None
-  }
-}
-
-///|
-fn scale_layout_spline(
-  spline : @geom.Spline,
-  sx : Double,
-  sy : Double,
-) -> @geom.Spline {
-  let points : Array[@geom.Point] = []
-  for point in spline.points {
-    points.push(scale_layout_point(point, sx, sy))
-  }
-  {
-    start: scale_layout_optional_point(spline.start, sx, sy),
-    end: scale_layout_optional_point(spline.end, sx, sy),
-    points,
-  }
+  let scaled = scale_point_value(point, sx, sy)
+  { x: scaled.x.round(), y: scaled.y.round() }
 }
 
 ///|
@@ -1122,38 +1089,38 @@ fn scale_layout_graph(
       if round_node_pos {
         scale_layout_point_rounded(node_layout.pos, sx, sy)
       } else {
-        scale_layout_point(node_layout.pos, sx, sy)
+        scale_point_value(node_layout.pos, sx, sy)
       }
     nodes.push({
       node: node_layout.node,
       pos: scaled_pos,
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: scale_layout_optional_point(node_layout.label_pos, sx, sy),
-      xlabel_pos: scale_layout_optional_point(node_layout.xlabel_pos, sx, sy),
+      label_pos: scale_optional_point_value(node_layout.label_pos, sx, sy),
+      xlabel_pos: scale_optional_point_value(node_layout.xlabel_pos, sx, sy),
     })
   }
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(scale_layout_spline(spline, sx, sy))
+      splines.push(scale_spline_value(spline, sx, sy))
     }
     edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: scale_layout_optional_point(edge_layout.label_pos, sx, sy),
-      head_label_pos: scale_layout_optional_point(
+      label_pos: scale_optional_point_value(edge_layout.label_pos, sx, sy),
+      head_label_pos: scale_optional_point_value(
         edge_layout.head_label_pos,
         sx,
         sy,
       ),
-      tail_label_pos: scale_layout_optional_point(
+      tail_label_pos: scale_optional_point_value(
         edge_layout.tail_label_pos,
         sx,
         sy,
       ),
-      xlabel_pos: scale_layout_optional_point(edge_layout.xlabel_pos, sx, sy),
+      xlabel_pos: scale_optional_point_value(edge_layout.xlabel_pos, sx, sy),
     })
   }
   let subgraphs : Array[DotLayoutGraph] = []
@@ -1168,7 +1135,7 @@ fn scale_layout_graph(
       urx: layout.bbox.urx * sx,
       ury: layout.bbox.ury * sy,
     },
-    label_pos: scale_layout_optional_point(layout.label_pos, sx, sy),
+    label_pos: scale_optional_point_value(layout.label_pos, sx, sy),
     nodes,
     edges,
     subgraphs,
