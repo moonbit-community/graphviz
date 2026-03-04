@@ -377,7 +377,7 @@ pub(all) struct RootReorderSourceBaseInputs {
 /// Graphviz parity: static root-reorder source base sets an empty rank-group
 /// payload until each pass attaches its own mincross group map.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_reorder_sources_base(
+fn build_root_reorder_sources_base(
   inputs : RootReorderSourceBaseInputs,
 ) -> RootReorderBuildSources {
   {
