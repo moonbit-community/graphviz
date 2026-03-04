@@ -46,16 +46,17 @@ priv struct RootRankOrderPhaseBase {
 /// Graphviz parity: root cluster-rank-order static source/context assembly is
 /// shared by root-phase override derivation and finalize-time cluster replay.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_reorder_source_base(
+fn build_root_rank_order_phase_base(
   dispatch_context : ClusteredDispatchContext,
+  order_sizes_out : Map[String, NodeSize],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
   reorder_context : @ordering.OrderReorderContext,
-) -> RootReorderSourceBase {
+) -> RootRankOrderPhaseBase {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
-  {
+  let source_base : RootReorderSourceBase = {
     order_with_vnodes: reorder_setup.order_with_vnodes,
     order_rank_keys: reorder_context.order_rank_keys,
     order_cluster_keys,
@@ -73,20 +74,7 @@ fn build_root_reorder_source_base(
     root_edge_creation: class2_data.root_edge_creation,
     flat_rank_constraints: reorder_setup.flat_rank_constraints,
   }
-}
-
-///|
-/// Graphviz parity: root rank-order context preserves rank-same constraints,
-/// spacing inputs, and cluster flat constraints used by root reorder pass.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_context(
-  dispatch_context : ClusteredDispatchContext,
-  order_sizes_out : Map[String, NodeSize],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> @ordering.RootRankOrderPhaseContext {
-  let reorder_setup = dispatch_context.reorder_setup
-  {
+  let root_rank_order_context : @ordering.RootRankOrderPhaseContext = {
     order_cluster_keys,
     order_cluster_skeleton,
     rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
@@ -99,35 +87,6 @@ fn build_root_rank_order_context(
     order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
     graphviz_flip: reorder_setup.graphviz_flip,
   }
-}
-
-///|
-/// Graphviz parity: root cluster-rank-order static source/context assembly is
-/// shared by root-phase override derivation and finalize-time cluster replay.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_phase_base(
-  dispatch_context : ClusteredDispatchContext,
-  order_sizes_out : Map[String, NodeSize],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  reorder_context : @ordering.OrderReorderContext,
-) -> RootRankOrderPhaseBase {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let source_base =
-    build_root_reorder_source_base(
-      dispatch_context,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      reorder_context,
-    )
-  let root_rank_order_context =
-    build_root_rank_order_context(
-      dispatch_context,
-      order_sizes_out,
-      order_cluster_keys,
-      order_cluster_skeleton,
-    )
   {
     order_with_clusters: reorder_setup.order_with_clusters,
     source_base,
@@ -136,34 +95,6 @@ fn build_root_rank_order_phase_base(
   }
 }
 
-///|
-/// Graphviz parity: root cluster-reorder source bundle is assembled from the
-/// clustered dispatch/pre-root snapshots plus the selected rank groups source.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_reorder_sources(
-  source_base : RootReorderSourceBase,
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> @ordering.RootReorderBuildSources {
-  {
-    order_with_vnodes: source_base.order_with_vnodes,
-    order_rank_keys: source_base.order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys: source_base.order_cluster_keys,
-    order_cluster_skeleton: source_base.order_cluster_skeleton,
-    edges: source_base.edges,
-    edge_tail: source_base.edge_tail,
-    edge_head: source_base.edge_head,
-    cluster_keys: source_base.cluster_keys,
-    edge_vnodes: source_base.edge_vnodes,
-    vnodes_by_rank: source_base.vnodes_by_rank,
-    vnode_order_keys_for_ordering: source_base.vnode_order_keys_for_ordering,
-    nlist_order: source_base.nlist_order,
-    ranks: source_base.ranks,
-    skeleton_edge_creation: source_base.skeleton_edge_creation,
-    root_edge_creation: source_base.root_edge_creation,
-    flat_rank_constraints: source_base.flat_rank_constraints,
-  }
-}
 ///|
 /// Graphviz parity: root cluster-rank-order pass uses reorder_rank_groups with
 /// coalesced-parallel mode on root-only rematerialized edge arrays.
@@ -210,11 +141,26 @@ fn run_root_reorder_and_rank_order_phase(
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
   let root_rank_order_phase_base = pre_root_stage.root_rank_order_phase_base
-  let root_reorder_sources =
-    build_root_reorder_sources(
-      root_rank_order_phase_base.source_base,
-      order_groups_for_mincross,
-    )
+  let source_base = root_rank_order_phase_base.source_base
+  let root_reorder_sources : @ordering.RootReorderBuildSources = {
+    order_with_vnodes: source_base.order_with_vnodes,
+    order_rank_keys: source_base.order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys: source_base.order_cluster_keys,
+    order_cluster_skeleton: source_base.order_cluster_skeleton,
+    edges: source_base.edges,
+    edge_tail: source_base.edge_tail,
+    edge_head: source_base.edge_head,
+    cluster_keys: source_base.cluster_keys,
+    edge_vnodes: source_base.edge_vnodes,
+    vnodes_by_rank: source_base.vnodes_by_rank,
+    vnode_order_keys_for_ordering: source_base.vnode_order_keys_for_ordering,
+    nlist_order: source_base.nlist_order,
+    ranks: source_base.ranks,
+    skeleton_edge_creation: source_base.skeleton_edge_creation,
+    root_edge_creation: source_base.root_edge_creation,
+    flat_rank_constraints: source_base.flat_rank_constraints,
+  }
   @ordering.run_root_reorder_and_rank_order_phase(
     root_reorder_sources,
     root_rank_order_phase_base.root_rank_order_context,
