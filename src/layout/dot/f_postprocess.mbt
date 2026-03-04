@@ -176,12 +176,14 @@ fn finalize_layout_graph(
   }
   let rotated =
     apply_cluster_lr_mirror_after_rotation(
-      graph,
-      rankdir,
-      rotated,
-      pre_rotation.layout.bbox,
-      pre_rotation.rank_bbox,
-      pre_rotation.subgraph_base_bbox,
+      {
+        graph,
+        rankdir,
+        rotated,
+        pre_rotation_bbox: pre_rotation.layout.bbox,
+        rank_bbox: pre_rotation.rank_bbox,
+        subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
+      },
     )
   finalize_root_coordinates(
     graph,
