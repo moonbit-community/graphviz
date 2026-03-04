@@ -32,14 +32,16 @@ fn build_position_output_maps(
   if input.pipeline.cluster_meta.has_clusters && input.pipeline.prep.has_dotted_edges &&
     intercluster_alignment_enabled() {
     adjust_intercluster_alignment(
-      input.pipeline.prep.nodes,
-      input.pipeline.prep.edges,
-      input.pipeline.rank_data.ranks,
-      input.x_positions,
-      input.pipeline.cluster_meta.cluster_keys,
-      input.pipeline.cluster_meta.intercluster_keys,
-      input.pipeline.rank_heights.nodesep_pt,
-      input.pipeline.prep.has_edge_labels,
+      {
+        nodes: input.pipeline.prep.nodes,
+        edges: input.pipeline.prep.edges,
+        ranks: input.pipeline.rank_data.ranks,
+        x_positions: input.x_positions,
+        cluster_keys: input.pipeline.cluster_meta.cluster_keys,
+        intercluster_keys: input.pipeline.cluster_meta.intercluster_keys,
+        nodesep_pt: input.pipeline.rank_heights.nodesep_pt,
+        has_edge_labels: input.pipeline.prep.has_edge_labels,
+      },
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.

@@ -1,26 +1,33 @@
 ///|
+/// Graphviz parity: intercluster alignment payload keeps rank and cluster maps
+/// grouped so cross-cluster x-shift wiring remains explicit and stable.
+priv struct InterclusterAlignmentInput {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  x_positions : Map[String, Double]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+}
+
+///|
 fn adjust_intercluster_alignment(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  x_positions : Map[String, Double],
-  cluster_keys : Map[String, String],
-  intercluster_keys : Map[String, String],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
+  input : InterclusterAlignmentInput,
 ) -> Unit {
   let cluster_rank_nodes : Map[String, Array[String]] = Map::new()
   let cluster_rank_value : Map[String, Int] = Map::new()
-  for node in nodes {
+  for node in input.nodes {
     let name = node.name()
-    let cluster = match cluster_keys.get(name) {
+    let cluster = match input.cluster_keys.get(name) {
       Some(value) => value
       None => ""
     }
     if cluster == "" {
       continue
     }
-    let rank = match ranks.get(name) {
+    let rank = match input.ranks.get(name) {
       Some(value) => value
       None => continue
     }
@@ -32,21 +39,21 @@ fn adjust_intercluster_alignment(
     }
   }
   let cluster_rank_targets : Map[String, Map[String, Bool]] = Map::new()
-  for edge in edges {
+  for edge in input.edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
-    let tail_cluster = match intercluster_keys.get(tail) {
+    let tail_cluster = match input.intercluster_keys.get(tail) {
       Some(value) => value
       None => ""
     }
-    let head_cluster = match intercluster_keys.get(head) {
+    let head_cluster = match input.intercluster_keys.get(head) {
       Some(value) => value
       None => ""
     }
     if tail_cluster == "" || tail_cluster == head_cluster {
       continue
     }
-    let tail_rank = match ranks.get(tail) {
+    let tail_rank = match input.ranks.get(tail) {
       Some(value) => value
       None => continue
     }
@@ -77,13 +84,13 @@ fn adjust_intercluster_alignment(
       target_name = name
       break
     }
-    let target_x = match x_positions.get(target_name) {
+    let target_x = match input.x_positions.get(target_name) {
       Some(value) => value
       None => continue
     }
     let mut aligned = false
     for name in names {
-      match x_positions.get(name) {
+      match input.x_positions.get(name) {
         Some(value) =>
           if Double::abs(value - target_x) <= eps {
             aligned = true
@@ -99,10 +106,10 @@ fn adjust_intercluster_alignment(
       Some(value) => value
       None => continue
     }
-    let shift = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
+    let shift = rank_nodesep_pt(rank, input.nodesep_pt, input.has_edge_labels)
     for name in names {
-      match x_positions.get(name) {
-        Some(value) => x_positions[name] = value - shift
+      match input.x_positions.get(name) {
+        Some(value) => input.x_positions[name] = value - shift
         None => ()
       }
     }
