@@ -405,7 +405,7 @@ pub fn build_root_reorder_sources_base(
 /// Graphviz parity: root reorder sources for each pass reuse one immutable
 /// source snapshot and only swap the rank-group payload for that pass.
 /// Do not change behavior without updating fixtures/tests.
-pub fn with_root_reorder_groups(
+fn with_root_reorder_groups(
   base : RootReorderBuildSources,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> RootReorderBuildSources {
