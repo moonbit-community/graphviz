@@ -9,35 +9,12 @@ type OrderEdgeListsByTail = Map[
 ]
 
 ///|
-/// Graphviz parity: root cluster-reorder base keeps static source snapshots
-/// that are shared by both root phase and clustered finalize rank-order replay.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootReorderSourceBase {
-  order_with_vnodes : Bool
-  order_rank_keys : Array[Int]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  cluster_keys : Map[String, String]
-  edge_vnodes : Map[String, Array[String]]
-  vnodes_by_rank : Map[Int, Array[String]]
-  vnode_order_keys_for_ordering : Map[String, Double]
-  nlist_order : Array[String]
-  ranks : Map[String, Int]
-  skeleton_edge_creation : Array[(String, String)]
-  root_edge_creation : Array[(String, String)]
-  flat_rank_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order base reuses one static source
 /// payload plus one static rank-order context across both stage callers.
 /// Do not change behavior without updating fixtures/tests.
 priv struct RootRankOrderPhaseBase {
   order_with_clusters : Bool
-  source_base : RootReorderSourceBase
+  root_reorder_sources_base : @ordering.RootReorderBuildSources
   root_rank_order_context : @ordering.RootRankOrderPhaseContext
   order_edges_by_tail_root : OrderEdgeListsByTail
 }
@@ -56,9 +33,10 @@ fn build_root_rank_order_phase_base(
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
-  let source_base : RootReorderSourceBase = {
+  let root_reorder_sources_base : @ordering.RootReorderBuildSources = {
     order_with_vnodes: reorder_setup.order_with_vnodes,
     order_rank_keys: reorder_context.order_rank_keys,
+    order_groups_for_mincross: Map::new(),
     order_cluster_keys,
     order_cluster_skeleton,
     edges: dispatch_context.edges,
@@ -89,7 +67,7 @@ fn build_root_rank_order_phase_base(
   }
   {
     order_with_clusters: reorder_setup.order_with_clusters,
-    source_base,
+    root_reorder_sources_base,
     root_rank_order_context,
     order_edges_by_tail_root: class2_data.order_edges_by_tail_root,
   }
@@ -104,25 +82,25 @@ fn run_root_reorder_and_rank_order_phase(
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
   let root_rank_order_phase_base = pre_root_stage.root_rank_order_phase_base
-  let source_base = root_rank_order_phase_base.source_base
+  let base = root_rank_order_phase_base.root_reorder_sources_base
   let root_reorder_sources : @ordering.RootReorderBuildSources = {
-    order_with_vnodes: source_base.order_with_vnodes,
-    order_rank_keys: source_base.order_rank_keys,
+    order_with_vnodes: base.order_with_vnodes,
+    order_rank_keys: base.order_rank_keys,
     order_groups_for_mincross,
-    order_cluster_keys: source_base.order_cluster_keys,
-    order_cluster_skeleton: source_base.order_cluster_skeleton,
-    edges: source_base.edges,
-    edge_tail: source_base.edge_tail,
-    edge_head: source_base.edge_head,
-    cluster_keys: source_base.cluster_keys,
-    edge_vnodes: source_base.edge_vnodes,
-    vnodes_by_rank: source_base.vnodes_by_rank,
-    vnode_order_keys_for_ordering: source_base.vnode_order_keys_for_ordering,
-    nlist_order: source_base.nlist_order,
-    ranks: source_base.ranks,
-    skeleton_edge_creation: source_base.skeleton_edge_creation,
-    root_edge_creation: source_base.root_edge_creation,
-    flat_rank_constraints: source_base.flat_rank_constraints,
+    order_cluster_keys: base.order_cluster_keys,
+    order_cluster_skeleton: base.order_cluster_skeleton,
+    edges: base.edges,
+    edge_tail: base.edge_tail,
+    edge_head: base.edge_head,
+    cluster_keys: base.cluster_keys,
+    edge_vnodes: base.edge_vnodes,
+    vnodes_by_rank: base.vnodes_by_rank,
+    vnode_order_keys_for_ordering: base.vnode_order_keys_for_ordering,
+    nlist_order: base.nlist_order,
+    ranks: base.ranks,
+    skeleton_edge_creation: base.skeleton_edge_creation,
+    root_edge_creation: base.root_edge_creation,
+    flat_rank_constraints: base.flat_rank_constraints,
   }
   @ordering.run_root_reorder_and_rank_order_phase(
     root_reorder_sources,
