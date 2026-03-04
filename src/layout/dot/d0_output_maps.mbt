@@ -69,11 +69,13 @@ fn build_position_output_maps(
     )
   if input.pipeline.cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions(
-      input.pipeline.graph,
-      positions,
-      vnode_positions,
-      input.pipeline.ordering.vnode_info.vnode_clusters,
-      input.pipeline.prep.sizes,
+      {
+        graph: input.pipeline.graph,
+        positions,
+        vnode_positions,
+        vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
+        sizes: input.pipeline.prep.sizes,
+      },
     )
   }
   {

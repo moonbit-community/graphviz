@@ -201,21 +201,31 @@ fn shift_graph_positions(
 }
 
 ///|
+/// Graphviz parity: cluster-position adjustment input keeps the recursive
+/// graph walk payload grouped so bbox expansion and center-shift propagation
+/// remain explicit and stable.
+priv struct ClusterPositionAdjustInput {
+  graph : @cgraph.Graph
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_clusters : Map[String, String]
+  sizes : Map[String, NodeSize]
+}
+
+///|
 fn adjust_cluster_positions(
-  graph : @cgraph.Graph,
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_clusters : Map[String, String],
-  sizes : Map[String, NodeSize],
+  input : ClusterPositionAdjustInput,
 ) -> @geom.Rect? {
-  let mut bbox = compute_nodes_bbox(graph, positions, sizes)
-  for child in graph.subgraphs() {
+  let mut bbox = compute_nodes_bbox(input.graph, input.positions, input.sizes)
+  for child in input.graph.subgraphs() {
     match adjust_cluster_positions(
-      child,
-      positions,
-      vnode_positions,
-      vnode_clusters,
-      sizes,
+      {
+        graph: child,
+        positions: input.positions,
+        vnode_positions: input.vnode_positions,
+        vnode_clusters: input.vnode_clusters,
+        sizes: input.sizes,
+      },
     ) {
       Some(child_bbox) =>
         bbox = Some(match bbox {
@@ -229,17 +239,17 @@ fn adjust_cluster_positions(
     Some(value) => value
     None => return None
   }
-  if @dot_shared.is_cluster_graph(graph) {
-    let pad = cluster_margin_pt(graph)
+  if @dot_shared.is_cluster_graph(input.graph) {
+    let pad = cluster_margin_pt(input.graph)
     current = {
       llx: current.llx - pad,
       lly: current.lly - pad,
       urx: current.urx + pad,
       ury: current.ury + pad,
     }
-    match graph_label_metrics(graph) {
+    match graph_label_metrics(input.graph) {
       Some(metrics) => {
-        let loc = graph_label_loc(graph)
+        let loc = graph_label_loc(input.graph)
         current =
           expand_bbox_for_label(
             current,
@@ -255,10 +265,10 @@ fn adjust_cluster_positions(
       (current.llx + current.urx) / 2.0
     if center_shift != 0.0 {
       shift_graph_positions(
-        graph,
-        positions,
-        vnode_positions,
-        vnode_clusters,
+        input.graph,
+        input.positions,
+        input.vnode_positions,
+        input.vnode_clusters,
         center_shift,
         0.0,
       )
