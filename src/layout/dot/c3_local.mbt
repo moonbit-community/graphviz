@@ -1214,19 +1214,25 @@ priv struct ClusterLocalReorderContext {
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder only considers nodes that are
-/// present in rank groups and belong to the current cluster (plus local
-/// virtual nodes when enabled).
-fn build_cluster_local_reorder_context(
+/// Graphviz parity: cluster-local reorder node-order context keeps filtered
+/// cluster members and deterministic local node indices built from node_order.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterNodeOrderContext {
+  cluster_nodes : Array[String]
+  cluster_node_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: cluster-local reorder node set keeps cluster members that
+/// are present in rank groups, plus local vnodes when enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_node_set_for_reorder(
   cluster : String,
   cluster_graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  source_out_neighbors : Map[String, Array[String]],
   vnode_clusters : Map[String, String],
-  fixed_positions : Map[String, Double],
   order_with_vnodes : Bool,
-) -> ClusterLocalReorderContext? {
+) -> Map[String, Bool] {
   let cluster_nodes_set : Map[String, Bool] = Map::new()
   for node in cluster_graph.nodes() {
     cluster_nodes_set[node.name()] = true
@@ -1246,11 +1252,17 @@ fn build_cluster_local_reorder_context(
       }
     }
   }
-  if cluster_node_set.length() <= 1 {
-    return None
-  }
-  // Graphviz parity: cluster-local node set uses global node_order as stable
-  // seed to create deterministic local node indices.
+  cluster_node_set
+}
+
+///|
+/// Graphviz parity: cluster-local node-order context uses global node_order as
+/// deterministic seed before assigning contiguous local order ids.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_node_order_context(
+  cluster_node_set : Map[String, Bool],
+  node_order : Map[String, Int],
+) -> ClusterNodeOrderContext {
   let cluster_nodes : Array[String] = []
   for name, _ in cluster_node_set {
     cluster_nodes.push(name)
@@ -1267,6 +1279,58 @@ fn build_cluster_local_reorder_context(
     cluster_node_order[name] = order_idx
     order_idx = order_idx + 1
   }
+  { cluster_nodes, cluster_node_order }
+}
+
+///|
+/// Graphviz parity: cluster-local reorder preserves fixed slots outside the
+/// active cluster node subset.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_fixed_positions(
+  fixed_positions : Map[String, Double],
+  cluster_node_set : Map[String, Bool],
+) -> Map[String, Double] {
+  let cluster_fixed_positions : Map[String, Double] = Map::new()
+  for name, value in fixed_positions {
+    if cluster_node_set.get(name) is None {
+      cluster_fixed_positions[name] = value
+    }
+  }
+  cluster_fixed_positions
+}
+
+///|
+/// Graphviz parity: cluster-local reorder only considers nodes that are
+/// present in rank groups and belong to the current cluster (plus local
+/// virtual nodes when enabled).
+fn build_cluster_local_reorder_context(
+  cluster : String,
+  cluster_graph : @cgraph.Graph,
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  source_out_neighbors : Map[String, Array[String]],
+  vnode_clusters : Map[String, String],
+  fixed_positions : Map[String, Double],
+  order_with_vnodes : Bool,
+) -> ClusterLocalReorderContext? {
+  let cluster_node_set =
+    build_cluster_node_set_for_reorder(
+      cluster,
+      cluster_graph,
+      groups,
+      vnode_clusters,
+      order_with_vnodes,
+    )
+  if cluster_node_set.length() <= 1 {
+    return None
+  }
+  let node_order_context =
+    build_cluster_node_order_context(
+      cluster_node_set,
+      node_order,
+    )
+  let cluster_nodes = node_order_context.cluster_nodes
+  let cluster_node_order = node_order_context.cluster_node_order
   let cluster_groups = build_local_rank_groups(
     groups,
     cluster_node_set,
@@ -1274,12 +1338,8 @@ fn build_cluster_local_reorder_context(
     source_out_neighbors,
   )
   let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
-  let cluster_fixed_positions : Map[String, Double] = Map::new()
-  for name, value in fixed_positions {
-    if cluster_node_set.get(name) is None {
-      cluster_fixed_positions[name] = value
-    }
-  }
+  let cluster_fixed_positions =
+    build_cluster_fixed_positions(fixed_positions, cluster_node_set)
   Some({
     cluster_node_set,
     cluster_nodes,
