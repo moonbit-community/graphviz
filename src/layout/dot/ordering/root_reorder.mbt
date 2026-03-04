@@ -351,6 +351,57 @@ pub(all) struct RootReorderBuildSources {
 }
 
 ///|
+/// Graphviz parity: root-reorder source-base payload keeps the static source
+/// snapshot shared across root/finalize passes before rank groups are attached.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootReorderSourceBaseInputs {
+  order_with_vnodes : Bool
+  order_rank_keys : Array[Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  cluster_keys : Map[String, String]
+  edge_vnodes : Map[String, Array[String]]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_order_keys_for_ordering : Map[String, Double]
+  nlist_order : Array[String]
+  ranks : Map[String, Int]
+  skeleton_edge_creation : Array[(String, String)]
+  root_edge_creation : Array[(String, String)]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: static root-reorder source base sets an empty rank-group
+/// payload until each pass attaches its own mincross group map.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_reorder_sources_base(
+  inputs : RootReorderSourceBaseInputs,
+) -> RootReorderBuildSources {
+  {
+    order_with_vnodes: inputs.order_with_vnodes,
+    order_rank_keys: inputs.order_rank_keys,
+    order_groups_for_mincross: Map::new(),
+    order_cluster_keys: inputs.order_cluster_keys,
+    order_cluster_skeleton: inputs.order_cluster_skeleton,
+    edges: inputs.edges,
+    edge_tail: inputs.edge_tail,
+    edge_head: inputs.edge_head,
+    cluster_keys: inputs.cluster_keys,
+    edge_vnodes: inputs.edge_vnodes,
+    vnodes_by_rank: inputs.vnodes_by_rank,
+    vnode_order_keys_for_ordering: inputs.vnode_order_keys_for_ordering,
+    nlist_order: inputs.nlist_order,
+    ranks: inputs.ranks,
+    skeleton_edge_creation: inputs.skeleton_edge_creation,
+    root_edge_creation: inputs.root_edge_creation,
+    flat_rank_constraints: inputs.flat_rank_constraints,
+  }
+}
+
+///|
 /// Graphviz parity: root reorder sources for each pass reuse one immutable
 /// source snapshot and only swap the rank-group payload for that pass.
 /// Do not change behavior without updating fixtures/tests.
