@@ -66,6 +66,32 @@ priv struct XSeedBuildInput {
 }
 
 ///|
+/// Graphviz parity: vnode-order probe input keeps order-index plus x-seed
+/// contexts grouped before Graphviz-compatible vnode-order derivation.
+priv struct VnodeOrderBuildInput {
+  use_vnodes_for_xpos : Bool
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  prep : LayoutPrep
+  rank_data : RankData
+  order_index : Map[String, Int]
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
+/// Graphviz parity: initial x-group assembly input keeps ordered groups,
+/// vnode order, and cluster cleanup gate together before xpos constraints.
+priv struct InitialXGroupsBuildInput {
+  use_vnodes_for_xpos : Bool
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  order_index : Map[String, Int]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_order_keys : Map[String, Double]
+  cluster_meta : ClusterMetadata
+}
+
+///|
 /// Graphviz parity: x-stage flat-label augmentation input keeps reorder flags,
 /// stage contexts, and seed snapshots grouped for one reorder+augmentation
 /// pass.
@@ -305,35 +331,29 @@ fn build_x_with_flat_labels(
 /// keys from edge-vnode chains and mark presence by non-empty key map.
 /// Do not change behavior without updating fixtures/tests.
 fn build_vnode_order_state(
-  use_vnodes_for_xpos : Bool,
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  prep : LayoutPrep,
-  rank_data : RankData,
-  order_index : Map[String, Int],
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  input : VnodeOrderBuildInput,
 ) -> XposVNodeOrderState {
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
-  if use_vnodes_for_xpos && ordered_groups_with_vnodes.length() == 0 {
+  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
     vnode_order_keys = build_vnode_order_keys(
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      rank_data.edge_reversed,
-      rank_data.ranks,
-      order_index,
-      cluster_meta.intercluster_keys,
-      cluster_meta.cluster_parents,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
+      input.prep.edges,
+      input.rank_data.edge_tail,
+      input.rank_data.edge_head,
+      input.rank_data.edge_reversed,
+      input.rank_data.ranks,
+      input.order_index,
+      input.cluster_meta.intercluster_keys,
+      input.cluster_meta.cluster_parents,
+      input.ordering.vnode_info.edge_vnodes,
+      input.ordering.vnode_info.vnode_ranks,
     )
     for _name, _ in vnode_order_keys {
       has_vnode_order = true
       break
     }
   }
-  if use_vnodes_for_xpos && ordered_groups_with_vnodes.length() > 0 {
+  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() > 0 {
     has_vnode_order = true
   }
   { vnode_order_keys, has_vnode_order }
@@ -690,30 +710,24 @@ fn build_vnode_positions(
 /// strip cluster skeleton placeholders before xpos constraints run.
 /// Do not change behavior without updating fixtures/tests.
 fn build_initial_x_groups(
-  use_vnodes_for_xpos : Bool,
-  ordered_groups : Map[Int, Array[String]],
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  order_index : Map[String, Int],
-  vnodes_by_rank : Map[Int, Array[String]],
-  vnode_order_keys : Map[String, Double],
-  cluster_meta : ClusterMetadata,
+  input : InitialXGroupsBuildInput,
 ) -> Map[Int, Array[String]] {
   let mut x_groups =
-    if use_vnodes_for_xpos {
-      if ordered_groups_with_vnodes.length() > 0 {
-        @ordering.clone_rank_groups(ordered_groups_with_vnodes)
+    if input.use_vnodes_for_xpos {
+      if input.ordered_groups_with_vnodes.length() > 0 {
+        @ordering.clone_rank_groups(input.ordered_groups_with_vnodes)
       } else {
         @ordering.build_x_groups_with_vnodes(
-          ordered_groups,
-          order_index,
-          vnodes_by_rank,
-          vnode_order_keys,
+          input.ordered_groups,
+          input.order_index,
+          input.vnodes_by_rank,
+          input.vnode_order_keys,
         )
       }
     } else {
-      ordered_groups
+      input.ordered_groups
     }
-  if cluster_meta.has_clusters {
+  if input.cluster_meta.has_clusters {
     let cleaned : Map[Int, Array[String]] = Map::new()
     for rank, names in x_groups {
       let filtered : Array[String] = []
@@ -741,13 +755,15 @@ fn build_x_seed_data(
   let order_index = @ordering.build_order_index(input.ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state(
-      input.use_vnodes_for_xpos,
-      input.ordering.ordered_groups_with_vnodes,
-      input.prep,
-      input.rank_data,
-      order_index,
-      input.cluster_meta,
-      input.ordering,
+      {
+        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
+        prep: input.prep,
+        rank_data: input.rank_data,
+        order_index,
+        cluster_meta: input.cluster_meta,
+        ordering: input.ordering,
+      },
     )
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
@@ -759,13 +775,15 @@ fn build_x_seed_data(
     )
   let x_groups =
     build_initial_x_groups(
-      input.use_vnodes_for_xpos,
-      input.ordering.ordered_groups,
-      input.ordering.ordered_groups_with_vnodes,
-      order_index,
-      input.ordering.vnode_info.vnodes_by_rank,
-      vnode_order_state.vnode_order_keys,
-      input.cluster_meta,
+      {
+        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        ordered_groups: input.ordering.ordered_groups,
+        ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
+        order_index,
+        vnodes_by_rank: input.ordering.vnode_info.vnodes_by_rank,
+        vnode_order_keys: vnode_order_state.vnode_order_keys,
+        cluster_meta: input.cluster_meta,
+      },
     )
   let x_cluster_keys : Map[String, String] = Map::new()
   for name, key in input.cluster_meta.cluster_keys {
