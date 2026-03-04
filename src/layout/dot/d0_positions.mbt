@@ -209,50 +209,6 @@ priv struct PositionModeFlags {
   graphviz_flip : Bool
 }
 
-///|
-/// Graphviz parity: xpos reorder control flags are evaluated once and then
-/// reused by clustered/non-clustered branch and transpose cleanup gates.
-priv struct XposReorderControl {
-  xpos_reorder_enabled : Bool
-  use_vnodes_for_xpos : Bool
-  allow_xpos_reorder : Bool
-  has_vnode_order : Bool
-}
-
-///|
-/// Graphviz parity: clustered/non-clustered xpos reorder branch gates are
-/// derived once from reorder control+context and reused unchanged by reorder
-/// and transpose cleanup routing.
-priv struct XposReorderPathFlags {
-  clustered_reorder_enabled : Bool
-  nonclustered_reorder_enabled : Bool
-}
-
-///|
-/// Graphviz parity: xpos reorder branch keeps shared graph/rank/ordering
-/// inputs grouped together so clustered/non-clustered paths consume the same
-/// payload without argument reordering.
-priv struct XposReorderContext {
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
-  x_order_sizes : Map[String, NodeSize]
-  x_cluster_keys : Map[String, String]
-  graphviz_flip : Bool
-}
-
-///|
-/// Graphviz parity: clustered xpos reorder keeps edge-port x/order samples in
-/// one payload for order-graph edge materialization.
-priv struct XposReorderPortData {
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-}
-
 
 ///|
 /// Stage D Phase D1/D2/D3/D5 split: xpos mode/seed/reorder-cleanup
@@ -480,155 +436,6 @@ fn build_flat_label_augmentation(
 }
 
 ///|
-/// Graphviz parity: reorder branch gating is evaluated once so clustered and
-/// non-clustered paths consume identical predicates as transpose cleanup.
-/// Do not change behavior without updating fixtures/tests.
-fn build_xpos_reorder_path_flags(
-  reorder_control : XposReorderControl,
-  reorder_context : XposReorderContext,
-) -> XposReorderPathFlags {
-  let base_reorder_enabled =
-    reorder_control.xpos_reorder_enabled &&
-    reorder_control.allow_xpos_reorder &&
-    !reorder_context.cluster_meta.ordering_set
-  {
-    clustered_reorder_enabled:
-      base_reorder_enabled && reorder_control.use_vnodes_for_xpos,
-    nonclustered_reorder_enabled:
-      base_reorder_enabled &&
-      !reorder_control.has_vnode_order &&
-      !reorder_context.cluster_meta.has_clusters,
-  }
-}
-
-///|
-/// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
-/// vnode reorder path is not taken, matching Graphviz branch structure.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_apply_nonclustered_xpos(
-  path_flags : XposReorderPathFlags,
-  reorder_context : XposReorderContext,
-  x_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  if path_flags.nonclustered_reorder_enabled {
-    @positioning.build_nonclustered_xpos_groups(
-      @positioning.build_nonclustered_xpos_group_build_input(
-        reorder_context.prep.nodes,
-        reorder_context.ordering.order_edges,
-        reorder_context.ordering.order_edge_tail,
-        reorder_context.ordering.order_edge_head,
-        reorder_context.rank_data.ranks,
-        reorder_context.ordering.vnode_info.edge_vnodes,
-        reorder_context.ordering.vnode_info.vnode_ranks,
-        reorder_context.x_cluster_keys,
-        reorder_context.cluster_meta.rank_same_groups,
-        reorder_context.cluster_meta.rank_same_order,
-        reorder_context.ordering.edge_order,
-        reorder_context.prep.node_order,
-        reorder_context.x_order_sizes,
-        reorder_context.rank_heights.nodesep_pt,
-        reorder_context.prep.has_edge_labels,
-        reorder_context.prep.port_order_positions,
-        reorder_context.prep.port_order_contrib,
-        reorder_context.cluster_meta.cluster_skeleton,
-        reorder_context.cluster_meta.flat_constraints,
-        reorder_context.graphviz_flip,
-      ),
-      x_groups,
-      (nodes, edges, edge_tail, edge_head, sizes) => {
-        // Graphviz parity: even non-cluster xpos reorder uses compass/record
-        // port-order fractions when mincross scoring ties are evaluated.
-        let samples =
-          compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
-      },
-      (nodes, edges, edge_tail, edge_head, sizes) => {
-        let samples =
-          compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
-      },
-    )
-  } else {
-    x_groups
-  }
-}
-
-
-///|
-/// Graphviz parity: xpos reorder branch resolver keeps clustered vs non-cluster
-/// routing unchanged before transpose-cleanup stage.
-/// Do not change behavior without updating fixtures/tests.
-fn build_xpos_reordered_groups(
-  path_flags : XposReorderPathFlags,
-  reorder_context : XposReorderContext,
-  reorder_port_data : XposReorderPortData,
-  x_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  if path_flags.clustered_reorder_enabled {
-    @positioning.build_clustered_xpos_groups(
-      @positioning.build_clustered_xpos_reorder_input(
-        x_groups,
-        reorder_context.x_order_sizes,
-        reorder_context.x_cluster_keys,
-        reorder_context.cluster_meta.cluster_min_rank,
-        reorder_context.cluster_meta.cluster_max_rank,
-        reorder_context.prep.node_order,
-        CLUSTER_SKELETON_PREFIX,
-        vnode_size_from_widths(1.0, 1.0),
-        reorder_context.prep.edges,
-        reorder_context.rank_data.edge_tail,
-        reorder_context.rank_data.edge_head,
-        reorder_context.rank_data.ranks,
-        reorder_context.ordering.vnode_info.edge_vnodes,
-        reorder_port_data.edge_tail_port_x,
-        reorder_port_data.edge_head_port_x,
-        reorder_port_data.edge_tail_port_order,
-        reorder_port_data.edge_head_port_order,
-        CL_CROSS,
-        reorder_context.cluster_meta.rank_same_groups,
-        reorder_context.cluster_meta.rank_same_order,
-        reorder_context.rank_heights.nodesep_pt,
-        reorder_context.prep.has_edge_labels,
-        reorder_context.cluster_meta.flat_constraints,
-        reorder_context.graphviz_flip,
-      ),
-    )
-  } else {
-    maybe_apply_nonclustered_xpos(
-      path_flags,
-      reorder_context,
-      x_groups,
-    )
-  }
-}
-
-///|
-/// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
-/// mode after reorder_rank_groups, and mutates x_groups in-place.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_apply_xpos_transpose(
-  path_flags : XposReorderPathFlags,
-  reorder_context : XposReorderContext,
-  x_groups : Map[Int, Array[String]],
-) -> Unit {
-  if path_flags.clustered_reorder_enabled {
-    @positioning.apply_xpos_transpose_cleanup(
-      x_groups,
-      @positioning.build_xpos_transpose_cleanup_input(
-        reorder_context.prep.nodes,
-        reorder_context.ordering.order_edges,
-        reorder_context.ordering.order_edge_tail,
-        reorder_context.ordering.order_edge_head,
-        reorder_context.rank_data.ranks,
-        reorder_context.ordering.vnode_info.edge_vnodes,
-        reorder_context.ordering.vnode_info.vnode_ranks,
-      ),
-      4,
-    )
-  }
-}
-
-///|
 /// Stage D Phase D0 split: position orchestrator helpers
 /// for x/y solve assembly and final result wiring.
 
@@ -807,42 +614,60 @@ fn build_x_seed_data(
 fn build_x_groups_after_reorder(
   input : XFlatLabelBuildInput,
 ) -> Map[Int, Array[String]] {
-  let reorder_control : XposReorderControl = {
-    xpos_reorder_enabled: input.xpos_reorder_enabled,
-    use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-    allow_xpos_reorder: input.allow_xpos_reorder,
-    has_vnode_order: input.x_seed.has_vnode_order,
-  }
-  let reorder_context : XposReorderContext = {
-    prep: input.prep,
-    rank_data: input.rank_data,
-    rank_heights: input.rank_heights,
-    cluster_meta: input.cluster_meta,
-    ordering: input.ordering,
-    x_order_sizes: input.x_seed.x_order_sizes,
-    x_cluster_keys: input.x_seed.x_cluster_keys,
-    graphviz_flip: input.graphviz_flip,
-  }
-  let reorder_port_data : XposReorderPortData = {
-    edge_tail_port_x: input.x_seed.x_edge_tail_port_x,
-    edge_head_port_x: input.x_seed.x_edge_head_port_x,
-    edge_tail_port_order: input.x_seed.x_edge_tail_port_order,
-    edge_head_port_order: input.x_seed.x_edge_head_port_order,
-  }
-  let path_flags = build_xpos_reorder_path_flags(reorder_control, reorder_context)
-  let x_groups =
-    build_xpos_reordered_groups(
-      path_flags,
-      reorder_context,
-      reorder_port_data,
+  @positioning.build_x_groups_after_reorder(
+    @positioning.build_xpos_reorder_pipeline_input(
+      input.xpos_reorder_enabled,
+      input.use_vnodes_for_xpos,
+      input.allow_xpos_reorder,
+      input.x_seed.has_vnode_order,
+      input.cluster_meta.ordering_set,
+      input.cluster_meta.has_clusters,
       input.x_seed.x_groups,
-    )
-  maybe_apply_xpos_transpose(
-    path_flags,
-    reorder_context,
-    x_groups,
+      input.x_seed.x_order_sizes,
+      input.x_seed.x_cluster_keys,
+      input.cluster_meta.cluster_min_rank,
+      input.cluster_meta.cluster_max_rank,
+      input.prep.node_order,
+      CLUSTER_SKELETON_PREFIX,
+      vnode_size_from_widths(1.0, 1.0),
+      input.prep.edges,
+      input.rank_data.edge_tail,
+      input.rank_data.edge_head,
+      input.rank_data.ranks,
+      input.ordering.vnode_info.edge_vnodes,
+      input.ordering.vnode_info.vnode_ranks,
+      input.x_seed.x_edge_tail_port_x,
+      input.x_seed.x_edge_head_port_x,
+      input.x_seed.x_edge_tail_port_order,
+      input.x_seed.x_edge_head_port_order,
+      CL_CROSS,
+      input.cluster_meta.rank_same_groups,
+      input.cluster_meta.rank_same_order,
+      input.rank_heights.nodesep_pt,
+      input.prep.has_edge_labels,
+      input.cluster_meta.flat_constraints,
+      input.graphviz_flip,
+      input.prep.nodes,
+      input.ordering.order_edges,
+      input.ordering.order_edge_tail,
+      input.ordering.order_edge_head,
+      input.ordering.edge_order,
+      input.prep.port_order_positions,
+      input.prep.port_order_contrib,
+      input.cluster_meta.cluster_skeleton,
+      4,
+    ),
+    (nodes, edges, edge_tail, edge_head, sizes) => {
+      // Graphviz parity: even non-cluster xpos reorder uses compass/record
+      // port-order fractions when mincross scoring ties are evaluated.
+      let samples = compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+      (samples.tail_values, samples.head_values)
+    },
+    (nodes, edges, edge_tail, edge_head, sizes) => {
+      let samples = compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+      (samples.tail_values, samples.head_values)
+    },
   )
-  x_groups
 }
 
 ///|
