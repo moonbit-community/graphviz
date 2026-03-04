@@ -729,12 +729,11 @@ fn resolve_root_phase_ordered_groups(
 
 ///|
 /// Graphviz parity: root mincross reordering is followed by clustered
-/// build_ranks application and vnode-inclusive output handoff for xpos.
+/// build_ranks handoff payload generation for clustered/local replay.
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_root_and_cluster_ranks(
   inputs : RootAndClusterRanksInputs,
   root_reorder_result : RootMincrossReorderResult,
-  run_cluster_reorder : (Map[Int, Array[String]]) -> Unit,
 ) -> RootAndClusterRanksOutput {
   let order_groups_for_mincross = root_reorder_result.order_groups_for_mincross
   let root_ordered_groups = root_reorder_result.ordered
@@ -745,9 +744,6 @@ pub fn run_root_and_cluster_ranks(
       inputs.cluster_keys,
       inputs.graphviz_flip,
     )
-  if inputs.order_with_clusters {
-    run_cluster_reorder(ordered)
-  }
   let ordered_with_vnodes =
     if !inputs.order_with_vnodes {
       Map::new()

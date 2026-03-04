@@ -206,9 +206,13 @@ fn run_root_and_cluster_ranks(
       dispatch_context,
       stage_views,
     )
-  @ordering.run_root_and_cluster_ranks(
-    root_and_cluster_inputs,
-    root_reorder_result,
-    (ordered) => reorder_by_cluster_ranks(ordered, replay_context),
-  )
+  let root_cluster_stage =
+    @ordering.run_root_and_cluster_ranks(
+      root_and_cluster_inputs,
+      root_reorder_result,
+    )
+  if reorder_setup.order_with_clusters {
+    reorder_by_cluster_ranks(root_cluster_stage.ordered, replay_context)
+  }
+  root_cluster_stage
 }
