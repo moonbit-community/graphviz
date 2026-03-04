@@ -364,73 +364,6 @@ fn build_flat_label_augmentation(
 /// helpers (seed/materialization/apply) for reorder flow.
 
 ///|
-/// Graphviz parity: clustered xpos reorder consumes order-graph parents/children
-/// plus edge-order hints exactly once before reorder_rank_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_rank_groups(
-  order_rank_keys : Array[Int],
-  order_groups : Map[Int, Array[String]],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_nodes : Array[String],
-  order_ranks : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  order_cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  let edge_index_data = @ordering.build_edge_index_for_names(
-    order_nodes,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_ranks,
-  )
-  let parents = edge_index_data.parents
-  let children = edge_index_data.children
-  let edge_order = @ordering.collect_edge_order(order_edges_out)
-  // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
-  // computed for the order graph (mincross median tie-breaking path).
-  @ordering.reorder_rank_groups(
-    order_rank_keys,
-    order_groups,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    parents,
-    children,
-    order_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    edge_order,
-    order_node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    Map::new(),
-    Map::new(),
-    Map::new(),
-    order_cluster_skeleton,
-    flat_constraints,
-    graphviz_flip=graphviz_flip,
-  )
-}
-
-///|
 /// Graphviz parity: clustered xpos reorder branch keeps the same seed build,
 /// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -471,28 +404,30 @@ fn build_clustered_xpos_groups(
         CL_CROSS,
       ),
     )
-  apply_clustered_rank_groups(
-    reorder_seed_data.order_rank_keys,
-    reorder_seed_data.order_groups,
-    reorder_edges_data.order_edges_out,
-    reorder_edges_data.order_edge_tail_out,
-    reorder_edges_data.order_edge_head_out,
-    reorder_edges_data.order_edge_tail_port_x,
-    reorder_edges_data.order_edge_head_port_x,
-    reorder_edges_data.order_edge_tail_port_order,
-    reorder_edges_data.order_edge_head_port_order,
-    reorder_seed_data.order_nodes,
-    reorder_seed_data.order_ranks,
-    reorder_seed_data.order_cluster_keys,
-    reorder_context.cluster_meta.rank_same_groups,
-    reorder_context.cluster_meta.rank_same_order,
-    reorder_seed_data.order_node_order,
-    reorder_seed_data.order_sizes,
-    reorder_context.rank_heights.nodesep_pt,
-    reorder_context.prep.has_edge_labels,
-    reorder_seed_data.order_cluster_skeleton,
-    reorder_context.cluster_meta.flat_constraints,
-    reorder_context.graphviz_flip,
+  @positioning.apply_clustered_xpos_reorder(
+    @positioning.build_clustered_xpos_reorder_apply_input(
+      reorder_seed_data.order_rank_keys,
+      reorder_seed_data.order_groups,
+      reorder_edges_data.order_edges_out,
+      reorder_edges_data.order_edge_tail_out,
+      reorder_edges_data.order_edge_head_out,
+      reorder_edges_data.order_edge_tail_port_x,
+      reorder_edges_data.order_edge_head_port_x,
+      reorder_edges_data.order_edge_tail_port_order,
+      reorder_edges_data.order_edge_head_port_order,
+      reorder_seed_data.order_nodes,
+      reorder_seed_data.order_ranks,
+      reorder_seed_data.order_cluster_keys,
+      reorder_context.cluster_meta.rank_same_groups,
+      reorder_context.cluster_meta.rank_same_order,
+      reorder_seed_data.order_node_order,
+      reorder_seed_data.order_sizes,
+      reorder_context.rank_heights.nodesep_pt,
+      reorder_context.prep.has_edge_labels,
+      reorder_seed_data.order_cluster_skeleton,
+      reorder_context.cluster_meta.flat_constraints,
+      reorder_context.graphviz_flip,
+    ),
   )
 }
 
