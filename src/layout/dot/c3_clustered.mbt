@@ -38,7 +38,6 @@ priv struct ClusteredDispatchContext {
   runtime_context : OrderingRuntimeContext
   edge_port_data : @ordering.OrderingEdgePortData
   reorder_setup : @ordering.OrderingReorderSetup
-  class2_data : @ordering.OrderingClass2Data
 }
 
 ///|
@@ -86,7 +85,7 @@ fn build_clustered_pre_root(
     @ordering.build_clustered_materialized_stage_from_sources(
       {
         reorder_setup: dispatch_context.reorder_setup,
-        class2_data: dispatch_context.class2_data,
+        class2_data: dispatch_context.reorder_setup.class2_data,
         order_groups,
         node_order: dispatch_context.node_order,
         real_nodes: runtime_context.real_nodes,
@@ -107,7 +106,7 @@ fn build_clustered_pre_root(
     @ordering.build_root_rank_order_phase_base_from_sources(
       {
         reorder_setup: dispatch_context.reorder_setup,
-        class2_data: dispatch_context.class2_data,
+        class2_data: dispatch_context.reorder_setup.class2_data,
         order_rank_keys: reorder_context.order_rank_keys,
         order_cluster_keys,
         order_cluster_skeleton,

@@ -186,7 +186,6 @@ fn build_clustered_dispatch_context_for_ordering(
     runtime_context,
     edge_port_data,
     reorder_setup,
-    class2_data: reorder_setup.class2_data,
   }
 }
 

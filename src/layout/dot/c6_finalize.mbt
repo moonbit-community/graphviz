@@ -38,7 +38,7 @@ fn finalize_order_groups(
           ranks: dispatch_context.ranks,
           reorder_setup,
           creation_order: pre_root_stage.reorder_context.creation_order,
-          edges_by_tail: dispatch_context.class2_data.edges_by_tail,
+          edges_by_tail: reorder_setup.class2_data.edges_by_tail,
           cluster_order: dispatch_context.cluster_meta.cluster_order,
           cluster_keys: dispatch_context.cluster_meta.cluster_keys,
           intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
