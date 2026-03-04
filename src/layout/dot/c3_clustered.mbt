@@ -45,15 +45,6 @@ priv struct ClusteredDispatchContext {
 /// pre-root/root/finalize stage orchestration helpers.
 
 ///|
-/// Graphviz parity: clustered root phase output carries root+cluster rank
-/// groups together with optional root tail-order override for ReMincross.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredRootPhaseOutput {
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput
-  root_tail_order_override : Array[String]?
-}
-
-///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -139,56 +130,6 @@ fn build_clustered_pre_root(
 }
 
 ///|
-/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
-/// typed stage context + pre-root output without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_root_phase(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-) -> ClusteredRootPhaseOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  let (root_reorder_output, root_rank_order_phase_output) =
-    @ordering.run_root_reorder_and_rank_order_from_base(
-      pre_root_stage.root_rank_order_phase_base,
-      pre_root_stage.order_groups,
-    )
-  let root_phase_overrides =
-    @ordering.build_clustered_root_phase_overrides(
-      reorder_setup.order_with_clusters,
-      root_reorder_output,
-      root_rank_order_phase_output,
-    )
-  let root_cluster_stage =
-    run_root_and_cluster_ranks(
-      dispatch_context,
-      pre_root_stage,
-      root_phase_overrides.root_groups_override_for_root_pass,
-    )
-  {
-    root_cluster_stage,
-    root_tail_order_override: root_phase_overrides.root_tail_order_override,
-  }
-}
-
-///|
-/// Graphviz parity: clustered finalize phase first applies root cluster-rank
-/// ordering, then runs final clustered ReMincross with unchanged call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_finalize_phase(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_phase_output : ClusteredRootPhaseOutput,
-) -> OrderingDispatchOutput {
-  let root_cluster_stage = root_phase_output.root_cluster_stage
-  finalize_order_groups(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-    root_phase_output.root_tail_order_override,
-  )
-}
-
-///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -196,14 +137,11 @@ fn run_clustered(
   dispatch_context : ClusteredDispatchContext,
 ) -> OrderingDispatchOutput {
   let pre_root_stage = build_clustered_pre_root(dispatch_context)
-  let root_phase_output =
-    run_clustered_root_phase(
-      dispatch_context,
-      pre_root_stage,
-    )
+  let root_phase_output = run_clustered_root_phase(dispatch_context, pre_root_stage)
   run_clustered_finalize_phase(
     dispatch_context,
     pre_root_stage,
-    root_phase_output,
+    root_phase_output.root_cluster_stage,
+    root_phase_output.root_tail_order_override,
   )
 }

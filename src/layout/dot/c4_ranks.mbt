@@ -3,6 +3,47 @@
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
+/// Graphviz parity: clustered root phase output carries root+cluster rank
+/// groups together with optional root tail-order override for ReMincross.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredRootPhaseOutput {
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput
+  root_tail_order_override : Array[String]?
+}
+
+///|
+/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
+/// typed stage context + pre-root output without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_root_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> ClusteredRootPhaseOutput {
+  let reorder_setup = dispatch_context.reorder_setup
+  let (root_reorder_output, root_rank_order_phase_output) =
+    @ordering.run_root_reorder_and_rank_order_from_base(
+      pre_root_stage.root_rank_order_phase_base,
+      pre_root_stage.order_groups,
+    )
+  let root_phase_overrides =
+    @ordering.build_clustered_root_phase_overrides(
+      reorder_setup.order_with_clusters,
+      root_reorder_output,
+      root_rank_order_phase_output,
+    )
+  let root_cluster_stage =
+    run_root_and_cluster_ranks(
+      dispatch_context,
+      pre_root_stage,
+      root_phase_overrides.root_groups_override_for_root_pass,
+    )
+  {
+    root_cluster_stage,
+    root_tail_order_override: root_phase_overrides.root_tail_order_override,
+  }
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.

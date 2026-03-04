@@ -80,3 +80,21 @@ fn finalize_order_groups(
     ordered_with_vnodes: finalize_output.ordered_with_vnodes,
   }
 }
+
+///|
+/// Graphviz parity: clustered finalize phase first applies root cluster-rank
+/// ordering, then runs final clustered ReMincross with unchanged call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_finalize_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  root_tail_order_override : Array[String]?,
+) -> OrderingDispatchOutput {
+  finalize_order_groups(
+    dispatch_context,
+    pre_root_stage,
+    root_cluster_stage,
+    root_tail_order_override,
+  )
+}
