@@ -453,17 +453,19 @@ pub fn layout_neato_noop(
   let empty_rank_ht2 : Map[Int, Double] = Map::new()
   let subgraphs =
     layout_subgraphs(
-      active_graph,
-      nodes_out,
-      edges_out,
-      empty_cluster_ln_x,
-      empty_cluster_rn_x,
-      empty_cluster_bbox_heights,
-      rankdir,
-      empty_ranks,
-      empty_rank_y,
-      empty_rank_ht1,
-      empty_rank_ht2,
+      {
+        graph: active_graph,
+        nodes_out,
+        edges_out,
+        cluster_ln_x: empty_cluster_ln_x,
+        cluster_rn_x: empty_cluster_rn_x,
+        cluster_bbox_heights: empty_cluster_bbox_heights,
+        rankdir,
+        ranks: empty_ranks,
+        rank_y: empty_rank_y,
+        rank_ht1: empty_rank_ht1,
+        rank_ht2: empty_rank_ht2,
+      },
     )
   let mut final_bbox = if subgraphs.length() > 0 {
     expand_bbox_with_subgraphs(base_bbox, subgraphs)

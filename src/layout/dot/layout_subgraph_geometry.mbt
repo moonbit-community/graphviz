@@ -11,22 +11,40 @@ priv struct ClusterLabelPlacementInfo {
 }
 
 ///|
+/// Graphviz parity: subgraph layout payload keeps cluster/rank snapshots
+/// grouped so recursive cluster-bbox wiring remains explicit and stable.
+priv struct LayoutSubgraphsInput {
+  graph : @cgraph.Graph
+  nodes_out : Array[DotLayoutNode]
+  edges_out : Array[DotLayoutEdge]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
+  rankdir : RankDir
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+///|
 /// Graphviz parity: cluster bbox + label placement aligned to refs/graphviz/lib/common/postproc.c
 /// (place_graph_label) + lib/common/input.c (cluster label borders) + dotgen/position.c (cluster margins).
 /// Do not change behavior without updating fixtures/tests.
 fn layout_subgraphs(
-  graph : @cgraph.Graph,
-  nodes_out : Array[DotLayoutNode],
-  edges_out : Array[DotLayoutEdge],
-  cluster_ln_x : Map[String, Double],
-  cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
-  rankdir : RankDir,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  input : LayoutSubgraphsInput,
 ) -> Array[DotLayoutGraph] {
+  let graph = input.graph
+  let nodes_out = input.nodes_out
+  let edges_out = input.edges_out
+  let cluster_ln_x = input.cluster_ln_x
+  let cluster_rn_x = input.cluster_rn_x
+  let cluster_bbox_heights = input.cluster_bbox_heights
+  let rankdir = input.rankdir
+  let ranks = input.ranks
+  let rank_y = input.rank_y
+  let rank_ht1 = input.rank_ht1
+  let rank_ht2 = input.rank_ht2
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let result : Array[DotLayoutGraph] = []
   for subgraph in graph.subgraphs() {
@@ -62,17 +80,19 @@ fn layout_subgraphs(
     let mut label_info : ClusterLabelPlacementInfo? = None
     let sub_subgraphs =
       layout_subgraphs(
-        subgraph,
-        nodes_out,
-        edges_out,
-        cluster_ln_x,
-        cluster_rn_x,
-        cluster_bbox_heights,
-        rankdir,
-        ranks,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
+        {
+          graph: subgraph,
+          nodes_out,
+          edges_out,
+          cluster_ln_x,
+          cluster_rn_x,
+          cluster_bbox_heights,
+          rankdir,
+          ranks,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+        },
       )
     if @dot_shared.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
@@ -301,17 +321,19 @@ fn build_subgraphs_and_bbox(
 ) -> SubgraphsAndBBox {
   let subgraphs =
     layout_subgraphs(
-      input.graph,
-      input.nodes,
-      input.edges,
-      input.cluster_ln_x,
-      input.cluster_rn_x,
-      input.cluster_bbox_heights,
-      input.rankdir,
-      input.ranks,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
+      {
+        graph: input.graph,
+        nodes_out: input.nodes,
+        edges_out: input.edges,
+        cluster_ln_x: input.cluster_ln_x,
+        cluster_rn_x: input.cluster_rn_x,
+        cluster_bbox_heights: input.cluster_bbox_heights,
+        rankdir: input.rankdir,
+        ranks: input.ranks,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+      },
     )
   let expanded = if subgraphs.length() > 0 {
     expand_bbox_with_clusters(input.bbox, subgraphs)

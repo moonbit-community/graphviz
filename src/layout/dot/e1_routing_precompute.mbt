@@ -127,17 +127,19 @@ fn compute_cluster_route_bboxes(
   if @dot_shared.graph_has_cluster(input.graph) {
     let cluster_layouts =
       layout_subgraphs(
-        input.graph,
-        input.nodes_out,
-        [],
-        input.cluster_ln_x,
-        input.cluster_rn_x,
-        input.cluster_bbox_heights,
-        input.rankdir,
-        input.ranks,
-        input.rank_y,
-        input.rank_ht1,
-        input.rank_ht2,
+        {
+          graph: input.graph,
+          nodes_out: input.nodes_out,
+          edges_out: [],
+          cluster_ln_x: input.cluster_ln_x,
+          cluster_rn_x: input.cluster_rn_x,
+          cluster_bbox_heights: input.cluster_bbox_heights,
+          rankdir: input.rankdir,
+          ranks: input.ranks,
+          rank_y: input.rank_y,
+          rank_ht1: input.rank_ht1,
+          rank_ht2: input.rank_ht2,
+        },
       )
     collect_cluster_bboxes(cluster_layouts, cluster_bboxes)
   }
