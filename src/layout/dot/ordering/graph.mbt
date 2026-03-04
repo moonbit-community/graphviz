@@ -425,6 +425,129 @@ pub fn build_sizes_for_order_graph(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root seed payload keeps grouped nodes,
+/// order-graph sizes, and cluster metadata maps bundled for root/cluster
+/// ordering preparation.
+pub(all) struct OrderSeedGroupsOutput {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: order-stage seed input keeps vnode and cluster metadata
+/// snapshots unchanged before grouped seed expansion.
+pub(all) struct OrderSeedGroupsInputs {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, NodeSize]
+  skeleton_size : NodeSize
+}
+
+///|
+/// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
+/// vnodes, and install cluster skeleton nodes with virtual-node defaults.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_order_seed_groups(
+  inputs : OrderSeedGroupsInputs,
+) -> OrderSeedGroupsOutput {
+  let order_groups =
+    if inputs.order_with_vnodes {
+      build_x_groups_with_vnodes(
+        inputs.ordering_groups_base,
+        inputs.base_order_index,
+        inputs.vnodes_by_rank,
+        inputs.vnode_order_keys_for_ordering,
+      )
+    } else {
+      let out : Map[Int, Array[String]] = Map::new()
+      for rank, names in inputs.ordering_groups_base {
+        out[rank] = names.copy()
+      }
+      out
+    }
+  let order_sizes_out =
+    build_sizes_for_order_graph(
+      inputs.order_sizes,
+      inputs.order_with_vnodes,
+      inputs.vnode_sizes,
+    )
+  // Graphviz parity: order graph cluster-key map starts from real-node keys and
+  // appends vnode cluster keys only when vnode ordering is enabled.
+  let order_cluster_keys : Map[String, String] = Map::new()
+  for name, key in inputs.cluster_keys {
+    order_cluster_keys[name] = key
+  }
+  if inputs.order_with_vnodes {
+    for name, key in inputs.vnode_clusters {
+      order_cluster_keys[name] = key
+    }
+  }
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  if inputs.order_with_clusters {
+    let cluster_seen : Map[String, Bool] = Map::new()
+    for cluster in inputs.cluster_order {
+      match inputs.cluster_min_rank.get(cluster) {
+        Some(min_rank) => {
+          let max_rank = match inputs.cluster_max_rank.get(cluster) {
+            Some(value) => value
+            None => min_rank
+          }
+          append_cluster_skeleton_range(
+            cluster,
+            min_rank,
+            max_rank,
+            order_cluster_keys,
+            order_cluster_skeleton,
+            order_sizes_out,
+            order_groups,
+            inputs.skeleton_size,
+          )
+          cluster_seen[cluster] = true
+        }
+        None => ()
+      }
+    }
+    for cluster, min_rank in inputs.cluster_min_rank {
+      if cluster_seen.get(cluster) is Some(_) {
+        continue
+      }
+      let max_rank = match inputs.cluster_max_rank.get(cluster) {
+        Some(value) => value
+        None => min_rank
+      }
+      append_cluster_skeleton_range(
+        cluster,
+        min_rank,
+        max_rank,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        order_sizes_out,
+        order_groups,
+        inputs.skeleton_size,
+      )
+    }
+  }
+  {
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  }
+}
+
+///|
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.

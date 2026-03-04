@@ -65,15 +65,25 @@ fn build_clustered_pre_root(
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
   let order_seed_output =
-    build_order_seed_groups(
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.order_with_clusters,
-      dispatch_context.cluster_meta,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      dispatch_context.order_sizes,
+    @ordering.build_order_seed_groups(
+      {
+        ordering_groups_base: reorder_setup.ordering_groups_base,
+        base_order_index: reorder_setup.base_order_index,
+        order_with_vnodes: reorder_setup.order_with_vnodes,
+        order_with_clusters: reorder_setup.order_with_clusters,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        vnode_order_keys_for_ordering:
+          reorder_setup.vnode_order_keys_for_ordering,
+        order_sizes: dispatch_context.order_sizes,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+        skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      },
     )
   let order_groups = order_seed_output.order_groups
   let order_sizes_out = order_seed_output.order_sizes_out
