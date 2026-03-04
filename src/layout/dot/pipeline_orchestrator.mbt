@@ -245,24 +245,30 @@ priv struct DotRoutingStageOutput {
 }
 
 ///|
-/// Graphviz parity: dot routing stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
-/// + lib/common/routespl.c + lib/pathplan/* (fixtures), with typed stage payload.
+priv struct RoutingRatioAdjustedData {
+  ratio_scaled : Bool
+  ratio_sx : Double
+  ratio_sy : Double
+  positions_state : PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+}
+
+///|
+/// Graphviz parity: ratio=fill scaling is resolved once before routing
+/// precompute/edge solve and keeps position/cluster/port maps in sync.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_dot_routing_stage(
+fn build_routing_ratio_adjusted_data(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  nodes_out : Array[DotLayoutNode],
   positions_state : PositionResult,
-) -> DotRoutingStageOutput {
-  let spatial_data =
-    build_routing_spatial_data(graph, prep, rank_data.ranks, positions_state)
-  let nodes_out = spatial_data.nodes_out
-  let label_ports_map = spatial_data.label_ports_map
-  let label_ports_raw = spatial_data.label_ports_raw
-  let cluster_bboxes = spatial_data.cluster_bboxes
+  cluster_bboxes : Map[String, @geom.Rect],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+) -> RoutingRatioAdjustedData {
   let routing_bbox =
     compute_dot_bbox(
       nodes_out,
@@ -283,62 +289,82 @@ fn compute_dot_routing_stage(
       None => (1.0, 1.0)
     }
   let ratio_scaled = ratio_sx != 1.0 || ratio_sy != 1.0
-  let routing_positions =
-    if ratio_scaled {
-      scale_point_map_rounded(positions_state.positions, ratio_sx, ratio_sy)
-    } else {
-      positions_state.positions
+  if !ratio_scaled {
+    return {
+      ratio_scaled,
+      ratio_sx,
+      ratio_sy,
+      positions_state,
+      cluster_bboxes,
+      label_ports_map,
+      label_ports_raw,
     }
-  let routing_vnode_positions =
-    if ratio_scaled {
-      scale_point_map_rounded(positions_state.vnode_positions, ratio_sx, ratio_sy)
-    } else {
-      positions_state.vnode_positions
-    }
-  let routing_rank_y =
-    if ratio_scaled {
-      scale_double_map_rounded(positions_state.rank_y, ratio_sy)
-    } else {
-      positions_state.rank_y
-    }
-  let routing_cluster_bboxes =
-    if ratio_scaled {
-      scale_rect_map(cluster_bboxes, ratio_sx, ratio_sy)
-    } else {
-      cluster_bboxes
-    }
-  let routing_label_ports_map =
-    if ratio_scaled {
-      scale_record_port_maps(label_ports_map, ratio_sx, ratio_sy)
-    } else {
-      label_ports_map
-    }
-  let routing_label_ports_raw =
-    if ratio_scaled {
-      scale_record_port_maps(label_ports_raw, ratio_sx, ratio_sy)
-    } else {
-      label_ports_raw
-    }
+  }
+  let adjusted_positions_state : PositionResult = {
+    x_groups: positions_state.x_groups,
+    rank_y: scale_double_map_rounded(positions_state.rank_y, ratio_sy),
+    positions: scale_point_map_rounded(positions_state.positions, ratio_sx, ratio_sy),
+    vnode_positions:
+      scale_point_map_rounded(
+        positions_state.vnode_positions,
+        ratio_sx,
+        ratio_sy,
+      ),
+    cluster_ln_x: scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
+    cluster_rn_x: scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
+    flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
+    rank_ht1: positions_state.rank_ht1,
+    rank_ht2: positions_state.rank_ht2,
+    cluster_bbox_heights: positions_state.cluster_bbox_heights,
+  }
+  {
+    ratio_scaled,
+    ratio_sx,
+    ratio_sy,
+    positions_state: adjusted_positions_state,
+    cluster_bboxes: scale_rect_map(cluster_bboxes, ratio_sx, ratio_sy),
+    label_ports_map: scale_record_port_maps(label_ports_map, ratio_sx, ratio_sy),
+    label_ports_raw: scale_record_port_maps(label_ports_raw, ratio_sx, ratio_sy),
+  }
+}
+
+///|
+/// Graphviz parity: dot routing stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
+/// + lib/common/routespl.c + lib/pathplan/* (fixtures), with typed stage payload.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_dot_routing_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  positions_state : PositionResult,
+) -> DotRoutingStageOutput {
+  let spatial_data =
+    build_routing_spatial_data(graph, prep, rank_data.ranks, positions_state)
+  let nodes_out = spatial_data.nodes_out
+  let ratio_adjusted_data =
+    build_routing_ratio_adjusted_data(
+      graph,
+      prep,
+      rank_data,
+      nodes_out,
+      positions_state,
+      spatial_data.cluster_bboxes,
+      spatial_data.label_ports_map,
+      spatial_data.label_ports_raw,
+    )
+  let ratio_scaled = ratio_adjusted_data.ratio_scaled
+  let ratio_sx = ratio_adjusted_data.ratio_sx
+  let ratio_sy = ratio_adjusted_data.ratio_sy
+  let routing_cluster_bboxes = ratio_adjusted_data.cluster_bboxes
+  let routing_label_ports_map = ratio_adjusted_data.label_ports_map
+  let routing_label_ports_raw = ratio_adjusted_data.label_ports_raw
   let routing_sizes =
     // Graphviz parity: route spline clipping keeps node extents in pre-ratio units.
     prep.sizes
-  let routing_positions_state : PositionResult =
-    if ratio_scaled {
-      {
-        x_groups: positions_state.x_groups,
-        rank_y: routing_rank_y,
-        positions: routing_positions,
-        vnode_positions: routing_vnode_positions,
-        cluster_ln_x: scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
-        cluster_rn_x: scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
-        flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
-        rank_ht1: positions_state.rank_ht1,
-        rank_ht2: positions_state.rank_ht2,
-        cluster_bbox_heights: positions_state.cluster_bbox_heights,
-      }
-    } else {
-      positions_state
-    }
+  let routing_positions_state = ratio_adjusted_data.positions_state
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
   let label_edge_counts = build_label_edge_counts(prep.edges)
