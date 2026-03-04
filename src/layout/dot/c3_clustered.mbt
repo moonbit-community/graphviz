@@ -17,6 +17,15 @@ priv struct ClusteredPreRootData {
 }
 
 ///|
+/// Graphviz parity: clustered pre-root materialized stage keeps reorder context
+/// and mapped/unmapped order-edge snapshots paired after seed-order overrides.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredMaterializedStage {
+  reorder_context : @ordering.OrderReorderContext
+  materialized : @ordering.OrderMaterializationData
+}
+
+///|
 /// Graphviz parity: clustered ordering stage dispatch context keeps complete
 /// clustered ordering payload ordering unchanged before stage execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -62,7 +71,6 @@ fn build_clustered_pre_root(
   dispatch_context : ClusteredDispatchContext,
 ) -> ClusteredPreRootData {
   let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
   let order_seed_output =
     @ordering.build_order_seed_groups(
@@ -89,6 +97,44 @@ fn build_clustered_pre_root(
   let order_sizes_out = order_seed_output.order_sizes_out
   let order_cluster_keys = order_seed_output.order_cluster_keys
   let order_cluster_skeleton = order_seed_output.order_cluster_skeleton
+  let materialized_stage =
+    build_clustered_materialized_stage(
+      dispatch_context,
+      order_groups,
+    )
+  let reorder_context = materialized_stage.reorder_context
+  let materialized = materialized_stage.materialized
+  let root_rank_order_phase_base =
+    build_root_rank_order_phase_base(
+      dispatch_context,
+      order_sizes_out,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      reorder_context,
+    )
+  {
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    reorder_context,
+    materialized,
+    root_rank_order_phase_base,
+  }
+}
+
+///|
+/// Graphviz parity: clustered pre-root materialized stage builds reorder
+/// context, materializes mapped/unmapped edges, then applies unconstrained
+/// seed-order overrides before root phase orchestration.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_materialized_stage(
+  dispatch_context : ClusteredDispatchContext,
+  order_groups : Map[Int, Array[String]],
+) -> ClusteredMaterializedStage {
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let runtime_context = dispatch_context.runtime_context
   let reorder_context =
     @ordering.build_order_reorder_context(
       {
@@ -134,22 +180,9 @@ fn build_clustered_pre_root(
     dispatch_context.cluster_meta.intercluster_keys,
     reorder_context.order_node_order,
   )
-  let root_rank_order_phase_base =
-    build_root_rank_order_phase_base(
-      dispatch_context,
-      order_sizes_out,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      reorder_context,
-    )
   {
-    order_groups,
-    order_sizes_out,
-    order_cluster_keys,
-    order_cluster_skeleton,
     reorder_context,
     materialized,
-    root_rank_order_phase_base,
   }
 }
 
