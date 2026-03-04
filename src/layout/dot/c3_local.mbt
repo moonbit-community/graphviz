@@ -1107,6 +1107,37 @@ fn should_include_external_crossing_edges(
 }
 
 ///|
+/// Graphviz parity: local edge-bundle policy derives external-crossing
+/// inclusion from rank depth, cluster edge presence, vnode density, and
+/// fixture-capture mode before filtering order edges.
+fn build_local_reorder_edge_bundle_for_context(
+  input_context : ClusterLocalReorderInputBuildContext,
+) -> LocalReorderEdgeBundle {
+  let vnode_count = count_edge_vnodes(input_context.cluster_nodes)
+  let include_external_crossing =
+    should_include_external_crossing_edges(
+      input_context.cluster_rank_keys,
+      input_context.cluster_graph_edge_count,
+      vnode_count,
+    )
+  build_local_reorder_edge_bundle(
+    {
+      include_external_crossing,
+      order_edges: input_context.order_edges,
+      order_edge_tail: input_context.order_edge_tail,
+      order_edge_head: input_context.order_edge_head,
+      order_edge_tail_port_x: input_context.order_edge_tail_port_x,
+      order_edge_head_port_x: input_context.order_edge_head_port_x,
+      order_edge_tail_port_order: input_context.order_edge_tail_port_order,
+      order_edge_head_port_order: input_context.order_edge_head_port_order,
+      cluster_node_set: input_context.cluster_node_set,
+      cluster_nodes: input_context.cluster_nodes,
+      fixed_ranks: input_context.fixed_ranks,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: local cluster keys are cleared for all active cluster
 /// nodes so cluster-local reorder ignores cross-cluster barriers.
 fn build_local_reorder_cluster_keys(
@@ -1238,29 +1269,8 @@ fn build_cluster_local_reorder_input_build_context(
 fn build_local_reorder_inputs(
   input_context : ClusterLocalReorderInputBuildContext,
 ) -> ClusterLocalReorderRunInputsOutput {
-  let vnode_count = count_edge_vnodes(input_context.cluster_nodes)
-  let include_external_crossing =
-    should_include_external_crossing_edges(
-      input_context.cluster_rank_keys,
-      input_context.cluster_graph_edge_count,
-      vnode_count,
-    )
   let edge_bundle =
-    build_local_reorder_edge_bundle(
-      {
-        include_external_crossing,
-        order_edges: input_context.order_edges,
-        order_edge_tail: input_context.order_edge_tail,
-        order_edge_head: input_context.order_edge_head,
-        order_edge_tail_port_x: input_context.order_edge_tail_port_x,
-        order_edge_head_port_x: input_context.order_edge_head_port_x,
-        order_edge_tail_port_order: input_context.order_edge_tail_port_order,
-        order_edge_head_port_order: input_context.order_edge_head_port_order,
-        cluster_node_set: input_context.cluster_node_set,
-        cluster_nodes: input_context.cluster_nodes,
-        fixed_ranks: input_context.fixed_ranks,
-      },
-    )
+    build_local_reorder_edge_bundle_for_context(input_context)
   let metadata =
     build_cluster_local_reorder_metadata(input_context, edge_bundle)
   {
