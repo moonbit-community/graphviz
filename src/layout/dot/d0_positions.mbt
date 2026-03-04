@@ -137,6 +137,19 @@ priv struct XWithFlatLabelData {
 }
 
 ///|
+/// Graphviz parity: final projection stage input keeps x-stage bundle and
+/// pipeline contexts grouped for one y/x solve and output map assembly pass.
+priv struct ProjectionBuildInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  x_data : XWithFlatLabelData
+}
+
+///|
 /// Graphviz parity: x-position solve input keeps x-stage bundle plus ordering
 /// and rank context grouped for one compute_x_positions invocation.
 priv struct XPositionBuildInput {
@@ -1230,46 +1243,41 @@ fn build_position_output_maps(
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
 fn build_projection_result(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_data : XWithFlatLabelData,
+  input : ProjectionBuildInput,
 ) -> PositionResult {
+  let x_data = input.x_data
   let y_position_data =
     build_y_position_data(
       {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
+        graph: input.graph,
+        prep: input.prep,
+        rank_data: input.rank_data,
+        rank_heights: input.rank_heights,
+        cluster_meta: input.cluster_meta,
+        ordering: input.ordering,
         flat_label_nodes: x_data.flat_label_nodes,
       },
     )
   let x_positions =
     compute_layout_x_positions(
       {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        ordering,
+        graph: input.graph,
+        prep: input.prep,
+        rank_data: input.rank_data,
+        rank_heights: input.rank_heights,
+        ordering: input.ordering,
         x_data,
       },
     )
   let position_output_maps =
     build_position_output_maps(
       {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
+        graph: input.graph,
+        prep: input.prep,
+        rank_data: input.rank_data,
+        rank_heights: input.rank_heights,
+        cluster_meta: input.cluster_meta,
+        ordering: input.ordering,
         use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
         x_positions,
         y_positions: y_position_data.y_positions,
@@ -1284,8 +1292,8 @@ fn build_projection_result(
     cluster_ln_x: position_output_maps.cluster_ln_x,
     cluster_rn_x: position_output_maps.cluster_rn_x,
     flat_label_edge_vnodes: x_data.flat_label_edge_vnodes,
-    rank_ht1: rank_heights.rank_ht1,
-    rank_ht2: rank_heights.rank_ht2,
+    rank_ht1: input.rank_heights.rank_ht1,
+    rank_ht2: input.rank_heights.rank_ht2,
     cluster_bbox_heights: y_position_data.cluster_bbox_heights,
   }
 }
@@ -1310,12 +1318,14 @@ fn compute_positions(
       ordering,
     )
   build_projection_result(
-    graph,
-    prep,
-    rank_data,
-    rank_heights,
-    cluster_meta,
-    ordering,
-    x_data,
+    {
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      x_data,
+    },
   )
 }
