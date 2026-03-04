@@ -48,6 +48,28 @@ priv struct PortOrderMetadata {
   contributions : Map[String, Array[(String, Double)]]
 }
 
+priv struct RecordPortOrderInput {
+  nodes : Array[@cgraph.Node]
+  output_sizes : Map[String, NodeSize]
+  rankdir : RankDir
+  record_orientation : RecordOrientation
+}
+
+priv struct PortOrderContribInput {
+  edges : Array[@cgraph.Edge]
+  record_port_order : Map[String, Map[String, Double]]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+priv struct PortOrderMetadataInput {
+  rankdir : RankDir
+  has_port_edges : Bool
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  output_sizes : Map[String, NodeSize]
+  record_orientation : RecordOrientation
+}
+
 ///|
 /// Stage A Phase A1 split: layout input preparation
 /// logic and canonicalization helper flow.
@@ -225,30 +247,27 @@ fn build_size_maps(
 /// (layout_port_offset.x) used by later opposite-endpoint averaging.
 /// Do not change behavior without updating fixtures/tests.
 fn build_record_port_order_map(
-  nodes : Array[@cgraph.Node],
-  output_sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  record_orientation : RecordOrientation,
+  input : RecordPortOrderInput,
 ) -> Map[String, Map[String, Double]] {
   let record_port_order : Map[String, Map[String, Double]] = Map::new()
-  for node in nodes {
+  for node in input.nodes {
     let label = label_text(node)
     let has_html = @html_label.is_html_label_text(label)
     if has_html || is_record_shape(node) {
       let name = node.name()
-      let size = match output_sizes.get(name) {
+      let size = match input.output_sizes.get(name) {
         Some(value) => value
-        None => node_size(node, record_orientation)
+        None => node_size(node, input.record_orientation)
       }
       let raw_ports =
         if has_html {
           html_ports(node, { x: 0.0, y: 0.0 }, size)
         } else {
-          record_ports(node, { x: 0.0, y: 0.0 }, size, record_orientation)
+          record_ports(node, { x: 0.0, y: 0.0 }, size, input.record_orientation)
         }
       let order_map : Map[String, Double] = Map::new()
       for port_name, port in raw_ports {
-        let offset = layout_port_offset(port.center, rankdir)
+        let offset = layout_port_offset(port.center, input.rankdir)
         order_map[port_name] = offset.x
       }
       record_port_order[name] = order_map
@@ -263,9 +282,7 @@ fn build_record_port_order_map(
 /// explicit record/html ports onto opposite endpoints before averaging.
 /// Do not change behavior without updating fixtures/tests.
 fn accumulate_port_order_contrib(
-  edges : Array[@cgraph.Edge],
-  record_port_order : Map[String, Map[String, Double]],
-  port_order_contrib : Map[String, Array[(String, Double)]],
+  input : PortOrderContribInput,
 ) -> Map[String, PortOrderTotal] {
   let order_sum : Map[String, PortOrderTotal] = Map::new()
   let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
@@ -273,7 +290,7 @@ fn accumulate_port_order_contrib(
       Some(value) =>
         match value.name {
           Some(port_name) =>
-            match record_port_order.get(anchor) {
+            match input.record_port_order.get(anchor) {
               Some(ports) =>
                 match ports.get(port_name) {
                   Some(order) => {
@@ -285,9 +302,9 @@ fn accumulate_port_order_contrib(
                       sum: current.sum + order,
                       count: current.count + 1,
                     }
-                    match port_order_contrib.get(target) {
+                    match input.port_order_contrib.get(target) {
                       Some(list) => list.push((anchor, order))
-                      None => port_order_contrib[target] = [(anchor, order)]
+                      None => input.port_order_contrib[target] = [(anchor, order)]
                     }
                   }
                   None => ()
@@ -299,7 +316,7 @@ fn accumulate_port_order_contrib(
       None => ()
     }
   }
-  for edge in edges {
+  for edge in input.edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
     if @dot_shared.port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
@@ -318,28 +335,28 @@ fn accumulate_port_order_contrib(
 /// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
 fn build_port_order_metadata(
-  rankdir : RankDir,
-  has_port_edges : Bool,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  output_sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
+  input : PortOrderMetadataInput,
 ) -> PortOrderMetadata {
   let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
-  if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
+  if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
+    input.has_port_edges {
     let record_port_order =
       build_record_port_order_map(
-        nodes,
-        output_sizes,
-        rankdir,
-        record_orientation,
+        {
+          nodes: input.nodes,
+          output_sizes: input.output_sizes,
+          rankdir: input.rankdir,
+          record_orientation: input.record_orientation,
+        },
       )
     let order_sum =
       accumulate_port_order_contrib(
-        edges,
-        record_port_order,
-        port_order_contrib,
+        {
+          edges: input.edges,
+          record_port_order,
+          port_order_contrib,
+        },
       )
     for name, entry in order_sum {
       if entry.count > 0 {
@@ -373,12 +390,14 @@ fn prepare_layout_inputs(
     build_size_maps(nodes, rankdir, record_orientation)
   let port_order_metadata =
     build_port_order_metadata(
-      rankdir,
-      edge_flags.has_port_edges,
-      nodes,
-      edges,
-      size_maps.output_sizes,
-      record_orientation,
+      {
+        rankdir,
+        has_port_edges: edge_flags.has_port_edges,
+        nodes,
+        edges,
+        output_sizes: size_maps.output_sizes,
+        record_orientation,
+      },
     )
   {
     rankdir,
