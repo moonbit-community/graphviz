@@ -1,30 +1,28 @@
-type NodeSize = @shared.NodeSize
-
 ///|
 /// Graphviz parity: clustered xpos reorder seed inputs keep x-order rank
 /// groups, cluster bounds, and node-order seeds together before skeleton
 /// injection and rank/order materialization.
 pub struct ClusteredXposSeedInput {
   x_groups : Map[Int, Array[String]]
-  x_order_sizes : Map[String, NodeSize]
+  x_order_sizes : Map[String, @shared.NodeSize]
   x_cluster_keys : Map[String, String]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
   cluster_skeleton_prefix : String
-  cluster_skeleton_size : NodeSize
+  cluster_skeleton_size : @shared.NodeSize
 }
 
 ///|
 pub fn build_clustered_xpos_seed_input(
   x_groups : Map[Int, Array[String]],
-  x_order_sizes : Map[String, NodeSize],
+  x_order_sizes : Map[String, @shared.NodeSize],
   x_cluster_keys : Map[String, String],
   cluster_min_rank : Map[String, Int],
   cluster_max_rank : Map[String, Int],
   node_order : Map[String, Int],
   cluster_skeleton_prefix : String,
-  cluster_skeleton_size : NodeSize,
+  cluster_skeleton_size : @shared.NodeSize,
 ) -> ClusteredXposSeedInput {
   {
     x_groups,
@@ -44,7 +42,7 @@ pub fn build_clustered_xpos_seed_input(
 /// reorder_rank_groups.
 pub struct ClusteredXposSeedOutput {
   order_groups : Map[Int, Array[String]]
-  order_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @shared.NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   order_node_order : Map[String, Int]
@@ -57,7 +55,7 @@ pub struct ClusteredXposSeedOutput {
 fn append_skeleton_nodes(
   input : ClusteredXposSeedInput,
   order_groups : Map[Int, Array[String]],
-  order_sizes : Map[String, NodeSize],
+  order_sizes : Map[String, @shared.NodeSize],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
 ) -> Unit {
@@ -87,7 +85,7 @@ pub fn build_clustered_xpos_seed(
   for rank, names in input.x_groups {
     order_groups[rank] = names.copy()
   }
-  let order_sizes : Map[String, NodeSize] = Map::new()
+  let order_sizes : Map[String, @shared.NodeSize] = Map::new()
   for name, size in input.x_order_sizes {
     order_sizes[name] = size
   }
