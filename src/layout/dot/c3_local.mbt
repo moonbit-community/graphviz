@@ -663,20 +663,6 @@ priv struct ClusterRankReorderOutput {
 }
 
 ///|
-/// Graphviz parity: cluster-local mincross runtime config keeps rank-same maps
-/// and fixed-slot constraints grouped with transpose/median parameters.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderRunConfig {
-  cluster_meta : ClusterMetadata
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  empty_cluster_skeleton : Map[String, Bool]
-  fixed_ranks : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: cluster-local mincross seeds ND_order by vnode
 /// interpolation, then applies same-rank flat constraints before startpass=2.
 fn build_cluster_rank_seeded_groups(
@@ -708,7 +694,7 @@ fn build_cluster_rank_seeded_groups(
 fn run_cluster_rank_reorder(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
-  run_config : ClusterLocalReorderRunConfig,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> ClusterRankReorderOutput {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
@@ -718,7 +704,7 @@ fn run_cluster_rank_reorder(
     build_cluster_rank_seeded_groups(
       local_context,
       input_phase_output,
-      run_config.fixed_ranks,
+      dispatch_context.fixed_ranks,
     )
   let ordered_cluster =
     reorder_rank_groups(
@@ -734,23 +720,23 @@ fn run_cluster_rank_reorder(
       input_phase_output.parents,
       input_phase_output.children,
       input_phase_output.cluster_keys,
-      run_config.cluster_meta.rank_same_groups,
-      run_config.cluster_meta.rank_same_order,
+      dispatch_context.cluster_meta.rank_same_groups,
+      dispatch_context.cluster_meta.rank_same_order,
       input_phase_output.edge_order,
       local_context.cluster_node_order,
       input_phase_output.cluster_sizes,
-      run_config.nodesep_pt,
-      run_config.has_edge_labels,
-      run_config.port_order_positions,
-      run_config.port_order_contrib,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
       Map::new(),
-      run_config.empty_cluster_skeleton,
+      dispatch_context.empty_cluster_skeleton,
       input_phase_output.cluster_flat_constraints,
       graphviz_out_neighbors=input_phase_output.graphviz_out_neighbors,
       graphviz_in_neighbors=input_phase_output.graphviz_in_neighbors,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
       fixed_positions=local_context.cluster_fixed_positions,
-      fixed_ranks=run_config.fixed_ranks,
+      fixed_ranks=dispatch_context.fixed_ranks,
       graphviz_flip=false,
       // Graphviz parity: cluster-local startpass=2 mincross coalesces
       // parallel edge segments by endpoint+port order and sums xpenalty.
@@ -1488,7 +1474,6 @@ fn reorder_cluster_rank_group(
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
-  run_config : ClusterLocalReorderRunConfig,
 ) -> Unit {
   let local_context = match build_cluster_local_reorder_context({
     cluster,
@@ -1531,7 +1516,7 @@ fn reorder_cluster_rank_group(
     run_cluster_rank_reorder(
       local_context,
       input_phase_output,
-      run_config,
+      dispatch_context,
     )
   if !reorder_output.has_internal_constraints {
     return ()
@@ -1557,15 +1542,6 @@ fn reorder_cluster_rank_groups(
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map::new()
   let mut current_fixed_positions = fixed_positions
-  let run_config : ClusterLocalReorderRunConfig = {
-    cluster_meta: dispatch_context.cluster_meta,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    empty_cluster_skeleton: dispatch_context.empty_cluster_skeleton,
-    fixed_ranks: dispatch_context.fixed_ranks,
-  }
   for cluster in cluster_names {
     let cluster_graph = match cluster_graphs.get(cluster) {
       Some(value) => value
@@ -1578,7 +1554,6 @@ fn reorder_cluster_rank_groups(
       groups,
       current_fixed_positions,
       dispatch_context,
-      run_config,
     )
     expanded_clusters[cluster] = true
     current_fixed_positions = @ordering.order_positions_from_groups(groups)
