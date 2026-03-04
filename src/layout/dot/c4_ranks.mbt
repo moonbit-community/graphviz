@@ -105,7 +105,7 @@ fn build_seeded_reorder_groups(
         build_context.order_edge_head_out,
         build_context.order_ranks,
       )
-    let _ = transpose_rank_groups_port(
+    let _ = @ordering.transpose_rank_groups_port(
       build_context.order_rank_keys,
       seeded_groups,
       build_context.order_ranks,

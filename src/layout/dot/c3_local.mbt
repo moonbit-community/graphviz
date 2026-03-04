@@ -696,7 +696,7 @@ fn build_cluster_rank_seeded_groups(
       input_phase_output.children,
     )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
-  flat_reorder_rank_groups(
+  @ordering.flat_reorder_rank_groups(
     local_context.cluster_rank_keys,
     seeded_by_vnode_interp,
     fixed_ranks,

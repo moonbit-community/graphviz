@@ -1,751 +1,4 @@
 ///|
-/// Graphviz parity: port x tie-break matches mincross.c in_cross.
-fn in_cross_port_tiebreak(
-  left : String,
-  right : String,
-  rank : Int,
-  ranks : Map[String, Int],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_tail : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_penalty : Array[Int],
-) -> Int {
-  let _ = rank
-  let _ = ranks
-  let right_in = match edge_in.get(right) {
-    Some(value) => value
-    None => []
-  }
-  let left_in = match edge_in.get(left) {
-    Some(value) => value
-    None => []
-  }
-  let mut cross = 0
-  for edge_idx in right_in {
-    let cnt = edge_penalty[edge_idx]
-    if cnt <= 0 {
-      continue
-    }
-    let inv = match order.get(edge_tail[edge_idx]) {
-      Some(value) => value
-      None =>
-        match fixed_order.get(edge_tail[edge_idx]) {
-          Some(value) => value
-          None => 0
-        }
-    }
-    let inv_port =
-      if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
-        0.0
-      }
-    for edge_idx2 in left_in {
-      let weight = edge_penalty[edge_idx2]
-      if weight <= 0 {
-        continue
-      }
-      let tail_order = match order.get(edge_tail[edge_idx2]) {
-        Some(value) => value
-        None =>
-          match fixed_order.get(edge_tail[edge_idx2]) {
-            Some(value) => value
-            None => 0
-          }
-      }
-      let t = tail_order - inv
-      let tail_port =
-        if edge_idx2 < edge_tail_port_x.length() { edge_tail_port_x[edge_idx2] } else {
-          0.0
-        }
-      if t > 0 || (t == 0 && tail_port > inv_port) {
-        cross = cross + weight * cnt
-      }
-    }
-  }
-  cross
-}
-
-///|
-/// Graphviz parity: port x tie-break matches mincross.c out_cross.
-fn out_cross_port_tiebreak(
-  left : String,
-  right : String,
-  rank : Int,
-  ranks : Map[String, Int],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_out : Map[String, Array[Int]],
-  edge_head : Array[String],
-  edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-) -> Int {
-  let _ = rank
-  let _ = ranks
-  let right_out = match edge_out.get(right) {
-    Some(value) => value
-    None => []
-  }
-  let left_out = match edge_out.get(left) {
-    Some(value) => value
-    None => []
-  }
-  let mut cross = 0
-  for edge_idx in right_out {
-    let cnt = edge_penalty[edge_idx]
-    if cnt <= 0 {
-      continue
-    }
-    let inv = match order.get(edge_head[edge_idx]) {
-      Some(value) => value
-      None =>
-        match fixed_order.get(edge_head[edge_idx]) {
-          Some(value) => value
-          None => 0
-        }
-    }
-    let inv_port =
-      if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
-        0.0
-      }
-    for edge_idx2 in left_out {
-      let weight = edge_penalty[edge_idx2]
-      if weight <= 0 {
-        continue
-      }
-      let head_order = match order.get(edge_head[edge_idx2]) {
-        Some(value) => value
-        None =>
-          match fixed_order.get(edge_head[edge_idx2]) {
-            Some(value) => value
-            None => 0
-          }
-      }
-      let t = head_order - inv
-      let head_port =
-        if edge_idx2 < edge_head_port_x.length() { edge_head_port_x[edge_idx2] } else {
-          0.0
-        }
-      if t > 0 || (t == 0 && head_port > inv_port) {
-        cross = cross + weight * cnt
-      }
-    }
-  }
-  cross
-}
-
-///|
-fn count_rank_crossings_port(
-  rank : Int,
-  names : Array[String],
-  ranks : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-) -> Int {
-  let order : Map[String, Int] = Map::new()
-  for i, name in names {
-    order[name] = i
-  }
-  let mut cross = 0
-  let mut left_idx = 0
-  while left_idx + 1 < names.length() {
-    let left = names[left_idx]
-    let mut right_idx = left_idx + 1
-    while right_idx < names.length() {
-      let right = names[right_idx]
-      cross = cross + in_cross_port_tiebreak(
-        left,
-        right,
-        rank,
-        ranks,
-        order,
-        fixed_order,
-        edge_in,
-        edge_tail,
-        edge_tail_port_x,
-        edge_penalty,
-      )
-      cross = cross + out_cross_port_tiebreak(
-        left,
-        right,
-        rank,
-        ranks,
-        order,
-        fixed_order,
-        edge_out,
-        edge_head,
-        edge_head_port_x,
-        edge_penalty,
-      )
-      right_idx = right_idx + 1
-    }
-    left_idx = left_idx + 1
-  }
-  cross
-}
-
-///|
-fn has_single_rank_incidents(
-  names : Array[String],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_penalty : Array[Int],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-) -> Bool {
-  let rank_nodes : Map[String, Bool] = Map::new()
-  for name in names {
-    rank_nodes[name] = true
-  }
-  for edge_idx in 0..<edge_tail.length() {
-    let penalty =
-      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
-    if penalty <= 0 {
-      continue
-    }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    let tail_in = rank_nodes.get(tail) is Some(_)
-    let head_in = rank_nodes.get(head) is Some(_)
-    if tail_in == head_in {
-      continue
-    }
-    let other = if tail_in { head } else { tail }
-    if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
-      return true
-    }
-  }
-  for name in names {
-    let out_neighbors = match graphviz_out_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    for other in out_neighbors {
-      if rank_nodes.get(other) is Some(_) {
-        continue
-      }
-      if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
-        return true
-      }
-    }
-    let in_neighbors = match graphviz_in_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    for other in in_neighbors {
-      if rank_nodes.get(other) is Some(_) {
-        continue
-      }
-      if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
-        return true
-      }
-    }
-  }
-  false
-}
-
-///|
-priv struct TransposeRankResult {
-  delta : Int
-  changed : Bool
-}
-
-///|
-fn transpose_rank_port_tiebreak(
-  rank : Int,
-  ranks : Map[String, Int],
-  names : Array[String],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-  cluster_keys : Map[String, String],
-  cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  reverse : Bool,
-  remincross_mode : Bool,
-) -> TransposeRankResult {
-  let mut changed = false
-  let mut delta = 0
-  let mut i = 0
-  while i + 1 < names.length() {
-    let left = names[i]
-    let right = names[i + 1]
-    if @ordering.left2right_constraint(
-      left,
-      right,
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
-      remincross_mode=remincross_mode,
-    ) {
-      i = i + 1
-      continue
-    }
-    let mut c0 = 0
-    let mut c1 = 0
-    c0 = c0 + in_cross_port_tiebreak(
-      left,
-      right,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_in,
-      edge_tail,
-      edge_tail_port_x,
-      edge_penalty,
-    )
-    c1 = c1 + in_cross_port_tiebreak(
-      right,
-      left,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_in,
-      edge_tail,
-      edge_tail_port_x,
-      edge_penalty,
-    )
-    c0 = c0 + out_cross_port_tiebreak(
-      left,
-      right,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_out,
-      edge_head,
-      edge_head_port_x,
-      edge_penalty,
-    )
-    c1 = c1 + out_cross_port_tiebreak(
-      right,
-      left,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_out,
-      edge_head,
-      edge_head_port_x,
-      edge_penalty,
-    )
-    if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
-      names[i] = right
-      names[i + 1] = left
-      order[left] = i + 1
-      order[right] = i
-      changed = true
-      delta = delta + (c0 - c1)
-    }
-    i = i + 1
-  }
-  { delta, changed }
-}
-
-///|
-fn transpose_rank_groups_port(
-  rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  fixed_order? : Map[String, Int] = Map::new(),
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-  cluster_keys : Map[String, String],
-  cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  reverse : Bool,
-  max_passes : Int,
-  remincross_mode? : Bool = false,
-) -> Bool {
-  let mut changed_any = false
-  let mut passes = 0
-  let rank_len = rank_keys.length()
-  let candidate = Array::make(rank_len, true)
-  while true {
-    if max_passes > 0 && passes >= max_passes {
-      break
-    }
-    passes = passes + 1
-    let order = @ordering.build_order_index(ordered)
-    let mut delta = 0
-    let mut idx = 0
-    while idx < rank_len {
-      if !candidate[idx] {
-        idx = idx + 1
-        continue
-      }
-      candidate[idx] = false
-      let rank = rank_keys[idx]
-      let names = match ordered.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      if names.length() < 2 {
-        idx = idx + 1
-        continue
-      }
-      let transpose_result = transpose_rank_port_tiebreak(
-        rank,
-        ranks,
-        names,
-        order,
-        fixed_order,
-        edge_in,
-        edge_out,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_penalty,
-        cluster_keys,
-        cluster_skeleton,
-        flat_constraints,
-        reverse,
-        remincross_mode,
-      )
-      if transpose_result.changed {
-        ordered[rank] = names
-        changed_any = true
-        candidate[idx] = true
-        if idx > 0 {
-          candidate[idx - 1] = true
-        }
-        if idx + 1 < rank_len {
-          candidate[idx + 1] = true
-        }
-      }
-      delta = delta + transpose_result.delta
-      idx = idx + 1
-    }
-    if delta < 1 {
-      break
-    }
-  }
-  changed_any
-}
-
-///|
-/// Graphviz parity: medians() assigns flat_mval for nodes with no in/out
-/// non-flat edges (mincross.c flat_mval + medians).
-fn apply_flat_mvals(
-  names : Array[String],
-  desired : Map[String, Double],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
-  flat_constraints : Map[String, Bool],
-) -> Bool {
-  let order_index : Map[String, Int] = Map::new()
-  let rank_nodes : Map[String, Bool] = Map::new()
-  for i, name in names {
-    order_index[name] = i
-    rank_nodes[name] = true
-  }
-  let flat_in : Map[String, Array[String]] = Map::new()
-  let flat_out : Map[String, Array[String]] = Map::new()
-  for name in names {
-    flat_in[name] = []
-    flat_out[name] = []
-  }
-  for key, enabled in flat_constraints {
-    if !enabled {
-      continue
-    }
-    match @dot_shared.parse_flat_constraint_key(key) {
-      Some((tail, head)) => {
-        if tail == "" || head == "" {
-          continue
-        }
-        if rank_nodes.get(tail) is Some(_) && rank_nodes.get(head) is Some(_) {
-          match flat_out.get(tail) {
-            Some(list) => list.push(head)
-            None => flat_out[tail] = [head]
-          }
-          match flat_in.get(head) {
-            Some(list) => list.push(tail)
-            None => flat_in[head] = [tail]
-          }
-        }
-      }
-      None => ()
-    }
-  }
-  let mc_eps = 1.0 / 256.0
-  let mut hasfixed = false
-  for name in names {
-    let in_edges = match edge_in.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let out_edges = match edge_out.get(name) {
-      Some(list) => list
-      None => []
-    }
-    if in_edges.length() > 0 || out_edges.length() > 0 {
-      continue
-    }
-    let in_list = match flat_in.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let mut assigned = false
-    if in_list.length() > 0 {
-      let mut chosen = in_list[0]
-      let mut chosen_idx = match order_index.get(chosen) {
-        Some(value) => value
-        None => -1
-      }
-      let mut i = 1
-      while i < in_list.length() {
-        let candidate = in_list[i]
-        let candidate_idx = match order_index.get(candidate) {
-          Some(value) => value
-          None => -1
-        }
-        if candidate_idx > chosen_idx {
-          chosen = candidate
-          chosen_idx = candidate_idx
-        }
-        i = i + 1
-      }
-      match desired.get(chosen) {
-        Some(value) => {
-          desired[name] = value + mc_eps
-          assigned = true
-        }
-        None => ()
-      }
-    } else {
-      let out_list = match flat_out.get(name) {
-        Some(list) => list
-        None => []
-      }
-      if out_list.length() > 0 {
-        let mut chosen = out_list[0]
-        let mut chosen_idx = match order_index.get(chosen) {
-          Some(value) => value
-          None => 0x7fffffff
-        }
-        let mut i = 1
-        while i < out_list.length() {
-          let candidate = out_list[i]
-          let candidate_idx = match order_index.get(candidate) {
-            Some(value) => value
-            None => 0x7fffffff
-          }
-          if candidate_idx < chosen_idx {
-            chosen = candidate
-            chosen_idx = candidate_idx
-          }
-          i = i + 1
-        }
-        match desired.get(chosen) {
-          Some(value) => {
-            if value > 0.0 {
-              desired[name] = value - mc_eps
-              assigned = true
-            }
-          }
-          None => ()
-        }
-      }
-    }
-    if !assigned {
-      hasfixed = true
-    }
-  }
-  hasfixed
-}
-
-///|
-/// Graphviz parity: flat edge reorder aligned to refs/graphviz/lib/dotgen/flat.c.
-/// Do not change behavior without updating fixtures/tests.
-fn flat_reorder_rank_groups(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  node_ranks : Map[String, Int],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  let ordered = @ordering.clone_rank_groups(groups)
-  if flat_constraints.length() == 0 {
-    return ordered
-  }
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
-  for rank in rank_keys {
-    let names = match ordered.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for name in names {
-      flat_out[name] = []
-      flat_in[name] = []
-    }
-  }
-  for key, value in flat_constraints {
-    if !value {
-      continue
-    }
-    match @dot_shared.parse_flat_constraint_key(key) {
-      Some((tail, head)) => {
-        if tail == "" || head == "" {
-          continue
-        }
-        let tail_rank = match node_ranks.get(tail) {
-          Some(value) => value
-          None => continue
-        }
-        let head_rank = match node_ranks.get(head) {
-          Some(value) => value
-          None => continue
-        }
-        if tail_rank != head_rank {
-          continue
-        }
-        match flat_out.get(tail) {
-          Some(list) => list.push(head)
-          None => flat_out[tail] = [head]
-        }
-        match flat_in.get(head) {
-          Some(list) => list.push(tail)
-          None => flat_in[head] = [tail]
-        }
-      }
-      None => ()
-    }
-  }
-  for rank in rank_keys {
-    let names = match ordered.get(rank) {
-      Some(list) => list.copy()
-      None => []
-    }
-    if names.length() <= 1 {
-      continue
-    }
-    let mut has_flat = false
-    for name in names {
-      let out = match flat_out.get(name) {
-        Some(list) => list
-        None => []
-      }
-      let inn = match flat_in.get(name) {
-        Some(list) => list
-        None => []
-      }
-      if out.length() > 0 || inn.length() > 0 {
-        has_flat = true
-        break
-      }
-    }
-    if !has_flat {
-      continue
-    }
-    let marked : Map[String, Bool] = Map::new()
-    for name in names {
-      marked[name] = false
-    }
-    let temprank : Array[String] = []
-    let postorder = (start : String) => {
-      let stack : Array[(String, Int)] = [(start, 0)]
-      while stack.length() > 0 {
-        let top_idx = stack.length() - 1
-        let (current, idx) = stack[top_idx]
-        if marked.get(current) != Some(true) {
-          marked[current] = true
-        }
-        let out = match flat_out.get(current) {
-          Some(list) => list
-          None => []
-        }
-        if idx >= out.length() {
-          let _ = stack.pop()
-          temprank.push(current)
-          continue
-        }
-        let next = out[idx]
-        stack[top_idx] = (current, idx + 1)
-        if marked.get(next) != Some(true) {
-          stack.push((next, 0))
-        }
-      }
-    }
-    let mut i = 0
-    while i < names.length() {
-      let v =
-        if graphviz_flip {
-          names[i]
-        } else {
-          names[names.length() - i - 1]
-        }
-      let local_in = match flat_in.get(v) {
-        Some(list) => list
-        None => []
-      }
-      let local_out = match flat_out.get(v) {
-        Some(list) => list
-        None => []
-      }
-      if local_in.length() == 0 && local_out.length() == 0 {
-        temprank.push(v)
-      } else if marked.get(v) != Some(true) && local_in.length() == 0 {
-        postorder(v)
-      }
-      i = i + 1
-    }
-    if temprank.length() == 0 {
-      continue
-    }
-    let reordered : Array[String] =
-      if graphviz_flip {
-        temprank
-      } else {
-        let reversed : Array[String] = []
-        let mut idx = temprank.length()
-        while idx > 0 {
-          idx = idx - 1
-          reversed.push(temprank[idx])
-        }
-        reversed
-      }
-    if reordered.length() < names.length() {
-      let seen : Map[String, Bool] = Map::new()
-      for name in reordered {
-        seen[name] = true
-      }
-      let updated = reordered.copy()
-      for name in names {
-        if seen.get(name) is None {
-          updated.push(name)
-        }
-      }
-      ordered[rank] = updated
-    } else {
-      ordered[rank] = reordered
-    }
-  }
-  ordered
-}
-
-///|
 let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
 
 ///|
@@ -1114,7 +367,7 @@ fn reorder_rank_groups(
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
-    ordered = flat_reorder_rank_groups(
+    ordered = @ordering.flat_reorder_rank_groups(
       rank_keys,
       ordered,
       node_ranks,
@@ -1135,7 +388,7 @@ fn reorder_rank_groups(
         fixed_order=fixed_order,
       )
     if seed_cross > 0 {
-      let _ = transpose_rank_groups_port(
+      let _ = @ordering.transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -1169,7 +422,7 @@ fn reorder_rank_groups(
       Some(list) => list
       None => []
     }
-    if !has_single_rank_incidents(
+    if !@ordering.has_single_rank_incidents(
       single_names,
       edge_tail,
       edge_head,
@@ -1184,7 +437,7 @@ fn reorder_rank_groups(
         Some(list) => list
         None => []
       }
-      count_rank_crossings_port(
+      @ordering.count_rank_crossings_port(
         rank,
         names,
         node_ranks,
@@ -1238,7 +491,7 @@ fn reorder_rank_groups(
         )
         let seed_cross = compute_single_cross()
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_port(
+          let _ = @ordering.transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
@@ -1258,7 +511,7 @@ fn reorder_rank_groups(
             remincross_mode=remincross_mode,
           )
         }
-        ordered = flat_reorder_rank_groups(
+        ordered = @ordering.flat_reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
@@ -1315,7 +568,7 @@ fn reorder_rank_groups(
                 order_positions,
               )
             }
-          let hasfixed = apply_flat_mvals(
+          let hasfixed = @ordering.apply_flat_mvals(
             names,
             desired,
             edge_in,
@@ -1335,7 +588,7 @@ fn reorder_rank_groups(
           order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
-        let _ = transpose_rank_groups_port(
+        let _ = @ordering.transpose_rank_groups_port(
           rank_keys,
           ordered,
           node_ranks,
@@ -1385,7 +638,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_port(
+      let _ = @ordering.transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -1458,7 +711,7 @@ fn reorder_rank_groups(
             fixed_order=fixed_order,
           )
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_port(
+          let _ = @ordering.transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
@@ -1478,7 +731,7 @@ fn reorder_rank_groups(
             remincross_mode=remincross_mode,
           )
         }
-        ordered = flat_reorder_rank_groups(
+        ordered = @ordering.flat_reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
@@ -1549,7 +802,7 @@ fn reorder_rank_groups(
                 median_parents,
                 desired_positions,
               )
-              let hasfixed = apply_flat_mvals(
+              let hasfixed = @ordering.apply_flat_mvals(
                 names,
                 desired,
                 edge_in,
@@ -1594,7 +847,7 @@ fn reorder_rank_groups(
                 median_children,
                 desired_positions,
               )
-              let hasfixed = apply_flat_mvals(
+              let hasfixed = @ordering.apply_flat_mvals(
                 names,
                 desired,
                 edge_in,
@@ -1628,7 +881,7 @@ fn reorder_rank_groups(
         }
         // Graphviz parity: transpose remains active with port-order hints;
         // ties are resolved by in/out port x during crossing checks.
-        let _ = transpose_rank_groups_port(
+        let _ = @ordering.transpose_rank_groups_port(
           rank_keys,
           ordered,
           node_ranks,
@@ -1688,7 +941,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_port(
+      let _ = @ordering.transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -1779,7 +1032,7 @@ fn reorder_rank_groups(
           }
         }
         if !has_port_order {
-          let _ = transpose_rank_groups_port(
+          let _ = @ordering.transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
