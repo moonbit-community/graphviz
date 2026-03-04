@@ -96,19 +96,20 @@ fn route_ordered_edge(
     return ()
   }
   build_regular_layouts_for_edge(
-    edge_id,
-    edge,
-    base,
-    input.regular_pass_input,
-    input.path_left_bound,
-    input.path_right_bound,
-    input.recover_edge_id_for_routing,
-    input.regular_parallel_groups,
-    input.base_cache,
-    state.recovered_slack_keys,
-    state.edges_out_by_id,
-    callbacks.recover_slack_vnodes_fn,
-    callbacks.build_edge_layout_fn,
+    {
+      edge_id,
+      edge,
+      base,
+      input: input.regular_pass_input,
+      path_left_bound: input.path_left_bound,
+      path_right_bound: input.path_right_bound,
+      recover_edge_id_by_key: input.recover_edge_id_for_routing,
+      regular_parallel_groups: input.regular_parallel_groups,
+      base_cache: input.base_cache,
+      recovered_slack_keys: state.recovered_slack_keys,
+      edges_out_by_id: state.edges_out_by_id,
+      callbacks,
+    },
   )
 }
 
