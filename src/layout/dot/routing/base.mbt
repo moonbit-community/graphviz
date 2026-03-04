@@ -157,6 +157,60 @@ fn slope_rankdir_for_endpoint(
     None => layout_rankdir
   }
 }
+
+///|
+fn anchor_base_for_route_endpoint(
+  sameport_anchor : @geom.Point?,
+  dynamic_anchor : RouteDynamicPortAnchor,
+  fallback_center : @geom.Point,
+) -> @geom.Point {
+  match sameport_anchor {
+    Some(pos) => pos
+    None =>
+      match dynamic_anchor.anchor {
+        Some(pos) => pos
+        None => fallback_center
+      }
+  }
+}
+
+///|
+fn port_side_for_route_endpoint(
+  sameport_anchor : @geom.Point?,
+  dynamic_anchor : RouteDynamicPortAnchor,
+  anchor_base : @geom.Point,
+  port : @cgraph.Port?,
+  port_rect : @geom.Rect?,
+  pos : @geom.Point,
+  size : NodeSize,
+  port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int,
+  port_side_for_edge : (@cgraph.Port?, @geom.Rect?, @geom.Point, NodeSize) -> Int,
+) -> Int {
+  if sameport_anchor is Some(_) {
+    port_side_mask_from_anchor(anchor_base, pos, size)
+  } else if dynamic_anchor.is_dynamic {
+    dynamic_anchor.side
+  } else {
+    port_side_for_edge(port, port_rect, pos, size)
+  }
+}
+
+///|
+fn compass_port_on_non_record_shape(
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  is_record_shape : (@cgraph.Node) -> Bool,
+) -> Bool {
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => false
+        Some(_) => !is_record_shape(node)
+        None => false
+      }
+    None => false
+  }
+}
 ///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -362,48 +416,42 @@ fn build_edge_route_base(
       head_dynamic_anchor.anchor is Some(_) ||
       tail_sameport_anchor is Some(_) ||
       head_sameport_anchor is Some(_)
-  let tail_anchor_base = match tail_sameport_anchor {
-    Some(pos) => pos
-    None =>
-      match tail_dynamic_anchor.anchor {
-        Some(pos) => pos
-        None => tail_geometry.center
-      }
-  }
-  let head_anchor_base = match head_sameport_anchor {
-    Some(pos) => pos
-    None =>
-      match head_dynamic_anchor.anchor {
-        Some(pos) => pos
-        None => head_geometry.center
-      }
-  }
+  let tail_anchor_base =
+    anchor_base_for_route_endpoint(
+      tail_sameport_anchor,
+      tail_dynamic_anchor,
+      tail_geometry.center,
+    )
+  let head_anchor_base =
+    anchor_base_for_route_endpoint(
+      head_sameport_anchor,
+      head_dynamic_anchor,
+      head_geometry.center,
+    )
   let tail_port_side =
-    if tail_sameport_anchor is Some(_) {
-    (route_base_deps.port_side_mask_from_anchor)(tail_anchor_base, tail_pos, tail_size)
-  } else if tail_dynamic_anchor.is_dynamic {
-    tail_dynamic_anchor.side
-  } else {
-    (route_base_deps.port_side_for_edge)(
+    port_side_for_route_endpoint(
+      tail_sameport_anchor,
+      tail_dynamic_anchor,
+      tail_anchor_base,
       tail_port,
       tail_port_rect,
       tail_pos,
       tail_size,
+      route_base_deps.port_side_mask_from_anchor,
+      route_base_deps.port_side_for_edge,
     )
-  }
   let head_port_side =
-    if head_sameport_anchor is Some(_) {
-    (route_base_deps.port_side_mask_from_anchor)(head_anchor_base, head_pos, head_size)
-  } else if head_dynamic_anchor.is_dynamic {
-    head_dynamic_anchor.side
-  } else {
-    (route_base_deps.port_side_for_edge)(
+    port_side_for_route_endpoint(
+      head_sameport_anchor,
+      head_dynamic_anchor,
+      head_anchor_base,
       head_port,
       head_port_rect,
       head_pos,
       head_size,
+      route_base_deps.port_side_mask_from_anchor,
+      route_base_deps.port_side_for_edge,
     )
-  }
   let tail_anchor0 = @edge_spline.point_add(tail_anchor_base, tail_offset)
   let head_anchor0 = @edge_spline.point_add(head_anchor_base, head_offset)
   let self_edge = orig_tail_name == orig_head_name
@@ -547,24 +595,18 @@ fn build_edge_route_base(
           }
       }
   }
-  let compass_tail_on_non_record = match tail_port {
-    Some(value) =>
-      match value.compass {
-        Some(@cgraph.Compass::C) => false
-        Some(_) => !(route_base_deps.is_record_shape)(tail_node)
-        None => false
-      }
-    None => false
-  }
-  let compass_head_on_non_record = match head_port {
-    Some(value) =>
-      match value.compass {
-        Some(@cgraph.Compass::C) => false
-        Some(_) => !(route_base_deps.is_record_shape)(head_node)
-        None => false
-      }
-    None => false
-  }
+  let compass_tail_on_non_record =
+    compass_port_on_non_record_shape(
+      tail_node,
+      tail_port,
+      route_base_deps.is_record_shape,
+    )
+  let compass_head_on_non_record =
+    compass_port_on_non_record_shape(
+      head_node,
+      head_port,
+      route_base_deps.is_record_shape,
+    )
   let flat_bottom_dirboth_x_nudge =
     match (route_base_deps.edge_dir_for)(edge, graph_kind) {
       RouteEdgeDir::Both =>
