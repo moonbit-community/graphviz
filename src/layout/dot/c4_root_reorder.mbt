@@ -57,20 +57,6 @@ fn build_root_rank_order_phase_base(
 }
 
 ///|
-/// Graphviz parity: root cluster-reorder phase keeps root input assembly and
-/// root rank-order execution in one sequence for shared clustered consumers.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_reorder_and_rank_order_phase(
-  pre_root_stage : ClusteredPreRootData,
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
-  @ordering.run_root_reorder_and_rank_order_from_base(
-    pre_root_stage.root_rank_order_phase_base,
-    order_groups_for_mincross,
-  )
-}
-
-///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -84,8 +70,8 @@ fn build_cluster_rank_order(
     return Map::new()
   }
   let (_root_reorder_output, root_rank_order_phase_output) =
-    run_root_reorder_and_rank_order_phase(
-      pre_root_stage,
+    @ordering.run_root_reorder_and_rank_order_from_base(
+      pre_root_stage.root_rank_order_phase_base,
       root_cluster_stage.order_groups_for_mincross,
     )
   @ordering.build_cluster_order_from_root(

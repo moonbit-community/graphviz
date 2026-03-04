@@ -223,8 +223,8 @@ fn run_clustered_root_phase(
 ) -> ClusteredRootPhaseOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let (root_reorder_output, root_rank_order_phase_output) =
-    run_root_reorder_and_rank_order_phase(
-      pre_root_stage,
+    @ordering.run_root_reorder_and_rank_order_from_base(
+      pre_root_stage.root_rank_order_phase_base,
       pre_root_stage.order_groups,
     )
   let root_phase_overrides =
