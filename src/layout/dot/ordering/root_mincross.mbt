@@ -796,6 +796,74 @@ pub(all) struct RootAndClusterRanksInputs {
 }
 
 ///|
+/// Graphviz parity: root+cluster call-input bundle keeps root ReMincross input
+/// snapshots paired with root/cluster merge flags for one stage call.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootAndClusterRanksCallInputs {
+  root_mincross_reorder_inputs : RootMincrossReorderInputs
+  root_and_cluster_inputs : RootAndClusterRanksInputs
+}
+
+///|
+/// Graphviz parity: root+cluster call-input source bundle keeps pre-root
+/// materialized snapshots paired with root override replay inputs.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootAndClusterRanksCallInputSources {
+  reorder_setup : OrderingReorderSetup
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+  order_groups : Map[Int, Array[String]]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_keys : Map[String, String]
+  root_groups_override : Map[Int, Array[String]]?
+}
+
+///|
+/// Graphviz parity: root+cluster stage call inputs are assembled from one
+/// pre-root source snapshot without changing root reorder call order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_and_cluster_ranks_call_inputs_from_sources(
+  sources : RootAndClusterRanksCallInputSources,
+) -> RootAndClusterRanksCallInputs {
+  let root_mincross_reorder_inputs =
+    build_root_mincross_reorder_inputs_from_sources(
+      {
+        reorder_setup: sources.reorder_setup,
+        reorder_context: sources.reorder_context,
+        materialized: sources.materialized,
+        order_groups: sources.order_groups,
+        order_cluster_keys: sources.order_cluster_keys,
+        order_cluster_skeleton: sources.order_cluster_skeleton,
+        order_sizes_out: sources.order_sizes_out,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        nodesep_pt: sources.nodesep_pt,
+        has_edge_labels: sources.has_edge_labels,
+        port_order_positions: sources.port_order_positions,
+        port_order_contrib: sources.port_order_contrib,
+      },
+    )
+  let root_and_cluster_inputs : RootAndClusterRanksInputs = {
+    order_with_vnodes: sources.reorder_setup.order_with_vnodes,
+    graphviz_flip: sources.reorder_setup.graphviz_flip,
+    cluster_keys: sources.cluster_keys,
+    root_groups_override: sources.root_groups_override,
+  }
+  {
+    root_mincross_reorder_inputs,
+    root_and_cluster_inputs,
+  }
+}
+
+///|
 /// Graphviz parity: root+cluster rank phase output keeps root-mincross input
 /// groups, final ordered groups, and vnode-inclusive groups for xpos.
 /// Do not change behavior without updating fixtures/tests.

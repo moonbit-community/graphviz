@@ -11,8 +11,8 @@ fn run_root_and_cluster_ranks(
   pre_root_stage : ClusteredPreRootData,
   root_groups_override : Map[Int, Array[String]]?,
 ) -> @ordering.RootAndClusterRanksOutput {
-  let root_mincross_reorder_inputs =
-    @ordering.build_root_mincross_reorder_inputs_from_sources(
+  let call_inputs =
+    @ordering.build_root_and_cluster_ranks_call_inputs_from_sources(
       {
         reorder_setup: dispatch_context.reorder_setup,
         reorder_context: pre_root_stage.reorder_context,
@@ -27,18 +27,14 @@ fn run_root_and_cluster_ranks(
         has_edge_labels: dispatch_context.has_edge_labels,
         port_order_positions: dispatch_context.port_order_positions,
         port_order_contrib: dispatch_context.port_order_contrib,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        root_groups_override,
       },
     )
   let reorder_setup = dispatch_context.reorder_setup
-  let root_and_cluster_inputs : @ordering.RootAndClusterRanksInputs = {
-    order_with_vnodes: reorder_setup.order_with_vnodes,
-    graphviz_flip: reorder_setup.graphviz_flip,
-    cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-    root_groups_override,
-  }
   let root_reorder_result =
     @ordering.run_root_mincross_reorder_with_pass0_capture(
-      root_mincross_reorder_inputs,
+      call_inputs.root_mincross_reorder_inputs,
       root_groups_override,
       capture_root_mincross_pass_snapshot,
     )
@@ -51,7 +47,7 @@ fn run_root_and_cluster_ranks(
     )
   let root_cluster_stage =
     @ordering.run_root_and_cluster_ranks(
-      root_and_cluster_inputs,
+      call_inputs.root_and_cluster_inputs,
       root_reorder_result,
     )
   if reorder_setup.order_with_clusters {
