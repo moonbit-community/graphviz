@@ -1511,14 +1511,26 @@ priv struct ClusterLocalRankReplayContext {
 }
 
 ///|
-/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
-/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn reorder_by_cluster_ranks(
+/// Graphviz parity: cluster-local replay preparation keeps cluster traversal
+/// order, fixed-slot snapshots, and dispatch payload assembled in one bundle.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReplayPreparation {
+  cluster_names : Array[String]
+  cluster_graphs : Map[String, @cgraph.Graph]
+  fixed_positions : Map[String, Double]
+  dispatch_context : ClusterLocalReorderDispatchContext
+}
+
+///|
+/// Graphviz parity: cluster-local replay preparation mirrors Graphviz
+/// cluster-order traversal and AGSEQ neighbor-source assembly before reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_replay_preparation(
   groups : Map[Int, Array[String]],
   replay_context : ClusterLocalRankReplayContext,
-) -> Unit {
+) -> ClusterLocalReplayPreparation? {
   if replay_context.cluster_meta.cluster_order.length() == 0 {
-    return ()
+    return None
   }
   let cluster_graph_order =
     build_cluster_graph_order(
@@ -1529,7 +1541,7 @@ fn reorder_by_cluster_ranks(
   let cluster_graphs = cluster_graph_order.cluster_graphs
   let cluster_names = cluster_graph_order.cluster_names
   if cluster_graphs.length() == 0 {
-    return ()
+    return None
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   let fixed_positions = @ordering.order_positions_from_groups(groups)
@@ -1570,11 +1582,33 @@ fn reorder_by_cluster_ranks(
     empty_cluster_skeleton,
     order_with_vnodes: replay_context.order_with_vnodes,
   }
-  reorder_cluster_rank_groups(
+  Some({
     cluster_names,
     cluster_graphs,
-    groups,
     fixed_positions,
     dispatch_context,
+  })
+}
+
+///|
+/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
+/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
+fn reorder_by_cluster_ranks(
+  groups : Map[Int, Array[String]],
+  replay_context : ClusterLocalRankReplayContext,
+) -> Unit {
+  let preparation = match build_cluster_local_replay_preparation(
+    groups,
+    replay_context,
+  ) {
+    Some(value) => value
+    None => return ()
+  }
+  reorder_cluster_rank_groups(
+    preparation.cluster_names,
+    preparation.cluster_graphs,
+    groups,
+    preparation.fixed_positions,
+    preparation.dispatch_context,
   )
 }
