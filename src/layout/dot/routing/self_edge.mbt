@@ -374,14 +374,25 @@ fn self_edge_routes_horizontal_side(
 ///|
 /// Graphviz parity: self-edge routing aligned to refs/graphviz/lib/common/splines.c.
 /// Do not change behavior without updating fixtures/tests.
+priv struct BuildSelfEdgeRoutesInput {
+  edges : Array[@cgraph.Edge]
+  bases : Array[EdgeRouteBase]
+  nodesep_pt : Double
+  rank_y : Map[Int, Double]
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 fn build_self_edge_routes(
-  edges : Array[@cgraph.Edge],
-  bases : Array[EdgeRouteBase],
-  nodesep_pt : Double,
-  rank_y : Map[Int, Double],
-  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
-  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : BuildSelfEdgeRoutesInput,
 ) -> Array[SelfEdgeRoute] {
+  let edges = input.edges
+  let bases = input.bases
+  let nodesep_pt = input.nodesep_pt
+  let rank_y = input.rank_y
+  let self_edge_label_height_fn = input.self_edge_label_height_fn
+  let self_edge_label_width_fn = input.self_edge_label_width_fn
   if edges.length() == 0 {
     return []
   }
@@ -588,12 +599,14 @@ fn ensure_self_edge_routes(
       }
       let group_routes =
         build_self_edge_routes(
-          group_edges,
-          group_bases,
-          nodesep_pt,
-          rank_y,
-          self_edge_label_height_fn,
-          self_edge_label_width_fn,
+          {
+            edges: group_edges,
+            bases: group_bases,
+            nodesep_pt,
+            rank_y,
+            self_edge_label_height_fn,
+            self_edge_label_width_fn,
+          },
         )
       for i in 0..<group_edges.length() {
         self_edge_routes[group_edges[i].id()] = group_routes[i]
