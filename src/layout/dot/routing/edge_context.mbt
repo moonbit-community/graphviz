@@ -28,17 +28,19 @@ fn build_ordered_routing_input(
 ) -> OrderedRoutingInput {
   let prepass =
     build_route_prepass_state(
-      input.edges,
-      input.base_cache,
-      input.use_spline_prepass,
-      input.ranks,
-      input.routing_context.order_index,
-      input.routing_context.path_order_index,
-      input.positions,
-      input.vnode_positions,
-      input.sizes,
-      input.vnode_info.vnode_sizes,
-      input.x_groups,
+      {
+        edges: input.edges,
+        base_cache: input.base_cache,
+        build_flat_adjacent_beziers: input.use_spline_prepass,
+        ranks: input.ranks,
+        order_index: input.routing_context.order_index,
+        path_order_index: input.routing_context.path_order_index,
+        positions: input.positions,
+        vnode_positions: input.vnode_positions,
+        sizes: input.sizes,
+        vnode_sizes: input.vnode_info.vnode_sizes,
+        x_groups: input.x_groups,
+      },
     )
   let self_edge_groups = collect_self_edge_groups(input.edges)
   {
