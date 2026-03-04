@@ -856,25 +856,6 @@ pub fn run_root_rank_order_phase(
 }
 
 ///|
-/// Graphviz parity: clustered root phase runs root-only edge rematerialization
-/// and root rank-order reorder in one deterministic call sequence.
-/// Do not change behavior without updating fixtures/tests.
-pub fn run_root_reorder_and_rank_order_phase(
-  root_reorder_sources : RootReorderBuildSources,
-  root_rank_order_context : RootRankOrderPhaseContext,
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
-  let root_reorder_output =
-    build_root_reorder_inputs(root_reorder_sources, order_edges_by_tail_root)
-  let root_rank_order_phase_output =
-    run_root_rank_order_phase(
-      root_reorder_output,
-      root_rank_order_context,
-    )
-  (root_reorder_output, root_rank_order_phase_output)
-}
-
-///|
 /// Graphviz parity: clustered root rank-order pass reuses one static base
 /// snapshot and only swaps rank groups before root reorder/rank-order run.
 /// Do not change behavior without updating fixtures/tests.
@@ -887,11 +868,17 @@ pub fn run_root_reorder_and_rank_order_from_base(
       phase_base.root_reorder_sources_base,
       order_groups_for_mincross,
     )
-  run_root_reorder_and_rank_order_phase(
-    root_reorder_sources,
-    phase_base.root_rank_order_context,
-    phase_base.order_edges_by_tail_root,
-  )
+  let root_reorder_output =
+    build_root_reorder_inputs(
+      root_reorder_sources,
+      phase_base.order_edges_by_tail_root,
+    )
+  let root_rank_order_phase_output =
+    run_root_rank_order_phase(
+      root_reorder_output,
+      phase_base.root_rank_order_context,
+    )
+  (root_reorder_output, root_rank_order_phase_output)
 }
 
 ///|
