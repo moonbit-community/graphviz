@@ -65,13 +65,14 @@ fn finalize_order_groups(
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
   root_tail_order_override : Array[String]?,
+  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase,
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
   let finalize_inputs =
     @ordering.build_clustered_finalize_inputs_from_root_phase_sources(
       {
-        phase_base: pre_root_stage.root_rank_order_phase_base,
+        phase_base: root_rank_order_phase_base,
         root_cluster_stage,
         order_cluster_keys: pre_root_stage.order_cluster_keys,
         order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
@@ -109,11 +110,13 @@ fn run_clustered_finalize_phase(
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
   root_tail_order_override : Array[String]?,
+  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase,
 ) -> OrderingDispatchOutput {
   finalize_order_groups(
     dispatch_context,
     pre_root_stage,
     root_cluster_stage,
     root_tail_order_override,
+    root_rank_order_phase_base,
   )
 }

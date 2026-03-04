@@ -13,7 +13,6 @@ priv struct ClusteredPreRootData {
   order_cluster_skeleton : Map[String, Bool]
   reorder_context : @ordering.OrderReorderContext
   materialized : @ordering.OrderMaterializationData
-  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase
 }
 
 ///|
@@ -96,31 +95,6 @@ fn build_clustered_pre_root(
     )
   let reorder_context = materialized_stage.reorder_context
   let materialized = materialized_stage.materialized
-  let root_rank_order_phase_base =
-    @ordering.build_root_rank_order_phase_base_from_sources(
-      {
-        reorder_setup: dispatch_context.reorder_setup,
-        class2_data: dispatch_context.reorder_setup.class2_data,
-        order_rank_keys: reorder_context.order_rank_keys,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        edges: dispatch_context.edges,
-        edge_tail: dispatch_context.edge_tail,
-        edge_head: dispatch_context.edge_head,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        edge_vnodes: dispatch_context.runtime_context.vnode_info.edge_vnodes,
-        vnodes_by_rank: dispatch_context.runtime_context.vnode_info.vnodes_by_rank,
-        ranks: dispatch_context.ranks,
-        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-        order_sizes_out,
-        nodesep_pt: dispatch_context.nodesep_pt,
-        has_edge_labels: dispatch_context.has_edge_labels,
-        port_order_positions: dispatch_context.port_order_positions,
-        port_order_contrib: dispatch_context.port_order_contrib,
-        order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-      },
-    )
   {
     order_groups,
     order_sizes_out,
@@ -128,7 +102,6 @@ fn build_clustered_pre_root(
     order_cluster_skeleton,
     reorder_context,
     materialized,
-    root_rank_order_phase_base,
   }
 }
 
@@ -146,5 +119,6 @@ fn run_clustered(
     pre_root_stage,
     root_phase_output.root_cluster_stage,
     root_phase_output.root_tail_order_override,
+    root_phase_output.root_rank_order_phase_base,
   )
 }
