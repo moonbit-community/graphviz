@@ -476,10 +476,7 @@ fn has_source_external_anchor(
 fn append_raw_neighbors_with_external_anchor(
   neighbors : Array[String],
   raw_neighbors : Array[String],
-  cluster : String,
-  expanded_clusters : Map[String, Bool],
-  intercluster_keys : Map[String, String],
-  external_anchor_name : String,
+  merge_context : LocalNeighborMergeContext,
 ) -> Unit {
   let external_cluster_seen : Map[String, Bool] = Map::new()
   for other in raw_neighbors {
@@ -489,13 +486,14 @@ fn append_raw_neighbors_with_external_anchor(
     let normalized =
       normalize_external_neighbor_name(
         other,
-        cluster,
-        expanded_clusters,
-        intercluster_keys,
-        external_anchor_name,
+        merge_context.cluster,
+        merge_context.expanded_clusters,
+        merge_context.intercluster_keys,
+        merge_context.external_anchor_name,
       )
-    if normalized == external_anchor_name {
-      let external_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
+    if normalized == merge_context.external_anchor_name {
+      let external_cluster =
+        @ordering.cluster_key_or_empty(merge_context.intercluster_keys, other)
       if external_cluster == "" ||
         external_cluster_seen.get(external_cluster) is Some(_) {
         continue
@@ -515,48 +513,57 @@ priv struct LocalNeighborLists {
 }
 
 ///|
+/// Graphviz parity: local neighbor merge context keeps one cluster-scoped
+/// source snapshot while per-node lists decide raw AGSEQ merge eligibility.
+priv struct LocalNeighborMergeContext {
+  cluster : String
+  cluster_node_set : Map[String, Bool]
+  expanded_clusters : Map[String, Bool]
+  neighbor_sources : ClusterLocalNeighborSources
+  intercluster_keys : Map[String, String]
+  allow_raw_neighbors : Bool
+  external_anchor_name : String
+}
+
+///|
 /// Graphviz parity: per-node local neighbor lists start from order-graph
 /// ND_out/ND_in and only then merge raw AGSEQ neighbors when allowed.
 fn build_local_neighbor_lists_for_name(
   name : String,
-  cluster : String,
-  cluster_node_set : Map[String, Bool],
-  expanded_clusters : Map[String, Bool],
-  neighbor_sources : ClusterLocalNeighborSources,
-  intercluster_keys : Map[String, String],
-  allow_raw_neighbors : Bool,
-  external_anchor_name : String,
+  merge_context : LocalNeighborMergeContext,
 ) -> LocalNeighborLists {
   let out_neighbors =
-    neighbor_sources.source_out_neighbors.get(name).unwrap_or_default().copy()
+    merge_context.neighbor_sources.source_out_neighbors
+      .get(name)
+      .unwrap_or_default()
+      .copy()
   let in_neighbors =
-    neighbor_sources.source_in_neighbors.get(name).unwrap_or_default().copy()
-  if !allow_raw_neighbors ||
+    merge_context.neighbor_sources.source_in_neighbors
+      .get(name)
+      .unwrap_or_default()
+      .copy()
+  if !merge_context.allow_raw_neighbors ||
     has_source_external_anchor(
       name,
-      cluster_node_set,
-      neighbor_sources.source_out_neighbors,
-      neighbor_sources.source_in_neighbors,
+      merge_context.cluster_node_set,
+      merge_context.neighbor_sources.source_out_neighbors,
+      merge_context.neighbor_sources.source_in_neighbors,
     ) {
     return { out_neighbors, in_neighbors }
   }
-  let raw_out = neighbor_sources.raw_out_neighbors.get(name).unwrap_or_default()
+  let raw_out =
+    merge_context.neighbor_sources.raw_out_neighbors.get(name).unwrap_or_default()
   append_raw_neighbors_with_external_anchor(
     out_neighbors,
     raw_out,
-    cluster,
-    expanded_clusters,
-    intercluster_keys,
-    external_anchor_name,
+    merge_context,
   )
-  let raw_in = neighbor_sources.raw_in_neighbors.get(name).unwrap_or_default()
+  let raw_in =
+    merge_context.neighbor_sources.raw_in_neighbors.get(name).unwrap_or_default()
   append_raw_neighbors_with_external_anchor(
     in_neighbors,
     raw_in,
-    cluster,
-    expanded_clusters,
-    intercluster_keys,
-    external_anchor_name,
+    merge_context,
   )
   { out_neighbors, in_neighbors }
 }
@@ -577,18 +584,20 @@ fn build_local_neighbor_maps(
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
   let cluster_node_set = build_name_set(cluster_nodes)
-  let external_anchor_name = "%0"
+  let merge_context : LocalNeighborMergeContext = {
+    cluster,
+    cluster_node_set,
+    expanded_clusters,
+    neighbor_sources,
+    intercluster_keys,
+    allow_raw_neighbors,
+    external_anchor_name: "%0",
+  }
   for name in cluster_nodes {
     let local_neighbor_lists =
       build_local_neighbor_lists_for_name(
         name,
-        cluster,
-        cluster_node_set,
-        expanded_clusters,
-        neighbor_sources,
-        intercluster_keys,
-        allow_raw_neighbors,
-        external_anchor_name,
+        merge_context,
       )
     graphviz_out_neighbors[name] = local_neighbor_lists.out_neighbors
     graphviz_in_neighbors[name] = local_neighbor_lists.in_neighbors
