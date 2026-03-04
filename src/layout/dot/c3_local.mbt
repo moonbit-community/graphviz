@@ -676,6 +676,32 @@ priv struct ClusterLocalReorderRunConfig {
   fixed_ranks : Map[String, Int]
 }
 
+///|
+/// Graphviz parity: cluster-local mincross seeds ND_order by vnode
+/// interpolation, then applies same-rank flat constraints before startpass=2.
+fn build_cluster_rank_seeded_groups(
+  local_context : ClusterLocalReorderContext,
+  input_phase_output : ClusterLocalReorderRunInputsOutput,
+  fixed_ranks : Map[String, Int],
+) -> Map[Int, Array[String]] {
+  let seeded_by_vnode_interp =
+    seed_local_groups_by_vnode(
+      local_context.cluster_rank_keys,
+      local_context.cluster_groups,
+      fixed_ranks,
+      input_phase_output.parents,
+      input_phase_output.children,
+    )
+  // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
+  flat_reorder_rank_groups(
+    local_context.cluster_rank_keys,
+    seeded_by_vnode_interp,
+    fixed_ranks,
+    input_phase_output.cluster_flat_constraints,
+    false,
+  )
+}
+
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
@@ -688,22 +714,11 @@ fn run_cluster_rank_reorder(
     input_phase_output.cluster_flat_constraints.length() == 0 {
     return { has_internal_constraints: false, ordered_cluster: Map::new() }
   }
-  let seeded_by_vnode_interp =
-    seed_local_groups_by_vnode(
-      local_context.cluster_rank_keys,
-      local_context.cluster_groups,
-      run_config.fixed_ranks,
-      input_phase_output.parents,
-      input_phase_output.children,
-    )
-  // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
   let seeded_cluster_groups =
-    flat_reorder_rank_groups(
-      local_context.cluster_rank_keys,
-      seeded_by_vnode_interp,
+    build_cluster_rank_seeded_groups(
+      local_context,
+      input_phase_output,
       run_config.fixed_ranks,
-      input_phase_output.cluster_flat_constraints,
-      false,
     )
   let ordered_cluster =
     reorder_rank_groups(
