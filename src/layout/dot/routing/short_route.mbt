@@ -268,44 +268,51 @@ pub(all) struct ShortRouteBuildContextInput {
 }
 
 ///|
+/// Graphviz parity: short-route fallback input keeps detour outcome, line
+/// endpoints, and slope/clip controls grouped for one fallback build path.
+priv struct ShortRouteFallbackBuildInput {
+  base : EdgeRouteBase
+  using_pathplan : Bool
+  pathplan_points : Array[@geom.Point]
+  line_start : @geom.Point
+  line_end : @geom.Point
+  detour_context : ShortRouteDetourContext
+  detour_resolution : ShortRouteDetourResolution
+  force_segmented : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  curve_offset : Double
+  curve_skew : Double
+  prefer_linear_flat_invis : Bool
+  prefer_linear_flat_bottom_single_arrow : Bool
+}
+
+///|
 fn build_short_route_fallback_spline(
-  base : EdgeRouteBase,
-  using_pathplan : Bool,
-  pathplan_points : Array[@geom.Point],
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  detour_context : ShortRouteDetourContext,
-  detour_resolution : ShortRouteDetourResolution,
-  force_segmented : Bool,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
-  curve_offset : Double,
-  curve_skew : Double,
-  prefer_linear_flat_invis : Bool,
-  prefer_linear_flat_bottom_single_arrow : Bool,
+  input : ShortRouteFallbackBuildInput,
 ) -> PointsSplineResult {
   let prefer_linear_flat_line =
     prefer_linear_for_flat_line(
-      prefer_linear_flat_invis,
-      detour_resolution.flat_no_arrow_candidate,
-      detour_resolution.has_flat_detour,
-      prefer_linear_flat_bottom_single_arrow,
+      input.prefer_linear_flat_invis,
+      input.detour_resolution.flat_no_arrow_candidate,
+      input.detour_resolution.has_flat_detour,
+      input.prefer_linear_flat_bottom_single_arrow,
     )
   build_short_route_line_or_pathplan_spline(
-    base,
-    using_pathplan,
-    pathplan_points,
-    line_start,
-    line_end,
-    detour_context.tail_slope_line,
-    detour_context.head_slope_line,
-    force_segmented,
-    route_barriers,
-    tail_clip_enabled,
-    head_clip_enabled,
-    curve_offset,
-    curve_skew,
+    input.base,
+    input.using_pathplan,
+    input.pathplan_points,
+    input.line_start,
+    input.line_end,
+    input.detour_context.tail_slope_line,
+    input.detour_context.head_slope_line,
+    input.force_segmented,
+    input.route_barriers,
+    input.tail_clip_enabled,
+    input.head_clip_enabled,
+    input.curve_offset,
+    input.curve_skew,
     prefer_linear_flat_line,
   )
 }
@@ -450,21 +457,24 @@ pub fn build_short_route_spline_with_detour(
         line_end,
       )
     build_short_route_fallback_spline(
-      base,
-      short_route_context.using_pathplan,
-      line_points,
-      line_start,
-      line_end,
-      detour_context,
-      detour_resolution,
-      short_route_context.force_segmented,
-      short_route_context.route_barriers,
-      short_route_spec.tail_clip_enabled,
-      short_route_spec.head_clip_enabled,
-      short_route_context.curve_offset,
-      short_route_context.curve_skew,
-      short_route_context.prefer_linear_flat_invis,
-      short_route_context.prefer_linear_flat_bottom_single_arrow,
+      {
+        base,
+        using_pathplan: short_route_context.using_pathplan,
+        pathplan_points: line_points,
+        line_start,
+        line_end,
+        detour_context,
+        detour_resolution,
+        force_segmented: short_route_context.force_segmented,
+        route_barriers: short_route_context.route_barriers,
+        tail_clip_enabled: short_route_spec.tail_clip_enabled,
+        head_clip_enabled: short_route_spec.head_clip_enabled,
+        curve_offset: short_route_context.curve_offset,
+        curve_skew: short_route_context.curve_skew,
+        prefer_linear_flat_invis: short_route_context.prefer_linear_flat_invis,
+        prefer_linear_flat_bottom_single_arrow:
+          short_route_context.prefer_linear_flat_bottom_single_arrow,
+      },
     )
   }
 }
