@@ -117,8 +117,6 @@ fn run_clustered(
   run_clustered_finalize_phase(
     dispatch_context,
     pre_root_stage,
-    root_phase_output.root_cluster_stage,
-    root_phase_output.root_tail_order_override,
-    root_phase_output.root_rank_order_phase_base,
+    root_phase_output,
   )
 }

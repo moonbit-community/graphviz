@@ -9,8 +9,7 @@
 fn build_clustered_finalize_remincross_sources(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
-  root_tail_order_override : Array[String]?,
+  root_phase_output : ClusteredRootPhaseOutput,
 ) -> @ordering.ReMincrossPassBuildSources {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
@@ -44,9 +43,9 @@ fn build_clustered_finalize_remincross_sources(
     vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     order_sizes: dispatch_context.order_sizes,
     rank_same_constraints: runtime_context.rank_same_constraints,
-    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
+    ordered_with_vnodes: root_phase_output.root_cluster_stage.ordered_with_vnodes,
     real_nodes: runtime_context.real_nodes,
-    root_tail_order_override,
+    root_tail_order_override: root_phase_output.root_tail_order_override,
     root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
     nodesep_pt: dispatch_context.nodesep_pt,
     has_edge_labels: dispatch_context.has_edge_labels,
@@ -56,24 +55,21 @@ fn build_clustered_finalize_remincross_sources(
 }
 
 ///|
-/// Graphviz parity: final group cleanup keeps only real nodes, applies
-/// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
-/// refinement before returning final groups.
+/// Graphviz parity: clustered finalize phase first applies root cluster-rank
+/// ordering, then runs final clustered ReMincross with unchanged call ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_order_groups(
+fn run_clustered_finalize_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
-  root_tail_order_override : Array[String]?,
-  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase,
+  root_phase_output : ClusteredRootPhaseOutput,
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
   let finalize_inputs =
     @ordering.build_clustered_finalize_inputs_from_root_phase_sources(
       {
-        phase_base: root_rank_order_phase_base,
-        root_cluster_stage,
+        phase_base: root_phase_output.root_rank_order_phase_base,
+        root_cluster_stage: root_phase_output.root_cluster_stage,
         order_cluster_keys: pre_root_stage.order_cluster_keys,
         order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
         real_nodes: runtime_context.real_nodes,
@@ -83,8 +79,7 @@ fn finalize_order_groups(
           build_clustered_finalize_remincross_sources(
             dispatch_context,
             pre_root_stage,
-            root_cluster_stage,
-            root_tail_order_override,
+            root_phase_output,
           ),
       },
     )
@@ -99,24 +94,4 @@ fn finalize_order_groups(
     ordered_groups: finalize_output.ordered_groups,
     ordered_with_vnodes: finalize_output.ordered_with_vnodes,
   }
-}
-
-///|
-/// Graphviz parity: clustered finalize phase first applies root cluster-rank
-/// ordering, then runs final clustered ReMincross with unchanged call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_finalize_phase(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
-  root_tail_order_override : Array[String]?,
-  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase,
-) -> OrderingDispatchOutput {
-  finalize_order_groups(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-    root_tail_order_override,
-    root_rank_order_phase_base,
-  )
 }
