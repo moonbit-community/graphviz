@@ -360,79 +360,6 @@ fn build_flat_label_augmentation(
 }
 
 ///|
-/// Stage D Phase D4 split: clustered x-constraint solve
-/// helpers (seed/materialization/apply) for reorder flow.
-
-///|
-/// Graphviz parity: clustered xpos reorder branch keeps the same seed build,
-/// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_groups(
-  reorder_context : XposReorderContext,
-  port_data : XposReorderPortData,
-  x_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  let reorder_seed_data =
-    @positioning.build_clustered_xpos_seed(
-      @positioning.build_clustered_xpos_seed_input(
-        x_groups,
-        reorder_context.x_order_sizes,
-        reorder_context.x_cluster_keys,
-        reorder_context.cluster_meta.cluster_min_rank,
-        reorder_context.cluster_meta.cluster_max_rank,
-        reorder_context.prep.node_order,
-        CLUSTER_SKELETON_PREFIX,
-        vnode_size_from_widths(1.0, 1.0),
-      ),
-    )
-  let reorder_edges_data =
-    @positioning.build_clustered_xpos_edges(
-      @positioning.build_clustered_xpos_edge_materialization_input(
-        reorder_context.prep.edges,
-        reorder_context.rank_data.edge_tail,
-        reorder_context.rank_data.edge_head,
-        reorder_context.rank_data.ranks,
-        reorder_context.ordering.vnode_info.edge_vnodes,
-        reorder_seed_data.order_nodes,
-        port_data.edge_tail_port_x,
-        port_data.edge_head_port_x,
-        port_data.edge_tail_port_order,
-        port_data.edge_head_port_order,
-        reorder_context.cluster_meta.cluster_min_rank,
-        reorder_context.cluster_meta.cluster_max_rank,
-        CLUSTER_SKELETON_PREFIX,
-        CL_CROSS,
-      ),
-    )
-  @positioning.apply_clustered_xpos_reorder(
-    @positioning.build_clustered_xpos_reorder_apply_input(
-      reorder_seed_data.order_rank_keys,
-      reorder_seed_data.order_groups,
-      reorder_edges_data.order_edges_out,
-      reorder_edges_data.order_edge_tail_out,
-      reorder_edges_data.order_edge_head_out,
-      reorder_edges_data.order_edge_tail_port_x,
-      reorder_edges_data.order_edge_head_port_x,
-      reorder_edges_data.order_edge_tail_port_order,
-      reorder_edges_data.order_edge_head_port_order,
-      reorder_seed_data.order_nodes,
-      reorder_seed_data.order_ranks,
-      reorder_seed_data.order_cluster_keys,
-      reorder_context.cluster_meta.rank_same_groups,
-      reorder_context.cluster_meta.rank_same_order,
-      reorder_seed_data.order_node_order,
-      reorder_seed_data.order_sizes,
-      reorder_context.rank_heights.nodesep_pt,
-      reorder_context.prep.has_edge_labels,
-      reorder_seed_data.order_cluster_skeleton,
-      reorder_context.cluster_meta.flat_constraints,
-      reorder_context.graphviz_flip,
-    ),
-  )
-}
-
-
-///|
 /// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
 /// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -528,10 +455,33 @@ fn build_xpos_reordered_groups(
     reorder_control.use_vnodes_for_xpos &&
     reorder_control.allow_xpos_reorder &&
     !reorder_context.cluster_meta.ordering_set {
-    build_clustered_xpos_groups(
-      reorder_context,
-      reorder_port_data,
-      x_groups,
+    @positioning.build_clustered_xpos_groups(
+      @positioning.build_clustered_xpos_reorder_input(
+        x_groups,
+        reorder_context.x_order_sizes,
+        reorder_context.x_cluster_keys,
+        reorder_context.cluster_meta.cluster_min_rank,
+        reorder_context.cluster_meta.cluster_max_rank,
+        reorder_context.prep.node_order,
+        CLUSTER_SKELETON_PREFIX,
+        vnode_size_from_widths(1.0, 1.0),
+        reorder_context.prep.edges,
+        reorder_context.rank_data.edge_tail,
+        reorder_context.rank_data.edge_head,
+        reorder_context.rank_data.ranks,
+        reorder_context.ordering.vnode_info.edge_vnodes,
+        reorder_port_data.edge_tail_port_x,
+        reorder_port_data.edge_head_port_x,
+        reorder_port_data.edge_tail_port_order,
+        reorder_port_data.edge_head_port_order,
+        CL_CROSS,
+        reorder_context.cluster_meta.rank_same_groups,
+        reorder_context.cluster_meta.rank_same_order,
+        reorder_context.rank_heights.nodesep_pt,
+        reorder_context.prep.has_edge_labels,
+        reorder_context.cluster_meta.flat_constraints,
+        reorder_context.graphviz_flip,
+      ),
     )
   } else {
     maybe_apply_nonclustered_xpos(
