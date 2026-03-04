@@ -430,6 +430,14 @@ priv struct ClusterLocalNeighborSources {
 }
 
 ///|
+/// Stage C Phase C3 split: raw Graphviz ND_out/ND_in neighbor map bundle used
+/// by local-cluster neighbor replay before per-cluster merge.
+priv struct GraphvizNeighborMaps {
+  out_neighbors : Map[String, Array[String]]
+  in_neighbors : Map[String, Array[String]]
+}
+
+///|
 /// Graphviz parity: raw-graph ND_out/ND_in maps preserve AGSEQ edge replay
 /// order for local cluster median-anchor fallback.
 /// Do not change behavior without updating fixtures/tests.

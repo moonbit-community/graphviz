@@ -3,18 +3,6 @@
 /// and materialization helpers for root mincross flow.
 
 ///|
-/// Stage C Phase C2 split: shared Graphviz ND_out/ND_in neighbor map bundle
-/// reused by C2 materialization and C3 local-cluster neighbor replay.
-priv struct GraphvizNeighborMaps {
-  out_neighbors : Map[String, Array[String]]
-  in_neighbors : Map[String, Array[String]]
-}
-
-///|
-/// Stage C Phase C2 split: order-reorder/materialize
-/// runtime data types shared with clustered root stages.
-
-///|
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
