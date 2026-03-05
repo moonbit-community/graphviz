@@ -91,32 +91,6 @@ priv struct OrderingPipelineContext {
 }
 
 ///|
-/// Graphviz parity: ordering dispatch setup keeps edge-port extraction and
-/// reorder setup sequence identical to Graphviz class2/mincross preparation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_edge_port_data(
-  input : OrderingStageInput,
-) -> @ordering.OrderingEdgePortData {
-  @ordering.build_ordering_edge_port_data(
-    input.nodes,
-    input.edges,
-    input.edge_tail,
-    input.edge_head,
-    input.order_sizes,
-    (nodes, edges, edge_tail, edge_head, sizes) => {
-      let samples =
-        compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
-      (samples.tail_values, samples.head_values)
-    },
-    (nodes, edges, edge_tail, edge_head, sizes) => {
-      let samples =
-        compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
-      (samples.tail_values, samples.head_values)
-    },
-  )
-}
-
-///|
 /// Graphviz parity: reorder setup keeps vnode-key derivation and class2 wiring
 /// in the same order as Graphviz clustered/noncluster mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
@@ -181,7 +155,15 @@ fn build_ordering_pipeline_context(
   let runtime_context =
     build_ordering_context(input)
   let edge_port_data =
-    build_ordering_edge_port_data(input)
+    @ordering.build_ordering_edge_port_data(
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.order_sizes,
+      compute_edge_port_values,
+      compute_edge_order_values,
+    )
   let reorder_setup =
     build_ordering_reorder_setup(
       input,
