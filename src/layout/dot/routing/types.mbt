@@ -221,12 +221,22 @@ pub type EdgeLayoutBuilderFn =
 pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @dot_shared.RankDir) -> Double
 
 ///|
+pub(all) struct EdgePortLabelPosInput {
+  edge : @cgraph.Edge
+  spline : @geom.Spline
+  is_head : Bool
+}
+
+///|
+pub type EdgePortLabelPosFn = (EdgePortLabelPosInput) -> @geom.Point?
+
+///|
 pub(all) struct RoutingCallbacks {
   recover_slack_vnodes_fn : RecoverSlackVnodesFn
   build_edge_layout_fn : EdgeLayoutBuilderFn
   self_edge_label_height_fn : SelfEdgeLabelMetricFn
   self_edge_label_width_fn : SelfEdgeLabelMetricFn
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
+  edge_port_label_pos_fn : EdgePortLabelPosFn
 }
 
 ///|

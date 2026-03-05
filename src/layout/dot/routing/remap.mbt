@@ -13,7 +13,7 @@ priv struct PortLabelPosRemapInput {
   label_attr : String
   is_head : Bool
   fallback : @geom.Point?
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
+  edge_port_label_pos_fn : EdgePortLabelPosFn
 }
 
 ///|
@@ -38,7 +38,7 @@ fn remap_port_label_pos(
     } else {
       splines[0]
     }
-  match edge_port_label_pos_fn(edge, spline, is_head) {
+  match edge_port_label_pos_fn({ edge, spline, is_head }) {
     Some(pos) => Some(pos)
     None => fallback
   }
@@ -65,7 +65,7 @@ fn collect_input_order_edge_ids(
 fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> DotLayoutEdge {
   let label_pos =
     if edge_attr_non_empty(edge, "label") {
@@ -240,7 +240,7 @@ fn remap_parallel_edge_layouts(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> Unit {
   let assignments =
     build_parallel_remap_assignments(
@@ -284,7 +284,7 @@ pub fn finalize_routed_edges(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> Array[DotLayoutEdge] {
   remap_parallel_edge_layouts(
     edges,

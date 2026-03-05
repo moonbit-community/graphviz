@@ -48,9 +48,6 @@ pub(all) struct EdgeLabelPosInput {
 type EdgeLabelPosFn = (EdgeLabelPosInput) -> @geom.Point?
 
 ///|
-type EdgePortLabelPosFn = (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
-
-///|
 pub(all) struct EdgeLayoutDeps {
   edge_label_rank_for_routing_fn : EdgeLabelRankForRoutingFn
   edge_label_rank_y_fn : EdgeLabelRankYFn
@@ -87,7 +84,13 @@ fn edge_port_label_pos_for_attr(
 ) -> @geom.Point? {
   let edge = input.edge
   if edge_layout_attr_non_empty(edge, input.attr_name) {
-    (input.edge_port_label_pos_fn)(edge, input.spline, input.is_head)
+    (input.edge_port_label_pos_fn)(
+      {
+        edge,
+        spline: input.spline,
+        is_head: input.is_head,
+      },
+    )
   } else {
     None
   }

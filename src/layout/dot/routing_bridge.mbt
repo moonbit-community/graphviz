@@ -171,7 +171,8 @@ fn build_routing_edge_layout_for_dot(
           input.nodesep_pt,
           input.label_pad_boost,
         ),
-      edge_port_label_pos_fn: edge_port_label_pos,
+      edge_port_label_pos_fn: (input) =>
+        edge_port_label_pos(input.edge, input.spline, input.is_head),
     },
   )
 }
@@ -231,7 +232,8 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
           ),
         self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
         self_edge_label_width_fn: self_edge_label_width_pt,
-        edge_port_label_pos_fn: edge_port_label_pos,
+        edge_port_label_pos_fn: (input) =>
+          edge_port_label_pos(input.edge, input.spline, input.is_head),
       },
     },
   )
