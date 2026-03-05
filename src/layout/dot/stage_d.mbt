@@ -441,28 +441,6 @@ fn build_x_flat_labels(
 ///|
 /// Stage D y-rank placement and flip-adjustment helpers.
 
-priv struct YPositionsWithFlipOutput {
-  y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
-}
-
-///|
-/// Graphviz parity: y-position flip solve input keeps rank maps, rank spacing,
-/// cluster heights, and traversal bounds grouped for one fill+adjust pass.
-priv struct YPositionsWithFlipInput {
-  graph : @cgraph.Graph
-  rankdir : RankDir
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  ranksep_pt : Double
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
-  y_all_ranks : Array[Int]
-}
-
 ///|
 /// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
 /// and these maxima must feed y-rank placement exactly as in Graphviz.
@@ -493,60 +471,6 @@ fn apply_flat_label_heights(
     rank_ht1,
     rank_ht2,
   )
-}
-
-/// Graphviz parity: y-position stage runs fill_rank_positions first, then
-/// optional flip-cluster height correction (cluster.c path) and y rebuild.
-/// Do not change behavior without updating fixtures/tests.
-fn build_y_positions_with_flip(
-  input : YPositionsWithFlipInput,
-) -> YPositionsWithFlipOutput {
-  let mut y_positions : Map[String, Double] = Map::new()
-  let rank_y : Map[Int, Double] = Map::new()
-  @positioning.fill_rank_positions(
-    {
-      rank_keys: input.rank_keys,
-      groups: input.groups,
-      all_ranks: input.y_all_ranks,
-      rank_pht: input.rank_pht,
-      rank_ht1: input.rank_ht1,
-      rank_ht2: input.rank_ht2,
-      ranksep_pt: input.ranksep_pt,
-      y_positions,
-      rank_y,
-    },
-  )
-  let graphviz_flip = input.rankdir == RankDir::LR || input.rankdir == RankDir::RL
-  if graphviz_flip && @dot_shared.graph_has_cluster(input.graph) {
-    let min_root_rank =
-      if input.y_all_ranks.length() > 0 {
-        input.y_all_ranks[0]
-      } else {
-        0
-      }
-    if @clustering.adjust_flip_rank_heights(
-      {
-        graph: input.graph,
-        ranks: input.ranks,
-        rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-        cluster_heights: input.cluster_bbox_heights,
-        min_root_rank,
-        margin_total: 0.0,
-        cluster_margin_pt_for: cluster_margin_pt,
-        cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
-      },
-    ) {
-      y_positions =
-        @positioning.build_y_positions_from_rank_groups(
-          input.rank_keys,
-          input.groups,
-          rank_y,
-        )
-    }
-  }
-  { y_positions, rank_y }
 }
 
 ///|
@@ -670,7 +594,7 @@ fn build_y_position_data(
       flat_ranks,
     )
   let y_position_output =
-    build_y_positions_with_flip(
+    @positioning.build_y_positions_with_flip(
       {
         graph: input.pipeline.graph,
         rankdir: input.pipeline.prep.rankdir,
@@ -683,6 +607,8 @@ fn build_y_position_data(
         ranksep_pt: input.pipeline.rank_heights.ranksep_pt,
         cluster_bbox_heights,
         y_all_ranks,
+        cluster_margin_pt_for: cluster_margin_pt,
+        cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
       },
     )
   let y_positions = y_position_output.y_positions
