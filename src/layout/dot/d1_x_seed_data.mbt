@@ -57,19 +57,6 @@ priv struct XOrderEdgePortBuildInput {
 }
 
 ///|
-/// Graphviz parity: initial x-group assembly input keeps ordered groups,
-/// vnode order, and cluster cleanup gate together before xpos constraints.
-priv struct InitialXGroupsBuildInput {
-  use_vnodes_for_xpos : Bool
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  order_index : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
-  vnode_order_keys : Map[String, Double]
-  cluster_meta : ClusterMetadata
-}
-
-///|
 /// Graphviz parity: vnode order-key derivation follows Graphviz: explicit
 /// ordered_groups_with_vnodes means vnode order is present; otherwise build
 /// keys from edge-vnode chains and mark presence by non-empty key map.
@@ -161,46 +148,6 @@ fn build_x_order_edge_port_data(
 }
 
 ///|
-/// Graphviz parity: initial x-groups must preserve vnode-aware ordering and
-/// strip cluster skeleton placeholders before xpos constraints run.
-/// Do not change behavior without updating fixtures/tests.
-fn build_initial_x_groups(
-  input : InitialXGroupsBuildInput,
-) -> Map[Int, Array[String]] {
-  let mut x_groups =
-    if input.use_vnodes_for_xpos {
-      if input.ordered_groups_with_vnodes.length() > 0 {
-        @ordering.clone_rank_groups(input.ordered_groups_with_vnodes)
-      } else {
-        @ordering.build_x_groups_with_vnodes(
-          input.ordered_groups,
-          input.order_index,
-          input.vnodes_by_rank,
-          input.vnode_order_keys,
-        )
-      }
-    } else {
-      input.ordered_groups
-    }
-  if input.cluster_meta.has_clusters {
-    let cleaned : Map[Int, Array[String]] = Map::new()
-    for rank, names in x_groups {
-      let filtered : Array[String] = []
-      for name in names {
-        if cluster_key_from_skeleton(name) is None {
-          filtered.push(name)
-        }
-      }
-      if filtered.length() > 0 {
-        cleaned[rank] = filtered
-      }
-    }
-    x_groups = cleaned
-  }
-  x_groups
-}
-
-///|
 /// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
 /// order probing, edge-port metadata, and initial group/cluster maps unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -227,7 +174,7 @@ fn build_x_seed_data(
       },
     )
   let x_groups =
-    build_initial_x_groups(
+    @positioning.build_initial_x_groups(
       {
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
         ordered_groups: pipeline.ordering.ordered_groups,
@@ -235,7 +182,9 @@ fn build_x_seed_data(
         order_index,
         vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
         vnode_order_keys: vnode_order_state.vnode_order_keys,
-        cluster_meta: pipeline.cluster_meta,
+        has_clusters: pipeline.cluster_meta.has_clusters,
+        is_cluster_skeleton_name:
+          (name) => cluster_key_from_skeleton(name) is Some(_),
       },
     )
   let x_cluster_keys : Map[String, String] = Map::new()
