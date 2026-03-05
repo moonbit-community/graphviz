@@ -1,11 +1,12 @@
 ///|
-/// Stage C Phase C3 split: cluster-local reorder context builders.
+/// Ordering domain: clustered local-reorder context builders used by
+/// Stage C clustered replay orchestration.
 
 ///|
 /// Graphviz parity: cluster-local reorder context keeps filtered cluster nodes,
 /// seeded local rank groups, and fixed-slot exclusions in one bundle.
 /// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderContext {
+pub(all) struct ClusterLocalReorderContext {
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
   cluster_node_order : Map[String, Int]
@@ -72,7 +73,7 @@ fn build_cluster_node_order_context(
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
-      @ordering.compare_by_order_then_name(node_order, a, b)
+      compare_by_order_then_name(node_order, a, b)
     })
   }
   let mut order_idx = 0
@@ -105,7 +106,7 @@ fn build_cluster_fixed_positions(
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
 /// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderContextBuildInputs {
+pub(all) struct ClusterLocalReorderContextBuildInputs {
   cluster : String
   cluster_graph : @cgraph.Graph
   groups : Map[Int, Array[String]]
@@ -120,7 +121,7 @@ priv struct ClusterLocalReorderContextBuildInputs {
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
-fn build_cluster_local_reorder_context(
+pub fn build_cluster_local_reorder_context(
   inputs : ClusterLocalReorderContextBuildInputs,
 ) -> ClusterLocalReorderContext? {
   let cluster_node_set =
@@ -141,13 +142,13 @@ fn build_cluster_local_reorder_context(
     )
   let cluster_nodes = node_order_context.cluster_nodes
   let cluster_node_order = node_order_context.cluster_node_order
-  let cluster_groups = @ordering.build_local_rank_groups(
+  let cluster_groups = build_local_rank_groups(
     inputs.groups,
     cluster_node_set,
     cluster_node_order,
     inputs.source_out_neighbors,
   )
-  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = collect_rank_keys(cluster_groups)
   let cluster_fixed_positions =
     build_cluster_fixed_positions(inputs.fixed_positions, cluster_node_set)
   Some({

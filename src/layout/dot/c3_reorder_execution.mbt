@@ -5,7 +5,7 @@
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_rank_reorder(
-  local_context : ClusterLocalReorderContext,
+  local_context : @ordering.ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Map[Int, Array[String]]? {
@@ -95,7 +95,7 @@ fn reorder_cluster_rank_group(
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
-  let local_context = match build_cluster_local_reorder_context(
+  let local_context = match @ordering.build_cluster_local_reorder_context(
     {
       cluster,
       cluster_graph,
