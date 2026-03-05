@@ -323,6 +323,53 @@ pub fn build_clustered_finalize_inputs_from_root_phase_sources(
 }
 
 ///|
+/// Graphviz parity: clustered finalize stage source bundle keeps root-phase
+/// cleanup snapshots and ReMincross source input together for one finalize
+/// stage run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredFinalizeStageRootSources {
+  phase_base : RootRankOrderPhaseBase
+  root_cluster_stage : RootAndClusterRanksOutput
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  real_nodes : Map[String, Bool]
+  reorder_setup : OrderingReorderSetup
+  order_rank_keys : Array[Int]
+  remincross_source_input : ReMincrossPassSourceInput
+}
+
+///|
+/// Graphviz parity: clustered finalize stage derives root-phase cleanup maps,
+/// builds ReMincross context from one source snapshot, then runs finalize
+/// group cleanup + startpass=2 reorder in fixed order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_clustered_finalize_stage_from_root_phase_sources(
+  sources : ClusteredFinalizeStageRootSources,
+  capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
+) -> ReMincrossPassOutput {
+  let finalize_inputs =
+    build_clustered_finalize_inputs_from_root_phase_sources(
+      {
+        phase_base: sources.phase_base,
+        root_cluster_stage: sources.root_cluster_stage,
+        order_cluster_keys: sources.order_cluster_keys,
+        order_cluster_skeleton: sources.order_cluster_skeleton,
+        real_nodes: sources.real_nodes,
+        reorder_setup: sources.reorder_setup,
+        order_rank_keys: sources.order_rank_keys,
+        remincross_sources:
+          build_remincross_pass_sources(sources.remincross_source_input),
+      },
+    )
+  run_clustered_finalize_order_groups(
+    finalize_inputs,
+    capture_call,
+    reorder_call,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ReMincross group-selection inputs capture seeded
 /// fallback context and vnode-injection context for the current cleanup pass.
 pub(all) struct ReMincrossGroupInputs {
