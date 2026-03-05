@@ -59,12 +59,14 @@ pub fn route_edges_pipeline(
 ) -> Array[DotLayoutEdge] {
   let sameport_overrides =
     collect_sameport_overrides(
-      input.edges,
-      input.positions,
-      input.sizes,
-      deps.route_base_deps.node_size_for_missing,
-      input.layout_rankdir,
-      input.ranksep_pt,
+      {
+        edges: input.edges,
+        positions: input.positions,
+        sizes: input.sizes,
+        node_size_for_missing: deps.route_base_deps.node_size_for_missing,
+        layout_rankdir: input.layout_rankdir,
+        ranksep_pt: input.ranksep_pt,
+      },
     )
   let base_cache =
     build_route_base_cache(

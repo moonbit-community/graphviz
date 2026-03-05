@@ -431,14 +431,25 @@ fn apply_sameport_group_overrides(
 /// Graphviz parity: samehead/sametail handling aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports).
 /// Do not change behavior without updating fixtures/tests.
+priv struct SameportOverridesCollectInput {
+  edges : Array[@cgraph.Edge]
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, NodeSize]
+  node_size_for_missing : (@cgraph.Node) -> NodeSize
+  layout_rankdir : RankDir
+  ranksep_pt : Double
+}
+
+///|
 fn collect_sameport_overrides(
-  edges : Array[@cgraph.Edge],
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  node_size_for_missing : (@cgraph.Node) -> NodeSize,
-  layout_rankdir : RankDir,
-  ranksep_pt : Double,
+  input : SameportOverridesCollectInput,
 ) -> SameportOverrides {
+  let edges = input.edges
+  let positions = input.positions
+  let sizes = input.sizes
+  let node_size_for_missing = input.node_size_for_missing
+  let layout_rankdir = input.layout_rankdir
+  let ranksep_pt = input.ranksep_pt
   let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let samehead_group_order : Array[String] = []
