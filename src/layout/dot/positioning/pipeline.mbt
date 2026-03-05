@@ -1,4 +1,107 @@
 ///|
+/// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
+/// rankdir flip) are computed once from precomputed stage flags.
+pub struct PositionModeFlags {
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: position-mode source bundle keeps vnode caps and rankdir
+/// together so Stage D call-sites avoid positional argument drift.
+pub(all) struct PositionModeFlagSources {
+  has_edge_labels : Bool
+  has_port_edges : Bool
+  vnode_count : Int
+  max_xpos_vnodes : Int
+  max_xpos_reorder_vnodes : Int
+  rankdir : @shared.RankDir
+}
+
+///|
+/// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
+/// rankdir flip) are computed once and forwarded unchanged.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_position_mode_flags(
+  sources : PositionModeFlagSources,
+) -> PositionModeFlags {
+  let use_vnodes_for_xpos =
+    sources.has_edge_labels || sources.has_port_edges ||
+    sources.vnode_count <= sources.max_xpos_vnodes
+  let allow_xpos_reorder =
+    !use_vnodes_for_xpos || sources.vnode_count <= sources.max_xpos_reorder_vnodes
+  let graphviz_flip =
+    sources.rankdir == @shared.RankDir::LR || sources.rankdir == @shared.RankDir::RL
+  {
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    graphviz_flip,
+  }
+}
+
+///|
+/// Graphviz parity: x-position solve input keeps reordered rank metadata,
+/// vnode extra-node toggles, and size overlays grouped for one xpos call.
+pub struct XposComputationInput {
+  x_sizes : Map[String, @shared.NodeSize]
+  x_rank_keys : Array[Int]
+  x_ranks : Map[String, Int]
+  x_extra_nodes : Array[@ordering.ExtraConstraintNode]
+  x_edge_vnodes : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: xpos source bundle keeps x-stage payload and vnode replay
+/// metadata grouped so Stage D call-sites avoid positional drift.
+pub(all) struct XposComputationInputSources {
+  use_vnodes_for_xpos : Bool
+  x_base_sizes : Map[String, @shared.NodeSize]
+  x_groups : Map[Int, Array[String]]
+  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_creation_order : Array[String]
+  vnode_ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: xpos solver inputs preserve vnode-size merge,
+/// rank-map/key derivation, and vnode-edge/slack toggles.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_xpos_computation_input_from_sources(
+  sources : XposComputationInputSources,
+) -> XposComputationInput {
+  let x_sizes =
+    if sources.use_vnodes_for_xpos {
+      @ordering.merge_sizes_with_vnodes(
+        sources.x_base_sizes,
+        sources.vnode_sizes,
+      )
+    } else {
+      sources.x_base_sizes
+    }
+  let x_rank_keys = @ordering.collect_rank_keys(sources.x_groups)
+  let x_ranks = @ordering.build_node_ranks(sources.x_groups)
+  let vnode_extra_nodes =
+    if sources.use_vnodes_for_xpos {
+      @ordering.build_vnode_extra_nodes(
+        sources.vnode_creation_order,
+        sources.vnode_ranks,
+      )
+    } else {
+      []
+    }
+  let x_extra_nodes = vnode_extra_nodes.copy()
+  let x_edge_vnodes =
+    if sources.use_vnodes_for_xpos {
+      sources.edge_vnodes
+    } else {
+      Map::new()
+    }
+  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes }
+}
+
+///|
 /// Graphviz parity: clustered/non-clustered xpos reorder branch gates are
 /// evaluated once and then reused by reorder + transpose cleanup.
 priv struct XposReorderPathFlags {

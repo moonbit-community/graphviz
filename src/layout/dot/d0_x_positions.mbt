@@ -14,36 +14,8 @@ priv struct XWithFlatLabelData {
 }
 
 ///|
-priv struct PositionModeFlags {
-  use_vnodes_for_xpos : Bool
-  allow_xpos_reorder : Bool
-  graphviz_flip : Bool
-}
-
-///|
 /// Stage D Phase D1/D2/D3/D5 split: xpos mode/seed/reorder-cleanup
 /// helpers used by the Stage D position orchestrator.
-
-///|
-/// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
-/// rankdir flip) are computed once from prep+ordering and forwarded unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_position_mode_flags(
-  prep : LayoutPrep,
-  ordering : OrderingResult,
-) -> PositionModeFlags {
-  let use_vnodes_for_xpos =
-    prep.has_edge_labels || prep.has_port_edges ||
-    ordering.vnode_count <= MAX_XPOS_VNODES
-  let allow_xpos_reorder =
-    !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
-  let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
-  {
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    graphviz_flip,
-  }
-}
 
 ///|
 /// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
@@ -53,7 +25,17 @@ fn build_position_mode_flags(
 fn build_x_with_flat_labels(
   pipeline : PositionPipelineContext,
 ) -> XWithFlatLabelData {
-  let mode_flags = build_position_mode_flags(pipeline.prep, pipeline.ordering)
+  let mode_flags =
+    @positioning.build_position_mode_flags(
+      {
+        has_edge_labels: pipeline.prep.has_edge_labels,
+        has_port_edges: pipeline.prep.has_port_edges,
+        vnode_count: pipeline.ordering.vnode_count,
+        max_xpos_vnodes: MAX_XPOS_VNODES,
+        max_xpos_reorder_vnodes: MAX_XPOS_REORDER_VNODES,
+        rankdir: pipeline.prep.rankdir,
+      },
+    )
   let x_seed =
     build_x_seed_data(
       {
