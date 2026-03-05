@@ -2,6 +2,7 @@
   "import": [
     "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
     "moonbitlang/core/strconv"
   ]
 }

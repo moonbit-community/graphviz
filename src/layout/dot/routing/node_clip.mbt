@@ -1,23 +1,3 @@
-///|
-fn clip_to_rect(
-  center : @geom.Point,
-  size : NodeSize,
-  target : @geom.Point,
-) -> @geom.Point {
-  let dx = target.x - center.x
-  let dy = target.y - center.y
-  if dx == 0.0 && dy == 0.0 {
-    return center
-  }
-  let half_w = size.width_pt / 2.0
-  let half_h = size.height_pt / 2.0
-  let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
-  let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
-  let t = if tx < ty { tx } else { ty }
-  { x: center.x + dx * t, y: center.y + dy * t }
-}
-
-///|
 fn clip_to_ellipse(
   center : @geom.Point,
   size : NodeSize,
@@ -308,7 +288,7 @@ fn clip_to_polygon_shape(
       },
     )
   if vertices.length() < 3 {
-    return clip_to_rect(center, size, target)
+    return @dot_shared.clip_to_rect(center, size, target)
   }
   let dx = target.x - center.x
   let dy = target.y - center.y
@@ -342,7 +322,7 @@ fn clip_to_polygon_shape(
   if found {
     @edge_spline.point(center.x + dx * best_t, center.y + dy * best_t)
   } else {
-    clip_to_rect(center, size, target)
+    @dot_shared.clip_to_rect(center, size, target)
   }
 }
 
@@ -376,7 +356,7 @@ fn clip_to_node_shape(
               skew: params.skew,
             },
           )
-        None => clip_to_rect(center, size, target)
+        None => @dot_shared.clip_to_rect(center, size, target)
       }
   }
 }

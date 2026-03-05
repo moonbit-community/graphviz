@@ -82,8 +82,8 @@ fn line_spline(
   tail_size : NodeSize,
   head_size : NodeSize,
 ) -> @geom.Spline {
-  let start = clip_to_rect(tail_pos, tail_size, head_pos)
-  let end = clip_to_rect(head_pos, head_size, tail_pos)
+  let start = @dot_shared.clip_to_rect(tail_pos, tail_size, head_pos)
+  let end = @dot_shared.clip_to_rect(head_pos, head_size, tail_pos)
   {
     start: Some(start),
     end: Some(end),
