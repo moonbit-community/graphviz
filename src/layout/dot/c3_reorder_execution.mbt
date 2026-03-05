@@ -14,7 +14,7 @@ fn run_cluster_rank_reorder(
     return None
   }
   let seeded_cluster_groups =
-    build_cluster_rank_seeded_groups(
+    @ordering.build_cluster_rank_seeded_groups(
       local_context,
       input_phase_output,
       dispatch_context.fixed_ranks,
