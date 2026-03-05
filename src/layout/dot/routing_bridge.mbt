@@ -202,6 +202,27 @@ fn build_routing_edge_layout_for_dot(
 }
 
 ///|
+fn build_routing_callbacks_for_dot(
+  edge_layout_input : @routing.EdgeLayoutInput,
+) -> @routing.RoutingCallbacks {
+  {
+    recover_slack_vnodes_fn: recover_slack_vnodes,
+    build_edge_layout_fn: (base, spline, spline_result) =>
+      build_routing_edge_layout_for_dot(
+        {
+          base,
+          spline,
+          spline_result,
+          edge_layout_input,
+        },
+      ),
+    self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
+    self_edge_label_width_fn: self_edge_label_width_pt,
+    edge_port_label_pos_fn: routing_edge_port_label_pos,
+  }
+}
+
+///|
 fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
   let layout_rankdir = RankDir::TB
   let edge_layout_input : @routing.EdgeLayoutInput = {
@@ -245,21 +266,7 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
           input.routing_label_ports_map,
           input.routing_label_ports_raw,
         ),
-      callbacks: {
-        recover_slack_vnodes_fn: recover_slack_vnodes,
-        build_edge_layout_fn: (base, spline, spline_result) =>
-          build_routing_edge_layout_for_dot(
-            {
-              base,
-              spline,
-              spline_result,
-              edge_layout_input,
-            },
-          ),
-        self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
-        self_edge_label_width_fn: self_edge_label_width_pt,
-        edge_port_label_pos_fn: routing_edge_port_label_pos,
-      },
+      callbacks: build_routing_callbacks_for_dot(edge_layout_input),
     },
   )
 }
