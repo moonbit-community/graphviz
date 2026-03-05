@@ -300,16 +300,8 @@ fn build_ordering_pipeline_context(
 ) -> OrderingPipelineContext {
   let runtime_context =
     build_ordering_context(input)
-  let edge_port_positions =
-    compute_edge_port_positions(
-      input.nodes,
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-      input.order_sizes,
-    )
-  let edge_port_orders =
-    compute_edge_port_orders(
+  let edge_port_samples =
+    build_edge_port_sample_bundle(
       input.nodes,
       input.edges,
       input.edge_tail,
@@ -322,16 +314,8 @@ fn build_ordering_pipeline_context(
       input.edge_tail,
       input.edge_head,
     )
-  let order_edge_port_positions =
-    compute_edge_port_positions(
-      input.nodes,
-      dedup_order_edges.order_edges,
-      dedup_order_edges.order_edge_tail,
-      dedup_order_edges.order_edge_head,
-      input.order_sizes,
-    )
-  let order_edge_port_orders =
-    compute_edge_port_orders(
+  let order_edge_port_samples =
+    build_edge_port_sample_bundle(
       input.nodes,
       dedup_order_edges.order_edges,
       dedup_order_edges.order_edge_tail,
@@ -342,17 +326,17 @@ fn build_ordering_pipeline_context(
     @ordering.build_ordering_edge_port_data(
       {
         edges: input.edges,
-        edge_tail_port_x: edge_port_positions.tail_values,
-        edge_head_port_x: edge_port_positions.head_values,
-        edge_tail_port_order: edge_port_orders.tail_values,
-        edge_head_port_order: edge_port_orders.head_values,
+        edge_tail_port_x: edge_port_samples.tail_port_x,
+        edge_head_port_x: edge_port_samples.head_port_x,
+        edge_tail_port_order: edge_port_samples.tail_port_order,
+        edge_head_port_order: edge_port_samples.head_port_order,
         order_edges: dedup_order_edges.order_edges,
         order_edge_tail: dedup_order_edges.order_edge_tail,
         order_edge_head: dedup_order_edges.order_edge_head,
-        order_edge_tail_port_x: order_edge_port_positions.tail_values,
-        order_edge_head_port_x: order_edge_port_positions.head_values,
-        order_edge_tail_port_order: order_edge_port_orders.tail_values,
-        order_edge_head_port_order: order_edge_port_orders.head_values,
+        order_edge_tail_port_x: order_edge_port_samples.tail_port_x,
+        order_edge_head_port_x: order_edge_port_samples.head_port_x,
+        order_edge_tail_port_order: order_edge_port_samples.tail_port_order,
+        order_edge_head_port_order: order_edge_port_samples.head_port_order,
       },
     )
   let graphviz_flip = input.rankdir == RankDir::RL || input.rankdir == RankDir::LR

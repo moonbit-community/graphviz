@@ -7,6 +7,16 @@ priv struct EdgePortSamples {
 }
 
 ///|
+/// Graphviz parity: edge-port sample bundle keeps x-offset and port-order
+/// arrays aligned by edge traversal order for tie-break and median passes.
+priv struct EdgePortSampleBundle {
+  tail_port_x : Array[Double]
+  head_port_x : Array[Double]
+  tail_port_order : Array[Double]
+  head_port_order : Array[Double]
+}
+
+///|
 /// Graphviz parity: edge-port sampling context keeps rankdir lookup, node
 /// index, and per-node port offsets fixed before edge endpoint iteration.
 /// Do not change behavior without updating fixtures/tests.
@@ -75,46 +85,38 @@ fn compute_edge_port_samples(
 }
 
 ///|
-/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
+/// Graphviz parity: x-offset and port-order endpoint samples are computed from
+/// the same endpoint projection/context snapshot for deterministic pairing.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_edge_port_positions(
+fn build_edge_port_sample_bundle(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-) -> EdgePortSamples {
-  // Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
-  // sequence order after endpoint-name/port remap.
-  compute_edge_port_samples(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    sizes,
-    edge_port_offset,
-  )
-}
-
-///|
-/// Graphviz parity: port order fractions for mincross medians
-/// (shapes.c compassPort + mincross.c VAL/MC_SCALE).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_edge_port_orders(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
-) -> EdgePortSamples {
-  // Graphviz parity: per-edge tail/head port-order samples are emitted in edge
-  // sequence order using the same endpoint remap as tie-break x-offsets.
-  compute_edge_port_samples(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    sizes,
-    edge_port_order,
-  )
+) -> EdgePortSampleBundle {
+  let port_positions =
+    compute_edge_port_samples(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      sizes,
+      edge_port_offset,
+    )
+  let port_orders =
+    compute_edge_port_samples(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      sizes,
+      edge_port_order,
+    )
+  {
+    tail_port_x: port_positions.tail_values,
+    head_port_x: port_positions.head_values,
+    tail_port_order: port_orders.tail_values,
+    head_port_order: port_orders.head_values,
+  }
 }

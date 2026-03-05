@@ -230,32 +230,16 @@ fn build_x_seed_data(
     } else {
       x_base_sizes
     }
-  let x_port_positions =
-    compute_edge_port_positions(
+  let x_port_samples =
+    build_edge_port_sample_bundle(
       pipeline.prep.nodes,
       pipeline.prep.edges,
       pipeline.rank_data.edge_tail,
       pipeline.rank_data.edge_head,
       x_order_sizes,
     )
-  let x_port_orders =
-    compute_edge_port_orders(
-      pipeline.prep.nodes,
-      pipeline.prep.edges,
-      pipeline.rank_data.edge_tail,
-      pipeline.rank_data.edge_head,
-      x_order_sizes,
-    )
-  let order_edge_port_positions =
-    compute_edge_port_positions(
-      pipeline.prep.nodes,
-      pipeline.ordering.order_edges,
-      pipeline.ordering.order_edge_tail,
-      pipeline.ordering.order_edge_head,
-      x_order_sizes,
-    )
-  let order_edge_port_orders =
-    compute_edge_port_orders(
+  let order_edge_port_samples =
+    build_edge_port_sample_bundle(
       pipeline.prep.nodes,
       pipeline.ordering.order_edges,
       pipeline.ordering.order_edge_tail,
@@ -278,14 +262,14 @@ fn build_x_seed_data(
       vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
       x_base_sizes,
       x_order_sizes,
-      x_edge_tail_port_x: x_port_positions.tail_values,
-      x_edge_head_port_x: x_port_positions.head_values,
-      x_edge_tail_port_order: x_port_orders.tail_values,
-      x_edge_head_port_order: x_port_orders.head_values,
-      order_edge_tail_port_x: order_edge_port_positions.tail_values,
-      order_edge_head_port_x: order_edge_port_positions.head_values,
-      order_edge_tail_port_order: order_edge_port_orders.tail_values,
-      order_edge_head_port_order: order_edge_port_orders.head_values,
+      x_edge_tail_port_x: x_port_samples.tail_port_x,
+      x_edge_head_port_x: x_port_samples.head_port_x,
+      x_edge_tail_port_order: x_port_samples.tail_port_order,
+      x_edge_head_port_order: x_port_samples.head_port_order,
+      order_edge_tail_port_x: order_edge_port_samples.tail_port_x,
+      order_edge_head_port_x: order_edge_port_samples.head_port_x,
+      order_edge_tail_port_order: order_edge_port_samples.tail_port_order,
+      order_edge_head_port_order: order_edge_port_samples.head_port_order,
       vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
       has_clusters: pipeline.cluster_meta.has_clusters,
       cluster_keys: pipeline.cluster_meta.cluster_keys,
