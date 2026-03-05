@@ -630,7 +630,12 @@ fn build_route_base_deps_for_dot(
 ) -> @routing.RouteBaseDeps {
   {
     node_size_for_missing: (node) => node_size(node, record_orientation),
-    edge_mid_label_metrics: edge_mid_label_metrics_for_routing,
+    edge_mid_label_metrics:
+      (edge) =>
+        match edge_mid_label_metrics(edge) {
+          Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+          None => None
+        },
     record_port_path_box,
     port_geometry:
       (node_name, port, node_pos, node_size) => {
@@ -676,7 +681,14 @@ fn build_route_base_deps_for_dot(
       (port, port_rect, node_pos, node_size) =>
         port_side_for_edge(port, port_rect, node_pos, node_size, None),
     layout_port_offset,
-    edge_dir_for: edge_dir_for_routing,
+    edge_dir_for:
+      (edge, kind) =>
+        match edge_dir_for(edge, kind) {
+          EdgeDir::Forward => @routing.RouteEdgeDir::Forward
+          EdgeDir::Back => @routing.RouteEdgeDir::Back
+          EdgeDir::Both => @routing.RouteEdgeDir::Both
+          EdgeDir::None => @routing.RouteEdgeDir::None
+        },
     node_cluster_key: @clustering.node_cluster_key,
     node_local_cluster_key: @clustering.node_local_cluster_key,
   }
