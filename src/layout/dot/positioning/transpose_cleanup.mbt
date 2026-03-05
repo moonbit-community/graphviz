@@ -13,27 +13,6 @@ pub struct XposTransposeCleanupInput {
 }
 
 ///|
-pub fn build_xpos_transpose_cleanup_input(
-  nodes : Array[@cgraph.Node],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
-) -> XposTransposeCleanupInput {
-  {
-    nodes,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    ranks,
-    edge_vnodes,
-    vnode_ranks,
-  }
-}
-
-///|
 /// Graphviz parity: transpose cleanup performs two limited passes in fixed
 /// order (forward then reverse), matching Graphviz fixture behavior.
 /// Do not change behavior without updating fixtures/tests.
