@@ -1,9 +1,4 @@
 ///|
-fn is_edge_vnode_name_for_xpos(name : String) -> Bool {
-  @shared.is_edge_vnode_name(name)
-}
-
-///|
 /// Graphviz parity: xpos nlist order keeps clustered reverse-rank traversal,
 /// vnode-first ordering, and LR/RL source-order fast path aligned with
 /// position.c/create_aux_edges.
@@ -65,7 +60,7 @@ pub fn build_xpos_nlist_order(
       while name_idx > 0 {
         name_idx = name_idx - 1
         let name = names[name_idx]
-        if !is_edge_vnode_name_for_xpos(name) {
+        if !@shared.is_edge_vnode_name(name) {
           continue
         }
         let name_cluster = input.cluster_keys.get(name).unwrap_or_default()
@@ -78,7 +73,7 @@ pub fn build_xpos_nlist_order(
       while name_idx > 0 {
         name_idx = name_idx - 1
         let name = names[name_idx]
-        if is_edge_vnode_name_for_xpos(name) {
+        if @shared.is_edge_vnode_name(name) {
           continue
         }
         let name_cluster = input.cluster_keys.get(name).unwrap_or_default()
