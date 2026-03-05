@@ -358,22 +358,59 @@ fn build_ordering_pipeline_context(
 ) -> OrderingPipelineContext {
   let runtime_context =
     build_ordering_context(input)
-  let edge_port_data =
-    @ordering.build_ordering_edge_port_data(
+  let edge_port_positions =
+    compute_edge_port_positions(
       input.nodes,
       input.edges,
       input.edge_tail,
       input.edge_head,
       input.order_sizes,
-      (nodes, edges, edge_tail, edge_head, sizes) => {
-        let samples =
-          compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
-      },
-      (nodes, edges, edge_tail, edge_head, sizes) => {
-        let samples =
-          compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
+    )
+  let edge_port_orders =
+    compute_edge_port_orders(
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.order_sizes,
+    )
+  let dedup_order_edges =
+    @ordering.dedup_ordering_edges(
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+    )
+  let order_edge_port_positions =
+    compute_edge_port_positions(
+      input.nodes,
+      dedup_order_edges.order_edges,
+      dedup_order_edges.order_edge_tail,
+      dedup_order_edges.order_edge_head,
+      input.order_sizes,
+    )
+  let order_edge_port_orders =
+    compute_edge_port_orders(
+      input.nodes,
+      dedup_order_edges.order_edges,
+      dedup_order_edges.order_edge_tail,
+      dedup_order_edges.order_edge_head,
+      input.order_sizes,
+    )
+  let edge_port_data =
+    @ordering.build_ordering_edge_port_data(
+      {
+        edges: input.edges,
+        edge_tail_port_x: edge_port_positions.tail_values,
+        edge_head_port_x: edge_port_positions.head_values,
+        edge_tail_port_order: edge_port_orders.tail_values,
+        edge_head_port_order: edge_port_orders.head_values,
+        order_edges: dedup_order_edges.order_edges,
+        order_edge_tail: dedup_order_edges.order_edge_tail,
+        order_edge_head: dedup_order_edges.order_edge_head,
+        order_edge_tail_port_x: order_edge_port_positions.tail_values,
+        order_edge_head_port_x: order_edge_port_positions.head_values,
+        order_edge_tail_port_order: order_edge_port_orders.tail_values,
+        order_edge_head_port_order: order_edge_port_orders.head_values,
       },
     )
   let reorder_setup =
