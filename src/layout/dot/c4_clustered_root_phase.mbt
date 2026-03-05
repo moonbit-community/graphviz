@@ -52,15 +52,11 @@ fn run_clustered_root_phase(
 ) -> ClusteredRootPhaseOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
-  @ordering.run_clustered_root_phase_stage_from_sources(
-    {
-      root_rank_order_phase_base_sources:
+  let root_phase_sources =
+    @ordering.build_clustered_root_phase_stage_sources(
       {
         reorder_setup,
-        class2_data: reorder_setup.class2_data,
-        order_rank_keys: pre_root_stage.reorder_context.order_rank_keys,
-        order_cluster_keys: pre_root_stage.order_cluster_keys,
-        order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+        pre_root_stage,
         edges: dispatch_context.edges,
         edge_tail: dispatch_context.edge_tail,
         edge_head: dispatch_context.edge_head,
@@ -70,47 +66,22 @@ fn run_clustered_root_phase(
         ranks: dispatch_context.ranks,
         rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
         rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-        order_sizes_out: pre_root_stage.order_sizes_out,
         nodesep_pt: dispatch_context.nodesep_pt,
         has_edge_labels: dispatch_context.has_edge_labels,
         port_order_positions: dispatch_context.port_order_positions,
         port_order_contrib: dispatch_context.port_order_contrib,
-        order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        graph: dispatch_context.graph,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
       },
-      order_groups_for_root_phase: pre_root_stage.order_groups,
-      root_and_cluster_stage_sources:
-        {
-          call_input_sources:
-            {
-              reorder_setup: dispatch_context.reorder_setup,
-              reorder_context: pre_root_stage.reorder_context,
-              materialized: pre_root_stage.materialized,
-              order_groups: pre_root_stage.order_groups,
-              order_cluster_keys: pre_root_stage.order_cluster_keys,
-              order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-              order_sizes_out: pre_root_stage.order_sizes_out,
-              rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-              rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-              nodesep_pt: dispatch_context.nodesep_pt,
-              has_edge_labels: dispatch_context.has_edge_labels,
-              port_order_positions: dispatch_context.port_order_positions,
-              port_order_contrib: dispatch_context.port_order_contrib,
-              cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-              root_groups_override: None,
-            },
-          order_with_clusters: reorder_setup.order_with_clusters,
-          graph: dispatch_context.graph,
-          cluster_order: dispatch_context.cluster_meta.cluster_order,
-          cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-          intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-          flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-          node_order: pre_root_stage.reorder_context.order_node_order,
-          ranks: dispatch_context.ranks,
-          vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-          vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-          vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-        },
-    },
+    )
+  @ordering.run_clustered_root_phase_stage_from_sources(
+    root_phase_sources,
     @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
   )
 }
@@ -127,59 +98,52 @@ fn run_clustered_finalize_phase(
   pre_root_stage : ClusteredPreRootData,
   root_phase_output : ClusteredRootPhaseOutput,
 ) -> OrderingDispatchOutput {
-  let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
-  let finalize_output =
-    @ordering.run_clustered_finalize_stage_from_root_phase_sources(
+  let finalize_sources =
+    @ordering.build_clustered_finalize_stage_from_sources(
       {
         phase_base: root_phase_output.root_rank_order_phase_base,
         root_cluster_stage: root_phase_output.root_cluster_stage,
-        order_cluster_keys: pre_root_stage.order_cluster_keys,
-        order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+        root_tail_order_override: root_phase_output.root_tail_order_override,
+        pre_root_stage,
         real_nodes: runtime_context.real_nodes,
-        reorder_setup,
-        order_rank_keys: pre_root_stage.reorder_context.order_rank_keys,
-        remincross_source_input:
-          {
-            ratio: dispatch_context.graph.get_attr("ratio").unwrap_or_default(),
-            edges: dispatch_context.edges,
-            edge_tail: dispatch_context.edge_tail,
-            edge_head: dispatch_context.edge_head,
-            edge_reversed: dispatch_context.edge_reversed,
-            edge_tail_port_x: dispatch_context.edge_port_data.edge_tail_port_x,
-            edge_head_port_x: dispatch_context.edge_port_data.edge_head_port_x,
-            edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
-            edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
-            ranks: dispatch_context.ranks,
-            reorder_setup,
-            creation_order: pre_root_stage.reorder_context.creation_order,
-            cluster_order: dispatch_context.cluster_meta.cluster_order,
-            cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-            intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-            local_cluster_order: runtime_context.local_cluster_order,
-            cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-            cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-            cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-            cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-            rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-            rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-            edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-            vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-            vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-            vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-            order_sizes: dispatch_context.order_sizes,
-            rank_same_constraints: runtime_context.rank_same_constraints,
-            ordered_with_vnodes:
-              root_phase_output.root_cluster_stage.ordered_with_vnodes,
-            real_nodes: runtime_context.real_nodes,
-            root_tail_order_override: root_phase_output.root_tail_order_override,
-            root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
-            nodesep_pt: dispatch_context.nodesep_pt,
-            has_edge_labels: dispatch_context.has_edge_labels,
-            port_order_positions: dispatch_context.port_order_positions,
-            port_order_contrib: dispatch_context.port_order_contrib,
-          },
+        ratio: dispatch_context.graph.get_attr("ratio").unwrap_or_default(),
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        edge_reversed: dispatch_context.edge_reversed,
+        edge_tail_port_x: dispatch_context.edge_port_data.edge_tail_port_x,
+        edge_head_port_x: dispatch_context.edge_port_data.edge_head_port_x,
+        edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
+        edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
+        ranks: dispatch_context.ranks,
+        reorder_setup: dispatch_context.reorder_setup,
+        local_cluster_order: runtime_context.local_cluster_order,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        order_sizes: dispatch_context.order_sizes,
+        rank_same_constraints: runtime_context.rank_same_constraints,
+        root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
       },
+    )
+  let finalize_output =
+    @ordering.run_clustered_finalize_stage_from_root_phase_sources(
+      finalize_sources,
       @ordering.build_remincross_snapshot_capture_callback(
         @dot_shared.edge_xpenalty,
       ),

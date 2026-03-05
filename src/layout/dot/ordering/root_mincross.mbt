@@ -987,6 +987,104 @@ pub(all) struct ClusteredRootPhaseStageSources {
 }
 
 ///|
+/// Graphviz parity: clustered root-phase source bundle assembly keeps pre-root
+/// snapshots and root-stage metadata grouped before deterministic stage run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredRootPhaseStageBuildSources {
+  reorder_setup : OrderingReorderSetup
+  pre_root_stage : ClusteredPreRootStageOutput
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  cluster_keys : Map[String, String]
+  edge_vnodes : Map[String, Array[String]]
+  vnodes_by_rank : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graph : @cgraph.Graph
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @shared.NodeSize]
+}
+
+///|
+/// Graphviz parity: clustered root-phase source assembly keeps root-rank-order
+/// base sources and root+cluster stage sources paired from one pre-root
+/// snapshot without positional argument drift.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_root_phase_stage_sources(
+  sources : ClusteredRootPhaseStageBuildSources,
+) -> ClusteredRootPhaseStageSources {
+  {
+    root_rank_order_phase_base_sources:
+      {
+        reorder_setup: sources.reorder_setup,
+        class2_data: sources.reorder_setup.class2_data,
+        order_rank_keys: sources.pre_root_stage.reorder_context.order_rank_keys,
+        order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
+        order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
+        edges: sources.edges,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+        cluster_keys: sources.cluster_keys,
+        edge_vnodes: sources.edge_vnodes,
+        vnodes_by_rank: sources.vnodes_by_rank,
+        ranks: sources.ranks,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        order_sizes_out: sources.pre_root_stage.order_sizes_out,
+        nodesep_pt: sources.nodesep_pt,
+        has_edge_labels: sources.has_edge_labels,
+        port_order_positions: sources.port_order_positions,
+        port_order_contrib: sources.port_order_contrib,
+        order_flat_constraints: sources.flat_constraints,
+      },
+    order_groups_for_root_phase: sources.pre_root_stage.order_groups,
+    root_and_cluster_stage_sources:
+      {
+        call_input_sources:
+          {
+            reorder_setup: sources.reorder_setup,
+            reorder_context: sources.pre_root_stage.reorder_context,
+            materialized: sources.pre_root_stage.materialized,
+            order_groups: sources.pre_root_stage.order_groups,
+            order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
+            order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
+            order_sizes_out: sources.pre_root_stage.order_sizes_out,
+            rank_same_groups: sources.rank_same_groups,
+            rank_same_order: sources.rank_same_order,
+            nodesep_pt: sources.nodesep_pt,
+            has_edge_labels: sources.has_edge_labels,
+            port_order_positions: sources.port_order_positions,
+            port_order_contrib: sources.port_order_contrib,
+            cluster_keys: sources.cluster_keys,
+            root_groups_override: None,
+          },
+        order_with_clusters: sources.reorder_setup.order_with_clusters,
+        graph: sources.graph,
+        cluster_order: sources.cluster_order,
+        cluster_parents: sources.cluster_parents,
+        intercluster_keys: sources.intercluster_keys,
+        flat_constraints: sources.flat_constraints,
+        node_order: sources.pre_root_stage.reorder_context.order_node_order,
+        ranks: sources.ranks,
+        vnode_ranks: sources.vnode_ranks,
+        vnode_clusters: sources.vnode_clusters,
+        vnode_sizes: sources.vnode_sizes,
+      },
+  }
+}
+
+///|
 /// Graphviz parity: clustered root-phase stage root-groups override is applied
 /// only to root+cluster stage call-input sources, keeping all other snapshots
 /// unchanged.

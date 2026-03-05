@@ -339,6 +339,108 @@ pub(all) struct ClusteredFinalizeStageRootSources {
 }
 
 ///|
+/// Graphviz parity: clustered finalize stage source assembly keeps pre-root
+/// snapshots, root-phase output, and ReMincross context grouped before one
+/// deterministic finalize run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredFinalizeStageBuildSources {
+  phase_base : RootRankOrderPhaseBase
+  root_cluster_stage : RootAndClusterRanksOutput
+  root_tail_order_override : Array[String]?
+  pre_root_stage : ClusteredPreRootStageOutput
+  real_nodes : Map[String, Bool]
+  ratio : String
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  ranks : Map[String, Int]
+  reorder_setup : OrderingReorderSetup
+  local_cluster_order : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  cluster_parents : Map[String, String?]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_flat_constraints : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_sizes : Map[String, @shared.NodeSize]
+  order_sizes : Map[String, @shared.NodeSize]
+  rank_same_constraints : Map[String, Bool]
+  root_cluster : String
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
+/// Graphviz parity: clustered finalize stage source bundle is assembled from
+/// one root/pre-root snapshot without changing ReMincross input field mapping.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_finalize_stage_from_sources(
+  sources : ClusteredFinalizeStageBuildSources,
+) -> ClusteredFinalizeStageRootSources {
+  {
+    phase_base: sources.phase_base,
+    root_cluster_stage: sources.root_cluster_stage,
+    order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
+    real_nodes: sources.real_nodes,
+    reorder_setup: sources.reorder_setup,
+    order_rank_keys: sources.pre_root_stage.reorder_context.order_rank_keys,
+    remincross_source_input:
+      {
+        ratio: sources.ratio,
+        edges: sources.edges,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+        edge_reversed: sources.edge_reversed,
+        edge_tail_port_x: sources.edge_tail_port_x,
+        edge_head_port_x: sources.edge_head_port_x,
+        edge_tail_port_order: sources.edge_tail_port_order,
+        edge_head_port_order: sources.edge_head_port_order,
+        ranks: sources.ranks,
+        reorder_setup: sources.reorder_setup,
+        creation_order: sources.pre_root_stage.reorder_context.creation_order,
+        cluster_order: sources.cluster_order,
+        cluster_keys: sources.cluster_keys,
+        intercluster_keys: sources.intercluster_keys,
+        local_cluster_order: sources.local_cluster_order,
+        cluster_parents: sources.cluster_parents,
+        cluster_min_rank: sources.cluster_min_rank,
+        cluster_max_rank: sources.cluster_max_rank,
+        cluster_flat_constraints: sources.cluster_flat_constraints,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        edge_vnodes: sources.edge_vnodes,
+        vnode_ranks: sources.vnode_ranks,
+        vnodes_by_rank: sources.vnodes_by_rank,
+        vnode_sizes: sources.vnode_sizes,
+        order_sizes: sources.order_sizes,
+        rank_same_constraints: sources.rank_same_constraints,
+        ordered_with_vnodes: sources.root_cluster_stage.ordered_with_vnodes,
+        real_nodes: sources.real_nodes,
+        root_tail_order_override: sources.root_tail_order_override,
+        root_cluster: sources.root_cluster,
+        nodesep_pt: sources.nodesep_pt,
+        has_edge_labels: sources.has_edge_labels,
+        port_order_positions: sources.port_order_positions,
+        port_order_contrib: sources.port_order_contrib,
+      },
+  }
+}
+
+///|
 /// Graphviz parity: clustered finalize stage derives root-phase cleanup maps,
 /// builds ReMincross context from one source snapshot, then runs finalize
 /// group cleanup + startpass=2 reorder in fixed order.
