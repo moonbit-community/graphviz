@@ -196,16 +196,21 @@ pub(all) struct EdgeLayoutInput {
 }
 
 ///|
+pub(all) struct RecoverSlackVnodesInput {
+  edge : @cgraph.Edge
+  ordered_vnodes : Array[String]
+  boxes : Array[@geom.Rect]
+  ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  adjacency : @routesplines.PathAdjacency
+}
+
+///|
 pub type RecoverSlackVnodesFn = (
-  @cgraph.Edge,
-  Array[String],
-  Array[@geom.Rect],
-  Map[String, Int],
-  Map[String, Int],
-  Map[Int, Double],
-  Map[String, @geom.Point],
-  Map[String, @dot_shared.NodeSize],
-  @routesplines.PathAdjacency,
+  RecoverSlackVnodesInput,
 ) -> Unit
 
 ///|

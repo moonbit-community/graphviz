@@ -78,15 +78,17 @@ fn recover_pathplan_slack(
           recover_input.base.head_rank,
         )
       (recover_input.callbacks.recover_slack_vnodes_fn)(
-        recover_input.edge,
-        ordered_vnodes,
-        segment.boxes,
-        recover_input.input.ranks,
-        recover_input.input.vnode_info.vnode_ranks,
-        recover_input.input.rank_y,
-        recover_input.input.vnode_positions,
-        recover_input.input.vnode_info.vnode_sizes,
-        recover_input.input.routing_context.path_adjacency,
+        {
+          edge: recover_input.edge,
+          ordered_vnodes,
+          boxes: segment.boxes,
+          ranks: recover_input.input.ranks,
+          vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
+          rank_y: recover_input.input.rank_y,
+          vnode_positions: recover_input.input.vnode_positions,
+          vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+          adjacency: recover_input.input.routing_context.path_adjacency,
+        },
       )
       did_recover = true
     }
@@ -107,15 +109,17 @@ fn recover_pathplan_slack(
     )
   let ordered_vnodes = ordered_vnodes_for_edge(recover_input.base)
   (recover_input.callbacks.recover_slack_vnodes_fn)(
-    recover_input.edge,
-    ordered_vnodes,
-    limited_boxes,
-    recover_input.input.ranks,
-    recover_input.input.vnode_info.vnode_ranks,
-    recover_input.input.rank_y,
-    recover_input.input.vnode_positions,
-    recover_input.input.vnode_info.vnode_sizes,
-    recover_input.input.routing_context.path_adjacency,
+    {
+      edge: recover_input.edge,
+      ordered_vnodes,
+      boxes: limited_boxes,
+      ranks: recover_input.input.ranks,
+      vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
+      rank_y: recover_input.input.rank_y,
+      vnode_positions: recover_input.input.vnode_positions,
+      vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+      adjacency: recover_input.input.routing_context.path_adjacency,
+    },
   )
   recover_input.recovered_slack_keys[recover_key] = true
 }
