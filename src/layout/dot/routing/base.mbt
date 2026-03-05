@@ -47,20 +47,6 @@ fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
-fn routing_env_flag_enabled(
-  value : String?,
-  default_enabled : Bool,
-) -> Bool {
-  match value {
-    Some(raw) => {
-      let lower = raw.to_lower()
-      lower != "0" && lower != "false" && lower != "no"
-    }
-    None => default_enabled
-  }
-}
-
-///|
 fn size_for_name_or_node(
   sizes : Map[String, NodeSize],
   name : String,
@@ -574,7 +560,7 @@ fn build_edge_route_base(
     force_segmented_base ||
     (is_flat_edge && has_vnodes && mid_label_width_pt > 0.0)
   let use_pathplan =
-    routing_env_flag_enabled(@sys.get_env_var("DOT_USE_PATHPLAN"), true)
+    @dot_shared.env_flag_enabled(@sys.get_env_var("DOT_USE_PATHPLAN"), true)
   let allow_offset =
     !is_flat_edge &&
     !has_cluster &&

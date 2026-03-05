@@ -749,5 +749,7 @@ fn build_position_output_maps(
 
 ///|
 fn cluster_rounding_enabled() -> Bool {
-  env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"))
+  @dot_shared.env_flag_enabled_nonempty(
+    @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
+  )
 }

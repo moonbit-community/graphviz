@@ -2,13 +2,7 @@
 /// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 pub fn intercluster_alignment_enabled() -> Bool {
-  match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
+  @shared.env_flag_enabled(@sys.get_env_var("DOT_INTERCLUSTER_ALIGN"), false)
 }
 
 ///|
