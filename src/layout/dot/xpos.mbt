@@ -11,14 +11,7 @@ const CLUSTER_COMPACT_WEIGHT : Int = 128
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
 ///|
-priv struct ConstraintEdge {
-  tail : String
-  head : String
-  minlen : Int
-  weight : Int
-  tail_port : String?
-  head_port : String?
-}
+type ConstraintEdge = @positioning.ConstraintEdge
 
 ///|
 priv struct XposConstraintNodeSnapshot {
@@ -1421,31 +1414,6 @@ fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
 }
 
 ///|
-fn upsert_constraint_with_max(
-  constraints : Map[String, ConstraintEdge],
-  key : String,
-  tail : String,
-  head : String,
-  minlen : Int,
-  weight : Int,
-) -> Unit {
-  match constraints.get(key) {
-    Some(entry) => {
-      constraints[key] = {
-        tail: entry.tail,
-        head: entry.head,
-        minlen: if minlen > entry.minlen { minlen } else { entry.minlen },
-        weight: if weight > entry.weight { weight } else { entry.weight },
-        tail_port: None,
-        head_port: None,
-      }
-    }
-    None => {
-      constraints[key] = { tail, head, minlen, weight, tail_port: None, head_port: None }
-    }
-  }
-}
-
 ///|
 fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
   match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
@@ -1597,30 +1565,6 @@ fn add_segments_in_tail_order(
         real_by_name,
       )
     }
-  }
-}
-
-///|
-fn add_constraint_edge_if_present(
-  graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
-  edge : ConstraintEdge,
-) -> Unit {
-  match index.get(edge.tail) {
-    Some(tail_idx) =>
-      match index.get(edge.head) {
-        Some(head_idx) => {
-          let _ = @network_simplex.add_edge(
-            graph,
-            tail_idx,
-            head_idx,
-            edge.minlen,
-            edge.weight,
-          )
-        }
-        None => ()
-      }
-    None => ()
   }
 }
 
@@ -2048,7 +1992,7 @@ fn build_constraint_graph(
                 let weight = @dot_shared.edge_weight(edge)
                 let flat_key = "\{left}|\{right}"
                 if rank_adj_constraints.get(flat_key) is Some(_) {
-                  upsert_constraint_with_max(
+                  @positioning.upsert_constraint_with_max(
                     rank_adj_constraints,
                     flat_key,
                     left,
@@ -2057,7 +2001,7 @@ fn build_constraint_graph(
                     weight,
                   )
                 } else {
-                  upsert_constraint_with_max(
+                  @positioning.upsert_constraint_with_max(
                     flat_minlen_constraints,
                     flat_key,
                     left,
@@ -2162,12 +2106,12 @@ fn build_constraint_graph(
   )
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
-      Some(entry) => add_constraint_edge_if_present(graph, index, entry)
+      Some(entry) => @positioning.add_constraint_edge_if_present(graph, index, entry)
       None => ()
     }
   }
   for _flat_key, entry in flat_minlen_constraints {
-    add_constraint_edge_if_present(graph, index, entry)
+    @positioning.add_constraint_edge_if_present(graph, index, entry)
   }
   add_segments_in_tail_order(
     graph,
@@ -2213,7 +2157,7 @@ fn build_constraint_graph(
   for edge in extra_edges {
     let _ = edge.tail_port
     let _ = edge.head_port
-    add_constraint_edge_if_present(graph, index, edge)
+    @positioning.add_constraint_edge_if_present(graph, index, edge)
   }
   { graph, index }
 }
