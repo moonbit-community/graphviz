@@ -80,72 +80,80 @@ pub fn build_gdnlist_order(
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
+pub(all) struct OrderingReorderSetupInput {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+  vnode_count : Int
+  graphviz_flip : Bool
+  has_clusters : Bool
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  vnode_edge_vnodes : Map[String, Array[String]]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int]
+  cluster_parents : Map[String, String?]
+  edge_port_data : OrderingEdgePortData
+}
+
+///|
+/// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
+/// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
+/// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_reorder_setup(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  port_edge_nodes : Map[String, Bool],
-  vnode_count : Int,
-  graphviz_flip : Bool,
-  has_clusters : Bool,
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  cluster_keys : Map[String, String],
-  cluster_order : Array[String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  vnode_edge_vnodes : Map[String, Array[String]],
-  vnodes_by_rank : Map[Int, Array[String]],
-  vnode_ranks : Map[String, Int],
-  cluster_parents : Map[String, String?],
-  edge_port_data : OrderingEdgePortData,
+  input : OrderingReorderSetupInput,
 ) -> OrderingReorderSetup {
   let ordering_groups_base = apply_rank_same_order(
-    groups,
-    rank_same_groups,
-    rank_same_order,
-    node_order,
-    port_edge_nodes,
+    input.groups,
+    input.rank_same_groups,
+    input.rank_same_order,
+    input.node_order,
+    input.port_edge_nodes,
   )
   let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = vnode_count > 0
-  let order_with_clusters = has_clusters && cluster_min_rank.length() > 0
+  let order_with_vnodes = input.vnode_count > 0
+  let order_with_clusters = input.has_clusters && input.cluster_min_rank.length() > 0
   let flat_rank_constraints =
-    build_flat_rank_constraints(edge_tail, edge_head, ranks)
+    build_flat_rank_constraints(input.edge_tail, input.edge_head, input.ranks)
   let class2_data =
     build_ordering_class2_data(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      edge_port_data.edge_tail_port_x,
-      edge_port_data.edge_head_port_x,
-      edge_port_data.edge_tail_port_order,
-      edge_port_data.edge_head_port_order,
-      ranks,
-      vnode_edge_vnodes,
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.edge_out_order,
+      input.edge_port_data.edge_tail_port_x,
+      input.edge_port_data.edge_head_port_x,
+      input.edge_port_data.edge_tail_port_order,
+      input.edge_port_data.edge_head_port_order,
+      input.ranks,
+      input.vnode_edge_vnodes,
       order_with_vnodes,
       order_with_clusters,
-      cluster_keys,
-      cluster_order,
-      cluster_min_rank,
-      cluster_max_rank,
-      has_clusters,
+      input.cluster_keys,
+      input.cluster_order,
+      input.cluster_min_rank,
+      input.cluster_max_rank,
+      input.has_clusters,
       flat_rank_constraints,
-      graphviz_flip,
+      input.graphviz_flip,
     )
   let gdnlist_order =
     build_gdnlist_order(
       class2_data,
-      graphviz_flip,
-      cluster_order,
+      input.graphviz_flip,
+      input.cluster_order,
     )
   let nlist_order_index : Map[String, Int] = Map::new()
   let mut nlist_idx = 0
@@ -154,25 +162,25 @@ pub fn build_ordering_reorder_setup(
     nlist_idx = nlist_idx + 1
   }
   let vnode_order_keys_for_ordering =
-    if vnode_count <= 0 {
+    if input.vnode_count <= 0 {
       Map::new()
-    } else if has_clusters {
+    } else if input.has_clusters {
       build_vnode_order_keys(
-        edges,
-        edge_tail,
-        edge_head,
-        edge_reversed,
-        ranks,
+        input.edges,
+        input.edge_tail,
+        input.edge_head,
+        input.edge_reversed,
+        input.ranks,
         base_order_index,
-        cluster_keys,
-        cluster_parents,
-        vnode_edge_vnodes,
-        vnode_ranks,
+        input.cluster_keys,
+        input.cluster_parents,
+        input.vnode_edge_vnodes,
+        input.vnode_ranks,
       )
     } else {
       build_vnode_keys_from_nlist(
         ordering_groups_base,
-        vnodes_by_rank,
+        input.vnodes_by_rank,
         base_order_index,
         nlist_order_index,
         Map::new(),
@@ -184,7 +192,7 @@ pub fn build_ordering_reorder_setup(
     base_order_index,
     order_with_vnodes,
     order_with_clusters,
-    graphviz_flip,
+    graphviz_flip: input.graphviz_flip,
     flat_rank_constraints,
     class2_data,
     gdnlist_order,
