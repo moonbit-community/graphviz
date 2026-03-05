@@ -835,27 +835,13 @@ fn edge_port_label_pos(
   let edge = input.edge
   let spline = input.spline
   let head_p = input.is_head
-  let arrow_is_none = (value : String?) => {
-    match value {
-      Some(v) => v.trim().to_lower() == "none"
-      None => false
-    }
-  }
-  let dir = @dot_shared.edge_dir_for(edge, edge.tail().graph().kind())
   // Graphviz parity: map edge dir + arrow attrs to place_portlabel eflag/sflag.
+  let graph_kind = edge.tail().graph().kind()
   let marker_present =
     if head_p {
-      match dir {
-        @dot_shared.EdgeDir::Forward | @dot_shared.EdgeDir::Both =>
-          !arrow_is_none(edge.get_attr("arrowhead"))
-        _ => false
-      }
+      @dot_shared.edge_has_head_marker(edge, graph_kind)
     } else {
-      match dir {
-        @dot_shared.EdgeDir::Back | @dot_shared.EdgeDir::Both =>
-          !arrow_is_none(edge.get_attr("arrowtail"))
-        _ => false
-      }
+      @dot_shared.edge_has_tail_marker(edge, graph_kind)
     }
   match port_label_params(edge) {
     Some(params) =>

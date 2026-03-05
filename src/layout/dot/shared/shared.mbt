@@ -141,6 +141,30 @@ pub fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
 }
 
 ///|
+pub fn arrow_attr_is_none(value : String?) -> Bool {
+  match value {
+    Some(raw) => raw.trim().to_lower() == "none"
+    None => false
+  }
+}
+
+///|
+pub fn edge_has_head_marker(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> Bool {
+  match edge_dir_for(edge, kind) {
+    EdgeDir::Forward | EdgeDir::Both => !arrow_attr_is_none(edge.get_attr("arrowhead"))
+    _ => false
+  }
+}
+
+///|
+pub fn edge_has_tail_marker(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> Bool {
+  match edge_dir_for(edge, kind) {
+    EdgeDir::Back | EdgeDir::Both => !arrow_attr_is_none(edge.get_attr("arrowtail"))
+    _ => false
+  }
+}
+
+///|
 pub fn parse_double_or(value : String, fallback : Double) -> Double {
   try @strconv.parse_double(value) catch {
     _ => fallback

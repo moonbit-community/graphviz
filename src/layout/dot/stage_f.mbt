@@ -270,12 +270,6 @@ fn set_edge_label_pos_if_present(
 /// for graph/node/edge geometry and label positions.
 /// Do not change behavior without updating fixtures/tests.
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
-  let arrow_is_none = (value : String?) => {
-    match value {
-      Some(v) => v.trim().to_lower() == "none"
-      None => false
-    }
-  }
   let mut write_bb = self.graph.is_root()
   if !write_bb {
     match self.graph.name() {
@@ -347,18 +341,9 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   }
   for edge_layout in self.edges {
     let edge = edge_layout.edge
-    let dir = @dot_shared.edge_dir_for(edge, self.graph.kind())
     // Graphviz parity: omit e/s markers when arrowhead/arrowtail is none.
-    let include_tail = match dir {
-      @dot_shared.EdgeDir::Back | @dot_shared.EdgeDir::Both =>
-        !arrow_is_none(edge.get_attr("arrowtail"))
-      _ => false
-    }
-    let include_head = match dir {
-      @dot_shared.EdgeDir::Forward | @dot_shared.EdgeDir::Both =>
-        !arrow_is_none(edge.get_attr("arrowhead"))
-      _ => false
-    }
+    let include_tail = @dot_shared.edge_has_tail_marker(edge, self.graph.kind())
+    let include_head = @dot_shared.edge_has_head_marker(edge, self.graph.kind())
     let segments : Array[String] = []
     for spline in edge_layout.splines {
       let parts : Array[String] = []
