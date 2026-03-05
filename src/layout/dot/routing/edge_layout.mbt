@@ -70,15 +70,21 @@ fn edge_layout_attr_non_empty(
 }
 
 ///|
+priv struct EdgePortLabelPosForAttrInput {
+  edge : @cgraph.Edge
+  spline : @geom.Spline
+  attr_name : String
+  is_head : Bool
+  edge_port_label_pos_fn : EdgePortLabelPosFn
+}
+
+///|
 fn edge_port_label_pos_for_attr(
-  edge : @cgraph.Edge,
-  spline : @geom.Spline,
-  attr_name : String,
-  is_head : Bool,
-  edge_port_label_pos_fn : EdgePortLabelPosFn,
+  input : EdgePortLabelPosForAttrInput,
 ) -> @geom.Point? {
-  if edge_layout_attr_non_empty(edge, attr_name) {
-    edge_port_label_pos_fn(edge, spline, is_head)
+  let edge = input.edge
+  if edge_layout_attr_non_empty(edge, input.attr_name) {
+    (input.edge_port_label_pos_fn)(edge, input.spline, input.is_head)
   } else {
     None
   }
@@ -185,19 +191,23 @@ pub fn build_edge_layout(
   }
   let head_label_pos =
     edge_port_label_pos_for_attr(
-      edge,
-      spline,
-      "headlabel",
-      true,
-      deps.edge_port_label_pos_fn,
+      {
+        edge,
+        spline,
+        attr_name: "headlabel",
+        is_head: true,
+        edge_port_label_pos_fn: deps.edge_port_label_pos_fn,
+      },
     )
   let tail_label_pos =
     edge_port_label_pos_for_attr(
-      edge,
-      spline,
-      "taillabel",
-      false,
-      deps.edge_port_label_pos_fn,
+      {
+        edge,
+        spline,
+        attr_name: "taillabel",
+        is_head: false,
+        edge_port_label_pos_fn: deps.edge_port_label_pos_fn,
+      },
     )
   {
     edge,
