@@ -419,3 +419,46 @@ priv struct FlatLabelVnodeResult {
   flat_label_edge_vnodes : Map[String, String]
   flat_label_edges : Array[ConstraintEdge]
 }
+
+///|
+fn build_flat_label_vnodes_for_positioning(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  ordered_groups : Map[Int, Array[String]],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+  x_base_sizes : Map[String, NodeSize],
+  edge_cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  existing_names : Map[String, Bool],
+  vnode_info : @routing.EdgeVnodeInfo,
+  x_groups : Map[Int, Array[String]],
+) -> @positioning.FlatLabelVnodeBuildOutput {
+  let flat_label_vnodes = add_flat_label_vnodes(
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    ordered_groups,
+    nodesep_pt,
+    rankdir,
+    x_base_sizes,
+    edge_cluster_keys,
+    cluster_parents,
+    existing_names,
+    vnode_info,
+    x_groups,
+  )
+  let flat_label_ranks : Map[String, Int] = Map::new()
+  for name, info in flat_label_vnodes.flat_label_nodes {
+    flat_label_ranks[name] = info.rank
+  }
+  {
+    x_groups: flat_label_vnodes.x_groups,
+    flat_label_edges: flat_label_vnodes.flat_label_edges,
+    flat_label_ranks,
+    flat_label_edge_vnodes: flat_label_vnodes.flat_label_edge_vnodes,
+  }
+}

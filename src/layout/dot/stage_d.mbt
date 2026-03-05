@@ -308,7 +308,7 @@ fn build_flat_label_augmentation(
       vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
       build_flat_label_vnodes_fn:
         (existing_names, x_groups) => {
-          let flat_label_vnodes = add_flat_label_vnodes(
+          build_flat_label_vnodes_for_positioning(
             pipeline.prep.edges,
             pipeline.rank_data.edge_tail,
             pipeline.rank_data.edge_head,
@@ -323,16 +323,6 @@ fn build_flat_label_augmentation(
             pipeline.ordering.vnode_info,
             x_groups,
           )
-          let flat_label_ranks : Map[String, Int] = Map::new()
-          for name, info in flat_label_vnodes.flat_label_nodes {
-            flat_label_ranks[name] = info.rank
-          }
-          {
-            x_groups: flat_label_vnodes.x_groups,
-            flat_label_edges: flat_label_vnodes.flat_label_edges,
-            flat_label_ranks,
-            flat_label_edge_vnodes: flat_label_vnodes.flat_label_edge_vnodes,
-          }
         },
     },
   )
