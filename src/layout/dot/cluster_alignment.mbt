@@ -83,6 +83,22 @@ fn shift_graph_positions(
 }
 
 ///|
+fn collect_cluster_names(
+  graph : @cgraph.Graph,
+  out : Map[String, Bool],
+) -> Unit {
+  if @dot_shared.is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => out[name] = true
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_names(child, out)
+  }
+}
+
+///|
 fn adjust_cluster_positions(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
@@ -154,22 +170,4 @@ fn adjust_cluster_positions(
     return Some(round_bbox(current))
   }
   Some(current)
-}
-
-///|
-fn collect_cluster_bboxes(
-  subgraphs : Array[DotLayoutGraph],
-  out : Map[String, @geom.Rect],
-) -> Unit {
-  for layout in subgraphs {
-    if @dot_shared.is_cluster_graph(layout.graph) {
-      match layout.graph.name() {
-        Some(name) => out[name] = layout.bbox
-        None => ()
-      }
-    }
-    if layout.subgraphs.length() > 0 {
-      collect_cluster_bboxes(layout.subgraphs, out)
-    }
-  }
 }

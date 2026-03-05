@@ -286,22 +286,6 @@ fn cluster_key_from_skeleton(name : String) -> String? {
 }
 
 ///|
-fn collect_cluster_names(
-  graph : @cgraph.Graph,
-  out : Map[String, Bool],
-) -> Unit {
-  if @dot_shared.is_cluster_graph(graph) {
-    match graph.name() {
-      Some(name) => out[name] = true
-      None => ()
-    }
-  }
-  for child in graph.subgraphs() {
-    collect_cluster_names(child, out)
-  }
-}
-
-///|
 /// Graphviz parity: collapse_sets walks subgraphs and only recurses into
 /// non-cluster subgraphs when building the root cluster list.
 fn collect_cluster_names_order(

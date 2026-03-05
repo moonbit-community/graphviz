@@ -268,17 +268,6 @@ fn vnode_positions_from_edges(
 }
 
 ///|
-fn cluster_rounding_enabled() -> Bool {
-  match @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "" && lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
-}
-
-///|
 /// Graphviz parity: final node position projection maps x/y by graph node list
 /// order and defaults missing coordinates to 0.0 exactly as before.
 pub fn build_node_positions_map(
@@ -385,7 +374,7 @@ pub struct PositionOutputMaps {
 ///|
 /// Graphviz parity: final output map source bundle keeps dotted-edge
 /// alignment, cluster-boundary capture, vnode projection, and cluster-rounding
-/// callbacks grouped before one deterministic assembly pass.
+/// prerequisites grouped before one deterministic assembly pass.
 pub(all) struct PositionOutputBuildSources {
   has_clusters : Bool
   has_dotted_edges : Bool
@@ -403,23 +392,13 @@ pub(all) struct PositionOutputBuildSources {
   use_vnodes_for_xpos : Bool
   vnode_ranks : Map[String, Int]
   edge_vnodes : Map[String, Array[String]]
-  vnode_clusters : Map[String, String]
-  sizes : Map[String, @shared.NodeSize]
   cluster_ln_prefix : String
   cluster_rn_prefix : String
-  adjust_cluster_positions_fn : (
-    @cgraph.Graph,
-    Map[String, @geom.Point],
-    Map[String, @geom.Point],
-    Map[String, String],
-    Map[String, @shared.NodeSize],
-  ) -> @geom.Rect?
 }
 
 ///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
-/// cluster boundary capture, vnode projection, and rounding-adjust order
-/// unchanged.
+/// cluster boundary capture, and vnode projection order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_position_output_maps_from_sources(
   sources : PositionOutputBuildSources,
@@ -488,16 +467,6 @@ pub fn build_position_output_maps_from_sources(
       sources.x_positions,
       sources.y_positions,
     )
-  if sources.has_clusters && cluster_rounding_enabled() {
-    let _ =
-      (sources.adjust_cluster_positions_fn)(
-        sources.graph,
-        positions,
-        vnode_positions,
-        sources.vnode_clusters,
-        sources.sizes,
-      )
-  }
   {
     positions,
     vnode_positions,

@@ -282,6 +282,24 @@ fn compute_cluster_route_bboxes(
 }
 
 ///|
+fn collect_cluster_bboxes(
+  subgraphs : Array[DotLayoutGraph],
+  out : Map[String, @geom.Rect],
+) -> Unit {
+  for layout in subgraphs {
+    if @dot_shared.is_cluster_graph(layout.graph) {
+      match layout.graph.name() {
+        Some(name) => out[name] = layout.bbox
+        None => ()
+      }
+    }
+    if layout.subgraphs.length() > 0 {
+      collect_cluster_bboxes(layout.subgraphs, out)
+    }
+  }
+}
+
+///|
 priv struct RoutingSpatialData {
   nodes_out : Array[DotLayoutNode]
   label_ports_map : Map[String, Map[String, RecordPort]]
