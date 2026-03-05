@@ -1,5 +1,77 @@
 ///|
-/// Stage C Phase C4 split: clustered root phase helpers.
+/// Stage C Phase C3/C4 split: clustered pre-root + root phase helpers.
+
+///|
+/// Graphviz parity: clustered pre-root stage output carries grouped sizes,
+/// cluster skeleton maps, reorder context, and materialized edges unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredPreRootData {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  reorder_context : @ordering.OrderReorderContext
+  materialized : @ordering.OrderMaterializationData
+}
+
+///|
+/// Graphviz parity: clustered pre-root ordering preparation keeps order-group
+/// expansion, reorder context, and materialization sequence aligned to Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_pre_root(
+  dispatch_context : ClusteredDispatchContext,
+) -> ClusteredPreRootData {
+  let runtime_context = dispatch_context.runtime_context
+  let order_seed_stage =
+    @ordering.build_clustered_order_seed_stage_from_sources(
+      {
+        reorder_setup: dispatch_context.reorder_setup,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        order_sizes: dispatch_context.order_sizes,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+        skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      },
+    )
+  let order_groups = order_seed_stage.order_groups
+  let order_sizes_out = order_seed_stage.order_sizes_out
+  let order_cluster_keys = order_seed_stage.order_cluster_keys
+  let order_cluster_skeleton = order_seed_stage.order_cluster_skeleton
+  let materialized_stage =
+    @ordering.build_clustered_materialized_stage_from_sources(
+      {
+        reorder_setup: dispatch_context.reorder_setup,
+        class2_data: dispatch_context.reorder_setup.class2_data,
+        order_groups,
+        node_order: dispatch_context.node_order,
+        real_nodes: runtime_context.real_nodes,
+        has_clusters: dispatch_context.cluster_meta.has_clusters,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        port_edge_nodes: runtime_context.port_edge_nodes,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        nodes: dispatch_context.nodes,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+      },
+    )
+  let reorder_context = materialized_stage.reorder_context
+  let materialized = materialized_stage.materialized
+  {
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    reorder_context,
+    materialized,
+  }
+}
 
 ///|
 /// Graphviz parity: clustered root phase output carries root+cluster rank
