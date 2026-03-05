@@ -22,7 +22,7 @@ fn probe_vnode_tail_constraints_for_ordering(
 ) -> Unit {
   let _ =
     if vnode_info.vnode_ranks.length() > 0 {
-      build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
+      @ordering.build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
     } else {
       Map::new()
     }
