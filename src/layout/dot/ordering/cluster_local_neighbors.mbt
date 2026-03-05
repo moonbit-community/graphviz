@@ -1,21 +1,11 @@
 ///|
-/// Stage C Phase C3 split: cluster-local neighbor map merge helpers.
-
-///|
-/// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
-/// neighbors after order-graph replay, skipping duplicates to mirror fixture
-/// out_all/in_all merge behavior.
-/// Do not change behavior without updating fixtures/tests.
-priv struct LocalNeighborMapsOutput {
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-}
+/// Ordering domain: cluster-local Graphviz ND_out/ND_in merge helpers used by
+/// Stage C local replay before per-cluster reorder passes.
 
 ///|
 /// Graphviz parity: cluster-local neighbor sources keep order-graph ND_out/ND_in
 /// together with raw graph AGSEQ ND_out/ND_in for deterministic merge.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalNeighborSources {
+pub(all) struct ClusterLocalNeighborSources {
   source_out_neighbors : Map[String, Array[String]]
   source_in_neighbors : Map[String, Array[String]]
   raw_out_neighbors : Map[String, Array[String]]
@@ -23,15 +13,24 @@ priv struct ClusterLocalNeighborSources {
 }
 
 ///|
-/// Stage C Phase C3 split: raw Graphviz ND_out/ND_in neighbor map bundle used
-/// by local-cluster neighbor replay before per-cluster merge.
-priv struct GraphvizNeighborMaps {
+/// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
+/// neighbors after order-graph replay, skipping duplicates to mirror fixture
+/// out_all/in_all merge behavior.
+pub(all) struct ClusterLocalNeighborMaps {
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: raw Graphviz ND_out/ND_in neighbor map bundle used by
+/// local-cluster neighbor replay before per-cluster merge.
+priv struct RawGraphvizNeighborMaps {
   out_neighbors : Map[String, Array[String]]
   in_neighbors : Map[String, Array[String]]
 }
 
 ///|
-fn append_neighbor_edge(
+fn append_cluster_local_neighbor_edge(
   out_neighbors : Map[String, Array[String]],
   in_neighbors : Map[String, Array[String]],
   tail : String,
@@ -50,8 +49,7 @@ fn append_neighbor_edge(
 ///|
 /// Graphviz parity: raw-graph ND_out/ND_in maps preserve AGSEQ edge replay
 /// order for local cluster median-anchor fallback.
-/// Do not change behavior without updating fixtures/tests.
-fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> GraphvizNeighborMaps {
+fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> RawGraphvizNeighborMaps {
   let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
   for node in graph.nodes() {
@@ -60,7 +58,7 @@ fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> GraphvizNeighborMa
     raw_graphviz_in_neighbors[name] = []
   }
   for edge in graph.edges() {
-    append_neighbor_edge(
+    append_cluster_local_neighbor_edge(
       raw_graphviz_out_neighbors,
       raw_graphviz_in_neighbors,
       edge.tail().name(),
@@ -70,6 +68,23 @@ fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> GraphvizNeighborMa
   {
     out_neighbors: raw_graphviz_out_neighbors,
     in_neighbors: raw_graphviz_in_neighbors,
+  }
+}
+
+///|
+/// Graphviz parity: source ND_out/ND_in maps are paired with raw AGSEQ maps so
+/// local replay can decide raw merge eligibility per node.
+pub fn build_cluster_local_neighbor_sources(
+  graph : @cgraph.Graph,
+  source_out_neighbors : Map[String, Array[String]],
+  source_in_neighbors : Map[String, Array[String]],
+) -> ClusterLocalNeighborSources {
+  let raw_graphviz_neighbors = build_raw_graphviz_neighbor_maps(graph)
+  {
+    source_out_neighbors,
+    source_in_neighbors,
+    raw_out_neighbors: raw_graphviz_neighbors.out_neighbors,
+    raw_in_neighbors: raw_graphviz_neighbors.in_neighbors,
   }
 }
 
@@ -97,7 +112,7 @@ fn normalize_external_neighbor_name(
   intercluster_keys : Map[String, String],
   external_anchor_name : String,
 ) -> String {
-  let other_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
+  let other_cluster = cluster_key_or_empty(intercluster_keys, other)
   if other_cluster != "" && other_cluster != cluster &&
     expanded_clusters.get(other_cluster) is None {
     external_anchor_name
@@ -161,7 +176,7 @@ fn append_raw_neighbors_with_external_anchor(
       )
     if normalized == merge_context.external_anchor_name {
       let external_cluster =
-        @ordering.cluster_key_or_empty(merge_context.intercluster_keys, other)
+        cluster_key_or_empty(merge_context.intercluster_keys, other)
       if external_cluster == "" ||
         external_cluster_seen.get(external_cluster) is Some(_) {
         continue
@@ -180,7 +195,7 @@ priv struct LocalNeighborLists {
   in_neighbors : Array[String]
 }
 
-///|
+///| 
 /// Graphviz parity: local neighbor merge context keeps one cluster-scoped
 /// source snapshot while per-node lists decide raw AGSEQ merge eligibility.
 priv struct LocalNeighborMergeContext {
@@ -191,6 +206,15 @@ priv struct LocalNeighborMergeContext {
   intercluster_keys : Map[String, String]
   allow_raw_neighbors : Bool
   external_anchor_name : String
+}
+
+///|
+fn build_name_set(names : Array[String]) -> Map[String, Bool] {
+  let result : Map[String, Bool] = Map::new()
+  for name in names {
+    result[name] = true
+  }
+  result
 }
 
 ///|
@@ -241,14 +265,14 @@ fn build_local_neighbor_lists_for_name(
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
 /// Do not change behavior without updating fixtures/tests.
-fn build_local_neighbor_maps(
+pub fn build_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_nodes : Array[String],
   neighbor_sources : ClusterLocalNeighborSources,
   intercluster_keys : Map[String, String],
   allow_raw_neighbors : Bool,
-) -> LocalNeighborMapsOutput {
+) -> ClusterLocalNeighborMaps {
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
   let cluster_node_set = build_name_set(cluster_nodes)

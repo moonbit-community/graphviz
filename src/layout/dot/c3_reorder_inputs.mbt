@@ -14,7 +14,7 @@ priv struct ClusterLocalReorderDispatchContext {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  neighbor_sources : ClusterLocalNeighborSources
+  neighbor_sources : @ordering.ClusterLocalNeighborSources
   order_sizes : Map[String, NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -141,7 +141,7 @@ priv struct ClusterLocalReorderInputBuildContext {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  neighbor_sources : ClusterLocalNeighborSources
+  neighbor_sources : @ordering.ClusterLocalNeighborSources
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
   fixed_ranks : Map[String, Int]
@@ -265,7 +265,7 @@ fn build_cluster_local_reorder_metadata(
       input_context.flat_constraints,
     )
   let local_neighbor_maps =
-    build_local_neighbor_maps(
+    @ordering.build_local_neighbor_maps(
       input_context.cluster_name,
       input_context.expanded_clusters,
       input_context.cluster_nodes,

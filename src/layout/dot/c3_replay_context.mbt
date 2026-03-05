@@ -83,16 +83,14 @@ fn build_cluster_replay_fixed_ranks(
 /// ND_in and append raw AGSEQ traversal maps for median fallback.
 fn build_cluster_replay_neighbor_sources(
   replay_context : ClusterLocalRankReplayContext,
-) -> ClusterLocalNeighborSources {
+) -> @ordering.ClusterLocalNeighborSources {
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
-  let raw_graphviz_neighbors = build_raw_graphviz_neighbor_maps(replay_context.graph)
-  {
-    source_out_neighbors: replay_context.graphviz_out_neighbors,
-    source_in_neighbors: replay_context.graphviz_in_neighbors,
-    raw_out_neighbors: raw_graphviz_neighbors.out_neighbors,
-    raw_in_neighbors: raw_graphviz_neighbors.in_neighbors,
-  }
+  @ordering.build_cluster_local_neighbor_sources(
+    replay_context.graph,
+    replay_context.graphviz_out_neighbors,
+    replay_context.graphviz_in_neighbors,
+  )
 }
 
 ///|
@@ -100,7 +98,7 @@ fn build_cluster_replay_neighbor_sources(
 /// shared by all per-cluster reorder calls in traversal order.
 fn build_cluster_replay_dispatch_context(
   replay_context : ClusterLocalRankReplayContext,
-  neighbor_sources : ClusterLocalNeighborSources,
+  neighbor_sources : @ordering.ClusterLocalNeighborSources,
   fixed_ranks : Map[String, Int],
 ) -> ClusterLocalReorderDispatchContext {
   {
