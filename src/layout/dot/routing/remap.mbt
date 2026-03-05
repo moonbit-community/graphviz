@@ -236,12 +236,20 @@ fn build_parallel_remap_assignments(
 /// Graphviz parity: duplicate regular-edge spline slots are assigned in
 /// pair order after routing, but only within one-direction parallel classes.
 /// Do not change behavior without updating fixtures/tests.
+priv struct ParallelEdgeLayoutsRemapInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  edges_out_by_id : Map[Int, DotLayoutEdge]
+  edge_port_label_pos_fn : EdgePortLabelPosFn
+}
+
+///|
 fn remap_parallel_edge_layouts(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  edges_out_by_id : Map[Int, DotLayoutEdge],
-  edge_port_label_pos_fn : EdgePortLabelPosFn,
+  input : ParallelEdgeLayoutsRemapInput,
 ) -> Unit {
+  let edges = input.edges
+  let ranks = input.ranks
+  let edges_out_by_id = input.edges_out_by_id
   let assignments =
     build_parallel_remap_assignments(
       edges,
@@ -272,7 +280,7 @@ fn remap_parallel_edge_layouts(
       remap_edge_layout_edge(
         target_layout.edge,
         source_layout,
-        edge_port_label_pos_fn,
+        input.edge_port_label_pos_fn,
       )
   }
 }
@@ -295,10 +303,12 @@ pub fn finalize_routed_edges(
   let ranks = input.ranks
   let edges_out_by_id = input.edges_out_by_id
   remap_parallel_edge_layouts(
-    edges,
-    ranks,
-    edges_out_by_id,
-    input.edge_port_label_pos_fn,
+    {
+      edges,
+      ranks,
+      edges_out_by_id,
+      edge_port_label_pos_fn: input.edge_port_label_pos_fn,
+    },
   )
   let ordered_output_edge_ids =
     collect_input_order_edge_ids(
