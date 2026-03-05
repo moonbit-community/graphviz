@@ -54,89 +54,96 @@ pub struct XposReorderPipelineInput {
 }
 
 ///|
-pub fn build_xpos_reorder_pipeline_input(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  has_vnode_order : Bool,
-  ordering_set : Bool,
-  has_clusters : Bool,
-  x_groups : Map[Int, Array[String]],
-  x_order_sizes : Map[String, @shared.NodeSize],
-  x_cluster_keys : Map[String, String],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  node_order : Map[String, Int],
-  cluster_skeleton_prefix : String,
-  cluster_skeleton_size : @shared.NodeSize,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  cluster_skeleton_penalty : Int,
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  nodes : Array[@cgraph.Node],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  edge_order : Map[String, Int],
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  cluster_skeleton : Map[String, Bool],
-  transpose_max_passes : Int,
+/// Graphviz parity: xpos reorder pipeline source bundle keeps all branch
+/// gates and reorder payload grouped so call-sites avoid positional drift.
+pub(all) struct XposReorderPipelineSources {
+  xpos_reorder_enabled : Bool
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  has_vnode_order : Bool
+  ordering_set : Bool
+  has_clusters : Bool
+  x_groups : Map[Int, Array[String]]
+  x_order_sizes : Map[String, @shared.NodeSize]
+  x_cluster_keys : Map[String, String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  node_order : Map[String, Int]
+  cluster_skeleton_prefix : String
+  cluster_skeleton_size : @shared.NodeSize
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  cluster_skeleton_penalty : Int
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+  nodes : Array[@cgraph.Node]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  edge_order : Map[String, Int]
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_skeleton : Map[String, Bool]
+  transpose_max_passes : Int
+}
+
+///|
+pub fn build_xpos_reorder_pipeline_input_from_sources(
+  sources : XposReorderPipelineSources,
 ) -> XposReorderPipelineInput {
   {
-    xpos_reorder_enabled,
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    has_vnode_order,
-    ordering_set,
-    has_clusters,
-    x_groups,
-    x_order_sizes,
-    x_cluster_keys,
-    cluster_min_rank,
-    cluster_max_rank,
-    node_order,
-    cluster_skeleton_prefix,
-    cluster_skeleton_size,
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    edge_vnodes,
-    vnode_ranks,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    cluster_skeleton_penalty,
-    rank_same_groups,
-    rank_same_order,
-    nodesep_pt,
-    has_edge_labels,
-    flat_constraints,
-    graphviz_flip,
-    nodes,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    edge_order,
-    port_order_positions,
-    port_order_contrib,
-    cluster_skeleton,
-    transpose_max_passes,
+    xpos_reorder_enabled: sources.xpos_reorder_enabled,
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    allow_xpos_reorder: sources.allow_xpos_reorder,
+    has_vnode_order: sources.has_vnode_order,
+    ordering_set: sources.ordering_set,
+    has_clusters: sources.has_clusters,
+    x_groups: sources.x_groups,
+    x_order_sizes: sources.x_order_sizes,
+    x_cluster_keys: sources.x_cluster_keys,
+    cluster_min_rank: sources.cluster_min_rank,
+    cluster_max_rank: sources.cluster_max_rank,
+    node_order: sources.node_order,
+    cluster_skeleton_prefix: sources.cluster_skeleton_prefix,
+    cluster_skeleton_size: sources.cluster_skeleton_size,
+    edges: sources.edges,
+    edge_tail: sources.edge_tail,
+    edge_head: sources.edge_head,
+    ranks: sources.ranks,
+    edge_vnodes: sources.edge_vnodes,
+    vnode_ranks: sources.vnode_ranks,
+    edge_tail_port_x: sources.edge_tail_port_x,
+    edge_head_port_x: sources.edge_head_port_x,
+    edge_tail_port_order: sources.edge_tail_port_order,
+    edge_head_port_order: sources.edge_head_port_order,
+    cluster_skeleton_penalty: sources.cluster_skeleton_penalty,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    nodesep_pt: sources.nodesep_pt,
+    has_edge_labels: sources.has_edge_labels,
+    flat_constraints: sources.flat_constraints,
+    graphviz_flip: sources.graphviz_flip,
+    nodes: sources.nodes,
+    order_edges: sources.order_edges,
+    order_edge_tail: sources.order_edge_tail,
+    order_edge_head: sources.order_edge_head,
+    edge_order: sources.edge_order,
+    port_order_positions: sources.port_order_positions,
+    port_order_contrib: sources.port_order_contrib,
+    cluster_skeleton: sources.cluster_skeleton,
+    transpose_max_passes: sources.transpose_max_passes,
   }
 }
 
