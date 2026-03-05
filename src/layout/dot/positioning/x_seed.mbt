@@ -156,6 +156,20 @@ pub struct XPositionSeedData {
 }
 
 ///|
+/// Graphviz parity: x-seed edge-port sample bundle keeps main-edge and
+/// order-edge tail/head x+order arrays grouped to avoid field drift.
+pub(all) struct XSeedPortSamples {
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
 /// Graphviz parity: x-stage seed source bundle keeps ordering/rank snapshots
 /// and precomputed edge-port samples grouped before one seed build pass.
 pub(all) struct XSeedBuildSources {
@@ -173,14 +187,7 @@ pub(all) struct XSeedBuildSources {
   vnode_ranks : Map[String, Int]
   x_base_sizes : Map[String, @shared.NodeSize]
   x_order_sizes : Map[String, @shared.NodeSize]
-  x_edge_tail_port_x : Array[Double]
-  x_edge_head_port_x : Array[Double]
-  x_edge_tail_port_order : Array[Double]
-  x_edge_head_port_order : Array[Double]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
+  port_samples : XSeedPortSamples
   vnodes_by_rank : Map[Int, Array[String]]
   has_clusters : Bool
   cluster_keys : Map[String, String]
@@ -235,14 +242,14 @@ pub fn build_x_seed_data_from_sources(
     has_vnode_order: vnode_order_state.has_vnode_order,
     x_base_sizes: sources.x_base_sizes,
     x_order_sizes: sources.x_order_sizes,
-    x_edge_tail_port_x: sources.x_edge_tail_port_x,
-    x_edge_head_port_x: sources.x_edge_head_port_x,
-    x_edge_tail_port_order: sources.x_edge_tail_port_order,
-    x_edge_head_port_order: sources.x_edge_head_port_order,
-    order_edge_tail_port_x: sources.order_edge_tail_port_x,
-    order_edge_head_port_x: sources.order_edge_head_port_x,
-    order_edge_tail_port_order: sources.order_edge_tail_port_order,
-    order_edge_head_port_order: sources.order_edge_head_port_order,
+    x_edge_tail_port_x: sources.port_samples.x_edge_tail_port_x,
+    x_edge_head_port_x: sources.port_samples.x_edge_head_port_x,
+    x_edge_tail_port_order: sources.port_samples.x_edge_tail_port_order,
+    x_edge_head_port_order: sources.port_samples.x_edge_head_port_order,
+    order_edge_tail_port_x: sources.port_samples.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.port_samples.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.port_samples.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.port_samples.order_edge_head_port_order,
     x_groups,
     x_cluster_keys,
   }
