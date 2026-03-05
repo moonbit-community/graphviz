@@ -147,6 +147,36 @@ fn build_ordering_reorder_setup(
 }
 
 ///|
+/// Graphviz parity: class2/mincross edge-port extraction consumes the same
+/// sampled tail/head values for both x-offset and port-order arrays.
+fn compute_ordering_edge_port_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
+}
+
+///|
+/// Graphviz parity: class2/mincross edge-port extraction consumes the same
+/// sampled tail/head values for both x-offset and port-order arrays.
+fn compute_ordering_edge_order_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
+}
+
+///|
 /// Graphviz parity: ordering pipeline context assembles runtime expansion,
 /// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
 fn build_ordering_pipeline_context(
@@ -161,8 +191,8 @@ fn build_ordering_pipeline_context(
       input.edge_tail,
       input.edge_head,
       input.order_sizes,
-      compute_edge_port_values,
-      compute_edge_order_values,
+      compute_ordering_edge_port_values,
+      compute_ordering_edge_order_values,
     )
   let reorder_setup =
     build_ordering_reorder_setup(
