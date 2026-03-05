@@ -160,3 +160,25 @@ pub fn build_constraint_nodes_setup(
     late_extra_nodes: seed.late_extra_nodes,
   }
 }
+
+///|
+pub(all) struct LateConstraintNodesInput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+  late_extra_nodes : Array[@ordering.ExtraConstraintNode]
+}
+
+///|
+/// Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
+/// and are later positioned by constraints, not by seed x ranks.
+pub fn append_late_constraint_nodes(input : LateConstraintNodesInput) -> Unit {
+  for extra_node in input.late_extra_nodes {
+    let idx = @network_simplex.add_node(
+      input.graph,
+      extra_node.name,
+      kind=constraint_node_kind(extra_node.name),
+    )
+    input.index[extra_node.name] = idx
+    @network_simplex.set_node_rank(input.graph, idx, 0)
+  }
+}

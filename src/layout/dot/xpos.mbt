@@ -63,12 +63,6 @@ fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
 type SlackSegment = @positioning.SlackSegment
 
 ///|
-priv struct ConstraintGraphState {
-  graph : @network_simplex.NsGraph
-  index : Map[String, Int]
-}
-
-///|
 priv struct ClusterConstraintBuild {
   extra_nodes : Array[@ordering.ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
@@ -1262,171 +1256,6 @@ fn segment_slack_minlen(
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
-fn build_constraint_graph(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  nlist_order : Array[String],
-  gdnlist_order : Array[String],
-  ranks : Map[String, Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  sizes : Map[String, NodeSize],
-  output_sizes : Map[String, NodeSize],
-  cluster_keys : Map[String, String],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  extra_nodes : Array[@ordering.ExtraConstraintNode],
-  extra_edges : Array[ConstraintEdge],
-  edge_vnodes : Map[String, Array[String]],
-  root_ln_targets : Array[String],
-  root_rn_targets : Array[String],
-  compress_width_minlen : Int?,
-) -> ConstraintGraphState {
-  let graph = @network_simplex.new_graph()
-  let ordered_nodes = nodes
-  let mut has_port_edges = false
-  for edge in edges {
-    if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
-      has_port_edges = true
-      break
-    }
-  }
-  let port_offsets =
-    if has_port_edges {
-      port_offsets_for_nodes(ordered_nodes, output_sizes)
-    } else {
-      Map::new()
-    }
-  let rankdir =
-    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
-  let skip_intercluster =
-    @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
-  let base_positions = @positioning.compute_rank_positions(
-    rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
-  )
-  let node_setup =
-    @positioning.build_constraint_nodes_setup(
-      {
-        graph,
-        nodes,
-        extra_nodes,
-        nlist_order,
-        gdnlist_order,
-        base_positions,
-        trunc_int,
-      },
-    )
-  let index = node_setup.index
-  let real_by_name = node_setup.real_by_name
-  let late_extra_nodes = node_setup.late_extra_nodes
-  let rank_constraint_seed =
-    @positioning.build_rank_constraint_seed(
-      rank_keys,
-      groups,
-      sizes,
-      nodesep_pt,
-      has_edge_labels,
-    )
-  let rank_adj_constraints = rank_constraint_seed.rank_adj_constraints
-  let rank_adj_order = rank_constraint_seed.rank_adj_order
-  let order_in_rank = rank_constraint_seed.order_in_rank
-  let segment_pass =
-    @positioning.build_constraint_segment_pass(
-      {
-        edges,
-        edge_tail,
-        edge_head,
-        edge_out_order,
-        nlist_order,
-        ranks,
-        cluster_keys,
-        edge_vnodes,
-        order_in_rank,
-        nodesep_pt,
-        sizes,
-        skip_intercluster,
-        rank_adj_constraints,
-        edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
-        edge_degree_increment:
-          edge =>
-            if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
-              2
-            } else {
-              1
-            },
-        trunc_int,
-      },
-    )
-  let segments_by_tail = segment_pass.segments_by_tail
-  let flat_minlen_constraints = segment_pass.flat_minlen_constraints
-  for key in rank_adj_order {
-    match rank_adj_constraints.get(key) {
-      Some(entry) => @positioning.add_constraint_edge_if_present(graph, index, entry)
-      None => ()
-    }
-  }
-  for _flat_key, entry in flat_minlen_constraints {
-    @positioning.add_constraint_edge_if_present(graph, index, entry)
-  }
-  @positioning.add_segments_in_tail_order(
-    {
-      graph,
-      index,
-      segments_by_tail,
-      nlist_order,
-      segment_minlen:
-        segment =>
-          segment_slack_minlen(
-            segment,
-            port_offsets,
-            sizes,
-            rankdir,
-            real_by_name,
-          ),
-    },
-  )
-  for extra_node in late_extra_nodes {
-    let idx = @network_simplex.add_node(
-      graph,
-      extra_node.name,
-      kind=@positioning.constraint_node_kind(extra_node.name),
-    )
-    index[extra_node.name] = idx
-    // Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
-    // and are later positioned by constraints, not by seed x ranks.
-    @network_simplex.set_node_rank(graph, idx, 0)
-  }
-  let root_margin = if nodes.length() > 0 {
-    cluster_margin_pt(nodes[0].graph())
-  } else {
-    CLUSTER_MARGIN_PT
-  }
-  @positioning.add_root_boundary_constraints(
-    {
-      graph,
-      index,
-      root_ln_targets,
-      root_rn_targets,
-      sizes,
-      root_margin,
-      compress_width_minlen,
-      root_compress_weight: ROOT_COMPRESS_WEIGHT,
-      node_left_pt,
-      node_right_pt,
-      round_int,
-    },
-  )
-  for edge in extra_edges {
-    let _ = edge.tail_port
-    let _ = edge.head_port
-    @positioning.add_constraint_edge_if_present(graph, index, edge)
-  }
-  { graph, index }
-}
-
 ///|
 fn x_positions_from_simplex(
   graph_root : @cgraph.Graph,
@@ -1464,29 +1293,74 @@ fn x_positions_from_simplex(
       },
     )
   let order_index = @ordering.build_order_index(groups)
-  let constraint_graph = build_constraint_graph(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_out_order,
-    xpos_nlist_order,
-    xpos_nlist_order,
-    ranks,
-    rank_keys,
-    groups,
-    sizes,
-    output_sizes,
-    cluster_keys,
-    nodesep_pt,
-    has_edge_labels,
-    extra_nodes,
-    extra_edges,
-    edge_vnodes,
-    root_ln_targets,
-    root_rn_targets,
-    compress_width_minlen,
-  )
+  let mut has_port_edges = false
+  for edge in edges {
+    if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
+      has_port_edges = true
+      break
+    }
+  }
+  let port_offsets =
+    if has_port_edges {
+      port_offsets_for_nodes(nodes, output_sizes)
+    } else {
+      Map::new()
+    }
+  let rankdir =
+    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+  let root_margin = if nodes.length() > 0 {
+    cluster_margin_pt(nodes[0].graph())
+  } else {
+    CLUSTER_MARGIN_PT
+  }
+  let constraint_graph =
+    @positioning.build_constraint_graph(
+      {
+        nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_out_order,
+        nlist_order: xpos_nlist_order,
+        gdnlist_order: xpos_nlist_order,
+        ranks,
+        rank_keys,
+        groups,
+        sizes,
+        cluster_keys,
+        nodesep_pt,
+        has_edge_labels,
+        extra_nodes,
+        extra_edges,
+        edge_vnodes,
+        root_ln_targets,
+        root_rn_targets,
+        compress_width_minlen,
+        segment_minlen:
+          (segment, real_by_name) =>
+            segment_slack_minlen(
+              segment,
+              port_offsets,
+              sizes,
+              rankdir,
+              real_by_name,
+            ),
+        edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
+        edge_degree_increment:
+          edge =>
+            if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
+              2
+            } else {
+              1
+            },
+        root_margin,
+        root_compress_weight: ROOT_COMPRESS_WEIGHT,
+        node_left_pt,
+        node_right_pt,
+        round_int,
+        trunc_int,
+      },
+    )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
   let order =
     @positioning.build_constraint_reorder(
