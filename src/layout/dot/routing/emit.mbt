@@ -4,18 +4,29 @@ priv struct BezierLayoutSplineResult {
 }
 
 ///|
+priv struct BezierLayoutSplineBuildInput {
+  base : EdgeRouteBase
+  raw_bezier : Array[@geom.Point]
+  label_pad_boost : Double
+  apply_dotted_adjustment : Bool
+  tail_swap : Bool
+  head_swap : Bool
+}
+
+///|
 /// Graphviz parity: bezier route rendering follows
 /// build_bezier_points_spline -> edge_spline_result_for_bezier ->
 /// rebuild_spline_for_render -> finalize_edge_spline.
 /// Do not change behavior without updating fixtures/tests.
 fn build_bezier_layout_spline_result(
-  base : EdgeRouteBase,
-  raw_bezier : Array[@geom.Point],
-  label_pad_boost : Double,
-  apply_dotted_adjustment : Bool,
-  tail_swap : Bool,
-  head_swap : Bool,
+  input : BezierLayoutSplineBuildInput,
 ) -> BezierLayoutSplineResult {
+  let base = input.base
+  let raw_bezier = input.raw_bezier
+  let label_pad_boost = input.label_pad_boost
+  let apply_dotted_adjustment = input.apply_dotted_adjustment
+  let tail_swap = input.tail_swap
+  let head_swap = input.head_swap
   let spline =
     build_bezier_points_spline(
       base,
@@ -56,12 +67,14 @@ fn build_bezier_layout_edge(
 ) -> DotLayoutEdge {
   let bezier_layout_result =
     build_bezier_layout_spline_result(
-      input.base,
-      input.raw_bezier,
-      input.label_pad_boost,
-      input.apply_dotted_adjustment,
-      input.tail_swap,
-      input.head_swap,
+      {
+        base: input.base,
+        raw_bezier: input.raw_bezier,
+        label_pad_boost: input.label_pad_boost,
+        apply_dotted_adjustment: input.apply_dotted_adjustment,
+        tail_swap: input.tail_swap,
+        head_swap: input.head_swap,
+      },
     )
   (input.build_edge_layout_fn)(
     input.base,
