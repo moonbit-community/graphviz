@@ -118,14 +118,25 @@ fn convert_sides_to_points(tail_side : Int, head_side : Int) -> Int {
 }
 
 ///|
+priv struct TopSelfEdgeRoutesInput {
+  edges : Array[@cgraph.Edge]
+  base0 : EdgeRouteBase
+  nodesep_pt : Double
+  sizey_param : Double
+  point_pair : Int
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 fn self_edge_routes_top(
-  edges : Array[@cgraph.Edge],
-  base0 : EdgeRouteBase,
-  nodesep_pt : Double,
-  sizey_param : Double,
-  point_pair : Int,
-  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : TopSelfEdgeRoutesInput,
 ) -> Array[SelfEdgeRoute] {
+  let edges = input.edges
+  let base0 = input.base0
+  let nodesep_pt = input.nodesep_pt
+  let sizey_param = input.sizey_param
+  let point_pair = input.point_pair
+  let self_edge_label_height_fn = input.self_edge_label_height_fn
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -204,14 +215,25 @@ fn self_edge_routes_top(
 }
 
 ///|
+priv struct BottomSelfEdgeRoutesInput {
+  edges : Array[@cgraph.Edge]
+  base0 : EdgeRouteBase
+  nodesep_pt : Double
+  sizey_param : Double
+  point_pair : Int
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 fn self_edge_routes_bottom(
-  edges : Array[@cgraph.Edge],
-  base0 : EdgeRouteBase,
-  nodesep_pt : Double,
-  sizey_param : Double,
-  point_pair : Int,
-  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : BottomSelfEdgeRoutesInput,
 ) -> Array[SelfEdgeRoute] {
+  let edges = input.edges
+  let base0 = input.base0
+  let nodesep_pt = input.nodesep_pt
+  let sizey_param = input.sizey_param
+  let point_pair = input.point_pair
+  let self_edge_label_height_fn = input.self_edge_label_height_fn
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -463,12 +485,14 @@ fn build_self_edge_routes(
   if uses_left {
     if uses_right {
       return self_edge_routes_top(
-        edges,
-        base0,
-        nodesep_pt,
-        sizey_param,
-        convert_sides_to_points(tail_side, head_side),
-        self_edge_label_height_fn,
+        {
+          edges,
+          base0,
+          nodesep_pt,
+          sizey_param,
+          point_pair: convert_sides_to_points(tail_side, head_side),
+          self_edge_label_height_fn,
+        },
       )
     } else {
       let point_pair = convert_sides_to_points(tail_side, head_side)
@@ -494,31 +518,37 @@ fn build_self_edge_routes(
   let point_pair = convert_sides_to_points(tail_side, head_side)
   if (tail_side & PORT_SIDE_TOP) != 0 {
     return self_edge_routes_top(
-      edges,
-      base0,
-      nodesep_pt,
-      sizey_param,
-      point_pair,
-      self_edge_label_height_fn,
+      {
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        point_pair,
+        self_edge_label_height_fn,
+      },
     )
   }
   if (tail_side & PORT_SIDE_BOTTOM) != 0 {
     return self_edge_routes_bottom(
+      {
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        point_pair,
+        self_edge_label_height_fn,
+      },
+    )
+  }
+  self_edge_routes_top(
+    {
       edges,
       base0,
       nodesep_pt,
       sizey_param,
       point_pair,
       self_edge_label_height_fn,
-    )
-  }
-  self_edge_routes_top(
-    edges,
-    base0,
-    nodesep_pt,
-    sizey_param,
-    point_pair,
-    self_edge_label_height_fn,
+    },
   )
 }
 
