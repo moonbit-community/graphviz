@@ -82,7 +82,11 @@ fn build_flat_label_augmentation(
 fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
 ) -> XposFlatLabelAugmentation {
-  let x_groups = build_x_groups_after_reorder(input)
+  let x_groups =
+    @positioning.build_x_groups_after_reorder(
+      build_xpos_reorder_pipeline_input(input),
+      compute_xpos_reorder_port_samples,
+    )
   build_flat_label_augmentation(
     {
       pipeline: input.pipeline,

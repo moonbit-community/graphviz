@@ -97,16 +97,3 @@ fn compute_xpos_reorder_port_samples(
     port_order_samples.head_values,
   )
 }
-
-///|
-/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
-/// fixed order before flat-label augmentation consumes updated x_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_groups_after_reorder(
-  input : XFlatLabelBuildInput,
-) -> Map[Int, Array[String]] {
-  @positioning.build_x_groups_after_reorder(
-    build_xpos_reorder_pipeline_input(input),
-    compute_xpos_reorder_port_samples,
-  )
-}
