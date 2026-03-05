@@ -1,26 +1,27 @@
 ///|
-/// Stage C Phase C3 split: cluster-local reorder execution helpers.
+/// Ordering domain: cluster-local reorder execution helpers used by
+/// Stage C clustered local replay orchestration.
 
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_rank_reorder(
-  local_context : @ordering.ClusterLocalReorderContext,
-  input_phase_output : @ordering.ClusterLocalReorderRunInputsOutput,
-  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
+  local_context : ClusterLocalReorderContext,
+  input_phase_output : ClusterLocalReorderRunInputsOutput,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Map[Int, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
     return None
   }
   let seeded_cluster_groups =
-    @ordering.build_cluster_rank_seeded_groups(
+    build_cluster_rank_seeded_groups(
       local_context,
       input_phase_output,
       dispatch_context.fixed_ranks,
     )
   let ordered_cluster =
-    @ordering.run_cluster_local_rank_reorder_call(
+    run_cluster_local_rank_reorder_call(
       {
         cluster_rank_keys: local_context.cluster_rank_keys,
         seeded_cluster_groups,
@@ -63,9 +64,9 @@ fn reorder_cluster_rank_group(
   cluster_graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
-  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
-  let local_context = match @ordering.build_cluster_local_reorder_context(
+  let local_context = match build_cluster_local_reorder_context(
     {
       cluster,
       cluster_graph,
@@ -82,12 +83,12 @@ fn reorder_cluster_rank_group(
   }
   let cluster_graph_edge_count = cluster_graph.edges().length()
   let include_external_crossing =
-    @ordering.should_include_external_crossing_edges(
+    should_include_external_crossing_edges(
       local_context.cluster_rank_keys,
       cluster_graph_edge_count,
-      @ordering.count_edge_vnodes(local_context.cluster_nodes),
+      count_edge_vnodes(local_context.cluster_nodes),
     )
-  let input_context : @ordering.ClusterLocalReorderInputBuildContext = {
+  let input_context : ClusterLocalReorderInputBuildContext = {
     cluster_name: cluster,
     include_external_crossing,
     expanded_clusters,
@@ -108,7 +109,7 @@ fn reorder_cluster_rank_group(
     flat_constraints: dispatch_context.flat_constraints,
   }
   let input_phase_output =
-    @ordering.build_local_reorder_inputs(input_context)
+    build_local_reorder_inputs(input_context)
   let ordered_cluster = match run_cluster_rank_reorder(
     local_context,
     input_phase_output,
@@ -117,7 +118,7 @@ fn reorder_cluster_rank_group(
     Some(value) => value
     None => return ()
   }
-  @ordering.apply_cluster_rank_reorder_output(
+  apply_cluster_rank_reorder_output(
     groups,
     local_context.cluster_rank_keys,
     ordered_cluster,
@@ -129,12 +130,12 @@ fn reorder_cluster_rank_group(
 /// Graphviz parity: cluster-local reorder iterates clusters in deterministic
 /// build order and applies one independent local pass per cluster.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_cluster_rank_groups(
+pub fn reorder_cluster_rank_groups(
   cluster_names : Array[String],
   cluster_graphs : Map[String, @cgraph.Graph],
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
-  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map::new()
   let mut current_fixed_positions = fixed_positions
@@ -152,6 +153,6 @@ fn reorder_cluster_rank_groups(
       dispatch_context,
     )
     expanded_clusters[cluster] = true
-    current_fixed_positions = @ordering.order_positions_from_groups(groups)
+    current_fixed_positions = order_positions_from_groups(groups)
   }
 }

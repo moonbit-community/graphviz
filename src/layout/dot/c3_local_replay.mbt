@@ -32,7 +32,7 @@ fn run_cluster_local_rank_replay(
       neighbor_sources,
       fixed_ranks,
     )
-  reorder_cluster_rank_groups(
+  @ordering.reorder_cluster_rank_groups(
     cluster_names,
     cluster_graphs,
     groups,
