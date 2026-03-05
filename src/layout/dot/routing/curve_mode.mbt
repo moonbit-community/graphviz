@@ -92,14 +92,25 @@ fn segment_intersects_rect(
 }
 
 ///|
+priv struct DetourPolylineInput {
+  tail : @geom.Point
+  head : @geom.Point
+  tail_rect : @geom.Rect
+  head_rect : @geom.Rect
+  nodesep_pt : Double
+  rankdir : RankDir
+}
+
+///|
 fn detour_polyline_for_rects(
-  tail : @geom.Point,
-  head : @geom.Point,
-  tail_rect : @geom.Rect,
-  head_rect : @geom.Rect,
-  nodesep_pt : Double,
-  rankdir : RankDir,
+  input : DetourPolylineInput,
 ) -> Array[@geom.Point] {
+  let tail = input.tail
+  let head = input.head
+  let tail_rect = input.tail_rect
+  let head_rect = input.head_rect
+  let nodesep_pt = input.nodesep_pt
+  let rankdir = input.rankdir
   let detour_margin = curve_max_double(nodesep_pt * 0.75, 8.0)
   let exit_base = curve_max_double(nodesep_pt * 1.25, 16.0)
   let entry_base = curve_max_double(nodesep_pt * 0.3, 5.71)
@@ -1077,12 +1088,14 @@ fn adjust_route_points(
     if needs_detour {
       points =
         detour_polyline_for_rects(
-          base.tail_anchor,
-          base.head_anchor,
-          tail_rect,
-          head_rect,
-          nodesep_pt,
-          base.layout_rankdir,
+          {
+            tail: base.tail_anchor,
+            head: base.head_anchor,
+            tail_rect,
+            head_rect,
+            nodesep_pt,
+            rankdir: base.layout_rankdir,
+          },
         )
     }
   }
