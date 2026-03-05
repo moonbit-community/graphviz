@@ -77,37 +77,6 @@ fn build_cluster_local_rank_replay_context(
 }
 
 ///|
-/// Graphviz parity: local replay fixed-rank map overlays vnode ranks on top of
-/// base node ranks before any per-cluster reorder calls.
-fn build_cluster_replay_fixed_ranks(
-  replay_context : ClusterLocalRankReplayContext,
-) -> Map[String, Int] {
-  let fixed_ranks : Map[String, Int] = Map::new()
-  for name, rank in replay_context.ranks {
-    fixed_ranks[name] = rank
-  }
-  for name, rank in replay_context.vnode_ranks {
-    fixed_ranks[name] = rank
-  }
-  fixed_ranks
-}
-
-///|
-/// Graphviz parity: local replay neighbor sources preserve order-graph ND_out/
-/// ND_in and append raw AGSEQ traversal maps for median fallback.
-fn build_cluster_replay_neighbor_sources(
-  replay_context : ClusterLocalRankReplayContext,
-) -> @ordering.ClusterLocalNeighborSources {
-  // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
-  // tail/head AGSEQ replay order for startpass=2 median anchors.
-  @ordering.build_cluster_local_neighbor_sources(
-    replay_context.graph,
-    replay_context.graphviz_out_neighbors,
-    replay_context.graphviz_in_neighbors,
-  )
-}
-
-///|
 /// Graphviz parity: local replay dispatch context keeps one immutable payload
 /// shared by all per-cluster reorder calls in traversal order.
 fn build_cluster_replay_dispatch_context(
@@ -163,8 +132,19 @@ fn run_cluster_local_rank_replay(
     return ()
   }
   let fixed_positions = @ordering.order_positions_from_groups(groups)
-  let fixed_ranks = build_cluster_replay_fixed_ranks(replay_context)
-  let neighbor_sources = build_cluster_replay_neighbor_sources(replay_context)
+  let fixed_ranks =
+    @ordering.merge_ranks_with_vnodes(
+      replay_context.ranks,
+      replay_context.vnode_ranks,
+    )
+  // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
+  // tail/head AGSEQ replay order for startpass=2 median anchors.
+  let neighbor_sources =
+    @ordering.build_cluster_local_neighbor_sources(
+      replay_context.graph,
+      replay_context.graphviz_out_neighbors,
+      replay_context.graphviz_in_neighbors,
+    )
   let dispatch_context =
     build_cluster_replay_dispatch_context(
       replay_context,
