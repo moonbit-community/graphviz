@@ -872,24 +872,8 @@ fn edge_port_label_pos(
 }
 
 ///|
-/// Graphviz parity: edge label midpoint placement aligned to refs/graphviz/lib/common/labels.c.
-/// Do not change behavior without updating fixtures/tests.
-priv struct EdgeLabelPosInput {
-  edge : @cgraph.Edge
-  spline : @geom.Spline
-  tail_clip : @geom.Point
-  head_clip : @geom.Point
-  rankdir : RankDir
-  label_rank_y : Double?
-  label_rank_x : Double?
-  apply_label_pad : Bool
-  nodesep_pt : Double
-  label_pad_boost : Double
-}
-
-///|
 fn edge_label_pos_from_input(
-  input : EdgeLabelPosInput,
+  input : @routing.EdgeLabelPosInput,
 ) -> @geom.Point? {
   let edge = input.edge
   let spline = input.spline
@@ -1009,20 +993,7 @@ fn edge_label_pos_from_input(
 fn edge_label_pos(
   input : @routing.EdgeLabelPosInput,
 ) -> @geom.Point? {
-  edge_label_pos_from_input(
-    {
-      edge: input.edge,
-      spline: input.spline,
-      tail_clip: input.tail_clip,
-      head_clip: input.head_clip,
-      rankdir: input.rankdir,
-      label_rank_y: input.label_rank_y,
-      label_rank_x: input.label_rank_x,
-      apply_label_pad: input.apply_label_pad,
-      nodesep_pt: input.nodesep_pt,
-      label_pad_boost: input.label_pad_boost,
-    },
-  )
+  edge_label_pos_from_input(input)
 }
 
 ///|
