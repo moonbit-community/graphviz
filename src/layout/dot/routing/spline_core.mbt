@@ -47,31 +47,37 @@ pub fn edge_polyline_mode_spline(
 }
 
 ///|
+pub(all) struct BezierPointsSplineBuildInput {
+  base : EdgeRouteBase
+  bezier_points : Array[@geom.Point]
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  clip_swapped : Bool
+  arrow_swapped : Bool
+}
+
+///|
 pub fn build_bezier_points_spline(
-  base : EdgeRouteBase,
-  bezier_points : Array[@geom.Point],
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
-  clip_swapped : Bool,
-  arrow_swapped : Bool,
+  input : BezierPointsSplineBuildInput,
 ) -> @geom.Spline {
+  let base = input.base
   @edge_spline.edge_spline_for_bezier_points(
     base.edge,
-    bezier_points,
+    input.bezier_points,
     base.tail_clip_center,
     base.head_clip_center,
     base.tail_clip_size,
     base.head_clip_size,
     base.route_include_tail,
     base.route_include_head,
-    tail_clip_enabled=tail_clip_enabled,
-    head_clip_enabled=head_clip_enabled,
+    tail_clip_enabled=input.tail_clip_enabled,
+    head_clip_enabled=input.head_clip_enabled,
     arrow_len_override=base.arrow_len_override,
     tail_cluster_bbox=base.tail_cluster_bbox,
     head_cluster_bbox=base.head_cluster_bbox,
     parallel_offset=base.parallel_offset,
-    clip_swapped=clip_swapped,
-    arrow_swapped=arrow_swapped,
+    clip_swapped=input.clip_swapped,
+    arrow_swapped=input.arrow_swapped,
   )
 }
 
@@ -175,12 +181,14 @@ pub fn rebuild_spline_for_render(
   }
   let rebuilt =
     build_bezier_points_spline(
-      base,
-      spline_result.raw_bezier,
-      edge_clip_flags.tail_clip_enabled,
-      edge_clip_flags.head_clip_enabled,
-      base.swap_ends,
-      base.swap_ends,
+      {
+        base,
+        bezier_points: spline_result.raw_bezier,
+        tail_clip_enabled: edge_clip_flags.tail_clip_enabled,
+        head_clip_enabled: edge_clip_flags.head_clip_enabled,
+        clip_swapped: base.swap_ends,
+        arrow_swapped: base.swap_ends,
+      },
     )
   {
     spline: rebuilt,

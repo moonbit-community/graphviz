@@ -1507,12 +1507,14 @@ fn build_multi_point_routed_spline(
   if segmented_raw.length() > 0 {
     let spline =
       build_bezier_points_spline(
-        base,
-        segmented_raw,
-        tail_clip_enabled,
-        head_clip_enabled,
-        base.swap_ends,
-        base.swap_ends,
+        {
+          base,
+          bezier_points: segmented_raw,
+          tail_clip_enabled,
+          head_clip_enabled,
+          clip_swapped: base.swap_ends,
+          arrow_swapped: base.swap_ends,
+        },
       )
     { spline, raw_bezier: segmented_raw }
   } else {

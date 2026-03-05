@@ -29,12 +29,14 @@ fn build_bezier_layout_spline_result(
   let head_swap = input.head_swap
   let spline =
     build_bezier_points_spline(
-      base,
-      raw_bezier,
-      base.tail_clip_enabled,
-      base.head_clip_enabled,
-      tail_swap,
-      head_swap,
+      {
+        base,
+        bezier_points: raw_bezier,
+        tail_clip_enabled: base.tail_clip_enabled,
+        head_clip_enabled: base.head_clip_enabled,
+        clip_swapped: tail_swap,
+        arrow_swapped: head_swap,
+      },
     )
   let spline_result =
     edge_spline_result_for_bezier(
