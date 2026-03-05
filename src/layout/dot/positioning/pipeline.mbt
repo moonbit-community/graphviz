@@ -271,7 +271,6 @@ pub fn build_x_flat_label_augmentation(
 ///|
 pub(all) struct XFlatLabelPipelineInput {
   reorder_sources : XposReorderPipelineSources
-  compute_port_samples : XposPortSampleBundleFn
   augment_from_groups_fn : (Map[Int, Array[String]]) -> XFlatLabelAugmentationOutput
 }
 
@@ -285,7 +284,6 @@ pub fn build_x_flat_label_pipeline(
   let x_groups =
     build_x_groups_after_reorder(
       build_xpos_reorder_pipeline_input_from_sources(input.reorder_sources),
-      input.compute_port_samples,
     )
   (input.augment_from_groups_fn)(x_groups)
 }
@@ -337,6 +335,10 @@ pub struct XposReorderPipelineInput {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
   edge_order : Map[String, Int]
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
@@ -382,6 +384,10 @@ pub(all) struct XposReorderPipelineSources {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
   edge_order : Map[String, Int]
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
@@ -428,6 +434,10 @@ pub fn build_xpos_reorder_pipeline_input_from_sources(
     order_edges: sources.order_edges,
     order_edge_tail: sources.order_edge_tail,
     order_edge_head: sources.order_edge_head,
+    order_edge_tail_port_x: sources.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.order_edge_head_port_order,
     edge_order: sources.edge_order,
     port_order_positions: sources.port_order_positions,
     port_order_contrib: sources.port_order_contrib,
@@ -496,7 +506,6 @@ fn apply_clustered_xpos_reorder_path(
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 fn apply_nonclustered_xpos_reorder(
   input : XposReorderPipelineInput,
-  compute_port_samples : XposPortSampleBundleFn,
 ) -> Map[Int, Array[String]] {
   build_nonclustered_xpos_groups(
     {
@@ -522,7 +531,12 @@ fn apply_nonclustered_xpos_reorder(
       graphviz_flip: input.graphviz_flip,
     },
     input.x_groups,
-    compute_port_samples,
+    {
+      tail_port_x: input.order_edge_tail_port_x,
+      head_port_x: input.order_edge_head_port_x,
+      tail_port_order: input.order_edge_tail_port_order,
+      head_port_order: input.order_edge_head_port_order,
+    },
   )
 }
 
@@ -557,7 +571,6 @@ fn maybe_apply_xpos_transpose_cleanup(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_x_groups_after_reorder(
   input : XposReorderPipelineInput,
-  compute_port_samples : XposPortSampleBundleFn,
 ) -> Map[Int, Array[String]] {
   let path_flags = build_xpos_reorder_path_flags(input)
   let x_groups =
@@ -566,7 +579,6 @@ pub fn build_x_groups_after_reorder(
     } else if path_flags.nonclustered_reorder_enabled {
       apply_nonclustered_xpos_reorder(
         input,
-        compute_port_samples,
       )
     } else {
       input.x_groups

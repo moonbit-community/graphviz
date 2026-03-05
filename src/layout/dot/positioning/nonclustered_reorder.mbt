@@ -1,67 +1,11 @@
 type NodeSize = @shared.NodeSize
 
 ///|
-pub struct XposPortSampleInput {
-  nodes : Array[@cgraph.Node]
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  x_order_sizes : Map[String, NodeSize]
-}
-
 pub struct XposPortSamples {
   tail_port_x : Array[Double]
   head_port_x : Array[Double]
   tail_port_order : Array[Double]
   head_port_order : Array[Double]
-}
-
-///|
-pub fn xpos_port_samples(
-  tail_port_x : Array[Double],
-  head_port_x : Array[Double],
-  tail_port_order : Array[Double],
-  head_port_order : Array[Double],
-) -> XposPortSamples {
-  { tail_port_x, head_port_x, tail_port_order, head_port_order }
-}
-
-///|
-pub type XposPortSampleBundleFn = (
-  XposPortSampleInput,
-) -> XposPortSamples
-
-///|
-/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
-/// and order-fraction hints from the same order-edge snapshot before scoring.
-/// Do not change behavior without updating fixtures/tests.
-pub fn build_xpos_port_samples(
-  input : XposPortSampleInput,
-  compute_port_positions : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
-  compute_port_orders : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
-) -> XposPortSamples {
-  let (tail_port_x, head_port_x) =
-    compute_port_positions(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
-    )
-  let (tail_port_order, head_port_order) =
-    compute_port_orders(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
-    )
-  xpos_port_samples(
-    tail_port_x,
-    head_port_x,
-    tail_port_order,
-    head_port_order,
-  )
 }
 
 ///|
@@ -178,18 +122,8 @@ fn reorder_nonclustered_x_groups(
 pub fn build_nonclustered_xpos_groups(
   input : NonclusteredXposGroupBuildInput,
   x_groups : Map[Int, Array[String]],
-  compute_port_samples : XposPortSampleBundleFn,
+  port_samples : XposPortSamples,
 ) -> Map[Int, Array[String]] {
-  let port_samples =
-    compute_port_samples(
-      {
-        nodes: input.nodes,
-        order_edges: input.order_edges,
-        order_edge_tail: input.order_edge_tail,
-        order_edge_head: input.order_edge_head,
-        x_order_sizes: input.x_order_sizes,
-      },
-    )
   reorder_nonclustered_x_groups(
     {
       nodes: input.nodes,
