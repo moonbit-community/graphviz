@@ -238,23 +238,6 @@ priv struct OrderingRuntimeContext {
   rank_same_constraints : Map[String, Bool]
 }
 
-///|
-/// Graphviz parity: setup probes vnode tail constraints in setup order even
-/// when the probe output is only used for parity diagnostics.
-/// Do not change behavior without updating fixtures/tests.
-fn probe_vnode_tail_constraints_for_ordering(
-  vnode_info : @routing.EdgeVnodeInfo,
-  edge_tail : Array[String],
-) -> Unit {
-  let _ =
-    if vnode_info.vnode_ranks.length() > 0 {
-      @ordering.build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
-    } else {
-      Map::new()
-    }
-}
-
-///|
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
 /// in the same position as Graphviz ordering setup, even when only used for
 /// parity diagnostics.
@@ -300,10 +283,17 @@ fn build_ordering_context(
       local_cluster_order: runtime_core.local_cluster_order,
       rank_same_constraints,
     }
-  probe_vnode_tail_constraints_for_ordering(
-    runtime_context.vnode_info,
-    input.edge_tail,
-  )
+  // Graphviz parity: setup probes vnode tail constraints in setup order even
+  // when the probe output is only used for parity diagnostics.
+  let _ =
+    if runtime_context.vnode_info.vnode_ranks.length() > 0 {
+      @ordering.build_vnode_tail_constraints(
+        runtime_context.vnode_info.vnodes_by_rank,
+        input.edge_tail,
+      )
+    } else {
+      Map::new()
+    }
   runtime_context
 }
 
