@@ -59,52 +59,6 @@ pub struct NonclusteredXposGroupBuildInput {
 }
 
 ///|
-pub fn build_nonclustered_xpos_group_build_input(
-  nodes : Array[@cgraph.Node],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
-  x_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  edge_order : Map[String, Int],
-  node_order : Map[String, Int],
-  x_order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> NonclusteredXposGroupBuildInput {
-  {
-    nodes,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    ranks,
-    edge_vnodes,
-    vnode_ranks,
-    x_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    edge_order,
-    node_order,
-    x_order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    cluster_skeleton,
-    flat_constraints,
-    graphviz_flip,
-  }
-}
-
 /// Graphviz parity: non-cluster xpos reorder inputs keep vnode-expanded edge
 /// index data, precomputed port hints, and rank-order metadata together for a
 /// single reorder_rank_groups call.
