@@ -1513,43 +1513,6 @@ fn push_slack_segment(
 }
 
 ///|
-fn add_ordered_constraint_nodes(
-  graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
-  ordered_names : Array[String],
-  real_by_name : Map[String, @cgraph.Node],
-  extra_rank : Map[String, Int],
-  base_positions : Map[String, Double],
-) -> Unit {
-  for name in ordered_names {
-    match real_by_name.get(name) {
-      Some(node) => {
-        let idx = @network_simplex.add_node(graph, node.name())
-        index[name] = idx
-        let pos = match base_positions.get(name) {
-          Some(value) => value
-          None => 0.0
-        }
-        @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
-      }
-      None =>
-        match extra_rank.get(name) {
-          Some(rank) => {
-            let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
-            index[name] = idx
-            let pos = match base_positions.get(name) {
-              Some(value) => value
-              None => rank.to_double()
-            }
-            @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
-          }
-          None => ()
-        }
-    }
-  }
-}
-
-///|
 priv struct OrientedEdgeEndpoints {
   tail_name : String
   head_name : String
@@ -1643,57 +1606,22 @@ fn build_constraint_graph(
   let base_positions = @positioning.compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
-  let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
-  let late_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
-  for extra_node in extra_nodes {
-    if @clustering.is_cluster_boundary_name(extra_node.name) {
-      late_extra_nodes.push(extra_node)
-    } else {
-      early_extra_nodes.push(extra_node)
-    }
-  }
-  let real_by_name : Map[String, @cgraph.Node] = Map::new()
-  for node in nodes {
-    real_by_name[node.name()] = node
-  }
-  let extra_rank : Map[String, Int] = Map::new()
-  for extra_node in early_extra_nodes {
-    extra_rank[extra_node.name] = extra_node.rank
-  }
-  let ordered_names : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
-  let base_order =
-    if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
-  for name in base_order {
-    if real_by_name.get(name) is Some(_) || extra_rank.get(name) is Some(_) {
-      if seen.get(name) is None {
-        ordered_names.push(name)
-        seen[name] = true
-      }
-    }
-  }
-  for node in nodes {
-    let name = node.name()
-    if seen.get(name) is None {
-      ordered_names.push(name)
-      seen[name] = true
-    }
-  }
-  for name, _rank in extra_rank {
-    if seen.get(name) is None {
-      ordered_names.push(name)
-      seen[name] = true
-    }
-  }
-  let index : Map[String, Int] = Map::new()
-  add_ordered_constraint_nodes(
-    graph,
-    index,
-    ordered_names,
-    real_by_name,
-    extra_rank,
-    base_positions,
-  )
+  let node_setup =
+    @positioning.build_constraint_nodes_setup(
+      {
+        graph,
+        nodes,
+        extra_nodes,
+        nlist_order,
+        gdnlist_order,
+        base_positions,
+        extra_node_kind,
+        trunc_int,
+      },
+    )
+  let index = node_setup.index
+  let real_by_name = node_setup.real_by_name
+  let late_extra_nodes = node_setup.late_extra_nodes
   let rank_constraint_seed =
     @positioning.build_rank_constraint_seed(
       rank_keys,
@@ -1765,38 +1693,38 @@ fn build_constraint_graph(
                       (head_name, tail_name)
                     }
                 }
-                let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
-                let mut minlen_value =
-                  Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
-                let is_invis = match edge.get_attr("style") {
-                  Some(style) => style.to_lower().contains("invis")
-                  None => false
-                }
-                if is_invis && has_ordering {
-                  minlen_value = minlen_value + nodesep_pt
-                }
-                let minlen = trunc_int(minlen_value)
-                let weight = @dot_shared.edge_weight(edge)
-                let flat_key = "\{left}|\{right}"
-                if rank_adj_constraints.get(flat_key) is Some(_) {
-                  @positioning.upsert_constraint_with_max(
-                    rank_adj_constraints,
-                    flat_key,
-                    left,
-                    right,
-                    minlen,
-                    weight,
-                  )
-                } else {
-                  @positioning.upsert_constraint_with_max(
-                    flat_minlen_constraints,
-                    flat_key,
-                    left,
-                    right,
-                    minlen,
-                    weight,
-                  )
-                }
+              let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
+              let mut minlen_value =
+                Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
+              let is_invis = match edge.get_attr("style") {
+                Some(style) => style.to_lower().contains("invis")
+                None => false
+              }
+              if is_invis && has_ordering {
+                minlen_value = minlen_value + nodesep_pt
+              }
+              let minlen = trunc_int(minlen_value)
+              let weight = @dot_shared.edge_weight(edge)
+              let flat_key = "\{left}|\{right}"
+              if rank_adj_constraints.get(flat_key) is Some(_) {
+                @positioning.upsert_constraint_with_max(
+                  rank_adj_constraints,
+                  flat_key,
+                  left,
+                  right,
+                  minlen,
+                  weight,
+                )
+              } else {
+                @positioning.upsert_constraint_with_max(
+                  flat_minlen_constraints,
+                  flat_key,
+                  left,
+                  right,
+                  minlen,
+                  weight,
+                )
+              }
             } else {
               let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
                 Some(list) => list
@@ -1814,16 +1742,16 @@ fn build_constraint_graph(
                 }
                 reversed
               }
-                let chain : Array[String] = []
-                chain.push(tail_name)
-                for vnode in ordered_vnodes {
-                  chain.push(vnode)
-                }
-                if tail_name != head_name || ordered_vnodes.length() == 0 {
-                  chain.push(head_name)
-                }
-                let base_weight = @dot_shared.edge_weight(edge)
-                let orig_tail = edge.tail().name()
+              let chain : Array[String] = []
+              chain.push(tail_name)
+              for vnode in ordered_vnodes {
+                chain.push(vnode)
+              }
+              if tail_name != head_name || ordered_vnodes.length() == 0 {
+                chain.push(head_name)
+              }
+              let base_weight = @dot_shared.edge_weight(edge)
+              let orig_tail = edge.tail().name()
               let mut idx = 0
               while idx + 1 < chain.length() {
                 let seg_tail = chain[idx]
