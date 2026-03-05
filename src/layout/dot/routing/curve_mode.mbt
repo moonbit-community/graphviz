@@ -580,12 +580,14 @@ fn prepare_edge_curve_mode_route(
       },
     )
   let curve_offset_params = compute_curve_offset(
-    edge,
-    input.base,
-    input.head_port_metrics,
-    label_width_pt,
-    input.nodesep_pt,
-    input.enable_complex_tuning,
+    {
+      edge,
+      base: input.base,
+      head_port_metrics: input.head_port_metrics,
+      label_width_pt,
+      nodesep_pt: input.nodesep_pt,
+      enable_complex_tuning: input.enable_complex_tuning,
+    },
   )
   let short_route_context =
     short_route_build_context(
@@ -1116,16 +1118,27 @@ priv struct CurveOffsetParams {
 }
 
 ///|
+priv struct CurveOffsetInput {
+  edge : @cgraph.Edge
+  base : EdgeRouteBase
+  head_port_metrics : HeadPortMetrics
+  label_width_pt : Double
+  nodesep_pt : Double
+  enable_complex_tuning : Bool
+}
+
+///|
 /// Graphviz parity: curve offset tuning aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_curve_offset(
-  edge : @cgraph.Edge,
-  base : EdgeRouteBase,
-  head_port_metrics : HeadPortMetrics,
-  label_width_pt : Double,
-  nodesep_pt : Double,
-  enable_complex_tuning : Bool,
+  input : CurveOffsetInput,
 ) -> CurveOffsetParams {
+  let edge = input.edge
+  let base = input.base
+  let head_port_metrics = input.head_port_metrics
+  let label_width_pt = input.label_width_pt
+  let nodesep_pt = input.nodesep_pt
+  let enable_complex_tuning = input.enable_complex_tuning
   let mut curve_offset = 0.0
   let mut curve_skew = 1.0
   if enable_complex_tuning {
