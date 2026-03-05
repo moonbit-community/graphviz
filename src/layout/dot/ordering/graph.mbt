@@ -1239,6 +1239,100 @@ pub fn build_clustered_materialized_stage_from_sources(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root stage source bundle keeps seed-stage
+/// snapshots and materialization-stage snapshots grouped for one deterministic
+/// pre-root run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredPreRootStageSources {
+  reorder_setup : OrderingReorderSetup
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnodes_by_rank : Map[Int, Array[String]]
+  order_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, NodeSize]
+  skeleton_size : NodeSize
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  has_clusters : Bool
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+  flat_constraints : Map[String, Bool]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+  intercluster_keys : Map[String, String]
+}
+
+///|
+/// Graphviz parity: clustered pre-root stage output keeps grouped sizes,
+/// cluster skeleton maps, reorder context, and materialized edges unchanged.
+/// Do not change behavior without updating fixtures/tests.
+pub struct ClusteredPreRootStageOutput {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+}
+
+///|
+/// Graphviz parity: clustered pre-root stage keeps order-group seed expansion,
+/// reorder-context assembly, and mapped/unmapped edge materialization in fixed
+/// order before root/finalize phases.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_clustered_pre_root_stage_from_sources(
+  sources : ClusteredPreRootStageSources,
+) -> ClusteredPreRootStageOutput {
+  let order_seed_stage =
+    build_clustered_order_seed_stage_from_sources(
+      {
+        reorder_setup: sources.reorder_setup,
+        cluster_keys: sources.cluster_keys,
+        cluster_order: sources.cluster_order,
+        cluster_min_rank: sources.cluster_min_rank,
+        cluster_max_rank: sources.cluster_max_rank,
+        vnode_clusters: sources.vnode_clusters,
+        vnodes_by_rank: sources.vnodes_by_rank,
+        order_sizes: sources.order_sizes,
+        vnode_sizes: sources.vnode_sizes,
+        skeleton_size: sources.skeleton_size,
+      },
+    )
+  let materialized_stage =
+    build_clustered_materialized_stage_from_sources(
+      {
+        reorder_setup: sources.reorder_setup,
+        class2_data: sources.reorder_setup.class2_data,
+        order_groups: order_seed_stage.order_groups,
+        node_order: sources.node_order,
+        real_nodes: sources.real_nodes,
+        has_clusters: sources.has_clusters,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        port_edge_nodes: sources.port_edge_nodes,
+        flat_constraints: sources.flat_constraints,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+        nodes: sources.nodes,
+        intercluster_keys: sources.intercluster_keys,
+      },
+    )
+  {
+    order_groups: order_seed_stage.order_groups,
+    order_sizes_out: order_seed_stage.order_sizes_out,
+    order_cluster_keys: order_seed_stage.order_cluster_keys,
+    order_cluster_skeleton: order_seed_stage.order_cluster_skeleton,
+    reorder_context: materialized_stage.reorder_context,
+    materialized: materialized_stage.materialized,
+  }
+}
+
+///|
 /// Graphviz parity: parent/child adjacency maps and edge-order indices are
 /// derived from the exact materialized edge arrays in current order graph.
 /// Do not change behavior without updating fixtures/tests.
