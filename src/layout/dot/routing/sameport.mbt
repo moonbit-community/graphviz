@@ -308,14 +308,25 @@ fn oriented_edge_endpoints_for_route(
 ///|
 /// Graphviz parity: same-rank intercluster edges keep original direction in
 /// route base setup even when edgecmp would otherwise swap endpoints.
+priv struct RouteBaseSwapEndsInput {
+  edge : @cgraph.Edge
+  orig_tail_name : String
+  orig_head_name : String
+  ranks : Map[String, Int]
+  order_index : Map[String, Int]
+  node_local_cluster_key_fn : (@cgraph.Node) -> String
+}
+
+///|
 fn edge_swap_ends_for_route_base(
-  edge : @cgraph.Edge,
-  orig_tail_name : String,
-  orig_head_name : String,
-  ranks : Map[String, Int],
-  order_index : Map[String, Int],
-  node_local_cluster_key_fn : (@cgraph.Node) -> String,
+  input : RouteBaseSwapEndsInput,
 ) -> Bool {
+  let edge = input.edge
+  let orig_tail_name = input.orig_tail_name
+  let orig_head_name = input.orig_head_name
+  let ranks = input.ranks
+  let order_index = input.order_index
+  let node_local_cluster_key_fn = input.node_local_cluster_key_fn
   let swap_ends_raw =
     @edge_ops.edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
   let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()

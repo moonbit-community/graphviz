@@ -385,12 +385,14 @@ fn build_edge_route_base(
   let orig_head_name = edge.head().name()
   let swap_ends =
     edge_swap_ends_for_route_base(
-      edge,
-      orig_tail_name,
-      orig_head_name,
-      ranks,
-      order_index,
-      route_base_deps.node_local_cluster_key,
+      {
+        edge,
+        orig_tail_name,
+        orig_head_name,
+        ranks,
+        order_index,
+        node_local_cluster_key_fn: route_base_deps.node_local_cluster_key,
+      },
     )
   let sameport_info =
     edge_sameport_orientation_info(
