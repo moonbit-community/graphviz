@@ -548,7 +548,7 @@ fn add_flat_label_vnodes(
       } else {
         minlen_base
       }
-      let minlen = round_int(minlen_adjusted)
+      let minlen = @dot_shared.round_int(minlen_adjusted)
       extra_edges.push({
         tail: left,
         head: right,
@@ -618,8 +618,8 @@ fn add_flat_label_vnodes(
       0.5
     }
     let m0 = Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt * m0_scale
-    let minlen_left = round_int(m0 + left_right + half_width)
-    let minlen_right = round_int(m0 + half_width + right_left)
+    let minlen_left = @dot_shared.round_int(m0 + left_right + half_width)
+    let minlen_right = @dot_shared.round_int(m0 + half_width + right_left)
     extra_edges.push({
       tail: left,
       head: name,

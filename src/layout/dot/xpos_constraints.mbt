@@ -13,24 +13,6 @@ priv struct ClusterBoundaryNodes {
 }
 
 ///|
-fn round_int(value : Double) -> Int {
-  if value >= 0.0 {
-    (value + 0.5).floor().to_int()
-  } else {
-    (value - 0.5).ceil().to_int()
-  }
-}
-
-///|
-fn trunc_int(value : Double) -> Int {
-  if value >= 0.0 {
-    value.floor().to_int()
-  } else {
-    value.ceil().to_int()
-  }
-}
-
-///|
 fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
   match graph.get_attr("margin") {
     Some(value) => {
@@ -78,7 +60,7 @@ fn compress_width_minlen_pt(
     return None
   }
   let clamped = if width_pt > 65535.0 { 65535.0 } else { width_pt }
-  Some(round_int(clamped))
+  Some(@dot_shared.round_int(clamped))
 }
 
 ///|
@@ -290,11 +272,11 @@ fn build_cluster_constraints(
         }
         extra_nodes.push({
           name: ln_name,
-          rank: trunc_int(left - margin - left_border),
+          rank: @dot_shared.trunc_int(left - margin - left_border),
         })
         extra_nodes.push({
           name: rn_name,
-          rank: trunc_int(right + margin + right_border),
+          rank: @dot_shared.trunc_int(right + margin + right_border),
         })
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
@@ -328,7 +310,7 @@ fn build_cluster_constraints(
           match graph_label_metrics(cluster_graph) {
             Some(metrics) => {
               let label_width = metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0
-              let minlen = round_int(label_width)
+              let minlen = @dot_shared.round_int(label_width)
               if minlen > 0 {
                 label_minlen = Some(minlen)
               }
@@ -396,7 +378,7 @@ fn build_cluster_constraints(
           }
           let left_name = names[left_idx]
           let right_name = names[right_idx]
-          let left_minlen = round_int(
+          let left_minlen = @dot_shared.round_int(
             @dot_shared.node_left_pt(left_name, sizes) + margin + left_border,
           )
           extra_edges.push({
@@ -407,7 +389,7 @@ fn build_cluster_constraints(
             tail_port: None,
             head_port: None,
           })
-          let right_minlen = round_int(
+          let right_minlen = @dot_shared.round_int(
             @dot_shared.node_right_pt(right_name, sizes) + margin + right_border,
           )
           extra_edges.push({
@@ -424,7 +406,9 @@ fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = round_int(@dot_shared.node_right_pt(outside, sizes) + margin)
+              let minlen = @dot_shared.round_int(
+                @dot_shared.node_right_pt(outside, sizes) + margin,
+              )
               extra_edges.push({
                 tail: outside,
                 head: ln_name,
@@ -443,7 +427,9 @@ fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = round_int(@dot_shared.node_left_pt(outside, sizes) + margin)
+              let minlen = @dot_shared.round_int(
+                @dot_shared.node_left_pt(outside, sizes) + margin,
+              )
               extra_edges.push({
                 tail: rn_name,
                 head: outside,
@@ -483,8 +469,12 @@ fn build_cluster_constraints(
                   Some(value) => value
                   None => 0.0
                 }
-                let left_minlen = round_int(margin + parent_left_border)
-                let right_minlen = round_int(margin + parent_right_border)
+                let left_minlen = @dot_shared.round_int(
+                  margin + parent_left_border,
+                )
+                let right_minlen = @dot_shared.round_int(
+                  margin + parent_right_border,
+                )
                 extra_edges.push({
                   tail: parent_ln,
                   head: child_ln,
@@ -640,7 +630,7 @@ fn build_cluster_constraints(
                                           Some(right_pair) => {
                                             let left_rn = left_pair.right_node
                                             let right_ln = right_pair.left_node
-                                            let minlen = round_int(margin)
+                                            let minlen = @dot_shared.round_int(margin)
                                             extra_edges.push({
                                               tail: left_rn,
                                               head: right_ln,

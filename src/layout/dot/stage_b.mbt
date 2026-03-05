@@ -365,8 +365,8 @@ fn compute_rank_heights(
       node_half_height_pt_for: node_half_height_pt,
     },
   )
-  let nodesep_pt = round_int(input.nodesep_in * 72.0).to_double()
-  let mut ranksep_pt_int = round_int(input.ranksep_in * 72.0)
+  let nodesep_pt = @dot_shared.round_int(input.nodesep_in * 72.0).to_double()
+  let mut ranksep_pt_int = @dot_shared.round_int(input.ranksep_in * 72.0)
   if input.has_edge_labels {
     ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }

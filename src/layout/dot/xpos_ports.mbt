@@ -410,8 +410,8 @@ fn segment_slack_minlen(
     real_by_name,
   )
   let delta = head_offset - tail_offset
-  let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-  let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+  let m0 = if delta > 0.0 { @dot_shared.trunc_int(delta) } else { 0 }
+  let m1 = if delta < 0.0 { @dot_shared.trunc_int(-delta) } else { 0 }
   (m0, m1)
 }
 

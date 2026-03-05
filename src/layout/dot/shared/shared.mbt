@@ -174,6 +174,25 @@ pub fn parse_double_or(value : String, fallback : Double) -> Double {
 }
 
 ///|
+/// Graphviz ROUND macro parity (round half away from zero).
+pub fn round_int(value : Double) -> Int {
+  if value >= 0.0 {
+    (value + 0.5).floor().to_int()
+  } else {
+    (value - 0.5).ceil().to_int()
+  }
+}
+
+///|
+pub fn trunc_int(value : Double) -> Int {
+  if value >= 0.0 {
+    value.floor().to_int()
+  } else {
+    value.ceil().to_int()
+  }
+}
+
+///|
 fn first_numeric_token(value : String) -> String? {
   let sb = StringBuilder::new()
   let mut seen = false

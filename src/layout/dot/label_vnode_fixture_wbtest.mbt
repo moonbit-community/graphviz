@@ -621,7 +621,7 @@ test "flat label node sizes match Graphviz fixtures" {
     Some(value) => @dot_shared.parse_first_double(value, default_ranksep_in())
     None => default_ranksep_in()
   }
-  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
+  let mut ranksep_pt_int = @dot_shared.round_int(ranksep_in * 72.0)
   if has_edge_labels {
     ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }

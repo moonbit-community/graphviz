@@ -9,15 +9,6 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
 
 ///|
-fn trunc_int(value : Double) -> Int {
-  if value >= 0.0 {
-    value.floor().to_int()
-  } else {
-    value.ceil().to_int()
-  }
-}
-
-///|
 fn size_left_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double {
   match sizes.get(name) {
     Some(size) => size.left_pt
@@ -120,7 +111,7 @@ pub fn compute_rank_positions(
       let tail_right = size_right_pt(prev, sizes)
       let head_left = size_left_pt(name, sizes)
       let width = tail_right + head_left + rank_nodesep
-      current = trunc_int(current.to_double() + width)
+      current = @shared.trunc_int(current.to_double() + width)
       positions[name] = current.to_double()
       prev = name
       i = i + 1
