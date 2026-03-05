@@ -46,7 +46,7 @@ fn for_each_sameport_class_member_edge_id(
   edge : @cgraph.Edge,
   apply_id : (Int) -> Unit,
 ) -> Unit {
-  if edge_has_label(edge) {
+  if @dot_shared.edge_has_label(edge) {
     apply_id(edge.id())
     return ()
   }

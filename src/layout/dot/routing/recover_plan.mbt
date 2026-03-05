@@ -3,7 +3,7 @@
 /// unlabeled edges that share a class2 vnode chain.
 pub fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
-  if edge_has_label(edge) || !undirected {
+  if @dot_shared.edge_has_label(edge) || !undirected {
     "vnode|\{@dot_shared.edge_vnode_key(edge)}"
   } else {
     "parallel|\{@edge_ops.edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
@@ -60,7 +60,7 @@ fn collect_parallel_groups(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in ordered_edges {
-    if edge_has_label(edge) {
+    if @dot_shared.edge_has_label(edge) {
       continue
     }
     if @dot_shared.edge_is_self(edge) {

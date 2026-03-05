@@ -233,7 +233,7 @@ fn update_rank_pht_for_label(
   rank_pht : Map[Int, Double],
   rankdir : RankDir,
 ) -> Unit {
-  if !edge_has_label(edge) {
+  if !@dot_shared.edge_has_label(edge) {
     return
   }
   let tail = edge.tail().name()

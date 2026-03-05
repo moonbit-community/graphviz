@@ -127,7 +127,7 @@ fn collect_parallel_remap_edge_ids(
   let group_first_direction : Map[String, String] = Map::new()
   let group_has_mixed_direction : Map[String, Bool] = Map::new()
   for edge in edges {
-    if edge_has_label(edge) {
+    if @dot_shared.edge_has_label(edge) {
       continue
     }
     let tail = edge.tail().name()

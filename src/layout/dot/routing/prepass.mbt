@@ -23,7 +23,7 @@ fn collect_flat_adjacent_beziers(
     if @dot_shared.edge_is_self(edge) {
       continue
     }
-    if edge_has_label(edge) {
+    if @dot_shared.edge_has_label(edge) {
       continue
     }
     if @dot_shared.port_is_explicit(edge.tail_port()) ||

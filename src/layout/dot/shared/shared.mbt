@@ -190,6 +190,14 @@ pub fn edge_is_self(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+pub fn edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")

@@ -78,20 +78,9 @@ fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
-/// Graphviz parity: edge label presence aligned to refs/graphviz/lib/dotgen/position.c
-/// (hasedge).
-/// Do not change behavior without updating fixtures/tests.
-fn edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
   for edge in edges {
-    if edge_has_label(edge) {
+    if @dot_shared.edge_has_label(edge) {
       return true
     }
   }

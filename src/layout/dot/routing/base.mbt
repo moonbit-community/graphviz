@@ -10,14 +10,6 @@ fn point_for_name_or_origin(
 }
 
 ///|
-fn edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
   match edge.get_attr(name) {
     Some(value) => value != ""
