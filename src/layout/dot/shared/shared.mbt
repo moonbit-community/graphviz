@@ -28,6 +28,12 @@ pub const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
 pub const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
 
 ///|
+pub const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
+
+///|
+pub const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
+
+///|
 pub fn default_node_width_in() -> Double {
   0.75
 }

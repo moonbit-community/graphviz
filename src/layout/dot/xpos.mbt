@@ -11,10 +11,10 @@ const CLUSTER_COMPACT_WEIGHT : Int = 128
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
 ///|
-const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
+const CLUSTER_LN_PREFIX : String = @dot_shared.CLUSTER_LN_PREFIX
 
 ///|
-const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
+const CLUSTER_RN_PREFIX : String = @dot_shared.CLUSTER_RN_PREFIX
 
 ///|
 priv struct ConstraintEdge {

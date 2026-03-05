@@ -125,21 +125,19 @@ fn adjust_intercluster_alignment(
 fn cluster_key_from_boundary(
   name : String,
   cluster_names : Map[String, Bool],
-  cluster_ln_prefix : String,
-  cluster_rn_prefix : String,
 ) -> String? {
   let mut rest : String? = None
-  if name.has_prefix(cluster_ln_prefix) {
+  if name.has_prefix(@shared.CLUSTER_LN_PREFIX) {
     rest = Some(
       name.unsafe_substring(
-        start=cluster_ln_prefix.length(),
+        start=@shared.CLUSTER_LN_PREFIX.length(),
         end=name.length(),
       ),
     )
-  } else if name.has_prefix(cluster_rn_prefix) {
+  } else if name.has_prefix(@shared.CLUSTER_RN_PREFIX) {
     rest = Some(
       name.unsafe_substring(
-        start=cluster_rn_prefix.length(),
+        start=@shared.CLUSTER_RN_PREFIX.length(),
         end=name.length(),
       ),
     )
@@ -370,8 +368,6 @@ pub(all) struct PositionOutputBuildSources {
   use_vnodes_for_xpos : Bool
   vnode_ranks : Map[String, Int]
   edge_vnodes : Map[String, Array[String]]
-  cluster_ln_prefix : String
-  cluster_rn_prefix : String
 }
 
 ///|
@@ -407,17 +403,15 @@ pub fn build_position_output_maps_from_sources(
         x_positions: sources.x_positions,
         is_cluster_boundary:
           (name) =>
-            name.has_prefix(sources.cluster_ln_prefix) ||
-            name.has_prefix(sources.cluster_rn_prefix),
+            name.has_prefix(@shared.CLUSTER_LN_PREFIX) ||
+            name.has_prefix(@shared.CLUSTER_RN_PREFIX),
         boundary_cluster_key:
           (name) =>
             cluster_key_from_boundary(
               name,
               cluster_names,
-              sources.cluster_ln_prefix,
-              sources.cluster_rn_prefix,
             ),
-        is_left_boundary: (name) => name.has_prefix(sources.cluster_ln_prefix),
+        is_left_boundary: (name) => name.has_prefix(@shared.CLUSTER_LN_PREFIX),
       },
     )
   // Let the final bounding-box translation handle normalization, matching Graphviz.

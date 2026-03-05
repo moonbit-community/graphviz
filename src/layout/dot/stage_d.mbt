@@ -734,8 +734,6 @@ fn build_position_output_maps(
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
         vnode_ranks: input.pipeline.ordering.vnode_info.vnode_ranks,
         edge_vnodes: input.pipeline.ordering.vnode_info.edge_vnodes,
-        cluster_ln_prefix: CLUSTER_LN_PREFIX,
-        cluster_rn_prefix: CLUSTER_RN_PREFIX,
       },
     )
   if input.pipeline.cluster_meta.has_clusters && cluster_rounding_enabled() {
