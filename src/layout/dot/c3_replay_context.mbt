@@ -6,7 +6,12 @@
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 priv struct ClusterLocalRankReplayContext {
   graph : @cgraph.Graph
-  cluster_meta : ClusterMetadata
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
   node_order : Map[String, Int]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
@@ -23,7 +28,9 @@ priv struct ClusterLocalRankReplayContext {
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
-  vnode_info : @routing.EdgeVnodeInfo
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, NodeSize]
   order_with_vnodes : Bool
 }
 
@@ -40,7 +47,12 @@ fn build_cluster_local_rank_replay_context(
   let runtime_context = dispatch_context.runtime_context
   {
     graph: dispatch_context.graph,
-    cluster_meta: dispatch_context.cluster_meta,
+    cluster_order: dispatch_context.cluster_meta.cluster_order,
+    cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    flat_constraints: dispatch_context.cluster_meta.flat_constraints,
     node_order: reorder_context.order_node_order,
     order_edges: materialized.order_edges_out_unmapped,
     order_edge_tail: materialized.order_edge_tail_out_unmapped,
@@ -57,7 +69,9 @@ fn build_cluster_local_rank_replay_context(
     has_edge_labels: dispatch_context.has_edge_labels,
     port_order_positions: dispatch_context.port_order_positions,
     port_order_contrib: dispatch_context.port_order_contrib,
-    vnode_info: runtime_context.vnode_info,
+    vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+    vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+    vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     order_with_vnodes: dispatch_context.reorder_setup.order_with_vnodes,
   }
 }
@@ -72,7 +86,7 @@ fn build_cluster_replay_fixed_ranks(
   for name, rank in replay_context.ranks {
     fixed_ranks[name] = rank
   }
-  for name, rank in replay_context.vnode_info.vnode_ranks {
+  for name, rank in replay_context.vnode_ranks {
     fixed_ranks[name] = rank
   }
   fixed_ranks
@@ -116,12 +130,12 @@ fn build_cluster_replay_dispatch_context(
     has_edge_labels: replay_context.has_edge_labels,
     port_order_positions: replay_context.port_order_positions,
     port_order_contrib: replay_context.port_order_contrib,
-    rank_same_groups: replay_context.cluster_meta.rank_same_groups,
-    rank_same_order: replay_context.cluster_meta.rank_same_order,
-    intercluster_keys: replay_context.cluster_meta.intercluster_keys,
-    flat_constraints: replay_context.cluster_meta.flat_constraints,
-    vnode_clusters: replay_context.vnode_info.vnode_clusters,
-    vnode_sizes: replay_context.vnode_info.vnode_sizes,
+    rank_same_groups: replay_context.rank_same_groups,
+    rank_same_order: replay_context.rank_same_order,
+    intercluster_keys: replay_context.intercluster_keys,
+    flat_constraints: replay_context.flat_constraints,
+    vnode_clusters: replay_context.vnode_clusters,
+    vnode_sizes: replay_context.vnode_sizes,
     fixed_ranks,
     order_with_vnodes: replay_context.order_with_vnodes,
   }

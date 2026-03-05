@@ -9,14 +9,14 @@ fn run_cluster_local_rank_replay(
   groups : Map[Int, Array[String]],
   replay_context : ClusterLocalRankReplayContext,
 ) -> Unit {
-  if replay_context.cluster_meta.cluster_order.length() == 0 {
+  if replay_context.cluster_order.length() == 0 {
     return ()
   }
   let cluster_graph_order =
     @ordering.build_cluster_graph_order(
       replay_context.graph,
-      replay_context.cluster_meta.cluster_order,
-      replay_context.cluster_meta.cluster_parents,
+      replay_context.cluster_order,
+      replay_context.cluster_parents,
     )
   let cluster_graphs = cluster_graph_order.cluster_graphs
   let cluster_names = cluster_graph_order.cluster_names
