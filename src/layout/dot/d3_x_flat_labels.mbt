@@ -85,7 +85,12 @@ fn build_x_flat_labels(
   let x_groups =
     @positioning.build_x_groups_after_reorder(
       build_xpos_reorder_pipeline_input(input),
-      compute_xpos_reorder_port_samples,
+      (sample_input) =>
+        @positioning.build_xpos_port_samples(
+          sample_input,
+          compute_edge_port_values,
+          compute_edge_order_values,
+        ),
     )
   build_flat_label_augmentation(
     {

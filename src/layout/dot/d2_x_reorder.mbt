@@ -67,33 +67,3 @@ fn build_xpos_reorder_pipeline_input(
     },
   )
 }
-
-/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
-/// and order-fraction hints from the same order-edge snapshot before scoring.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_xpos_reorder_port_samples(
-  input : @positioning.XposPortSampleInput,
-) -> @positioning.XposPortSamples {
-  let port_position_samples =
-    compute_edge_port_positions(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
-    )
-  let port_order_samples =
-    compute_edge_port_orders(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
-    )
-  @positioning.xpos_port_samples(
-    port_position_samples.tail_values,
-    port_position_samples.head_values,
-    port_order_samples.tail_values,
-    port_order_samples.head_values,
-  )
-}

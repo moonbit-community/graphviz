@@ -32,6 +32,39 @@ pub type XposPortSampleBundleFn = (
 ) -> XposPortSamples
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
+/// and order-fraction hints from the same order-edge snapshot before scoring.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_xpos_port_samples(
+  input : XposPortSampleInput,
+  compute_port_positions : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
+  compute_port_orders : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
+) -> XposPortSamples {
+  let (tail_port_x, head_port_x) =
+    compute_port_positions(
+      input.nodes,
+      input.order_edges,
+      input.order_edge_tail,
+      input.order_edge_head,
+      input.x_order_sizes,
+    )
+  let (tail_port_order, head_port_order) =
+    compute_port_orders(
+      input.nodes,
+      input.order_edges,
+      input.order_edge_tail,
+      input.order_edge_head,
+      input.x_order_sizes,
+    )
+  xpos_port_samples(
+    tail_port_x,
+    head_port_x,
+    tail_port_order,
+    head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder build input keeps order-edge
 /// snapshots, vnode expansion metadata, and reorder constraints grouped before
 /// order-edge port hint sampling.
