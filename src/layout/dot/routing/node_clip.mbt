@@ -201,13 +201,23 @@ fn clip_polygon_shape_params(
 }
 
 ///|
+priv struct ClipPolygonForShapeInput {
+  size : NodeSize
+  sides : Int
+  orientation_deg : Double
+  distortion : Double
+  skew : Double
+}
+
+///|
 fn clip_polygon_for_shape(
-  size : NodeSize,
-  sides : Int,
-  orientation_deg : Double,
-  distortion : Double,
-  skew : Double,
+  input : ClipPolygonForShapeInput,
 ) -> Array[@geom.Point] {
+  let size = input.size
+  let sides = input.sides
+  let orientation_deg = input.orientation_deg
+  let distortion = input.distortion
+  let skew = input.skew
   if sides < 3 {
     return []
   }
@@ -289,11 +299,13 @@ fn clip_to_polygon_shape(
   let skew = input.skew
   let vertices =
     clip_polygon_for_shape(
-      size,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
+      {
+        size,
+        sides,
+        orientation_deg,
+        distortion,
+        skew,
+      },
     )
   if vertices.length() < 3 {
     return clip_to_rect(center, size, target)
