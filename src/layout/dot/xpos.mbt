@@ -1400,52 +1400,6 @@ fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
-fn port_merge_key(port : @cgraph.Port?) -> String {
-  match port {
-    None => ""
-    Some(value) => {
-      let mut out = ""
-      match value.name {
-        Some(name) => out = name
-        None => ()
-      }
-      match value.compass {
-        Some(compass) => {
-          let side = match compass {
-            @cgraph.Compass::N => "n"
-            @cgraph.Compass::NE => "ne"
-            @cgraph.Compass::E => "e"
-            @cgraph.Compass::SE => "se"
-            @cgraph.Compass::S => "s"
-            @cgraph.Compass::SW => "sw"
-            @cgraph.Compass::W => "w"
-            @cgraph.Compass::NW => "nw"
-            @cgraph.Compass::C => "c"
-          }
-          if out == "" {
-            out = side
-          } else {
-            out = "\{out}:\{side}"
-          }
-        }
-        None => ()
-      }
-      out
-    }
-  }
-}
-
-///|
-fn directed_edge_merge_key(
-  tail : String,
-  head : String,
-  tail_port : @cgraph.Port?,
-  head_port : @cgraph.Port?,
-) -> String {
-  "\{tail}|\{head}|\{port_merge_key(tail_port)}|\{port_merge_key(head_port)}"
-}
-
-///|
 fn add_segment_slack_edges(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -1599,7 +1553,6 @@ fn add_ordered_constraint_nodes(
 priv struct OrientedEdgeEndpoints {
   tail_name : String
   head_name : String
-  is_reversed : Bool
 }
 
 ///|
@@ -1616,80 +1569,12 @@ fn oriented_edge_endpoints(
       edge_tail,
       edge_head,
     )
-  let is_reversed = @ordering.edge_orientation_is_reversed(edge, tail_name, head_name)
-  { tail_name, head_name, is_reversed }
+  { tail_name, head_name }
 }
 
 ///|
 fn edge_excluded_from_reverse_merge(edge : @cgraph.Edge) -> Bool {
   edge_mid_label_metrics(edge) is Some(_) || edge_is_self(edge)
-}
-
-///|
-priv struct ReverseMergeMetadata {
-  merged_edge_weight_bonus : Map[Int, Int]
-  merged_edge_skip : Map[Int, Bool]
-}
-
-///|
-fn build_reverse_merge_metadata(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> ReverseMergeMetadata {
-  let forward_rep_by_key : Map[String, Int] = Map::new()
-  let merged_edge_weight_bonus : Map[Int, Int] = Map::new()
-  let merged_edge_skip : Map[Int, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    if edge_excluded_from_reverse_merge(edge) {
-      continue
-    }
-    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
-    if oriented.is_reversed {
-      continue
-    }
-    let key = directed_edge_merge_key(
-      edge.tail().name(),
-      edge.head().name(),
-      edge.tail_port(),
-      edge.head_port(),
-    )
-    if forward_rep_by_key.get(key) is None {
-      forward_rep_by_key[key] = edge_idx
-    }
-  }
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    if edge_excluded_from_reverse_merge(edge) {
-      continue
-    }
-    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
-    if !oriented.is_reversed {
-      continue
-    }
-    let key = directed_edge_merge_key(
-      edge.head().name(),
-      edge.tail().name(),
-      edge.tail_port(),
-      edge.head_port(),
-    )
-    match forward_rep_by_key.get(key) {
-      Some(rep_idx) => {
-        if rep_idx == edge_idx {
-          continue
-        }
-        merged_edge_skip[edge_idx] = true
-        let prev_bonus = match merged_edge_weight_bonus.get(rep_idx) {
-          Some(value) => value
-          None => 0
-        }
-        merged_edge_weight_bonus[rep_idx] = prev_bonus + @dot_shared.edge_weight(edge)
-      }
-      None => ()
-    }
-  }
-  { merged_edge_weight_bonus, merged_edge_skip }
 }
 
 ///|
@@ -1823,7 +1708,14 @@ fn build_constraint_graph(
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
   let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
   let reverse_merge_metadata =
-    build_reverse_merge_metadata(edges, edge_tail, edge_head)
+    @positioning.build_reverse_merge_metadata(
+      {
+        edges,
+        edge_tail,
+        edge_head,
+        edge_excluded_from_reverse_merge,
+      },
+    )
   let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus
   let merged_edge_skip = reverse_merge_metadata.merged_edge_skip
   let record_edge_segments = (edge_idx : Int, edge : @cgraph.Edge) => {
