@@ -22,6 +22,9 @@ pub(all) struct NodeSize {
 pub const RECORD_BORDER_PT : Double = 0.5
 
 ///|
+pub const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
+
+///|
 pub fn default_node_width_in() -> Double {
   0.75
 }

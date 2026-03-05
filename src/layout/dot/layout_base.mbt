@@ -317,7 +317,7 @@ fn edge_dir_for_routing(
 }
 
 ///|
-const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
+const EDGE_VNODE_PREFIX : String = @dot_shared.EDGE_VNODE_PREFIX
 
 ///|
 const MAX_XPOS_VNODES : Int = 100000

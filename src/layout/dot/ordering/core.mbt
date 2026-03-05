@@ -2,7 +2,7 @@
 type NodeSize = @shared.NodeSize
 
 ///|
-const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
+const EDGE_VNODE_PREFIX : String = @shared.EDGE_VNODE_PREFIX
 
 ///|
 const LARGE_SORT_THRESHOLD : Int = 128
