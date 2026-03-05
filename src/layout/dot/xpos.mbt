@@ -13,52 +13,6 @@ const ROOT_COMPRESS_WEIGHT : Int = 1000
 ///|
 type ConstraintEdge = @positioning.ConstraintEdge
 
-///|
-priv struct XposConstraintNodeSnapshot {
-  name : String?
-  kind : @network_simplex.NodeKind
-  rank : Int
-  order : Int
-  left_pt : Double
-  right_pt : Double
-  height_pt : Double
-}
-
-///|
-priv struct XposConstraintEdgeSnapshot {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
-}
-
-///|
-priv struct XposConstraintSnapshot {
-  nodes : Array[XposConstraintNodeSnapshot]
-  edges : Array[XposConstraintEdgeSnapshot]
-}
-
-///|
-fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
-  let _ = snapshot.nodes
-  let _ = snapshot.edges
-  for node in snapshot.nodes {
-    let _ = node.name
-    let _ = node.kind
-    let _ = node.rank
-    let _ = node.order
-    let _ = node.left_pt
-    let _ = node.right_pt
-    let _ = node.height_pt
-  }
-  for edge in snapshot.edges {
-    let _ = edge.tail
-    let _ = edge.head
-    let _ = edge.minlen
-    let _ = edge.weight
-  }
-}
-
 fn x_positions_from_simplex(
   graph_root : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
