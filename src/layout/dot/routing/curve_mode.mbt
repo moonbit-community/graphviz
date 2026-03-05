@@ -570,12 +570,14 @@ fn prepare_edge_curve_mode_route(
   let using_pathplan = route_state.using_pathplan
   let points =
     adjust_route_points(
-      route_state.points,
-      input.base,
-      input.base.head_port_rect,
-      has_explicit_port,
-      using_pathplan,
-      input.nodesep_pt,
+      {
+        points: route_state.points,
+        base: input.base,
+        head_port_rect: input.base.head_port_rect,
+        has_explicit_port,
+        using_pathplan,
+        nodesep_pt: input.nodesep_pt,
+      },
     )
   let curve_offset_params = compute_curve_offset(
     edge,
@@ -1016,15 +1018,25 @@ fn compute_pathplan_route_points(
 ///|
 /// Graphviz parity: route point tweaks aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
+priv struct AdjustRoutePointsInput {
+  points : Array[@geom.Point]
+  base : EdgeRouteBase
+  head_port_rect : @geom.Rect?
+  has_explicit_port : Bool
+  using_pathplan : Bool
+  nodesep_pt : Double
+}
+
+///|
 fn adjust_route_points(
-  points : Array[@geom.Point],
-  base : EdgeRouteBase,
-  head_port_rect : @geom.Rect?,
-  has_explicit_port : Bool,
-  using_pathplan : Bool,
-  nodesep_pt : Double,
+  input : AdjustRoutePointsInput,
 ) -> Array[@geom.Point] {
-  let mut points = points
+  let base = input.base
+  let head_port_rect = input.head_port_rect
+  let has_explicit_port = input.has_explicit_port
+  let using_pathplan = input.using_pathplan
+  let nodesep_pt = input.nodesep_pt
+  let mut points = input.points
   let touch_eps = curve_max_double(@dot_shared.RECORD_BORDER_PT + 0.01, 1.5)
   let head_lr_touch =
     match head_port_rect {
