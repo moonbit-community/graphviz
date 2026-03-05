@@ -25,11 +25,6 @@ pub(all) struct ConstraintSegmentPassOutput {
 }
 
 ///|
-fn is_self_edge(edge : @cgraph.Edge) -> Bool {
-  edge.tail().name() == edge.head().name()
-}
-
-///|
 fn choose_flat_constraint_endpoints(
   tail_name : String,
   head_name : String,
@@ -137,7 +132,7 @@ pub fn build_constraint_segment_pass(
         edge_tail: input.edge_tail,
         edge_head: input.edge_head,
         edge_excluded_from_reverse_merge:
-          edge => (input.edge_has_mid_label)(edge) || is_self_edge(edge),
+          edge => (input.edge_has_mid_label)(edge) || @shared.edge_is_self(edge),
       },
     )
   let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus

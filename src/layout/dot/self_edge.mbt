@@ -91,7 +91,7 @@ fn self_edge_extra_right_space(
 fn collect_self_edges(edges : Array[@cgraph.Edge]) -> Array[@cgraph.Edge] {
   let self_edges : Array[@cgraph.Edge] = []
   for edge in edges {
-    if edge_is_self(edge) {
+    if @dot_shared.edge_is_self(edge) {
       self_edges.push(edge)
     }
   }
@@ -146,7 +146,7 @@ fn self_edge_label_half_heights(
 ) -> Map[String, Double] {
   let heights : Map[String, Double] = Map::new()
   for edge in edges {
-    if !edge_is_self(edge) {
+    if !@dot_shared.edge_is_self(edge) {
       continue
     }
     let tail = edge.tail().name()

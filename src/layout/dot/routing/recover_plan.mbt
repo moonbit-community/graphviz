@@ -20,7 +20,7 @@ fn recover_regular_selection(
   let selected_ids : Map[String, Int] = Map::new()
   let selected_scores : Map[String, Double] = Map::new()
   for edge in ordered_edges {
-    if edge_is_self(edge) {
+    if @dot_shared.edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
@@ -63,7 +63,7 @@ fn collect_parallel_groups(
     if edge_has_label(edge) {
       continue
     }
-    if edge_is_self(edge) {
+    if @dot_shared.edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {

@@ -28,7 +28,7 @@ fn collect_sameport_classes(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if edge_is_self(edge) {
+    if @dot_shared.edge_is_self(edge) {
       continue
     }
     let key = sameport_merge_key(edge)
@@ -443,7 +443,7 @@ fn collect_sameport_overrides(
   let sametail_group_order : Array[String] = []
   let merge_classes = collect_sameport_classes(edges)
   for edge in edges {
-    if edge_is_self(edge) {
+    if @dot_shared.edge_is_self(edge) {
       continue
     }
     let samehead_id = edge_attr_or_empty(edge, "samehead")

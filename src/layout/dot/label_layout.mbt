@@ -928,7 +928,7 @@ fn edge_label_pos_from_input(
         }
       _ => raw_pos
     }
-  if edge_is_self(edge) {
+  if @dot_shared.edge_is_self(edge) {
     return Some(base_pos)
   }
   match label_rank_y {

@@ -185,6 +185,11 @@ pub fn is_edge_vnode_name(name : String) -> Bool {
 }
 
 ///|
+pub fn edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")
