@@ -16,7 +16,7 @@ fn extract_numbers(value : String) -> Array[Double] {
     if token.length() == 0 {
       continue
     }
-    numbers.push(parse_double(token.to_string(), 0.0))
+    numbers.push(@dot_shared.parse_double_or(token.to_string(), 0.0))
   }
   numbers
 }
@@ -1675,7 +1675,7 @@ fn attr_bool_true(value : String?) -> Bool {
 ///|
 fn polygon_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
   match node.get_attr(key) {
-    Some(value) => parse_double(value, fallback.to_double()).round().to_int()
+    Some(value) => @dot_shared.parse_double_or(value, fallback.to_double()).round().to_int()
     None => fallback
   }
 }
@@ -1687,7 +1687,7 @@ fn polygon_attr_double(
   fallback : Double,
 ) -> Double {
   match node.get_attr(key) {
-    Some(value) => parse_double(value, fallback)
+    Some(value) => @dot_shared.parse_double_or(value, fallback)
     None => fallback
   }
 }
@@ -1699,7 +1699,7 @@ fn polygon_shape_attrs(
   // Graphviz parity (poly_init): polygon shape accepts explicit sides=0 which
   // keeps ellipse behavior; missing sides falls back to 4.
   let mut sides = match node.get_attr("sides") {
-    Some(value) => parse_double(value, 4.0).round().to_int()
+    Some(value) => @dot_shared.parse_double_or(value, 4.0).round().to_int()
     None => 4
   }
   if sides < 0 {
@@ -2088,11 +2088,11 @@ fn node_size(
     (@dot_shared.default_node_width_in(), @dot_shared.default_node_height_in())
   }
   let base_width_in = match node.get_attr("width") {
-    Some(value) => parse_double(value, fallback_width)
+    Some(value) => @dot_shared.parse_double_or(value, fallback_width)
     None => fallback_width
   }
   let base_height_in = match node.get_attr("height") {
-    Some(value) => parse_double(value, fallback_height)
+    Some(value) => @dot_shared.parse_double_or(value, fallback_height)
     None => fallback_height
   }
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
@@ -2102,10 +2102,10 @@ fn node_size(
   let base_height_pt = base_height_in * 72.0
   if shape == "point" || shape == "dot" {
     let point_size_in = match node.get_attr("width") {
-      Some(value) => parse_double(value, fallback_width)
+      Some(value) => @dot_shared.parse_double_or(value, fallback_width)
       None =>
         match node.get_attr("height") {
-          Some(value) => parse_double(value, fallback_height)
+          Some(value) => @dot_shared.parse_double_or(value, fallback_height)
           None => fallback_width
         }
     }

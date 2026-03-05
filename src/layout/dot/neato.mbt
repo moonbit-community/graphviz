@@ -50,7 +50,7 @@ priv struct NeatoEdge {
 ///|
 fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
-    Some(value) => parse_double(value, default_nodesep_in())
+    Some(value) => @dot_shared.parse_double_or(value, default_nodesep_in())
     None => default_nodesep_in()
   }
   nodesep_in * 72.0
@@ -264,13 +264,13 @@ pub fn layout_neato(
       continue
     }
     let len_in = match edge.get_attr("len") {
-      Some(value) => parse_double(value, 1.0)
+      Some(value) => @dot_shared.parse_double_or(value, 1.0)
       None => 1.0
     }
     let length_in = if len_in <= 0.0 { 1.0 } else { len_in }
     let length_pt = length_in * 72.0
     let raw_weight = match edge.get_attr("weight") {
-      Some(value) => parse_double(value, 1.0)
+      Some(value) => @dot_shared.parse_double_or(value, 1.0)
       None => 1.0
     }
     let weight = if raw_weight <= 0.0 { 1.0 } else { raw_weight }

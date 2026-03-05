@@ -29,11 +29,6 @@ fn default_point_size_in() -> Double {
 }
 
 ///|
-fn parse_double(value : String, fallback : Double) -> Double {
-  @dot_shared.parse_double_or(value, fallback)
-}
-
-///|
 fn validate_nonnegative_attr(
   owner : String,
   attr_name : String,

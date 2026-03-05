@@ -21,8 +21,8 @@ fn edge_at(graph : @cgraph.Graph, index : Int) -> @cgraph.Edge raise {
 
 ///|
 test "base parse helpers extract and clamp doubles" {
-  assert_double_close(parse_double("12.5", 0.0), 12.5, 0.000001)
-  assert_double_close(parse_double("oops", 3.5), 3.5, 0.000001)
+  assert_double_close(@dot_shared.parse_double_or("12.5", 0.0), 12.5, 0.000001)
+  assert_double_close(@dot_shared.parse_double_or("oops", 3.5), 3.5, 0.000001)
 
   assert_double_close(
     @dot_shared.parse_first_double("ranksep=1.75 equally", 0.0),
