@@ -30,7 +30,7 @@ fn build_position_output_maps(
   input : PositionOutputBuildInput,
 ) -> PositionOutputMaps {
   if input.pipeline.cluster_meta.has_clusters && input.pipeline.prep.has_dotted_edges &&
-    intercluster_alignment_enabled() {
+    @positioning.intercluster_alignment_enabled() {
     adjust_intercluster_alignment(
       {
         nodes: input.pipeline.prep.nodes,
@@ -53,16 +53,25 @@ fn build_position_output_maps(
     )
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
-    build_vnode_positions(
+    @positioning.build_vnode_positions(
       {
-        pipeline: input.pipeline,
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        vnode_ranks: input.pipeline.ordering.vnode_info.vnode_ranks,
         x_positions: input.x_positions,
         rank_y: input.rank_y,
+        fallback_fn: () =>
+          vnode_positions_from_edges(
+            input.pipeline.prep.edges,
+            input.pipeline.rank_data.ranks,
+            input.pipeline.ordering.vnode_info.vnode_ranks,
+            input.pipeline.ordering.vnode_info.edge_vnodes,
+            input.x_positions,
+            input.rank_y,
+          ),
       },
     )
   let positions =
-    build_node_positions_map(
+    @positioning.build_node_positions_map(
       input.pipeline.prep.nodes,
       input.x_positions,
       input.y_positions,

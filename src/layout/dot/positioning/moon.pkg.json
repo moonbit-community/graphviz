@@ -2,6 +2,8 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/shared",
-    "moonbit-community/graphviz/cgraph"
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/x/sys"
   ]
 }
