@@ -299,9 +299,6 @@ fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
 }
 
 ///|
-const EDGE_VNODE_PREFIX : String = @dot_shared.EDGE_VNODE_PREFIX
-
-///|
 const MAX_XPOS_VNODES : Int = 100000
 
 ///|

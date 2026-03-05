@@ -390,7 +390,7 @@ fn build_edge_vnodes(
     while rank < max_rank {
       let is_label_rank = rank == label_rank && label_width > 0.0
       let name = unique_virtual_node_name(
-        EDGE_VNODE_PREFIX,
+        @dot_shared.EDGE_VNODE_PREFIX,
         idx,
         rank,
         existing_names,
@@ -567,7 +567,7 @@ fn add_flat_label_vnodes(
     let place =
       flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
     let name = unique_virtual_node_name(
-      EDGE_VNODE_PREFIX,
+      @dot_shared.EDGE_VNODE_PREFIX,
       current_idx,
       label_rank,
       existing_names,
