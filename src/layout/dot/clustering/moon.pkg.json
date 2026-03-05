@@ -1,0 +1,6 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/cgraph"
+  ]
+}

@@ -432,7 +432,7 @@ fn build_routing_precompute_data(
           prep.rankdir,
           prep.record_orientation,
         ),
-      node_local_cluster_key_fn: node_local_cluster_key,
+      node_local_cluster_key_fn: @clustering.node_local_cluster_key,
       compute_padding_fn: (edges) => {
         let padding =
           record_port_padding_y(
@@ -677,8 +677,8 @@ fn build_route_base_deps_for_dot(
         port_side_for_edge(port, port_rect, node_pos, node_size, None),
     layout_port_offset,
     edge_dir_for: edge_dir_for_routing,
-    node_cluster_key,
-    node_local_cluster_key,
+    node_cluster_key: @clustering.node_cluster_key,
+    node_local_cluster_key: @clustering.node_local_cluster_key,
   }
 }
 

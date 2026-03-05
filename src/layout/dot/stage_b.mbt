@@ -475,7 +475,7 @@ fn compute_cluster_metadata(
   // used throughout clustered ordering and compound-edge setup.
   let cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
-    cluster_keys[node.name()] = node_cluster_key(node)
+    cluster_keys[node.name()] = @clustering.node_cluster_key(node)
   }
   // Graphviz parity: cluster subgraph node order follows GD_nlist traversal
   // direction and rankdir flip behavior from dotgen cluster ordering.
@@ -558,7 +558,7 @@ fn compute_cluster_metadata(
   // Graphviz parity: cluster order and parent map are collected from
   // Graphviz cluster traversal before clustered ordering stages.
   let cluster_order : Array[String] = []
-  collect_cluster_names_order(graph, cluster_order)
+  @clustering.collect_cluster_names_order(graph, cluster_order)
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
@@ -573,7 +573,7 @@ fn compute_cluster_metadata(
   // used by Graphviz compound edge ordering.
   let intercluster_keys : Map[String, String] = Map::new()
   for node in nodes {
-    intercluster_keys[node.name()] = node_local_cluster_key(node)
+    intercluster_keys[node.name()] = @clustering.node_local_cluster_key(node)
   }
   // Graphviz parity: rank=same groups/order are collected once for clustered
   // ordering constraints, matching Graphviz same-rank preprocessing.

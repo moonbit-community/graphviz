@@ -243,7 +243,8 @@ fn build_ordering_context(
         ranks: input.ranks,
         node_order: input.node_order,
         collect_edge_cluster_keys_fn:
-          (edge_cluster_keys) => collect_edge_cluster_keys(input.graph, edge_cluster_keys),
+          (edge_cluster_keys) =>
+            @clustering.collect_edge_cluster_keys(input.graph, edge_cluster_keys),
       },
     )
   let vnode_info = build_edge_vnodes(

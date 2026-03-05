@@ -1,4 +1,6 @@
-fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
+const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
+
+pub fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {
     match graph.parent() {
@@ -86,7 +88,7 @@ fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   while true {
     match current {
       Some(value) => {
-        if @dot_shared.is_cluster_graph(value) {
+        if @shared.is_cluster_graph(value) {
           match value.name() {
             Some(name) => return name
             None => return ""
@@ -100,7 +102,7 @@ fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   ""
 }
 
-fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
+pub fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   if !graph_contains_node_raw(graph, node) {
     return false
   }
@@ -130,7 +132,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
     if !graph_contains_node(current, node) {
       continue
     }
-    if @dot_shared.is_cluster_graph(current) {
+    if @shared.is_cluster_graph(current) {
       let name = match current.name() {
         Some(value) => value
         None => ""
@@ -151,7 +153,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
 /// Graphviz parity: cluster membership is derived from subgraph node membership
 /// (nodes referenced in a cluster belong to it), not node home graphs.
 /// Do not change behavior without updating fixtures/tests.
-fn node_cluster_key(node : @cgraph.Node) -> String {
+pub fn node_cluster_key(node : @cgraph.Node) -> String {
   node_cluster_keys(node).outer
 }
 
@@ -159,16 +161,16 @@ fn node_cluster_key(node : @cgraph.Node) -> String {
 /// Graphviz parity: local cluster key resolves to the deepest (innermost)
 /// cluster containing the node.
 /// Do not change behavior without updating fixtures/tests.
-fn node_local_cluster_key(node : @cgraph.Node) -> String {
+pub fn node_local_cluster_key(node : @cgraph.Node) -> String {
   node_cluster_keys(node).inner
 }
 
 ///|
-fn graph_cluster_key(graph : @cgraph.Graph) -> String {
+pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
   while !current.is_root() {
-    if @dot_shared.is_cluster_graph(current) {
+    if @shared.is_cluster_graph(current) {
       match current.name() {
         Some(name) => key = name
         None => key = ""
@@ -183,14 +185,14 @@ fn graph_cluster_key(graph : @cgraph.Graph) -> String {
 }
 
 ///|
-fn collect_edge_cluster_keys(
+pub fn collect_edge_cluster_keys(
   graph : @cgraph.Graph,
   edge_cluster_keys : Map[String, String],
 ) -> Unit {
   for child in graph.subgraphs() {
     collect_edge_cluster_keys(child, edge_cluster_keys)
   }
-  if !@dot_shared.is_cluster_graph(graph) {
+  if !@shared.is_cluster_graph(graph) {
     return ()
   }
   let cluster_key = graph_cluster_key(graph)
@@ -200,11 +202,11 @@ fn collect_edge_cluster_keys(
   let child_edges : Map[String, Bool] = Map::new()
   for child in graph.subgraphs() {
     for edge in child.edges() {
-      child_edges[@dot_shared.edge_key(edge)] = true
+      child_edges[@shared.edge_key(edge)] = true
     }
   }
   for edge in graph.edges() {
-    let key = @dot_shared.edge_key(edge)
+    let key = @shared.edge_key(edge)
     if child_edges.get(key) is None {
       edge_cluster_keys[key] = cluster_key
     }
@@ -215,7 +217,7 @@ fn collect_edge_cluster_keys(
 /// Graphviz parity: assign intercluster virtual nodes to the lowest common
 /// ancestor cluster (mark_lowclusters + class2).
 /// Do not change behavior without updating fixtures/tests.
-fn cluster_lca(
+pub fn cluster_lca(
   left : String,
   right : String,
   cluster_parents : Map[String, String?],
@@ -268,7 +270,7 @@ fn cluster_lca(
 
 ///|
 /// Graphviz parity: cluster skeleton node names encode the cluster key.
-fn cluster_key_from_skeleton(name : String) -> String? {
+pub fn cluster_key_from_skeleton(name : String) -> String? {
   if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
     return None
   }
@@ -288,12 +290,12 @@ fn cluster_key_from_skeleton(name : String) -> String? {
 ///|
 /// Graphviz parity: collapse_sets walks subgraphs and only recurses into
 /// non-cluster subgraphs when building the root cluster list.
-fn collect_cluster_names_order(
+pub fn collect_cluster_names_order(
   graph : @cgraph.Graph,
   out : Array[String],
 ) -> Unit {
   for subgraph in graph.subgraphs() {
-    if @dot_shared.is_cluster_graph(subgraph) {
+    if @shared.is_cluster_graph(subgraph) {
       match subgraph.name() {
         Some(name) => out.push(name)
         None => ()

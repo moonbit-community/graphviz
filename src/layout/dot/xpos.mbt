@@ -451,7 +451,7 @@ fn collect_cluster_member_nodes(
   nodes_out : Map[String, Bool],
 ) -> Unit {
   for node in graph.nodes() {
-    if graph_contains_node(graph, node) {
+    if @clustering.graph_contains_node(graph, node) {
       nodes_out[node.name()] = true
     }
   }
@@ -524,7 +524,7 @@ fn build_cluster_constraints(
   if cluster_members.length() > 0 {
     for _rank, names in groups {
       for name in names {
-        match cluster_key_from_skeleton(name) {
+        match @clustering.cluster_key_from_skeleton(name) {
           Some(cluster_key) =>
             match cluster_members.get(cluster_key) {
               Some(members) => members[name] = true
@@ -779,7 +779,7 @@ fn build_cluster_constraints(
           while i < names.length() {
             let node_name = names[i]
             if members.get(node_name) is Some(_) &&
-              cluster_key_from_skeleton(node_name) is None {
+              @clustering.cluster_key_from_skeleton(node_name) is None {
               if left_idx < 0 {
                 left_idx = i
               }
@@ -993,7 +993,7 @@ fn build_cluster_constraints(
                                     while idx < names.length() &&
                                           (first_i < 0 || first_j < 0) {
                                       let node_name = names[idx]
-                                      if cluster_key_from_skeleton(node_name)
+                                      if @clustering.cluster_key_from_skeleton(node_name)
                                         is Some(_) {
                                         idx = idx + 1
                                         continue
@@ -1508,7 +1508,7 @@ fn upsert_constraint_with_max(
 
 ///|
 fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
-  match root_graph_for_node(edge.tail()).get_attr("ordering") {
+  match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
     Some(value) => {
       let lower = value.to_lower()
       lower == "out" || lower == "in"

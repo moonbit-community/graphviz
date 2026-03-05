@@ -61,8 +61,8 @@ fn build_edge_vnodes(
         edge_tail,
         edge_head,
       )
-    let tail_cluster = node_cluster_key(edge.tail())
-    let head_cluster = node_cluster_key(edge.head())
+    let tail_cluster = @clustering.node_cluster_key(edge.tail())
+    let head_cluster = @clustering.node_cluster_key(edge.head())
     // Graphviz parity: cluster-local parallel chains do not widen class2 vnodes.
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
@@ -117,7 +117,7 @@ fn build_edge_vnodes(
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
-        cluster_lca(tail_cluster, head_cluster, cluster_parents)
+        @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
         match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value
@@ -343,11 +343,11 @@ fn add_flat_label_vnodes(
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
       vnode_size_from_widths_with_h(half_width, half_width, label_height)
-    let tail_cluster = node_cluster_key(edge.tail())
-    let head_cluster = node_cluster_key(edge.head())
+    let tail_cluster = @clustering.node_cluster_key(edge.tail())
+    let head_cluster = @clustering.node_cluster_key(edge.head())
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
-        cluster_lca(tail_cluster, head_cluster, cluster_parents)
+        @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
         match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value
@@ -374,7 +374,7 @@ fn add_flat_label_vnodes(
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
     }
     let graph_ordering =
-      match root_graph_for_node(edge.tail()).get_attr("ordering") {
+      match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
       Some(value) => value.to_lower()
       None => ""
     }

@@ -190,7 +190,7 @@ fn collect_label_vnode_actuals(
     has_edge_labels,
   )
   let edge_cluster_keys : Map[String, String] = Map::new()
-  collect_edge_cluster_keys(graph, edge_cluster_keys)
+  @clustering.collect_edge_cluster_keys(graph, edge_cluster_keys)
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
