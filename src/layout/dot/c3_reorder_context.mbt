@@ -72,7 +72,7 @@ fn build_cluster_node_order_context(
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
-      compare_by_order_then_name(node_order, a, b)
+      @ordering.compare_by_order_then_name(node_order, a, b)
     })
   }
   let mut order_idx = 0
@@ -141,7 +141,7 @@ fn build_cluster_local_reorder_context(
     )
   let cluster_nodes = node_order_context.cluster_nodes
   let cluster_node_order = node_order_context.cluster_node_order
-  let cluster_groups = build_local_rank_groups(
+  let cluster_groups = @ordering.build_local_rank_groups(
     inputs.groups,
     cluster_node_set,
     cluster_node_order,

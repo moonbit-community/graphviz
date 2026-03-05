@@ -1,6 +1,6 @@
 ///|
-/// Stage C Phase C3 split: cluster graph ordering and local rank-group seeding
-/// helpers for cluster-local replay.
+/// Ordering domain: cluster graph ordering and local rank-group seeding
+/// helpers used by Stage C clustered local replay.
 
 fn cluster_depth_for_order_inner(
   cluster : String,
@@ -84,7 +84,7 @@ fn cluster_order_index_or_end(
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-priv struct LocalClusterGraphOrderOutput {
+pub(all) struct LocalClusterGraphOrderOutput {
   cluster_graphs : Map[String, @cgraph.Graph]
   cluster_names : Array[String]
 }
@@ -93,14 +93,14 @@ priv struct LocalClusterGraphOrderOutput {
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_graph_order(
+pub fn build_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
 ) -> LocalClusterGraphOrderOutput {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  @shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   let cluster_names : Array[String] = []
   for name, _ in cluster_graphs {
     cluster_names.push(name)
@@ -108,7 +108,7 @@ fn build_cluster_graph_order(
   if cluster_graphs.length() == 0 {
     return { cluster_graphs, cluster_names }
   }
-  let cluster_index = @ordering.build_cluster_order_index(cluster_order)
+  let cluster_index = build_cluster_order_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
   for name in cluster_names {
     let _ = cluster_depth_for_order(
@@ -145,7 +145,7 @@ fn build_cluster_graph_order(
 ///|
 /// Graphviz parity: local-cluster stable sorts compare seed order first and
 /// break ties by node name to keep deterministic fixture ordering.
-fn compare_by_order_then_name(
+pub fn compare_by_order_then_name(
   order_map : Map[String, Int],
   a : String,
   b : String,
@@ -194,7 +194,7 @@ fn collect_rank_real_nodes(list : Array[String]) -> Array[String] {
 }
 
 ///|
-fn build_name_set(names : Array[String]) -> Map[String, Bool] {
+fn build_rank_group_name_set(names : Array[String]) -> Map[String, Bool] {
   let out : Map[String, Bool] = Map::new()
   for name in names {
     out[name] = true
@@ -258,7 +258,7 @@ fn seed_rank_real_nodes_from_previous_rank(
     return ()
   }
   let real_nodes = collect_rank_real_nodes(list)
-  let real_set = build_name_set(real_nodes)
+  let real_set = build_rank_group_name_set(real_nodes)
   if real_nodes.length() <= 1 {
     return ()
   }
@@ -291,7 +291,7 @@ fn seed_rank_real_nodes_from_previous_rank(
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn build_local_rank_groups(
+pub fn build_local_rank_groups(
   groups : Map[Int, Array[String]],
   cluster_node_set : Map[String, Bool],
   cluster_node_order : Map[String, Int],
@@ -315,7 +315,7 @@ fn build_local_rank_groups(
       cluster_node_set,
       source_graphviz_out_neighbors,
     )
-  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
       Some(value) => value

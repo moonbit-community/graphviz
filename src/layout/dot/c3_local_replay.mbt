@@ -13,7 +13,7 @@ fn run_cluster_local_rank_replay(
     return ()
   }
   let cluster_graph_order =
-    build_cluster_graph_order(
+    @ordering.build_cluster_graph_order(
       replay_context.graph,
       replay_context.cluster_meta.cluster_order,
       replay_context.cluster_meta.cluster_parents,
