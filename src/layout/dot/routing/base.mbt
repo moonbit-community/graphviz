@@ -10,6 +10,19 @@ fn point_for_name_or_origin(
 }
 
 ///|
+fn edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
+fn edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
 fn size_for_name_or_node(
   sizes : Map[String, NodeSize],
   name : String,

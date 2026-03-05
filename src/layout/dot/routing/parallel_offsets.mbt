@@ -30,14 +30,6 @@ fn edge_orientation_is_reversed(
 }
 
 ///|
-fn edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 /// Graphviz parity: parallel-offset ordering keeps edge-orientation flags from
 /// staged edge_tail/edge_head arrays.
 /// Do not change behavior without updating fixtures/tests.
