@@ -29,61 +29,6 @@ pub struct ClusteredXposReorderInput {
   graphviz_flip : Bool
 }
 
-///|
-pub fn build_clustered_xpos_reorder_input(
-  x_groups : Map[Int, Array[String]],
-  x_order_sizes : Map[String, @shared.NodeSize],
-  x_cluster_keys : Map[String, String],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  node_order : Map[String, Int],
-  cluster_skeleton_prefix : String,
-  cluster_skeleton_size : @shared.NodeSize,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  cluster_skeleton_penalty : Int,
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> ClusteredXposReorderInput {
-  {
-    x_groups,
-    x_order_sizes,
-    x_cluster_keys,
-    cluster_min_rank,
-    cluster_max_rank,
-    node_order,
-    cluster_skeleton_prefix,
-    cluster_skeleton_size,
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    edge_vnodes,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    cluster_skeleton_penalty,
-    rank_same_groups,
-    rank_same_order,
-    nodesep_pt,
-    has_edge_labels,
-    flat_constraints,
-    graphviz_flip,
-  }
-}
-
 /// Graphviz parity: clustered xpos reorder runs seed build, order-edge
 /// materialization, and reorder_rank_groups in Graphviz-equivalent sequence.
 /// Do not change behavior without updating fixtures/tests.
