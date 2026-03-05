@@ -572,53 +572,42 @@ priv struct PositionOutputBuildInput {
 fn build_position_output_maps(
   input : PositionOutputBuildInput,
 ) -> PositionOutputMaps {
-  let output_maps =
-    @positioning.build_position_output_maps_from_sources(
-      {
-        has_clusters: input.pipeline.cluster_meta.has_clusters,
-        has_dotted_edges: input.pipeline.prep.has_dotted_edges,
-        graph: input.pipeline.graph,
-        nodes: input.pipeline.prep.nodes,
-        edges: input.pipeline.prep.edges,
-        ranks: input.pipeline.rank_data.ranks,
-        x_positions: input.x_positions,
-        y_positions: input.y_positions,
-        rank_y: input.rank_y,
-        cluster_keys: input.pipeline.cluster_meta.cluster_keys,
-        intercluster_keys: input.pipeline.cluster_meta.intercluster_keys,
-        nodesep_pt: input.pipeline.rank_heights.nodesep_pt,
-        has_edge_labels: input.pipeline.prep.has_edge_labels,
-        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        vnode_ranks: input.pipeline.ordering.vnode_info.vnode_ranks,
-        edge_vnodes: input.pipeline.ordering.vnode_info.edge_vnodes,
-      },
-    )
-  if input.pipeline.cluster_meta.has_clusters && cluster_rounding_enabled() {
-    let _ =
-      @clustering.adjust_cluster_positions(
-        {
-          graph: input.pipeline.graph,
-          positions: output_maps.positions,
-          vnode_positions: output_maps.vnode_positions,
-          vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
-          sizes: input.pipeline.prep.sizes,
-          cluster_margin_pt_for: cluster_margin_pt,
-          expand_cluster_label_bbox:
-            (graph, bbox) =>
-              match graph_label_metrics(graph) {
-                Some(metrics) =>
-                  expand_bbox_for_label(
-                    bbox,
-                    metrics.width_pt,
-                    metrics.height_pt,
-                    graph_label_loc(graph),
-                  )
-                None => bbox
-              },
-        },
-      )
-  }
-  output_maps
+  @positioning.build_position_output_pipeline(
+    {
+      has_clusters: input.pipeline.cluster_meta.has_clusters,
+      has_dotted_edges: input.pipeline.prep.has_dotted_edges,
+      graph: input.pipeline.graph,
+      nodes: input.pipeline.prep.nodes,
+      edges: input.pipeline.prep.edges,
+      ranks: input.pipeline.rank_data.ranks,
+      x_positions: input.x_positions,
+      y_positions: input.y_positions,
+      rank_y: input.rank_y,
+      cluster_keys: input.pipeline.cluster_meta.cluster_keys,
+      intercluster_keys: input.pipeline.cluster_meta.intercluster_keys,
+      nodesep_pt: input.pipeline.rank_heights.nodesep_pt,
+      has_edge_labels: input.pipeline.prep.has_edge_labels,
+      use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+      vnode_ranks: input.pipeline.ordering.vnode_info.vnode_ranks,
+      edge_vnodes: input.pipeline.ordering.vnode_info.edge_vnodes,
+      cluster_rounding_enabled: cluster_rounding_enabled(),
+      vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
+      sizes: input.pipeline.prep.sizes,
+      cluster_margin_pt_for: cluster_margin_pt,
+      expand_cluster_label_bbox:
+        (graph, bbox) =>
+          match graph_label_metrics(graph) {
+            Some(metrics) =>
+              expand_bbox_for_label(
+                bbox,
+                metrics.width_pt,
+                metrics.height_pt,
+                graph_label_loc(graph),
+              )
+            None => bbox
+          },
+    },
+  )
 }
 
 ///|

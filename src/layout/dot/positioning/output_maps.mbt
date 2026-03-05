@@ -372,3 +372,77 @@ pub fn build_position_output_maps_from_sources(
     cluster_rn_x: cluster_boundary_x.cluster_rn_x,
   }
 }
+
+///|
+/// Graphviz parity: final output pipeline input keeps the base output-map
+/// source bundle plus optional cluster-rounding callbacks grouped at one
+/// assembly boundary.
+pub(all) struct PositionOutputPipelineInput {
+  has_clusters : Bool
+  has_dotted_edges : Bool
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  x_positions : Map[String, Double]
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  use_vnodes_for_xpos : Bool
+  vnode_ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  cluster_rounding_enabled : Bool
+  vnode_clusters : Map[String, String]
+  sizes : Map[String, @shared.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
+}
+
+///|
+/// Graphviz parity: final output pipeline keeps intercluster alignment,
+/// boundary capture, vnode projection, then optional cluster-rounding
+/// adjustment in fixed order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_position_output_pipeline(
+  input : PositionOutputPipelineInput,
+) -> PositionOutputMaps {
+  let output_maps =
+    build_position_output_maps_from_sources(
+      {
+        has_clusters: input.has_clusters,
+        has_dotted_edges: input.has_dotted_edges,
+        graph: input.graph,
+        nodes: input.nodes,
+        edges: input.edges,
+        ranks: input.ranks,
+        x_positions: input.x_positions,
+        y_positions: input.y_positions,
+        rank_y: input.rank_y,
+        cluster_keys: input.cluster_keys,
+        intercluster_keys: input.intercluster_keys,
+        nodesep_pt: input.nodesep_pt,
+        has_edge_labels: input.has_edge_labels,
+        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        vnode_ranks: input.vnode_ranks,
+        edge_vnodes: input.edge_vnodes,
+      },
+    )
+  if input.has_clusters && input.cluster_rounding_enabled {
+    let _ =
+      @clustering.adjust_cluster_positions(
+        {
+          graph: input.graph,
+          positions: output_maps.positions,
+          vnode_positions: output_maps.vnode_positions,
+          vnode_clusters: input.vnode_clusters,
+          sizes: input.sizes,
+          cluster_margin_pt_for: input.cluster_margin_pt_for,
+          expand_cluster_label_bbox: input.expand_cluster_label_bbox,
+        },
+      )
+  }
+  output_maps
+}
