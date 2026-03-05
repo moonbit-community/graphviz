@@ -89,61 +89,6 @@ priv struct ClusterBoundaryNodes {
 }
 
 ///|
-priv enum EndpointClass {
-  Ordinary
-  Singleton
-  Virtual
-}
-
-///|
-fn endpoint_class(
-  name : String,
-  node_degrees : Map[String, Int],
-  _cluster_keys : Map[String, String],
-) -> EndpointClass {
-  if is_edge_vnode_name(name) {
-    EndpointClass::Virtual
-  } else {
-    let degree = match node_degrees.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    if degree <= 1 {
-      EndpointClass::Singleton
-    } else {
-      EndpointClass::Ordinary
-    }
-  }
-}
-
-///|
-fn constraint_weight_scale(
-  tail_class : EndpointClass,
-  head_class : EndpointClass,
-) -> Int {
-  match (tail_class, head_class) {
-    (EndpointClass::Virtual, EndpointClass::Virtual) => 4
-    (EndpointClass::Singleton, EndpointClass::Singleton)
-    | (EndpointClass::Singleton, EndpointClass::Virtual)
-    | (EndpointClass::Virtual, EndpointClass::Singleton) => 2
-    _ => 1
-  }
-}
-
-///|
-fn scaled_edge_weight(
-  base_weight : Int,
-  tail_class : EndpointClass,
-  head_class : EndpointClass,
-) -> Int {
-  if base_weight == 0 {
-    0
-  } else {
-    base_weight * constraint_weight_scale(tail_class, head_class)
-  }
-}
-
-///|
 let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
 
 ///|
@@ -1302,18 +1247,6 @@ fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
 }
 
 ///|
-///|
-fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
-  match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower == "out" || lower == "in"
-    }
-    None => false
-  }
-}
-
-///|
 fn add_segment_slack_edges(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -1589,7 +1522,7 @@ fn build_constraint_graph(
               Some(value) => value
               None => 0
             }
-            let has_ordering = edge_tail_ordering_is_out_or_in(edge)
+            let has_ordering = @positioning.edge_tail_ordering_is_out_or_in(edge)
             if tail_rank == head_rank && @dot_shared.edge_is_constraint(edge) &&
               edge_mid_label_metrics(edge) is None {
               let (left, right) =
@@ -1673,9 +1606,12 @@ fn build_constraint_graph(
                 idx = idx + 1
                 let seg_base_weight =
                   if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
-                  let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
-                  let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
-                  scaled_edge_weight(base_weight, tail_class, head_class)
+                  @positioning.scaled_segment_edge_weight(
+                    base_weight,
+                    seg_tail,
+                    seg_head,
+                    node_degrees,
+                  )
                 } else {
                   base_weight
                 }
