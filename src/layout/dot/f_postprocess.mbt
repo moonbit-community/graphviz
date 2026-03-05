@@ -24,6 +24,48 @@ priv struct FinalizeLayoutInput {
 }
 
 ///|
+/// Graphviz parity: Stage F source payload keeps upstream stage outputs grouped
+/// so final postprocess input assembly stays explicit and stable.
+priv struct FinalizeLayoutBuildSources {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  positions_state : PositionResult
+  routing_stage_output : DotRoutingStageOutput
+}
+
+///|
+/// Graphviz parity: Stage F input assembly keeps Stage A-E outputs mapped in
+/// one deterministic projection before finalize layout postprocess.
+/// Do not change behavior without updating fixtures/tests.
+fn build_finalize_layout_input_from_sources(
+  sources : FinalizeLayoutBuildSources,
+) -> FinalizeLayoutInput {
+  {
+    graph: sources.graph,
+    nodes: sources.prep.nodes,
+    nodes_out: sources.routing_stage_output.nodes_out,
+    edges_out: sources.routing_stage_output.edges_out,
+    rankdir: sources.prep.rankdir,
+    splines: sources.prep.splines,
+    all_ranks: sources.rank_data.all_ranks,
+    ranks: sources.rank_data.ranks,
+    sizes: sources.prep.sizes,
+    cluster_ln_x: sources.positions_state.cluster_ln_x,
+    cluster_rn_x: sources.positions_state.cluster_rn_x,
+    cluster_bbox_heights: sources.positions_state.cluster_bbox_heights,
+    rank_y: sources.positions_state.rank_y,
+    rank_ht1: sources.positions_state.rank_ht1,
+    rank_ht2: sources.positions_state.rank_ht2,
+    nodesep_pt: sources.rank_heights.nodesep_pt,
+    port_pad_below: sources.routing_stage_output.port_pad_below,
+    port_pad_above: sources.routing_stage_output.port_pad_above,
+    flat_label_edge_vnodes: sources.positions_state.flat_label_edge_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: pre-rotation assembly keeps dot_compute_bb + label/ratio
 /// interactions in one place before rankdir transforms are applied.
 /// Do not change behavior without updating fixtures/tests.

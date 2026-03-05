@@ -4,45 +4,6 @@ pub fn DotLayoutOptions::default() -> DotLayoutOptions {
 }
 
 ///|
-/// Graphviz parity: finalize-input payload keeps stage outputs grouped so
-/// Stage F assembly in layout_dot remains explicit and stable.
-priv struct FinalizeInputBuildContext {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  positions_state : PositionResult
-  routing_stage_output : DotRoutingStageOutput
-}
-
-///|
-fn build_finalize_layout_input(
-  context : FinalizeInputBuildContext,
-) -> FinalizeLayoutInput {
-  {
-    graph: context.graph,
-    nodes: context.prep.nodes,
-    nodes_out: context.routing_stage_output.nodes_out,
-    edges_out: context.routing_stage_output.edges_out,
-    rankdir: context.prep.rankdir,
-    splines: context.prep.splines,
-    all_ranks: context.rank_data.all_ranks,
-    ranks: context.rank_data.ranks,
-    sizes: context.prep.sizes,
-    cluster_ln_x: context.positions_state.cluster_ln_x,
-    cluster_rn_x: context.positions_state.cluster_rn_x,
-    cluster_bbox_heights: context.positions_state.cluster_bbox_heights,
-    rank_y: context.positions_state.rank_y,
-    rank_ht1: context.positions_state.rank_ht1,
-    rank_ht2: context.positions_state.rank_ht2,
-    nodesep_pt: context.rank_heights.nodesep_pt,
-    port_pad_below: context.routing_stage_output.port_pad_below,
-    port_pad_above: context.routing_stage_output.port_pad_above,
-    flat_label_edge_vnodes: context.positions_state.flat_label_edge_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: dot layout orchestration aligned to refs/graphviz/lib/dotgen/dotinit.c
 /// (dot_layout/doDot) + lib/common/postproc.c (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
@@ -84,7 +45,7 @@ pub fn layout_dot(
       },
     )
   finalize_layout_graph(
-    build_finalize_layout_input(
+    build_finalize_layout_input_from_sources(
       {
         graph,
         prep,
