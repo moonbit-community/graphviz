@@ -150,16 +150,15 @@ pub(all) struct XPositionPipelineInput {
   has_edge_labels : Bool
   output_sizes : Map[String, @shared.NodeSize]
   flat_label_edges : Array[ConstraintEdge]
-  compute_x_positions_fn : (XPositionSolveInput) -> Map[String, Double]
 }
 
 ///|
-/// Graphviz parity: x-position stage keeps vnode merge, rank derivation, and
-/// compute_x_positions invocation order unchanged.
+/// Graphviz parity: x-position stage keeps vnode merge and rank-derivation
+/// order unchanged while producing one stable solve payload.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_x_position_pipeline(
+pub fn build_x_position_solve_input(
   input : XPositionPipelineInput,
-) -> Map[String, Double] {
+) -> XPositionSolveInput {
   let xpos_input =
     build_xpos_computation_input_from_sources(
       {
@@ -172,29 +171,27 @@ pub fn build_x_position_pipeline(
         edge_vnodes: input.edge_vnodes,
       },
     )
-  (input.compute_x_positions_fn)(
-    {
-      graph: input.graph,
-      nodes: input.nodes,
-      edges: input.edges,
-      edge_tail: input.edge_tail,
-      edge_head: input.edge_head,
-      edge_out_order: input.edge_out_order,
-      nlist_order: input.nlist_order,
-      gdnlist_order: input.gdnlist_order,
-      ranks: xpos_input.x_ranks,
-      rank_keys: xpos_input.x_rank_keys,
-      groups: input.x_groups,
-      sizes: xpos_input.x_sizes,
-      output_sizes: input.output_sizes,
-      cluster_keys: input.cluster_keys,
-      nodesep_pt: input.nodesep_pt,
-      has_edge_labels: input.has_edge_labels,
-      extra_nodes: xpos_input.x_extra_nodes,
-      flat_label_edges: input.flat_label_edges,
-      edge_vnodes: xpos_input.x_edge_vnodes,
-    },
-  )
+  {
+    graph: input.graph,
+    nodes: input.nodes,
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    edge_out_order: input.edge_out_order,
+    nlist_order: input.nlist_order,
+    gdnlist_order: input.gdnlist_order,
+    ranks: xpos_input.x_ranks,
+    rank_keys: xpos_input.x_rank_keys,
+    groups: input.x_groups,
+    sizes: xpos_input.x_sizes,
+    output_sizes: input.output_sizes,
+    cluster_keys: input.cluster_keys,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    extra_nodes: xpos_input.x_extra_nodes,
+    flat_label_edges: input.flat_label_edges,
+    edge_vnodes: xpos_input.x_edge_vnodes,
+  }
 }
 
 ///|
