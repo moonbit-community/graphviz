@@ -67,7 +67,7 @@ fn build_rank_lookup(rank_keys : Array[Int], groups : Map[Int, Array[String]]) -
 }
 
 ///|
-fn edge_snapshot_line(idx : Int, edge : OrderingInputEdgeSnapshot) -> String {
+fn edge_snapshot_line(idx : Int, edge : @ordering.OrderingEdgeSnapshotEntry) -> String {
   "edge \{idx}: \{edge.tail} -> \{edge.head} pen=\{edge.xpenalty} tpx=\{edge.tail_port_x} hpx=\{edge.head_port_x} tpo=\{edge.tail_port_order} hpo=\{edge.head_port_order}"
 }
 
@@ -99,7 +99,7 @@ fn expected_input_dump(input : MincrossInput) -> String raise {
       Some(value) => value
       None => fail("missing fixture head id \{edge.head}")
     }
-    let snapshot : OrderingInputEdgeSnapshot = {
+    let snapshot : @ordering.OrderingEdgeSnapshotEntry = {
       tail: canonical_fixture_node_name(tail_node),
       head: canonical_fixture_node_name(head_node),
       xpenalty: edge.xpenalty,
@@ -147,7 +147,7 @@ fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
       Some(value) => value
       None => fail("missing root rank for head \{edge.head}")
     }
-    let canonical_edge : OrderingInputEdgeSnapshot = {
+    let canonical_edge : @ordering.OrderingEdgeSnapshotEntry = {
       tail: canonical_snapshot_name(
         edge.tail,
         tail_rank,

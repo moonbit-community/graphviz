@@ -315,8 +315,8 @@ fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
 /// preserves edge field mapping and iteration order for fixture capture.
 fn ordering_snapshot_entries_to_edges(
   entries : Array[@ordering.OrderingEdgeSnapshotEntry],
-) -> Array[OrderingInputEdgeSnapshot] {
-  let edges : Array[OrderingInputEdgeSnapshot] = []
+) -> Array[@ordering.OrderingEdgeSnapshotEntry] {
+  let edges : Array[@ordering.OrderingEdgeSnapshotEntry] = []
   for entry in entries {
     edges.push({
       tail: entry.tail,
@@ -438,36 +438,10 @@ fn capture_remincross_snapshot(
 }
 
 ///|
-priv struct OrderingInputEdgeSnapshot {
-  tail : String
-  head : String
-  xpenalty : Int
-  tail_port_x : Double
-  head_port_x : Double
-  tail_port_order : Double
-  head_port_order : Double
-}
-
-///|
-fn touch_ordering_input_edges(
-  edges : Array[OrderingInputEdgeSnapshot],
-) -> Unit {
-  for edge in edges {
-    let _ = edge.tail
-    let _ = edge.head
-    let _ = edge.xpenalty
-    let _ = edge.tail_port_x
-    let _ = edge.head_port_x
-    let _ = edge.tail_port_order
-    let _ = edge.head_port_order
-  }
-}
-
-///|
 priv struct RootMincrossInputSnapshot {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
-  edges : Array[OrderingInputEdgeSnapshot]
+  edges : Array[@ordering.OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
 }
@@ -476,7 +450,7 @@ priv struct RootMincrossInputSnapshot {
 priv struct RemincrossInputSnapshot {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
-  edges : Array[OrderingInputEdgeSnapshot]
+  edges : Array[@ordering.OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
 }
 
@@ -490,7 +464,6 @@ fn set_root_mincross_input_snapshot(snapshot : RootMincrossInputSnapshot) -> Uni
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
   let _ = snapshot.edges
-  touch_ordering_input_edges(snapshot.edges)
   let _ = snapshot.cluster_keys
   let _ = snapshot.cluster_skeleton
   root_mincross_input_snapshot.val = Some(snapshot)
@@ -501,7 +474,6 @@ fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
   let _ = snapshot.edges
-  touch_ordering_input_edges(snapshot.edges)
   let _ = snapshot.cluster_keys
   remincross_input_snapshot.val = Some(snapshot)
 }
