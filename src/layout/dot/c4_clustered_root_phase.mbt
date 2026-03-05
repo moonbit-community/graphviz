@@ -482,50 +482,6 @@ fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
 /// Stage C Phase C3 split: clustered local-replay context and dispatch builders.
 
 ///|
-/// Graphviz parity: root mincross output is replayed into clustered
-/// build_ranks using unmapped order-edge snapshots before local cluster pass.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_replay_input(
-  groups : Map[Int, Array[String]],
-  dispatch_context : ClusteredDispatchContext,
-  reorder_context : @ordering.OrderReorderContext,
-  materialized : @ordering.OrderMaterializationData,
-  order_sizes_out : Map[String, NodeSize],
-) -> @ordering.ClusterLocalRankReplayInput {
-  let runtime_context = dispatch_context.runtime_context
-  {
-    groups,
-    graph: dispatch_context.graph,
-    cluster_order: dispatch_context.cluster_meta.cluster_order,
-    cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-    flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-    node_order: reorder_context.order_node_order,
-    order_edges: materialized.order_edges_out_unmapped,
-    order_edge_tail: materialized.order_edge_tail_out_unmapped,
-    order_edge_head: materialized.order_edge_head_out_unmapped,
-    order_edge_tail_port_x: materialized.order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x: materialized.order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order: materialized.order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order: materialized.order_edge_head_port_order_unmapped,
-    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-    ranks: dispatch_context.ranks,
-    order_sizes: order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-    vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-    vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-    order_with_vnodes: dispatch_context.reorder_setup.order_with_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: local cluster replay applies only when clustered ordering
 /// is enabled and uses pre-root unmapped order-graph snapshots.
 /// Do not change behavior without updating fixtures/tests.
@@ -537,14 +493,39 @@ fn apply_cluster_local_rank_replay_after_root(
   if !dispatch_context.reorder_setup.order_with_clusters {
     return ()
   }
-  let replay_input =
-    build_cluster_local_rank_replay_input(
-      root_cluster_stage.ordered,
-      dispatch_context,
-      pre_root_stage.reorder_context,
-      pre_root_stage.materialized,
-      pre_root_stage.order_sizes_out,
-    )
+  let runtime_context = dispatch_context.runtime_context
+  let replay_input : @ordering.ClusterLocalRankReplayInput = {
+    groups: root_cluster_stage.ordered,
+    graph: dispatch_context.graph,
+    cluster_order: dispatch_context.cluster_meta.cluster_order,
+    cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+    node_order: pre_root_stage.reorder_context.order_node_order,
+    order_edges: pre_root_stage.materialized.order_edges_out_unmapped,
+    order_edge_tail: pre_root_stage.materialized.order_edge_tail_out_unmapped,
+    order_edge_head: pre_root_stage.materialized.order_edge_head_out_unmapped,
+    order_edge_tail_port_x: pre_root_stage.materialized.order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x: pre_root_stage.materialized.order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order:
+      pre_root_stage.materialized.order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order:
+      pre_root_stage.materialized.order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors: pre_root_stage.materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: pre_root_stage.materialized.graphviz_in_neighbors,
+    ranks: dispatch_context.ranks,
+    order_sizes: pre_root_stage.order_sizes_out,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+    vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+    vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+    order_with_vnodes: dispatch_context.reorder_setup.order_with_vnodes,
+  }
   @ordering.run_cluster_local_rank_replay(
     replay_input,
   )
