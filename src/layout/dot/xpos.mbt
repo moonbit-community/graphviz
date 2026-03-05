@@ -1313,23 +1313,6 @@ fn build_constraint_graph(
     }
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
-  let node_degrees : Map[String, Int] = Map::new()
-  for edge in edges {
-    let tail_name = edge.tail().name()
-    let head_name = edge.head().name()
-    let dir = edge_dir_for(edge, edge.tail().graph().kind())
-    let inc = if dir is EdgeDir::Both { 2 } else { 1 }
-    let tail_degree = match node_degrees.get(tail_name) {
-      Some(value) => value
-      None => 0
-    }
-    node_degrees[tail_name] = tail_degree + inc
-    let head_degree = match node_degrees.get(head_name) {
-      Some(value) => value
-      None => 0
-    }
-    node_degrees[head_name] = head_degree + inc
-  }
   let skip_intercluster =
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
   let base_positions = @positioning.compute_rank_positions(
@@ -1373,13 +1356,19 @@ fn build_constraint_graph(
         ranks,
         cluster_keys,
         edge_vnodes,
-        node_degrees,
         order_in_rank,
         nodesep_pt,
         sizes,
         skip_intercluster,
         rank_adj_constraints,
         edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
+        edge_degree_increment:
+          edge =>
+            if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
+              2
+            } else {
+              1
+            },
         trunc_int,
       },
     )

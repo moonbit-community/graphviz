@@ -8,13 +8,13 @@ pub(all) struct ConstraintSegmentPassInput {
   ranks : Map[String, Int]
   cluster_keys : Map[String, String]
   edge_vnodes : Map[String, Array[String]]
-  node_degrees : Map[String, Int]
   order_in_rank : Map[String, Int]
   nodesep_pt : Double
   sizes : Map[String, @shared.NodeSize]
   skip_intercluster : Bool
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
+  edge_degree_increment : (@cgraph.Edge) -> Int
   trunc_int : (Double) -> Int
 }
 
@@ -75,6 +75,24 @@ fn ordered_vnodes_for_ranks(
 }
 
 ///|
+fn build_node_degrees(
+  edges : Array[@cgraph.Edge],
+  edge_degree_increment : (@cgraph.Edge) -> Int,
+) -> Map[String, Int] {
+  let node_degrees : Map[String, Int] = Map::new()
+  for edge in edges {
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    let inc = edge_degree_increment(edge)
+    let tail_degree = node_degrees.get(tail_name).unwrap_or_default()
+    node_degrees[tail_name] = tail_degree + inc
+    let head_degree = node_degrees.get(head_name).unwrap_or_default()
+    node_degrees[head_name] = head_degree + inc
+  }
+  node_degrees
+}
+
+///|
 fn node_side_pt(
   name : String,
   sizes : Map[String, @shared.NodeSize],
@@ -115,6 +133,8 @@ fn same_rank_constraint_minlen(
 pub fn build_constraint_segment_pass(
   input : ConstraintSegmentPassInput,
 ) -> ConstraintSegmentPassOutput {
+  let node_degrees =
+    build_node_degrees(input.edges, input.edge_degree_increment)
   let reverse_merge_metadata =
     build_reverse_merge_metadata(
       {
@@ -225,7 +245,7 @@ pub fn build_constraint_segment_pass(
                       base_weight,
                       seg_tail,
                       seg_head,
-                      input.node_degrees,
+                      node_degrees,
                     )
                   } else {
                     base_weight
