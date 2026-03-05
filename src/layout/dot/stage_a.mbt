@@ -86,7 +86,7 @@ fn resolve_rankdir(
     None =>
       match graph.get_attr("rankdir") {
         Some(value) =>
-          match parse_rankdir(value) {
+          match @dot_shared.parse_rankdir(value) {
             Some(parsed) => parsed
             None => RankDir::TB
           }

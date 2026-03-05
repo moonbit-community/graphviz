@@ -374,7 +374,7 @@ fn build_edge_port_sampling_context(
   sizes : Map[String, NodeSize],
 ) -> EdgePortSamplingContext {
   let rankdir =
-    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+    if nodes.length() > 0 { @dot_shared.graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
   let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
   for node in nodes {
     nodes_by_name[node.name()] = node

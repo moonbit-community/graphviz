@@ -37,11 +37,11 @@ test "base parse helpers extract and clamp doubles" {
 
 ///|
 test "base rankdir and splines parsers accept graphviz aliases" {
-  assert_eq(parse_rankdir("TB"), Some(RankDir::TB))
-  assert_eq(parse_rankdir("bt"), Some(RankDir::BT))
-  assert_eq(parse_rankdir("Lr"), Some(RankDir::LR))
-  assert_eq(parse_rankdir("rl"), Some(RankDir::RL))
-  assert_eq(parse_rankdir("diag"), None)
+  assert_eq(@dot_shared.parse_rankdir("TB"), Some(RankDir::TB))
+  assert_eq(@dot_shared.parse_rankdir("bt"), Some(RankDir::BT))
+  assert_eq(@dot_shared.parse_rankdir("Lr"), Some(RankDir::LR))
+  assert_eq(@dot_shared.parse_rankdir("rl"), Some(RankDir::RL))
+  assert_eq(@dot_shared.parse_rankdir("diag"), None)
 
   assert_eq(parse_splines("true"), Some(SplinesMode::Spline))
   assert_eq(parse_splines("line"), Some(SplinesMode::Polyline))
@@ -56,15 +56,15 @@ test "graph_rankdir walks parent chain" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=RL; subgraph cluster_outer { subgraph cluster_inner { a -> b } } }",
   )
-  assert_eq(graph_rankdir(graph), RankDir::RL)
+  assert_eq(@dot_shared.graph_rankdir(graph), RankDir::RL)
 
   let outer = graph.subgraphs()[0]
   let inner = outer.subgraphs()[0]
-  assert_eq(graph_rankdir(outer), RankDir::RL)
-  assert_eq(graph_rankdir(inner), RankDir::RL)
+  assert_eq(@dot_shared.graph_rankdir(outer), RankDir::RL)
+  assert_eq(@dot_shared.graph_rankdir(inner), RankDir::RL)
 
   let no_rankdir = @dot_parser.parse_dot("digraph { a -> b }")
-  assert_eq(graph_rankdir(no_rankdir), RankDir::TB)
+  assert_eq(@dot_shared.graph_rankdir(no_rankdir), RankDir::TB)
 }
 
 ///|

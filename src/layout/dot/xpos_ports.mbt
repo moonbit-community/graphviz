@@ -7,7 +7,7 @@ fn port_offsets_for_nodes(
 ) -> Map[String, Map[String, RecordPort]] {
   let offsets : Map[String, Map[String, RecordPort]] = Map::new()
   let rankdir = if nodes.length() > 0 {
-    graph_rankdir(nodes[0].graph())
+    @dot_shared.graph_rankdir(nodes[0].graph())
   } else {
     RankDir::TB
   }

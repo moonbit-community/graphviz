@@ -371,7 +371,7 @@ pub fn layout_neato_noop(
   reset_label_caches()
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
-  let rankdir = graph_rankdir(active_graph)
+  let rankdir = @dot_shared.graph_rankdir(active_graph)
   let record_orientation = record_layout_orientation(rankdir)
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []

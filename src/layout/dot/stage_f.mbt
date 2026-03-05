@@ -284,7 +284,7 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     }
   }
   let record_orientation =
-    record_layout_orientation(graph_rankdir(self.graph))
+    record_layout_orientation(@dot_shared.graph_rankdir(self.graph))
   if write_bb {
     self.graph.set_attr("bb", format_rect(self.bbox))
   }
@@ -1043,7 +1043,7 @@ fn expand_bbox_for_edge_labels(
   }
   // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
   // dimensions in pre-rotation space to match compute_bb.
-  let rankdir = graph_rankdir(graph)
+  let rankdir = @dot_shared.graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let adjust_metrics = (metrics : EdgeLabelMetrics?) => {
     match metrics {

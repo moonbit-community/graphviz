@@ -926,7 +926,7 @@ fn apply_xlabels(
   layout : DotLayoutGraph,
   splines : SplinesMode,
 ) -> DotLayoutGraph {
-  let rankdir = graph_rankdir(graph)
+  let rankdir = @dot_shared.graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []

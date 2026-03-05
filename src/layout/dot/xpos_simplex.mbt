@@ -30,7 +30,7 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   let xpos_nlist_order =
     @positioning.build_xpos_nlist_order(
       {
-        rankdir: graph_rankdir(input.graph_root),
+        rankdir: @dot_shared.graph_rankdir(input.graph_root),
         nlist_order: input.nlist_order,
         gdnlist_order: input.gdnlist_order,
         cluster_keys: input.cluster_keys,
@@ -54,7 +54,7 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
     }
   let rankdir =
     if input.nodes.length() > 0 {
-      graph_rankdir(input.nodes[0].graph())
+      @dot_shared.graph_rankdir(input.nodes[0].graph())
     } else {
       RankDir::TB
     }

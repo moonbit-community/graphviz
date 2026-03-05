@@ -193,7 +193,7 @@ pub fn layout_neato(
   validate_neato_edge_lengths(active_graph)
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
-  let rankdir = graph_rankdir(active_graph)
+  let rankdir = @dot_shared.graph_rankdir(active_graph)
   let record_orientation = record_layout_orientation(rankdir)
   let nodes = active_graph.nodes()
   let node_count = nodes.length()
