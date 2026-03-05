@@ -66,14 +66,13 @@ fn build_xpos_reorder_pipeline_input(
   )
 }
 
-///|
-/// Graphviz parity: non-cluster xpos reorder uses edge-port x-position samples
-/// derived from compass/record port geometry before reorder scoring.
+/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
+/// and order-fraction hints from the same order-edge snapshot before scoring.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_xpos_reorder_port_positions(
+fn compute_xpos_reorder_port_samples(
   input : @positioning.XposPortSampleInput,
-) -> (Array[Double], Array[Double]) {
-  let samples =
+) -> @positioning.XposPortSamples {
+  let port_position_samples =
     compute_edge_port_positions(
       input.nodes,
       input.order_edges,
@@ -81,17 +80,7 @@ fn compute_xpos_reorder_port_positions(
       input.order_edge_head,
       input.x_order_sizes,
     )
-  (samples.tail_values, samples.head_values)
-}
-
-///|
-/// Graphviz parity: non-cluster xpos reorder uses edge-port order fractions to
-/// break mincross scoring ties consistently with Graphviz.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_xpos_reorder_port_orders(
-  input : @positioning.XposPortSampleInput,
-) -> (Array[Double], Array[Double]) {
-  let samples =
+  let port_order_samples =
     compute_edge_port_orders(
       input.nodes,
       input.order_edges,
@@ -99,25 +88,11 @@ fn compute_xpos_reorder_port_orders(
       input.order_edge_head,
       input.x_order_sizes,
     )
-  (samples.tail_values, samples.head_values)
-}
-
-///|
-/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
-/// and order-fraction hints from the same order-edge snapshot before scoring.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_xpos_reorder_port_samples(
-  input : @positioning.XposPortSampleInput,
-) -> @positioning.XposPortSamples {
-  let (tail_port_x, head_port_x) =
-    compute_xpos_reorder_port_positions(input)
-  let (tail_port_order, head_port_order) =
-    compute_xpos_reorder_port_orders(input)
   @positioning.xpos_port_samples(
-    tail_port_x,
-    head_port_x,
-    tail_port_order,
-    head_port_order,
+    port_position_samples.tail_values,
+    port_position_samples.head_values,
+    port_order_samples.tail_values,
+    port_order_samples.head_values,
   )
 }
 
