@@ -482,50 +482,19 @@ fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
 /// Stage C Phase C3 split: clustered local-replay context and dispatch builders.
 
 ///|
-/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
-/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalRankReplayContext {
-  graph : @cgraph.Graph
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  intercluster_keys : Map[String, String]
-  flat_constraints : Map[String, Bool]
-  node_order : Map[String, Int]
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  ranks : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  vnode_ranks : Map[String, Int]
-  vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, NodeSize]
-  order_with_vnodes : Bool
-}
-
-///|
 /// Graphviz parity: root mincross output is replayed into clustered
 /// build_ranks using unmapped order-edge snapshots before local cluster pass.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_replay_context(
+fn build_cluster_local_rank_replay_input(
+  groups : Map[Int, Array[String]],
   dispatch_context : ClusteredDispatchContext,
   reorder_context : @ordering.OrderReorderContext,
   materialized : @ordering.OrderMaterializationData,
   order_sizes_out : Map[String, NodeSize],
-) -> ClusterLocalRankReplayContext {
+) -> @ordering.ClusterLocalRankReplayInput {
   let runtime_context = dispatch_context.runtime_context
   {
+    groups,
     graph: dispatch_context.graph,
     cluster_order: dispatch_context.cluster_meta.cluster_order,
     cluster_parents: dispatch_context.cluster_meta.cluster_parents,
@@ -557,45 +526,6 @@ fn build_cluster_local_rank_replay_context(
 }
 
 ///|
-/// Graphviz parity: cluster-local replay input is built from root-replay
-/// context plus current ordered groups before ordering-subpackage execution.
-fn build_cluster_local_rank_replay_input(
-  groups : Map[Int, Array[String]],
-  replay_context : ClusterLocalRankReplayContext,
-) -> @ordering.ClusterLocalRankReplayInput {
-  {
-    groups,
-    graph: replay_context.graph,
-    cluster_order: replay_context.cluster_order,
-    cluster_parents: replay_context.cluster_parents,
-    rank_same_groups: replay_context.rank_same_groups,
-    rank_same_order: replay_context.rank_same_order,
-    intercluster_keys: replay_context.intercluster_keys,
-    flat_constraints: replay_context.flat_constraints,
-    node_order: replay_context.node_order,
-    order_edges: replay_context.order_edges,
-    order_edge_tail: replay_context.order_edge_tail,
-    order_edge_head: replay_context.order_edge_head,
-    order_edge_tail_port_x: replay_context.order_edge_tail_port_x,
-    order_edge_head_port_x: replay_context.order_edge_head_port_x,
-    order_edge_tail_port_order: replay_context.order_edge_tail_port_order,
-    order_edge_head_port_order: replay_context.order_edge_head_port_order,
-    graphviz_out_neighbors: replay_context.graphviz_out_neighbors,
-    graphviz_in_neighbors: replay_context.graphviz_in_neighbors,
-    ranks: replay_context.ranks,
-    order_sizes: replay_context.order_sizes,
-    nodesep_pt: replay_context.nodesep_pt,
-    has_edge_labels: replay_context.has_edge_labels,
-    port_order_positions: replay_context.port_order_positions,
-    port_order_contrib: replay_context.port_order_contrib,
-    vnode_ranks: replay_context.vnode_ranks,
-    vnode_clusters: replay_context.vnode_clusters,
-    vnode_sizes: replay_context.vnode_sizes,
-    order_with_vnodes: replay_context.order_with_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: local cluster replay applies only when clustered ordering
 /// is enabled and uses pre-root unmapped order-graph snapshots.
 /// Do not change behavior without updating fixtures/tests.
@@ -607,17 +537,15 @@ fn apply_cluster_local_rank_replay_after_root(
   if !dispatch_context.reorder_setup.order_with_clusters {
     return ()
   }
-  let replay_context =
-    build_cluster_local_rank_replay_context(
+  let replay_input =
+    build_cluster_local_rank_replay_input(
+      root_cluster_stage.ordered,
       dispatch_context,
       pre_root_stage.reorder_context,
       pre_root_stage.materialized,
       pre_root_stage.order_sizes_out,
     )
   @ordering.run_cluster_local_rank_replay(
-    build_cluster_local_rank_replay_input(
-      root_cluster_stage.ordered,
-      replay_context,
-    ),
+    replay_input,
   )
 }
