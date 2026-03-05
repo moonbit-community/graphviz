@@ -92,6 +92,96 @@ pub(all) struct ReMincrossPassBuildSources {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross source input keeps root/finalize
+/// snapshots grouped before context-source assembly.
+pub(all) struct ReMincrossPassSourceInput {
+  ratio : String
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  ranks : Map[String, Int]
+  reorder_setup : OrderingReorderSetup
+  creation_order : Array[String]
+  cluster_order : Array[String]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  local_cluster_order : Map[String, Int]
+  cluster_parents : Map[String, String?]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_flat_constraints : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_sizes : Map[String, @shared.NodeSize]
+  order_sizes : Map[String, @shared.NodeSize]
+  rank_same_constraints : Map[String, Bool]
+  ordered_with_vnodes : Map[Int, Array[String]]
+  real_nodes : Map[String, Bool]
+  root_tail_order_override : Array[String]?
+  root_cluster : String
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
+/// Graphviz parity: clustered ReMincross source assembly keeps finalize
+/// snapshots and reorder setup data grouped before context conversion.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_remincross_pass_sources(
+  input : ReMincrossPassSourceInput,
+) -> ReMincrossPassBuildSources {
+  {
+    ratio: input.ratio,
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    edge_reversed: input.edge_reversed,
+    edge_tail_port_x: input.edge_tail_port_x,
+    edge_head_port_x: input.edge_head_port_x,
+    edge_tail_port_order: input.edge_tail_port_order,
+    edge_head_port_order: input.edge_head_port_order,
+    ranks: input.ranks,
+    reorder_setup: input.reorder_setup,
+    creation_order: input.creation_order,
+    edges_by_tail: input.reorder_setup.class2_data.edges_by_tail,
+    cluster_order: input.cluster_order,
+    cluster_keys: input.cluster_keys,
+    intercluster_keys: input.intercluster_keys,
+    local_cluster_order: input.local_cluster_order,
+    cluster_parents: input.cluster_parents,
+    cluster_min_rank: input.cluster_min_rank,
+    cluster_max_rank: input.cluster_max_rank,
+    cluster_flat_constraints: input.cluster_flat_constraints,
+    rank_same_groups: input.rank_same_groups,
+    rank_same_order: input.rank_same_order,
+    edge_vnodes: input.edge_vnodes,
+    vnode_ranks: input.vnode_ranks,
+    vnodes_by_rank: input.vnodes_by_rank,
+    vnode_sizes: input.vnode_sizes,
+    order_sizes: input.order_sizes,
+    rank_same_constraints: input.rank_same_constraints,
+    ordered_with_vnodes: input.ordered_with_vnodes,
+    real_nodes: input.real_nodes,
+    root_tail_order_override: input.root_tail_order_override,
+    root_cluster: input.root_cluster,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    port_order_positions: input.port_order_positions,
+    port_order_contrib: input.port_order_contrib,
+  }
+}
+
+///|
 /// Graphviz parity: clustered ReMincross context payload is assembled from one
 /// finalize snapshot without changing Graphviz startpass=2 call order.
 /// Do not change behavior without updating fixtures/tests.
