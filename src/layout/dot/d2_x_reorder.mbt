@@ -103,6 +103,25 @@ fn compute_xpos_reorder_port_orders(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder samples both geometric x-hints
+/// and order-fraction hints from the same order-edge snapshot before scoring.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_xpos_reorder_port_samples(
+  input : @positioning.XposPortSampleInput,
+) -> @positioning.XposPortSamples {
+  let (tail_port_x, head_port_x) =
+    compute_xpos_reorder_port_positions(input)
+  let (tail_port_order, head_port_order) =
+    compute_xpos_reorder_port_orders(input)
+  @positioning.xpos_port_samples(
+    tail_port_x,
+    head_port_x,
+    tail_port_order,
+    head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
 /// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -111,7 +130,6 @@ fn build_x_groups_after_reorder(
 ) -> Map[Int, Array[String]] {
   @positioning.build_x_groups_after_reorder(
     build_xpos_reorder_pipeline_input(input),
-    compute_xpos_reorder_port_positions,
-    compute_xpos_reorder_port_orders,
+    compute_xpos_reorder_port_samples,
   )
 }

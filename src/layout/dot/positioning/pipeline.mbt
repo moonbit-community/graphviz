@@ -201,8 +201,7 @@ fn apply_clustered_xpos_reorder_path(
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 fn apply_nonclustered_xpos_reorder(
   input : XposReorderPipelineInput,
-  compute_port_positions : XposPortSampleFn,
-  compute_port_orders : XposPortSampleFn,
+  compute_port_samples : XposPortSampleBundleFn,
 ) -> Map[Int, Array[String]] {
   build_nonclustered_xpos_groups(
     {
@@ -228,8 +227,7 @@ fn apply_nonclustered_xpos_reorder(
       graphviz_flip: input.graphviz_flip,
     },
     input.x_groups,
-    compute_port_positions,
-    compute_port_orders,
+    compute_port_samples,
   )
 }
 
@@ -264,8 +262,7 @@ fn maybe_apply_xpos_transpose_cleanup(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_x_groups_after_reorder(
   input : XposReorderPipelineInput,
-  compute_port_positions : XposPortSampleFn,
-  compute_port_orders : XposPortSampleFn,
+  compute_port_samples : XposPortSampleBundleFn,
 ) -> Map[Int, Array[String]] {
   let path_flags = build_xpos_reorder_path_flags(input)
   let x_groups =
@@ -274,8 +271,7 @@ pub fn build_x_groups_after_reorder(
     } else if path_flags.nonclustered_reorder_enabled {
       apply_nonclustered_xpos_reorder(
         input,
-        compute_port_positions,
-        compute_port_orders,
+        compute_port_samples,
       )
     } else {
       input.x_groups

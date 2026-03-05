@@ -9,10 +9,27 @@ pub struct XposPortSampleInput {
   x_order_sizes : Map[String, NodeSize]
 }
 
+pub struct XposPortSamples {
+  tail_port_x : Array[Double]
+  head_port_x : Array[Double]
+  tail_port_order : Array[Double]
+  head_port_order : Array[Double]
+}
+
 ///|
-pub type XposPortSampleFn = (
+pub fn xpos_port_samples(
+  tail_port_x : Array[Double],
+  head_port_x : Array[Double],
+  tail_port_order : Array[Double],
+  head_port_order : Array[Double],
+) -> XposPortSamples {
+  { tail_port_x, head_port_x, tail_port_order, head_port_order }
+}
+
+///|
+pub type XposPortSampleBundleFn = (
   XposPortSampleInput,
-) -> (Array[Double], Array[Double])
+) -> XposPortSamples
 
 ///|
 /// Graphviz parity: non-cluster xpos reorder build input keeps order-edge
@@ -174,21 +191,10 @@ fn reorder_nonclustered_x_groups(
 pub fn build_nonclustered_xpos_groups(
   input : NonclusteredXposGroupBuildInput,
   x_groups : Map[Int, Array[String]],
-  compute_port_positions : XposPortSampleFn,
-  compute_port_orders : XposPortSampleFn,
+  compute_port_samples : XposPortSampleBundleFn,
 ) -> Map[Int, Array[String]] {
-  let (order_edge_tail_port_x, order_edge_head_port_x) =
-    compute_port_positions(
-      {
-        nodes: input.nodes,
-        order_edges: input.order_edges,
-        order_edge_tail: input.order_edge_tail,
-        order_edge_head: input.order_edge_head,
-        x_order_sizes: input.x_order_sizes,
-      },
-    )
-  let (order_edge_tail_port_order, order_edge_head_port_order) =
-    compute_port_orders(
+  let port_samples =
+    compute_port_samples(
       {
         nodes: input.nodes,
         order_edges: input.order_edges,
@@ -206,10 +212,10 @@ pub fn build_nonclustered_xpos_groups(
       ranks: input.ranks,
       edge_vnodes: input.edge_vnodes,
       vnode_ranks: input.vnode_ranks,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
+      order_edge_tail_port_x: port_samples.tail_port_x,
+      order_edge_head_port_x: port_samples.head_port_x,
+      order_edge_tail_port_order: port_samples.tail_port_order,
+      order_edge_head_port_order: port_samples.head_port_order,
       x_cluster_keys: input.x_cluster_keys,
       rank_same_groups: input.rank_same_groups,
       rank_same_order: input.rank_same_order,
