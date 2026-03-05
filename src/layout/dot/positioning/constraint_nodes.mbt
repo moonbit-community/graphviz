@@ -34,15 +34,12 @@ fn build_constraint_node_seed(
 fn build_constraint_ordered_names(
   nodes : Array[@cgraph.Node],
   nlist_order : Array[String],
-  gdnlist_order : Array[String],
   real_by_name : Map[String, @cgraph.Node],
   extra_rank : Map[String, Int],
 ) -> Array[String] {
   let ordered_names : Array[String] = []
   let seen : Map[String, Bool] = Map::new()
-  let base_order =
-    if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
-  for name in base_order {
+  for name in nlist_order {
     if real_by_name.get(name) is Some(_) || extra_rank.get(name) is Some(_) {
       if seen.get(name) is None {
         ordered_names.push(name)
@@ -117,7 +114,6 @@ pub(all) struct ConstraintNodesSetupInput {
   nodes : Array[@cgraph.Node]
   extra_nodes : Array[@ordering.ExtraConstraintNode]
   nlist_order : Array[String]
-  gdnlist_order : Array[String]
   base_positions : Map[String, Double]
   trunc_int : (Double) -> Int
 }
@@ -140,7 +136,6 @@ pub fn build_constraint_nodes_setup(
     build_constraint_ordered_names(
       input.nodes,
       input.nlist_order,
-      input.gdnlist_order,
       seed.real_by_name,
       seed.extra_rank,
     )

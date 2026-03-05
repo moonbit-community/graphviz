@@ -6,7 +6,6 @@ pub(all) struct ConstraintGraphBuildInput {
   edge_head : Array[String]
   edge_out_order : Map[String, Array[Int]]
   nlist_order : Array[String]
-  gdnlist_order : Array[String]
   ranks : Map[String, Int]
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
@@ -61,7 +60,6 @@ pub fn build_constraint_graph(
         nodes: input.nodes,
         extra_nodes: input.extra_nodes,
         nlist_order: input.nlist_order,
-        gdnlist_order: input.gdnlist_order,
         base_positions,
         trunc_int: input.trunc_int,
       },

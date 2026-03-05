@@ -124,7 +124,6 @@ fn x_positions_from_simplex(
         edge_head,
         edge_out_order,
         nlist_order: xpos_nlist_order,
-        gdnlist_order: xpos_nlist_order,
         ranks,
         rank_keys,
         groups,
