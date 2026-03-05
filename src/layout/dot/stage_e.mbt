@@ -397,6 +397,125 @@ priv struct RoutingPrecomputeInput {
 type RoutingPrecomputeData = @routing.RoutingPrecomputePipelineOutput
 
 ///|
+/// Graphviz parity: routing port-padding gate mirrors Graphviz clustered/port
+/// mode branch before record-port padding sampling.
+fn routing_port_padding(
+  has_clusters : Bool,
+  has_port_edges : Bool,
+  edges : Array[@cgraph.Edge],
+  positions : Map[String, @geom.Point],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+) -> (Double, Double) {
+  if has_clusters || !has_port_edges {
+    return (0.0, 0.0)
+  }
+  let padding = record_port_padding_y(edges, positions, label_ports_map)
+  (padding.below, padding.above)
+}
+
+///|
+/// Graphviz parity: complex head-port tuning keys match dotsplines behavior:
+/// explicit port key when present, otherwise record-shape node key.
+fn routing_head_metric_key(edge : @cgraph.Edge) -> String {
+  let head_name = edge.head().name()
+  let head_port = @dot_shared.port_key(edge.head_port())
+  if head_port == "" {
+    if is_record_shape(edge.head()) { head_name } else { "" }
+  } else {
+    "\{head_name}:\{head_port}"
+  }
+}
+
+///|
+/// Graphviz parity: complex tuning distance uses endpoint port centers in
+/// current routing coordinates.
+fn routing_head_metric_distance(
+  edge : @cgraph.Edge,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  record_orientation : RecordOrientation,
+) -> Double {
+  let tail_name = edge.tail().name()
+  let head_name = edge.head().name()
+  let tail_pos =
+    positions.get(tail_name).unwrap_or({
+      x: 0.0,
+      y: 0.0,
+    })
+  let head_pos =
+    positions.get(head_name).unwrap_or({
+      x: 0.0,
+      y: 0.0,
+    })
+  let tail_size = sizes.get(tail_name).unwrap_or(node_size(edge.tail(), record_orientation))
+  let head_size = sizes.get(head_name).unwrap_or(node_size(edge.head(), record_orientation))
+  let tail_geometry =
+    port_geometry(
+      tail_name,
+      edge.tail_port(),
+      label_ports_map,
+      tail_pos,
+      tail_size,
+    )
+  let head_geometry =
+    port_geometry(
+      head_name,
+      edge.head_port(),
+      label_ports_map,
+      head_pos,
+      head_size,
+    )
+  let dx = head_geometry.center.x - tail_geometry.center.x
+  let dy = head_geometry.center.y - tail_geometry.center.y
+  Double::sqrt(dx * dx + dy * dy)
+}
+
+///|
+/// Graphviz parity: head-port metric aggregation mirrors dotsplines
+/// count/min/max accumulation for complex tuning.
+fn build_routing_head_port_metrics(
+  prep : LayoutPrep,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  enable_complex_tuning : Bool,
+) -> @routing.HeadPortMetrics {
+  let head_port_counts : Map[String, Int] = Map::new()
+  let head_port_min_dist : Map[String, Double] = Map::new()
+  let head_port_max_dist : Map[String, Double] = Map::new()
+  if enable_complex_tuning {
+    for edge in prep.edges {
+      let key = routing_head_metric_key(edge)
+      if key == "" {
+        continue
+      }
+      let dist =
+        routing_head_metric_distance(
+          edge,
+          positions,
+          sizes,
+          label_ports_map,
+          prep.record_orientation,
+        )
+      let current = head_port_counts.get(key).unwrap_or_default()
+      head_port_counts[key] = current + 1
+      let mut min_dist = head_port_min_dist.get(key).unwrap_or(dist)
+      let mut max_dist = head_port_max_dist.get(key).unwrap_or(dist)
+      if dist < min_dist {
+        min_dist = dist
+      }
+      if dist > max_dist {
+        max_dist = dist
+      }
+      head_port_min_dist[key] = min_dist
+      head_port_max_dist[key] = max_dist
+    }
+  }
+  { head_port_counts, head_port_min_dist, head_port_max_dist }
+}
+
+///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -404,6 +523,22 @@ fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
+  let (port_pad_below, port_pad_above) =
+    routing_port_padding(
+      input.cluster_meta.has_clusters,
+      prep.has_port_edges,
+      prep.edges,
+      input.positions_state.positions,
+      input.label_ports_map,
+    )
+  let head_port_metrics =
+    build_routing_head_port_metrics(
+      prep,
+      input.positions_state.positions,
+      input.sizes,
+      input.label_ports_map,
+      input.enable_complex_tuning,
+    )
   // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
   let pathplan_sizes =
     apply_self_edge_right_space(
@@ -415,13 +550,13 @@ fn build_routing_precompute_data(
     )
   @routing.build_routing_precompute_pipeline(
     {
-      has_clusters: input.cluster_meta.has_clusters,
-      has_port_edges: prep.has_port_edges,
       edges: prep.edges,
-      enable_complex_tuning: input.enable_complex_tuning,
       x_groups: input.positions_state.x_groups,
       ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
       ordered_groups: input.ordering.ordered_groups,
+      port_pad_below,
+      port_pad_above,
+      head_port_metrics,
       edge_tail: input.rank_data.edge_tail,
       edge_head: input.rank_data.edge_head,
       ranks: input.rank_data.ranks,
@@ -432,59 +567,6 @@ fn build_routing_precompute_data(
       vnode_sizes: input.ordering.vnode_info.vnode_sizes,
       vnode_positions: input.positions_state.vnode_positions,
       cluster_bboxes: input.cluster_bboxes,
-      compute_padding_fn: (edges) => {
-        let padding =
-          record_port_padding_y(
-            edges,
-            input.positions_state.positions,
-            input.label_ports_map,
-          )
-        (padding.below, padding.above)
-      },
-      head_metric_key_fn: (edge) => {
-        let head_name = edge.head().name()
-        let head_port = @dot_shared.port_key(edge.head_port())
-        if head_port == "" {
-          if is_record_shape(edge.head()) { head_name } else { "" }
-        } else {
-          "\{head_name}:\{head_port}"
-        }
-      },
-      head_metric_distance_fn: (edge) => {
-        let tail_name = edge.tail().name()
-        let head_name = edge.head().name()
-        let tail_pos =
-          input.positions_state.positions.get(tail_name).unwrap_or({
-            x: 0.0,
-            y: 0.0,
-          })
-        let head_pos =
-          input.positions_state.positions.get(head_name).unwrap_or({
-            x: 0.0,
-            y: 0.0,
-          })
-        let tail_size = input.sizes.get(tail_name).unwrap_or(node_size(edge.tail(), prep.record_orientation))
-        let head_size = input.sizes.get(head_name).unwrap_or(node_size(edge.head(), prep.record_orientation))
-        let tail_geometry =
-          port_geometry(
-            tail_name,
-            edge.tail_port(),
-            input.label_ports_map,
-            tail_pos,
-            tail_size,
-          )
-        let head_geometry =
-          port_geometry(
-            head_name,
-            edge.head_port(),
-            input.label_ports_map,
-            head_pos,
-            head_size,
-          )
-        let dx = head_geometry.center.x - tail_geometry.center.x
-        let dy = head_geometry.center.y - tail_geometry.center.y
-        Double::sqrt(dx * dx + dy * dy)
-      },
     },
   )
 }

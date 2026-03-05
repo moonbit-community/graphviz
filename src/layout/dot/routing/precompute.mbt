@@ -46,83 +46,16 @@ pub fn complex_tuning_enabled() -> Bool {
 }
 
 ///|
-/// Graphviz parity: routing port-padding gate input keeps cluster/port flags
-/// plus edge sequence and callback wiring grouped for Stage E precompute.
-pub(all) struct RoutingPortPaddingInput {
-  has_clusters : Bool
-  has_port_edges : Bool
-  edges : Array[@cgraph.Edge]
-  compute_padding_fn : (Array[@cgraph.Edge]) -> (Double, Double)
-}
-
-///|
-/// Graphviz parity: routing port padding keeps Graphviz branch gating for
-/// clustered/port-edge mode before invoking record-port padding callbacks.
-pub fn compute_port_padding(
-  input : RoutingPortPaddingInput,
-) -> (Double, Double) {
-  if input.has_clusters || !input.has_port_edges {
-    (0.0, 0.0)
-  } else {
-    (input.compute_padding_fn)(input.edges)
-  }
-}
-
-///|
-/// Graphviz parity: head-port metric collector input keeps edge traversal and
-/// key/distance callback wiring grouped for deterministic metric aggregation.
-pub(all) struct CollectHeadPortMetricsInput {
-  edges : Array[@cgraph.Edge]
-  enable_complex_tuning : Bool
-  key_for_edge_fn : (@cgraph.Edge) -> String
-  distance_for_edge_fn : (@cgraph.Edge) -> Double
-}
-
-///|
-/// Graphviz parity: head-port metric aggregation mirrors refs/graphviz/lib/dotgen/dotsplines.c
-/// (curve offsets), preserving stable count/min/max updates per head-port key.
-/// Do not change behavior without updating fixtures/tests.
-pub fn collect_head_port_metrics(
-  input : CollectHeadPortMetricsInput,
-) -> HeadPortMetrics {
-  let head_port_counts : Map[String, Int] = Map::new()
-  let head_port_min_dist : Map[String, Double] = Map::new()
-  let head_port_max_dist : Map[String, Double] = Map::new()
-  if input.enable_complex_tuning {
-    for edge in input.edges {
-      let key = (input.key_for_edge_fn)(edge)
-      if key == "" {
-        continue
-      }
-      let dist = (input.distance_for_edge_fn)(edge)
-      let current = head_port_counts.get(key).unwrap_or_default()
-      head_port_counts[key] = current + 1
-      let mut min_dist = head_port_min_dist.get(key).unwrap_or(dist)
-      let mut max_dist = head_port_max_dist.get(key).unwrap_or(dist)
-      if dist < min_dist {
-        min_dist = dist
-      }
-      if dist > max_dist {
-        max_dist = dist
-      }
-      head_port_min_dist[key] = min_dist
-      head_port_max_dist[key] = max_dist
-    }
-  }
-  { head_port_counts, head_port_min_dist, head_port_max_dist }
-}
-
-///|
 /// Graphviz parity: routing precompute pipeline input keeps padding/metric
-/// callbacks plus path-context snapshots grouped before Stage E edge solve.
+/// snapshots grouped before Stage E edge solve.
 pub(all) struct RoutingPrecomputePipelineInput {
-  has_clusters : Bool
-  has_port_edges : Bool
   edges : Array[@cgraph.Edge]
-  enable_complex_tuning : Bool
   x_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   ordered_groups : Map[Int, Array[String]]
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
   edge_tail : Array[String]
   edge_head : Array[String]
   ranks : Map[String, Int]
@@ -133,9 +66,6 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_sizes : Map[String, @dot_shared.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
-  compute_padding_fn : (Array[@cgraph.Edge]) -> (Double, Double)
-  head_metric_key_fn : (@cgraph.Edge) -> String
-  head_metric_distance_fn : (@cgraph.Edge) -> Double
 }
 
 ///|
@@ -156,24 +86,6 @@ pub struct RoutingPrecomputePipelineOutput {
 pub fn build_routing_precompute_pipeline(
   input : RoutingPrecomputePipelineInput,
 ) -> RoutingPrecomputePipelineOutput {
-  let (port_pad_below, port_pad_above) =
-    compute_port_padding(
-      {
-        has_clusters: input.has_clusters,
-        has_port_edges: input.has_port_edges,
-        edges: input.edges,
-        compute_padding_fn: input.compute_padding_fn,
-      },
-    )
-  let head_port_metrics =
-    collect_head_port_metrics(
-      {
-        edges: input.edges,
-        enable_complex_tuning: input.enable_complex_tuning,
-        key_for_edge_fn: input.head_metric_key_fn,
-        distance_for_edge_fn: input.head_metric_distance_fn,
-      },
-    )
   let path_groups =
     select_path_groups(
       input.x_groups,
@@ -199,9 +111,9 @@ pub fn build_routing_precompute_pipeline(
       },
     )
   {
-    port_pad_below,
-    port_pad_above,
-    head_port_metrics,
+    port_pad_below: input.port_pad_below,
+    port_pad_above: input.port_pad_above,
+    head_port_metrics: input.head_port_metrics,
     path_groups,
     routing_context,
   }
