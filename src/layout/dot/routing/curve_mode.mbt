@@ -755,12 +755,14 @@ fn build_edge_curve_mode_result(
     )
   let (pathplan_boxes, pathplan_segments) =
     finalize_pathplan_boxes_and_segments(
-      input.base,
-      prepared.using_pathplan,
-      prepared.pathplan_boxes,
-      prepared.pathplan_points,
-      spline_result.raw_bezier,
-      prepared.pathplan_segments,
+      {
+        base: input.base,
+        using_pathplan: prepared.using_pathplan,
+        pathplan_boxes: prepared.pathplan_boxes,
+        pathplan_points: prepared.pathplan_points,
+        raw_bezier: spline_result.raw_bezier,
+        pathplan_segments: prepared.pathplan_segments,
+      },
     )
   {
     spline: spline_result.spline,
@@ -1443,16 +1445,25 @@ fn build_multi_point_routed_spline(
 }
 
 ///|
+priv struct PathplanFinalizeInput {
+  base : EdgeRouteBase
+  using_pathplan : Bool
+  pathplan_boxes : Array[@geom.Rect]
+  pathplan_points : Array[@geom.Point]
+  raw_bezier : Array[@geom.Point]
+  pathplan_segments : Array[@routesplines.PathplanSegment]
+}
+
+///|
 fn finalize_pathplan_boxes_and_segments(
-  base : EdgeRouteBase,
-  using_pathplan : Bool,
-  pathplan_boxes : Array[@geom.Rect],
-  pathplan_points : Array[@geom.Point],
-  raw_bezier : Array[@geom.Point],
-  pathplan_segments : Array[@routesplines.PathplanSegment],
+  input : PathplanFinalizeInput,
 ) -> (Array[@geom.Rect], Array[@routesplines.PathplanSegment]) {
-  let mut limited_boxes = pathplan_boxes
-  let mut limited_segments = pathplan_segments
+  let base = input.base
+  let using_pathplan = input.using_pathplan
+  let pathplan_points = input.pathplan_points
+  let raw_bezier = input.raw_bezier
+  let mut limited_boxes = input.pathplan_boxes
+  let mut limited_segments = input.pathplan_segments
   if using_pathplan && limited_boxes.length() > 0 && raw_bezier.length() >= 4 {
     // Graphviz parity: limit boxes based on routed spline before recover_slack.
     limited_boxes =
