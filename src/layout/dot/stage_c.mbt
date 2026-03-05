@@ -339,7 +339,7 @@ fn build_ordering_reorder_setup(
         runtime_context.vnode_info.vnode_ranks,
       ),
     (ordering_groups_base, base_order_index, nlist_order_index) =>
-      build_vnode_keys_from_nlist(
+      @ordering.build_vnode_keys_from_nlist(
         ordering_groups_base,
         runtime_context.vnode_info.vnodes_by_rank,
         base_order_index,
