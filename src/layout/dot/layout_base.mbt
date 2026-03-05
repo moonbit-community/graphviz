@@ -22,7 +22,7 @@ fn default_ranksep_in() -> Double {
 const CL_BACK : Int = 10
 const CL_CROSS : Int = 1000
 const VNODE_HEIGHT_PT : Double = 1.0
-const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
+const CLUSTER_SKELETON_PREFIX : String = @dot_shared.CLUSTER_SKELETON_PREFIX
 
 ///|
 fn default_point_size_in() -> Double {

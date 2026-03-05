@@ -1,5 +1,3 @@
-const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
-
 pub fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {
@@ -271,11 +269,11 @@ pub fn cluster_lca(
 ///|
 /// Graphviz parity: cluster skeleton node names encode the cluster key.
 pub fn cluster_key_from_skeleton(name : String) -> String? {
-  if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+  if !name.has_prefix(@shared.CLUSTER_SKELETON_PREFIX) {
     return None
   }
   let rest = name.unsafe_substring(
-    start=CLUSTER_SKELETON_PREFIX.length(),
+    start=@shared.CLUSTER_SKELETON_PREFIX.length(),
     end=name.length(),
   )
   for part in rest.split("@") {

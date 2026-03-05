@@ -759,18 +759,12 @@ fn cluster_key_for_tail_name(
   if direct != "" {
     return direct
   }
-  if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
-    return ""
-  }
-  let prefix_len = CLUSTER_SKELETON_PREFIX.length()
-  let len = name.length()
-  if prefix_len >= len {
-    return ""
-  }
-  let suffix = name.unsafe_substring(start=prefix_len, end=len)
-  match suffix.find("@") {
-    Some(pos) =>
-      if pos > 0 { suffix.unsafe_substring(start=0, end=pos) } else { "" }
+  match @clustering.cluster_key_from_skeleton(name) {
+    Some(cluster) =>
+      match name.find("@") {
+        Some(pos) => if pos > 0 { cluster } else { "" }
+        None => ""
+      }
     None => ""
   }
 }

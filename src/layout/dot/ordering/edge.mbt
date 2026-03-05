@@ -1,5 +1,5 @@
 ///|
-const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
+const CLUSTER_SKELETON_PREFIX : String = @shared.CLUSTER_SKELETON_PREFIX
 
 ///|
 priv enum OrderingMode {
