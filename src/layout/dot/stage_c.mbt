@@ -235,6 +235,7 @@ fn build_ordering_context(
   let runtime_core =
     @ordering.build_ordering_runtime_core(
       {
+        graph: input.graph,
         nodes: input.nodes,
         edges: input.edges,
         edge_tail: input.edge_tail,
@@ -242,9 +243,6 @@ fn build_ordering_context(
         intercluster_keys: input.cluster_meta.intercluster_keys,
         ranks: input.ranks,
         node_order: input.node_order,
-        collect_edge_cluster_keys_fn:
-          (edge_cluster_keys) =>
-            @clustering.collect_edge_cluster_keys(input.graph, edge_cluster_keys),
       },
     )
   let vnode_info = build_edge_vnodes(

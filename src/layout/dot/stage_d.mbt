@@ -268,8 +268,6 @@ fn build_x_seed_data(
       x_edge_head_port_order: x_port_orders.head_values,
       vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
       has_clusters: pipeline.cluster_meta.has_clusters,
-      is_cluster_skeleton_name:
-        (name) => @clustering.cluster_key_from_skeleton(name) is Some(_),
       cluster_keys: pipeline.cluster_meta.cluster_keys,
       vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
     },

@@ -14,8 +14,9 @@ pub(all) struct OrderingRuntimeCore {
 
 ///|
 /// Graphviz parity: runtime-core input keeps node/edge/rank snapshots and the
-/// edge-cluster collection callback grouped in one setup boundary.
+/// edge-cluster collection context grouped in one setup boundary.
 pub(all) struct BuildOrderingRuntimeCoreInput {
+  graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -23,7 +24,6 @@ pub(all) struct BuildOrderingRuntimeCoreInput {
   intercluster_keys : Map[String, String]
   ranks : Map[String, Int]
   node_order : Map[String, Int]
-  collect_edge_cluster_keys_fn : (Map[String, String]) -> Unit
 }
 
 ///|
@@ -37,7 +37,7 @@ pub fn build_ordering_runtime_core(
   let real_nodes = node_name_sets.real_nodes
   let existing_names = node_name_sets.existing_names
   let edge_cluster_keys : Map[String, String] = Map::new()
-  (input.collect_edge_cluster_keys_fn)(edge_cluster_keys)
+  @clustering.collect_edge_cluster_keys(input.graph, edge_cluster_keys)
   let port_edge_nodes =
     build_port_edge_nodes_for_ordering(
       input.edges,

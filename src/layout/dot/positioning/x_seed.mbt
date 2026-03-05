@@ -73,7 +73,6 @@ pub(all) struct XInitialGroupsInput {
   vnodes_by_rank : Map[Int, Array[String]]
   vnode_order_keys : Map[String, Double]
   has_clusters : Bool
-  is_cluster_skeleton_name : (String) -> Bool
 }
 
 ///|
@@ -103,7 +102,7 @@ pub fn build_initial_x_groups(
     for rank, names in x_groups {
       let filtered : Array[String] = []
       for name in names {
-        if !(input.is_cluster_skeleton_name)(name) {
+        if !@clustering.is_cluster_skeleton_name(name) {
           filtered.push(name)
         }
       }
@@ -176,7 +175,6 @@ pub(all) struct XSeedBuildSources {
   x_edge_head_port_order : Array[Double]
   vnodes_by_rank : Map[Int, Array[String]]
   has_clusters : Bool
-  is_cluster_skeleton_name : (String) -> Bool
   cluster_keys : Map[String, String]
   vnode_clusters : Map[String, String]
 }
@@ -217,7 +215,6 @@ pub fn build_x_seed_data_from_sources(
         vnodes_by_rank: sources.vnodes_by_rank,
         vnode_order_keys: vnode_order_state.vnode_order_keys,
         has_clusters: sources.has_clusters,
-        is_cluster_skeleton_name: sources.is_cluster_skeleton_name,
       },
     )
   let x_cluster_keys =
