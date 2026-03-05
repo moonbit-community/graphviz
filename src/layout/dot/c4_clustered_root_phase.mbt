@@ -151,70 +151,41 @@ fn run_root_and_cluster_ranks(
   pre_root_stage : ClusteredPreRootData,
   root_groups_override : Map[Int, Array[String]]?,
 ) -> @ordering.RootAndClusterRanksOutput {
-  let call_inputs =
-    @ordering.build_root_and_cluster_ranks_call_inputs_from_sources(
-      {
-        reorder_setup: dispatch_context.reorder_setup,
-        reorder_context: pre_root_stage.reorder_context,
-        materialized: pre_root_stage.materialized,
-        order_groups: pre_root_stage.order_groups,
-        order_cluster_keys: pre_root_stage.order_cluster_keys,
-        order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-        order_sizes_out: pre_root_stage.order_sizes_out,
-        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-        nodesep_pt: dispatch_context.nodesep_pt,
-        has_edge_labels: dispatch_context.has_edge_labels,
-        port_order_positions: dispatch_context.port_order_positions,
-        port_order_contrib: dispatch_context.port_order_contrib,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        root_groups_override,
-      },
-    )
-  let root_cluster_stage =
-    @ordering.run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
-      call_inputs,
-      @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
-    )
   let runtime_context = dispatch_context.runtime_context
-  @ordering.run_cluster_local_rank_replay_after_root_from_sources(
+  @ordering.run_root_and_cluster_ranks_stage_from_sources(
     {
+      call_input_sources:
+        {
+          reorder_setup: dispatch_context.reorder_setup,
+          reorder_context: pre_root_stage.reorder_context,
+          materialized: pre_root_stage.materialized,
+          order_groups: pre_root_stage.order_groups,
+          order_cluster_keys: pre_root_stage.order_cluster_keys,
+          order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+          order_sizes_out: pre_root_stage.order_sizes_out,
+          rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+          rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+          nodesep_pt: dispatch_context.nodesep_pt,
+          has_edge_labels: dispatch_context.has_edge_labels,
+          port_order_positions: dispatch_context.port_order_positions,
+          port_order_contrib: dispatch_context.port_order_contrib,
+          cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+          root_groups_override,
+        },
       order_with_clusters: dispatch_context.reorder_setup.order_with_clusters,
-      groups: root_cluster_stage.ordered,
       graph: dispatch_context.graph,
       cluster_order: dispatch_context.cluster_meta.cluster_order,
       cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-      rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-      rank_same_order: dispatch_context.cluster_meta.rank_same_order,
       intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
       flat_constraints: dispatch_context.cluster_meta.flat_constraints,
       node_order: pre_root_stage.reorder_context.order_node_order,
-      order_edges: pre_root_stage.materialized.order_edges_out_unmapped,
-      order_edge_tail: pre_root_stage.materialized.order_edge_tail_out_unmapped,
-      order_edge_head: pre_root_stage.materialized.order_edge_head_out_unmapped,
-      order_edge_tail_port_x:
-        pre_root_stage.materialized.order_edge_tail_port_x_unmapped,
-      order_edge_head_port_x:
-        pre_root_stage.materialized.order_edge_head_port_x_unmapped,
-      order_edge_tail_port_order:
-        pre_root_stage.materialized.order_edge_tail_port_order_unmapped,
-      order_edge_head_port_order:
-        pre_root_stage.materialized.order_edge_head_port_order_unmapped,
-      graphviz_out_neighbors: pre_root_stage.materialized.graphviz_out_neighbors,
-      graphviz_in_neighbors: pre_root_stage.materialized.graphviz_in_neighbors,
       ranks: dispatch_context.ranks,
-      order_sizes: pre_root_stage.order_sizes_out,
-      nodesep_pt: dispatch_context.nodesep_pt,
-      has_edge_labels: dispatch_context.has_edge_labels,
-      port_order_positions: dispatch_context.port_order_positions,
-      port_order_contrib: dispatch_context.port_order_contrib,
       vnode_ranks: runtime_context.vnode_info.vnode_ranks,
       vnode_clusters: runtime_context.vnode_info.vnode_clusters,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-      order_with_vnodes: dispatch_context.reorder_setup.order_with_vnodes,
     },
+    @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
   )
-  root_cluster_stage
 }
 
 ///|

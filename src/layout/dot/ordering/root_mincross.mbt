@@ -884,6 +884,87 @@ pub fn run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
 }
 
 ///|
+/// Graphviz parity: root+cluster stage source bundle keeps root-mincross call
+/// inputs and post-root local-replay snapshots grouped for one stage run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootAndClusterRanksStageSources {
+  call_input_sources : RootAndClusterRanksCallInputSources
+  order_with_clusters : Bool
+  graph : @cgraph.Graph
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  node_order : Map[String, Int]
+  ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @shared.NodeSize]
+}
+
+///|
+/// Graphviz parity: root+cluster stage run preserves root mincross
+/// capture/replay ordering, then applies local cluster replay using unmapped
+/// order-graph snapshots from the same pre-root source payload.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_and_cluster_ranks_stage_from_sources(
+  sources : RootAndClusterRanksStageSources,
+  capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
+) -> RootAndClusterRanksOutput {
+  let call_inputs =
+    build_root_and_cluster_ranks_call_inputs_from_sources(
+      sources.call_input_sources,
+    )
+  let root_cluster_stage =
+    run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
+      call_inputs,
+      capture_call,
+    )
+  run_cluster_local_rank_replay_after_root_from_sources(
+    {
+      order_with_clusters: sources.order_with_clusters,
+      groups: root_cluster_stage.ordered,
+      graph: sources.graph,
+      cluster_order: sources.cluster_order,
+      cluster_parents: sources.cluster_parents,
+      rank_same_groups: sources.call_input_sources.rank_same_groups,
+      rank_same_order: sources.call_input_sources.rank_same_order,
+      intercluster_keys: sources.intercluster_keys,
+      flat_constraints: sources.flat_constraints,
+      node_order: sources.node_order,
+      order_edges: sources.call_input_sources.materialized.order_edges_out_unmapped,
+      order_edge_tail:
+        sources.call_input_sources.materialized.order_edge_tail_out_unmapped,
+      order_edge_head:
+        sources.call_input_sources.materialized.order_edge_head_out_unmapped,
+      order_edge_tail_port_x:
+        sources.call_input_sources.materialized.order_edge_tail_port_x_unmapped,
+      order_edge_head_port_x:
+        sources.call_input_sources.materialized.order_edge_head_port_x_unmapped,
+      order_edge_tail_port_order:
+        sources.call_input_sources.materialized.order_edge_tail_port_order_unmapped,
+      order_edge_head_port_order:
+        sources.call_input_sources.materialized.order_edge_head_port_order_unmapped,
+      graphviz_out_neighbors:
+        sources.call_input_sources.materialized.graphviz_out_neighbors,
+      graphviz_in_neighbors:
+        sources.call_input_sources.materialized.graphviz_in_neighbors,
+      ranks: sources.ranks,
+      order_sizes: sources.call_input_sources.order_sizes_out,
+      nodesep_pt: sources.call_input_sources.nodesep_pt,
+      has_edge_labels: sources.call_input_sources.has_edge_labels,
+      port_order_positions: sources.call_input_sources.port_order_positions,
+      port_order_contrib: sources.call_input_sources.port_order_contrib,
+      vnode_ranks: sources.vnode_ranks,
+      vnode_clusters: sources.vnode_clusters,
+      vnode_sizes: sources.vnode_sizes,
+      order_with_vnodes: sources.call_input_sources.reorder_setup.order_with_vnodes,
+    },
+  )
+  root_cluster_stage
+}
+
+///|
 /// Graphviz parity: root+cluster rank phase output keeps root-mincross input
 /// groups, final ordered groups, and vnode-inclusive groups for xpos.
 /// Do not change behavior without updating fixtures/tests.
