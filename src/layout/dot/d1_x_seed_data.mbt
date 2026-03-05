@@ -2,16 +2,6 @@
 /// Stage D Phase D1 split: x-stage seed data helpers.
 
 ///|
-priv struct XposOrderEdgePortData {
-  x_base_sizes : Map[String, NodeSize]
-  x_order_sizes : Map[String, NodeSize]
-  x_edge_tail_port_x : Array[Double]
-  x_edge_head_port_x : Array[Double]
-  x_edge_tail_port_order : Array[Double]
-  x_edge_head_port_order : Array[Double]
-}
-
-///|
 priv struct XPositionSeedData {
   has_vnode_order : Bool
   x_base_sizes : Map[String, NodeSize]
@@ -30,70 +20,6 @@ priv struct XPositionSeedData {
 priv struct XSeedBuildInput {
   use_vnodes_for_xpos : Bool
   pipeline : PositionPipelineContext
-}
-
-///|
-/// Graphviz parity: x-order edge-port payload keeps vnode-mode and stage
-/// pipeline context grouped before port sampling and vnode-size merge.
-priv struct XOrderEdgePortBuildInput {
-  use_vnodes_for_xpos : Bool
-  pipeline : PositionPipelineContext
-}
-
-///|
-/// Graphviz parity: x-order sizes and edge port position/order arrays are
-/// derived from layout-coordinate sizes before any xpos reorder pass.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_order_edge_port_data(
-  input : XOrderEdgePortBuildInput,
-) -> XposOrderEdgePortData {
-  let pipeline = input.pipeline
-  let prep = pipeline.prep
-  let rank_data = pipeline.rank_data
-  let ordering = pipeline.ordering
-  // Graphviz parity: x-positioning uses layout-coordinate node sizes,
-  // so rankdir flip is handled via prep.sizes (not ordering-space widths).
-  let x_base_sizes = apply_self_edge_right_space(
-    prep.nodes,
-    prep.edges,
-    prep.sizes,
-    prep.rankdir,
-    prep.record_orientation,
-  )
-  let x_order_sizes =
-    if input.use_vnodes_for_xpos {
-      @ordering.merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
-    } else {
-      x_base_sizes
-    }
-  let x_edge_port_x_samples =
-    compute_edge_port_positions(
-      prep.nodes,
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      x_order_sizes,
-    )
-  let x_edge_tail_port_x = x_edge_port_x_samples.tail_values
-  let x_edge_head_port_x = x_edge_port_x_samples.head_values
-  let x_edge_port_order_samples =
-    compute_edge_port_orders(
-      prep.nodes,
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      x_order_sizes,
-    )
-  let x_edge_tail_port_order = x_edge_port_order_samples.tail_values
-  let x_edge_head_port_order = x_edge_port_order_samples.head_values
-  {
-    x_base_sizes,
-    x_order_sizes,
-    x_edge_tail_port_x,
-    x_edge_head_port_x,
-    x_edge_tail_port_order,
-    x_edge_head_port_order,
-  }
 }
 
 ///|
@@ -124,10 +50,25 @@ fn build_x_seed_data(
     )
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
-    build_x_order_edge_port_data(
+    @positioning.build_x_order_edge_port_data(
       {
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        pipeline,
+        nodes: pipeline.prep.nodes,
+        edges: pipeline.prep.edges,
+        edge_tail: pipeline.rank_data.edge_tail,
+        edge_head: pipeline.rank_data.edge_head,
+        sizes: pipeline.prep.sizes,
+        vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
+        apply_size_adjustment_fn: (nodes, edges, sizes) =>
+          apply_self_edge_right_space(
+            nodes,
+            edges,
+            sizes,
+            pipeline.prep.rankdir,
+            pipeline.prep.record_orientation,
+          ),
+        compute_port_positions_fn: compute_edge_port_values,
+        compute_port_orders_fn: compute_edge_order_values,
       },
     )
   let x_groups =
@@ -161,4 +102,30 @@ fn build_x_seed_data(
     x_groups,
     x_cluster_keys,
   }
+}
+
+///|
+fn compute_edge_port_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
+}
+
+///|
+fn compute_edge_order_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
 }
