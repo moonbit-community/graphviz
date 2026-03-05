@@ -280,17 +280,25 @@ fn remap_parallel_edge_layouts(
 ///|
 /// Graphviz parity: final routed edge output keeps remap-then-input-order flow.
 /// Do not change behavior without updating fixtures/tests.
+pub(all) struct FinalizeRoutedEdgesInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  edges_out_by_id : Map[Int, DotLayoutEdge]
+  edge_port_label_pos_fn : EdgePortLabelPosFn
+}
+
+///|
 pub fn finalize_routed_edges(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  edges_out_by_id : Map[Int, DotLayoutEdge],
-  edge_port_label_pos_fn : EdgePortLabelPosFn,
+  input : FinalizeRoutedEdgesInput,
 ) -> Array[DotLayoutEdge] {
+  let edges = input.edges
+  let ranks = input.ranks
+  let edges_out_by_id = input.edges_out_by_id
   remap_parallel_edge_layouts(
     edges,
     ranks,
     edges_out_by_id,
-    edge_port_label_pos_fn,
+    input.edge_port_label_pos_fn,
   )
   let ordered_output_edge_ids =
     collect_input_order_edge_ids(

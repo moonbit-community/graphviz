@@ -74,9 +74,11 @@ pub fn route_edges(
     callbacks,
   )
   finalize_routed_edges(
-    input.edges,
-    input.ranks,
-    edges_out_by_id,
-    callbacks.edge_port_label_pos_fn,
+    {
+      edges: input.edges,
+      ranks: input.ranks,
+      edges_out_by_id,
+      edge_port_label_pos_fn: callbacks.edge_port_label_pos_fn,
+    },
   )
 }
