@@ -12,6 +12,122 @@ pub fn intercluster_alignment_enabled() -> Bool {
 }
 
 ///|
+/// Graphviz parity: intercluster alignment payload keeps rank and cluster maps
+/// grouped so cross-cluster x-shift wiring remains explicit and stable.
+priv struct InterclusterAlignmentInput {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  x_positions : Map[String, Double]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+}
+
+///|
+fn cluster_rank_key(cluster : String, rank : Int) -> String {
+  "\{cluster}@\{rank}"
+}
+
+///|
+/// Graphviz parity: dotted-edge intercluster alignment follows dot rules for
+/// same-rank cluster groups that share a single external target.
+fn adjust_intercluster_alignment(
+  input : InterclusterAlignmentInput,
+) -> Unit {
+  let cluster_rank_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_rank_value : Map[String, Int] = Map::new()
+  for node in input.nodes {
+    let name = node.name()
+    let cluster = input.cluster_keys.get(name).unwrap_or_default()
+    if cluster == "" {
+      continue
+    }
+    let rank = match input.ranks.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let key = cluster_rank_key(cluster, rank)
+    cluster_rank_value[key] = rank
+    match cluster_rank_nodes.get(key) {
+      Some(list) => list.push(name)
+      None => cluster_rank_nodes[key] = [name]
+    }
+  }
+  let cluster_rank_targets : Map[String, Map[String, Bool]] = Map::new()
+  for edge in input.edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_cluster = input.intercluster_keys.get(tail).unwrap_or_default()
+    let head_cluster = input.intercluster_keys.get(head).unwrap_or_default()
+    if tail_cluster == "" || tail_cluster == head_cluster {
+      continue
+    }
+    let tail_rank = match input.ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let key = cluster_rank_key(tail_cluster, tail_rank)
+    match cluster_rank_targets.get(key) {
+      Some(targets) => targets[head] = true
+      None => {
+        let targets : Map[String, Bool] = Map::new()
+        targets[head] = true
+        cluster_rank_targets[key] = targets
+      }
+    }
+  }
+  let eps = 0.01
+  for key, names in cluster_rank_nodes {
+    if names.length() < 2 {
+      continue
+    }
+    let targets = match cluster_rank_targets.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    if targets.length() != 1 {
+      continue
+    }
+    let mut target_name = ""
+    for name, _ in targets {
+      target_name = name
+      break
+    }
+    let target_x = match input.x_positions.get(target_name) {
+      Some(value) => value
+      None => continue
+    }
+    let mut aligned = false
+    for name in names {
+      match input.x_positions.get(name) {
+        Some(value) =>
+          if Double::abs(value - target_x) <= eps {
+            aligned = true
+            break
+          }
+        None => ()
+      }
+    }
+    if !aligned {
+      continue
+    }
+    let rank = match cluster_rank_value.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    let shift = rank_nodesep_pt(rank, input.nodesep_pt, input.has_edge_labels)
+    for name in names {
+      match input.x_positions.get(name) {
+        Some(value) => input.x_positions[name] = value - shift
+        None => ()
+      }
+    }
+  }
+}
+
+///|
 /// Graphviz parity: final node position projection maps x/y by graph node list
 /// order and defaults missing coordinates to 0.0 exactly as before.
 pub fn build_node_positions_map(
@@ -142,16 +258,6 @@ pub(all) struct PositionOutputBuildSources {
   cluster_rn_prefix : String
   collect_cluster_names_fn : (@cgraph.Graph, Map[String, Bool]) -> Unit
   cluster_key_from_boundary_fn : (String, Map[String, Bool]) -> String?
-  adjust_intercluster_alignment_fn : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Map[String, Int],
-    Map[String, Double],
-    Map[String, String],
-    Map[String, String],
-    Double,
-    Bool,
-  ) -> Unit
   vnode_positions_from_edges_fn : (
     Array[@cgraph.Edge],
     Map[String, Int],
@@ -179,15 +285,17 @@ pub fn build_position_output_maps_from_sources(
   sources : PositionOutputBuildSources,
 ) -> PositionOutputMaps {
   if sources.has_clusters && sources.has_dotted_edges && intercluster_alignment_enabled() {
-    (sources.adjust_intercluster_alignment_fn)(
-      sources.nodes,
-      sources.edges,
-      sources.ranks,
-      sources.x_positions,
-      sources.cluster_keys,
-      sources.intercluster_keys,
-      sources.nodesep_pt,
-      sources.has_edge_labels,
+    adjust_intercluster_alignment(
+      {
+        nodes: sources.nodes,
+        edges: sources.edges,
+        ranks: sources.ranks,
+        x_positions: sources.x_positions,
+        cluster_keys: sources.cluster_keys,
+        intercluster_keys: sources.intercluster_keys,
+        nodesep_pt: sources.nodesep_pt,
+        has_edge_labels: sources.has_edge_labels,
+      },
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.

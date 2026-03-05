@@ -211,10 +211,6 @@ fn collect_edge_cluster_keys(
   }
 }
 
-fn cluster_rank_key(cluster : String, rank : Int) -> String {
-  "\{cluster}@\{rank}"
-}
-
 ///|
 /// Graphviz parity: assign intercluster virtual nodes to the lowest common
 /// ancestor cluster (mark_lowclusters + class2).

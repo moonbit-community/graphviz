@@ -732,29 +732,6 @@ fn build_position_output_maps(
       cluster_rn_prefix: CLUSTER_RN_PREFIX,
       collect_cluster_names_fn: collect_cluster_names,
       cluster_key_from_boundary_fn: cluster_key_from_boundary,
-      adjust_intercluster_alignment_fn:
-        (
-          nodes,
-          edges,
-          ranks,
-          x_positions,
-          cluster_keys,
-          intercluster_keys,
-          nodesep_pt,
-          has_edge_labels,
-        ) =>
-          adjust_intercluster_alignment(
-            {
-              nodes,
-              edges,
-              ranks,
-              x_positions,
-              cluster_keys,
-              intercluster_keys,
-              nodesep_pt,
-              has_edge_labels,
-            },
-          ),
       vnode_positions_from_edges_fn: vnode_positions_from_edges,
       cluster_rounding_enabled_fn: cluster_rounding_enabled,
       adjust_cluster_positions_fn:
