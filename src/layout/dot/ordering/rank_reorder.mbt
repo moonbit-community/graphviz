@@ -589,7 +589,7 @@ pub fn has_single_rank_incidents(
       continue
     }
     let other = if tail_in { head } else { tail }
-    if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+    if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
       return true
     }
   }
@@ -602,7 +602,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+      if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -614,7 +614,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+      if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -1392,7 +1392,7 @@ pub fn reorder_rank_groups(
   for name, _ in preferred_positions {
     // Graphviz parity: vnode ordering hints should not disable
     // mincross graphviz-style passes.
-    if !name.has_prefix(EDGE_VNODE_PREFIX) {
+    if !@shared.is_edge_vnode_name(name) {
       has_preferred = true
       break
     }

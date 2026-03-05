@@ -856,7 +856,7 @@ fn try_build_special_seed_order(
     }
   }
   if filtered.length() == 4 &&
-    is_edge_vnode_name(filtered[0]) &&
+    @shared.is_edge_vnode_name(filtered[0]) &&
     root_real_count == 1 &&
     cluster_real_count >= 2 &&
     synthetic_count == 1 &&

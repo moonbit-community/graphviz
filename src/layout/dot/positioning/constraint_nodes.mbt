@@ -65,7 +65,7 @@ fn build_constraint_ordered_names(
 
 ///|
 pub fn constraint_node_kind(name : String) -> @network_simplex.NodeKind {
-  if name.has_prefix(@shared.EDGE_VNODE_PREFIX) {
+  if @shared.is_edge_vnode_name(name) {
     @network_simplex.NodeKind::Virtual
   } else if @clustering.is_cluster_boundary_name(name) {
     @network_simplex.NodeKind::Slack

@@ -38,7 +38,7 @@ pub fn normalize_synthetic_ports(
   let tail_is_skeleton = @clustering.is_cluster_skeleton_name(tail)
   let head_is_skeleton = @clustering.is_cluster_skeleton_name(head)
   let synthetic_endpoint =
-    is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
+    @shared.is_edge_vnode_name(tail) || @shared.is_edge_vnode_name(head) ||
     tail_is_skeleton || head_is_skeleton
   let defaultish_x =
     (tail_port_x_raw == 0.0 || tail_port_x_raw == 0.5) &&
@@ -308,7 +308,7 @@ pub fn build_root_vnode_preferred_positions(
   }
   let filtered : Map[String, Double] = Map::new()
   for name, value in vnode_order_keys_for_ordering {
-    if is_edge_vnode_name(name) {
+    if @shared.is_edge_vnode_name(name) {
       filtered[name] = value
     }
   }
@@ -1668,7 +1668,7 @@ fn build_component_traversal_starts(
   }
   let preferred_start_nodes : Array[String] = []
   for name in start_nodes {
-    if !name.has_prefix(EDGE_VNODE_PREFIX) {
+    if !@shared.is_edge_vnode_name(name) {
       preferred_start_nodes.push(name)
     }
   }

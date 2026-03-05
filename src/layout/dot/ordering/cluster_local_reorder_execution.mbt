@@ -194,7 +194,7 @@ pub(all) struct ClusterLocalReorderDispatchContext {
 pub fn count_edge_vnodes(names : Array[String]) -> Int {
   let mut vnode_count = 0
   for name in names {
-    if is_edge_vnode_name(name) {
+    if @shared.is_edge_vnode_name(name) {
       vnode_count = vnode_count + 1
     }
   }
@@ -712,7 +712,7 @@ fn compute_vnode_interpolation_key(
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
 ) -> Double {
-  if !is_edge_vnode_name(name) {
+  if !@shared.is_edge_vnode_name(name) {
     return Double::from_int(base_order)
   }
   let vnode_rank = ranks.get(name).unwrap_or(rank)
@@ -1053,7 +1053,7 @@ fn rewrite_rank_real_slots(
 ) -> Unit {
   let mut real_idx = 0
   for i in 0..<list.length() {
-    if is_edge_vnode_name(list[i]) {
+    if @shared.is_edge_vnode_name(list[i]) {
       continue
     }
     list[i] = reordered_real_nodes[real_idx]
@@ -1065,7 +1065,7 @@ fn rewrite_rank_real_slots(
 fn collect_rank_real_nodes(list : Array[String]) -> Array[String] {
   let real_nodes : Array[String] = []
   for name in list {
-    if !is_edge_vnode_name(name) {
+    if !@shared.is_edge_vnode_name(name) {
       real_nodes.push(name)
     }
   }
@@ -1376,7 +1376,7 @@ fn append_raw_neighbors_with_external_anchor(
 ) -> Unit {
   let external_cluster_seen : Map[String, Bool] = Map::new()
   for other in raw_neighbors {
-    if is_edge_vnode_name(other) || @clustering.is_cluster_skeleton_name(other) {
+    if @shared.is_edge_vnode_name(other) || @clustering.is_cluster_skeleton_name(other) {
       continue
     }
     let normalized =

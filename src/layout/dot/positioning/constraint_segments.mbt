@@ -25,11 +25,6 @@ pub(all) struct ConstraintSegmentPassOutput {
 }
 
 ///|
-fn is_edge_vnode_name(name : String) -> Bool {
-  name.has_prefix(@shared.EDGE_VNODE_PREFIX)
-}
-
-///|
 fn is_self_edge(edge : @cgraph.Edge) -> Bool {
   edge.tail().name() == edge.head().name()
 }
@@ -240,7 +235,7 @@ pub fn build_constraint_segment_pass(
                 let seg_head = chain[chain_idx + 1]
                 chain_idx = chain_idx + 1
                 let seg_base_weight =
-                  if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
+                  if @shared.is_edge_vnode_name(seg_tail) || @shared.is_edge_vnode_name(seg_head) {
                     scaled_segment_edge_weight(
                       base_weight,
                       seg_tail,
@@ -269,7 +264,7 @@ pub fn build_constraint_segment_pass(
                   !@shared.port_is_explicit(edge.head_port()) &&
                   has_ordering &&
                   seg_tail == orig_tail &&
-                  is_edge_vnode_name(seg_head) {
+                  @shared.is_edge_vnode_name(seg_head) {
                   let forward =
                     match (
                       input.order_in_rank.get(seg_tail),

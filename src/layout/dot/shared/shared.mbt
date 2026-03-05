@@ -180,6 +180,11 @@ pub fn edge_vnode_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
+pub fn is_edge_vnode_name(name : String) -> Bool {
+  name.has_prefix(EDGE_VNODE_PREFIX)
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")

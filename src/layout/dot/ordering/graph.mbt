@@ -359,7 +359,7 @@ pub fn collect_intercluster_bonus(
       while i + 1 < chain.length() {
         let t = chain[i]
         let h = chain[i + 1]
-        if t != h && t.has_prefix(EDGE_VNODE_PREFIX) {
+        if t != h && @shared.is_edge_vnode_name(t) {
           let seg_tail_order =
             if t == tail && chain_tail == tail {
               tail_port_order

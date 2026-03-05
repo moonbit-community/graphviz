@@ -232,7 +232,7 @@ fn should_keep_root_reorder_name(
   if !is_skeleton && cluster != "" {
     return false
   }
-  if name.has_prefix(EDGE_VNODE_PREFIX) && root_vnodes.get(name) != Some(true) {
+  if @shared.is_edge_vnode_name(name) && root_vnodes.get(name) != Some(true) {
     return false
   }
   true

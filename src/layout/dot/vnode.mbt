@@ -23,11 +23,6 @@ fn unique_virtual_node_name(
 }
 
 ///|
-fn is_edge_vnode_name(name : String) -> Bool {
-  name.has_prefix(EDGE_VNODE_PREFIX)
-}
-
-///|
 fn flat_label_adjacent(
   rank : Int,
   tail : String,
@@ -114,7 +109,7 @@ fn collect_vnode_out_heads(
     while i + 1 < path.length() {
       let from = path[i]
       let to = path[i + 1]
-      if is_edge_vnode_name(from) {
+      if @dot_shared.is_edge_vnode_name(from) {
         match out_heads.get(from) {
           Some(list) => list.push(to)
           None => out_heads[from] = [to]
@@ -154,7 +149,7 @@ fn flat_limits(
   let bounds : Array[Int] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
   let setbounds = (name : String) => {
     let is_flat = flat_label_nodes.get(name) is Some(_)
-    if !is_flat && !is_edge_vnode_name(name) {
+    if !is_flat && !@dot_shared.is_edge_vnode_name(name) {
       return ()
     }
     let ord = match order_index.get(name) {

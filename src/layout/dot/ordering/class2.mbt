@@ -481,7 +481,7 @@ pub fn build_ordering_class2_data(
       }
       let vnode_creation_order : Array[String] = []
       for name in order_creation {
-        if name.has_prefix(EDGE_VNODE_PREFIX) {
+        if @shared.is_edge_vnode_name(name) {
           vnode_creation_order.push(name)
         }
       }

@@ -1,6 +1,6 @@
 ///|
 fn is_edge_vnode_name_for_xpos(name : String) -> Bool {
-  name.has_prefix(@shared.EDGE_VNODE_PREFIX)
+  @shared.is_edge_vnode_name(name)
 }
 
 ///|
