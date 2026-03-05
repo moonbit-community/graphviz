@@ -314,7 +314,7 @@ fn capture_root_mincross_pass_snapshot(
         edge_xpenalty_for: @dot_shared.edge_xpenalty,
       },
     )
-  root_mincross_input_snapshot.val = Some(snapshot)
+  @ordering.root_mincross_input_snapshot.val = Some(snapshot)
 }
 
 ///|
@@ -340,21 +340,8 @@ fn capture_remincross_snapshot(
         edge_xpenalty_for: @dot_shared.edge_xpenalty,
       },
     )
-  remincross_input_snapshot.val = Some(snapshot)
+  @ordering.remincross_input_snapshot.val = Some(snapshot)
 }
-
-///|
-type RootMincrossInputSnapshot = @ordering.RootMincrossInputSnapshot
-
-///|
-type RemincrossInputSnapshot = @ordering.RemincrossInputSnapshot
-
-let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] =
-  @ordering.root_mincross_input_snapshot
-
-///|
-let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] =
-  @ordering.remincross_input_snapshot
 
 ///|
 /// Stage C Phase C3 split: clustered local-replay context and dispatch builders.

@@ -115,7 +115,7 @@ fn expected_input_dump(input : MincrossInput) -> String raise {
 }
 
 ///|
-fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
+fn root_snapshot_dump(snapshot : @ordering.RootMincrossInputSnapshot) -> String raise {
   let lines : Array[String] = []
   let rank_lookup = build_rank_lookup(snapshot.rank_keys, snapshot.groups)
   for rank in snapshot.rank_keys {
@@ -173,7 +173,7 @@ fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
 }
 
 ///|
-fn remincross_snapshot_dump(snapshot : RemincrossInputSnapshot) -> String {
+fn remincross_snapshot_dump(snapshot : @ordering.RemincrossInputSnapshot) -> String {
   let lines : Array[String] = []
   for rank in snapshot.rank_keys {
     let names = match snapshot.groups.get(rank) {
@@ -224,8 +224,8 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   let root_expected = find_mincross_input_case(fixture_path, 1)
   let remincross_expected = find_mincross_input_case(fixture_path, 11)
 
-  root_mincross_input_snapshot.val = None
-  remincross_input_snapshot.val = None
+  @ordering.root_mincross_input_snapshot.val = None
+  @ordering.remincross_input_snapshot.val = None
 
   @sys.set_env_var("DOT_CAPTURE_ORDERING_INPUTS", "1")
   @sys.set_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE", "1")
@@ -234,11 +234,11 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_INPUTS")
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE")
 
-  let root_actual = match root_mincross_input_snapshot.val {
+  let root_actual = match @ordering.root_mincross_input_snapshot.val {
     Some(value) => value
     None => fail("missing captured root mincross input snapshot")
   }
-  let remincross_actual = match remincross_input_snapshot.val {
+  let remincross_actual = match @ordering.remincross_input_snapshot.val {
     Some(value) => value
     None => fail("missing captured remincross input snapshot")
   }
@@ -268,6 +268,6 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
     fail("remincross input mismatch for plugins: \{detail}")
   }
 
-  root_mincross_input_snapshot.val = None
-  remincross_input_snapshot.val = None
+  @ordering.root_mincross_input_snapshot.val = None
+  @ordering.remincross_input_snapshot.val = None
 }
