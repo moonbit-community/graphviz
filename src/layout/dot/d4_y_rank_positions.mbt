@@ -1,14 +1,7 @@
 ///|
 /// Stage D Phase D4 split: y-rank placement and flip-adjustment helpers.
 
-///|
-/// Graphviz parity: y-position stage runs fill_rank_positions first, then
-/// optional flip-cluster height correction (cluster.c path) and y rebuild.
-/// Do not change behavior without updating fixtures/tests.
-priv struct YPositionsWithFlipOutput {
-  y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
-}
+type YPositionsWithFlipOutput = @positioning.YPositionsWithFlipOutput
 
 ///|
 /// Graphviz parity: y-position flip solve input keeps rank maps, rank spacing,
@@ -81,46 +74,56 @@ fn build_y_all_ranks_with_flat(
 fn build_y_positions_with_flip(
   input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
-  let mut y_positions : Map[String, Double] = Map::new()
-  let rank_y : Map[Int, Double] = Map::new()
-  fill_rank_positions(
+  @positioning.build_y_positions_with_flip_from_sources(
     {
       rank_keys: input.rank_keys,
       groups: input.groups,
-      all_ranks: input.y_all_ranks,
+      y_all_ranks: input.y_all_ranks,
       rank_pht: input.rank_pht,
       rank_ht1: input.rank_ht1,
       rank_ht2: input.rank_ht2,
       ranksep_pt: input.ranksep_pt,
-      y_positions,
-      rank_y,
+      graphviz_flip: input.rankdir == RankDir::LR || input.rankdir == RankDir::RL,
+      graph_has_cluster: @dot_shared.graph_has_cluster(input.graph),
+      fill_rank_positions_fn:
+        (
+          rank_keys,
+          groups,
+          all_ranks,
+          rank_pht,
+          rank_ht1,
+          rank_ht2,
+          ranksep_pt,
+          y_positions,
+          rank_y,
+        ) =>
+          fill_rank_positions(
+            {
+              rank_keys,
+              groups,
+              all_ranks,
+              rank_pht,
+              rank_ht1,
+              rank_ht2,
+              ranksep_pt,
+              y_positions,
+              rank_y,
+            },
+          ),
+      adjust_flip_rank_heights_fn:
+        (rank_y, rank_ht1, rank_ht2, min_root_rank) =>
+          adjust_flip_rank_heights(
+            {
+              graph: input.graph,
+              ranks: input.ranks,
+              rank_y,
+              rank_ht1,
+              rank_ht2,
+              cluster_heights: input.cluster_bbox_heights,
+              min_root_rank,
+              margin_total: 0.0,
+            },
+          ),
     },
   )
-  if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(input.graph) {
-    let min_root_rank =
-      if input.y_all_ranks.length() > 0 { input.y_all_ranks[0] } else { 0 }
-    let adjusted =
-      adjust_flip_rank_heights(
-      {
-        graph: input.graph,
-        ranks: input.ranks,
-        rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-        cluster_heights: input.cluster_bbox_heights,
-        min_root_rank,
-        margin_total: 0.0,
-      },
-    )
-    if adjusted {
-      y_positions =
-        @positioning.build_y_positions_from_rank_groups(
-          input.rank_keys,
-          input.groups,
-          rank_y,
-        )
-    }
-  }
-  { y_positions, rank_y }
 }
