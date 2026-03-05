@@ -721,39 +721,35 @@ fn build_route_base_deps_for_dot(
 }
 
 ///|
-fn build_routing_edge_layout_deps() -> @routing.EdgeLayoutDeps {
-  {
-    edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
-      match edge_label_rank_info(edge, ranks) {
-        Some(info) =>
-          if mid_label_width_pt > 0.0 {
-            Some((info.label_rank, info.span))
-          } else {
-            None
-          }
-        None => None
-      },
-    edge_label_rank_y_fn: edge_label_rank_y,
-    edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
-      edge_label_rank_x(
-        edge,
-        label_rank,
-        vnode_info.vnode_ranks,
-        vnode_info.edge_vnodes,
-        vnode_positions,
-      ),
-    edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
-    flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
-    edge_label_pos_fn: edge_label_pos,
-    edge_port_label_pos_fn: edge_port_label_pos,
-  }
-}
-
-///|
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
-  let edge_layout_deps = build_routing_edge_layout_deps()
+  let edge_layout_deps : @routing.EdgeLayoutDeps =
+    {
+      edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
+        match edge_label_rank_info(edge, ranks) {
+          Some(info) =>
+            if mid_label_width_pt > 0.0 {
+              Some((info.label_rank, info.span))
+            } else {
+              None
+            }
+          None => None
+        },
+      edge_label_rank_y_fn: edge_label_rank_y,
+      edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
+        edge_label_rank_x(
+          edge,
+          label_rank,
+          vnode_info.vnode_ranks,
+          vnode_info.edge_vnodes,
+          vnode_positions,
+        ),
+      edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
+      flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
+      edge_label_pos_fn: edge_label_pos,
+      edge_port_label_pos_fn: edge_port_label_pos,
+    }
   {
     recover_slack_vnodes_fn: recover_slack_vnodes,
     build_edge_layout_fn: (input) =>
@@ -773,72 +769,54 @@ fn build_routing_callbacks_for_dot(
 }
 
 ///|
-fn build_route_edges_pipeline_input_for_dot(
-  input : RouteEdgesForDotInput,
-) -> @routing.RouteEdgesPipelineInput {
-  let layout_rankdir = RankDir::TB
-  {
-    graph_kind: input.graph.kind(),
-    rankdir: input.prep.rankdir,
-    layout_rankdir,
-    edges: input.prep.edges,
-    ranks: input.rank_data.ranks,
-    sizes: input.routing_sizes,
-    positions: input.routing_positions_state.positions,
-    vnode_positions: input.routing_positions_state.vnode_positions,
-    vnode_info: input.ordering.vnode_info,
-    rank_y: input.routing_positions_state.rank_y,
-    rank_ht1: input.routing_positions_state.rank_ht1,
-    rank_ht2: input.routing_positions_state.rank_ht2,
-    x_groups: input.path_groups,
-    nodesep_pt: input.rank_heights.nodesep_pt,
-    ranksep_pt: input.rank_heights.ranksep_pt,
-    label_edge_counts: input.label_edge_counts,
-    head_port_metrics: input.head_port_metrics,
-    flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
-    routing_context: input.routing_context,
-    enable_complex_tuning: input.enable_complex_tuning,
-    use_spline_prepass: input.prep.splines == SplinesMode::Spline,
-    spline_mode: routing_spline_mode(input.prep.splines),
-  }
-}
-
-///|
-fn build_route_edges_pipeline_deps_for_dot(
-  input : RouteEdgesForDotInput,
-  edge_layout_input : @routing.EdgeLayoutInput,
-) -> @routing.RouteEdgesPipelineDeps {
-  {
-    route_base_deps:
-      build_route_base_deps_for_dot(
-        input.prep.record_orientation,
-        input.routing_label_ports_map,
-        input.routing_label_ports_raw,
-      ),
-    callbacks: build_routing_callbacks_for_dot(edge_layout_input),
-  }
-}
-
-///|
-fn build_edge_layout_input_for_dot(
-  input : RouteEdgesForDotInput,
-) -> @routing.EdgeLayoutInput {
-  {
-    ranks: input.rank_data.ranks,
-    rank_y: input.routing_positions_state.rank_y,
-    vnode_info: input.ordering.vnode_info,
-    vnode_positions: input.routing_positions_state.vnode_positions,
-    has_clusters: input.cluster_meta.has_clusters,
-    nodesep_pt: input.rank_heights.nodesep_pt,
-    flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
-  }
-}
-
-///|
 fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
-  let edge_layout_input = build_edge_layout_input_for_dot(input)
+  let edge_layout_input : @routing.EdgeLayoutInput =
+    {
+      ranks: input.rank_data.ranks,
+      rank_y: input.routing_positions_state.rank_y,
+      vnode_info: input.ordering.vnode_info,
+      vnode_positions: input.routing_positions_state.vnode_positions,
+      has_clusters: input.cluster_meta.has_clusters,
+      nodesep_pt: input.rank_heights.nodesep_pt,
+      flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
+    }
+  let deps : @routing.RouteEdgesPipelineDeps =
+    {
+      route_base_deps:
+        build_route_base_deps_for_dot(
+          input.prep.record_orientation,
+          input.routing_label_ports_map,
+          input.routing_label_ports_raw,
+        ),
+      callbacks: build_routing_callbacks_for_dot(edge_layout_input),
+    }
+  let pipeline_input : @routing.RouteEdgesPipelineInput =
+    {
+      graph_kind: input.graph.kind(),
+      rankdir: input.prep.rankdir,
+      layout_rankdir: RankDir::TB,
+      edges: input.prep.edges,
+      ranks: input.rank_data.ranks,
+      sizes: input.routing_sizes,
+      positions: input.routing_positions_state.positions,
+      vnode_positions: input.routing_positions_state.vnode_positions,
+      vnode_info: input.ordering.vnode_info,
+      rank_y: input.routing_positions_state.rank_y,
+      rank_ht1: input.routing_positions_state.rank_ht1,
+      rank_ht2: input.routing_positions_state.rank_ht2,
+      x_groups: input.path_groups,
+      nodesep_pt: input.rank_heights.nodesep_pt,
+      ranksep_pt: input.rank_heights.ranksep_pt,
+      label_edge_counts: input.label_edge_counts,
+      head_port_metrics: input.head_port_metrics,
+      flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
+      routing_context: input.routing_context,
+      enable_complex_tuning: input.enable_complex_tuning,
+      use_spline_prepass: input.prep.splines == SplinesMode::Spline,
+      spline_mode: routing_spline_mode(input.prep.splines),
+    }
   @routing.route_edges_pipeline(
-    build_route_edges_pipeline_input_for_dot(input),
-    build_route_edges_pipeline_deps_for_dot(input, edge_layout_input),
+    pipeline_input,
+    deps,
   )
 }
