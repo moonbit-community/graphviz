@@ -439,35 +439,6 @@ fn unique_cluster_node_name(
   ""
 }
 
-fn collect_cluster_member_nodes(
-  graph : @cgraph.Graph,
-  nodes_out : Map[String, Bool],
-) -> Unit {
-  for node in graph.nodes() {
-    if @clustering.graph_contains_node(graph, node) {
-      nodes_out[node.name()] = true
-    }
-  }
-  for child in graph.subgraphs() {
-    collect_cluster_member_nodes(child, nodes_out)
-  }
-}
-
-fn collect_cluster_members(
-  cluster_graphs : Map[String, @cgraph.Graph],
-) -> Map[String, Map[String, Bool]] {
-  let members : Map[String, Map[String, Bool]] = Map::new()
-  for name, cluster_graph in cluster_graphs {
-    let set : Map[String, Bool] = Map::new()
-    collect_cluster_member_nodes(cluster_graph, set)
-    if set.length() > 0 {
-      members[name] = set
-    }
-  }
-  members
-}
-
-///|
 ///|
 /// Graphviz parity: cluster constraints aligned to refs/graphviz/lib/dotgen/position.c
 /// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
@@ -496,7 +467,7 @@ fn build_cluster_constraints(
       root_rn_targets: [],
     }
   }
-  let cluster_members = collect_cluster_members(cluster_graphs)
+  let cluster_members = @clustering.collect_cluster_members(cluster_graphs)
   if cluster_members.length() == 0 {
     return {
       extra_nodes: [],

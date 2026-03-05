@@ -143,12 +143,12 @@ fn cluster_node_names(
   for cluster in clusters {
     match cluster.ln {
       Some(value) =>
-        names[value] = "\{@dot_shared.CLUSTER_LN_PREFIX}\{cluster.name}"
+        names[value] = @clustering.cluster_left_boundary_name(cluster.name)
       None => ()
     }
     match cluster.rn {
       Some(value) =>
-        names[value] = "\{@dot_shared.CLUSTER_RN_PREFIX}\{cluster.name}"
+        names[value] = @clustering.cluster_right_boundary_name(cluster.name)
       None => ()
     }
   }
@@ -186,8 +186,7 @@ fn snapshot_node_key(
 ) -> String {
   match node.name {
     Some(value) => {
-      if value.has_prefix(@dot_shared.CLUSTER_LN_PREFIX) ||
-        value.has_prefix(@dot_shared.CLUSTER_RN_PREFIX) {
+      if @clustering.is_cluster_boundary_name(value) {
         return "N:\{value}"
       }
       if real_nodes.get(value) is Some(_) {

@@ -211,6 +211,37 @@ pub fn collect_edge_cluster_keys(
   }
 }
 
+fn collect_cluster_member_nodes(
+  graph : @cgraph.Graph,
+  nodes_out : Map[String, Bool],
+) -> Unit {
+  for node in graph.nodes() {
+    if graph_contains_node(graph, node) {
+      nodes_out[node.name()] = true
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_member_nodes(child, nodes_out)
+  }
+}
+
+///|
+/// Graphviz parity: cluster membership is derived from all node references in
+/// each cluster subgraph tree, filtered by graph_contains_node semantics.
+pub fn collect_cluster_members(
+  cluster_graphs : Map[String, @cgraph.Graph],
+) -> Map[String, Map[String, Bool]] {
+  let members : Map[String, Map[String, Bool]] = Map::new()
+  for name, cluster_graph in cluster_graphs {
+    let set : Map[String, Bool] = Map::new()
+    collect_cluster_member_nodes(cluster_graph, set)
+    if set.length() > 0 {
+      members[name] = set
+    }
+  }
+  members
+}
+
 ///|
 /// Graphviz parity: assign intercluster virtual nodes to the lowest common
 /// ancestor cluster (mark_lowclusters + class2).
