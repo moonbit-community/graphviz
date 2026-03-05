@@ -322,6 +322,30 @@ pub fn cluster_right_boundary_name(cluster : String) -> String {
 }
 
 ///|
+/// Graphviz parity: boundary node identifiers must stay unique if cluster
+/// names collide with existing graph nodes.
+pub fn unique_cluster_boundary_name(
+  base_name : String,
+  existing : Map[String, Bool],
+) -> String {
+  let mut candidate = base_name
+  if existing.get(candidate) is None {
+    existing[candidate] = true
+    return candidate
+  }
+  let mut i = 1
+  while true {
+    candidate = "\{base_name}_\{i}"
+    if existing.get(candidate) is None {
+      existing[candidate] = true
+      return candidate
+    }
+    i = i + 1
+  }
+  ""
+}
+
+///|
 /// Graphviz parity: cluster boundary slack nodes are identified by ln/rn
 /// prefixes in xpos constraint graphs.
 pub fn is_cluster_boundary_name(name : String) -> Bool {

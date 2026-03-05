@@ -418,28 +418,6 @@ fn compress_width_minlen_pt(
 }
 
 ///|
-fn unique_cluster_node_name(
-  base_name : String,
-  existing : Map[String, Bool],
-) -> String {
-  let mut candidate = base_name
-  if existing.get(candidate) is None {
-    existing[candidate] = true
-    return candidate
-  }
-  let mut i = 1
-  while true {
-    candidate = "\{base_name}_\{i}"
-    if existing.get(candidate) is None {
-      existing[candidate] = true
-      return candidate
-    }
-    i = i + 1
-  }
-  ""
-}
-
-///|
 /// Graphviz parity: cluster constraints aligned to refs/graphviz/lib/dotgen/position.c
 /// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
 /// Do not change behavior without updating fixtures/tests.
@@ -625,11 +603,11 @@ fn build_cluster_constraints(
     }
     match (min_left, max_right) {
       (Some(left), Some(right)) => {
-        let ln_name = unique_cluster_node_name(
+        let ln_name = @clustering.unique_cluster_boundary_name(
           @clustering.cluster_left_boundary_name(name),
           existing_names,
         )
-        let rn_name = unique_cluster_node_name(
+        let rn_name = @clustering.unique_cluster_boundary_name(
           @clustering.cluster_right_boundary_name(name),
           existing_names,
         )
