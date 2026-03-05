@@ -397,23 +397,6 @@ priv struct RoutingPrecomputeInput {
 type RoutingPrecomputeData = @routing.RoutingPrecomputePipelineOutput
 
 ///|
-/// Graphviz parity: routing port-padding gate mirrors Graphviz clustered/port
-/// mode branch before record-port padding sampling.
-fn routing_port_padding(
-  has_clusters : Bool,
-  has_port_edges : Bool,
-  edges : Array[@cgraph.Edge],
-  positions : Map[String, @geom.Point],
-  label_ports_map : Map[String, Map[String, RecordPort]],
-) -> (Double, Double) {
-  if has_clusters || !has_port_edges {
-    return (0.0, 0.0)
-  }
-  let padding = record_port_padding_y(edges, positions, label_ports_map)
-  (padding.below, padding.above)
-}
-
-///|
 /// Graphviz parity: complex head-port tuning keys match dotsplines behavior:
 /// explicit port key when present, otherwise record-shape node key.
 fn routing_head_metric_key(edge : @cgraph.Edge) -> String {
@@ -481,38 +464,26 @@ fn build_routing_head_port_metrics(
   label_ports_map : Map[String, Map[String, RecordPort]],
   enable_complex_tuning : Bool,
 ) -> @routing.HeadPortMetrics {
-  let head_port_counts : Map[String, Int] = Map::new()
-  let head_port_min_dist : Map[String, Double] = Map::new()
-  let head_port_max_dist : Map[String, Double] = Map::new()
-  if enable_complex_tuning {
-    for edge in prep.edges {
+  @routing.build_head_port_metrics(
+    prep.edges,
+    enable_complex_tuning,
+    (edge) => {
       let key = routing_head_metric_key(edge)
       if key == "" {
-        continue
+        None
+      } else {
+        let dist =
+          routing_head_metric_distance(
+            edge,
+            positions,
+            sizes,
+            label_ports_map,
+            prep.record_orientation,
+          )
+        Some((key, dist))
       }
-      let dist =
-        routing_head_metric_distance(
-          edge,
-          positions,
-          sizes,
-          label_ports_map,
-          prep.record_orientation,
-        )
-      let current = head_port_counts.get(key).unwrap_or_default()
-      head_port_counts[key] = current + 1
-      let mut min_dist = head_port_min_dist.get(key).unwrap_or(dist)
-      let mut max_dist = head_port_max_dist.get(key).unwrap_or(dist)
-      if dist < min_dist {
-        min_dist = dist
-      }
-      if dist > max_dist {
-        max_dist = dist
-      }
-      head_port_min_dist[key] = min_dist
-      head_port_max_dist[key] = max_dist
-    }
-  }
-  { head_port_counts, head_port_min_dist, head_port_max_dist }
+    },
+  )
 }
 
 ///|
@@ -524,12 +495,18 @@ fn build_routing_precompute_data(
 ) -> RoutingPrecomputeData {
   let prep = input.prep
   let (port_pad_below, port_pad_above) =
-    routing_port_padding(
+    @routing.resolve_routing_port_padding(
       input.cluster_meta.has_clusters,
       prep.has_port_edges,
-      prep.edges,
-      input.positions_state.positions,
-      input.label_ports_map,
+      () => {
+        let padding =
+          record_port_padding_y(
+            prep.edges,
+            input.positions_state.positions,
+            input.label_ports_map,
+          )
+        (padding.below, padding.above)
+      },
     )
   let head_port_metrics =
     build_routing_head_port_metrics(

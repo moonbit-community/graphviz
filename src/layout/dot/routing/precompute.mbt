@@ -46,6 +46,56 @@ pub fn complex_tuning_enabled() -> Bool {
 }
 
 ///|
+/// Graphviz parity: clustered/port-edge gate for routing Y padding mirrors
+/// dotsplines branch before record-port padding sampling.
+pub fn resolve_routing_port_padding(
+  has_clusters : Bool,
+  has_port_edges : Bool,
+  compute_padding : () -> (Double, Double),
+) -> (Double, Double) {
+  if has_clusters || !has_port_edges {
+    (0.0, 0.0)
+  } else {
+    compute_padding()
+  }
+}
+
+///|
+/// Graphviz parity: head-port metric aggregation mirrors dotsplines
+/// count/min/max accumulation for complex tuning.
+pub fn build_head_port_metrics(
+  edges : Array[@cgraph.Edge],
+  enable_complex_tuning : Bool,
+  edge_metric_sample : (@cgraph.Edge) -> (String, Double)?,
+) -> HeadPortMetrics {
+  let head_port_counts : Map[String, Int] = Map::new()
+  let head_port_min_dist : Map[String, Double] = Map::new()
+  let head_port_max_dist : Map[String, Double] = Map::new()
+  if enable_complex_tuning {
+    for edge in edges {
+      match edge_metric_sample(edge) {
+        Some((key, dist)) => {
+          let current = head_port_counts.get(key).unwrap_or_default()
+          head_port_counts[key] = current + 1
+          let mut min_dist = head_port_min_dist.get(key).unwrap_or(dist)
+          let mut max_dist = head_port_max_dist.get(key).unwrap_or(dist)
+          if dist < min_dist {
+            min_dist = dist
+          }
+          if dist > max_dist {
+            max_dist = dist
+          }
+          head_port_min_dist[key] = min_dist
+          head_port_max_dist[key] = max_dist
+        }
+        None => ()
+      }
+    }
+  }
+  { head_port_counts, head_port_min_dist, head_port_max_dist }
+}
+
+///|
 /// Graphviz parity: routing precompute pipeline input keeps padding/metric
 /// snapshots grouped before Stage E edge solve.
 pub(all) struct RoutingPrecomputePipelineInput {
