@@ -36,11 +36,20 @@ fn probe_vnode_tail_constraints_for_ordering(
 fn build_ordering_context(
   input : OrderingStageInput,
 ) -> OrderingRuntimeContext {
-  let node_name_sets = @ordering.build_ordering_node_name_sets(input.nodes)
-  let real_nodes = node_name_sets.real_nodes
-  let existing_names = node_name_sets.existing_names
-  let edge_cluster_keys : Map[String, String] = Map::new()
-  collect_edge_cluster_keys(input.graph, edge_cluster_keys)
+  let runtime_core =
+    @ordering.build_ordering_runtime_core(
+      {
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        intercluster_keys: input.cluster_meta.intercluster_keys,
+        ranks: input.ranks,
+        node_order: input.node_order,
+        collect_edge_cluster_keys_fn:
+          (edge_cluster_keys) => collect_edge_cluster_keys(input.graph, edge_cluster_keys),
+      },
+    )
   let vnode_info = build_edge_vnodes(
     input.nodes,
     input.edges,
@@ -50,31 +59,19 @@ fn build_ordering_context(
     input.ranks,
     input.nodesep_pt,
     input.rankdir,
-    existing_names,
-    edge_cluster_keys,
+    runtime_core.existing_names,
+    runtime_core.edge_cluster_keys,
     input.cluster_meta.cluster_parents,
-  )
-  let port_edge_nodes =
-    @ordering.build_port_edge_nodes_for_ordering(
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-    )
-  let local_cluster_order = @ordering.build_local_cluster_order(
-    input.nodes,
-    input.cluster_meta.intercluster_keys,
-    input.ranks,
-    input.node_order,
   )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()
   let runtime_context : OrderingRuntimeContext =
     {
-      real_nodes,
-      edge_cluster_keys,
+      real_nodes: runtime_core.real_nodes,
+      edge_cluster_keys: runtime_core.edge_cluster_keys,
       vnode_info,
-      port_edge_nodes,
-      local_cluster_order,
+      port_edge_nodes: runtime_core.port_edge_nodes,
+      local_cluster_order: runtime_core.local_cluster_order,
       rank_same_constraints,
     }
   probe_vnode_tail_constraints_for_ordering(
