@@ -137,82 +137,6 @@ pub fn build_x_cluster_keys(
   x_cluster_keys
 }
 
-///|
-/// Graphviz parity: x-order edge-port payload keeps vnode-mode and stage
-/// pipeline context grouped before port sampling and vnode-size merge.
-pub(all) struct XOrderEdgePortDataInput {
-  use_vnodes_for_xpos : Bool
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  sizes : Map[String, @shared.NodeSize]
-  vnode_sizes : Map[String, @shared.NodeSize]
-  apply_size_adjustment_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, @shared.NodeSize]) -> Map[String, @shared.NodeSize]
-  compute_port_positions_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double])
-  compute_port_orders_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double])
-}
-
-///|
-/// Graphviz parity: x-order edge-port output keeps adjusted size maps and
-/// tail/head x+order samples grouped for xpos reorder and flat-label stages.
-pub struct XOrderEdgePortData {
-  x_base_sizes : Map[String, @shared.NodeSize]
-  x_order_sizes : Map[String, @shared.NodeSize]
-  x_edge_tail_port_x : Array[Double]
-  x_edge_head_port_x : Array[Double]
-  x_edge_tail_port_order : Array[Double]
-  x_edge_head_port_order : Array[Double]
-}
-
-///|
-/// Graphviz parity: x-order sizes and edge port position/order arrays are
-/// derived from layout-coordinate sizes before any xpos reorder pass.
-/// Do not change behavior without updating fixtures/tests.
-pub fn build_x_order_edge_port_data(
-  input : XOrderEdgePortDataInput,
-) -> XOrderEdgePortData {
-  // Graphviz parity: x-positioning uses layout-coordinate node sizes before
-  // vnode overlays, so size adjustment must precede vnode-size merge.
-  let x_base_sizes =
-    (input.apply_size_adjustment_fn)(
-      input.nodes,
-      input.edges,
-      input.sizes,
-    )
-  let x_order_sizes =
-    if input.use_vnodes_for_xpos {
-      @ordering.merge_sizes_with_vnodes(x_base_sizes, input.vnode_sizes)
-    } else {
-      x_base_sizes
-    }
-  let (x_edge_tail_port_x, x_edge_head_port_x) =
-    (input.compute_port_positions_fn)(
-      input.nodes,
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-      x_order_sizes,
-    )
-  let (x_edge_tail_port_order, x_edge_head_port_order) =
-    (input.compute_port_orders_fn)(
-      input.nodes,
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-      x_order_sizes,
-    )
-  {
-    x_base_sizes,
-    x_order_sizes,
-    x_edge_tail_port_x,
-    x_edge_head_port_x,
-    x_edge_tail_port_order,
-    x_edge_head_port_order,
-  }
-}
-
-///|
 /// Graphviz parity: x-stage seed output keeps vnode-order probes, edge-port
 /// samples, and initial x-group/cluster snapshots grouped for downstream
 /// reorder/flat-label stages.
@@ -230,7 +154,7 @@ pub struct XPositionSeedData {
 
 ///|
 /// Graphviz parity: x-stage seed source bundle keeps ordering/rank snapshots
-/// and edge-port callbacks grouped before one seed build pass.
+/// and precomputed edge-port samples grouped before one seed build pass.
 pub(all) struct XSeedBuildSources {
   use_vnodes_for_xpos : Bool
   ordered_groups : Map[Int, Array[String]]
@@ -244,12 +168,12 @@ pub(all) struct XSeedBuildSources {
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
   vnode_ranks : Map[String, Int]
-  nodes : Array[@cgraph.Node]
-  sizes : Map[String, @shared.NodeSize]
-  vnode_sizes : Map[String, @shared.NodeSize]
-  apply_size_adjustment_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, @shared.NodeSize]) -> Map[String, @shared.NodeSize]
-  compute_port_positions_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double])
-  compute_port_orders_fn : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double])
+  x_base_sizes : Map[String, @shared.NodeSize]
+  x_order_sizes : Map[String, @shared.NodeSize]
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
   vnodes_by_rank : Map[Int, Array[String]]
   has_clusters : Bool
   is_cluster_skeleton_name : (String) -> Bool
@@ -283,21 +207,6 @@ pub fn build_x_seed_data_from_sources(
         vnode_ranks: sources.vnode_ranks,
       },
     )
-  let x_order_edge_port_data =
-    build_x_order_edge_port_data(
-      {
-        use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-        nodes: sources.nodes,
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-        sizes: sources.sizes,
-        vnode_sizes: sources.vnode_sizes,
-        apply_size_adjustment_fn: sources.apply_size_adjustment_fn,
-        compute_port_positions_fn: sources.compute_port_positions_fn,
-        compute_port_orders_fn: sources.compute_port_orders_fn,
-      },
-    )
   let x_groups =
     build_initial_x_groups(
       {
@@ -319,12 +228,12 @@ pub fn build_x_seed_data_from_sources(
     )
   {
     has_vnode_order: vnode_order_state.has_vnode_order,
-    x_base_sizes: x_order_edge_port_data.x_base_sizes,
-    x_order_sizes: x_order_edge_port_data.x_order_sizes,
-    x_edge_tail_port_x: x_order_edge_port_data.x_edge_tail_port_x,
-    x_edge_head_port_x: x_order_edge_port_data.x_edge_head_port_x,
-    x_edge_tail_port_order: x_order_edge_port_data.x_edge_tail_port_order,
-    x_edge_head_port_order: x_order_edge_port_data.x_edge_head_port_order,
+    x_base_sizes: sources.x_base_sizes,
+    x_order_sizes: sources.x_order_sizes,
+    x_edge_tail_port_x: sources.x_edge_tail_port_x,
+    x_edge_head_port_x: sources.x_edge_head_port_x,
+    x_edge_tail_port_order: sources.x_edge_tail_port_order,
+    x_edge_head_port_order: sources.x_edge_head_port_order,
     x_groups,
     x_cluster_keys,
   }

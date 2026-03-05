@@ -211,6 +211,41 @@ fn build_x_seed_data(
   input : XSeedBuildInput,
 ) -> @positioning.XPositionSeedData {
   let pipeline = input.pipeline
+  // Graphviz parity: x-positioning uses layout-coordinate node sizes before
+  // vnode overlays, so self-edge right-space adjustment must run first.
+  let x_base_sizes =
+    apply_self_edge_right_space(
+      pipeline.prep.nodes,
+      pipeline.prep.edges,
+      pipeline.prep.sizes,
+      pipeline.prep.rankdir,
+      pipeline.prep.record_orientation,
+    )
+  let x_order_sizes =
+    if input.use_vnodes_for_xpos {
+      @ordering.merge_sizes_with_vnodes(
+        x_base_sizes,
+        pipeline.ordering.vnode_info.vnode_sizes,
+      )
+    } else {
+      x_base_sizes
+    }
+  let x_port_positions =
+    compute_edge_port_positions(
+      pipeline.prep.nodes,
+      pipeline.prep.edges,
+      pipeline.rank_data.edge_tail,
+      pipeline.rank_data.edge_head,
+      x_order_sizes,
+    )
+  let x_port_orders =
+    compute_edge_port_orders(
+      pipeline.prep.nodes,
+      pipeline.prep.edges,
+      pipeline.rank_data.edge_tail,
+      pipeline.rank_data.edge_head,
+      x_order_sizes,
+    )
   @positioning.build_x_seed_data_from_sources(
     {
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,
@@ -225,27 +260,12 @@ fn build_x_seed_data(
       cluster_parents: pipeline.cluster_meta.cluster_parents,
       edge_vnodes: pipeline.ordering.vnode_info.edge_vnodes,
       vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
-      nodes: pipeline.prep.nodes,
-      sizes: pipeline.prep.sizes,
-      vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
-      apply_size_adjustment_fn: (nodes, edges, sizes) =>
-        apply_self_edge_right_space(
-          nodes,
-          edges,
-          sizes,
-          pipeline.prep.rankdir,
-          pipeline.prep.record_orientation,
-        ),
-      compute_port_positions_fn: (nodes, edges, edge_tail, edge_head, sizes) => {
-        let samples =
-          compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
-      },
-      compute_port_orders_fn: (nodes, edges, edge_tail, edge_head, sizes) => {
-        let samples =
-          compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
-        (samples.tail_values, samples.head_values)
-      },
+      x_base_sizes,
+      x_order_sizes,
+      x_edge_tail_port_x: x_port_positions.tail_values,
+      x_edge_head_port_x: x_port_positions.head_values,
+      x_edge_tail_port_order: x_port_orders.tail_values,
+      x_edge_head_port_order: x_port_orders.head_values,
       vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
       has_clusters: pipeline.cluster_meta.has_clusters,
       is_cluster_skeleton_name:
