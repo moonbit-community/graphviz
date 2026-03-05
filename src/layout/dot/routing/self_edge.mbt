@@ -45,14 +45,25 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
 }
 
 ///|
+priv struct SelfEdgeRankSpacingInput {
+  rank : Int
+  rank_y : Map[Int, Double]
+  node_y : Double
+  node_height : Double
+  min_rank : Int
+  max_rank : Int
+}
+
+///|
 fn self_edge_rank_spacing(
-  rank : Int,
-  rank_y : Map[Int, Double],
-  node_y : Double,
-  node_height : Double,
-  min_rank : Int,
-  max_rank : Int,
+  input : SelfEdgeRankSpacingInput,
 ) -> Double {
+  let rank = input.rank
+  let rank_y = input.rank_y
+  let node_y = input.node_y
+  let node_height = input.node_height
+  let min_rank = input.min_rank
+  let max_rank = input.max_rank
   if min_rank == max_rank {
     return node_height
   }
@@ -441,12 +452,14 @@ fn build_self_edge_routes(
   let bounds = rank_bounds(rank_y)
   let sizey =
     self_edge_rank_spacing(
-      base0.tail_rank,
-      rank_y,
-      np.y,
-      base0.tail_size.height_pt,
-      bounds.min_rank,
-      bounds.max_rank,
+      {
+        rank: base0.tail_rank,
+        rank_y,
+        node_y: np.y,
+        node_height: base0.tail_size.height_pt,
+        min_rank: bounds.min_rank,
+        max_rank: bounds.max_rank,
+      },
     )
   let sizey_param = sizey / 2.0
   let same_side = tail_side == head_side
