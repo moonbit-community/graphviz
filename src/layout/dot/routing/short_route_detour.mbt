@@ -255,17 +255,26 @@ fn maybe_flat_detour_points_if_blocked(
 }
 
 ///|
+priv struct FlatDetourPointsForLineInput {
+  context : FlatDetourLookupContext
+  flat_no_arrow_candidate : Bool
+  flat_top_compass_single_arrow_candidate : Bool
+  line_start : @geom.Point
+  line_end : @geom.Point
+}
+
+///|
 fn flat_detour_points_for_line(
-  context : FlatDetourLookupContext,
-  flat_no_arrow_candidate : Bool,
-  flat_top_compass_single_arrow_candidate : Bool,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
+  input : FlatDetourPointsForLineInput,
 ) -> FlatDetourResult? {
-  let flat_detour_scan_input = { lookup: context, line_start, line_end }
+  let flat_detour_scan_input = {
+    lookup: input.context,
+    line_start: input.line_start,
+    line_end: input.line_end,
+  }
   maybe_flat_detour_points_if_blocked(
-    flat_no_arrow_candidate,
-    flat_top_compass_single_arrow_candidate,
+    input.flat_no_arrow_candidate,
+    input.flat_top_compass_single_arrow_candidate,
     flat_detour_scan_input,
   )
 }
@@ -377,11 +386,13 @@ fn resolve_short_route_detour(
     input.detour_context.flat_top_compass_single_arrow_candidate
   let flat_detour =
     flat_detour_points_for_line(
-      input.flat_detour_lookup,
-      flat_no_arrow_candidate,
-      flat_top_compass_single_arrow_candidate,
-      input.line_start,
-      input.line_end,
+      {
+        context: input.flat_detour_lookup,
+        flat_no_arrow_candidate,
+        flat_top_compass_single_arrow_candidate,
+        line_start: input.line_start,
+        line_end: input.line_end,
+      },
     )
   let detour_spline =
     detour_spline_if_any(
