@@ -181,7 +181,7 @@ const CL_CROSS : Int = 1000
 
 ///|
 fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
-  "\{@shared.CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+  @clustering.cluster_skeleton_name(cluster, rank)
 }
 
 ///| 
