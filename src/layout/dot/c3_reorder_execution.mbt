@@ -6,7 +6,7 @@
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_rank_reorder(
   local_context : @ordering.ClusterLocalReorderContext,
-  input_phase_output : ClusterLocalReorderRunInputsOutput,
+  input_phase_output : @ordering.ClusterLocalReorderRunInputsOutput,
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Map[Int, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
@@ -112,12 +112,12 @@ fn reorder_cluster_rank_group(
   }
   let cluster_graph_edge_count = cluster_graph.edges().length()
   let include_external_crossing =
-    should_include_external_crossing_edges(
+    @ordering.should_include_external_crossing_edges(
       local_context.cluster_rank_keys,
       cluster_graph_edge_count,
-      count_edge_vnodes(local_context.cluster_nodes),
+      @ordering.count_edge_vnodes(local_context.cluster_nodes),
     )
-  let input_context : ClusterLocalReorderInputBuildContext = {
+  let input_context : @ordering.ClusterLocalReorderInputBuildContext = {
     cluster_name: cluster,
     include_external_crossing,
     expanded_clusters,
@@ -138,7 +138,7 @@ fn reorder_cluster_rank_group(
     flat_constraints: dispatch_context.cluster_meta.flat_constraints,
   }
   let input_phase_output =
-    build_local_reorder_inputs(input_context)
+    @ordering.build_local_reorder_inputs(input_context)
   let ordered_cluster = match run_cluster_rank_reorder(
     local_context,
     input_phase_output,
