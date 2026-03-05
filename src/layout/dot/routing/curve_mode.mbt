@@ -705,13 +705,23 @@ fn adjusted_curve_mode_points(
 }
 
 ///|
+priv struct CurveModeSplineFromPreparedInput {
+  base : EdgeRouteBase
+  prepared : CurveModeRoutePrep
+  label_edge_counts : Map[String, Int]
+  nodesep_pt : Double
+  enable_complex_tuning : Bool
+}
+
+///|
 fn build_curve_mode_spline_from_prepared_route(
-  base : EdgeRouteBase,
-  prepared : CurveModeRoutePrep,
-  label_edge_counts : Map[String, Int],
-  nodesep_pt : Double,
-  enable_complex_tuning : Bool,
+  input : CurveModeSplineFromPreparedInput,
 ) -> CurveModeSplineBuildResult {
+  let base = input.base
+  let prepared = input.prepared
+  let label_edge_counts = input.label_edge_counts
+  let nodesep_pt = input.nodesep_pt
+  let enable_complex_tuning = input.enable_complex_tuning
   let points = prepared.points
   if points.length() > 2 {
     let adjusted =
@@ -774,11 +784,13 @@ fn build_edge_curve_mode_result(
     )
   let spline_result =
     build_curve_mode_spline_from_prepared_route(
-      input.base,
-      prepared,
-      input.label_edge_counts,
-      input.nodesep_pt,
-      input.enable_complex_tuning,
+      {
+        base: input.base,
+        prepared,
+        label_edge_counts: input.label_edge_counts,
+        nodesep_pt: input.nodesep_pt,
+        enable_complex_tuning: input.enable_complex_tuning,
+      },
     )
   let (pathplan_boxes, pathplan_segments) =
     finalize_pathplan_boxes_and_segments(
