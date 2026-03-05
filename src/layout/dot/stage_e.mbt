@@ -636,15 +636,7 @@ fn build_route_base_deps_for_dot(
           Some(metrics) => Some({ width: metrics.width, height: metrics.height })
           None => None
         },
-    record_port_path_box:
-      (node, port, pos, size, rankdir) =>
-        record_port_path_box(
-          node,
-          port,
-          pos,
-          size,
-          rankdir,
-        ),
+    record_port_path_box,
     port_geometry:
       (node_name, port, node_pos, node_size) => {
         let geometry =
@@ -657,9 +649,7 @@ fn build_route_base_deps_for_dot(
           )
         { center: geometry.center, size: geometry.size }
       },
-    port_rect_from_geometry:
-      (port, center, port_size, node_size) =>
-        port_rect_from_geometry(port, center, port_size, node_size),
+    port_rect_from_geometry,
     port_is_label_port:
       (node_name, port) =>
         port_is_label_port(node_name, port, routing_label_ports_raw),
