@@ -7,6 +7,29 @@ fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
 }
 
 ///|
+fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
+  match edge.get_attr("dir") {
+    Some(value) => value.to_lower()
+    None => "forward"
+  }
+}
+
+///|
+fn parallel_remap_direction_key(
+  edge : @cgraph.Edge,
+  tail : String,
+  head : String,
+) -> String {
+  let sameport_tag =
+    if @edge_ops.edge_has_sameport_mark(edge) {
+      "sameport"
+    } else {
+      "plain"
+    }
+  "\{tail}|\{@dot_shared.port_key(edge.tail_port())}|\{head}|\{@dot_shared.port_key(edge.head_port())}|\{edge_dir_attr_key(edge)}|\{sameport_tag}"
+}
+
+///|
 priv struct PortLabelPosRemapInput {
   edge : @cgraph.Edge
   splines : Array[@geom.Spline]
@@ -135,14 +158,7 @@ fn collect_parallel_remap_edge_ids(
       continue
     }
     let key = @edge_ops.edge_parallel_group_key(edge)
-    let sameport_mark = @edge_ops.edge_has_sameport_mark(edge)
-    let dir_key = match edge.get_attr("dir") {
-      Some(value) => value.to_lower()
-      None => "forward"
-    }
-    let sameport_tag = if sameport_mark { "sameport" } else { "plain" }
-    let direction_key =
-      "\{tail}|\{@dot_shared.port_key(edge.tail_port())}|\{head}|\{@dot_shared.port_key(edge.head_port())}|\{dir_key}|\{sameport_tag}"
+    let direction_key = parallel_remap_direction_key(edge, tail, head)
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
