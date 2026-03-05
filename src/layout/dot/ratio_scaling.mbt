@@ -3,6 +3,16 @@ fn scale_point_value(point : @geom.Point, sx : Double, sy : Double) -> @geom.Poi
 }
 
 ///|
+fn scale_point_value_rounded(
+  point : @geom.Point,
+  sx : Double,
+  sy : Double,
+) -> @geom.Point {
+  let scaled = scale_point_value(point, sx, sy)
+  { x: scaled.x.round(), y: scaled.y.round() }
+}
+
+///|
 fn scale_optional_point_value(
   point : @geom.Point?,
   sx : Double,
@@ -71,8 +81,7 @@ fn scale_point_map_rounded(
 ) -> Map[String, @geom.Point] {
   let scaled : Map[String, @geom.Point] = Map::new()
   for name, point in points {
-    let p = scale_point_value(point, sx, sy)
-    scaled[name] = { x: p.x.round(), y: p.y.round() }
+    scaled[name] = scale_point_value_rounded(point, sx, sy)
   }
   scaled
 }

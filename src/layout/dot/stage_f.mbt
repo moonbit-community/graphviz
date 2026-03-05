@@ -510,17 +510,6 @@ fn build_final_layout_geometry(
 ///|
 /// Final-layout ratio=fill scaling helpers used by postprocess.
 
-///|
-fn scale_layout_point_rounded(
-  point : @geom.Point,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point {
-  let scaled = scale_point_value(point, sx, sy)
-  { x: scaled.x.round(), y: scaled.y.round() }
-}
-
-///|
 fn scale_layout_graph(
   layout : DotLayoutGraph,
   sx : Double,
@@ -531,7 +520,7 @@ fn scale_layout_graph(
   for node_layout in layout.nodes {
     let scaled_pos =
       if round_node_pos {
-        scale_layout_point_rounded(node_layout.pos, sx, sy)
+        scale_point_value_rounded(node_layout.pos, sx, sy)
       } else {
         scale_point_value(node_layout.pos, sx, sy)
       }
