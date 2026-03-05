@@ -285,21 +285,13 @@ fn run_clustered_finalize_phase(
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: ordering-input snapshot capture gates on the same
-/// DOT_CAPTURE_ORDERING_INPUTS env flag used by fixture capture workflows.
-/// Do not change behavior without updating fixtures/tests.
-fn should_capture_ordering_inputs() -> Bool {
-  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
-}
-
-///|
 /// Graphviz parity: root reorder pass snapshot records the same mincross edge
 /// projection and selected rank groups passed to reorder_rank_groups.
 fn capture_root_mincross_pass_snapshot(
   result : @ordering.RootMincrossReorderResult,
   inputs : @ordering.RootMincrossReorderInputs,
 ) -> Unit {
-  if !should_capture_ordering_inputs() {
+  if !@ordering.should_capture_ordering_inputs() {
     return
   }
   let reorder_call_data = result.reorder_call_data
@@ -322,14 +314,14 @@ fn capture_root_mincross_pass_snapshot(
         edge_xpenalty_for: @dot_shared.edge_xpenalty,
       },
     )
-  set_root_mincross_input_snapshot(snapshot)
+  root_mincross_input_snapshot.val = Some(snapshot)
 }
 
 ///|
 fn capture_remincross_snapshot(
   capture_inputs : @ordering.ReMincrossCleanupCaptureInputs,
 ) -> Unit {
-  if !should_capture_ordering_inputs() {
+  if !@ordering.should_capture_ordering_inputs() {
     return
   }
   let snapshot =
@@ -348,7 +340,7 @@ fn capture_remincross_snapshot(
         edge_xpenalty_for: @dot_shared.edge_xpenalty,
       },
     )
-  set_remincross_input_snapshot(snapshot)
+  remincross_input_snapshot.val = Some(snapshot)
 }
 
 ///|
@@ -357,29 +349,12 @@ type RootMincrossInputSnapshot = @ordering.RootMincrossInputSnapshot
 ///|
 type RemincrossInputSnapshot = @ordering.RemincrossInputSnapshot
 
-let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
+let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] =
+  @ordering.root_mincross_input_snapshot
 
 ///|
-let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
-
-///|
-fn set_root_mincross_input_snapshot(snapshot : RootMincrossInputSnapshot) -> Unit {
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-  let _ = snapshot.cluster_skeleton
-  root_mincross_input_snapshot.val = Some(snapshot)
-}
-
-///|
-fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-  remincross_input_snapshot.val = Some(snapshot)
-}
+let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] =
+  @ordering.remincross_input_snapshot
 
 ///|
 /// Stage C Phase C3 split: clustered local-replay context and dispatch builders.

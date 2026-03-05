@@ -2,6 +2,14 @@
 /// Ordering domain: edge snapshot projections for ordering fixture capture.
 
 ///|
+/// Graphviz parity: ordering-input snapshot capture gates on the same
+/// DOT_CAPTURE_ORDERING_INPUTS env flag used by fixture capture workflows.
+/// Do not change behavior without updating fixtures/tests.
+pub fn should_capture_ordering_inputs() -> Bool {
+  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
+}
+
+///|
 /// Graphviz parity: ordering edge snapshot input keeps edge arrays plus
 /// optional port metadata aligned by edge index before projection/coalescing.
 pub(all) struct OrderingEdgeSnapshotBuildInput {
@@ -127,7 +135,7 @@ pub fn coalesce_ordering_edge_snapshot_entries(
 ///|
 /// Graphviz parity: root mincross snapshot payload keeps rank-order groups,
 /// coalesced edge snapshots, and cluster overlays for fixture capture checks.
-pub struct RootMincrossInputSnapshot {
+pub(all) struct RootMincrossInputSnapshot {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
   edges : Array[OrderingEdgeSnapshotEntry]
@@ -138,12 +146,18 @@ pub struct RootMincrossInputSnapshot {
 ///|
 /// Graphviz parity: remincross snapshot payload keeps rank-order groups and
 /// edge snapshots for fixture capture checks.
-pub struct RemincrossInputSnapshot {
+pub(all) struct RemincrossInputSnapshot {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
   edges : Array[OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
 }
+
+///|
+pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
+
+///|
+pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
 
 ///|
 /// Graphviz parity: root mincross snapshot input keeps order-rank groups,
