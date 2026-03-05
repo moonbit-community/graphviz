@@ -22,10 +22,6 @@ const PAD_Y_PT : Double = 8.0
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|
-// Graphviz keeps edge-label ranks tight; use a fraction of nodesep on label ranks.
-const EDGE_LABEL_NODESEP_PT : Double = 5.0
-
-///|
 const SELF_EDGE_SIZE_PT : Double = 18.0
 
 ///|

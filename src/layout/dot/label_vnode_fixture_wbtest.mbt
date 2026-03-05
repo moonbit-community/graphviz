@@ -696,7 +696,7 @@ test "flat label node sizes match Graphviz fixtures" {
   }
   let y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
-  fill_rank_positions(
+  @positioning.fill_rank_positions(
     {
       rank_keys,
       groups,

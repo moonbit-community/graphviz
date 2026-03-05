@@ -94,17 +94,6 @@ pub(all) struct YPositionsWithFlipSources {
   ranksep_pt : Double
   graphviz_flip : Bool
   graph_has_cluster : Bool
-  fill_rank_positions_fn : (
-    Array[Int],
-    Map[Int, Array[String]],
-    Array[Int],
-    Map[Int, Double],
-    Map[Int, Double],
-    Map[Int, Double],
-    Double,
-    Map[String, Double],
-    Map[Int, Double],
-  ) -> Unit
   adjust_flip_rank_heights_fn : (
     Map[Int, Double],
     Map[Int, Double],
@@ -122,16 +111,18 @@ pub fn build_y_positions_with_flip_from_sources(
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
-  (sources.fill_rank_positions_fn)(
-    sources.rank_keys,
-    sources.groups,
-    sources.y_all_ranks,
-    sources.rank_pht,
-    sources.rank_ht1,
-    sources.rank_ht2,
-    sources.ranksep_pt,
-    y_positions,
-    rank_y,
+  fill_rank_positions(
+    {
+      rank_keys: sources.rank_keys,
+      groups: sources.groups,
+      all_ranks: sources.y_all_ranks,
+      rank_pht: sources.rank_pht,
+      rank_ht1: sources.rank_ht1,
+      rank_ht2: sources.rank_ht2,
+      ranksep_pt: sources.ranksep_pt,
+      y_positions,
+      rank_y,
+    },
   )
   if sources.graphviz_flip && sources.graph_has_cluster {
     let min_root_rank =

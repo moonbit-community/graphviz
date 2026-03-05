@@ -588,7 +588,7 @@ fn build_cluster_constraints(
       node_in_any_cluster[node_name] = true
     }
   }
-  let base_positions = compute_rank_positions(
+  let base_positions = @positioning.compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
   let existing_names : Map[String, Bool] = Map::new()
@@ -1953,7 +1953,8 @@ fn build_rank_constraint_seed(
     for i in 0..<names.length() {
       order_in_rank[names[i]] = i
     }
-    let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
+    let rank_nodesep =
+      @positioning.rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
     let mut i = 0
     while i + 1 < names.length() {
       let tail = names[i]
@@ -2068,7 +2069,7 @@ fn build_constraint_graph(
   }
   let skip_intercluster =
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
-  let base_positions = compute_rank_positions(
+  let base_positions = @positioning.compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
   let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []

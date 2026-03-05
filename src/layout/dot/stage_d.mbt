@@ -536,31 +536,6 @@ fn build_y_positions_with_flip(
       ranksep_pt: input.ranksep_pt,
       graphviz_flip: input.rankdir == RankDir::LR || input.rankdir == RankDir::RL,
       graph_has_cluster: @dot_shared.graph_has_cluster(input.graph),
-      fill_rank_positions_fn:
-        (
-          rank_keys,
-          groups,
-          all_ranks,
-          rank_pht,
-          rank_ht1,
-          rank_ht2,
-          ranksep_pt,
-          y_positions,
-          rank_y,
-        ) =>
-          fill_rank_positions(
-            {
-              rank_keys,
-              groups,
-              all_ranks,
-              rank_pht,
-              rank_ht1,
-              rank_ht2,
-              ranksep_pt,
-              y_positions,
-              rank_y,
-            },
-          ),
       adjust_flip_rank_heights_fn:
         (rank_y, rank_ht1, rank_ht2, min_root_rank) =>
           adjust_flip_rank_heights(
