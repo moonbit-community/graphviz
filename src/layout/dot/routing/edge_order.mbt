@@ -213,8 +213,8 @@ fn route_edge_cmp(
     return graph_cmp
   }
   if type_a == ROUTE_EDGE_FLAT {
-    let label_a = edge_attr_or_empty(a, "label")
-    let label_b = edge_attr_or_empty(b, "label")
+    let label_a = @dot_shared.edge_attr_or_empty(a, "label")
+    let label_b = @dot_shared.edge_attr_or_empty(b, "label")
     if label_a < label_b {
       return -1
     }

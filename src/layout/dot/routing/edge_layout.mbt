@@ -71,7 +71,7 @@ fn edge_port_label_pos_for_attr(
   input : EdgePortLabelPosForAttrInput,
 ) -> @geom.Point? {
   let edge = input.edge
-  if edge_attr_non_empty(edge, input.attr_name) {
+  if @dot_shared.edge_attr_non_empty(edge, input.attr_name) {
     (input.edge_port_label_pos_fn)(
       {
         edge,

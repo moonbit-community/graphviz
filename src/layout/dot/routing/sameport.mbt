@@ -18,7 +18,7 @@ fn add_sameport_group_edge(
 
 ///|
 fn sameport_merge_key(edge : @cgraph.Edge) -> String {
-  let label = edge_attr_or_empty(edge, "label")
+  let label = @dot_shared.edge_attr_or_empty(edge, "label")
   "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{@dot_shared.port_key(edge.tail_port())}|\{@dot_shared.port_key(edge.head_port())}"
 }
 
@@ -446,7 +446,7 @@ fn collect_sameport_overrides(
     if @dot_shared.edge_is_self(edge) {
       continue
     }
-    let samehead_id = edge_attr_or_empty(edge, "samehead")
+    let samehead_id = @dot_shared.edge_attr_or_empty(edge, "samehead")
     if samehead_id != "" {
       add_sameport_group_edge(
         samehead_groups,
@@ -455,7 +455,7 @@ fn collect_sameport_overrides(
         edge,
       )
     }
-    let sametail_id = edge_attr_or_empty(edge, "sametail")
+    let sametail_id = @dot_shared.edge_attr_or_empty(edge, "sametail")
     if sametail_id != "" {
       add_sameport_group_edge(
         sametail_groups,

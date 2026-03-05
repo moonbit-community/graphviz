@@ -32,7 +32,7 @@ fn remap_port_label_pos(
   let is_head = input.is_head
   let fallback = input.fallback
   let edge_port_label_pos_fn = input.edge_port_label_pos_fn
-  if !edge_attr_non_empty(edge, label_attr) {
+  if !@dot_shared.edge_attr_non_empty(edge, label_attr) {
     return None
   }
   if splines.length() == 0 {
@@ -74,7 +74,7 @@ fn remap_edge_layout_edge(
   edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> DotLayoutEdge {
   let label_pos =
-    if edge_attr_non_empty(edge, "label") {
+    if @dot_shared.edge_attr_non_empty(edge, "label") {
       layout.label_pos
     } else {
       None
@@ -100,7 +100,7 @@ fn remap_edge_layout_edge(
     },
   )
   let xlabel_pos =
-    if edge_attr_non_empty(edge, "xlabel") {
+    if @dot_shared.edge_attr_non_empty(edge, "xlabel") {
       layout.xlabel_pos
     } else {
       None

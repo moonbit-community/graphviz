@@ -217,6 +217,22 @@ pub fn edge_has_label(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+pub fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
+  match edge.get_attr(name) {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+pub fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
+  match edge.get_attr(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")

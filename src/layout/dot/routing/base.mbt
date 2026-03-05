@@ -10,22 +10,6 @@ fn point_for_name_or_origin(
 }
 
 ///|
-fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
-  match edge.get_attr(name) {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
-fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
-  match edge.get_attr(name) {
-    Some(value) => value
-    None => ""
-  }
-}
-
-///|
 fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
   match edge.get_attr("dir") {
     Some(value) => value.to_lower()
