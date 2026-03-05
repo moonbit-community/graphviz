@@ -43,6 +43,13 @@ fn self_edge_label_height_pt_for_routing(
 }
 
 ///|
+fn routing_edge_port_label_pos(
+  input : @routing.EdgePortLabelPosInput,
+) -> @geom.Point? {
+  edge_port_label_pos(input.edge, input.spline, input.is_head)
+}
+
+///|
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
@@ -171,8 +178,7 @@ fn build_routing_edge_layout_for_dot(
           input.nodesep_pt,
           input.label_pad_boost,
         ),
-      edge_port_label_pos_fn: (input) =>
-        edge_port_label_pos(input.edge, input.spline, input.is_head),
+      edge_port_label_pos_fn: routing_edge_port_label_pos,
     },
   )
 }
@@ -232,8 +238,7 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
           ),
         self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
         self_edge_label_width_fn: self_edge_label_width_pt,
-        edge_port_label_pos_fn: (input) =>
-          edge_port_label_pos(input.edge, input.spline, input.is_head),
+        edge_port_label_pos_fn: routing_edge_port_label_pos,
       },
     },
   )
