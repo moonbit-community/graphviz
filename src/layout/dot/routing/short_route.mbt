@@ -397,14 +397,25 @@ pub fn short_route_spec_for_adjusted_points(
 }
 
 ///|
+pub(all) struct ShortRouteSpecFromAnchorInput {
+  points : Array[@geom.Point]
+  using_pathplan : Bool
+  tail_anchor : @geom.Point
+  head_anchor : @geom.Point
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+}
+
+///|
 pub fn short_route_spec_for_anchor_or_pathplan_points(
-  points : Array[@geom.Point],
-  using_pathplan : Bool,
-  tail_anchor : @geom.Point,
-  head_anchor : @geom.Point,
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
+  input : ShortRouteSpecFromAnchorInput,
 ) -> ShortRouteBuildSpec {
+  let points = input.points
+  let using_pathplan = input.using_pathplan
+  let tail_anchor = input.tail_anchor
+  let head_anchor = input.head_anchor
+  let tail_clip_enabled = input.tail_clip_enabled
+  let head_clip_enabled = input.head_clip_enabled
   let fallback_line_start =
     if using_pathplan && points.length() >= 2 {
       points[0]

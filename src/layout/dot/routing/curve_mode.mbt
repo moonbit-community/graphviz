@@ -724,12 +724,14 @@ fn build_curve_mode_spline_from_prepared_route(
   } else {
     let short_route_spec =
       short_route_spec_for_anchor_or_pathplan_points(
-        points,
-        prepared.using_pathplan,
-        base.tail_anchor,
-        base.head_anchor,
-        base.tail_clip_enabled,
-        base.head_clip_enabled,
+        {
+          points,
+          using_pathplan: prepared.using_pathplan,
+          tail_anchor: base.tail_anchor,
+          head_anchor: base.head_anchor,
+          tail_clip_enabled: base.tail_clip_enabled,
+          head_clip_enabled: base.head_clip_enabled,
+        },
       )
     curve_mode_result_for_short_route(base, prepared, short_route_spec)
   }
