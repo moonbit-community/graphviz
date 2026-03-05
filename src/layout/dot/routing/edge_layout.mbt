@@ -31,18 +31,21 @@ type FlatEdgeLabelPosSimpleFn = (
 ) -> @geom.Point
 
 ///|
-type EdgeLabelPosFn = (
-  @cgraph.Edge,
-  @geom.Spline,
-  @geom.Point,
-  @geom.Point,
-  @dot_shared.RankDir,
-  Double?,
-  Double?,
-  Bool,
-  Double,
-  Double,
-) -> @geom.Point?
+pub(all) struct EdgeLabelPosInput {
+  edge : @cgraph.Edge
+  spline : @geom.Spline
+  tail_clip : @geom.Point
+  head_clip : @geom.Point
+  rankdir : @dot_shared.RankDir
+  label_rank_y : Double?
+  label_rank_x : Double?
+  apply_label_pad : Bool
+  nodesep_pt : Double
+  label_pad_boost : Double
+}
+
+///|
+type EdgeLabelPosFn = (EdgeLabelPosInput) -> @geom.Point?
 
 ///|
 type EdgePortLabelPosFn = (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
@@ -130,16 +133,18 @@ pub fn build_edge_layout(
   let default_label_pos =
     () =>
       (deps.edge_label_pos_fn)(
-        edge,
-        spline,
-        base.out_tail_clip,
-        base.out_head_clip,
-        base.layout_rankdir,
-        label_rank_y,
-        label_rank_x,
-        apply_label_pad,
-        input.nodesep_pt,
-        spline_result.label_pad_boost,
+        {
+          edge,
+          spline,
+          tail_clip: base.out_tail_clip,
+          head_clip: base.out_head_clip,
+          rankdir: base.layout_rankdir,
+          label_rank_y,
+          label_rank_x,
+          apply_label_pad,
+          nodesep_pt: input.nodesep_pt,
+          label_pad_boost: spline_result.label_pad_boost,
+        },
       )
   let flat_simple_or_default =
     () =>
