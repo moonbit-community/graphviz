@@ -1270,29 +1270,6 @@ fn segment_slack_minlen(
   (m0, m1)
 }
 
-///|
-fn same_rank_constraint_minlen(
-  edge : @cgraph.Edge,
-  left : String,
-  right : String,
-  nodesep_pt : Double,
-  sizes : Map[String, NodeSize],
-  has_ordering : Bool,
-) -> Int {
-  let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
-  let mut minlen_value =
-    Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
-  let is_invis = match edge.get_attr("style") {
-    Some(style) => style.to_lower().contains("invis")
-    None => false
-  }
-  if is_invis && has_ordering {
-    minlen_value = minlen_value + nodesep_pt
-  }
-  trunc_int(minlen_value)
-}
-
-///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -1399,19 +1376,11 @@ fn build_constraint_graph(
         node_degrees,
         order_in_rank,
         nodesep_pt,
+        sizes,
         skip_intercluster,
         rank_adj_constraints,
         edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
-        same_rank_minlen:
-          (edge, left, right, has_ordering) =>
-            same_rank_constraint_minlen(
-              edge,
-              left,
-              right,
-              nodesep_pt,
-              sizes,
-              has_ordering,
-            ),
+        trunc_int,
       },
     )
   let segments_by_tail = segment_pass.segments_by_tail

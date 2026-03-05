@@ -11,10 +11,11 @@ pub(all) struct ConstraintSegmentPassInput {
   node_degrees : Map[String, Int]
   order_in_rank : Map[String, Int]
   nodesep_pt : Double
+  sizes : Map[String, @shared.NodeSize]
   skip_intercluster : Bool
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
-  same_rank_minlen : (@cgraph.Edge, String, String, Bool) -> Int
+  trunc_int : (Double) -> Int
 }
 
 ///|
@@ -71,6 +72,41 @@ fn ordered_vnodes_for_ranks(
     reversed.push(vnodes[idx])
   }
   reversed
+}
+
+///|
+fn node_side_pt(
+  name : String,
+  sizes : Map[String, @shared.NodeSize],
+  use_left : Bool,
+) -> Double {
+  match sizes.get(name) {
+    Some(value) => if use_left { value.left_pt } else { value.right_pt }
+    None => @shared.default_node_width_in() * 72.0 / 2.0
+  }
+}
+
+///|
+fn same_rank_constraint_minlen(
+  edge : @cgraph.Edge,
+  left : String,
+  right : String,
+  nodesep_pt : Double,
+  sizes : Map[String, @shared.NodeSize],
+  has_ordering : Bool,
+  trunc_int : (Double) -> Int,
+) -> Int {
+  let width = node_side_pt(left, sizes, false) + node_side_pt(right, sizes, true)
+  let mut minlen_value =
+    Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt + width
+  let is_invis = match edge.get_attr("style") {
+    Some(style) => style.to_lower().contains("invis")
+    None => false
+  }
+  if is_invis && has_ordering {
+    minlen_value = minlen_value + nodesep_pt
+  }
+  trunc_int(minlen_value)
 }
 
 ///|
@@ -133,7 +169,16 @@ pub fn build_constraint_segment_pass(
                   head_name,
                   input.order_in_rank,
                 )
-              let minlen = (input.same_rank_minlen)(edge, left, right, has_ordering)
+              let minlen =
+                same_rank_constraint_minlen(
+                  edge,
+                  left,
+                  right,
+                  input.nodesep_pt,
+                  input.sizes,
+                  has_ordering,
+                  input.trunc_int,
+                )
               let weight = @shared.edge_weight(edge)
               let flat_key = "\{left}|\{right}"
               if input.rank_adj_constraints.get(flat_key) is Some(_) {
