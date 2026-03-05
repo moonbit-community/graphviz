@@ -24,8 +24,6 @@ pub(all) struct XposSimplexSolveInput {
   edge_degree_increment_fn : (@cgraph.Edge) -> Int
   root_margin : Double
   root_compress_weight : Int
-  node_left_pt_fn : (String, Map[String, @shared.NodeSize]) -> Double
-  node_right_pt_fn : (String, Map[String, @shared.NodeSize]) -> Double
   on_reordered_graph : (@network_simplex.NsGraph, Map[String, Int]) -> Unit
 }
 
@@ -64,8 +62,6 @@ pub fn solve_xpos_with_simplex(
         edge_degree_increment: input.edge_degree_increment_fn,
         root_margin: input.root_margin,
         root_compress_weight: input.root_compress_weight,
-        node_left_pt: input.node_left_pt_fn,
-        node_right_pt: input.node_right_pt_fn,
       },
     )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.

@@ -103,8 +103,6 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
           },
       root_margin,
       root_compress_weight: ROOT_COMPRESS_WEIGHT,
-      node_left_pt_fn: @dot_shared.node_left_pt,
-      node_right_pt_fn: @dot_shared.node_right_pt,
       on_reordered_graph:
         (graph, index) =>
           if @positioning.should_capture_xpos_snapshot(input.graph_root) {

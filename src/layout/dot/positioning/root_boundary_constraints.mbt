@@ -8,8 +8,6 @@ priv struct RootBoundaryTargetEdgesInput {
   root_margin : Double
   compress_mode : Bool
   is_left_boundary : Bool
-  node_left_pt : (String, Map[String, @shared.NodeSize]) -> Double
-  node_right_pt : (String, Map[String, @shared.NodeSize]) -> Double
 }
 
 ///|
@@ -24,11 +22,11 @@ fn add_root_boundary_target_edges(
           if input.compress_mode {
             if input.is_left_boundary {
               @shared.round_int(
-                (input.node_left_pt)(name, input.sizes) + input.root_margin,
+                @shared.node_left_pt(name, input.sizes) + input.root_margin,
               )
             } else {
               @shared.round_int(
-                (input.node_right_pt)(name, input.sizes) + input.root_margin,
+                @shared.node_right_pt(name, input.sizes) + input.root_margin,
               )
             }
           } else {
@@ -57,8 +55,6 @@ pub(all) struct RootBoundaryConstraintsInput {
   root_margin : Double
   compress_width_minlen : Int?
   root_compress_weight : Int
-  node_left_pt : (String, Map[String, @shared.NodeSize]) -> Double
-  node_right_pt : (String, Map[String, @shared.NodeSize]) -> Double
 }
 
 ///|
@@ -87,8 +83,6 @@ pub fn add_root_boundary_constraints(
       root_margin: input.root_margin,
       compress_mode,
       is_left_boundary: true,
-      node_left_pt: input.node_left_pt,
-      node_right_pt: input.node_right_pt,
     },
   )
   add_root_boundary_target_edges(
@@ -101,8 +95,6 @@ pub fn add_root_boundary_constraints(
       root_margin: input.root_margin,
       compress_mode,
       is_left_boundary: false,
-      node_left_pt: input.node_left_pt,
-      node_right_pt: input.node_right_pt,
     },
   )
   match input.compress_width_minlen {

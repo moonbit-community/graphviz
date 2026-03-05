@@ -24,8 +24,6 @@ pub(all) struct ConstraintGraphBuildInput {
   edge_degree_increment : (@cgraph.Edge) -> Int
   root_margin : Double
   root_compress_weight : Int
-  node_left_pt : (String, Map[String, @shared.NodeSize]) -> Double
-  node_right_pt : (String, Map[String, @shared.NodeSize]) -> Double
 }
 
 ///|
@@ -132,8 +130,6 @@ pub fn build_constraint_graph(
       root_margin: input.root_margin,
       compress_width_minlen: input.compress_width_minlen,
       root_compress_weight: input.root_compress_weight,
-      node_left_pt: input.node_left_pt,
-      node_right_pt: input.node_right_pt,
     },
   )
   for edge in input.extra_edges {
