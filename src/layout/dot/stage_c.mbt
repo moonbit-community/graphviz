@@ -1,0 +1,602 @@
+///|
+/// Stage C ordering stage file: contracts, runtime pipeline context, and
+/// clustered/non-clustered dispatch orchestration.
+
+///|
+/// Graphviz parity: ordering stage payload keeps rank and order-context maps
+/// grouped so Stage C wiring stays explicit and stable.
+priv struct OrderingStageInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
+priv struct OrderingDispatchOutput {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+}
+
+///|
+priv struct ClusterMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
+priv struct OrderingResult {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  vnode_info : @routing.EdgeVnodeInfo
+  vnode_count : Int
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  edge_order : Map[String, Int]
+  edge_cluster_keys : Map[String, String]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
+/// Stage C clustered ordering stage-dispatch type definitions.
+
+///|
+/// Graphviz parity: clustered ordering stage dispatch context keeps complete
+/// clustered ordering payload ordering unchanged before stage execution.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredDispatchContext {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : @ordering.OrderingEdgePortData
+  reorder_setup : @ordering.OrderingReorderSetup
+}
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let pre_root_stage = build_clustered_pre_root(dispatch_context)
+  let root_phase_output = run_clustered_root_phase(dispatch_context, pre_root_stage)
+  run_clustered_finalize_phase(
+    dispatch_context,
+    pre_root_stage,
+    root_phase_output,
+  )
+}
+
+
+///|
+/// Graphviz parity: choose clustered/non-clustered ordering flow using the same
+/// flag gates as Graphviz (vnode/cluster mode).
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_dispatch(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let reorder_setup = dispatch_context.reorder_setup
+  if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
+    run_clustered(dispatch_context)
+  } else {
+    run_nonclustered_ordering_dispatch(dispatch_context)
+  }
+}
+
+
+///|
+/// Graphviz parity: non-cluster dispatch builds reorder inputs from the same
+/// source payload and executes one noncluster reorder pass.
+/// Do not change behavior without updating fixtures/tests.
+fn run_nonclustered_ordering_dispatch(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let noncluster_inputs =
+    @ordering.build_noncluster_reorder_inputs_from_sources(
+      {
+        nodes: dispatch_context.nodes,
+        edges: dispatch_context.edges,
+        edge_head: dispatch_context.edge_head,
+        edge_out_order: dispatch_context.edge_out_order,
+        ranks: dispatch_context.ranks,
+        rank_keys: dispatch_context.rank_keys,
+        groups: dispatch_context.groups,
+        node_order: dispatch_context.node_order,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        cluster_skeleton: dispatch_context.cluster_meta.cluster_skeleton,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        order_sizes: dispatch_context.order_sizes,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        reorder_setup: dispatch_context.reorder_setup,
+        edge_port_data: dispatch_context.edge_port_data,
+      },
+    )
+  let ordered_groups =
+    @ordering.run_noncluster_reorder_pass(noncluster_inputs)
+  {
+    ordered_groups,
+    ordered_with_vnodes: Map::new(),
+  }
+}
+
+///|
+/// Graphviz parity: ordering dispatch context captures stage-C clustered/non-
+/// clustered inputs without reordering fields before dispatch execution.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_dispatch_context(
+  input : OrderingStageInput,
+  pipeline_context : OrderingPipelineContext,
+) -> ClusteredDispatchContext {
+  {
+    graph: input.graph,
+    nodes: input.nodes,
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    edge_reversed: input.edge_reversed,
+    edge_out_order: input.edge_out_order,
+    rank_keys: input.rank_keys,
+    groups: input.groups,
+    ranks: input.ranks,
+    node_order: input.node_order,
+    order_sizes: input.order_sizes,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    cluster_meta: input.cluster_meta,
+    port_order_positions: input.port_order_positions,
+    port_order_contrib: input.port_order_contrib,
+    runtime_context: pipeline_context.runtime_context,
+    edge_port_data: pipeline_context.edge_port_data,
+    reorder_setup: pipeline_context.reorder_setup,
+  }
+}
+
+///|
+/// Graphviz parity: ordering result assembly forwards dispatch and pipeline
+/// snapshots in Graphviz-aligned field composition order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_result(
+  pipeline_context : OrderingPipelineContext,
+  dispatch_output : OrderingDispatchOutput,
+) -> OrderingResult {
+  {
+    ordered_groups: dispatch_output.ordered_groups,
+    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
+    vnode_info: pipeline_context.runtime_context.vnode_info,
+    vnode_count: pipeline_context.runtime_context.vnode_info.vnode_ranks.length(),
+    order_edges: pipeline_context.edge_port_data.order_edges,
+    order_edge_tail: pipeline_context.edge_port_data.order_edge_tail,
+    order_edge_head: pipeline_context.edge_port_data.order_edge_head,
+    edge_order: pipeline_context.edge_port_data.edge_order,
+    edge_cluster_keys: pipeline_context.runtime_context.edge_cluster_keys,
+    nlist_order: pipeline_context.reorder_setup.class2_data.nlist_order,
+    gdnlist_order: pipeline_context.reorder_setup.gdnlist_order,
+    vnode_creation_order:
+      pipeline_context.reorder_setup.class2_data.vnode_creation_order,
+  }
+}
+
+
+///|
+/// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_ordering_and_vnodes(
+  input : OrderingStageInput,
+) -> OrderingResult {
+  let pipeline_context =
+    build_ordering_pipeline_context(input)
+  let dispatch_context =
+    build_clustered_dispatch_context(
+      input,
+      pipeline_context,
+    )
+  let dispatch_output =
+    run_ordering_dispatch(dispatch_context)
+  build_ordering_result(pipeline_context, dispatch_output)
+}
+///|
+/// Stage C runtime/pipeline context builders used by dispatch orchestration.
+
+///|
+priv struct OrderingRuntimeContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : @routing.EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: setup probes vnode tail constraints in setup order even
+/// when the probe output is only used for parity diagnostics.
+/// Do not change behavior without updating fixtures/tests.
+fn probe_vnode_tail_constraints_for_ordering(
+  vnode_info : @routing.EdgeVnodeInfo,
+  edge_tail : Array[String],
+) -> Unit {
+  let _ =
+    if vnode_info.vnode_ranks.length() > 0 {
+      @ordering.build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
+    } else {
+      Map::new()
+    }
+}
+
+///|
+/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
+/// in the same position as Graphviz ordering setup, even when only used for
+/// parity diagnostics.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_context(
+  input : OrderingStageInput,
+) -> OrderingRuntimeContext {
+  let runtime_core =
+    @ordering.build_ordering_runtime_core(
+      {
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        intercluster_keys: input.cluster_meta.intercluster_keys,
+        ranks: input.ranks,
+        node_order: input.node_order,
+        collect_edge_cluster_keys_fn:
+          (edge_cluster_keys) => collect_edge_cluster_keys(input.graph, edge_cluster_keys),
+      },
+    )
+  let vnode_info = build_edge_vnodes(
+    input.nodes,
+    input.edges,
+    input.edge_tail,
+    input.edge_head,
+    input.edge_out_order,
+    input.ranks,
+    input.nodesep_pt,
+    input.rankdir,
+    runtime_core.existing_names,
+    runtime_core.edge_cluster_keys,
+    input.cluster_meta.cluster_parents,
+  )
+  // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
+  let rank_same_constraints : Map[String, Bool] = Map::new()
+  let runtime_context : OrderingRuntimeContext =
+    {
+      real_nodes: runtime_core.real_nodes,
+      edge_cluster_keys: runtime_core.edge_cluster_keys,
+      vnode_info,
+      port_edge_nodes: runtime_core.port_edge_nodes,
+      local_cluster_order: runtime_core.local_cluster_order,
+      rank_same_constraints,
+    }
+  probe_vnode_tail_constraints_for_ordering(
+    runtime_context.vnode_info,
+    input.edge_tail,
+  )
+  runtime_context
+}
+
+///|
+/// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
+/// extraction, and reorder-setup snapshots together for C0 dispatch/replay.
+priv struct OrderingPipelineContext {
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : @ordering.OrderingEdgePortData
+  reorder_setup : @ordering.OrderingReorderSetup
+}
+
+///|
+/// Graphviz parity: reorder setup keeps vnode-key derivation and class2 wiring
+/// in the same order as Graphviz clustered/noncluster mincross preparation.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_reorder_setup(
+  input : OrderingStageInput,
+  runtime_context : OrderingRuntimeContext,
+  edge_port_data : @ordering.OrderingEdgePortData,
+) -> @ordering.OrderingReorderSetup {
+  let graphviz_flip = input.rankdir == RankDir::RL || input.rankdir == RankDir::LR
+  @ordering.build_ordering_reorder_setup(
+    input.nodes,
+    input.edges,
+    input.edge_tail,
+    input.edge_head,
+    input.edge_out_order,
+    input.ranks,
+    input.groups,
+    input.node_order,
+    runtime_context.port_edge_nodes,
+    runtime_context.vnode_info.vnode_ranks.length(),
+    graphviz_flip,
+    input.cluster_meta.has_clusters,
+    input.cluster_meta.cluster_min_rank,
+    input.cluster_meta.cluster_max_rank,
+    input.cluster_meta.cluster_keys,
+    input.cluster_meta.cluster_order,
+    input.cluster_meta.rank_same_groups,
+    input.cluster_meta.rank_same_order,
+    runtime_context.vnode_info.edge_vnodes,
+    edge_port_data,
+    (base_order_index) =>
+      @ordering.build_vnode_order_keys(
+        input.edges,
+        input.edge_tail,
+        input.edge_head,
+        input.edge_reversed,
+        input.ranks,
+        base_order_index,
+        input.cluster_meta.cluster_keys,
+        input.cluster_meta.cluster_parents,
+        runtime_context.vnode_info.edge_vnodes,
+        runtime_context.vnode_info.vnode_ranks,
+      ),
+    (ordering_groups_base, base_order_index, nlist_order_index) =>
+      build_vnode_keys_from_nlist(
+        ordering_groups_base,
+        runtime_context.vnode_info.vnodes_by_rank,
+        base_order_index,
+        nlist_order_index,
+        Map::new(),
+        false,
+      ),
+  )
+}
+
+///|
+/// Graphviz parity: class2/mincross edge-port extraction consumes the same
+/// sampled tail/head values for both x-offset and port-order arrays.
+fn compute_ordering_edge_port_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
+}
+
+///|
+/// Graphviz parity: class2/mincross edge-port extraction consumes the same
+/// sampled tail/head values for both x-offset and port-order arrays.
+fn compute_ordering_edge_order_values(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  let samples =
+    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+  (samples.tail_values, samples.head_values)
+}
+
+///|
+/// Graphviz parity: ordering pipeline context assembles runtime expansion,
+/// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
+fn build_ordering_pipeline_context(
+  input : OrderingStageInput,
+) -> OrderingPipelineContext {
+  let runtime_context =
+    build_ordering_context(input)
+  let edge_port_data =
+    @ordering.build_ordering_edge_port_data(
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.order_sizes,
+      compute_ordering_edge_port_values,
+      compute_ordering_edge_order_values,
+    )
+  let reorder_setup =
+    build_ordering_reorder_setup(
+      input,
+      runtime_context,
+      edge_port_data,
+    )
+  { runtime_context, edge_port_data, reorder_setup }
+}
+///|
+/// Stage C clustered phase helpers: pre-root, root, snapshot, and finalize.
+
+type ClusteredPreRootData = @ordering.ClusteredPreRootStageOutput
+
+///|
+/// Graphviz parity: clustered pre-root ordering preparation keeps order-group
+/// expansion, reorder context, and materialization sequence aligned to Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_pre_root(
+  dispatch_context : ClusteredDispatchContext,
+) -> ClusteredPreRootData {
+  let runtime_context = dispatch_context.runtime_context
+  @ordering.run_clustered_pre_root_stage_from_sources(
+    {
+      reorder_setup: dispatch_context.reorder_setup,
+      cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+      cluster_order: dispatch_context.cluster_meta.cluster_order,
+      cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+      cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+      vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+      order_sizes: dispatch_context.order_sizes,
+      vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+      // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+      skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      node_order: dispatch_context.node_order,
+      real_nodes: runtime_context.real_nodes,
+      has_clusters: dispatch_context.cluster_meta.has_clusters,
+      rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+      rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+      port_edge_nodes: runtime_context.port_edge_nodes,
+      flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      nodes: dispatch_context.nodes,
+      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    },
+  )
+}
+
+type ClusteredRootPhaseOutput = @ordering.ClusteredRootPhaseStageOutput
+
+///|
+/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
+/// typed stage context + pre-root output without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_root_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> ClusteredRootPhaseOutput {
+  let reorder_setup = dispatch_context.reorder_setup
+  let runtime_context = dispatch_context.runtime_context
+  let root_phase_sources =
+    @ordering.build_clustered_root_phase_stage_sources(
+      {
+        reorder_setup,
+        pre_root_stage,
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        ranks: dispatch_context.ranks,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        graph: dispatch_context.graph,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+      },
+    )
+  @ordering.run_clustered_root_phase_stage_from_sources(
+    root_phase_sources,
+    @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
+  )
+}
+
+///|
+/// Stage C clustered finalize-phase helpers.
+
+///|
+/// Graphviz parity: clustered finalize phase first applies root cluster-rank
+/// ordering, then runs final clustered ReMincross with unchanged call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_finalize_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_phase_output : ClusteredRootPhaseOutput,
+) -> OrderingDispatchOutput {
+  let runtime_context = dispatch_context.runtime_context
+  let finalize_sources =
+    @ordering.build_clustered_finalize_stage_from_sources(
+      {
+        phase_base: root_phase_output.root_rank_order_phase_base,
+        root_cluster_stage: root_phase_output.root_cluster_stage,
+        root_tail_order_override: root_phase_output.root_tail_order_override,
+        pre_root_stage,
+        real_nodes: runtime_context.real_nodes,
+        ratio: dispatch_context.graph.get_attr("ratio").unwrap_or_default(),
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        edge_reversed: dispatch_context.edge_reversed,
+        edge_tail_port_x: dispatch_context.edge_port_data.edge_tail_port_x,
+        edge_head_port_x: dispatch_context.edge_port_data.edge_head_port_x,
+        edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
+        edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
+        ranks: dispatch_context.ranks,
+        reorder_setup: dispatch_context.reorder_setup,
+        local_cluster_order: runtime_context.local_cluster_order,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        order_sizes: dispatch_context.order_sizes,
+        rank_same_constraints: runtime_context.rank_same_constraints,
+        root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+      },
+    )
+  let finalize_output =
+    @ordering.run_clustered_finalize_stage_from_root_phase_sources(
+      finalize_sources,
+      @ordering.build_remincross_snapshot_capture_callback(
+        @dot_shared.edge_xpenalty,
+      ),
+      @ordering.run_remincross_cleanup_reorder,
+    )
+  {
+    ordered_groups: finalize_output.ordered_groups,
+    ordered_with_vnodes: finalize_output.ordered_with_vnodes,
+  }
+}
