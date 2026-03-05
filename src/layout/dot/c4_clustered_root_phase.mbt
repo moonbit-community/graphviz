@@ -653,14 +653,21 @@ fn build_cluster_local_rank_replay_context(
 }
 
 ///|
-/// Graphviz parity: local replay dispatch context keeps one immutable payload
-/// shared by all per-cluster reorder calls in traversal order.
-fn build_cluster_replay_dispatch_context(
+/// Graphviz parity: cluster-local replay input is built from root-replay
+/// context plus current ordered groups before ordering-subpackage execution.
+fn build_cluster_local_rank_replay_input(
+  groups : Map[Int, Array[String]],
   replay_context : ClusterLocalRankReplayContext,
-  neighbor_sources : @ordering.ClusterLocalNeighborSources,
-  fixed_ranks : Map[String, Int],
-) -> @ordering.ClusterLocalReorderDispatchContext {
+) -> @ordering.ClusterLocalRankReplayInput {
   {
+    groups,
+    graph: replay_context.graph,
+    cluster_order: replay_context.cluster_order,
+    cluster_parents: replay_context.cluster_parents,
+    rank_same_groups: replay_context.rank_same_groups,
+    rank_same_order: replay_context.rank_same_order,
+    intercluster_keys: replay_context.intercluster_keys,
+    flat_constraints: replay_context.flat_constraints,
     node_order: replay_context.node_order,
     order_edges: replay_context.order_edges,
     order_edge_tail: replay_context.order_edge_tail,
@@ -669,71 +676,19 @@ fn build_cluster_replay_dispatch_context(
     order_edge_head_port_x: replay_context.order_edge_head_port_x,
     order_edge_tail_port_order: replay_context.order_edge_tail_port_order,
     order_edge_head_port_order: replay_context.order_edge_head_port_order,
-    neighbor_sources,
+    graphviz_out_neighbors: replay_context.graphviz_out_neighbors,
+    graphviz_in_neighbors: replay_context.graphviz_in_neighbors,
+    ranks: replay_context.ranks,
     order_sizes: replay_context.order_sizes,
     nodesep_pt: replay_context.nodesep_pt,
     has_edge_labels: replay_context.has_edge_labels,
     port_order_positions: replay_context.port_order_positions,
     port_order_contrib: replay_context.port_order_contrib,
-    rank_same_groups: replay_context.rank_same_groups,
-    rank_same_order: replay_context.rank_same_order,
-    intercluster_keys: replay_context.intercluster_keys,
-    flat_constraints: replay_context.flat_constraints,
+    vnode_ranks: replay_context.vnode_ranks,
     vnode_clusters: replay_context.vnode_clusters,
     vnode_sizes: replay_context.vnode_sizes,
-    fixed_ranks,
     order_with_vnodes: replay_context.order_with_vnodes,
   }
-}
-
-///|
-/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
-/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_replay(
-  groups : Map[Int, Array[String]],
-  replay_context : ClusterLocalRankReplayContext,
-) -> Unit {
-  if replay_context.cluster_order.length() == 0 {
-    return ()
-  }
-  let cluster_graph_order =
-    @ordering.build_cluster_graph_order(
-      replay_context.graph,
-      replay_context.cluster_order,
-      replay_context.cluster_parents,
-    )
-  let cluster_graphs = cluster_graph_order.cluster_graphs
-  let cluster_names = cluster_graph_order.cluster_names
-  if cluster_graphs.length() == 0 {
-    return ()
-  }
-  let fixed_positions = @ordering.order_positions_from_groups(groups)
-  let fixed_ranks =
-    @ordering.merge_ranks_with_vnodes(
-      replay_context.ranks,
-      replay_context.vnode_ranks,
-    )
-  // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
-  // tail/head AGSEQ replay order for startpass=2 median anchors.
-  let neighbor_sources =
-    @ordering.build_cluster_local_neighbor_sources(
-      replay_context.graph,
-      replay_context.graphviz_out_neighbors,
-      replay_context.graphviz_in_neighbors,
-    )
-  let dispatch_context =
-    build_cluster_replay_dispatch_context(
-      replay_context,
-      neighbor_sources,
-      fixed_ranks,
-    )
-  @ordering.reorder_cluster_rank_groups(
-    cluster_names,
-    cluster_graphs,
-    groups,
-    fixed_positions,
-    dispatch_context,
-  )
 }
 
 ///|
@@ -755,5 +710,10 @@ fn apply_cluster_local_rank_replay_after_root(
       pre_root_stage.materialized,
       pre_root_stage.order_sizes_out,
     )
-  run_cluster_local_rank_replay(root_cluster_stage.ordered, replay_context)
+  @ordering.run_cluster_local_rank_replay(
+    build_cluster_local_rank_replay_input(
+      root_cluster_stage.ordered,
+      replay_context,
+    ),
+  )
 }
