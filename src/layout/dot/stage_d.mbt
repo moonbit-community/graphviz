@@ -236,8 +236,16 @@ fn build_x_seed_data(
           pipeline.prep.rankdir,
           pipeline.prep.record_orientation,
         ),
-      compute_port_positions_fn: compute_edge_port_values,
-      compute_port_orders_fn: compute_edge_order_values,
+      compute_port_positions_fn: (nodes, edges, edge_tail, edge_head, sizes) => {
+        let samples =
+          compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+        (samples.tail_values, samples.head_values)
+      },
+      compute_port_orders_fn: (nodes, edges, edge_tail, edge_head, sizes) => {
+        let samples =
+          compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+        (samples.tail_values, samples.head_values)
+      },
       vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
       has_clusters: pipeline.cluster_meta.has_clusters,
       is_cluster_skeleton_name:
@@ -246,32 +254,6 @@ fn build_x_seed_data(
       vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
     },
   )
-}
-
-///|
-fn compute_edge_port_values(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
-) -> (Array[Double], Array[Double]) {
-  let samples =
-    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
-  (samples.tail_values, samples.head_values)
-}
-
-///|
-fn compute_edge_order_values(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
-) -> (Array[Double], Array[Double]) {
-  let samples =
-    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
-  (samples.tail_values, samples.head_values)
 }
 
 ///|
@@ -434,8 +416,16 @@ fn build_x_flat_labels(
       (sample_input) =>
         @positioning.build_xpos_port_samples(
           sample_input,
-          compute_edge_port_values,
-          compute_edge_order_values,
+          (nodes, edges, edge_tail, edge_head, sizes) => {
+            let samples =
+              compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+            (samples.tail_values, samples.head_values)
+          },
+          (nodes, edges, edge_tail, edge_head, sizes) => {
+            let samples =
+              compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+            (samples.tail_values, samples.head_values)
+          },
         ),
     )
   build_flat_label_augmentation(
