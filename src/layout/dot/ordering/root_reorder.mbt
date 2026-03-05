@@ -17,7 +17,7 @@ fn build_root_tail_order_seed(
     let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster != "" {
       let rank = flat_constraint_rank_or_zero(ranks, name)
-      let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      let skel = "\{@shared.CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
       append_creation_name(
         tail_order_root,
         tail_root_seen,

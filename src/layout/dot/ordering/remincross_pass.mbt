@@ -977,7 +977,7 @@ pub fn build_seeded_remincross(
     // and keeps remaining name order unchanged.
     let filtered : Array[String] = []
     for name in names {
-      if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+      if !@clustering.is_cluster_skeleton_name(name) {
         filtered.push(name)
       }
     }

@@ -68,7 +68,7 @@ fn build_vnode_keys_from_nlist(
   }
   // Graphviz parity: ignore cluster skeleton nodes when seeding vnode order keys.
   let is_skeleton = (name : String) => {
-    name.has_prefix(CLUSTER_SKELETON_PREFIX)
+    @clustering.is_cluster_skeleton_name(name)
   }
   let assign_interval = (
     vnodes : Array[String],

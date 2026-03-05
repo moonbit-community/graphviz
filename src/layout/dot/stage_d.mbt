@@ -294,7 +294,7 @@ fn build_xpos_reorder_pipeline_input(
       cluster_min_rank: pipeline.cluster_meta.cluster_min_rank,
       cluster_max_rank: pipeline.cluster_meta.cluster_max_rank,
       node_order: pipeline.prep.node_order,
-      cluster_skeleton_prefix: CLUSTER_SKELETON_PREFIX,
+      cluster_skeleton_prefix: @dot_shared.CLUSTER_SKELETON_PREFIX,
       cluster_skeleton_size: vnode_size_from_widths(1.0, 1.0),
       edges: pipeline.prep.edges,
       edge_tail: pipeline.rank_data.edge_tail,

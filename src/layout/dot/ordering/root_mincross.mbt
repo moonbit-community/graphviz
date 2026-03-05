@@ -35,8 +35,8 @@ pub fn normalize_synthetic_ports(
 ) -> (Double, Double, Double, Double) {
   // Graphviz parity: synthetic ordering nodes keep default mincross ports
   // unless a non-default port survives edge materialization.
-  let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
-  let head_is_skeleton = head.has_prefix(CLUSTER_SKELETON_PREFIX)
+  let tail_is_skeleton = @clustering.is_cluster_skeleton_name(tail)
+  let head_is_skeleton = @clustering.is_cluster_skeleton_name(head)
   let synthetic_endpoint =
     is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
     tail_is_skeleton || head_is_skeleton

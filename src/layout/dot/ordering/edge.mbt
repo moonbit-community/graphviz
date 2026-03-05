@@ -1,7 +1,4 @@
 ///|
-const CLUSTER_SKELETON_PREFIX : String = @shared.CLUSTER_SKELETON_PREFIX
-
-///|
 priv enum OrderingMode {
   Out
   In
@@ -604,13 +601,13 @@ pub fn build_order_edges_by_tail(
       let map_edge = use_mapping || (map_intercluster && intercluster)
       let mapped_tail =
         if map_edge && tail_cluster != "" {
-        "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
+        "\{@shared.CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
       } else {
         tail
       }
       let mapped_head =
         if map_edge && head_cluster != "" {
-        "\{CLUSTER_SKELETON_PREFIX}\{head_cluster}@\{head_rank}"
+        "\{@shared.CLUSTER_SKELETON_PREFIX}\{head_cluster}@\{head_rank}"
       } else {
         head
       }

@@ -268,8 +268,14 @@ pub fn cluster_lca(
 
 ///|
 /// Graphviz parity: cluster skeleton node names encode the cluster key.
+pub fn is_cluster_skeleton_name(name : String) -> Bool {
+  name.has_prefix(@shared.CLUSTER_SKELETON_PREFIX)
+}
+
+///|
+/// Graphviz parity: cluster skeleton node names encode the cluster key.
 pub fn cluster_key_from_skeleton(name : String) -> String? {
-  if !name.has_prefix(@shared.CLUSTER_SKELETON_PREFIX) {
+  if !is_cluster_skeleton_name(name) {
     return None
   }
   let rest = name.unsafe_substring(

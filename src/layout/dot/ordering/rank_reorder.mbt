@@ -589,7 +589,7 @@ pub fn has_single_rank_incidents(
       continue
     }
     let other = if tail_in { head } else { tail }
-    if !is_edge_vnode_name(other) && !other.has_prefix(CLUSTER_SKELETON_PREFIX) {
+    if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
       return true
     }
   }
@@ -602,7 +602,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !is_edge_vnode_name(other) && !other.has_prefix(CLUSTER_SKELETON_PREFIX) {
+      if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -614,7 +614,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !is_edge_vnode_name(other) && !other.has_prefix(CLUSTER_SKELETON_PREFIX) {
+      if !is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }

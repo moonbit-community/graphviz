@@ -1376,7 +1376,7 @@ fn append_raw_neighbors_with_external_anchor(
 ) -> Unit {
   let external_cluster_seen : Map[String, Bool] = Map::new()
   for other in raw_neighbors {
-    if is_edge_vnode_name(other) || other.has_prefix(CLUSTER_SKELETON_PREFIX) {
+    if is_edge_vnode_name(other) || @clustering.is_cluster_skeleton_name(other) {
       continue
     }
     let normalized =

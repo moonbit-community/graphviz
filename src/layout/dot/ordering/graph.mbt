@@ -607,7 +607,7 @@ pub fn append_cluster_skeleton_range(
   skeleton_size : NodeSize,
 ) -> Unit {
   for rank in min_rank..=max_rank {
-    let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+    let name = "\{@shared.CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
     order_cluster_keys[name] = cluster
     order_cluster_skeleton[name] = true
     order_sizes_out[name] = skeleton_size
