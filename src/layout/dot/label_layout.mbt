@@ -826,10 +826,11 @@ fn port_label_pos_from_points(
 
 ///|
 fn edge_port_label_pos(
-  edge : @cgraph.Edge,
-  spline : @geom.Spline,
-  head_p : Bool,
+  input : @routing.EdgePortLabelPosInput,
 ) -> @geom.Point? {
+  let edge = input.edge
+  let spline = input.spline
+  let head_p = input.is_head
   let arrow_is_none = (value : String?) => {
     match value {
       Some(v) => v.trim().to_lower() == "none"
