@@ -1271,31 +1271,25 @@ fn segment_slack_minlen(
 }
 
 ///|
-priv struct OrientedEdgeEndpoints {
-  tail_name : String
-  head_name : String
-}
-
-///|
-fn oriented_edge_endpoints(
-  edge_idx : Int,
+fn same_rank_constraint_minlen(
   edge : @cgraph.Edge,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> OrientedEdgeEndpoints {
-  let (tail_name, head_name) =
-    @ordering.edge_endpoints_at(
-      edge,
-      edge_idx,
-      edge_tail,
-      edge_head,
-    )
-  { tail_name, head_name }
-}
-
-///|
-fn edge_excluded_from_reverse_merge(edge : @cgraph.Edge) -> Bool {
-  edge_mid_label_metrics(edge) is Some(_) || edge_is_self(edge)
+  left : String,
+  right : String,
+  nodesep_pt : Double,
+  sizes : Map[String, NodeSize],
+  has_ordering : Bool,
+) -> Int {
+  let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
+  let mut minlen_value =
+    Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
+  let is_invis = match edge.get_attr("style") {
+    Some(style) => style.to_lower().contains("invis")
+    None => false
+  }
+  if is_invis && has_ordering {
+    minlen_value = minlen_value + nodesep_pt
+  }
+  trunc_int(minlen_value)
 }
 
 ///|
@@ -1391,195 +1385,37 @@ fn build_constraint_graph(
   let rank_adj_constraints = rank_constraint_seed.rank_adj_constraints
   let rank_adj_order = rank_constraint_seed.rank_adj_order
   let order_in_rank = rank_constraint_seed.order_in_rank
-  let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
-  let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
-  let reverse_merge_metadata =
-    @positioning.build_reverse_merge_metadata(
+  let segment_pass =
+    @positioning.build_constraint_segment_pass(
       {
         edges,
         edge_tail,
         edge_head,
-        edge_excluded_from_reverse_merge,
+        edge_out_order,
+        nlist_order,
+        ranks,
+        cluster_keys,
+        edge_vnodes,
+        node_degrees,
+        order_in_rank,
+        nodesep_pt,
+        skip_intercluster,
+        rank_adj_constraints,
+        edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
+        same_rank_minlen:
+          (edge, left, right, has_ordering) =>
+            same_rank_constraint_minlen(
+              edge,
+              left,
+              right,
+              nodesep_pt,
+              sizes,
+              has_ordering,
+            ),
       },
     )
-  let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus
-  let merged_edge_skip = reverse_merge_metadata.merged_edge_skip
-  let record_edge_segments = (edge_idx : Int, edge : @cgraph.Edge) => {
-    if merged_edge_skip.get(edge_idx) is Some(_) {
-      return ()
-    }
-    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
-    let tail_name = oriented.tail_name
-    let head_name = oriented.head_name
-    let tail_cluster = match cluster_keys.get(tail_name) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head_name) {
-      Some(value) => value
-      None => ""
-    }
-    if skip_intercluster && tail_cluster != head_cluster &&
-      (tail_cluster != "" || head_cluster != "") {
-      ()
-    } else {
-      match (ranks.get(tail_name), ranks.get(head_name)) {
-        (Some(tail_rank), Some(head_rank)) =>
-          if tail_name == head_name {
-            // Graphviz parity: make_edge_pairs skips self-edges (handled via ND_other).
-            ()
-          } else {
-            let weight_bonus = match merged_edge_weight_bonus.get(edge_idx) {
-              Some(value) => value
-              None => 0
-            }
-            let has_ordering = @positioning.edge_tail_ordering_is_out_or_in(edge)
-            if tail_rank == head_rank && @dot_shared.edge_is_constraint(edge) &&
-              edge_mid_label_metrics(edge) is None {
-              let (left, right) =
-                match (order_in_rank.get(tail_name), order_in_rank.get(head_name)) {
-                  (Some(tail_order), Some(head_order)) =>
-                    if tail_order <= head_order {
-                      (tail_name, head_name)
-                    } else {
-                      (head_name, tail_name)
-                    }
-                  _ =>
-                    if tail_name <= head_name {
-                      (tail_name, head_name)
-                    } else {
-                      (head_name, tail_name)
-                    }
-                }
-              let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
-              let mut minlen_value =
-                Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
-              let is_invis = match edge.get_attr("style") {
-                Some(style) => style.to_lower().contains("invis")
-                None => false
-              }
-              if is_invis && has_ordering {
-                minlen_value = minlen_value + nodesep_pt
-              }
-              let minlen = trunc_int(minlen_value)
-              let weight = @dot_shared.edge_weight(edge)
-              let flat_key = "\{left}|\{right}"
-              if rank_adj_constraints.get(flat_key) is Some(_) {
-                @positioning.upsert_constraint_with_max(
-                  rank_adj_constraints,
-                  flat_key,
-                  left,
-                  right,
-                  minlen,
-                  weight,
-                )
-              } else {
-                @positioning.upsert_constraint_with_max(
-                  flat_minlen_constraints,
-                  flat_key,
-                  left,
-                  right,
-                  minlen,
-                  weight,
-                )
-              }
-            } else {
-              let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-                Some(list) => list
-                None => []
-              }
-              let ordered_vnodes =
-                if tail_rank <= head_rank {
-                vnodes
-              } else {
-                let reversed : Array[String] = []
-                let mut idx = vnodes.length()
-                while idx > 0 {
-                  idx = idx - 1
-                  reversed.push(vnodes[idx])
-                }
-                reversed
-              }
-              let chain : Array[String] = []
-              chain.push(tail_name)
-              for vnode in ordered_vnodes {
-                chain.push(vnode)
-              }
-              if tail_name != head_name || ordered_vnodes.length() == 0 {
-                chain.push(head_name)
-              }
-              let base_weight = @dot_shared.edge_weight(edge)
-              let orig_tail = edge.tail().name()
-              let mut idx = 0
-              while idx + 1 < chain.length() {
-                let seg_tail = chain[idx]
-                let seg_head = chain[idx + 1]
-                idx = idx + 1
-                let seg_base_weight =
-                  if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
-                  @positioning.scaled_segment_edge_weight(
-                    base_weight,
-                    seg_tail,
-                    seg_head,
-                    node_degrees,
-                  )
-                } else {
-                  base_weight
-                }
-                let weight = seg_base_weight + weight_bonus
-                let mut tail_port =
-                  @ordering.edge_tail_port_for_name(
-                    edge,
-                    seg_tail,
-                    fallback_to_original=false,
-                  )
-                let mut head_port =
-                  @ordering.edge_head_port_for_name(
-                    edge,
-                    seg_head,
-                    fallback_to_original=false,
-                  )
-                if tail_rank == head_rank &&
-                  edge_mid_label_metrics(edge) is Some(_) &&
-                  !@dot_shared.port_is_explicit(edge.tail_port()) &&
-                  !@dot_shared.port_is_explicit(edge.head_port()) &&
-                  has_ordering &&
-                  seg_tail == orig_tail &&
-                  is_edge_vnode_name(seg_head) {
-                  let forward =
-                    match (order_in_rank.get(seg_tail), order_in_rank.get(seg_head)) {
-                      (Some(tail_order), Some(head_order)) => tail_order <= head_order
-                      _ => seg_tail <= seg_head
-                    }
-                  if forward {
-                    tail_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
-                    head_port = Some({ name: None, compass: Some(@cgraph.Compass::W) })
-                  } else {
-                    tail_port = Some({ name: None, compass: Some(@cgraph.Compass::W) })
-                    head_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
-                  }
-                }
-                @positioning.push_slack_segment(
-                  segments_by_tail,
-                  seg_tail,
-                  seg_head,
-                  weight,
-                  tail_port,
-                  head_port,
-                )
-              }
-            }
-          }
-        _ => ()
-      }
-    }
-  }
-  @positioning.for_each_edge_index_in_tail_order(
-    edges,
-    edge_out_order,
-    nlist_order,
-    edge_idx => record_edge_segments(edge_idx, edges[edge_idx]),
-  )
+  let segments_by_tail = segment_pass.segments_by_tail
+  let flat_minlen_constraints = segment_pass.flat_minlen_constraints
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
       Some(entry) => @positioning.add_constraint_edge_if_present(graph, index, entry)
