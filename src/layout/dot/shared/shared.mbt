@@ -89,6 +89,22 @@ pub fn node_size_from_points(
 }
 
 ///|
+pub fn node_left_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
+  match sizes.get(name) {
+    Some(value) => value.left_pt
+    None => default_node_width_in() * 72.0 / 2.0
+  }
+}
+
+///|
+pub fn node_right_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
+  match sizes.get(name) {
+    Some(value) => value.right_pt
+    None => default_node_width_in() * 72.0 / 2.0
+  }
+}
+
+///|
 pub fn port_is_explicit(port : @cgraph.Port?) -> Bool {
   match port {
     Some(value) => value.name is Some(_) || value.compass is Some(_)

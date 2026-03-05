@@ -249,8 +249,8 @@ fn build_cluster_constraints(
       }
       match base_positions.get(node_name) {
         Some(pos) => {
-          let left_width = node_left_pt(node_name, sizes)
-          let right_width = node_right_pt(node_name, sizes)
+          let left_width = @dot_shared.node_left_pt(node_name, sizes)
+          let right_width = @dot_shared.node_right_pt(node_name, sizes)
           let left = pos - left_width
           let right = pos + right_width
           match min_left {
@@ -397,7 +397,7 @@ fn build_cluster_constraints(
           let left_name = names[left_idx]
           let right_name = names[right_idx]
           let left_minlen = round_int(
-            node_left_pt(left_name, sizes) + margin + left_border,
+            @dot_shared.node_left_pt(left_name, sizes) + margin + left_border,
           )
           extra_edges.push({
             tail: ln_name,
@@ -408,7 +408,7 @@ fn build_cluster_constraints(
             head_port: None,
           })
           let right_minlen = round_int(
-            node_right_pt(right_name, sizes) + margin + right_border,
+            @dot_shared.node_right_pt(right_name, sizes) + margin + right_border,
           )
           extra_edges.push({
             tail: right_name,
@@ -424,7 +424,7 @@ fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = round_int(node_right_pt(outside, sizes) + margin)
+              let minlen = round_int(@dot_shared.node_right_pt(outside, sizes) + margin)
               extra_edges.push({
                 tail: outside,
                 head: ln_name,
@@ -443,7 +443,7 @@ fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = round_int(node_left_pt(outside, sizes) + margin)
+              let minlen = round_int(@dot_shared.node_left_pt(outside, sizes) + margin)
               extra_edges.push({
                 tail: rn_name,
                 head: outside,

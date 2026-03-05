@@ -395,8 +395,8 @@ fn compute_dot_bbox(
   let mut first = true
   for node_layout in input.nodes_out {
     let name = node_layout.node.name()
-    let left = node_left_pt(name, input.sizes)
-    let right = node_right_pt(name, input.sizes)
+    let left = @dot_shared.node_left_pt(name, input.sizes)
+    let right = @dot_shared.node_right_pt(name, input.sizes)
     let llx = node_layout.pos.x - left
     let urx = node_layout.pos.x + right
     if first {

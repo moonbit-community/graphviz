@@ -298,8 +298,8 @@ fn add_flat_label_vnodes(
         _ => tail
       }
     let right = if left == tail { head } else { tail }
-    let left_right = node_right_pt(left, sizes)
-    let right_left = node_left_pt(right, sizes)
+    let left_right = @dot_shared.node_right_pt(left, sizes)
+    let right_left = @dot_shared.node_left_pt(right, sizes)
     let width = left_right + right_left
     let base_minlen =
       Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
