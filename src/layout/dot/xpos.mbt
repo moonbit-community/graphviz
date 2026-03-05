@@ -42,45 +42,22 @@ fn compute_x_positions(
   input : XPositionsInput,
 ) -> Map[String, Double] {
   let graph = input.graph
-  let cluster_constraints =
-    build_cluster_constraints(
-    graph,
-    input.nodes,
-    input.edges,
-    input.ranks,
-    input.rank_keys,
-    input.groups,
-    input.sizes,
-    input.cluster_keys,
-    input.nodesep_pt,
-    input.has_edge_labels,
-    input.edge_vnodes,
-  )
-  let all_extra_nodes = input.extra_nodes.copy()
-  for pair in cluster_constraints.extra_nodes {
-    all_extra_nodes.push(pair)
-  }
-  let all_extra_edges = cluster_constraints.extra_edges.copy()
-  for edge in input.flat_label_edges {
-    all_extra_edges.push(edge)
-  }
-  let rankdir = graph_rankdir(graph)
-  let compress_width_minlen = compress_width_minlen_pt(graph, rankdir)
-  let all_root_ln_targets = cluster_constraints.root_ln_targets.copy()
-  let all_root_rn_targets = cluster_constraints.root_rn_targets.copy()
-  match compress_width_minlen {
-    Some(_) => {
-      // Graphviz parity: contain_nodes constrains per-rank leftmost/rightmost
-      // nodes against root ln/rn before adding the compress edge.
-      @positioning.append_missing_rank_boundary_targets(
-        input.rank_keys,
-        input.groups,
-        all_root_ln_targets,
-        all_root_rn_targets,
-      )
-    }
-    None => ()
-  }
+  let prepared =
+    prepare_xpos_constraint_inputs(
+      graph,
+      input.nodes,
+      input.edges,
+      input.ranks,
+      input.rank_keys,
+      input.groups,
+      input.sizes,
+      input.cluster_keys,
+      input.nodesep_pt,
+      input.has_edge_labels,
+      input.edge_vnodes,
+      input.extra_nodes,
+      input.flat_label_edges,
+    )
   x_positions_from_simplex(
     {
       graph_root: graph,
@@ -99,12 +76,12 @@ fn compute_x_positions(
       cluster_keys: input.cluster_keys,
       nodesep_pt: input.nodesep_pt,
       has_edge_labels: input.has_edge_labels,
-      extra_nodes: all_extra_nodes,
-      extra_edges: all_extra_edges,
+      extra_nodes: prepared.extra_nodes,
+      extra_edges: prepared.extra_edges,
       edge_vnodes: input.edge_vnodes,
-      root_ln_targets: all_root_ln_targets,
-      root_rn_targets: all_root_rn_targets,
-      compress_width_minlen,
+      root_ln_targets: prepared.root_ln_targets,
+      root_rn_targets: prepared.root_rn_targets,
+      compress_width_minlen: prepared.compress_width_minlen,
     },
   )
 }
