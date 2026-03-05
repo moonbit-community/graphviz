@@ -126,7 +126,6 @@ pub struct XposReorderPipelineInput {
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_prefix : String
   cluster_skeleton_size : @shared.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -172,7 +171,6 @@ pub(all) struct XposReorderPipelineSources {
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_prefix : String
   cluster_skeleton_size : @shared.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -219,7 +217,6 @@ pub fn build_xpos_reorder_pipeline_input_from_sources(
     cluster_min_rank: sources.cluster_min_rank,
     cluster_max_rank: sources.cluster_max_rank,
     node_order: sources.node_order,
-    cluster_skeleton_prefix: sources.cluster_skeleton_prefix,
     cluster_skeleton_size: sources.cluster_skeleton_size,
     edges: sources.edges,
     edge_tail: sources.edge_tail,
@@ -284,7 +281,6 @@ fn apply_clustered_xpos_reorder_path(
       cluster_min_rank: input.cluster_min_rank,
       cluster_max_rank: input.cluster_max_rank,
       node_order: input.node_order,
-      cluster_skeleton_prefix: input.cluster_skeleton_prefix,
       cluster_skeleton_size: input.cluster_skeleton_size,
       edges: input.edges,
       edge_tail: input.edge_tail,

@@ -9,7 +9,6 @@ pub struct ClusteredXposReorderInput {
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_prefix : String
   cluster_skeleton_size : @shared.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -44,7 +43,6 @@ pub fn build_clustered_xpos_groups(
         cluster_min_rank: input.cluster_min_rank,
         cluster_max_rank: input.cluster_max_rank,
         node_order: input.node_order,
-        cluster_skeleton_prefix: input.cluster_skeleton_prefix,
         cluster_skeleton_size: input.cluster_skeleton_size,
       },
     )
@@ -63,7 +61,6 @@ pub fn build_clustered_xpos_groups(
         edge_head_port_order: input.edge_head_port_order,
         cluster_min_rank: input.cluster_min_rank,
         cluster_max_rank: input.cluster_max_rank,
-        cluster_skeleton_prefix: input.cluster_skeleton_prefix,
         cluster_skeleton_penalty: input.cluster_skeleton_penalty,
       },
     )
@@ -183,7 +180,6 @@ priv struct ClusteredXposSeedInput {
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_prefix : String
   cluster_skeleton_size : @shared.NodeSize
 }
 
@@ -213,7 +209,7 @@ fn append_skeleton_nodes(
   for cluster, min_rank in input.cluster_min_rank {
     let max_rank = input.cluster_max_rank.get(cluster).unwrap_or(min_rank)
     for rank in min_rank..=max_rank {
-      let name = "\{input.cluster_skeleton_prefix}\{cluster}@\{rank}"
+      let name = @clustering.cluster_skeleton_name(cluster, rank)
       order_cluster_keys[name] = cluster
       order_cluster_skeleton[name] = true
       order_sizes[name] = input.cluster_skeleton_size
@@ -300,7 +296,6 @@ priv struct ClusteredXposEdgeMaterializationInput {
   edge_head_port_order : Array[Double]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
-  cluster_skeleton_prefix : String
   cluster_skeleton_penalty : Int
 }
 
@@ -545,8 +540,8 @@ fn append_skeleton_edges(
     let max_rank = input.cluster_max_rank.get(cluster).unwrap_or(min_rank)
     let mut rank = min_rank
     while rank < max_rank {
-      let tail_name = "\{input.cluster_skeleton_prefix}\{cluster}@\{rank}"
-      let head_name = "\{input.cluster_skeleton_prefix}\{cluster}@\{rank + 1}"
+      let tail_name = @clustering.cluster_skeleton_name(cluster, rank)
+      let head_name = @clustering.cluster_skeleton_name(cluster, rank + 1)
       @ordering.add_order_edge(
         order_graph,
         order_node_map,
