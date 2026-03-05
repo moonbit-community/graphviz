@@ -1251,13 +1251,23 @@ fn route_endpoint_slopes(
 }
 
 ///|
+priv struct PathplanSegmentSlopesInput {
+  seg_idx : Int
+  segment_count : Int
+  tail_slope_for : @geom.Point
+  head_slope_for : @geom.Point
+  join_dir : @geom.Point
+}
+
+///|
 fn pathplan_segment_slopes(
-  seg_idx : Int,
-  segment_count : Int,
-  tail_slope_for : @geom.Point,
-  head_slope_for : @geom.Point,
-  join_dir : @geom.Point,
+  input : PathplanSegmentSlopesInput,
 ) -> (@geom.Point, @geom.Point) {
+  let seg_idx = input.seg_idx
+  let segment_count = input.segment_count
+  let tail_slope_for = input.tail_slope_for
+  let head_slope_for = input.head_slope_for
+  let join_dir = input.join_dir
   let seg_tail_slope = if seg_idx == 0 { tail_slope_for } else { join_dir }
   let seg_head_slope =
     if seg_idx + 1 == segment_count {
@@ -1339,11 +1349,13 @@ fn pathplan_segment_raw_bezier(
     }
   let (seg_tail_slope, seg_head_slope) =
     pathplan_segment_slopes(
-      seg_idx,
-      segment_count,
-      tail_slope_for,
-      head_slope_for,
-      join_dir,
+      {
+        seg_idx,
+        segment_count,
+        tail_slope_for,
+        head_slope_for,
+        join_dir,
+      },
     )
   @edge_spline.edge_spline_raw_for_points(
     segment_points,
