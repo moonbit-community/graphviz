@@ -732,7 +732,11 @@ fn port_label_params(edge : @cgraph.Edge) -> PortLabelParams? {
       if value == "" {
         PORT_LABEL_ANGLE_DEG
       } else {
-        parse_attr_double(value, PORT_LABEL_ANGLE_DEG, PORT_LABEL_ANGLE_MIN_DEG)
+        @dot_shared.parse_attr_double(
+          value,
+          PORT_LABEL_ANGLE_DEG,
+          PORT_LABEL_ANGLE_MIN_DEG,
+        )
       }
     None => PORT_LABEL_ANGLE_DEG
   }
@@ -741,7 +745,7 @@ fn port_label_params(edge : @cgraph.Edge) -> PortLabelParams? {
       if value == "" {
         1.0
       } else {
-        parse_attr_double(value, 1.0, 0.0)
+        @dot_shared.parse_attr_double(value, 1.0, 0.0)
       }
     None => 1.0
   }

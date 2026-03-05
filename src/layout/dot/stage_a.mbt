@@ -108,7 +108,7 @@ fn resolve_spacing(
     Some(value) => value
     None =>
       match graph.get_attr("nodesep") {
-        Some(value) => parse_first_double(value, default_nodesep_in())
+        Some(value) => @dot_shared.parse_first_double(value, default_nodesep_in())
         None => default_nodesep_in()
       }
   }
@@ -122,7 +122,7 @@ fn resolve_spacing(
     Some(value) => value
     None =>
       match graph.get_attr("ranksep") {
-        Some(value) => parse_first_double(value, default_ranksep_in())
+        Some(value) => @dot_shared.parse_first_double(value, default_ranksep_in())
         None => default_ranksep_in()
       }
   }

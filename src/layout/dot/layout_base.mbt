@@ -34,93 +34,6 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
-priv struct GraphSizePt {
-  width_pt : Double
-  height_pt : Double
-}
-
-///|
-/// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c.
-fn parse_graph_size_pt_attr(graph : @cgraph.Graph) -> GraphSizePt? {
-  match graph.get_attr("size") {
-    Some(value) => {
-      let parts : Array[String] = []
-      for part in value.split(",") {
-        let cleaned = part.trim(chars=" \n\r\t!").to_string()
-        if cleaned != "" {
-          parts.push(cleaned)
-        }
-      }
-      if parts.length() == 0 {
-        return None
-      }
-      let width_in = parse_double(parts[0], -1.0)
-      let height_in =
-        if parts.length() > 1 {
-          parse_double(parts[1], -1.0)
-        } else {
-          width_in
-        }
-      if width_in <= 0.0 || height_in <= 0.0 {
-        return None
-      }
-      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
-    }
-    None => None
-  }
-}
-
-///|
-fn parse_first_double(value : String, fallback : Double) -> Double {
-  let sb = StringBuilder::new()
-  let mut seen = false
-  for ch in value {
-    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
-      sb.write_char(ch)
-      seen = true
-    } else if seen {
-      break
-    }
-  }
-  if !seen {
-    fallback
-  } else {
-    parse_double(sb.to_string(), fallback)
-  }
-}
-
-///|
-fn parse_first_double_optional(value : String) -> Double? {
-  let sb = StringBuilder::new()
-  let mut seen = false
-  for ch in value {
-    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
-      sb.write_char(ch)
-      seen = true
-    } else if seen {
-      break
-    }
-  }
-  if !seen {
-    None
-  } else {
-    try @strconv.parse_double(sb.to_string()) catch {
-      _ => None
-    } noraise {
-      parsed => Some(parsed)
-    }
-  }
-}
-
-///|
-fn parse_attr_double(value : String, fallback : Double, min : Double) -> Double {
-  match parse_first_double_optional(value) {
-    Some(parsed) => if parsed < min { min } else { parsed }
-    None => fallback
-  }
-}
-
-///|
 fn validate_nonnegative_attr(
   owner : String,
   attr_name : String,
@@ -142,7 +55,7 @@ fn validate_graph_spacing(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
         "graph",
         "nodesep",
         value,
-        parse_first_double(value, 0.0),
+        @dot_shared.parse_first_double(value, 0.0),
       )
     None => ()
   }
@@ -152,7 +65,7 @@ fn validate_graph_spacing(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
         "graph",
         "ranksep",
         value,
-        parse_first_double(value, 0.0),
+        @dot_shared.parse_first_double(value, 0.0),
       )
     None => ()
   }
@@ -167,7 +80,7 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           "node \{node.name()}",
           "width",
           value,
-          parse_first_double(value, 0.0),
+          @dot_shared.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -177,7 +90,7 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           "node \{node.name()}",
           "height",
           value,
-          parse_first_double(value, 0.0),
+          @dot_shared.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -196,7 +109,7 @@ fn validate_edge_attributes(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           owner,
           "minlen",
           value,
-          parse_first_double(value, 0.0),
+          @dot_shared.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -206,7 +119,7 @@ fn validate_edge_attributes(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           owner,
           "weight",
           value,
-          parse_first_double(value, 0.0),
+          @dot_shared.parse_first_double(value, 0.0),
         )
       None => ()
     }

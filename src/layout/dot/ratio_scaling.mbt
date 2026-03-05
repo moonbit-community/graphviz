@@ -125,7 +125,7 @@ fn ratio_fill_scale_factors(
   if ratio != "fill" {
     return None
   }
-  let target_size = match parse_graph_size_pt_attr(graph) {
+  let target_size = match @dot_shared.parse_graph_size_pt_attr(graph) {
     Some(size) => size
     None => return None
   }

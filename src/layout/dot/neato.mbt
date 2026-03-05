@@ -65,7 +65,7 @@ fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Unit raise DotLayoutErr
           "edge \{edge.tail().name()} -> \{edge.head().name()}",
           "len",
           value,
-          parse_first_double(value, 0.0),
+          @dot_shared.parse_first_double(value, 0.0),
         )
       None => ()
     }

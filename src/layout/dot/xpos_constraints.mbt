@@ -34,7 +34,7 @@ fn trunc_int(value : Double) -> Int {
 fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
   match graph.get_attr("margin") {
     Some(value) => {
-      let margin = parse_first_double(value, CLUSTER_MARGIN_PT)
+      let margin = @dot_shared.parse_first_double(value, CLUSTER_MARGIN_PT)
       if margin < 0.0 {
         CLUSTER_MARGIN_PT
       } else {
@@ -66,7 +66,7 @@ fn compress_width_minlen_pt(
   if !graph_ratio_is_compress(graph) {
     return None
   }
-  let size = match parse_graph_size_pt_attr(graph) {
+  let size = match @dot_shared.parse_graph_size_pt_attr(graph) {
     Some(value) => value
     None => return None
   }
