@@ -124,14 +124,6 @@ fn build_route_base_deps_for_dot(
 }
 
 ///|
-priv struct RoutingEdgeLayoutBuildInput {
-  base : @routing.EdgeRouteBase
-  spline : @geom.Spline
-  spline_result : @routing.EdgeSplineResult
-  edge_layout_input : @routing.EdgeLayoutInput
-}
-
-///|
 fn build_routing_edge_layout_deps() -> @routing.EdgeLayoutDeps {
   {
     edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
@@ -161,34 +153,21 @@ fn build_routing_edge_layout_deps() -> @routing.EdgeLayoutDeps {
 }
 
 ///|
-fn build_routing_edge_layout_for_dot(
-  input : RoutingEdgeLayoutBuildInput,
-) -> DotLayoutEdge {
-  @routing.build_edge_layout(
-    {
-      base: input.base,
-      spline: input.spline,
-      spline_result: input.spline_result,
-      edge_layout_input: input.edge_layout_input,
-      deps: build_routing_edge_layout_deps(),
-    },
-  )
-}
-
-///|
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
+  let edge_layout_deps = build_routing_edge_layout_deps()
   {
     recover_slack_vnodes_fn: recover_slack_vnodes,
     build_edge_layout_fn: (input) =>
-      build_routing_edge_layout_for_dot(
+      @routing.build_edge_layout(
         {
           base: input.base,
           spline: input.spline,
           spline_result: input.spline_result,
           edge_layout_input,
-        },
+          deps: edge_layout_deps,
+        }
       ),
     self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
     self_edge_label_width_fn: self_edge_label_width_pt,
