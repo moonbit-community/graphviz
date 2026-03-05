@@ -102,25 +102,19 @@ fn build_path_vnode_clusters(
 /// Graphviz parity: routing-context input keeps pathplan/rank/cluster snapshots
 /// and callback dependencies grouped at one pre-routing boundary.
 pub(all) struct PrepareRoutingContextInput {
-  nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  sizes : Map[String, NodeSize]
   ranks : Map[String, Int]
   ordered_groups : Map[Int, Array[String]]
   x_groups : Map[Int, Array[String]]
   nodesep_pt : Double
   edge_vnodes : Map[String, Array[String]]
+  pathplan_sizes : Map[String, NodeSize]
+  path_cluster_keys : Map[String, String]
   vnode_sizes : Map[String, NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
-  apply_self_edge_right_space_fn : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Map[String, NodeSize],
-  ) -> Map[String, NodeSize]
-  node_local_cluster_key_fn : (@cgraph.Node) -> String
 }
 
 ///|
@@ -139,21 +133,10 @@ pub fn prepare_routing_context(
       input.edge_tail,
       input.edge_head,
     )
-  // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
-  let pathplan_sizes =
-    (input.apply_self_edge_right_space_fn)(
-      input.nodes,
-      input.edges,
-      input.sizes,
-    )
   // Graphviz parity: preserve original vnode widths for ND_mval usage.
   let pathplan_vnode_mval_sizes : Map[String, NodeSize] = Map::new()
   for name, size in input.vnode_sizes {
     pathplan_vnode_mval_sizes[name] = size
-  }
-  let path_cluster_keys : Map[String, String] = Map::new()
-  for node in input.nodes {
-    path_cluster_keys[node.name()] = (input.node_local_cluster_key_fn)(node)
   }
   let path_vnode_clusters =
     build_path_vnode_clusters(
@@ -161,7 +144,7 @@ pub fn prepare_routing_context(
         edges: input.edges,
         edge_vnodes: input.edge_vnodes,
         vnode_positions: input.vnode_positions,
-        cluster_keys: path_cluster_keys,
+        cluster_keys: input.path_cluster_keys,
         cluster_bboxes: input.cluster_bboxes,
       },
     )
@@ -175,16 +158,16 @@ pub fn prepare_routing_context(
         ranks: input.ranks,
         nodesep_pt: input.nodesep_pt,
         edge_reversed_by_id,
-        cluster_keys: path_cluster_keys,
+        cluster_keys: input.path_cluster_keys,
       },
     )
   {
     order_index,
     path_order_index,
     path_adjacency,
-    pathplan_sizes,
+    pathplan_sizes: input.pathplan_sizes,
     pathplan_vnode_mval_sizes,
-    path_cluster_keys,
+    path_cluster_keys: input.path_cluster_keys,
     path_vnode_clusters,
     parallel_offsets,
     cluster_bboxes: input.cluster_bboxes,

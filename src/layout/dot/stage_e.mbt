@@ -404,6 +404,15 @@ fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
+  // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
+  let pathplan_sizes =
+    apply_self_edge_right_space(
+      prep.nodes,
+      prep.edges,
+      input.sizes,
+      prep.rankdir,
+      prep.record_orientation,
+    )
   @routing.build_routing_precompute_pipeline(
     {
       has_clusters: input.cluster_meta.has_clusters,
@@ -413,25 +422,16 @@ fn build_routing_precompute_data(
       x_groups: input.positions_state.x_groups,
       ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
       ordered_groups: input.ordering.ordered_groups,
-      nodes: prep.nodes,
       edge_tail: input.rank_data.edge_tail,
       edge_head: input.rank_data.edge_head,
-      sizes: input.sizes,
       ranks: input.rank_data.ranks,
       nodesep_pt: input.rank_heights.nodesep_pt,
       edge_vnodes: input.ordering.vnode_info.edge_vnodes,
+      pathplan_sizes,
+      path_cluster_keys: input.cluster_meta.intercluster_keys,
       vnode_sizes: input.ordering.vnode_info.vnode_sizes,
       vnode_positions: input.positions_state.vnode_positions,
       cluster_bboxes: input.cluster_bboxes,
-      apply_self_edge_right_space_fn: (nodes, edges, sizes) =>
-        apply_self_edge_right_space(
-          nodes,
-          edges,
-          sizes,
-          prep.rankdir,
-          prep.record_orientation,
-        ),
-      node_local_cluster_key_fn: @clustering.node_local_cluster_key,
       compute_padding_fn: (edges) => {
         let padding =
           record_port_padding_y(

@@ -123,22 +123,16 @@ pub(all) struct RoutingPrecomputePipelineInput {
   x_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   ordered_groups : Map[Int, Array[String]]
-  nodes : Array[@cgraph.Node]
   edge_tail : Array[String]
   edge_head : Array[String]
-  sizes : Map[String, @dot_shared.NodeSize]
   ranks : Map[String, Int]
   nodesep_pt : Double
   edge_vnodes : Map[String, Array[String]]
+  pathplan_sizes : Map[String, @dot_shared.NodeSize]
+  path_cluster_keys : Map[String, String]
   vnode_sizes : Map[String, @dot_shared.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
-  apply_self_edge_right_space_fn : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Map[String, @dot_shared.NodeSize],
-  ) -> Map[String, @dot_shared.NodeSize]
-  node_local_cluster_key_fn : (@cgraph.Node) -> String
   compute_padding_fn : (Array[@cgraph.Edge]) -> (Double, Double)
   head_metric_key_fn : (@cgraph.Edge) -> String
   head_metric_distance_fn : (@cgraph.Edge) -> Double
@@ -189,21 +183,19 @@ pub fn build_routing_precompute_pipeline(
   let routing_context =
     prepare_routing_context(
       {
-        nodes: input.nodes,
         edges: input.edges,
         edge_tail: input.edge_tail,
         edge_head: input.edge_head,
-        sizes: input.sizes,
         ranks: input.ranks,
         ordered_groups: input.ordered_groups,
         x_groups: path_groups,
         nodesep_pt: input.nodesep_pt,
         edge_vnodes: input.edge_vnodes,
+        pathplan_sizes: input.pathplan_sizes,
+        path_cluster_keys: input.path_cluster_keys,
         vnode_sizes: input.vnode_sizes,
         vnode_positions: input.vnode_positions,
         cluster_bboxes: input.cluster_bboxes,
-        apply_self_edge_right_space_fn: input.apply_self_edge_right_space_fn,
-        node_local_cluster_key_fn: input.node_local_cluster_key_fn,
       },
     )
   {
