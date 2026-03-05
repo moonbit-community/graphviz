@@ -180,16 +180,21 @@ fn collect_parallel_remap_edge_ids(
 /// Graphviz parity: remap groups are applied only when all grouped ids already
 /// have routed layouts.
 /// Do not change behavior without updating fixtures/tests.
+priv struct CompleteParallelRemapGroupsCollectInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  has_layout : (Int) -> Bool
+}
+
+///|
 fn collect_complete_parallel_remap_groups(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  has_layout : (Int) -> Bool,
+  input : CompleteParallelRemapGroupsCollectInput,
 ) -> Array[Array[Int]] {
   let complete_groups : Array[Array[Int]] = []
-  for ids in collect_parallel_remap_edge_ids(edges, ranks) {
+  for ids in collect_parallel_remap_edge_ids(input.edges, input.ranks) {
     let mut all_present = true
     for edge_id in ids {
-      if !has_layout(edge_id) {
+      if !(input.has_layout)(edge_id) {
         all_present = false
         break
       }
@@ -211,13 +216,24 @@ priv struct ParallelRemapAssignment {
 /// Graphviz parity: each parallel remap group applies reversed source slots
 /// to ascending target ids.
 /// Do not change behavior without updating fixtures/tests.
+priv struct ParallelRemapAssignmentsBuildInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  has_layout : (Int) -> Bool
+}
+
+///|
 fn build_parallel_remap_assignments(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  has_layout : (Int) -> Bool,
+  input : ParallelRemapAssignmentsBuildInput,
 ) -> Array[ParallelRemapAssignment] {
   let assignments : Array[ParallelRemapAssignment] = []
-  for ids in collect_complete_parallel_remap_groups(edges, ranks, has_layout) {
+  for ids in collect_complete_parallel_remap_groups(
+    {
+      edges: input.edges,
+      ranks: input.ranks,
+      has_layout: input.has_layout,
+    },
+  ) {
     let mut out_idx = 0
     let mut src_idx = ids.length()
     while out_idx < ids.length() {
@@ -252,9 +268,11 @@ fn remap_parallel_edge_layouts(
   let edges_out_by_id = input.edges_out_by_id
   let assignments =
     build_parallel_remap_assignments(
-      edges,
-      ranks,
-      (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
+      {
+        edges,
+        ranks,
+        has_layout: (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
+      },
     )
   let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
   for assignment in assignments {
