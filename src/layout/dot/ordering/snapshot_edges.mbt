@@ -269,3 +269,69 @@ pub fn build_remincross_input_snapshot(
     cluster_keys: clone_string_map(input.cluster_keys),
   }
 }
+
+///|
+/// Graphviz parity: root mincross pass capture callback records the same
+/// pass0-captured reorder snapshot into fixture state when capture is enabled.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_snapshot_capture_callback(
+  edge_xpenalty_for : (@cgraph.Edge) -> Int,
+) -> (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit {
+  (result, inputs) => {
+    if !should_capture_ordering_inputs() {
+      return
+    }
+    let reorder_call_data = result.reorder_call_data
+    let snapshot =
+      build_root_mincross_input_snapshot(
+        {
+          rank_keys: reorder_call_data.order_rank_keys_for_mincross,
+          groups: result.order_groups_for_mincross,
+          edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+          edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+          edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+          edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+          edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+          edge_tail_port_order:
+            reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+          edge_head_port_order:
+            reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+          cluster_keys: inputs.order_cluster_keys,
+          cluster_skeleton: inputs.order_cluster_skeleton,
+          edge_xpenalty_for,
+        },
+      )
+    root_mincross_input_snapshot.val = Some(snapshot)
+  }
+}
+
+///|
+/// Graphviz parity: remincross cleanup capture callback records the same
+/// rematerialized startpass=2 reorder snapshot into fixture state when enabled.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_remincross_snapshot_capture_callback(
+  edge_xpenalty_for : (@cgraph.Edge) -> Int,
+) -> (ReMincrossCleanupCaptureInputs) -> Unit {
+  (capture_inputs) => {
+    if !should_capture_ordering_inputs() {
+      return
+    }
+    let snapshot =
+      build_remincross_input_snapshot(
+        {
+          rank_keys: capture_inputs.rem_rank_keys,
+          groups: capture_inputs.rem_groups,
+          edges_out: capture_inputs.rem_edges_out,
+          edge_tail_out: capture_inputs.rem_edge_tail_out,
+          edge_head_out: capture_inputs.rem_edge_head_out,
+          edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+          edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+          edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+          edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+          cluster_keys: capture_inputs.rem_cluster_keys,
+          edge_xpenalty_for,
+        },
+      )
+    remincross_input_snapshot.val = Some(snapshot)
+  }
+}

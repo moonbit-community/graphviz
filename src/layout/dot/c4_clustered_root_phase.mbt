@@ -174,7 +174,7 @@ fn run_root_and_cluster_ranks(
   let root_cluster_stage =
     @ordering.run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
       call_inputs,
-      capture_root_mincross_pass_snapshot,
+      @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
     )
   apply_cluster_local_rank_replay_after_root(
     dispatch_context,
@@ -271,76 +271,15 @@ fn run_clustered_finalize_phase(
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
       finalize_inputs,
-      capture_remincross_snapshot,
+      @ordering.build_remincross_snapshot_capture_callback(
+        @dot_shared.edge_xpenalty,
+      ),
       @ordering.run_remincross_cleanup_reorder,
     )
   {
     ordered_groups: finalize_output.ordered_groups,
     ordered_with_vnodes: finalize_output.ordered_with_vnodes,
   }
-}
-
-///|
-/// Stage C Phase C5 split: remincross snapshot
-/// helpers for focused ReMincross responsibilities.
-
-///|
-/// Graphviz parity: root reorder pass snapshot records the same mincross edge
-/// projection and selected rank groups passed to reorder_rank_groups.
-fn capture_root_mincross_pass_snapshot(
-  result : @ordering.RootMincrossReorderResult,
-  inputs : @ordering.RootMincrossReorderInputs,
-) -> Unit {
-  if !@ordering.should_capture_ordering_inputs() {
-    return
-  }
-  let reorder_call_data = result.reorder_call_data
-  let snapshot =
-    @ordering.build_root_mincross_input_snapshot(
-      {
-        rank_keys: reorder_call_data.order_rank_keys_for_mincross,
-        groups: result.order_groups_for_mincross,
-        edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-        edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-        edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-        edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-        edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-        edge_tail_port_order:
-          reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-        edge_head_port_order:
-          reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-        cluster_keys: inputs.order_cluster_keys,
-        cluster_skeleton: inputs.order_cluster_skeleton,
-        edge_xpenalty_for: @dot_shared.edge_xpenalty,
-      },
-    )
-  @ordering.root_mincross_input_snapshot.val = Some(snapshot)
-}
-
-///|
-fn capture_remincross_snapshot(
-  capture_inputs : @ordering.ReMincrossCleanupCaptureInputs,
-) -> Unit {
-  if !@ordering.should_capture_ordering_inputs() {
-    return
-  }
-  let snapshot =
-    @ordering.build_remincross_input_snapshot(
-      {
-        rank_keys: capture_inputs.rem_rank_keys,
-        groups: capture_inputs.rem_groups,
-        edges_out: capture_inputs.rem_edges_out,
-        edge_tail_out: capture_inputs.rem_edge_tail_out,
-        edge_head_out: capture_inputs.rem_edge_head_out,
-        edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
-        edge_head_port_x: capture_inputs.rem_edge_head_port_x,
-        edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
-        edge_head_port_order: capture_inputs.rem_edge_head_port_order,
-        cluster_keys: capture_inputs.rem_cluster_keys,
-        edge_xpenalty_for: @dot_shared.edge_xpenalty,
-      },
-    )
-  @ordering.remincross_input_snapshot.val = Some(snapshot)
 }
 
 ///|
