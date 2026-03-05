@@ -181,12 +181,12 @@ fn build_routing_callbacks_for_dot(
 ) -> @routing.RoutingCallbacks {
   {
     recover_slack_vnodes_fn: recover_slack_vnodes,
-    build_edge_layout_fn: (base, spline, spline_result) =>
+    build_edge_layout_fn: (input) =>
       build_routing_edge_layout_for_dot(
         {
-          base,
-          spline,
-          spline_result,
+          base: input.base,
+          spline: input.spline,
+          spline_result: input.spline_result,
           edge_layout_input,
         },
       ),

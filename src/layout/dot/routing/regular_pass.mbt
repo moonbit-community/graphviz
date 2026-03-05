@@ -184,9 +184,11 @@ fn build_regular_spline_layout(
   )
   let layout =
     (layout_input.callbacks.build_edge_layout_fn)(
-      layout_input.base,
-      spline,
-      layout_spline_result,
+      {
+        base: layout_input.base,
+        spline,
+        spline_result: layout_spline_result,
+      },
     )
   { edge_layout: layout, spline_result }
 }

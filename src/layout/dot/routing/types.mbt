@@ -214,8 +214,14 @@ pub type RecoverSlackVnodesFn = (
 ) -> Unit
 
 ///|
-pub type EdgeLayoutBuilderFn =
-  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
+pub(all) struct EdgeLayoutBuildCallbackInput {
+  base : EdgeRouteBase
+  spline : @geom.Spline
+  spline_result : EdgeSplineResult
+}
+
+///|
+pub type EdgeLayoutBuilderFn = (EdgeLayoutBuildCallbackInput) -> DotLayoutEdge
 
 ///|
 pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @dot_shared.RankDir) -> Double

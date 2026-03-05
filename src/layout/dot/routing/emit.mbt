@@ -79,9 +79,11 @@ fn build_bezier_layout_edge(
       },
     )
   (input.build_edge_layout_fn)(
-    input.base,
-    bezier_layout_result.final_spline,
-    bezier_layout_result.layout_spline_result,
+    {
+      base: input.base,
+      spline: bezier_layout_result.final_spline,
+      spline_result: bezier_layout_result.layout_spline_result,
+    },
   )
 }
 
