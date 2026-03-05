@@ -246,6 +246,22 @@ fn build_x_seed_data(
       pipeline.rank_data.edge_head,
       x_order_sizes,
     )
+  let order_edge_port_positions =
+    compute_edge_port_positions(
+      pipeline.prep.nodes,
+      pipeline.ordering.order_edges,
+      pipeline.ordering.order_edge_tail,
+      pipeline.ordering.order_edge_head,
+      x_order_sizes,
+    )
+  let order_edge_port_orders =
+    compute_edge_port_orders(
+      pipeline.prep.nodes,
+      pipeline.ordering.order_edges,
+      pipeline.ordering.order_edge_tail,
+      pipeline.ordering.order_edge_head,
+      x_order_sizes,
+    )
   @positioning.build_x_seed_data_from_sources(
     {
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,
@@ -266,6 +282,10 @@ fn build_x_seed_data(
       x_edge_head_port_x: x_port_positions.head_values,
       x_edge_tail_port_order: x_port_orders.tail_values,
       x_edge_head_port_order: x_port_orders.head_values,
+      order_edge_tail_port_x: order_edge_port_positions.tail_values,
+      order_edge_head_port_x: order_edge_port_positions.head_values,
+      order_edge_tail_port_order: order_edge_port_orders.tail_values,
+      order_edge_head_port_order: order_edge_port_orders.head_values,
       vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
       has_clusters: pipeline.cluster_meta.has_clusters,
       cluster_keys: pipeline.cluster_meta.cluster_keys,
@@ -354,22 +374,6 @@ fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
-  let order_edge_port_positions =
-    compute_edge_port_positions(
-      pipeline.prep.nodes,
-      pipeline.ordering.order_edges,
-      pipeline.ordering.order_edge_tail,
-      pipeline.ordering.order_edge_head,
-      input.x_seed.x_order_sizes,
-    )
-  let order_edge_port_orders =
-    compute_edge_port_orders(
-      pipeline.prep.nodes,
-      pipeline.ordering.order_edges,
-      pipeline.ordering.order_edge_tail,
-      pipeline.ordering.order_edge_head,
-      input.x_seed.x_order_sizes,
-    )
   @positioning.build_x_flat_label_pipeline(
     {
       reorder_sources:
@@ -408,10 +412,10 @@ fn build_x_flat_labels(
           order_edges: pipeline.ordering.order_edges,
           order_edge_tail: pipeline.ordering.order_edge_tail,
           order_edge_head: pipeline.ordering.order_edge_head,
-          order_edge_tail_port_x: order_edge_port_positions.tail_values,
-          order_edge_head_port_x: order_edge_port_positions.head_values,
-          order_edge_tail_port_order: order_edge_port_orders.tail_values,
-          order_edge_head_port_order: order_edge_port_orders.head_values,
+          order_edge_tail_port_x: input.x_seed.order_edge_tail_port_x,
+          order_edge_head_port_x: input.x_seed.order_edge_head_port_x,
+          order_edge_tail_port_order: input.x_seed.order_edge_tail_port_order,
+          order_edge_head_port_order: input.x_seed.order_edge_head_port_order,
           edge_order: pipeline.ordering.edge_order,
           port_order_positions: pipeline.prep.port_order_positions,
           port_order_contrib: pipeline.prep.port_order_contrib,

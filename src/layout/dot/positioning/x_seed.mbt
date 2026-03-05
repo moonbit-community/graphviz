@@ -147,6 +147,10 @@ pub struct XPositionSeedData {
   x_edge_head_port_x : Array[Double]
   x_edge_tail_port_order : Array[Double]
   x_edge_head_port_order : Array[Double]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
 }
@@ -173,6 +177,10 @@ pub(all) struct XSeedBuildSources {
   x_edge_head_port_x : Array[Double]
   x_edge_tail_port_order : Array[Double]
   x_edge_head_port_order : Array[Double]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
   vnodes_by_rank : Map[Int, Array[String]]
   has_clusters : Bool
   cluster_keys : Map[String, String]
@@ -231,6 +239,10 @@ pub fn build_x_seed_data_from_sources(
     x_edge_head_port_x: sources.x_edge_head_port_x,
     x_edge_tail_port_order: sources.x_edge_tail_port_order,
     x_edge_head_port_order: sources.x_edge_head_port_order,
+    order_edge_tail_port_x: sources.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.order_edge_head_port_order,
     x_groups,
     x_cluster_keys,
   }
