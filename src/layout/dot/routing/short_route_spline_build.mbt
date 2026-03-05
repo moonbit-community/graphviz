@@ -104,23 +104,28 @@ fn pathplan_line_points_or_endpoints(
 }
 
 ///|
+priv struct PathplanPointsSplineBuildInput {
+  base : EdgeRouteBase
+  pathplan_points : Array[@geom.Point]
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  force_segmented : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+}
+
+///|
 fn build_pathplan_points_spline(
-  base : EdgeRouteBase,
-  pathplan_points : Array[@geom.Point],
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  force_segmented : Bool,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
+  input : PathplanPointsSplineBuildInput,
 ) -> PointsSplineResult {
   build_points_spline(
     {
-      base,
-      points: pathplan_points,
-      tail_slope_line,
-      head_slope_line,
-      force_segmented,
+      base: input.base,
+      points: input.pathplan_points,
+      tail_slope_line: input.tail_slope_line,
+      head_slope_line: input.head_slope_line,
+      force_segmented: input.force_segmented,
       using_pathplan: true,
-      route_barriers,
+      route_barriers: input.route_barriers,
     },
   )
 }
@@ -206,12 +211,14 @@ fn build_short_route_line_or_pathplan_spline(
 ) -> PointsSplineResult {
   if input.using_pathplan {
     build_pathplan_points_spline(
-      input.base,
-      input.pathplan_points,
-      input.tail_slope_line,
-      input.head_slope_line,
-      input.force_segmented,
-      input.route_barriers,
+      {
+        base: input.base,
+        pathplan_points: input.pathplan_points,
+        tail_slope_line: input.tail_slope_line,
+        head_slope_line: input.head_slope_line,
+        force_segmented: input.force_segmented,
+        route_barriers: input.route_barriers,
+      },
     )
   } else {
     {
