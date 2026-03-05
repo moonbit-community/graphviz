@@ -965,6 +965,110 @@ pub fn run_root_and_cluster_ranks_stage_from_sources(
 }
 
 ///|
+/// Graphviz parity: root-phase stage output keeps root+cluster rank groups,
+/// tail-order replay override, and shared root-rank-order phase base grouped
+/// for clustered finalize replay.
+/// Do not change behavior without updating fixtures/tests.
+pub struct ClusteredRootPhaseStageOutput {
+  root_cluster_stage : RootAndClusterRanksOutput
+  root_tail_order_override : Array[String]?
+  root_rank_order_phase_base : RootRankOrderPhaseBase
+}
+
+///|
+/// Graphviz parity: clustered root-phase stage source bundle keeps root
+/// rank-order base sources, root-pass input groups, and root+cluster stage
+/// sources grouped for one deterministic stage run.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredRootPhaseStageSources {
+  root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
+  order_groups_for_root_phase : Map[Int, Array[String]]
+  root_and_cluster_stage_sources : RootAndClusterRanksStageSources
+}
+
+///|
+/// Graphviz parity: clustered root-phase stage root-groups override is applied
+/// only to root+cluster stage call-input sources, keeping all other snapshots
+/// unchanged.
+fn with_root_groups_override_in_call_input_sources(
+  call_input_sources : RootAndClusterRanksCallInputSources,
+  root_groups_override : Map[Int, Array[String]]?,
+) -> RootAndClusterRanksCallInputSources {
+  {
+    reorder_setup: call_input_sources.reorder_setup,
+    reorder_context: call_input_sources.reorder_context,
+    materialized: call_input_sources.materialized,
+    order_groups: call_input_sources.order_groups,
+    order_cluster_keys: call_input_sources.order_cluster_keys,
+    order_cluster_skeleton: call_input_sources.order_cluster_skeleton,
+    order_sizes_out: call_input_sources.order_sizes_out,
+    rank_same_groups: call_input_sources.rank_same_groups,
+    rank_same_order: call_input_sources.rank_same_order,
+    nodesep_pt: call_input_sources.nodesep_pt,
+    has_edge_labels: call_input_sources.has_edge_labels,
+    port_order_positions: call_input_sources.port_order_positions,
+    port_order_contrib: call_input_sources.port_order_contrib,
+    cluster_keys: call_input_sources.cluster_keys,
+    root_groups_override,
+  }
+}
+
+///|
+/// Graphviz parity: clustered root phase keeps root-rank-order base assembly,
+/// root-only reorder pass/override derivation, and root+cluster stage replay in
+/// fixed order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_clustered_root_phase_stage_from_sources(
+  sources : ClusteredRootPhaseStageSources,
+  capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
+) -> ClusteredRootPhaseStageOutput {
+  let root_rank_order_phase_base =
+    build_root_rank_order_phase_base_from_sources(
+      sources.root_rank_order_phase_base_sources,
+    )
+  let (root_reorder_output, root_rank_order_phase_output) =
+    run_root_reorder_and_rank_order_from_base(
+      root_rank_order_phase_base,
+      sources.order_groups_for_root_phase,
+    )
+  let root_phase_overrides =
+    build_clustered_root_phase_overrides(
+      sources.root_and_cluster_stage_sources.order_with_clusters,
+      root_reorder_output,
+      root_rank_order_phase_output,
+    )
+  let root_cluster_stage =
+    run_root_and_cluster_ranks_stage_from_sources(
+      {
+        call_input_sources:
+          with_root_groups_override_in_call_input_sources(
+            sources.root_and_cluster_stage_sources.call_input_sources,
+            root_phase_overrides.root_groups_override_for_root_pass,
+          ),
+        order_with_clusters:
+          sources.root_and_cluster_stage_sources.order_with_clusters,
+        graph: sources.root_and_cluster_stage_sources.graph,
+        cluster_order: sources.root_and_cluster_stage_sources.cluster_order,
+        cluster_parents: sources.root_and_cluster_stage_sources.cluster_parents,
+        intercluster_keys:
+          sources.root_and_cluster_stage_sources.intercluster_keys,
+        flat_constraints: sources.root_and_cluster_stage_sources.flat_constraints,
+        node_order: sources.root_and_cluster_stage_sources.node_order,
+        ranks: sources.root_and_cluster_stage_sources.ranks,
+        vnode_ranks: sources.root_and_cluster_stage_sources.vnode_ranks,
+        vnode_clusters: sources.root_and_cluster_stage_sources.vnode_clusters,
+        vnode_sizes: sources.root_and_cluster_stage_sources.vnode_sizes,
+      },
+      capture_call,
+    )
+  {
+    root_cluster_stage,
+    root_tail_order_override: root_phase_overrides.root_tail_order_override,
+    root_rank_order_phase_base,
+  }
+}
+
+///|
 /// Graphviz parity: root+cluster rank phase output keeps root-mincross input
 /// groups, final ordered groups, and vnode-inclusive groups for xpos.
 /// Do not change behavior without updating fixtures/tests.

@@ -74,15 +74,7 @@ fn build_clustered_pre_root(
   }
 }
 
-///|
-/// Graphviz parity: clustered root phase output carries root+cluster rank
-/// groups together with optional root tail-order override for ReMincross.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredRootPhaseOutput {
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput
-  root_tail_order_override : Array[String]?
-  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase
-}
+type ClusteredRootPhaseOutput = @ordering.ClusteredRootPhaseStageOutput
 
 ///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
@@ -93,8 +85,10 @@ fn run_clustered_root_phase(
   pre_root_stage : ClusteredPreRootData,
 ) -> ClusteredRootPhaseOutput {
   let reorder_setup = dispatch_context.reorder_setup
-  let root_rank_order_phase_base =
-    @ordering.build_root_rank_order_phase_base_from_sources(
+  let runtime_context = dispatch_context.runtime_context
+  @ordering.run_clustered_root_phase_stage_from_sources(
+    {
+      root_rank_order_phase_base_sources:
       {
         reorder_setup,
         class2_data: reorder_setup.class2_data,
@@ -105,8 +99,8 @@ fn run_clustered_root_phase(
         edge_tail: dispatch_context.edge_tail,
         edge_head: dispatch_context.edge_head,
         cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        edge_vnodes: dispatch_context.runtime_context.vnode_info.edge_vnodes,
-        vnodes_by_rank: dispatch_context.runtime_context.vnode_info.vnodes_by_rank,
+        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
         ranks: dispatch_context.ranks,
         rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
         rank_same_order: dispatch_context.cluster_meta.rank_same_order,
@@ -117,72 +111,39 @@ fn run_clustered_root_phase(
         port_order_contrib: dispatch_context.port_order_contrib,
         order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
       },
-    )
-  let (root_reorder_output, root_rank_order_phase_output) =
-    @ordering.run_root_reorder_and_rank_order_from_base(
-      root_rank_order_phase_base,
-      pre_root_stage.order_groups,
-    )
-  let root_phase_overrides =
-    @ordering.build_clustered_root_phase_overrides(
-      reorder_setup.order_with_clusters,
-      root_reorder_output,
-      root_rank_order_phase_output,
-    )
-  let root_cluster_stage =
-    run_root_and_cluster_ranks(
-      dispatch_context,
-      pre_root_stage,
-      root_phase_overrides.root_groups_override_for_root_pass,
-    )
-  {
-    root_cluster_stage,
-    root_tail_order_override: root_phase_overrides.root_tail_order_override,
-    root_rank_order_phase_base,
-  }
-}
-
-///|
-/// Graphviz parity: root mincross reordering is followed by clustered
-/// build_ranks application on the unmapped order graph before final cleanup.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_ranks(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_groups_override : Map[Int, Array[String]]?,
-) -> @ordering.RootAndClusterRanksOutput {
-  let runtime_context = dispatch_context.runtime_context
-  @ordering.run_root_and_cluster_ranks_stage_from_sources(
-    {
-      call_input_sources:
+      order_groups_for_root_phase: pre_root_stage.order_groups,
+      root_and_cluster_stage_sources:
         {
-          reorder_setup: dispatch_context.reorder_setup,
-          reorder_context: pre_root_stage.reorder_context,
-          materialized: pre_root_stage.materialized,
-          order_groups: pre_root_stage.order_groups,
-          order_cluster_keys: pre_root_stage.order_cluster_keys,
-          order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-          order_sizes_out: pre_root_stage.order_sizes_out,
-          rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-          rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-          nodesep_pt: dispatch_context.nodesep_pt,
-          has_edge_labels: dispatch_context.has_edge_labels,
-          port_order_positions: dispatch_context.port_order_positions,
-          port_order_contrib: dispatch_context.port_order_contrib,
-          cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-          root_groups_override,
+          call_input_sources:
+            {
+              reorder_setup: dispatch_context.reorder_setup,
+              reorder_context: pre_root_stage.reorder_context,
+              materialized: pre_root_stage.materialized,
+              order_groups: pre_root_stage.order_groups,
+              order_cluster_keys: pre_root_stage.order_cluster_keys,
+              order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+              order_sizes_out: pre_root_stage.order_sizes_out,
+              rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+              rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+              nodesep_pt: dispatch_context.nodesep_pt,
+              has_edge_labels: dispatch_context.has_edge_labels,
+              port_order_positions: dispatch_context.port_order_positions,
+              port_order_contrib: dispatch_context.port_order_contrib,
+              cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+              root_groups_override: None,
+            },
+          order_with_clusters: reorder_setup.order_with_clusters,
+          graph: dispatch_context.graph,
+          cluster_order: dispatch_context.cluster_meta.cluster_order,
+          cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+          intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+          flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+          node_order: pre_root_stage.reorder_context.order_node_order,
+          ranks: dispatch_context.ranks,
+          vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+          vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+          vnode_sizes: runtime_context.vnode_info.vnode_sizes,
         },
-      order_with_clusters: dispatch_context.reorder_setup.order_with_clusters,
-      graph: dispatch_context.graph,
-      cluster_order: dispatch_context.cluster_meta.cluster_order,
-      cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-      node_order: pre_root_stage.reorder_context.order_node_order,
-      ranks: dispatch_context.ranks,
-      vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-      vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-      vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     },
     @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
   )
