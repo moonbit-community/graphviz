@@ -117,3 +117,108 @@ pub fn collect_head_port_metrics(
   }
   { head_port_counts, head_port_min_dist, head_port_max_dist }
 }
+
+///|
+/// Graphviz parity: routing precompute pipeline input keeps padding/metric
+/// callbacks plus path-context snapshots grouped before Stage E edge solve.
+pub(all) struct RoutingPrecomputePipelineInput {
+  has_clusters : Bool
+  has_port_edges : Bool
+  edges : Array[@cgraph.Edge]
+  enable_complex_tuning : Bool
+  x_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int, Array[String]]
+  nodes : Array[@cgraph.Node]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  sizes : Map[String, @dot_shared.NodeSize]
+  ranks : Map[String, Int]
+  nodesep_pt : Double
+  edge_vnodes : Map[String, Array[String]]
+  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_bboxes : Map[String, @geom.Rect]
+  build_order_index_fn : (Map[Int, Array[String]]) -> Map[String, Int]
+  apply_self_edge_right_space_fn : (
+    Array[@cgraph.Node],
+    Array[@cgraph.Edge],
+    Map[String, @dot_shared.NodeSize],
+  ) -> Map[String, @dot_shared.NodeSize]
+  node_local_cluster_key_fn : (@cgraph.Node) -> String
+  compute_padding_fn : (Array[@cgraph.Edge]) -> (Double, Double)
+  head_metric_key_fn : (@cgraph.Edge) -> String
+  head_metric_distance_fn : (@cgraph.Edge) -> Double
+}
+
+///|
+/// Graphviz parity: routing precompute pipeline output keeps padding metrics,
+/// selected path groups, and assembled routing context for Stage E solve.
+pub struct RoutingPrecomputePipelineOutput {
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
+  path_groups : Map[Int, Array[String]]
+  routing_context : RoutingContext
+}
+
+///|
+/// Graphviz parity: routing precompute keeps metric and path-context
+/// derivation in fixed order before Stage E edge routing.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_routing_precompute_pipeline(
+  input : RoutingPrecomputePipelineInput,
+) -> RoutingPrecomputePipelineOutput {
+  let (port_pad_below, port_pad_above) =
+    compute_port_padding(
+      {
+        has_clusters: input.has_clusters,
+        has_port_edges: input.has_port_edges,
+        edges: input.edges,
+        compute_padding_fn: input.compute_padding_fn,
+      },
+    )
+  let head_port_metrics =
+    collect_head_port_metrics(
+      {
+        edges: input.edges,
+        enable_complex_tuning: input.enable_complex_tuning,
+        key_for_edge_fn: input.head_metric_key_fn,
+        distance_for_edge_fn: input.head_metric_distance_fn,
+      },
+    )
+  let path_groups =
+    select_path_groups(
+      input.x_groups,
+      input.ordered_groups_with_vnodes,
+      input.ordered_groups,
+    )
+  let routing_context =
+    prepare_routing_context(
+      {
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        sizes: input.sizes,
+        ranks: input.ranks,
+        ordered_groups: input.ordered_groups,
+        x_groups: path_groups,
+        nodesep_pt: input.nodesep_pt,
+        edge_vnodes: input.edge_vnodes,
+        vnode_sizes: input.vnode_sizes,
+        vnode_positions: input.vnode_positions,
+        cluster_bboxes: input.cluster_bboxes,
+        build_order_index_fn: input.build_order_index_fn,
+        apply_self_edge_right_space_fn: input.apply_self_edge_right_space_fn,
+        node_local_cluster_key_fn: input.node_local_cluster_key_fn,
+      },
+    )
+  {
+    port_pad_below,
+    port_pad_above,
+    head_port_metrics,
+    path_groups,
+    routing_context,
+  }
+}
