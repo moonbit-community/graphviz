@@ -133,7 +133,6 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_sizes : Map[String, @dot_shared.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
-  build_order_index_fn : (Map[Int, Array[String]]) -> Map[String, Int]
   apply_self_edge_right_space_fn : (
     Array[@cgraph.Node],
     Array[@cgraph.Edge],
@@ -203,7 +202,6 @@ pub fn build_routing_precompute_pipeline(
         vnode_sizes: input.vnode_sizes,
         vnode_positions: input.vnode_positions,
         cluster_bboxes: input.cluster_bboxes,
-        build_order_index_fn: input.build_order_index_fn,
         apply_self_edge_right_space_fn: input.apply_self_edge_right_space_fn,
         node_local_cluster_key_fn: input.node_local_cluster_key_fn,
       },

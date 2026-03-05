@@ -423,7 +423,6 @@ fn build_routing_precompute_data(
       vnode_sizes: input.ordering.vnode_info.vnode_sizes,
       vnode_positions: input.positions_state.vnode_positions,
       cluster_bboxes: input.cluster_bboxes,
-      build_order_index_fn: @ordering.build_order_index,
       apply_self_edge_right_space_fn: (nodes, edges, sizes) =>
         apply_self_edge_right_space(
           nodes,
