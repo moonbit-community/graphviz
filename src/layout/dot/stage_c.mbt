@@ -307,6 +307,7 @@ fn build_ordering_reorder_setup(
     input.edges,
     input.edge_tail,
     input.edge_head,
+    input.edge_reversed,
     input.edge_out_order,
     input.ranks,
     input.groups,
@@ -322,29 +323,10 @@ fn build_ordering_reorder_setup(
     input.cluster_meta.rank_same_groups,
     input.cluster_meta.rank_same_order,
     runtime_context.vnode_info.edge_vnodes,
+    runtime_context.vnode_info.vnodes_by_rank,
+    runtime_context.vnode_info.vnode_ranks,
+    input.cluster_meta.cluster_parents,
     edge_port_data,
-    (base_order_index) =>
-      @ordering.build_vnode_order_keys(
-        input.edges,
-        input.edge_tail,
-        input.edge_head,
-        input.edge_reversed,
-        input.ranks,
-        base_order_index,
-        input.cluster_meta.cluster_keys,
-        input.cluster_meta.cluster_parents,
-        runtime_context.vnode_info.edge_vnodes,
-        runtime_context.vnode_info.vnode_ranks,
-      ),
-    (ordering_groups_base, base_order_index, nlist_order_index) =>
-      @ordering.build_vnode_keys_from_nlist(
-        ordering_groups_base,
-        runtime_context.vnode_info.vnodes_by_rank,
-        base_order_index,
-        nlist_order_index,
-        Map::new(),
-        false,
-      ),
   )
 }
 

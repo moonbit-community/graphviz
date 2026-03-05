@@ -85,6 +85,7 @@ pub fn build_ordering_reorder_setup(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_reversed : Array[Bool],
   edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
   groups : Map[Int, Array[String]],
@@ -100,9 +101,10 @@ pub fn build_ordering_reorder_setup(
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
   vnode_edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_ranks : Map[String, Int],
+  cluster_parents : Map[String, String?],
   edge_port_data : OrderingEdgePortData,
-  build_cluster_vnode_order_keys : (Map[String, Int]) -> Map[String, Double],
-  build_noncluster_vnode_order_keys : (Map[Int, Array[String]], Map[String, Int], Map[String, Int]) -> Map[String, Double],
 ) -> OrderingReorderSetup {
   let ordering_groups_base = apply_rank_same_order(
     groups,
@@ -155,12 +157,26 @@ pub fn build_ordering_reorder_setup(
     if vnode_count <= 0 {
       Map::new()
     } else if has_clusters {
-      build_cluster_vnode_order_keys(base_order_index)
+      build_vnode_order_keys(
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        ranks,
+        base_order_index,
+        cluster_keys,
+        cluster_parents,
+        vnode_edge_vnodes,
+        vnode_ranks,
+      )
     } else {
-      build_noncluster_vnode_order_keys(
+      build_vnode_keys_from_nlist(
         ordering_groups_base,
+        vnodes_by_rank,
         base_order_index,
         nlist_order_index,
+        Map::new(),
+        false,
       )
     }
   {
