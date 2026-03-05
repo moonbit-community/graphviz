@@ -269,6 +269,28 @@ pub fn build_x_flat_label_augmentation(
 }
 
 ///|
+pub(all) struct XFlatLabelPipelineInput {
+  reorder_sources : XposReorderPipelineSources
+  compute_port_samples : XposPortSampleBundleFn
+  augment_from_groups_fn : (Map[Int, Array[String]]) -> XFlatLabelAugmentationOutput
+}
+
+///|
+/// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
+/// augmentation must run in the same order and with the same inputs as Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_x_flat_label_pipeline(
+  input : XFlatLabelPipelineInput,
+) -> XFlatLabelAugmentationOutput {
+  let x_groups =
+    build_x_groups_after_reorder(
+      build_xpos_reorder_pipeline_input_from_sources(input.reorder_sources),
+      input.compute_port_samples,
+    )
+  (input.augment_from_groups_fn)(x_groups)
+}
+
+///|
 /// Graphviz parity: clustered/non-clustered xpos reorder branch gates are
 /// evaluated once and then reused by reorder + transpose cleanup.
 priv struct XposReorderPathFlags {

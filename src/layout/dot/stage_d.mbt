@@ -346,9 +346,9 @@ fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
-  let x_groups =
-    @positioning.build_x_groups_after_reorder(
-      @positioning.build_xpos_reorder_pipeline_input_from_sources(
+  @positioning.build_x_flat_label_pipeline(
+    {
+      reorder_sources:
         {
           xpos_reorder_enabled: input.xpos_reorder_enabled,
           use_vnodes_for_xpos: input.use_vnodes_for_xpos,
@@ -390,8 +390,8 @@ fn build_x_flat_labels(
           cluster_skeleton: pipeline.cluster_meta.cluster_skeleton,
           transpose_max_passes: 4,
         },
-      ),
-      (sample_input) =>
+      compute_port_samples:
+        (sample_input) =>
         @positioning.build_xpos_port_samples(
           sample_input,
           (nodes, edges, edge_tail, edge_head, sizes) => {
@@ -405,14 +405,17 @@ fn build_x_flat_labels(
             (samples.tail_values, samples.head_values)
           },
         ),
-    )
-  build_flat_label_augmentation(
-    {
-      pipeline: input.pipeline,
-      use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-      x_base_sizes: input.x_seed.x_base_sizes,
-      x_groups,
-      x_cluster_keys: input.x_seed.x_cluster_keys,
+      augment_from_groups_fn:
+        (x_groups) =>
+          build_flat_label_augmentation(
+            {
+              pipeline: input.pipeline,
+              use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+              x_base_sizes: input.x_seed.x_base_sizes,
+              x_groups,
+              x_cluster_keys: input.x_seed.x_cluster_keys,
+            },
+          ),
     },
   )
 }
