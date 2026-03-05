@@ -479,29 +479,7 @@ fn compute_layout_x_positions(
         flat_label_edges: input.x_data.flat_label_edges,
       },
     )
-  compute_x_positions(
-    {
-      graph: solve_input.graph,
-      nodes: solve_input.nodes,
-      edges: solve_input.edges,
-      edge_tail: solve_input.edge_tail,
-      edge_head: solve_input.edge_head,
-      edge_out_order: solve_input.edge_out_order,
-      nlist_order: solve_input.nlist_order,
-      gdnlist_order: solve_input.gdnlist_order,
-      ranks: solve_input.ranks,
-      rank_keys: solve_input.rank_keys,
-      groups: solve_input.groups,
-      sizes: solve_input.sizes,
-      output_sizes: solve_input.output_sizes,
-      cluster_keys: solve_input.cluster_keys,
-      nodesep_pt: solve_input.nodesep_pt,
-      has_edge_labels: solve_input.has_edge_labels,
-      extra_nodes: solve_input.extra_nodes,
-      flat_label_edges: solve_input.flat_label_edges,
-      edge_vnodes: solve_input.edge_vnodes,
-    },
-  )
+  compute_x_positions(solve_input)
 }
 
 ///|

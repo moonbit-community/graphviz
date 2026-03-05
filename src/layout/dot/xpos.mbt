@@ -13,27 +13,7 @@ const ROOT_COMPRESS_WEIGHT : Int = 1000
 ///|
 /// Graphviz parity: xpos payload keeps rank/group/cluster snapshots grouped so
 /// position.c/cluster.c constraint wiring remains explicit and stable.
-priv struct XPositionsInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
-  nlist_order : Array[String]
-  gdnlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  sizes : Map[String, NodeSize]
-  output_sizes : Map[String, NodeSize]
-  cluster_keys : Map[String, String]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
-  flat_label_edges : Array[ConstraintEdge]
-  edge_vnodes : Map[String, Array[String]]
-}
+type XPositionsInput = @positioning.XPositionSolveInput
 
 ///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/position.c + cluster.c (fixtures).
