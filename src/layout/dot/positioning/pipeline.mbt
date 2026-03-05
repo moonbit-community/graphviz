@@ -97,7 +97,7 @@ pub fn build_xpos_computation_input_from_sources(
       sources.edge_vnodes
     } else {
       Map::new()
-  }
+    }
   { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes }
 }
 
