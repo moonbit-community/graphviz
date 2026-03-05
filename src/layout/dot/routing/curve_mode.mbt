@@ -657,13 +657,23 @@ fn curve_mode_result_for_short_route(
 }
 
 ///|
+priv struct AdjustedCurveModePointsInput {
+  base : EdgeRouteBase
+  prepared : CurveModeRoutePrep
+  label_edge_counts : Map[String, Int]
+  nodesep_pt : Double
+  enable_complex_tuning : Bool
+}
+
+///|
 fn adjusted_curve_mode_points(
-  base : EdgeRouteBase,
-  prepared : CurveModeRoutePrep,
-  label_edge_counts : Map[String, Int],
-  nodesep_pt : Double,
-  enable_complex_tuning : Bool,
+  input : AdjustedCurveModePointsInput,
 ) -> Array[@geom.Point] {
+  let base = input.base
+  let prepared = input.prepared
+  let label_edge_counts = input.label_edge_counts
+  let nodesep_pt = input.nodesep_pt
+  let enable_complex_tuning = input.enable_complex_tuning
   let points = prepared.points
   let simplify_tol = nodesep_pt * 0.8
   let tail_label_edges = match label_edge_counts.get(base.orig_tail_name) {
@@ -706,11 +716,13 @@ fn build_curve_mode_spline_from_prepared_route(
   if points.length() > 2 {
     let adjusted =
       adjusted_curve_mode_points(
-        base,
-        prepared,
-        label_edge_counts,
-        nodesep_pt,
-        enable_complex_tuning,
+        {
+          base,
+          prepared,
+          label_edge_counts,
+          nodesep_pt,
+          enable_complex_tuning,
+        },
       )
     if adjusted.length() <= 2 {
       let short_route_spec =
