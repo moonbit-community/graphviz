@@ -623,22 +623,6 @@ fn routing_spline_mode(splines : SplinesMode) -> Int {
   }
 }
 
-///|
-fn self_edge_label_height_pt_for_routing(
-  edge : @cgraph.Edge,
-  rankdir : RankDir,
-) -> Double {
-  match edge_mid_label_metrics(edge) {
-    Some(metrics) =>
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        metrics.width
-      } else {
-        metrics.height
-      }
-    None => 0.0
-  }
-}
-
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
@@ -762,7 +746,7 @@ fn build_routing_callbacks_for_dot(
           deps: edge_layout_deps,
         }
       ),
-    self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
+    self_edge_label_height_fn: self_edge_label_height_pt,
     self_edge_label_width_fn: self_edge_label_width_pt,
     edge_port_label_pos_fn: edge_port_label_pos,
   }

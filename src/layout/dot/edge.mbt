@@ -115,3 +115,16 @@ fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
     None => 0.0
   }
 }
+
+///|
+fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) =>
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        metrics.width
+      } else {
+        metrics.height
+      }
+    None => 0.0
+  }
+}
