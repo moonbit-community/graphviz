@@ -59,6 +59,32 @@ pub(all) struct EdgeLayoutDeps {
 }
 
 ///|
+fn edge_layout_attr_non_empty(
+  edge : @cgraph.Edge,
+  attr_name : String,
+) -> Bool {
+  match edge.get_attr(attr_name) {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+fn edge_port_label_pos_for_attr(
+  edge : @cgraph.Edge,
+  spline : @geom.Spline,
+  attr_name : String,
+  is_head : Bool,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
+) -> @geom.Point? {
+  if edge_layout_attr_non_empty(edge, attr_name) {
+    edge_port_label_pos_fn(edge, spline, is_head)
+  } else {
+    None
+  }
+}
+
+///|
 /// Graphviz parity: edge label placement aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/labels.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_edge_layout(
@@ -152,29 +178,27 @@ pub fn build_edge_layout(
               }
             } else {
               default_label_pos()
-            }
+          }
         }
       }
     None => None
   }
-  let head_label_pos : @geom.Point? = match edge.get_attr("headlabel") {
-    Some(value) =>
-      if value == "" {
-        None
-      } else {
-        (deps.edge_port_label_pos_fn)(edge, spline, true)
-      }
-    None => None
-  }
-  let tail_label_pos : @geom.Point? = match edge.get_attr("taillabel") {
-    Some(value) =>
-      if value == "" {
-        None
-      } else {
-        (deps.edge_port_label_pos_fn)(edge, spline, false)
-      }
-    None => None
-  }
+  let head_label_pos =
+    edge_port_label_pos_for_attr(
+      edge,
+      spline,
+      "headlabel",
+      true,
+      deps.edge_port_label_pos_fn,
+    )
+  let tail_label_pos =
+    edge_port_label_pos_for_attr(
+      edge,
+      spline,
+      "taillabel",
+      false,
+      deps.edge_port_label_pos_fn,
+    )
   {
     edge,
     splines: [spline],
