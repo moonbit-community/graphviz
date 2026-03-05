@@ -37,6 +37,85 @@ pub(all) struct ClusterLocalRankReplayInput {
 }
 
 ///|
+/// Graphviz parity: cluster-local replay source bundle keeps root-phase
+/// snapshots and cluster gates grouped before replay input assembly.
+pub(all) struct ClusterLocalRankReplayAfterRootSources {
+  order_with_clusters : Bool
+  groups : Map[Int, Array[String]]
+  graph : @cgraph.Graph
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  ranks : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, NodeSize]
+  order_with_vnodes : Bool
+}
+
+///|
+/// Graphviz parity: post-root cluster-local replay gate and payload assembly
+/// are preserved before local mincross execution.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_cluster_local_rank_replay_after_root_from_sources(
+  sources : ClusterLocalRankReplayAfterRootSources,
+) -> Unit {
+  if !sources.order_with_clusters {
+    return ()
+  }
+  run_cluster_local_rank_replay(
+    {
+      groups: sources.groups,
+      graph: sources.graph,
+      cluster_order: sources.cluster_order,
+      cluster_parents: sources.cluster_parents,
+      rank_same_groups: sources.rank_same_groups,
+      rank_same_order: sources.rank_same_order,
+      intercluster_keys: sources.intercluster_keys,
+      flat_constraints: sources.flat_constraints,
+      node_order: sources.node_order,
+      order_edges: sources.order_edges,
+      order_edge_tail: sources.order_edge_tail,
+      order_edge_head: sources.order_edge_head,
+      order_edge_tail_port_x: sources.order_edge_tail_port_x,
+      order_edge_head_port_x: sources.order_edge_head_port_x,
+      order_edge_tail_port_order: sources.order_edge_tail_port_order,
+      order_edge_head_port_order: sources.order_edge_head_port_order,
+      graphviz_out_neighbors: sources.graphviz_out_neighbors,
+      graphviz_in_neighbors: sources.graphviz_in_neighbors,
+      ranks: sources.ranks,
+      order_sizes: sources.order_sizes,
+      nodesep_pt: sources.nodesep_pt,
+      has_edge_labels: sources.has_edge_labels,
+      port_order_positions: sources.port_order_positions,
+      port_order_contrib: sources.port_order_contrib,
+      vnode_ranks: sources.vnode_ranks,
+      vnode_clusters: sources.vnode_clusters,
+      vnode_sizes: sources.vnode_sizes,
+      order_with_vnodes: sources.order_with_vnodes,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 pub fn run_cluster_local_rank_replay(
