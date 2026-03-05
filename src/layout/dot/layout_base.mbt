@@ -265,40 +265,6 @@ fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
-priv enum EdgeDir {
-  Forward
-  Back
-  Both
-  None
-}
-
-///|
-fn parse_edge_dir(value : String) -> EdgeDir? {
-  match value.to_lower() {
-    "forward" | "f" => Some(EdgeDir::Forward)
-    "back" | "b" => Some(EdgeDir::Back)
-    "both" => Some(EdgeDir::Both)
-    "none" => Some(EdgeDir::None)
-    _ => None
-  }
-}
-
-///|
-fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
-  if kind == @cgraph.GraphKind::Undirected {
-    return EdgeDir::None
-  }
-  match edge.get_attr("dir") {
-    Some(value) =>
-      match parse_edge_dir(value) {
-        Some(dir) => dir
-        None => EdgeDir::Forward
-      }
-    None => EdgeDir::Forward
-  }
-}
-
-///|
 const MAX_XPOS_VNODES : Int = 100000
 
 ///|

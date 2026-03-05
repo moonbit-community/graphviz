@@ -44,14 +44,14 @@ fn cluster_bbox_if_named(
 
 ///|
 fn edge_include_arrowheads(
-  dir : RouteEdgeDir,
+  dir : @dot_shared.EdgeDir,
 ) -> (Bool, Bool) {
   let include_tail = match dir {
-    RouteEdgeDir::Back | RouteEdgeDir::Both => true
+    @dot_shared.EdgeDir::Back | @dot_shared.EdgeDir::Both => true
     _ => false
   }
   let include_head = match dir {
-    RouteEdgeDir::Forward | RouteEdgeDir::Both => true
+    @dot_shared.EdgeDir::Forward | @dot_shared.EdgeDir::Both => true
     _ => false
   }
   (include_tail, include_head)
@@ -327,7 +327,7 @@ fn clip_point_for_route_endpoint(
 
 ///|
 priv struct FlatBottomDirBothNudgeCheckInput {
-  dir : RouteEdgeDir
+  dir : @dot_shared.EdgeDir
   is_flat_edge : Bool
   has_vnodes : Bool
   mid_label_width_pt : Double
@@ -349,7 +349,7 @@ fn should_apply_flat_bottom_dirboth_x_nudge(
   input : FlatBottomDirBothNudgeCheckInput,
 ) -> Bool {
   match input.dir {
-    RouteEdgeDir::Both =>
+    @dot_shared.EdgeDir::Both =>
       input.is_flat_edge &&
       !input.has_vnodes &&
       input.mid_label_width_pt <= 0.0 &&
@@ -762,7 +762,7 @@ fn build_edge_route_base(
       head_port,
       route_base_deps.is_record_shape,
     )
-  let dir = (route_base_deps.edge_dir_for)(edge, graph_kind)
+  let dir = @dot_shared.edge_dir_for(edge, graph_kind)
   let flat_bottom_dirboth_x_nudge =
     should_apply_flat_bottom_dirboth_x_nudge(
       {

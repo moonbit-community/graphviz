@@ -681,14 +681,6 @@ fn build_route_base_deps_for_dot(
       (port, port_rect, node_pos, node_size) =>
         port_side_for_edge(port, port_rect, node_pos, node_size, None),
     layout_port_offset,
-    edge_dir_for:
-      (edge, kind) =>
-        match edge_dir_for(edge, kind) {
-          EdgeDir::Forward => @routing.RouteEdgeDir::Forward
-          EdgeDir::Back => @routing.RouteEdgeDir::Back
-          EdgeDir::Both => @routing.RouteEdgeDir::Both
-          EdgeDir::None => @routing.RouteEdgeDir::None
-        },
     node_cluster_key: @clustering.node_cluster_key,
     node_local_cluster_key: @clustering.node_local_cluster_key,
   }

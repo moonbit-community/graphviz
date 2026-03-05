@@ -96,7 +96,7 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
       edge_has_mid_label_fn: edge => edge_mid_label_metrics(edge) is Some(_),
       edge_degree_increment_fn:
         edge =>
-          if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
+          if @dot_shared.edge_dir_for(edge, edge.tail().graph().kind()) is @dot_shared.EdgeDir::Both {
             2
           } else {
             1

@@ -8,6 +8,15 @@ pub(all) enum RankDir {
 } derive(Show, Eq)
 
 ///|
+/// Edge direction for directed edge endpoint markers and routing behavior.
+pub(all) enum EdgeDir {
+  Forward
+  Back
+  Both
+  None
+} derive(Show, Eq)
+
+///|
 /// Node size in inches and points.
 pub(all) struct NodeSize {
   width_in : Double
@@ -65,6 +74,32 @@ pub fn env_flag_enabled_nonempty(value : String?) -> Bool {
       lower != "" && lower != "0" && lower != "false" && lower != "no"
     }
     None => false
+  }
+}
+
+///|
+pub fn parse_edge_dir(value : String) -> EdgeDir? {
+  match value.to_lower() {
+    "forward" | "f" => Some(EdgeDir::Forward)
+    "back" | "b" => Some(EdgeDir::Back)
+    "both" => Some(EdgeDir::Both)
+    "none" => Some(EdgeDir::None)
+    _ => None
+  }
+}
+
+///|
+pub fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
+  if kind == @cgraph.GraphKind::Undirected {
+    return EdgeDir::None
+  }
+  match edge.get_attr("dir") {
+    Some(value) =>
+      match parse_edge_dir(value) {
+        Some(dir) => dir
+        None => EdgeDir::Forward
+      }
+    None => EdgeDir::Forward
   }
 }
 

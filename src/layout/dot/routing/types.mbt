@@ -67,14 +67,6 @@ pub(all) struct EdgeRouteBase {
 }
 
 ///|
-pub(all) enum RouteEdgeDir {
-  Forward
-  Back
-  Both
-  None
-}
-
-///|
 pub(all) struct RouteLabelMetrics {
   width : Double
   height : Double
@@ -135,7 +127,6 @@ pub(all) struct RouteBaseDeps {
     @dot_shared.NodeSize,
   ) -> Int
   layout_port_offset : (@geom.Point, @dot_shared.RankDir) -> @geom.Point
-  edge_dir_for : (@cgraph.Edge, @cgraph.GraphKind) -> RouteEdgeDir
   node_cluster_key : (@cgraph.Node) -> String
   node_local_cluster_key : (@cgraph.Node) -> String
 }

@@ -837,18 +837,18 @@ fn edge_port_label_pos(
       None => false
     }
   }
-  let dir = edge_dir_for(edge, edge.tail().graph().kind())
+  let dir = @dot_shared.edge_dir_for(edge, edge.tail().graph().kind())
   // Graphviz parity: map edge dir + arrow attrs to place_portlabel eflag/sflag.
   let marker_present =
     if head_p {
       match dir {
-        EdgeDir::Forward | EdgeDir::Both =>
+        @dot_shared.EdgeDir::Forward | @dot_shared.EdgeDir::Both =>
           !arrow_is_none(edge.get_attr("arrowhead"))
         _ => false
       }
     } else {
       match dir {
-        EdgeDir::Back | EdgeDir::Both =>
+        @dot_shared.EdgeDir::Back | @dot_shared.EdgeDir::Both =>
           !arrow_is_none(edge.get_attr("arrowtail"))
         _ => false
       }

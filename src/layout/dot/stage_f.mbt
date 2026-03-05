@@ -347,14 +347,16 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   }
   for edge_layout in self.edges {
     let edge = edge_layout.edge
-    let dir = edge_dir_for(edge, self.graph.kind())
+    let dir = @dot_shared.edge_dir_for(edge, self.graph.kind())
     // Graphviz parity: omit e/s markers when arrowhead/arrowtail is none.
     let include_tail = match dir {
-      EdgeDir::Back | EdgeDir::Both => !arrow_is_none(edge.get_attr("arrowtail"))
+      @dot_shared.EdgeDir::Back | @dot_shared.EdgeDir::Both =>
+        !arrow_is_none(edge.get_attr("arrowtail"))
       _ => false
     }
     let include_head = match dir {
-      EdgeDir::Forward | EdgeDir::Both => !arrow_is_none(edge.get_attr("arrowhead"))
+      @dot_shared.EdgeDir::Forward | @dot_shared.EdgeDir::Both =>
+        !arrow_is_none(edge.get_attr("arrowhead"))
       _ => false
     }
     let segments : Array[String] = []
