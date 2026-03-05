@@ -159,12 +159,14 @@ pub fn prepare_routing_context(
     collect_parallel_offset_edge_flags(input.edges, input.edge_tail, input.edge_head)
   let parallel_offsets =
     build_edge_parallel_offsets(
-      input.edges,
-      edge_has_label_by_id,
-      input.ranks,
-      input.nodesep_pt,
-      edge_reversed_by_id,
-      path_cluster_keys,
+      {
+        edges: input.edges,
+        edge_has_label_by_id,
+        ranks: input.ranks,
+        nodesep_pt: input.nodesep_pt,
+        edge_reversed_by_id,
+        cluster_keys: path_cluster_keys,
+      },
     )
   {
     order_index,

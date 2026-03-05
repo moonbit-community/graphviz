@@ -68,14 +68,25 @@ pub fn collect_parallel_offset_edge_flags(
 /// Graphviz parity: parallel offsets group by unordered endpoints/ports (set of
 /// tail/head), and only for unlabeled edges (class2 merge_chain).
 /// Do not change behavior without updating fixtures/tests.
+pub(all) struct ParallelOffsetsBuildInput {
+  edges : Array[@cgraph.Edge]
+  edge_has_label_by_id : Map[Int, Bool]
+  ranks : Map[String, Int]
+  nodesep_pt : Double
+  edge_reversed_by_id : Map[Int, Bool]
+  cluster_keys : Map[String, String]
+}
+
+///|
 pub fn build_edge_parallel_offsets(
-  edges : Array[@cgraph.Edge],
-  edge_has_label_by_id : Map[Int, Bool],
-  ranks : Map[String, Int],
-  nodesep_pt : Double,
-  edge_reversed_by_id : Map[Int, Bool],
-  cluster_keys : Map[String, String],
+  input : ParallelOffsetsBuildInput,
 ) -> Map[Int, Double] {
+  let edges = input.edges
+  let edge_has_label_by_id = input.edge_has_label_by_id
+  let ranks = input.ranks
+  let nodesep_pt = input.nodesep_pt
+  let edge_reversed_by_id = input.edge_reversed_by_id
+  let cluster_keys = input.cluster_keys
   let groups : Map[String, Array[Int]] = Map::new()
   let group_first_dir_attr : Map[String, String] = Map::new()
   let group_has_mixed_dir_attr : Map[String, Bool] = Map::new()
