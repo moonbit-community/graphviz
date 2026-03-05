@@ -58,18 +58,6 @@ pub(all) struct EdgeLayoutDeps {
   edge_port_label_pos_fn : EdgePortLabelPosFn
 }
 
-///|
-fn edge_layout_attr_non_empty(
-  edge : @cgraph.Edge,
-  attr_name : String,
-) -> Bool {
-  match edge.get_attr(attr_name) {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 priv struct EdgePortLabelPosForAttrInput {
   edge : @cgraph.Edge
   spline : @geom.Spline
@@ -83,7 +71,7 @@ fn edge_port_label_pos_for_attr(
   input : EdgePortLabelPosForAttrInput,
 ) -> @geom.Point? {
   let edge = input.edge
-  if edge_layout_attr_non_empty(edge, input.attr_name) {
+  if edge_attr_non_empty(edge, input.attr_name) {
     (input.edge_port_label_pos_fn)(
       {
         edge,

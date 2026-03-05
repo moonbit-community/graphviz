@@ -23,6 +23,22 @@ fn edge_has_label(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
+  match edge.get_attr(name) {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
+  match edge.get_attr(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 fn size_for_name_or_node(
   sizes : Map[String, NodeSize],
   name : String,

@@ -58,15 +58,6 @@ fn cmp_double(a : Double, b : Double) -> Int {
   }
 }
 
-///|
-fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
-  match edge.get_attr(name) {
-    Some(value) => value
-    None => ""
-  }
-}
-
-///|
 fn port_cmp(
   a_defined : Bool,
   a_pos : @geom.Point,

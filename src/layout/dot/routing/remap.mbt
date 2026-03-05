@@ -1,12 +1,3 @@
-///|
-fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
-  match edge.get_attr(name) {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
   match edge.get_attr("dir") {
     Some(value) => value.to_lower()
