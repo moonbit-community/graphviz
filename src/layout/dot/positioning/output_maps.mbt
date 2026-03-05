@@ -128,22 +128,6 @@ fn adjust_intercluster_alignment(
 }
 
 ///|
-fn collect_cluster_names(
-  graph : @cgraph.Graph,
-  out : Map[String, Bool],
-) -> Unit {
-  if @shared.is_cluster_graph(graph) {
-    match graph.name() {
-      Some(name) => out[name] = true
-      None => ()
-    }
-  }
-  for child in graph.subgraphs() {
-    collect_cluster_names(child, out)
-  }
-}
-
-///|
 fn cluster_key_from_boundary(
   name : String,
   cluster_names : Map[String, Bool],
@@ -420,7 +404,7 @@ pub fn build_position_output_maps_from_sources(
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_names : Map[String, Bool] = Map::new()
   if sources.has_clusters {
-    collect_cluster_names(sources.graph, cluster_names)
+    @shared.collect_cluster_names(sources.graph, cluster_names)
   }
   let cluster_boundary_x =
     build_cluster_boundary_x(

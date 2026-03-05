@@ -71,7 +71,7 @@ fn shift_graph_positions(
     }
   }
   let clusters : Map[String, Bool] = Map::new()
-  collect_cluster_names(graph, clusters)
+  @dot_shared.collect_cluster_names(graph, clusters)
   for vnode, key in vnode_clusters {
     if clusters.get(key) is Some(_) {
       match vnode_positions.get(vnode) {
@@ -79,22 +79,6 @@ fn shift_graph_positions(
         None => ()
       }
     }
-  }
-}
-
-///|
-fn collect_cluster_names(
-  graph : @cgraph.Graph,
-  out : Map[String, Bool],
-) -> Unit {
-  if @dot_shared.is_cluster_graph(graph) {
-    match graph.name() {
-      Some(name) => out[name] = true
-      None => ()
-    }
-  }
-  for child in graph.subgraphs() {
-    collect_cluster_names(child, out)
   }
 }
 

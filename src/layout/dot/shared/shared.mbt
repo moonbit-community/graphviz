@@ -159,6 +159,22 @@ pub fn collect_cluster_graphs(
 }
 
 ///|
+pub fn collect_cluster_names(
+  graph : @cgraph.Graph,
+  out : Map[String, Bool],
+) -> Unit {
+  if is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => out[name] = true
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_names(child, out)
+  }
+}
+
+///|
 pub fn collect_graph_nodes(
   graph : @cgraph.Graph,
   nodes_out : Map[String, Bool],
