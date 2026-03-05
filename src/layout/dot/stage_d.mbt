@@ -61,7 +61,7 @@ fn build_projection_result(
     build_y_position_data(
       {
         pipeline,
-        flat_label_nodes: x_data.flat_label_nodes,
+        flat_label_ranks: x_data.flat_label_ranks,
       },
     )
   let x_positions =
@@ -136,7 +136,7 @@ priv struct XWithFlatLabelData {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
   flat_label_edges : Array[ConstraintEdge]
-  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_ranks : Map[String, Int]
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -187,7 +187,7 @@ fn build_x_with_flat_labels(
     x_groups: flat_label_augmentation.x_groups,
     x_cluster_keys: flat_label_augmentation.x_cluster_keys,
     flat_label_edges: flat_label_augmentation.flat_label_edges,
-    flat_label_nodes: flat_label_augmentation.flat_label_nodes,
+    flat_label_ranks: flat_label_augmentation.flat_label_ranks,
     flat_label_edge_vnodes: flat_label_augmentation.flat_label_edge_vnodes,
   }
 }
@@ -292,7 +292,7 @@ priv struct XposFlatLabelAugmentation {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
   flat_label_edges : Array[ConstraintEdge]
-  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_ranks : Map[String, Int]
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -306,7 +306,7 @@ fn build_flat_label_augmentation(
   let pipeline = input.pipeline
   let mut next_x_groups = input.x_groups
   let mut flat_label_edges : Array[ConstraintEdge] = []
-  let mut flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let flat_label_ranks : Map[String, Int] = Map::new()
   let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
   let next_x_cluster_keys = input.x_cluster_keys
   let existing_names : Map[String, Bool] = Map::new()
@@ -334,7 +334,9 @@ fn build_flat_label_augmentation(
     )
     next_x_groups = flat_label_vnodes.x_groups
     flat_label_edges = flat_label_vnodes.flat_label_edges
-    flat_label_nodes = flat_label_vnodes.flat_label_nodes
+    for name, info in flat_label_vnodes.flat_label_nodes {
+      flat_label_ranks[name] = info.rank
+    }
     flat_label_edge_vnodes = flat_label_vnodes.flat_label_edge_vnodes
     for name, key in pipeline.ordering.vnode_info.vnode_clusters {
       next_x_cluster_keys[name] = key
@@ -344,7 +346,7 @@ fn build_flat_label_augmentation(
     x_groups: next_x_groups,
     x_cluster_keys: next_x_cluster_keys,
     flat_label_edges,
-    flat_label_nodes,
+    flat_label_ranks,
     flat_label_edge_vnodes,
   }
 }
@@ -512,7 +514,7 @@ type YPositionComputationData = @positioning.YPositionPipelineOutput
 /// gates, and flat-label adjustments grouped before y sweep.
 priv struct YPositionBuildInput {
   pipeline : PositionPipelineContext
-  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_ranks : Map[String, Int]
 }
 
 ///|
@@ -522,10 +524,6 @@ priv struct YPositionBuildInput {
 fn build_y_position_data(
   input : YPositionBuildInput,
 ) -> YPositionComputationData {
-  let flat_label_ranks : Map[String, Int] = Map::new()
-  for name, info in input.flat_label_nodes {
-    flat_label_ranks[name] = info.rank
-  }
   @positioning.build_y_position_pipeline(
     {
       has_clusters: input.pipeline.cluster_meta.has_clusters,
@@ -540,7 +538,7 @@ fn build_y_position_data(
       rank_ht1: input.pipeline.rank_heights.rank_ht1,
       rank_ht2: input.pipeline.rank_heights.rank_ht2,
       ranksep_pt: input.pipeline.rank_heights.ranksep_pt,
-      flat_label_ranks,
+      flat_label_ranks: input.flat_label_ranks,
       vnode_sizes: input.pipeline.ordering.vnode_info.vnode_sizes,
       cluster_margin_pt_for: cluster_margin_pt,
       cluster_label_padding_for: cluster_label_padding_for_layout,
