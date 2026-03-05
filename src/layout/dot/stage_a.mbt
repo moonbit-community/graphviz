@@ -1,6 +1,6 @@
 ///|
-/// Stage A Phase A1 split: stage-local input type
-/// definitions shared with downstream pipeline wiring.
+/// Stage A input stage file: stage-local input type definitions plus layout
+/// input preparation and canonicalization helpers.
 
 ///|
 priv struct LayoutPrep {
@@ -71,8 +71,7 @@ priv struct PortOrderMetadataInput {
 }
 
 ///|
-/// Stage A Phase A1 split: layout input preparation
-/// logic and canonicalization helper flow.
+/// Stage A layout input preparation logic and canonicalization helper flow.
 
 ///|
 /// Graphviz parity: rankdir resolution uses option override first, then

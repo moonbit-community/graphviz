@@ -86,8 +86,11 @@ flowchart TD
 Pipeline orchestrator files:
 
 - `src/layout/dot/layout.mbt`
-- `src/layout/dot/b0_rank_stage.mbt`
-- `src/layout/dot/e0_routing_stage.mbt`
+- `src/layout/dot/stage_b.mbt`
+- `src/layout/dot/stage_c.mbt`
+- `src/layout/dot/stage_d.mbt`
+- `src/layout/dot/stage_e.mbt`
+- `src/layout/dot/stage_f.mbt`
 
 Why this design:
 
@@ -99,7 +102,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `a1_input_types.mbt`, `b1_b2_rank_types.mbt`, `c0_contract_types.mbt`, and `d0_position_types.mbt`).
+Defined across stage files (mainly `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, and `stage_d.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -151,8 +154,7 @@ flowchart LR
 
 Main files:
 
-- `src/layout/dot/a1_input.mbt`
-- `src/layout/dot/a1_input_types.mbt` (stage input struct contract)
+- `src/layout/dot/stage_a.mbt`
 
 ### What it does
 
@@ -177,7 +179,7 @@ Later stages assume a clean canonical view of the graph. If option parsing or si
 
 Orchestrator:
 
-- `compute_dot_rank_stage` in `src/layout/dot/b0_rank_stage.mbt`
+- `compute_dot_rank_stage` in `src/layout/dot/stage_b.mbt`
 
 This stage decides vertical layering and ordering inputs.
 
@@ -185,8 +187,7 @@ This stage decides vertical layering and ordering inputs.
 
 Main files:
 
-- `src/layout/dot/b1_b2_ranks.mbt`
-- `src/layout/dot/b1_b2_heights.mbt`
+- `src/layout/dot/stage_b.mbt`
 - `src/layout/dot/rank_assignment/*`
 - `src/layout/dot/network_simplex/*`
 
@@ -217,7 +218,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
-- implemented in `src/layout/dot/b3_clusters.mbt`
+- implemented in `src/layout/dot/stage_b.mbt`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -234,30 +235,12 @@ Clusters alter ordering and positioning constraints globally. This metadata is r
 
 Entry:
 
-- `compute_ordering_and_vnodes` in `src/layout/dot/c0_ordering.mbt`
+- `compute_ordering_and_vnodes` in `src/layout/dot/stage_c.mbt`
 
 Supporting files:
 
-- `src/layout/dot/c1_edges.mbt`
-- `src/layout/dot/c1_graph.mbt`
-- `src/layout/dot/c1_class2.mbt`
-- `src/layout/dot/ordering/graph.mbt`
-- `src/layout/dot/ordering/noncluster_reorder.mbt`
-- `src/layout/dot/c3_clustered.mbt`
-- `src/layout/dot/c3_local.mbt`
-- `src/layout/dot/c4_root_reorder.mbt`
-- `src/layout/dot/c4_ranks.mbt`
-- `src/layout/dot/c5_snapshot.mbt`
-- `src/layout/dot/c6_finalize.mbt`
-- `src/layout/dot/ordering/remincross_groups.mbt`
-- `src/layout/dot/ordering/remincross_materialized.mbt`
-- `src/layout/dot/ordering/remincross_cleanup.mbt`
-- `src/layout/dot/ordering/remincross_cluster_keys.mbt`
-- `src/layout/dot/ordering/remincross_seeded.mbt`
-- `src/layout/dot/ordering/remincross_vnode_groups.mbt`
-- `src/layout/dot/ordering.mbt`
-- `src/layout/dot/ordering/rank_reorder.mbt`
-- `src/layout/dot/ordering/rank_groups.mbt`
+- `src/layout/dot/stage_c.mbt`
+- `src/layout/dot/ordering/*`
 
 This is the most complex stage.
 
@@ -338,8 +321,8 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/d0_positions.mbt`
-- stage helpers in `src/layout/dot/d*_`
+- `compute_positions` in `src/layout/dot/stage_d.mbt`
+- stage helpers in `src/layout/dot/stage_d.mbt` and `src/layout/dot/positioning/*`
 
 ### D1) Mode gating
 
@@ -404,22 +387,12 @@ Final geometry needs both coordinates and cluster envelope data for routing/fina
 
 Entry:
 
-- `compute_dot_routing_stage` in `src/layout/dot/e0_routing_stage.mbt`
+- `compute_dot_routing_stage` in `src/layout/dot/stage_e.mbt`
 
 Main files:
 
-- `src/layout/dot/routing_types.mbt`
-- `src/layout/dot/routing_context.mbt`
-- `src/layout/dot/routing_pass.mbt`
-- `src/layout/dot/routing_edge_loop.mbt`
-- `src/layout/dot/routing_layout_emit.mbt`
-- `src/layout/dot/routing_regular_layout.mbt`
-- `src/layout/dot/routing_self_edge_apply.mbt`
-- `src/layout/dot/routing_output_remap.mbt`
-- `src/layout/dot/routing_base.mbt`
-- `src/layout/dot/routing_curve_points.mbt`
-- `src/layout/dot/routing_short_route.mbt`
-- `src/layout/dot/routing_curve_mode.mbt`
+- `src/layout/dot/stage_e.mbt`
+- `src/layout/dot/routing/*`
 - `src/layout/dot/routing_render_layout.mbt`
 - `src/layout/dot/routing_self_edge.mbt`
 - `src/layout/dot/routing_sameport.mbt`
@@ -463,7 +436,7 @@ Positioning tells “where nodes are.” Routing solves “how edges travel betw
 
 Main file:
 
-- `src/layout/dot/f_postprocess.mbt`
+- `src/layout/dot/stage_f.mbt`
 
 What is written:
 
@@ -548,52 +521,42 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `b0_rank_stage.mbt`, `e0_routing_stage.mbt`
+  - `layout.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `stage_e.mbt`, `stage_f.mbt`
 - Input canonicalization:
-  - `a1_input.mbt`
+  - `stage_a.mbt`
 - Rank assignment and rank heights:
-  - `b1_b2_ranks.mbt`, `b1_b2_heights.mbt`, `rank_assignment/*`, `network_simplex/*`
+  - `stage_b.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `b3_clusters.mbt`, `cluster.mbt`
+  - `stage_b.mbt`, `cluster.mbt`
 - Ordering dispatch + shared stage logic:
-  - `c0_ordering.mbt`
-  - `c0_setup.mbt`
-  - `c0_dispatch.mbt`
+  - `stage_c.mbt`
 - Ordering edge materialization:
-  - `c1_edges.mbt`
+  - `ordering/edge.mbt`
 - Ordering graph construction helpers:
-  - `c1_graph.mbt`
-  - `c1_class2.mbt`
-- Stage C ordering seed/reorder helpers:
   - `ordering/graph.mbt`
+  - `ordering/class2.mbt`
+- Stage C ordering seed/reorder helpers:
+  - `stage_c.mbt`
   - `ordering/noncluster_reorder.mbt`
 - Clustered ordering orchestration and rank-order updates:
-  - `c3_clustered.mbt`
-  - `c3_local.mbt`
-  - `c4_ranks.mbt`
-  - `c4_root_reorder.mbt`
-  - `c6_finalize.mbt`
+  - `stage_c.mbt`
+  - `ordering/root_reorder.mbt`
+  - `ordering/root_mincross.mbt`
+  - `ordering/cluster_local_replay.mbt`
 - Stage C ReMincross refinement family:
-  - `c5_snapshot.mbt`
-  - `ordering/remincross_groups.mbt`
+  - `ordering/snapshot_edges.mbt`
+  - `ordering/remincross_pass.mbt`
   - `ordering/remincross_materialized.mbt`
-  - `ordering/remincross_cleanup.mbt`
-  - `ordering/remincross_cluster_keys.mbt`
-  - `ordering/remincross_seeded.mbt`
-  - `ordering/remincross_vnode_groups.mbt`
+  - `ordering/remincross.mbt`
 - Stage D position/xpos internals:
-  - `d0_positions.mbt`
-  - `d1_d5_modes.mbt`
-  - `d2_seed.mbt`
-  - `d3_cleanup.mbt`
-  - `d4_clustered.mbt`
-  - `d4_nonclustered.mbt`
+  - `stage_d.mbt`
+  - `positioning/*`
 - Crossing helpers:
-  - `xpos.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`, `ordering/rank_groups.mbt`
+  - `xpos.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
 - Routing:
-  - `routing_types.mbt`, `routing_context.mbt`, `routing_pass.mbt`, `routing_base.mbt`, `routing_curve_points.mbt`, `routing_short_route.mbt`, `routing_curve_mode.mbt`, `routing_render_layout.mbt`, `routing_self_edge.mbt`, `routing_sameport.mbt`, `routing_clip_shape.mbt`, `routing/*`
+  - `stage_e.mbt`, `routing/*`
 - Final graph writeback:
-  - `f_postprocess.mbt`
+  - `stage_f.mbt`
 
 ---
 
@@ -602,13 +565,13 @@ Repository guard validates:
 If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
-2. `b0_rank_stage.mbt` + `e0_routing_stage.mbt` — understand rank/routing stage boundaries.
-3. `a1_input.mbt` — understand canonical input formation.
-4. `b1_b2_ranks.mbt` + `b1_b2_heights.mbt` — understand rank and spacing foundations.
-5. `c1_edges.mbt` + `c1_graph.mbt` — understand order graph construction.
-6. `c3_local.mbt` + `c4_root_reorder.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
-7. `c0_ordering.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
-8. `routing_context.mbt` + `routing_pass.mbt` + `routing_curve_mode.mbt` — understand edge geometry generation.
-9. `f_postprocess.mbt` — understand output attribute mapping.
+2. `stage_b.mbt` + `stage_e.mbt` — understand rank/routing stage boundaries.
+3. `stage_a.mbt` — understand canonical input formation.
+4. `stage_b.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
+5. `stage_c.mbt` + `ordering/graph.mbt` — understand order graph construction.
+6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
+7. `stage_c.mbt` + `stage_d.mbt` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
+8. `stage_e.mbt` + `routing/context.mbt` + `routing/regular_pass.mbt` + `routing/curve_mode.mbt` — understand edge geometry generation.
+9. `stage_f.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
