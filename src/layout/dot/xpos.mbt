@@ -1230,17 +1230,6 @@ fn edge_port_order(
   }
 }
 
-fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
-  if name.has_prefix(EDGE_VNODE_PREFIX) {
-    @network_simplex.NodeKind::Virtual
-  } else if @clustering.is_cluster_boundary_name(name) {
-    @network_simplex.NodeKind::Slack
-  } else {
-    @network_simplex.NodeKind::Normal
-  }
-}
-
-///|
 fn segment_slack_minlen(
   segment : SlackSegment,
   port_offsets : Map[String, Map[String, RecordPort]],
@@ -1327,7 +1316,6 @@ fn build_constraint_graph(
         nlist_order,
         gdnlist_order,
         base_positions,
-        extra_node_kind,
         trunc_int,
       },
     )
@@ -1404,7 +1392,7 @@ fn build_constraint_graph(
     let idx = @network_simplex.add_node(
       graph,
       extra_node.name,
-      kind=extra_node_kind(extra_node.name),
+      kind=@positioning.constraint_node_kind(extra_node.name),
     )
     index[extra_node.name] = idx
     // Graphviz parity: cluster boundary helpers enter the aux graph at rank 0

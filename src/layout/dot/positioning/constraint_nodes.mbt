@@ -67,6 +67,17 @@ fn build_constraint_ordered_names(
 }
 
 ///|
+pub fn constraint_node_kind(name : String) -> @network_simplex.NodeKind {
+  if name.has_prefix(@shared.EDGE_VNODE_PREFIX) {
+    @network_simplex.NodeKind::Virtual
+  } else if @clustering.is_cluster_boundary_name(name) {
+    @network_simplex.NodeKind::Slack
+  } else {
+    @network_simplex.NodeKind::Normal
+  }
+}
+
+///|
 fn add_ordered_constraint_nodes(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -74,7 +85,6 @@ fn add_ordered_constraint_nodes(
   real_by_name : Map[String, @cgraph.Node],
   extra_rank : Map[String, Int],
   base_positions : Map[String, Double],
-  extra_node_kind : (String) -> @network_simplex.NodeKind,
   trunc_int : (Double) -> Int,
 ) -> Unit {
   for name in ordered_names {
@@ -88,7 +98,7 @@ fn add_ordered_constraint_nodes(
       None =>
         match extra_rank.get(name) {
           Some(rank) => {
-            let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
+            let idx = @network_simplex.add_node(graph, name, kind=constraint_node_kind(name))
             index[name] = idx
             let pos = base_positions.get(name).unwrap_or(rank.to_double())
             @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
@@ -109,7 +119,6 @@ pub(all) struct ConstraintNodesSetupInput {
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   base_positions : Map[String, Double]
-  extra_node_kind : (String) -> @network_simplex.NodeKind
   trunc_int : (Double) -> Int
 }
 
@@ -143,7 +152,6 @@ pub fn build_constraint_nodes_setup(
     seed.real_by_name,
     seed.extra_rank,
     input.base_positions,
-    input.extra_node_kind,
     input.trunc_int,
   )
   {
