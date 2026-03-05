@@ -525,7 +525,7 @@ fn build_y_positions_with_flip(
       } else {
         0
       }
-    if adjust_flip_rank_heights(
+    if @clustering.adjust_flip_rank_heights(
       {
         graph: input.graph,
         ranks: input.ranks,
@@ -535,6 +535,8 @@ fn build_y_positions_with_flip(
         cluster_heights: input.cluster_bbox_heights,
         min_root_rank,
         margin_total: 0.0,
+        cluster_margin_pt_for: cluster_margin_pt,
+        cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
       },
     ) {
       y_positions =
@@ -635,13 +637,16 @@ fn build_y_position_data(
   let rank_ht2 = input.pipeline.rank_heights.rank_ht2
   let cluster_bbox_heights =
     if input.pipeline.cluster_meta.has_clusters {
-      compute_cluster_bbox_heights(
+      @clustering.compute_cluster_bbox_heights(
         {
           graph: input.pipeline.graph,
           ranks: input.pipeline.rank_data.ranks,
           sizes: input.pipeline.prep.sizes,
           self_edge_labels: input.pipeline.rank_data.self_edge_labels,
           rankdir: input.pipeline.prep.rankdir,
+          cluster_margin_pt_for: cluster_margin_pt,
+          cluster_label_padding_for: cluster_label_padding_for_layout,
+          node_half_height_pt_for: node_half_height_pt,
         },
       )
     } else {

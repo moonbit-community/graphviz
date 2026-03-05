@@ -47,6 +47,10 @@ pub(all) struct DotLayoutNode {
 }
 
 ///|
+/// Cluster rank-height pair used by cluster bbox/rank alignment passes.
+type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
+
+///|
 /// Edge layout output.
 /// Splines use points in points; label positions are optional.
 pub type DotLayoutEdge = @routing.DotLayoutEdge

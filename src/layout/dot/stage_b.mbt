@@ -351,7 +351,7 @@ fn compute_rank_heights(
     rank_ht1[rank] = half_height
     rank_ht2[rank] = half_height
   }
-  let _ = apply_cluster_rank_heights(
+  let _ = @clustering.apply_cluster_rank_heights(
     {
       graph,
       ranks,
@@ -360,6 +360,9 @@ fn compute_rank_heights(
       rank_ht1,
       rank_ht2,
       rankdir: input.rankdir,
+      cluster_margin_pt_for: cluster_margin_pt,
+      cluster_label_padding_for: cluster_label_padding_for_layout,
+      node_half_height_pt_for: node_half_height_pt,
     },
   )
   let nodesep_pt = round_int(input.nodesep_in * 72.0).to_double()
