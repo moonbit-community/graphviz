@@ -54,36 +54,6 @@ fn run_cluster_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder writes only cluster members back to
-/// existing rank slots, preserving non-cluster node positions.
-fn apply_cluster_rank_reorder_output(
-  groups : Map[Int, Array[String]],
-  cluster_rank_keys : Array[Int],
-  ordered_cluster : Map[Int, Array[String]],
-  cluster_node_set : Map[String, Bool],
-) -> Unit {
-  for rank in cluster_rank_keys {
-    let desired = ordered_cluster.get(rank).unwrap_or_default()
-    if desired.length() <= 1 {
-      continue
-    }
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => continue
-    }
-    let mut idx = 0
-    let mut pos = 0
-    while pos < names.length() && idx < desired.length() {
-      if cluster_node_set.get(names[pos]) is Some(_) {
-        names[pos] = desired[idx]
-        idx = idx + 1
-      }
-      pos = pos + 1
-    }
-  }
-}
-
-///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -147,7 +117,7 @@ fn reorder_cluster_rank_group(
     Some(value) => value
     None => return ()
   }
-  apply_cluster_rank_reorder_output(
+  @ordering.apply_cluster_rank_reorder_output(
     groups,
     local_context.cluster_rank_keys,
     ordered_cluster,
