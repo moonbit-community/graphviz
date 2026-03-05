@@ -496,22 +496,6 @@ fn apply_flat_label_heights(
   )
 }
 
-///|
-/// Graphviz parity: y-rank sweep range expands to include inserted flat-label
-/// vnode ranks, while preserving continuous rank iteration.
-/// Do not change behavior without updating fixtures/tests.
-fn build_y_all_ranks_with_flat(
-  rank_keys : Array[Int],
-  flat_label_nodes : Map[String, FlatLabelNodeInfo],
-) -> Array[Int] {
-  let flat_ranks : Array[Int] = []
-  for _name, info in flat_label_nodes {
-    flat_ranks.push(info.rank)
-  }
-  @positioning.build_all_ranks_with_overlays(rank_keys, flat_ranks)
-}
-
-///|
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
@@ -670,8 +654,17 @@ fn build_y_position_data(
     rank_ht1,
     rank_ht2,
   )
+  // Graphviz parity: y-rank sweep range expands to include inserted flat-label
+  // vnode ranks, while preserving continuous rank iteration.
+  let flat_ranks : Array[Int] = []
+  for _name, info in input.flat_label_nodes {
+    flat_ranks.push(info.rank)
+  }
   let y_all_ranks =
-    build_y_all_ranks_with_flat(input.pipeline.rank_data.rank_keys, input.flat_label_nodes)
+    @positioning.build_all_ranks_with_overlays(
+      input.pipeline.rank_data.rank_keys,
+      flat_ranks,
+    )
   let y_position_output =
     build_y_positions_with_flip(
       {
