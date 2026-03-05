@@ -7,7 +7,7 @@
 fn run_cluster_rank_reorder(
   local_context : @ordering.ClusterLocalReorderContext,
   input_phase_output : @ordering.ClusterLocalReorderRunInputsOutput,
-  dispatch_context : ClusterLocalReorderDispatchContext,
+  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
 ) -> Map[Int, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
@@ -34,8 +34,8 @@ fn run_cluster_rank_reorder(
         parents: input_phase_output.parents,
         children: input_phase_output.children,
         cluster_keys: input_phase_output.cluster_keys,
-        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        rank_same_groups: dispatch_context.rank_same_groups,
+        rank_same_order: dispatch_context.rank_same_order,
         edge_order: input_phase_output.edge_order,
         cluster_node_order: local_context.cluster_node_order,
         cluster_sizes: input_phase_output.cluster_sizes,
@@ -93,7 +93,7 @@ fn reorder_cluster_rank_group(
   cluster_graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
-  dispatch_context : ClusterLocalReorderDispatchContext,
+  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
 ) -> Unit {
   let local_context = match @ordering.build_cluster_local_reorder_context(
     {
@@ -102,7 +102,7 @@ fn reorder_cluster_rank_group(
       groups,
       node_order: dispatch_context.node_order,
       source_out_neighbors: dispatch_context.neighbor_sources.source_out_neighbors,
-      vnode_clusters: dispatch_context.vnode_info.vnode_clusters,
+      vnode_clusters: dispatch_context.vnode_clusters,
       fixed_positions,
       order_with_vnodes: dispatch_context.order_with_vnodes,
     },
@@ -133,9 +133,9 @@ fn reorder_cluster_rank_group(
     cluster_nodes: local_context.cluster_nodes,
     fixed_ranks: dispatch_context.fixed_ranks,
     order_sizes: dispatch_context.order_sizes,
-    vnode_sizes: dispatch_context.vnode_info.vnode_sizes,
-    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-    flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+    vnode_sizes: dispatch_context.vnode_sizes,
+    intercluster_keys: dispatch_context.intercluster_keys,
+    flat_constraints: dispatch_context.flat_constraints,
   }
   let input_phase_output =
     @ordering.build_local_reorder_inputs(input_context)
@@ -164,7 +164,7 @@ fn reorder_cluster_rank_groups(
   cluster_graphs : Map[String, @cgraph.Graph],
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
-  dispatch_context : ClusterLocalReorderDispatchContext,
+  dispatch_context : @ordering.ClusterLocalReorderDispatchContext,
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map::new()
   let mut current_fixed_positions = fixed_positions

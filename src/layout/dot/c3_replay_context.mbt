@@ -28,31 +28,6 @@ priv struct ClusterLocalRankReplayContext {
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder dispatch context keeps shared
-/// arrays/maps together so each cluster pass reuses one immutable payload.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderDispatchContext {
-  node_order : Map[String, Int]
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  neighbor_sources : @ordering.ClusterLocalNeighborSources
-  order_sizes : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  cluster_meta : ClusterMetadata
-  vnode_info : @routing.EdgeVnodeInfo
-  fixed_ranks : Map[String, Int]
-  order_with_vnodes : Bool
-}
-
-///|
 /// Graphviz parity: root mincross output is replayed into clustered
 /// build_ranks using unmapped order-edge snapshots before local cluster pass.
 /// Do not change behavior without updating fixtures/tests.
@@ -125,7 +100,7 @@ fn build_cluster_replay_dispatch_context(
   replay_context : ClusterLocalRankReplayContext,
   neighbor_sources : @ordering.ClusterLocalNeighborSources,
   fixed_ranks : Map[String, Int],
-) -> ClusterLocalReorderDispatchContext {
+) -> @ordering.ClusterLocalReorderDispatchContext {
   {
     node_order: replay_context.node_order,
     order_edges: replay_context.order_edges,
@@ -141,8 +116,12 @@ fn build_cluster_replay_dispatch_context(
     has_edge_labels: replay_context.has_edge_labels,
     port_order_positions: replay_context.port_order_positions,
     port_order_contrib: replay_context.port_order_contrib,
-    cluster_meta: replay_context.cluster_meta,
-    vnode_info: replay_context.vnode_info,
+    rank_same_groups: replay_context.cluster_meta.rank_same_groups,
+    rank_same_order: replay_context.cluster_meta.rank_same_order,
+    intercluster_keys: replay_context.cluster_meta.intercluster_keys,
+    flat_constraints: replay_context.cluster_meta.flat_constraints,
+    vnode_clusters: replay_context.vnode_info.vnode_clusters,
+    vnode_sizes: replay_context.vnode_info.vnode_sizes,
     fixed_ranks,
     order_with_vnodes: replay_context.order_with_vnodes,
   }
