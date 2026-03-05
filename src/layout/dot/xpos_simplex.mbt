@@ -63,101 +63,62 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   } else {
     CLUSTER_MARGIN_PT
   }
-  let constraint_graph =
-    @positioning.build_constraint_graph(
-      {
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        edge_out_order: input.edge_out_order,
-        nlist_order: xpos_nlist_order,
-        ranks: input.ranks,
-        rank_keys: input.rank_keys,
-        groups: input.groups,
-        sizes: input.sizes,
-        cluster_keys: input.cluster_keys,
-        nodesep_pt: input.nodesep_pt,
-        has_edge_labels: input.has_edge_labels,
-        extra_nodes: input.extra_nodes,
-        extra_edges: input.extra_edges,
-        edge_vnodes: input.edge_vnodes,
-        root_ln_targets: input.root_ln_targets,
-        root_rn_targets: input.root_rn_targets,
-        compress_width_minlen: input.compress_width_minlen,
-        segment_minlen:
-          (segment, real_by_name) =>
-            segment_slack_minlen(
-              segment,
-              port_offsets,
-              input.sizes,
-              rankdir,
-              real_by_name,
-            ),
-        edge_has_mid_label: edge => edge_mid_label_metrics(edge) is Some(_),
-        edge_degree_increment:
-          edge =>
-            if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
-              2
-            } else {
-              1
-            },
-        root_margin,
-        root_compress_weight: ROOT_COMPRESS_WEIGHT,
-        node_left_pt,
-        node_right_pt,
-        round_int,
-        trunc_int,
-      },
-    )
-  // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
-  let order =
-    @positioning.build_constraint_reorder(
-      {
-        graph: constraint_graph.graph,
-        index: constraint_graph.index,
-        nlist_order: xpos_nlist_order,
-      },
-    )
-  let reordered =
-    @positioning.reorder_constraint_graph(
-      {
-        graph: constraint_graph.graph,
-        index: constraint_graph.index,
-        order,
-      },
-    )
-  if should_capture_xpos_snapshot(input.graph_root) {
-    xpos_constraint_snapshot.val = Some(
-      build_constraint_snapshot(
-        reordered.graph,
-        reordered.index,
-        input.sizes,
-        order_index,
-      ),
-    )
-  }
-  @network_simplex.network_simplex(
-    reordered.graph,
-    0x7fffffff,
-    @network_simplex.BalanceMode::LR,
+  @positioning.solve_xpos_with_simplex(
+    {
+      nodes: input.nodes,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_out_order: input.edge_out_order,
+      nlist_order: xpos_nlist_order,
+      ranks: input.ranks,
+      rank_keys: input.rank_keys,
+      groups: input.groups,
+      sizes: input.sizes,
+      cluster_keys: input.cluster_keys,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      extra_nodes: input.extra_nodes,
+      extra_edges: input.extra_edges,
+      edge_vnodes: input.edge_vnodes,
+      root_ln_targets: input.root_ln_targets,
+      root_rn_targets: input.root_rn_targets,
+      compress_width_minlen: input.compress_width_minlen,
+      segment_minlen_fn:
+        (segment, real_by_name) =>
+          segment_slack_minlen(
+            segment,
+            port_offsets,
+            input.sizes,
+            rankdir,
+            real_by_name,
+          ),
+      edge_has_mid_label_fn: edge => edge_mid_label_metrics(edge) is Some(_),
+      edge_degree_increment_fn:
+        edge =>
+          if edge_dir_for(edge, edge.tail().graph().kind()) is EdgeDir::Both {
+            2
+          } else {
+            1
+          },
+      root_margin,
+      root_compress_weight: ROOT_COMPRESS_WEIGHT,
+      node_left_pt_fn: node_left_pt,
+      node_right_pt_fn: node_right_pt,
+      round_int_fn: round_int,
+      trunc_int_fn: trunc_int,
+      on_reordered_graph:
+        (graph, index) =>
+          if should_capture_xpos_snapshot(input.graph_root) {
+            xpos_constraint_snapshot.val = Some(
+              build_constraint_snapshot(
+                graph,
+                index,
+                input.sizes,
+                order_index,
+              ),
+            )
+          },
+    },
   )
-  let positions : Map[String, Double] = Map::new()
-  for node in input.nodes {
-    let name = node.name()
-    let idx = match reordered.index.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    positions[name] = @network_simplex.node_rank(reordered.graph, idx).to_double()
-  }
-  for extra_node in input.extra_nodes {
-    let idx = match reordered.index.get(extra_node.name) {
-      Some(value) => value
-      None => 0
-    }
-    positions[extra_node.name] =
-      @network_simplex.node_rank(reordered.graph, idx).to_double()
-  }
-  positions
 }
