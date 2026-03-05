@@ -288,13 +288,7 @@ priv struct FlatLabelAugmentationBuildInput {
 }
 
 ///|
-priv struct XposFlatLabelAugmentation {
-  x_groups : Map[Int, Array[String]]
-  x_cluster_keys : Map[String, String]
-  flat_label_edges : Array[ConstraintEdge]
-  flat_label_ranks : Map[String, Int]
-  flat_label_edge_vnodes : Map[String, String]
-}
+type XposFlatLabelAugmentation = @positioning.XFlatLabelAugmentationOutput
 
 ///|
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
@@ -304,51 +298,44 @@ fn build_flat_label_augmentation(
   input : FlatLabelAugmentationBuildInput,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
-  let mut next_x_groups = input.x_groups
-  let mut flat_label_edges : Array[ConstraintEdge] = []
-  let flat_label_ranks : Map[String, Int] = Map::new()
-  let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
-  let next_x_cluster_keys = input.x_cluster_keys
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in pipeline.prep.nodes {
-    existing_names[node.name()] = true
-  }
-  for vnode, _ in pipeline.ordering.vnode_info.vnode_ranks {
-    existing_names[vnode] = true
-  }
-  if input.use_vnodes_for_xpos {
-    let flat_label_vnodes = add_flat_label_vnodes(
-      pipeline.prep.edges,
-      pipeline.rank_data.edge_tail,
-      pipeline.rank_data.edge_head,
-      pipeline.rank_data.ranks,
-      pipeline.ordering.ordered_groups,
-      pipeline.rank_heights.nodesep_pt,
-      pipeline.prep.rankdir,
-      input.x_base_sizes,
-      pipeline.ordering.edge_cluster_keys,
-      pipeline.cluster_meta.cluster_parents,
-      existing_names,
-      pipeline.ordering.vnode_info,
-      next_x_groups,
-    )
-    next_x_groups = flat_label_vnodes.x_groups
-    flat_label_edges = flat_label_vnodes.flat_label_edges
-    for name, info in flat_label_vnodes.flat_label_nodes {
-      flat_label_ranks[name] = info.rank
-    }
-    flat_label_edge_vnodes = flat_label_vnodes.flat_label_edge_vnodes
-    for name, key in pipeline.ordering.vnode_info.vnode_clusters {
-      next_x_cluster_keys[name] = key
-    }
-  }
-  {
-    x_groups: next_x_groups,
-    x_cluster_keys: next_x_cluster_keys,
-    flat_label_edges,
-    flat_label_ranks,
-    flat_label_edge_vnodes,
-  }
+  @positioning.build_x_flat_label_augmentation(
+    {
+      use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+      x_groups: input.x_groups,
+      x_cluster_keys: input.x_cluster_keys,
+      nodes: pipeline.prep.nodes,
+      vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
+      vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
+      build_flat_label_vnodes_fn:
+        (existing_names, x_groups) => {
+          let flat_label_vnodes = add_flat_label_vnodes(
+            pipeline.prep.edges,
+            pipeline.rank_data.edge_tail,
+            pipeline.rank_data.edge_head,
+            pipeline.rank_data.ranks,
+            pipeline.ordering.ordered_groups,
+            pipeline.rank_heights.nodesep_pt,
+            pipeline.prep.rankdir,
+            input.x_base_sizes,
+            pipeline.ordering.edge_cluster_keys,
+            pipeline.cluster_meta.cluster_parents,
+            existing_names,
+            pipeline.ordering.vnode_info,
+            x_groups,
+          )
+          let flat_label_ranks : Map[String, Int] = Map::new()
+          for name, info in flat_label_vnodes.flat_label_nodes {
+            flat_label_ranks[name] = info.rank
+          }
+          {
+            x_groups: flat_label_vnodes.x_groups,
+            flat_label_edges: flat_label_vnodes.flat_label_edges,
+            flat_label_ranks,
+            flat_label_edge_vnodes: flat_label_vnodes.flat_label_edge_vnodes,
+          }
+        },
+    },
+  )
 }
 
 ///|
