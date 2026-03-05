@@ -13,54 +13,6 @@ priv struct OrderingRuntimeContext {
 }
 
 ///|
-/// Graphviz parity: ordering pre-pass derives real-node and existing-name maps
-/// directly from the graph node array before vnode creation.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingNodeNameSets {
-  real_nodes : Map[String, Bool]
-  existing_names : Map[String, Bool]
-}
-
-///|
-/// Graphviz parity: ordering pre-pass derives real-node/existing-name sets
-/// from the node array before vnode creation and class2 preparation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_node_name_sets(
-  nodes : Array[@cgraph.Node],
-) -> OrderingNodeNameSets {
-  let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    real_nodes[name] = true
-    existing_names[name] = true
-  }
-  { real_nodes, existing_names }
-}
-
-///|
-/// Graphviz parity: explicit-port endpoints are tracked before class2 to keep
-/// port-order constraints available during ordering setup.
-/// Do not change behavior without updating fixtures/tests.
-fn build_port_edge_nodes_for_ordering(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> Map[String, Bool] {
-  let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
-      @dot_shared.port_is_explicit(edge.head_port())
-    if ported {
-      port_edge_nodes[edge_tail[edge_idx]] = true
-      port_edge_nodes[edge_head[edge_idx]] = true
-    }
-  }
-  port_edge_nodes
-}
-
-///|
 /// Graphviz parity: setup probes vnode tail constraints in setup order even
 /// when the probe output is only used for parity diagnostics.
 /// Do not change behavior without updating fixtures/tests.
@@ -84,7 +36,7 @@ fn probe_vnode_tail_constraints_for_ordering(
 fn build_ordering_context(
   input : OrderingStageInput,
 ) -> OrderingRuntimeContext {
-  let node_name_sets = build_ordering_node_name_sets(input.nodes)
+  let node_name_sets = @ordering.build_ordering_node_name_sets(input.nodes)
   let real_nodes = node_name_sets.real_nodes
   let existing_names = node_name_sets.existing_names
   let edge_cluster_keys : Map[String, String] = Map::new()
@@ -103,7 +55,7 @@ fn build_ordering_context(
     input.cluster_meta.cluster_parents,
   )
   let port_edge_nodes =
-    build_port_edge_nodes_for_ordering(
+    @ordering.build_port_edge_nodes_for_ordering(
       input.edges,
       input.edge_tail,
       input.edge_head,
