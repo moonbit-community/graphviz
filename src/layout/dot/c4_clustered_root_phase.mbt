@@ -285,20 +285,6 @@ fn run_clustered_finalize_phase(
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: snapshot edge projection keeps raw edge arrays and optional
-/// port metadata aligned by index before coalescing/materialization.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingEdgeSnapshotBuildInputs {
-  edges_out : Array[@cgraph.Edge]
-  edge_tail_out : Array[String]
-  edge_head_out : Array[String]
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-}
-
-///|
 /// Graphviz parity: ordering-input snapshot capture gates on the same
 /// DOT_CAPTURE_ORDERING_INPUTS env flag used by fixture capture workflows.
 /// Do not change behavior without updating fixtures/tests.
@@ -324,103 +310,25 @@ fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
   out
 }
 
-fn build_ordering_edges_snapshot(
-  build_inputs : OrderingEdgeSnapshotBuildInputs,
+///|
+/// Graphviz parity: snapshot edge projection from ordering subpackage entries
+/// preserves edge field mapping and iteration order for fixture capture.
+fn ordering_snapshot_entries_to_edges(
+  entries : Array[@ordering.OrderingEdgeSnapshotEntry],
 ) -> Array[OrderingInputEdgeSnapshot] {
-  let edges_out = build_inputs.edges_out
-  let edge_tail_out = build_inputs.edge_tail_out
-  let edge_head_out = build_inputs.edge_head_out
-  let edge_tail_port_x = build_inputs.edge_tail_port_x
-  let edge_head_port_x = build_inputs.edge_head_port_x
-  let edge_tail_port_order = build_inputs.edge_tail_port_order
-  let edge_head_port_order = build_inputs.edge_head_port_order
   let edges : Array[OrderingInputEdgeSnapshot] = []
-  let mut idx = 0
-  while idx < edges_out.length() {
-    let tail = edge_tail_out[idx]
-    let head = edge_head_out[idx]
-    let tail_port_x =
-      if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else { 0.0 }
-    let head_port_x =
-      if idx < edge_head_port_x.length() { edge_head_port_x[idx] } else { 0.0 }
-    let tail_port_order =
-      if idx < edge_tail_port_order.length() {
-        edge_tail_port_order[idx]
-      } else {
-        0.0
-      }
-    let head_port_order =
-      if idx < edge_head_port_order.length() {
-        edge_head_port_order[idx]
-      } else {
-        0.0
-      }
+  for entry in entries {
     edges.push({
-      tail,
-      head,
-      xpenalty: @dot_shared.edge_xpenalty(edges_out[idx]),
-      tail_port_x,
-      head_port_x,
-      tail_port_order,
-      head_port_order,
+      tail: entry.tail,
+      head: entry.head,
+      xpenalty: entry.xpenalty,
+      tail_port_x: entry.tail_port_x,
+      head_port_x: entry.head_port_x,
+      tail_port_order: entry.tail_port_order,
+      head_port_order: entry.head_port_order,
     })
-    idx = idx + 1
   }
   edges
-}
-
-///|
-fn coalesce_order_edges_snapshot(
-  edges : Array[OrderingInputEdgeSnapshot],
-) -> Array[OrderingInputEdgeSnapshot] {
-  let entries_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-    Map::new()
-  let tail_order : Array[String] = []
-  for edge in edges {
-    let tail = edge.tail
-    if entries_by_tail.get(tail) is None {
-      entries_by_tail[tail] = []
-      tail_order.push(tail)
-    }
-    match entries_by_tail.get(tail) {
-      Some(list) =>
-        list.push(
-          (
-            edge.tail,
-            edge.head,
-            edge.xpenalty,
-            true,
-            edge.tail_port_x,
-            edge.head_port_x,
-            edge.tail_port_order,
-            edge.head_port_order,
-          ),
-        )
-      None => ()
-    }
-  }
-  let coalesced_by_tail = @ordering.coalesce_order_edges_by_tail(entries_by_tail)
-  let coalesced : Array[OrderingInputEdgeSnapshot] = []
-  for tail in tail_order {
-    let entries = match coalesced_by_tail.get(tail) {
-      Some(value) => value
-      None => []
-    }
-    for entry in entries {
-      let (tail_name, head_name, xpenalty, _constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        entry
-      coalesced.push({
-        tail: tail_name,
-        head: head_name,
-        xpenalty,
-        tail_port_x,
-        head_port_x,
-        tail_port_order,
-        head_port_order,
-      })
-    }
-  }
-  coalesced
 }
 
 ///|
@@ -446,17 +354,20 @@ fn capture_root_snapshot(
     return
   }
   let edges =
-    coalesce_order_edges_snapshot(
-      build_ordering_edges_snapshot(
-        {
-          edges_out: input.edges_out,
-          edge_tail_out: input.edge_tail_out,
-          edge_head_out: input.edge_head_out,
-          edge_tail_port_x: input.edge_tail_port_x,
-          edge_head_port_x: input.edge_head_port_x,
-          edge_tail_port_order: input.edge_tail_port_order,
-          edge_head_port_order: input.edge_head_port_order,
-        },
+    ordering_snapshot_entries_to_edges(
+      @ordering.coalesce_ordering_edge_snapshot_entries(
+        @ordering.build_ordering_edge_snapshot_entries(
+          {
+            edges_out: input.edges_out,
+            edge_tail_out: input.edge_tail_out,
+            edge_head_out: input.edge_head_out,
+            edge_tail_port_x: input.edge_tail_port_x,
+            edge_head_port_x: input.edge_head_port_x,
+            edge_tail_port_order: input.edge_tail_port_order,
+            edge_head_port_order: input.edge_head_port_order,
+            edge_xpenalty_for: @dot_shared.edge_xpenalty,
+          },
+        ),
       ),
     )
   let snapshot : RootMincrossInputSnapshot = {
@@ -506,17 +417,21 @@ fn capture_remincross_snapshot(
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: capture_inputs.rem_rank_keys.copy(),
     groups: @ordering.clone_rank_groups(capture_inputs.rem_groups),
-    edges: build_ordering_edges_snapshot(
-      {
-        edges_out: capture_inputs.rem_edges_out,
-        edge_tail_out: capture_inputs.rem_edge_tail_out,
-        edge_head_out: capture_inputs.rem_edge_head_out,
-        edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
-        edge_head_port_x: capture_inputs.rem_edge_head_port_x,
-        edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
-        edge_head_port_order: capture_inputs.rem_edge_head_port_order,
-      },
-    ),
+    edges:
+      ordering_snapshot_entries_to_edges(
+        @ordering.build_ordering_edge_snapshot_entries(
+          {
+            edges_out: capture_inputs.rem_edges_out,
+            edge_tail_out: capture_inputs.rem_edge_tail_out,
+            edge_head_out: capture_inputs.rem_edge_head_out,
+            edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+            edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+            edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+            edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+            edge_xpenalty_for: @dot_shared.edge_xpenalty,
+          },
+        ),
+      ),
     cluster_keys: clone_string_map(capture_inputs.rem_cluster_keys),
   }
   set_remincross_input_snapshot(snapshot)
@@ -531,6 +446,21 @@ priv struct OrderingInputEdgeSnapshot {
   head_port_x : Double
   tail_port_order : Double
   head_port_order : Double
+}
+
+///|
+fn touch_ordering_input_edges(
+  edges : Array[OrderingInputEdgeSnapshot],
+) -> Unit {
+  for edge in edges {
+    let _ = edge.tail
+    let _ = edge.head
+    let _ = edge.xpenalty
+    let _ = edge.tail_port_x
+    let _ = edge.head_port_x
+    let _ = edge.tail_port_order
+    let _ = edge.head_port_order
+  }
 }
 
 ///|
@@ -560,6 +490,7 @@ fn set_root_mincross_input_snapshot(snapshot : RootMincrossInputSnapshot) -> Uni
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
   let _ = snapshot.edges
+  touch_ordering_input_edges(snapshot.edges)
   let _ = snapshot.cluster_keys
   let _ = snapshot.cluster_skeleton
   root_mincross_input_snapshot.val = Some(snapshot)
@@ -570,6 +501,7 @@ fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
   let _ = snapshot.edges
+  touch_ordering_input_edges(snapshot.edges)
   let _ = snapshot.cluster_keys
   remincross_input_snapshot.val = Some(snapshot)
 }
