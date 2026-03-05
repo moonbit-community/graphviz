@@ -2,12 +2,6 @@
 /// Stage D Phase D1 split: x-stage seed data helpers.
 
 ///|
-priv struct XposVNodeOrderState {
-  vnode_order_keys : Map[String, Double]
-  has_vnode_order : Bool
-}
-
-///|
 priv struct XposOrderEdgePortData {
   x_base_sizes : Map[String, NodeSize]
   x_order_sizes : Map[String, NodeSize]
@@ -39,56 +33,11 @@ priv struct XSeedBuildInput {
 }
 
 ///|
-/// Graphviz parity: vnode-order probe input keeps order-index plus x-seed
-/// contexts grouped before Graphviz-compatible vnode-order derivation.
-priv struct VnodeOrderBuildInput {
-  use_vnodes_for_xpos : Bool
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  pipeline : PositionPipelineContext
-  order_index : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: x-order edge-port payload keeps vnode-mode and stage
 /// pipeline context grouped before port sampling and vnode-size merge.
 priv struct XOrderEdgePortBuildInput {
   use_vnodes_for_xpos : Bool
   pipeline : PositionPipelineContext
-}
-
-///|
-/// Graphviz parity: vnode order-key derivation follows Graphviz: explicit
-/// ordered_groups_with_vnodes means vnode order is present; otherwise build
-/// keys from edge-vnode chains and mark presence by non-empty key map.
-/// Do not change behavior without updating fixtures/tests.
-fn build_vnode_order_state(
-  input : VnodeOrderBuildInput,
-) -> XposVNodeOrderState {
-  let pipeline = input.pipeline
-  let mut vnode_order_keys : Map[String, Double] = Map::new()
-  let mut has_vnode_order = false
-  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
-    vnode_order_keys = @ordering.build_vnode_order_keys(
-      pipeline.prep.edges,
-      pipeline.rank_data.edge_tail,
-      pipeline.rank_data.edge_head,
-      pipeline.rank_data.edge_reversed,
-      pipeline.rank_data.ranks,
-      input.order_index,
-      pipeline.cluster_meta.intercluster_keys,
-      pipeline.cluster_meta.cluster_parents,
-      pipeline.ordering.vnode_info.edge_vnodes,
-      pipeline.ordering.vnode_info.vnode_ranks,
-    )
-    for _name, _ in vnode_order_keys {
-      has_vnode_order = true
-      break
-    }
-  }
-  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() > 0 {
-    has_vnode_order = true
-  }
-  { vnode_order_keys, has_vnode_order }
 }
 
 ///|
@@ -157,12 +106,20 @@ fn build_x_seed_data(
   let pipeline = input.pipeline
   let order_index = @ordering.build_order_index(pipeline.ordering.ordered_groups)
   let vnode_order_state =
-    build_vnode_order_state(
+    @positioning.build_vnode_order_state(
       {
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
         ordered_groups_with_vnodes: pipeline.ordering.ordered_groups_with_vnodes,
-        pipeline,
+        edges: pipeline.prep.edges,
+        edge_tail: pipeline.rank_data.edge_tail,
+        edge_head: pipeline.rank_data.edge_head,
+        edge_reversed: pipeline.rank_data.edge_reversed,
+        ranks: pipeline.rank_data.ranks,
         order_index,
+        intercluster_keys: pipeline.cluster_meta.intercluster_keys,
+        cluster_parents: pipeline.cluster_meta.cluster_parents,
+        edge_vnodes: pipeline.ordering.vnode_info.edge_vnodes,
+        vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
       },
     )
   let has_vnode_order = vnode_order_state.has_vnode_order

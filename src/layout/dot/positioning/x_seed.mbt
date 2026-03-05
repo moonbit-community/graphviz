@@ -3,6 +3,66 @@
 /// vnode-aware xpos preparation.
 
 ///|
+/// Graphviz parity: vnode-order probe input keeps order-index plus x-seed
+/// contexts grouped before Graphviz-compatible vnode-order derivation.
+pub(all) struct XposVNodeOrderInput {
+  use_vnodes_for_xpos : Bool
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  ranks : Map[String, Int]
+  order_index : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  cluster_parents : Map[String, String?]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: vnode order-key output keeps derived keys and presence gate
+/// grouped for downstream x-group assembly.
+pub struct XposVNodeOrderState {
+  vnode_order_keys : Map[String, Double]
+  has_vnode_order : Bool
+}
+
+///|
+/// Graphviz parity: vnode order-key derivation follows Graphviz: explicit
+/// ordered_groups_with_vnodes means vnode order is present; otherwise build
+/// keys from edge-vnode chains and mark presence by non-empty key map.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_vnode_order_state(
+  input : XposVNodeOrderInput,
+) -> XposVNodeOrderState {
+  let mut vnode_order_keys : Map[String, Double] = Map::new()
+  let mut has_vnode_order = false
+  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
+    vnode_order_keys = @ordering.build_vnode_order_keys(
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.edge_reversed,
+      input.ranks,
+      input.order_index,
+      input.intercluster_keys,
+      input.cluster_parents,
+      input.edge_vnodes,
+      input.vnode_ranks,
+    )
+    for _name, _ in vnode_order_keys {
+      has_vnode_order = true
+      break
+    }
+  }
+  if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() > 0 {
+    has_vnode_order = true
+  }
+  { vnode_order_keys, has_vnode_order }
+}
+
+///|
 /// Graphviz parity: initial x-group assembly inputs keep vnode-aware ordering
 /// seeds and cluster-skeleton filtering gates grouped for one build pass.
 pub(all) struct XInitialGroupsInput {
