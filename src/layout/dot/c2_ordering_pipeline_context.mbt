@@ -151,7 +151,7 @@ fn build_ordering_reorder_setup(
     runtime_context.vnode_info.edge_vnodes,
     edge_port_data,
     (base_order_index) =>
-      build_vnode_order_keys(
+      @ordering.build_vnode_order_keys(
         input.edges,
         input.edge_tail,
         input.edge_head,

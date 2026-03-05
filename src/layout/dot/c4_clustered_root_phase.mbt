@@ -271,7 +271,6 @@ fn run_clustered_finalize_phase(
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
       finalize_inputs,
-      build_vnode_order_keys,
       capture_remincross_snapshot,
       @ordering.run_remincross_cleanup_reorder,
     )

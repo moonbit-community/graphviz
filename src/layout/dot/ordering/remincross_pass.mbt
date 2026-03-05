@@ -249,7 +249,6 @@ pub(all) struct ReMincrossGroupInputs {
 /// fallback to full rebuild when seeded output is empty.
 pub fn build_remincross_groups(
   inputs : ReMincrossGroupInputs,
-  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
 ) -> Map[Int, Array[String]] {
   // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
   // in clustered ReMincross (Graphviz fill-specific branch behavior).
@@ -273,10 +272,7 @@ pub fn build_remincross_groups(
   }
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
-  build_remincross_vnode_groups(
-    inputs.vnode_group_inputs,
-    build_vnode_order_keys,
-  )
+  build_remincross_vnode_groups(inputs.vnode_group_inputs)
 }
 
 ///|
@@ -286,7 +282,6 @@ pub fn build_remincross_groups(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_clustered_finalize_order_groups(
   inputs : ClusteredFinalizeInputs,
-  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
@@ -313,7 +308,6 @@ pub fn run_clustered_finalize_order_groups(
   run_remincross_pass(
     inputs.remincross_context,
     final_groups,
-    build_vnode_order_keys,
     capture_call,
     reorder_call,
   )
@@ -327,7 +321,6 @@ pub fn run_clustered_finalize_order_groups(
 pub fn run_remincross_pass(
   context : ReMincrossPassBuildContext,
   base_groups : Map[Int, Array[String]],
-  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
@@ -355,7 +348,6 @@ pub fn run_remincross_pass(
           vnodes_by_rank: context.vnodes_by_rank,
         },
       },
-      build_vnode_order_keys,
     )
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
@@ -826,6 +818,120 @@ fn edge_internal_to_cluster(
 }
 
 ///|
+/// Graphviz parity: vnode order keys interpolate tail/head order values while
+/// preserving cluster-internal edge treatment and trailing-root vnode placement.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_vnode_order_keys(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  order_index : Map[String, Int],
+  cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+) -> Map[String, Double] {
+  let _ = edge_reversed
+  let keys : Map[String, Double] = Map::new()
+  let max_order_by_rank : Map[Int, Int] = Map::new()
+  for name, order in order_index {
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    match max_order_by_rank.get(rank) {
+      Some(current) =>
+        if order > current {
+          max_order_by_rank[rank] = order
+        }
+      None => max_order_by_rank[rank] = order
+    }
+  }
+  let mut edge_idx = 0
+  for edge in edges {
+    let current_idx = edge_idx
+    edge_idx = edge_idx + 1
+    let vnodes = edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+    if vnodes.length() == 0 {
+      continue
+    }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        current_idx,
+        edge_tail,
+        edge_head,
+      )
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let tail_cluster = cluster_keys.get(tail).unwrap_or_default()
+    let head_cluster = cluster_keys.get(head).unwrap_or_default()
+    let tail_order = order_index.get(tail).unwrap_or_default()
+    let head_order = order_index.get(head).unwrap_or_default()
+    let (low_rank, high_rank, low_order, high_order) = if tail_rank <= head_rank {
+      (tail_rank, head_rank, tail_order, head_order)
+    } else {
+      (head_rank, tail_rank, head_order, tail_order)
+    }
+    let span = high_rank - low_rank
+    if span <= 0 {
+      continue
+    }
+    let span_f = Double::from_int(span)
+    let low_order_f = Double::from_int(low_order)
+    let high_order_f = Double::from_int(high_order)
+    let same_order = low_order == high_order
+    let internal =
+      tail_cluster != "" && head_cluster != "" &&
+      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+    let trail_external =
+      !internal &&
+      ((tail_cluster == "" && head_cluster != "") ||
+        (tail_cluster != "" && head_cluster == ""))
+    let edge_offset = Double::from_int(current_idx) * 0.001
+    let mut vnode_seq = 0
+    for vnode in vnodes {
+      let vnode_rank = match vnode_ranks.get(vnode) {
+        Some(value) => value
+        None => continue
+      }
+      let t = Double::from_int(vnode_rank - low_rank) / span_f
+      let mut base_key =
+        if same_order {
+          // Graphviz parity: when tail/head orders match, vnodes precede
+          // nodes with that order in the intermediate ranks.
+          low_order_f - (1.0 - t)
+        } else {
+          low_order_f + (high_order_f - low_order_f) * t
+        }
+      if trail_external {
+        // Graphviz parity: edges crossing cluster boundaries from/to root
+        // place vnodes after real nodes on the rank.
+        let max_order = max_order_by_rank.get(vnode_rank).unwrap_or(-1)
+        let min_key = Double::from_int(max_order + 1)
+        let vnode_offset = Double::from_int(vnode_seq) * 0.000001
+        if base_key < min_key {
+          base_key = min_key + edge_offset + vnode_offset
+        } else {
+          base_key = base_key + edge_offset + vnode_offset
+        }
+      }
+      keys[vnode] = base_key
+      vnode_seq = vnode_seq + 1
+    }
+  }
+  keys
+}
+
+///|
 /// Graphviz parity: intercluster trailing-vnode checks use inclusive overlap
 /// over each cluster's min/max rank bounds with min-rank fallback.
 fn cluster_rank_ranges_overlap(
@@ -970,7 +1076,6 @@ pub(all) struct ReMincrossVnodeGroupInputs {
 fn build_remincross_vnode_keys(
   inputs : ReMincrossVnodeGroupInputs,
   rem_base_order_index : Map[String, Int],
-  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
 ) -> Map[String, Double] {
   let remincross_cluster_keys : Map[String, String] = Map::new()
   for name, key in inputs.intercluster_keys {
@@ -1016,7 +1121,6 @@ fn build_remincross_vnode_keys(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_remincross_vnode_groups(
   inputs : ReMincrossVnodeGroupInputs,
-  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
 ) -> Map[Int, Array[String]] {
   let rem_base_groups = clone_rank_groups(inputs.final_groups)
   let rem_base_order_index = build_order_index(rem_base_groups)
@@ -1027,7 +1131,6 @@ pub fn build_remincross_vnode_groups(
       build_remincross_vnode_keys(
         inputs,
         rem_base_order_index,
-        build_vnode_order_keys,
       )
     }
   if inputs.order_with_vnodes {

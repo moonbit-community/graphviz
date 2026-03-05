@@ -81,7 +81,7 @@ fn build_vnode_order_state(
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
-    vnode_order_keys = build_vnode_order_keys(
+    vnode_order_keys = @ordering.build_vnode_order_keys(
       pipeline.prep.edges,
       pipeline.rank_data.edge_tail,
       pipeline.rank_data.edge_head,
