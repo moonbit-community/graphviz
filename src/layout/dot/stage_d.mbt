@@ -749,11 +749,5 @@ fn build_position_output_maps(
 
 ///|
 fn cluster_rounding_enabled() -> Bool {
-  match @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "" && lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
+  env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"))
 }

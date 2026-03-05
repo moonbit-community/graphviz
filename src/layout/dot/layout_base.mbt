@@ -39,6 +39,17 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+fn env_flag_enabled_nonempty(value : String?) -> Bool {
+  match value {
+    Some(raw) => {
+      let lower = raw.to_lower()
+      lower != "" && lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
+  }
+}
+
+///|
 priv struct GraphSizePt {
   width_pt : Double
   height_pt : Double

@@ -1303,13 +1303,7 @@ fn adjust_labels_for_overlaps(
 
 ///|
 fn edge_label_adjust_enabled() -> Bool {
-  match @sys.get_env_var("DOT_ADJUST_EDGE_LABELS") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "" && lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
+  env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
 }
 
 ///|
