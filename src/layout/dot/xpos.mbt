@@ -60,13 +60,7 @@ fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
 }
 
 ///|
-priv struct SlackSegment {
-  tail : String
-  head : String
-  weight : Int
-  tail_port : @cgraph.Port?
-  head_port : @cgraph.Port?
-}
+type SlackSegment = @positioning.SlackSegment
 
 ///|
 priv struct ConstraintGraphState {
@@ -1247,116 +1241,33 @@ fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
 }
 
 ///|
-fn add_segment_slack_edges(
-  graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
-  segments : Array[SlackSegment],
+fn segment_slack_minlen(
+  segment : SlackSegment,
   port_offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
   real_by_name : Map[String, @cgraph.Node],
-) -> Unit {
-  for seg in segments {
-    let tail_idx = match index.get(seg.tail) {
-      Some(value) => value
-      None => continue
-    }
-    let head_idx = match index.get(seg.head) {
-      Some(value) => value
-      None => continue
-    }
-    let tail_offset = edge_port_offset(
-      seg.tail,
-      seg.tail_port,
-      port_offsets,
-      sizes,
-      rankdir,
-      real_by_name,
-    )
-    let head_offset = edge_port_offset(
-      seg.head,
-      seg.head_port,
-      port_offsets,
-      sizes,
-      rankdir,
-      real_by_name,
-    )
-    let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-    // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
-    let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
-    let tail_rank = @network_simplex.node_rank(graph, tail_idx)
-    let head_rank = @network_simplex.node_rank(graph, head_idx)
-    let base_tail = tail_rank - m0 - 1
-    let base_head = head_rank - m1 - 1
-    @network_simplex.set_node_rank(
-      graph,
-      slack_idx,
-      if base_tail < base_head { base_tail } else { base_head },
-    )
-    let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
-    let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
-  }
-}
-
-///|
-fn add_segments_in_tail_order(
-  graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
-  segments_by_tail : Map[String, Array[SlackSegment]],
-  nlist_order : Array[String],
-  port_offsets : Map[String, Map[String, RecordPort]],
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  real_by_name : Map[String, @cgraph.Node],
-) -> Unit {
-  let tail_seen : Map[String, Bool] = Map::new()
-  for tail_name in nlist_order {
-    let segments = match segments_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    add_segment_slack_edges(
-      graph,
-      index,
-      segments,
-      port_offsets,
-      sizes,
-      rankdir,
-      real_by_name,
-    )
-    tail_seen[tail_name] = true
-  }
-  for tail_name, segments in segments_by_tail {
-    if tail_seen.get(tail_name) is None {
-      add_segment_slack_edges(
-        graph,
-        index,
-        segments,
-        port_offsets,
-        sizes,
-        rankdir,
-        real_by_name,
-      )
-    }
-  }
-}
-
-///|
-fn push_slack_segment(
-  segments_by_tail : Map[String, Array[SlackSegment]],
-  seg_tail : String,
-  seg_head : String,
-  weight : Int,
-  tail_port : @cgraph.Port?,
-  head_port : @cgraph.Port?,
-) -> Unit {
-  let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port }
-  match segments_by_tail.get(seg_tail) {
-    Some(list) => list.push(entry)
-    None => segments_by_tail[seg_tail] = [entry]
-  }
+) -> (Int, Int) {
+  let tail_offset = edge_port_offset(
+    segment.tail,
+    segment.tail_port,
+    port_offsets,
+    sizes,
+    rankdir,
+    real_by_name,
+  )
+  let head_offset = edge_port_offset(
+    segment.head,
+    segment.head_port,
+    port_offsets,
+    sizes,
+    rankdir,
+    real_by_name,
+  )
+  let delta = head_offset - tail_offset
+  let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+  let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+  (m0, m1)
 }
 
 ///|
@@ -1648,7 +1559,7 @@ fn build_constraint_graph(
                     head_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
                   }
                 }
-                push_slack_segment(
+                @positioning.push_slack_segment(
                   segments_by_tail,
                   seg_tail,
                   seg_head,
@@ -1678,15 +1589,22 @@ fn build_constraint_graph(
   for _flat_key, entry in flat_minlen_constraints {
     @positioning.add_constraint_edge_if_present(graph, index, entry)
   }
-  add_segments_in_tail_order(
-    graph,
-    index,
-    segments_by_tail,
-    nlist_order,
-    port_offsets,
-    sizes,
-    rankdir,
-    real_by_name,
+  @positioning.add_segments_in_tail_order(
+    {
+      graph,
+      index,
+      segments_by_tail,
+      nlist_order,
+      segment_minlen:
+        segment =>
+          segment_slack_minlen(
+            segment,
+            port_offsets,
+            sizes,
+            rankdir,
+            real_by_name,
+          ),
+    },
   )
   for extra_node in late_extra_nodes {
     let idx = @network_simplex.add_node(
