@@ -144,15 +144,12 @@ fn build_x_seed_data(
           (name) => cluster_key_from_skeleton(name) is Some(_),
       },
     )
-  let x_cluster_keys : Map[String, String] = Map::new()
-  for name, key in pipeline.cluster_meta.cluster_keys {
-    x_cluster_keys[name] = key
-  }
-  if input.use_vnodes_for_xpos {
-    for name, key in pipeline.ordering.vnode_info.vnode_clusters {
-      x_cluster_keys[name] = key
-    }
-  }
+  let x_cluster_keys =
+    @positioning.build_x_cluster_keys(
+      pipeline.cluster_meta.cluster_keys,
+      input.use_vnodes_for_xpos,
+      pipeline.ordering.vnode_info.vnode_clusters,
+    )
   {
     has_vnode_order,
     x_base_sizes: x_order_edge_port_data.x_base_sizes,

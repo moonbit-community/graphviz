@@ -115,3 +115,24 @@ pub fn build_initial_x_groups(
   }
   x_groups
 }
+
+///|
+/// Graphviz parity: x-stage cluster-key seed starts from graph cluster keys and
+/// overlays vnode cluster keys only when vnode xpos mode is enabled.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_x_cluster_keys(
+  cluster_keys : Map[String, String],
+  use_vnodes_for_xpos : Bool,
+  vnode_clusters : Map[String, String],
+) -> Map[String, String] {
+  let x_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_keys {
+    x_cluster_keys[name] = key
+  }
+  if use_vnodes_for_xpos {
+    for name, key in vnode_clusters {
+      x_cluster_keys[name] = key
+    }
+  }
+  x_cluster_keys
+}
