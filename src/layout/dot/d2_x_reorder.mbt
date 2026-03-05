@@ -11,7 +11,7 @@ priv struct XFlatLabelBuildInput {
   allow_xpos_reorder : Bool
   graphviz_flip : Bool
   pipeline : PositionPipelineContext
-  x_seed : XPositionSeedData
+  x_seed : @positioning.XPositionSeedData
 }
 
 ///|
