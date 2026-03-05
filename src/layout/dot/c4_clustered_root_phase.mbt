@@ -293,95 +293,36 @@ fn should_capture_ordering_inputs() -> Bool {
 }
 
 ///|
-fn clone_string_map(source : Map[String, String]) -> Map[String, String] {
-  let out : Map[String, String] = Map::new()
-  for key, value in source {
-    out[key] = value
-  }
-  out
-}
-
-///|
-fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
-  let out : Map[String, Bool] = Map::new()
-  for key, value in source {
-    out[key] = value
-  }
-  out
-}
-
-///|
-priv struct RootSnapshotCaptureInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  edges_out : Array[@cgraph.Edge]
-  edge_tail_out : Array[String]
-  edge_head_out : Array[String]
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-  cluster_keys : Map[String, String]
-  cluster_skeleton : Map[String, Bool]
-}
-
-///|
-fn capture_root_snapshot(
-  input : RootSnapshotCaptureInput,
-) -> Unit {
-  if !should_capture_ordering_inputs() {
-    return
-  }
-  let edges =
-    @ordering.coalesce_ordering_edge_snapshot_entries(
-      @ordering.build_ordering_edge_snapshot_entries(
-        {
-          edges_out: input.edges_out,
-          edge_tail_out: input.edge_tail_out,
-          edge_head_out: input.edge_head_out,
-          edge_tail_port_x: input.edge_tail_port_x,
-          edge_head_port_x: input.edge_head_port_x,
-          edge_tail_port_order: input.edge_tail_port_order,
-          edge_head_port_order: input.edge_head_port_order,
-          edge_xpenalty_for: @dot_shared.edge_xpenalty,
-        },
-      ),
-    )
-  let snapshot : RootMincrossInputSnapshot = {
-    rank_keys: input.rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(input.groups),
-    edges,
-    cluster_keys: clone_string_map(input.cluster_keys),
-    cluster_skeleton: clone_bool_map(input.cluster_skeleton),
-  }
-  set_root_mincross_input_snapshot(snapshot)
-}
-
-///|
 /// Graphviz parity: root reorder pass snapshot records the same mincross edge
 /// projection and selected rank groups passed to reorder_rank_groups.
 fn capture_root_mincross_pass_snapshot(
   result : @ordering.RootMincrossReorderResult,
   inputs : @ordering.RootMincrossReorderInputs,
 ) -> Unit {
+  if !should_capture_ordering_inputs() {
+    return
+  }
   let reorder_call_data = result.reorder_call_data
-  capture_root_snapshot(
-    {
-      rank_keys: reorder_call_data.order_rank_keys_for_mincross,
-      groups: result.order_groups_for_mincross,
-      edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-      edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-      edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-      edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-      edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-      edge_tail_port_order:
-        reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-      edge_head_port_order:
-        reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-      cluster_keys: inputs.order_cluster_keys,
-      cluster_skeleton: inputs.order_cluster_skeleton,
-    },
-  )
+  let snapshot =
+    @ordering.build_root_mincross_input_snapshot(
+      {
+        rank_keys: reorder_call_data.order_rank_keys_for_mincross,
+        groups: result.order_groups_for_mincross,
+        edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+        edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+        edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+        edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+        edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+        edge_tail_port_order:
+          reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+        edge_head_port_order:
+          reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+        cluster_keys: inputs.order_cluster_keys,
+        cluster_skeleton: inputs.order_cluster_skeleton,
+        edge_xpenalty_for: @dot_shared.edge_xpenalty,
+      },
+    )
+  set_root_mincross_input_snapshot(snapshot)
 }
 
 ///|
@@ -391,43 +332,30 @@ fn capture_remincross_snapshot(
   if !should_capture_ordering_inputs() {
     return
   }
-  let snapshot : RemincrossInputSnapshot = {
-    rank_keys: capture_inputs.rem_rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(capture_inputs.rem_groups),
-    edges:
-      @ordering.build_ordering_edge_snapshot_entries(
-        {
-          edges_out: capture_inputs.rem_edges_out,
-          edge_tail_out: capture_inputs.rem_edge_tail_out,
-          edge_head_out: capture_inputs.rem_edge_head_out,
-          edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
-          edge_head_port_x: capture_inputs.rem_edge_head_port_x,
-          edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
-          edge_head_port_order: capture_inputs.rem_edge_head_port_order,
-          edge_xpenalty_for: @dot_shared.edge_xpenalty,
-        },
-      ),
-    cluster_keys: clone_string_map(capture_inputs.rem_cluster_keys),
-  }
+  let snapshot =
+    @ordering.build_remincross_input_snapshot(
+      {
+        rank_keys: capture_inputs.rem_rank_keys,
+        groups: capture_inputs.rem_groups,
+        edges_out: capture_inputs.rem_edges_out,
+        edge_tail_out: capture_inputs.rem_edge_tail_out,
+        edge_head_out: capture_inputs.rem_edge_head_out,
+        edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+        edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+        edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+        edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+        cluster_keys: capture_inputs.rem_cluster_keys,
+        edge_xpenalty_for: @dot_shared.edge_xpenalty,
+      },
+    )
   set_remincross_input_snapshot(snapshot)
 }
 
 ///|
-priv struct RootMincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  edges : Array[@ordering.OrderingEdgeSnapshotEntry]
-  cluster_keys : Map[String, String]
-  cluster_skeleton : Map[String, Bool]
-}
+type RootMincrossInputSnapshot = @ordering.RootMincrossInputSnapshot
 
 ///|
-priv struct RemincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  edges : Array[@ordering.OrderingEdgeSnapshotEntry]
-  cluster_keys : Map[String, String]
-}
+type RemincrossInputSnapshot = @ordering.RemincrossInputSnapshot
 
 let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
 

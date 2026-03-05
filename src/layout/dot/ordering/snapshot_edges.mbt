@@ -123,3 +123,135 @@ pub fn coalesce_ordering_edge_snapshot_entries(
   }
   coalesced
 }
+
+///|
+/// Graphviz parity: root mincross snapshot payload keeps rank-order groups,
+/// coalesced edge snapshots, and cluster overlays for fixture capture checks.
+pub struct RootMincrossInputSnapshot {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges : Array[OrderingEdgeSnapshotEntry]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: remincross snapshot payload keeps rank-order groups and
+/// edge snapshots for fixture capture checks.
+pub struct RemincrossInputSnapshot {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges : Array[OrderingEdgeSnapshotEntry]
+  cluster_keys : Map[String, String]
+}
+
+///|
+/// Graphviz parity: root mincross snapshot input keeps order-rank groups,
+/// edge arrays, and cluster overlays together before capture materialization.
+pub(all) struct RootMincrossSnapshotBuildInput {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges_out : Array[@cgraph.Edge]
+  edge_tail_out : Array[String]
+  edge_head_out : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  edge_xpenalty_for : (@cgraph.Edge) -> Int
+}
+
+///|
+/// Graphviz parity: remincross snapshot input keeps order-rank groups,
+/// edge arrays, and cluster overlays together before capture materialization.
+pub(all) struct RemincrossSnapshotBuildInput {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges_out : Array[@cgraph.Edge]
+  edge_tail_out : Array[String]
+  edge_head_out : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  cluster_keys : Map[String, String]
+  edge_xpenalty_for : (@cgraph.Edge) -> Int
+}
+
+///|
+fn clone_string_map(source : Map[String, String]) -> Map[String, String] {
+  let out : Map[String, String] = Map::new()
+  for key, value in source {
+    out[key] = value
+  }
+  out
+}
+
+///|
+fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
+  let out : Map[String, Bool] = Map::new()
+  for key, value in source {
+    out[key] = value
+  }
+  out
+}
+
+///|
+/// Graphviz parity: root mincross snapshot capture coalesces edge projections
+/// and preserves rank-order/cluster overlays for fixture replay checks.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_mincross_input_snapshot(
+  input : RootMincrossSnapshotBuildInput,
+) -> RootMincrossInputSnapshot {
+  let edges =
+    coalesce_ordering_edge_snapshot_entries(
+      build_ordering_edge_snapshot_entries(
+        {
+          edges_out: input.edges_out,
+          edge_tail_out: input.edge_tail_out,
+          edge_head_out: input.edge_head_out,
+          edge_tail_port_x: input.edge_tail_port_x,
+          edge_head_port_x: input.edge_head_port_x,
+          edge_tail_port_order: input.edge_tail_port_order,
+          edge_head_port_order: input.edge_head_port_order,
+          edge_xpenalty_for: input.edge_xpenalty_for,
+        },
+      ),
+    )
+  {
+    rank_keys: input.rank_keys.copy(),
+    groups: clone_rank_groups(input.groups),
+    edges,
+    cluster_keys: clone_string_map(input.cluster_keys),
+    cluster_skeleton: clone_bool_map(input.cluster_skeleton),
+  }
+}
+
+///|
+/// Graphviz parity: remincross snapshot capture keeps raw edge projections
+/// (without coalescing) and preserves rank-order overlays.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_remincross_input_snapshot(
+  input : RemincrossSnapshotBuildInput,
+) -> RemincrossInputSnapshot {
+  {
+    rank_keys: input.rank_keys.copy(),
+    groups: clone_rank_groups(input.groups),
+    edges:
+      build_ordering_edge_snapshot_entries(
+        {
+          edges_out: input.edges_out,
+          edge_tail_out: input.edge_tail_out,
+          edge_head_out: input.edge_head_out,
+          edge_tail_port_x: input.edge_tail_port_x,
+          edge_head_port_x: input.edge_head_port_x,
+          edge_tail_port_order: input.edge_tail_port_order,
+          edge_head_port_order: input.edge_head_port_order,
+          edge_xpenalty_for: input.edge_xpenalty_for,
+        },
+      ),
+    cluster_keys: clone_string_map(input.cluster_keys),
+  }
+}
