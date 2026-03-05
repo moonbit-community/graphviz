@@ -25,6 +25,16 @@ fn edge_mid_label_metrics(edge : @cgraph.Edge) -> EdgeLabelMetrics? {
 }
 
 ///|
+fn edge_mid_label_metrics_for_routing(
+  edge : @cgraph.Edge,
+) -> @routing.RouteLabelMetrics? {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+///|
 /// Graphviz parity: edge label font selection aligned to refs/graphviz/lib/common/utils.c
 /// (initFontEdgeAttr/initFontLabelEdgeAttr).
 /// Do not change behavior without updating fixtures/tests.

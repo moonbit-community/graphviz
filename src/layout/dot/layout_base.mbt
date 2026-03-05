@@ -304,6 +304,19 @@ fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
 }
 
 ///|
+fn edge_dir_for_routing(
+  edge : @cgraph.Edge,
+  kind : @cgraph.GraphKind,
+) -> @routing.RouteEdgeDir {
+  match edge_dir_for(edge, kind) {
+    EdgeDir::Forward => @routing.RouteEdgeDir::Forward
+    EdgeDir::Back => @routing.RouteEdgeDir::Back
+    EdgeDir::Both => @routing.RouteEdgeDir::Both
+    EdgeDir::None => @routing.RouteEdgeDir::None
+  }
+}
+
+///|
 const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
 
 ///|
