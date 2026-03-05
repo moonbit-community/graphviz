@@ -1,5 +1,8 @@
 ///|
-priv struct XposConstraintNodeSnapshot {
+type SnapshotNodeSize = @shared.NodeSize
+
+///|
+pub(all) struct XposConstraintNodeSnapshot {
   name : String?
   kind : @network_simplex.NodeKind
   rank : Int
@@ -10,7 +13,7 @@ priv struct XposConstraintNodeSnapshot {
 }
 
 ///|
-priv struct XposConstraintEdgeSnapshot {
+pub(all) struct XposConstraintEdgeSnapshot {
   tail : Int
   head : Int
   minlen : Int
@@ -18,7 +21,7 @@ priv struct XposConstraintEdgeSnapshot {
 }
 
 ///|
-priv struct XposConstraintSnapshot {
+pub(all) struct XposConstraintSnapshot {
   nodes : Array[XposConstraintNodeSnapshot]
   edges : Array[XposConstraintEdgeSnapshot]
 }
@@ -45,11 +48,10 @@ fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
 }
 
 ///|
-///|
-let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
+pub let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
 
 ///|
-fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
+pub fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
   match @sys.get_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS") {
     None => false
     Some(value) => {
@@ -65,10 +67,10 @@ fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn build_constraint_snapshot(
+pub fn build_constraint_snapshot(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
-  sizes : Map[String, NodeSize],
+  sizes : Map[String, SnapshotNodeSize],
   order_index : Map[String, Int],
 ) -> XposConstraintSnapshot {
   let names : Array[String?] = []

@@ -109,9 +109,9 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
       trunc_int_fn: trunc_int,
       on_reordered_graph:
         (graph, index) =>
-          if should_capture_xpos_snapshot(input.graph_root) {
-            xpos_constraint_snapshot.val = Some(
-              build_constraint_snapshot(
+          if @positioning.should_capture_xpos_snapshot(input.graph_root) {
+            @positioning.xpos_constraint_snapshot.val = Some(
+              @positioning.build_constraint_snapshot(
                 graph,
                 index,
                 input.sizes,

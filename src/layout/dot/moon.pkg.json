@@ -25,10 +25,6 @@
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
       "alias": "edge_spline"
     },
-    {
-      "path": "moonbit-community/graphviz/layout/dot/network_simplex",
-      "alias": "network_simplex"
-    },
     "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
@@ -49,6 +45,10 @@
     {
       "path": "moonbit-community/graphviz/dot",
       "alias": "dot_parser"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/network_simplex",
+      "alias": "network_simplex"
     },
     "moonbitlang/core/json",
     "moonbitlang/x/fs"
