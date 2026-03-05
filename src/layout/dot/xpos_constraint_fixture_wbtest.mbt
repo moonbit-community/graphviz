@@ -142,11 +142,13 @@ fn cluster_node_names(
   let names : Map[Int, String] = Map::new()
   for cluster in clusters {
     match cluster.ln {
-      Some(value) => names[value] = "\{CLUSTER_LN_PREFIX}\{cluster.name}"
+      Some(value) =>
+        names[value] = "\{@dot_shared.CLUSTER_LN_PREFIX}\{cluster.name}"
       None => ()
     }
     match cluster.rn {
-      Some(value) => names[value] = "\{CLUSTER_RN_PREFIX}\{cluster.name}"
+      Some(value) =>
+        names[value] = "\{@dot_shared.CLUSTER_RN_PREFIX}\{cluster.name}"
       None => ()
     }
   }
@@ -184,8 +186,8 @@ fn snapshot_node_key(
 ) -> String {
   match node.name {
     Some(value) => {
-      if value.has_prefix(CLUSTER_LN_PREFIX) ||
-        value.has_prefix(CLUSTER_RN_PREFIX) {
+      if value.has_prefix(@dot_shared.CLUSTER_LN_PREFIX) ||
+        value.has_prefix(@dot_shared.CLUSTER_RN_PREFIX) {
         return "N:\{value}"
       }
       if real_nodes.get(value) is Some(_) {

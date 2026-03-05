@@ -122,74 +122,6 @@ fn adjust_intercluster_alignment(
 }
 
 ///|
-fn cluster_key_from_boundary(
-  name : String,
-  cluster_names : Map[String, Bool],
-) -> String? {
-  let mut rest : String? = None
-  if name.has_prefix(@shared.CLUSTER_LN_PREFIX) {
-    rest = Some(
-      name.unsafe_substring(
-        start=@shared.CLUSTER_LN_PREFIX.length(),
-        end=name.length(),
-      ),
-    )
-  } else if name.has_prefix(@shared.CLUSTER_RN_PREFIX) {
-    rest = Some(
-      name.unsafe_substring(
-        start=@shared.CLUSTER_RN_PREFIX.length(),
-        end=name.length(),
-      ),
-    )
-  }
-  let rest = match rest {
-    Some(value) => value
-    None => return None
-  }
-  match cluster_names.get(rest) {
-    Some(_) => return Some(rest)
-    None => ()
-  }
-  let mut best : String? = None
-  let mut best_len = -1
-  for cluster, _ in cluster_names {
-    if !rest.has_prefix(cluster) {
-      continue
-    }
-    let suffix = rest.unsafe_substring(
-      start=cluster.length(),
-      end=rest.length(),
-    )
-    if suffix == "" {
-      if cluster.length() > best_len {
-        best = Some(cluster)
-        best_len = cluster.length()
-      }
-      continue
-    }
-    if !suffix.has_prefix("_") {
-      continue
-    }
-    let digits = suffix.unsafe_substring(start=1, end=suffix.length())
-    if digits == "" {
-      continue
-    }
-    let mut all_digits = true
-    for ch in digits {
-      if ch < '0' || ch > '9' {
-        all_digits = false
-        break
-      }
-    }
-    if all_digits && cluster.length() > best_len {
-      best = Some(cluster)
-      best_len = cluster.length()
-    }
-  }
-  best
-}
-
-///|
 fn vnode_positions_from_edges(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
@@ -402,16 +334,10 @@ pub fn build_position_output_maps_from_sources(
         has_clusters: sources.has_clusters && cluster_names.length() > 0,
         x_positions: sources.x_positions,
         is_cluster_boundary:
-          (name) =>
-            name.has_prefix(@shared.CLUSTER_LN_PREFIX) ||
-            name.has_prefix(@shared.CLUSTER_RN_PREFIX),
+          (name) => @clustering.is_cluster_boundary_name(name),
         boundary_cluster_key:
-          (name) =>
-            cluster_key_from_boundary(
-              name,
-              cluster_names,
-            ),
-        is_left_boundary: (name) => name.has_prefix(@shared.CLUSTER_LN_PREFIX),
+          (name) => @clustering.cluster_key_from_boundary(name, cluster_names),
+        is_left_boundary: (name) => @clustering.is_cluster_left_boundary_name(name),
       },
     )
   // Let the final bounding-box translation handle normalization, matching Graphviz.

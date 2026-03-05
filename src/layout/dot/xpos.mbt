@@ -11,12 +11,6 @@ const CLUSTER_COMPACT_WEIGHT : Int = 128
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
 ///|
-const CLUSTER_LN_PREFIX : String = @dot_shared.CLUSTER_LN_PREFIX
-
-///|
-const CLUSTER_RN_PREFIX : String = @dot_shared.CLUSTER_RN_PREFIX
-
-///|
 priv struct ConstraintEdge {
   tail : String
   head : String
@@ -425,18 +419,17 @@ fn compress_width_minlen_pt(
 
 ///|
 fn unique_cluster_node_name(
-  prefix : String,
-  cluster_name : String,
+  base_name : String,
   existing : Map[String, Bool],
 ) -> String {
-  let mut candidate = "\{prefix}\{cluster_name}"
+  let mut candidate = base_name
   if existing.get(candidate) is None {
     existing[candidate] = true
     return candidate
   }
   let mut i = 1
   while true {
-    candidate = "\{prefix}\{cluster_name}_\{i}"
+    candidate = "\{base_name}_\{i}"
     if existing.get(candidate) is None {
       existing[candidate] = true
       return candidate
@@ -662,13 +655,11 @@ fn build_cluster_constraints(
     match (min_left, max_right) {
       (Some(left), Some(right)) => {
         let ln_name = unique_cluster_node_name(
-          CLUSTER_LN_PREFIX,
-          name,
+          @clustering.cluster_left_boundary_name(name),
           existing_names,
         )
         let rn_name = unique_cluster_node_name(
-          CLUSTER_RN_PREFIX,
-          name,
+          @clustering.cluster_right_boundary_name(name),
           existing_names,
         )
         cluster_nodes[name] = { left_node: ln_name, right_node: rn_name }
@@ -1473,7 +1464,7 @@ fn edge_port_order(
 fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
   if name.has_prefix(EDGE_VNODE_PREFIX) {
     @network_simplex.NodeKind::Virtual
-  } else if name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX) {
+  } else if @clustering.is_cluster_boundary_name(name) {
     @network_simplex.NodeKind::Slack
   } else {
     @network_simplex.NodeKind::Normal
@@ -2075,8 +2066,7 @@ fn build_constraint_graph(
   let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   let late_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   for extra_node in extra_nodes {
-    if extra_node.name.has_prefix(CLUSTER_LN_PREFIX) ||
-      extra_node.name.has_prefix(CLUSTER_RN_PREFIX) {
+    if @clustering.is_cluster_boundary_name(extra_node.name) {
       late_extra_nodes.push(extra_node)
     } else {
       early_extra_nodes.push(extra_node)
