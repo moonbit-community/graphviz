@@ -1,11 +1,3 @@
-fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
-  match edge.get_attr("dir") {
-    Some(value) => value.to_lower()
-    None => "forward"
-  }
-}
-
-///|
 fn parallel_remap_direction_key(
   edge : @cgraph.Edge,
   tail : String,
