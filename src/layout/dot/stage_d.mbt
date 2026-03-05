@@ -452,7 +452,10 @@ fn build_x_flat_labels(
 ///|
 /// Stage D y-rank placement and flip-adjustment helpers.
 
-type YPositionsWithFlipOutput = @positioning.YPositionsWithFlipOutput
+priv struct YPositionsWithFlipOutput {
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
 
 ///|
 /// Graphviz parity: y-position flip solve input keeps rank maps, rank spacing,
@@ -525,33 +528,50 @@ fn build_y_all_ranks_with_flat(
 fn build_y_positions_with_flip(
   input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
-  @positioning.build_y_positions_with_flip_from_sources(
+  let mut y_positions : Map[String, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map::new()
+  @positioning.fill_rank_positions(
     {
       rank_keys: input.rank_keys,
       groups: input.groups,
-      y_all_ranks: input.y_all_ranks,
+      all_ranks: input.y_all_ranks,
       rank_pht: input.rank_pht,
       rank_ht1: input.rank_ht1,
       rank_ht2: input.rank_ht2,
       ranksep_pt: input.ranksep_pt,
-      graphviz_flip: input.rankdir == RankDir::LR || input.rankdir == RankDir::RL,
-      graph_has_cluster: @dot_shared.graph_has_cluster(input.graph),
-      adjust_flip_rank_heights_fn:
-        (rank_y, rank_ht1, rank_ht2, min_root_rank) =>
-          adjust_flip_rank_heights(
-            {
-              graph: input.graph,
-              ranks: input.ranks,
-              rank_y,
-              rank_ht1,
-              rank_ht2,
-              cluster_heights: input.cluster_bbox_heights,
-              min_root_rank,
-              margin_total: 0.0,
-            },
-          ),
+      y_positions,
+      rank_y,
     },
   )
+  let graphviz_flip = input.rankdir == RankDir::LR || input.rankdir == RankDir::RL
+  if graphviz_flip && @dot_shared.graph_has_cluster(input.graph) {
+    let min_root_rank =
+      if input.y_all_ranks.length() > 0 {
+        input.y_all_ranks[0]
+      } else {
+        0
+      }
+    if adjust_flip_rank_heights(
+      {
+        graph: input.graph,
+        ranks: input.ranks,
+        rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        cluster_heights: input.cluster_bbox_heights,
+        min_root_rank,
+        margin_total: 0.0,
+      },
+    ) {
+      y_positions =
+        @positioning.build_y_positions_from_rank_groups(
+          input.rank_keys,
+          input.groups,
+          rank_y,
+        )
+    }
+  }
+  { y_positions, rank_y }
 }
 
 ///|
