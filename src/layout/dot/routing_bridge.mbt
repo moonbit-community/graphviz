@@ -244,8 +244,10 @@ fn build_route_edges_pipeline_deps_for_dot(
 }
 
 ///|
-fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
-  let edge_layout_input : @routing.EdgeLayoutInput = {
+fn build_edge_layout_input_for_dot(
+  input : RouteEdgesForDotInput,
+) -> @routing.EdgeLayoutInput {
+  {
     ranks: input.rank_data.ranks,
     rank_y: input.routing_positions_state.rank_y,
     vnode_info: input.ordering.vnode_info,
@@ -254,6 +256,11 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
     nodesep_pt: input.rank_heights.nodesep_pt,
     flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
   }
+}
+
+///|
+fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
+  let edge_layout_input = build_edge_layout_input_for_dot(input)
   @routing.route_edges_pipeline(
     build_route_edges_pipeline_input_for_dot(input),
     build_route_edges_pipeline_deps_for_dot(input, edge_layout_input),
