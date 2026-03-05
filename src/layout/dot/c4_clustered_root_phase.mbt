@@ -311,27 +311,6 @@ fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
 }
 
 ///|
-/// Graphviz parity: snapshot edge projection from ordering subpackage entries
-/// preserves edge field mapping and iteration order for fixture capture.
-fn ordering_snapshot_entries_to_edges(
-  entries : Array[@ordering.OrderingEdgeSnapshotEntry],
-) -> Array[@ordering.OrderingEdgeSnapshotEntry] {
-  let edges : Array[@ordering.OrderingEdgeSnapshotEntry] = []
-  for entry in entries {
-    edges.push({
-      tail: entry.tail,
-      head: entry.head,
-      xpenalty: entry.xpenalty,
-      tail_port_x: entry.tail_port_x,
-      head_port_x: entry.head_port_x,
-      tail_port_order: entry.tail_port_order,
-      head_port_order: entry.head_port_order,
-    })
-  }
-  edges
-}
-
-///|
 priv struct RootSnapshotCaptureInput {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
@@ -354,20 +333,18 @@ fn capture_root_snapshot(
     return
   }
   let edges =
-    ordering_snapshot_entries_to_edges(
-      @ordering.coalesce_ordering_edge_snapshot_entries(
-        @ordering.build_ordering_edge_snapshot_entries(
-          {
-            edges_out: input.edges_out,
-            edge_tail_out: input.edge_tail_out,
-            edge_head_out: input.edge_head_out,
-            edge_tail_port_x: input.edge_tail_port_x,
-            edge_head_port_x: input.edge_head_port_x,
-            edge_tail_port_order: input.edge_tail_port_order,
-            edge_head_port_order: input.edge_head_port_order,
-            edge_xpenalty_for: @dot_shared.edge_xpenalty,
-          },
-        ),
+    @ordering.coalesce_ordering_edge_snapshot_entries(
+      @ordering.build_ordering_edge_snapshot_entries(
+        {
+          edges_out: input.edges_out,
+          edge_tail_out: input.edge_tail_out,
+          edge_head_out: input.edge_head_out,
+          edge_tail_port_x: input.edge_tail_port_x,
+          edge_head_port_x: input.edge_head_port_x,
+          edge_tail_port_order: input.edge_tail_port_order,
+          edge_head_port_order: input.edge_head_port_order,
+          edge_xpenalty_for: @dot_shared.edge_xpenalty,
+        },
       ),
     )
   let snapshot : RootMincrossInputSnapshot = {
@@ -418,19 +395,17 @@ fn capture_remincross_snapshot(
     rank_keys: capture_inputs.rem_rank_keys.copy(),
     groups: @ordering.clone_rank_groups(capture_inputs.rem_groups),
     edges:
-      ordering_snapshot_entries_to_edges(
-        @ordering.build_ordering_edge_snapshot_entries(
-          {
-            edges_out: capture_inputs.rem_edges_out,
-            edge_tail_out: capture_inputs.rem_edge_tail_out,
-            edge_head_out: capture_inputs.rem_edge_head_out,
-            edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
-            edge_head_port_x: capture_inputs.rem_edge_head_port_x,
-            edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
-            edge_head_port_order: capture_inputs.rem_edge_head_port_order,
-            edge_xpenalty_for: @dot_shared.edge_xpenalty,
-          },
-        ),
+      @ordering.build_ordering_edge_snapshot_entries(
+        {
+          edges_out: capture_inputs.rem_edges_out,
+          edge_tail_out: capture_inputs.rem_edge_tail_out,
+          edge_head_out: capture_inputs.rem_edge_head_out,
+          edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+          edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+          edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+          edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+          edge_xpenalty_for: @dot_shared.edge_xpenalty,
+        },
       ),
     cluster_keys: clone_string_map(capture_inputs.rem_cluster_keys),
   }
