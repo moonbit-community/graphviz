@@ -6,22 +6,29 @@ priv struct OrderedEdgeRoutingState {
 }
 
 ///|
+priv struct OrderedEdgeLayoutAttemptInput {
+  edge : @cgraph.Edge
+  edge_id : Int
+  base : EdgeRouteBase
+  input : OrderedRoutingInput
+  state : OrderedEdgeRoutingState
+  callbacks : RoutingCallbacks
+}
+
+///|
 fn maybe_build_flat_adjacent_layout(
-  edge_id : Int,
-  base : EdgeRouteBase,
-  input : OrderedRoutingInput,
-  state : OrderedEdgeRoutingState,
-  callbacks : RoutingCallbacks,
+  input : OrderedEdgeLayoutAttemptInput,
 ) -> Bool {
-  match input.flat_adjacent_simple_beziers.get(edge_id) {
+  let edge_id = input.edge_id
+  match input.input.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
       let edge_layout =
         build_flat_adjacent_layout(
-          base,
+          input.base,
           bezier,
-          callbacks.build_edge_layout_fn,
+          input.callbacks.build_edge_layout_fn,
         )
-      state.edges_out_by_id[edge_id] = edge_layout
+      input.state.edges_out_by_id[edge_id] = edge_layout
       true
     }
     None => false
@@ -30,34 +37,31 @@ fn maybe_build_flat_adjacent_layout(
 
 ///|
 fn maybe_build_self_edge_layout(
-  edge : @cgraph.Edge,
-  base : EdgeRouteBase,
-  input : OrderedRoutingInput,
-  state : OrderedEdgeRoutingState,
-  callbacks : RoutingCallbacks,
+  input : OrderedEdgeLayoutAttemptInput,
 ) -> Bool {
-  let edge_id = edge.id()
+  let edge = input.edge
+  let edge_id = input.edge_id
   let route = self_edge_route_for_edge(
     {
       edge,
-      self_edge_groups: input.self_edge_groups,
-      base_cache: input.base_cache,
-      nodesep_pt: input.nodesep_pt,
-      rank_y: input.rank_y,
-      self_edge_routes: state.self_edge_routes,
-      self_edge_label_height_fn: callbacks.self_edge_label_height_fn,
-      self_edge_label_width_fn: callbacks.self_edge_label_width_fn,
+      self_edge_groups: input.input.self_edge_groups,
+      base_cache: input.input.base_cache,
+      nodesep_pt: input.input.nodesep_pt,
+      rank_y: input.input.rank_y,
+      self_edge_routes: input.state.self_edge_routes,
+      self_edge_label_height_fn: input.callbacks.self_edge_label_height_fn,
+      self_edge_label_width_fn: input.callbacks.self_edge_label_width_fn,
     },
   )
   match route {
     Some(route) => {
       let edge_layout =
         build_self_edge_layout(
-          base,
+          input.base,
           route,
-          callbacks.build_edge_layout_fn,
+          input.callbacks.build_edge_layout_fn,
         )
-      state.edges_out_by_id[edge_id] = edge_layout
+      input.state.edges_out_by_id[edge_id] = edge_layout
       true
     }
     None => false
@@ -79,21 +83,21 @@ fn route_ordered_edge(
     Some(value) => value
     None => return ()
   }
-  if maybe_build_flat_adjacent_layout(
+  let layout_attempt : OrderedEdgeLayoutAttemptInput = {
+    edge,
     edge_id,
     base,
     input,
     state,
     callbacks,
+  }
+  if maybe_build_flat_adjacent_layout(
+    layout_attempt,
   ) {
     return ()
   }
   if maybe_build_self_edge_layout(
-    edge,
-    base,
-    input,
-    state,
-    callbacks,
+    layout_attempt,
   ) {
     return ()
   }
