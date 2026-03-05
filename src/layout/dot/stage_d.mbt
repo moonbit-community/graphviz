@@ -442,38 +442,6 @@ fn build_x_flat_labels(
 /// Stage D y-rank placement and flip-adjustment helpers.
 
 ///|
-/// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
-/// and these maxima must feed y-rank placement exactly as in Graphviz.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_flat_label_heights(
-  flat_label_nodes : Map[String, FlatLabelNodeInfo],
-  vnode_sizes : Map[String, NodeSize],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-) -> Unit {
-  let half_heights_by_rank : Map[Int, Double] = Map::new()
-  for name, info in flat_label_nodes {
-    let size = match vnode_sizes.get(name) {
-      Some(value) => value
-      None => continue
-    }
-    let half_height = size.height_pt / 2.0
-    let rank = info.rank
-    let current = half_heights_by_rank.get(rank).unwrap_or_default()
-    if half_height > current {
-      half_heights_by_rank[rank] = half_height
-    }
-  }
-  @positioning.apply_rank_half_heights(
-    half_heights_by_rank,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-  )
-}
-
-///|
 /// Stage D x-position solver input assembly and invocation.
 
 ///|
@@ -534,11 +502,7 @@ fn compute_layout_x_positions(
 /// solve wiring.
 
 ///|
-priv struct YPositionComputationData {
-  y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
-}
+type YPositionComputationData = @positioning.YPositionPipelineOutput
 
 ///|
 /// Graphviz parity: y-position pre-solve input keeps rank metadata, cluster
@@ -555,65 +519,32 @@ priv struct YPositionBuildInput {
 fn build_y_position_data(
   input : YPositionBuildInput,
 ) -> YPositionComputationData {
-  let rank_pht = input.pipeline.rank_heights.rank_pht
-  let rank_ht1 = input.pipeline.rank_heights.rank_ht1
-  let rank_ht2 = input.pipeline.rank_heights.rank_ht2
-  let cluster_bbox_heights =
-    if input.pipeline.cluster_meta.has_clusters {
-      @clustering.compute_cluster_bbox_heights(
-        {
-          graph: input.pipeline.graph,
-          ranks: input.pipeline.rank_data.ranks,
-          sizes: input.pipeline.prep.sizes,
-          self_edge_labels: input.pipeline.rank_data.self_edge_labels,
-          rankdir: input.pipeline.prep.rankdir,
-          cluster_margin_pt_for: cluster_margin_pt,
-          cluster_label_padding_for: cluster_label_padding_for_layout,
-          node_half_height_pt_for: node_half_height_pt,
-        },
-      )
-    } else {
-      Map::new()
-    }
-  apply_flat_label_heights(
-    input.flat_label_nodes,
-    input.pipeline.ordering.vnode_info.vnode_sizes,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-  )
-  // Graphviz parity: y-rank sweep range expands to include inserted flat-label
-  // vnode ranks, while preserving continuous rank iteration.
-  let flat_ranks : Array[Int] = []
-  for _name, info in input.flat_label_nodes {
-    flat_ranks.push(info.rank)
+  let flat_label_ranks : Map[String, Int] = Map::new()
+  for name, info in input.flat_label_nodes {
+    flat_label_ranks[name] = info.rank
   }
-  let y_all_ranks =
-    @positioning.build_all_ranks_with_overlays(
-      input.pipeline.rank_data.rank_keys,
-      flat_ranks,
-    )
-  let y_position_output =
-    @positioning.build_y_positions_with_flip(
-      {
-        graph: input.pipeline.graph,
-        rankdir: input.pipeline.prep.rankdir,
-        rank_keys: input.pipeline.rank_data.rank_keys,
-        groups: input.pipeline.rank_data.groups,
-        ranks: input.pipeline.rank_data.ranks,
-        rank_pht,
-        rank_ht1,
-        rank_ht2,
-        ranksep_pt: input.pipeline.rank_heights.ranksep_pt,
-        cluster_bbox_heights,
-        y_all_ranks,
-        cluster_margin_pt_for: cluster_margin_pt,
-        cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
-      },
-    )
-  let y_positions = y_position_output.y_positions
-  let rank_y = y_position_output.rank_y
-  { y_positions, rank_y, cluster_bbox_heights }
+  @positioning.build_y_position_pipeline(
+    {
+      has_clusters: input.pipeline.cluster_meta.has_clusters,
+      graph: input.pipeline.graph,
+      rankdir: input.pipeline.prep.rankdir,
+      rank_keys: input.pipeline.rank_data.rank_keys,
+      groups: input.pipeline.rank_data.groups,
+      ranks: input.pipeline.rank_data.ranks,
+      sizes: input.pipeline.prep.sizes,
+      self_edge_labels: input.pipeline.rank_data.self_edge_labels,
+      rank_pht: input.pipeline.rank_heights.rank_pht,
+      rank_ht1: input.pipeline.rank_heights.rank_ht1,
+      rank_ht2: input.pipeline.rank_heights.rank_ht2,
+      ranksep_pt: input.pipeline.rank_heights.ranksep_pt,
+      flat_label_ranks,
+      vnode_sizes: input.pipeline.ordering.vnode_info.vnode_sizes,
+      cluster_margin_pt_for: cluster_margin_pt,
+      cluster_label_padding_for: cluster_label_padding_for_layout,
+      node_half_height_pt_for: node_half_height_pt,
+      cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
+    },
+  )
 }
 
 ///|

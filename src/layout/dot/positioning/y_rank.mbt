@@ -153,3 +153,134 @@ pub fn build_y_positions_with_flip(
   }
   { y_positions, rank_y }
 }
+
+///|
+/// Graphviz parity: y-position pipeline input keeps rank metadata, flat-label
+/// overlays, and cluster callback deps grouped for one y-solve pass.
+pub(all) struct YPositionPipelineInput {
+  has_clusters : Bool
+  graph : @cgraph.Graph
+  rankdir : @shared.RankDir
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  sizes : Map[String, @shared.NodeSize]
+  self_edge_labels : Map[String, Double]
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  flat_label_ranks : Map[String, Int]
+  vnode_sizes : Map[String, @shared.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  cluster_label_padding_for : (
+    @cgraph.Graph,
+    @shared.RankDir,
+  ) -> @clustering.ClusterLabelPadding
+  node_half_height_pt_for : (
+    String,
+    Map[String, @shared.NodeSize],
+    Map[String, Double],
+  ) -> Double
+  cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
+}
+
+///|
+pub(all) struct YPositionPipelineOutput {
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+  cluster_bbox_heights : Map[String, @clustering.ClusterBboxHeightPair]
+}
+
+///|
+fn apply_flat_label_rank_heights(
+  flat_label_ranks : Map[String, Int],
+  vnode_sizes : Map[String, @shared.NodeSize],
+  rank_pht : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> Array[Int] {
+  let half_heights_by_rank : Map[Int, Double] = Map::new()
+  let overlay_ranks : Array[Int] = []
+  for name, rank in flat_label_ranks {
+    let size = match vnode_sizes.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let half_height = size.height_pt / 2.0
+    let current = half_heights_by_rank.get(rank).unwrap_or_default()
+    if half_height > current {
+      half_heights_by_rank[rank] = half_height
+    }
+    overlay_ranks.push(rank)
+  }
+  apply_rank_half_heights(
+    half_heights_by_rank,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+  )
+  overlay_ranks
+}
+
+///|
+/// Graphviz parity: y-position pre-solve keeps cluster-height derivation,
+/// flat-label rank-height updates, and y sweep wiring unchanged.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_y_position_pipeline(
+  input : YPositionPipelineInput,
+) -> YPositionPipelineOutput {
+  let cluster_bbox_heights =
+    if input.has_clusters {
+      @clustering.compute_cluster_bbox_heights(
+        {
+          graph: input.graph,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rankdir: input.rankdir,
+          cluster_margin_pt_for: input.cluster_margin_pt_for,
+          cluster_label_padding_for: input.cluster_label_padding_for,
+          node_half_height_pt_for: input.node_half_height_pt_for,
+        },
+      )
+    } else {
+      Map::new()
+    }
+  let overlay_ranks =
+    apply_flat_label_rank_heights(
+      input.flat_label_ranks,
+      input.vnode_sizes,
+      input.rank_pht,
+      input.rank_ht1,
+      input.rank_ht2,
+    )
+  let y_all_ranks =
+    build_all_ranks_with_overlays(
+      input.rank_keys,
+      overlay_ranks,
+    )
+  let y_position_output =
+    build_y_positions_with_flip(
+      {
+        graph: input.graph,
+        rankdir: input.rankdir,
+        rank_keys: input.rank_keys,
+        groups: input.groups,
+        ranks: input.ranks,
+        rank_pht: input.rank_pht,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        ranksep_pt: input.ranksep_pt,
+        cluster_bbox_heights,
+        y_all_ranks,
+        cluster_margin_pt_for: input.cluster_margin_pt_for,
+        cluster_label_width_pt_for: input.cluster_label_width_pt_for,
+      },
+    )
+  {
+    y_positions: y_position_output.y_positions,
+    rank_y: y_position_output.rank_y,
+    cluster_bbox_heights,
+  }
+}
