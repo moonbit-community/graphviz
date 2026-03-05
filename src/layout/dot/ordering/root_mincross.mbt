@@ -1429,25 +1429,6 @@ pub fn reorder_names_by_override(
 }
 
 ///|
-/// Graphviz parity: cluster skeleton node names encode the cluster key.
-fn cluster_key_from_skeleton_name(name : String) -> String? {
-  if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
-    return None
-  }
-  let rest = name.unsafe_substring(
-    start=CLUSTER_SKELETON_PREFIX.length(),
-    end=name.length(),
-  )
-  for part in rest.split("@") {
-    let value = part.to_string()
-    if value != "" {
-      return Some(value)
-    }
-  }
-  None
-}
-
-///|
 /// Graphviz parity: root-override graphviz_flip replay keeps skeleton names in
 /// rank order, reattaches same-cluster names after skeletons, and preserves any
 /// unmatched names as final fallback in original rank order.
@@ -1458,7 +1439,7 @@ fn rebuild_root_override_names(
   // Graphviz parity: root-override skeleton checks treat non-skeleton names as
   // empty cluster keys when rebuilding attached-cluster bundles.
   let skeleton_cluster_or_empty = (name : String) =>
-    cluster_key_from_skeleton_name(name).unwrap_or_default()
+    @clustering.cluster_key_from_skeleton(name).unwrap_or_default()
   // Graphviz parity: any parsed skeleton cluster key is a skeleton marker.
   let is_root_override_skeleton_name = (name : String) =>
     skeleton_cluster_or_empty(name) != ""

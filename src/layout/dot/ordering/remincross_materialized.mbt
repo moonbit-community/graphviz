@@ -334,60 +334,6 @@ pub(all) struct ReMincrossMaterializationInputs {
 }
 
 ///|
-/// Graphviz parity: assign intercluster virtual nodes to lowest common
-/// ancestor cluster (mark_lowclusters + class2).
-fn cluster_lca(
-  left : String,
-  right : String,
-  cluster_parents : Map[String, String?],
-) -> String {
-  if left == "" || right == "" {
-    return ""
-  }
-  if left == right {
-    return left
-  }
-  let seen : Map[String, Bool] = Map::new()
-  let walk_seen : Map[String, Bool] = Map::new()
-  let mut current = left
-  while current != "" {
-    if walk_seen.get(current) is Some(_) {
-      break
-    }
-    walk_seen[current] = true
-    seen[current] = true
-    let parent = match cluster_parents.get(current) {
-      Some(value) => value
-      None => (None : String?)
-    }
-    match parent {
-      Some(value) => current = value
-      None => current = ""
-    }
-  }
-  let mut probe = right
-  let probe_seen : Map[String, Bool] = Map::new()
-  while probe != "" {
-    if probe_seen.get(probe) is Some(_) {
-      break
-    }
-    probe_seen[probe] = true
-    if seen.get(probe) is Some(_) {
-      return probe
-    }
-    let parent = match cluster_parents.get(probe) {
-      Some(value) => value
-      None => (None : String?)
-    }
-    match parent {
-      Some(value) => probe = value
-      None => probe = ""
-    }
-  }
-  ""
-}
-
-///|
 /// Graphviz parity: clustered ReMincross starts from a shallow clone of
 /// intercluster keys before root remapping and vnode LCA assignments.
 fn clone_remincross_cluster_keys(
@@ -429,7 +375,7 @@ fn assign_remincross_clusters(
     let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
     let head_cluster = intercluster_keys.get(head).unwrap_or_default()
     let vnode_cluster =
-      cluster_lca(
+      @clustering.cluster_lca(
         tail_cluster,
         head_cluster,
         cluster_parents,
