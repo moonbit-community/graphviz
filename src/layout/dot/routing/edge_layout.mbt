@@ -99,18 +99,36 @@ fn edge_port_label_pos_for_attr(
 ///|
 /// Graphviz parity: edge label placement aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/labels.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
+pub(all) struct EdgeLayoutBuildInput {
+  base : EdgeRouteBase
+  spline : @geom.Spline
+  spline_result : EdgeSplineResult
+  edge_layout_input : EdgeLayoutInput
+  deps : EdgeLayoutDeps
+}
+
+///|
 pub fn build_edge_layout(
-  base : EdgeRouteBase,
-  spline : @geom.Spline,
-  spline_result : EdgeSplineResult,
-  input : EdgeLayoutInput,
-  deps : EdgeLayoutDeps,
+  input : EdgeLayoutBuildInput,
 ) -> DotLayoutEdge {
+  let base = input.base
+  let spline = input.spline
+  let spline_result = input.spline_result
+  let edge_layout_input = input.edge_layout_input
+  let deps = input.deps
   let edge = base.edge
   let label_rank_info =
-    (deps.edge_label_rank_for_routing_fn)(edge, input.ranks, base.mid_label_width_pt)
+    (deps.edge_label_rank_for_routing_fn)(
+      edge,
+      edge_layout_input.ranks,
+      base.mid_label_width_pt,
+    )
   let label_rank_y =
-    (deps.edge_label_rank_y_fn)(edge, input.ranks, input.rank_y)
+    (deps.edge_label_rank_y_fn)(
+      edge,
+      edge_layout_input.ranks,
+      edge_layout_input.rank_y,
+    )
   let mid_label_metrics : EdgeLabelMetrics? =
     if base.mid_label_width_pt > 0.0 {
       Some({ width: base.mid_label_width_pt, height: base.mid_label_height_pt })
@@ -124,15 +142,15 @@ pub fn build_edge_layout(
           (deps.edge_label_rank_x_fn)(
             edge,
             label_rank,
-            input.vnode_info,
-            input.vnode_positions,
+            edge_layout_input.vnode_info,
+            edge_layout_input.vnode_positions,
           )
         } else {
           None
         }
       None => None
     }
-  let apply_label_pad = input.has_clusters
+  let apply_label_pad = edge_layout_input.has_clusters
   let default_label_pos =
     () =>
       (deps.edge_label_pos_fn)(
@@ -145,7 +163,7 @@ pub fn build_edge_layout(
           label_rank_y,
           label_rank_x,
           apply_label_pad,
-          nodesep_pt: input.nodesep_pt,
+          nodesep_pt: edge_layout_input.nodesep_pt,
           label_pad_boost: spline_result.label_pad_boost,
         },
       )
@@ -182,9 +200,9 @@ pub fn build_edge_layout(
           }
           _ =>
             if base.is_flat_edge {
-              match input.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+              match edge_layout_input.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
                 Some(vnode_name) =>
-                  match input.vnode_positions.get(vnode_name) {
+                  match edge_layout_input.vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)
                     None => flat_simple_or_default()
                   }

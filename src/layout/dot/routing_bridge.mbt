@@ -162,34 +162,36 @@ fn build_routing_edge_layout_for_dot(
   input : RoutingEdgeLayoutBuildInput,
 ) -> DotLayoutEdge {
   @routing.build_edge_layout(
-    input.base,
-    input.spline,
-    input.spline_result,
-    input.edge_layout_input,
     {
-      edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
-        match edge_label_rank_info(edge, ranks) {
-          Some(info) =>
-            if mid_label_width_pt > 0.0 {
-              Some((info.label_rank, info.span))
-            } else {
-              None
-            }
-          None => None
-        },
-      edge_label_rank_y_fn: edge_label_rank_y,
-      edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
-        edge_label_rank_x(
-          edge,
-          label_rank,
-          vnode_info.vnode_ranks,
-          vnode_info.edge_vnodes,
-          vnode_positions,
-        ),
-      edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
-      flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
-      edge_label_pos_fn: routing_edge_label_pos,
-      edge_port_label_pos_fn: routing_edge_port_label_pos,
+      base: input.base,
+      spline: input.spline,
+      spline_result: input.spline_result,
+      edge_layout_input: input.edge_layout_input,
+      deps: {
+        edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
+          match edge_label_rank_info(edge, ranks) {
+            Some(info) =>
+              if mid_label_width_pt > 0.0 {
+                Some((info.label_rank, info.span))
+              } else {
+                None
+              }
+            None => None
+          },
+        edge_label_rank_y_fn: edge_label_rank_y,
+        edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
+          edge_label_rank_x(
+            edge,
+            label_rank,
+            vnode_info.vnode_ranks,
+            vnode_info.edge_vnodes,
+            vnode_positions,
+          ),
+        edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
+        flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
+        edge_label_pos_fn: routing_edge_label_pos,
+        edge_port_label_pos_fn: routing_edge_port_label_pos,
+      },
     },
   )
 }
