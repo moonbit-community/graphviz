@@ -45,11 +45,23 @@ fn build_position_output_maps(
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
+  let cluster_names : Map[String, Bool] = Map::new()
+  if input.pipeline.cluster_meta.has_clusters {
+    collect_cluster_names(input.pipeline.graph, cluster_names)
+  }
   let cluster_boundary_x =
-    build_cluster_boundary_x(
-      input.pipeline.graph,
-      input.pipeline.cluster_meta,
-      input.x_positions,
+    @positioning.build_cluster_boundary_x(
+      {
+        has_clusters: input.pipeline.cluster_meta.has_clusters &&
+          cluster_names.length() > 0,
+        x_positions: input.x_positions,
+        is_cluster_boundary:
+          (name) =>
+            name.has_prefix(CLUSTER_LN_PREFIX) ||
+            name.has_prefix(CLUSTER_RN_PREFIX),
+        boundary_cluster_key: (name) => cluster_key_from_boundary(name, cluster_names),
+        is_left_boundary: (name) => name.has_prefix(CLUSTER_LN_PREFIX),
+      },
     )
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =

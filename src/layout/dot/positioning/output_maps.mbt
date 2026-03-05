@@ -59,3 +59,48 @@ pub fn build_vnode_positions(
     (input.fallback_fn)()
   }
 }
+
+///|
+pub struct ClusterBoundaryXOutput {
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+}
+
+///|
+/// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusterBoundaryXInput {
+  has_clusters : Bool
+  x_positions : Map[String, Double]
+  is_cluster_boundary : (String) -> Bool
+  boundary_cluster_key : (String) -> String?
+  is_left_boundary : (String) -> Bool
+}
+
+///|
+/// Graphviz parity: cluster boundary projection keeps boundary-node filtering
+/// and key mapping stable before writing ln/rn x maps.
+pub fn build_cluster_boundary_x(
+  input : ClusterBoundaryXInput,
+) -> ClusterBoundaryXOutput {
+  let cluster_ln_x : Map[String, Double] = Map::new()
+  let cluster_rn_x : Map[String, Double] = Map::new()
+  if !input.has_clusters {
+    return { cluster_ln_x, cluster_rn_x }
+  }
+  for name, pos_x in input.x_positions {
+    if !(input.is_cluster_boundary)(name) {
+      continue
+    }
+    match (input.boundary_cluster_key)(name) {
+      Some(cluster_key) =>
+        if (input.is_left_boundary)(name) {
+          cluster_ln_x[cluster_key] = pos_x
+        } else {
+          cluster_rn_x[cluster_key] = pos_x
+        }
+      None => ()
+    }
+  }
+  { cluster_ln_x, cluster_rn_x }
+}
