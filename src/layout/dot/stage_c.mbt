@@ -95,39 +95,6 @@ priv struct ClusteredDispatchContext {
 }
 
 ///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered(
-  dispatch_context : ClusteredDispatchContext,
-) -> OrderingDispatchOutput {
-  let pre_root_stage = build_clustered_pre_root(dispatch_context)
-  let root_phase_output = run_clustered_root_phase(dispatch_context, pre_root_stage)
-  run_clustered_finalize_phase(
-    dispatch_context,
-    pre_root_stage,
-    root_phase_output,
-  )
-}
-
-
-///|
-/// Graphviz parity: choose clustered/non-clustered ordering flow using the same
-/// flag gates as Graphviz (vnode/cluster mode).
-/// Do not change behavior without updating fixtures/tests.
-fn run_ordering_dispatch(
-  dispatch_context : ClusteredDispatchContext,
-) -> OrderingDispatchOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
-    run_clustered(dispatch_context)
-  } else {
-    run_nonclustered_ordering_dispatch(dispatch_context)
-  }
-}
-
-
-///|
 /// Graphviz parity: non-cluster dispatch builds reorder inputs from the same
 /// source payload and executes one noncluster reorder pass.
 /// Do not change behavior without updating fixtures/tests.
@@ -238,8 +205,24 @@ fn compute_ordering_and_vnodes(
       input,
       pipeline_context,
     )
+  // Graphviz parity: choose clustered/non-clustered ordering flow using the
+  // same flag gates as Graphviz (vnode/cluster mode).
   let dispatch_output =
-    run_ordering_dispatch(dispatch_context)
+    if pipeline_context.reorder_setup.order_with_vnodes ||
+      pipeline_context.reorder_setup.order_with_clusters {
+      // Graphviz parity: clustered ordering path keeps build_ranks/mincross
+      // phase boundaries unchanged while delegating each phase to base helpers.
+      let pre_root_stage = build_clustered_pre_root(dispatch_context)
+      let root_phase_output =
+        run_clustered_root_phase(dispatch_context, pre_root_stage)
+      run_clustered_finalize_phase(
+        dispatch_context,
+        pre_root_stage,
+        root_phase_output,
+      )
+    } else {
+      run_nonclustered_ordering_dispatch(dispatch_context)
+    }
   build_ordering_result(pipeline_context, dispatch_output)
 }
 ///|
