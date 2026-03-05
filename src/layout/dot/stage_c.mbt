@@ -134,39 +134,6 @@ fn run_nonclustered_ordering_dispatch(
   }
 }
 
-///|
-/// Graphviz parity: ordering dispatch context captures stage-C clustered/non-
-/// clustered inputs without reordering fields before dispatch execution.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_dispatch_context(
-  input : OrderingStageInput,
-  pipeline_context : OrderingPipelineContext,
-) -> ClusteredDispatchContext {
-  {
-    graph: input.graph,
-    nodes: input.nodes,
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    edge_reversed: input.edge_reversed,
-    edge_out_order: input.edge_out_order,
-    rank_keys: input.rank_keys,
-    groups: input.groups,
-    ranks: input.ranks,
-    node_order: input.node_order,
-    order_sizes: input.order_sizes,
-    nodesep_pt: input.nodesep_pt,
-    has_edge_labels: input.has_edge_labels,
-    cluster_meta: input.cluster_meta,
-    port_order_positions: input.port_order_positions,
-    port_order_contrib: input.port_order_contrib,
-    runtime_context: pipeline_context.runtime_context,
-    edge_port_data: pipeline_context.edge_port_data,
-    reorder_setup: pipeline_context.reorder_setup,
-  }
-}
-
-///|
 /// Graphviz parity: ordering result assembly forwards dispatch and pipeline
 /// snapshots in Graphviz-aligned field composition order.
 /// Do not change behavior without updating fixtures/tests.
@@ -200,11 +167,31 @@ fn compute_ordering_and_vnodes(
 ) -> OrderingResult {
   let pipeline_context =
     build_ordering_pipeline_context(input)
-  let dispatch_context =
-    build_clustered_dispatch_context(
-      input,
-      pipeline_context,
-    )
+  // Graphviz parity: ordering dispatch context captures stage-C clustered/non-
+  // clustered inputs without reordering fields before dispatch execution.
+  let dispatch_context : ClusteredDispatchContext =
+    {
+      graph: input.graph,
+      nodes: input.nodes,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_reversed: input.edge_reversed,
+      edge_out_order: input.edge_out_order,
+      rank_keys: input.rank_keys,
+      groups: input.groups,
+      ranks: input.ranks,
+      node_order: input.node_order,
+      order_sizes: input.order_sizes,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      cluster_meta: input.cluster_meta,
+      port_order_positions: input.port_order_positions,
+      port_order_contrib: input.port_order_contrib,
+      runtime_context: pipeline_context.runtime_context,
+      edge_port_data: pipeline_context.edge_port_data,
+      reorder_setup: pipeline_context.reorder_setup,
+    }
   // Graphviz parity: choose clustered/non-clustered ordering flow using the
   // same flag gates as Graphviz (vnode/cluster mode).
   let dispatch_output =
