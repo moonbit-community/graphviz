@@ -293,44 +293,6 @@ priv struct OrderingPipelineContext {
 }
 
 ///|
-/// Graphviz parity: reorder setup keeps vnode-key derivation and class2 wiring
-/// in the same order as Graphviz clustered/noncluster mincross preparation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_reorder_setup(
-  input : OrderingStageInput,
-  runtime_context : OrderingRuntimeContext,
-  edge_port_data : @ordering.OrderingEdgePortData,
-) -> @ordering.OrderingReorderSetup {
-  let graphviz_flip = input.rankdir == RankDir::RL || input.rankdir == RankDir::LR
-  @ordering.build_ordering_reorder_setup(
-    input.nodes,
-    input.edges,
-    input.edge_tail,
-    input.edge_head,
-    input.edge_reversed,
-    input.edge_out_order,
-    input.ranks,
-    input.groups,
-    input.node_order,
-    runtime_context.port_edge_nodes,
-    runtime_context.vnode_info.vnode_ranks.length(),
-    graphviz_flip,
-    input.cluster_meta.has_clusters,
-    input.cluster_meta.cluster_min_rank,
-    input.cluster_meta.cluster_max_rank,
-    input.cluster_meta.cluster_keys,
-    input.cluster_meta.cluster_order,
-    input.cluster_meta.rank_same_groups,
-    input.cluster_meta.rank_same_order,
-    runtime_context.vnode_info.edge_vnodes,
-    runtime_context.vnode_info.vnodes_by_rank,
-    runtime_context.vnode_info.vnode_ranks,
-    input.cluster_meta.cluster_parents,
-    edge_port_data,
-  )
-}
-
-///|
 /// Graphviz parity: ordering pipeline context assembles runtime expansion,
 /// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
 fn build_ordering_pipeline_context(
@@ -393,10 +355,32 @@ fn build_ordering_pipeline_context(
         order_edge_head_port_order: order_edge_port_orders.head_values,
       },
     )
+  let graphviz_flip = input.rankdir == RankDir::RL || input.rankdir == RankDir::LR
   let reorder_setup =
-    build_ordering_reorder_setup(
-      input,
-      runtime_context,
+    @ordering.build_ordering_reorder_setup(
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.edge_reversed,
+      input.edge_out_order,
+      input.ranks,
+      input.groups,
+      input.node_order,
+      runtime_context.port_edge_nodes,
+      runtime_context.vnode_info.vnode_ranks.length(),
+      graphviz_flip,
+      input.cluster_meta.has_clusters,
+      input.cluster_meta.cluster_min_rank,
+      input.cluster_meta.cluster_max_rank,
+      input.cluster_meta.cluster_keys,
+      input.cluster_meta.cluster_order,
+      input.cluster_meta.rank_same_groups,
+      input.cluster_meta.rank_same_order,
+      runtime_context.vnode_info.edge_vnodes,
+      runtime_context.vnode_info.vnodes_by_rank,
+      runtime_context.vnode_info.vnode_ranks,
+      input.cluster_meta.cluster_parents,
       edge_port_data,
     )
   { runtime_context, edge_port_data, reorder_setup }
