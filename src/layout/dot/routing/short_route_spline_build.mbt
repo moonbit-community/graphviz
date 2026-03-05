@@ -243,14 +243,25 @@ fn build_short_route_line_or_pathplan_spline(
 }
 
 ///|
+priv struct FlatDetourSplineBuildInput {
+  base : EdgeRouteBase
+  detour : FlatDetourResult
+  using_pathplan : Bool
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+}
+
+///|
 fn build_flat_detour_spline(
-  base : EdgeRouteBase,
-  detour : FlatDetourResult,
-  using_pathplan : Bool,
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
+  input : FlatDetourSplineBuildInput,
 ) -> PointsSplineResult {
+  let base = input.base
+  let detour = input.detour
+  let using_pathplan = input.using_pathplan
+  let tail_slope_line = input.tail_slope_line
+  let head_slope_line = input.head_slope_line
+  let route_barriers = input.route_barriers
   let detour_points = detour.points
   let first_right = detour.first_right
   let last_left = detour.last_left
@@ -345,12 +356,14 @@ fn detour_spline_if_any(
       Some(detour) =>
         Some(
           build_flat_detour_spline(
-            input.base,
-            detour,
-            input.using_pathplan,
-            input.tail_slope_line,
-            input.head_slope_line,
-            input.route_barriers,
+            {
+              base: input.base,
+              detour,
+              using_pathplan: input.using_pathplan,
+              tail_slope_line: input.tail_slope_line,
+              head_slope_line: input.head_slope_line,
+              route_barriers: input.route_barriers,
+            },
           ),
         )
       None => None
