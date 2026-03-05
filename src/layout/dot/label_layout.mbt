@@ -1313,17 +1313,6 @@ fn edge_label_adjust_enabled() -> Bool {
 }
 
 ///|
-fn cluster_rounding_enabled() -> Bool {
-  match @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "" && lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
-}
-
-///|
 fn expand_bbox_for_label(
   bbox : @geom.Rect,
   label_width_pt : Double,

@@ -730,27 +730,7 @@ fn build_position_output_maps(
       sizes: input.pipeline.prep.sizes,
       cluster_ln_prefix: CLUSTER_LN_PREFIX,
       cluster_rn_prefix: CLUSTER_RN_PREFIX,
-      collect_cluster_names_fn: collect_cluster_names,
-      cluster_key_from_boundary_fn: cluster_key_from_boundary,
-      vnode_positions_from_edges_fn: vnode_positions_from_edges,
-      cluster_rounding_enabled_fn: cluster_rounding_enabled,
-      adjust_cluster_positions_fn:
-        (
-          graph,
-          positions,
-          vnode_positions,
-          vnode_clusters,
-          sizes,
-        ) =>
-          adjust_cluster_positions(
-            {
-              graph,
-              positions,
-              vnode_positions,
-              vnode_clusters,
-              sizes,
-            },
-          ),
+      adjust_cluster_positions_fn: adjust_cluster_positions,
     },
   )
 }

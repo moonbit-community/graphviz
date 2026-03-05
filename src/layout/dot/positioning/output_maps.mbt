@@ -128,6 +128,157 @@ fn adjust_intercluster_alignment(
 }
 
 ///|
+fn collect_cluster_names(
+  graph : @cgraph.Graph,
+  out : Map[String, Bool],
+) -> Unit {
+  if @shared.is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => out[name] = true
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_names(child, out)
+  }
+}
+
+///|
+fn cluster_key_from_boundary(
+  name : String,
+  cluster_names : Map[String, Bool],
+  cluster_ln_prefix : String,
+  cluster_rn_prefix : String,
+) -> String? {
+  let mut rest : String? = None
+  if name.has_prefix(cluster_ln_prefix) {
+    rest = Some(
+      name.unsafe_substring(
+        start=cluster_ln_prefix.length(),
+        end=name.length(),
+      ),
+    )
+  } else if name.has_prefix(cluster_rn_prefix) {
+    rest = Some(
+      name.unsafe_substring(
+        start=cluster_rn_prefix.length(),
+        end=name.length(),
+      ),
+    )
+  }
+  let rest = match rest {
+    Some(value) => value
+    None => return None
+  }
+  match cluster_names.get(rest) {
+    Some(_) => return Some(rest)
+    None => ()
+  }
+  let mut best : String? = None
+  let mut best_len = -1
+  for cluster, _ in cluster_names {
+    if !rest.has_prefix(cluster) {
+      continue
+    }
+    let suffix = rest.unsafe_substring(
+      start=cluster.length(),
+      end=rest.length(),
+    )
+    if suffix == "" {
+      if cluster.length() > best_len {
+        best = Some(cluster)
+        best_len = cluster.length()
+      }
+      continue
+    }
+    if !suffix.has_prefix("_") {
+      continue
+    }
+    let digits = suffix.unsafe_substring(start=1, end=suffix.length())
+    if digits == "" {
+      continue
+    }
+    let mut all_digits = true
+    for ch in digits {
+      if ch < '0' || ch > '9' {
+        all_digits = false
+        break
+      }
+    }
+    if all_digits && cluster.length() > best_len {
+      best = Some(cluster)
+      best_len = cluster.length()
+    }
+  }
+  best
+}
+
+///|
+fn vnode_positions_from_edges(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  node_positions : Map[String, Double],
+  rank_y : Map[Int, Double],
+) -> Map[String, @geom.Point] {
+  let positions : Map[String, @geom.Point] = Map::new()
+  for edge in edges {
+    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let tail_pos = node_positions.get(tail).unwrap_or_default()
+    let head_pos = node_positions.get(head).unwrap_or_default()
+    let (low_rank, high_rank, low_pos, high_pos) = if tail_rank <= head_rank {
+      (tail_rank, head_rank, tail_pos, head_pos)
+    } else {
+      (head_rank, tail_rank, head_pos, tail_pos)
+    }
+    let span = high_rank - low_rank
+    if span <= 0 {
+      continue
+    }
+    let span_f = Double::from_int(span)
+    for vnode in vnodes {
+      let vnode_rank = match vnode_ranks.get(vnode) {
+        Some(value) => value
+        None => continue
+      }
+      let t = Double::from_int(vnode_rank - low_rank) / span_f
+      let pos_x = low_pos + (high_pos - low_pos) * t
+      let pos_y = rank_y.get(vnode_rank).unwrap_or_default()
+      positions[vnode] = { x: pos_x, y: pos_y }
+    }
+  }
+  positions
+}
+
+///|
+fn cluster_rounding_enabled() -> Bool {
+  match @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "" && lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
+  }
+}
+
+///|
 /// Graphviz parity: final node position projection maps x/y by graph node list
 /// order and defaults missing coordinates to 0.0 exactly as before.
 pub fn build_node_positions_map(
@@ -256,17 +407,6 @@ pub(all) struct PositionOutputBuildSources {
   sizes : Map[String, @shared.NodeSize]
   cluster_ln_prefix : String
   cluster_rn_prefix : String
-  collect_cluster_names_fn : (@cgraph.Graph, Map[String, Bool]) -> Unit
-  cluster_key_from_boundary_fn : (String, Map[String, Bool]) -> String?
-  vnode_positions_from_edges_fn : (
-    Array[@cgraph.Edge],
-    Map[String, Int],
-    Map[String, Int],
-    Map[String, Array[String]],
-    Map[String, Double],
-    Map[Int, Double],
-  ) -> Map[String, @geom.Point]
-  cluster_rounding_enabled_fn : () -> Bool
   adjust_cluster_positions_fn : (
     @cgraph.Graph,
     Map[String, @geom.Point],
@@ -301,7 +441,7 @@ pub fn build_position_output_maps_from_sources(
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_names : Map[String, Bool] = Map::new()
   if sources.has_clusters {
-    (sources.collect_cluster_names_fn)(sources.graph, cluster_names)
+    collect_cluster_names(sources.graph, cluster_names)
   }
   let cluster_boundary_x =
     build_cluster_boundary_x(
@@ -313,7 +453,13 @@ pub fn build_position_output_maps_from_sources(
             name.has_prefix(sources.cluster_ln_prefix) ||
             name.has_prefix(sources.cluster_rn_prefix),
         boundary_cluster_key:
-          (name) => (sources.cluster_key_from_boundary_fn)(name, cluster_names),
+          (name) =>
+            cluster_key_from_boundary(
+              name,
+              cluster_names,
+              sources.cluster_ln_prefix,
+              sources.cluster_rn_prefix,
+            ),
         is_left_boundary: (name) => name.has_prefix(sources.cluster_ln_prefix),
       },
     )
@@ -326,7 +472,7 @@ pub fn build_position_output_maps_from_sources(
         x_positions: sources.x_positions,
         rank_y: sources.rank_y,
         fallback_fn: () =>
-          (sources.vnode_positions_from_edges_fn)(
+          vnode_positions_from_edges(
             sources.edges,
             sources.ranks,
             sources.vnode_ranks,
@@ -342,7 +488,7 @@ pub fn build_position_output_maps_from_sources(
       sources.x_positions,
       sources.y_positions,
     )
-  if sources.has_clusters && (sources.cluster_rounding_enabled_fn)() {
+  if sources.has_clusters && cluster_rounding_enabled() {
     let _ =
       (sources.adjust_cluster_positions_fn)(
         sources.graph,
