@@ -71,8 +71,12 @@ fn compute_dot_routing_stage(
   let routing_positions_state = ratio_adjusted_data.positions_state
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
-  let label_edge_counts = build_label_edge_counts(prep.edges)
-  let enable_complex_tuning = complex_tuning_enabled()
+  let label_edge_counts =
+    @routing.build_label_edge_counts(
+      prep.edges,
+      (edge) => edge_mid_label_text(edge) is Some(_),
+    )
+  let enable_complex_tuning = @routing.complex_tuning_enabled()
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
   let precompute_data =

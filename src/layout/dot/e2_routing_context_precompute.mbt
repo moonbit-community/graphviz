@@ -65,13 +65,11 @@ fn build_routing_precompute_data(
   // then vnode-expanded order groups, then base order groups.
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
-    if input.positions_state.x_groups.length() > 0 {
-      input.positions_state.x_groups
-    } else if input.ordering.ordered_groups_with_vnodes.length() > 0 {
-      input.ordering.ordered_groups_with_vnodes
-    } else {
-      input.ordering.ordered_groups
-    }
+    @routing.select_path_groups(
+      input.positions_state.x_groups,
+      input.ordering.ordered_groups_with_vnodes,
+      input.ordering.ordered_groups,
+    )
   // Graphviz parity: routing context is assembled from routing-stage
   // inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
@@ -108,39 +106,6 @@ fn build_routing_precompute_data(
     head_port_metrics,
     path_groups,
     routing_context,
-  }
-}
-
-///|
-/// Graphviz parity: label edge counts aligned to refs/graphviz/lib/dotgen/dotsplines.c (label spacing).
-/// Do not change behavior without updating fixtures/tests.
-fn build_label_edge_counts(
-  edges : Array[@cgraph.Edge],
-) -> Map[String, Int] {
-  let label_edge_counts : Map[String, Int] = Map::new()
-  for edge in edges {
-    if edge_mid_label_text(edge) is Some(_) {
-      let tail = edge.tail().name()
-      let current = match label_edge_counts.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      label_edge_counts[tail] = current + 1
-    }
-  }
-  label_edge_counts
-}
-
-///|
-/// Graphviz parity: complex tuning toggle mirrors fixture gating for dotsplines heuristics.
-/// Do not change behavior without updating fixtures/tests.
-fn complex_tuning_enabled() -> Bool {
-  match @sys.get_env_var("DOT_COMPLEX_TUNING") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
   }
 }
 
