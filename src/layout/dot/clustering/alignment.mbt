@@ -1,8 +1,21 @@
 ///|
+/// Graphviz parity: cluster-alignment input keeps geometry maps and callbacks
+/// grouped so recursive rounding/label expansion wiring stays explicit.
+pub(all) struct ClusterAlignmentInput {
+  graph : @cgraph.Graph
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_clusters : Map[String, String]
+  sizes : Map[String, @shared.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
+}
+
+///|
 fn compute_nodes_bbox(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
+  sizes : Map[String, @shared.NodeSize],
 ) -> @geom.Rect? {
   let mut bbox_set = false
   let mut min_x = 0.0
@@ -54,6 +67,47 @@ fn compute_nodes_bbox(
 }
 
 ///|
+fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
+  { x: point.x + dx, y: point.y + dy }
+}
+
+///|
+fn round_bbox_x_only(bbox : @geom.Rect) -> @geom.Rect {
+  {
+    llx: bbox.llx.round(),
+    lly: bbox.lly,
+    urx: bbox.urx.round(),
+    ury: bbox.ury,
+  }
+}
+
+///|
+fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
+  {
+    llx: if base.llx < other.llx {
+      base.llx
+    } else {
+      other.llx
+    },
+    lly: if base.lly < other.lly {
+      base.lly
+    } else {
+      other.lly
+    },
+    urx: if base.urx > other.urx {
+      base.urx
+    } else {
+      other.urx
+    },
+    ury: if base.ury > other.ury {
+      base.ury
+    } else {
+      other.ury
+    },
+  }
+}
+
+///|
 fn shift_graph_positions(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
@@ -63,7 +117,7 @@ fn shift_graph_positions(
   dy : Double,
 ) -> Unit {
   let members : Map[String, Bool] = Map::new()
-  @dot_shared.collect_graph_nodes(graph, members)
+  @shared.collect_graph_nodes(graph, members)
   for name, _ in members {
     match positions.get(name) {
       Some(pos) => positions[name] = shift_point(pos, dx, dy)
@@ -71,7 +125,7 @@ fn shift_graph_positions(
     }
   }
   let clusters : Map[String, Bool] = Map::new()
-  @dot_shared.collect_cluster_names(graph, clusters)
+  @shared.collect_cluster_names(graph, clusters)
   for vnode, key in vnode_clusters {
     if clusters.get(key) is Some(_) {
       match vnode_positions.get(vnode) {
@@ -83,22 +137,26 @@ fn shift_graph_positions(
 }
 
 ///|
-fn adjust_cluster_positions(
-  graph : @cgraph.Graph,
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_clusters : Map[String, String],
-  sizes : Map[String, NodeSize],
+/// Graphviz parity: cluster bbox rounding/center alignment follows dot postproc
+/// cluster pass ordering; callback-owned margin/label expansion must preserve
+/// existing behavior from the caller package.
+pub fn adjust_cluster_positions(
+  input : ClusterAlignmentInput,
 ) -> @geom.Rect? {
-  let mut bbox = compute_nodes_bbox(graph, positions, sizes)
-  for child in graph.subgraphs() {
-    match adjust_cluster_positions(
-      child,
-      positions,
-      vnode_positions,
-      vnode_clusters,
-      sizes,
-    ) {
+  let mut bbox = compute_nodes_bbox(input.graph, input.positions, input.sizes)
+  for child in input.graph.subgraphs() {
+    match
+      adjust_cluster_positions(
+        {
+          graph: child,
+          positions: input.positions,
+          vnode_positions: input.vnode_positions,
+          vnode_clusters: input.vnode_clusters,
+          sizes: input.sizes,
+          cluster_margin_pt_for: input.cluster_margin_pt_for,
+          expand_cluster_label_bbox: input.expand_cluster_label_bbox,
+        },
+      ) {
       Some(child_bbox) =>
         bbox = Some(match bbox {
           Some(current) => merge_bbox(current, child_bbox)
@@ -111,36 +169,24 @@ fn adjust_cluster_positions(
     Some(value) => value
     None => return None
   }
-  if @dot_shared.is_cluster_graph(graph) {
-    let pad = cluster_margin_pt(graph)
+  if @shared.is_cluster_graph(input.graph) {
+    let pad = (input.cluster_margin_pt_for)(input.graph)
     current = {
       llx: current.llx - pad,
       lly: current.lly - pad,
       urx: current.urx + pad,
       ury: current.ury + pad,
     }
-    match graph_label_metrics(graph) {
-      Some(metrics) => {
-        let loc = graph_label_loc(graph)
-        current =
-          expand_bbox_for_label(
-            current,
-            metrics.width_pt,
-            metrics.height_pt,
-            loc,
-          )
-      }
-      None => ()
-    }
-    let rounded = round_bbox(current)
+    current = (input.expand_cluster_label_bbox)(input.graph, current)
+    let rounded = round_bbox_x_only(current)
     let center_shift = (rounded.llx + rounded.urx) / 2.0 -
       (current.llx + current.urx) / 2.0
     if center_shift != 0.0 {
       shift_graph_positions(
-        graph,
-        positions,
-        vnode_positions,
-        vnode_clusters,
+        input.graph,
+        input.positions,
+        input.vnode_positions,
+        input.vnode_clusters,
         center_shift,
         0.0,
       )
@@ -151,7 +197,7 @@ fn adjust_cluster_positions(
         ury: current.ury,
       }
     }
-    return Some(round_bbox(current))
+    return Some(round_bbox_x_only(current))
   }
   Some(current)
 }

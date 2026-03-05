@@ -736,12 +736,27 @@ fn build_position_output_maps(
     )
   if input.pipeline.cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ =
-      adjust_cluster_positions(
-        input.pipeline.graph,
-        output_maps.positions,
-        output_maps.vnode_positions,
-        input.pipeline.ordering.vnode_info.vnode_clusters,
-        input.pipeline.prep.sizes,
+      @clustering.adjust_cluster_positions(
+        {
+          graph: input.pipeline.graph,
+          positions: output_maps.positions,
+          vnode_positions: output_maps.vnode_positions,
+          vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
+          sizes: input.pipeline.prep.sizes,
+          cluster_margin_pt_for: cluster_margin_pt,
+          expand_cluster_label_bbox:
+            (graph, bbox) =>
+              match graph_label_metrics(graph) {
+                Some(metrics) =>
+                  expand_bbox_for_label(
+                    bbox,
+                    metrics.width_pt,
+                    metrics.height_pt,
+                    graph_label_loc(graph),
+                  )
+                None => bbox
+              },
+        },
       )
   }
   output_maps
