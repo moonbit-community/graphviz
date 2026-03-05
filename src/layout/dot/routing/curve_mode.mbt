@@ -1410,13 +1410,23 @@ fn limit_pathplan_segment_boxes(
 }
 
 ///|
+priv struct SegmentedPathplanRawBezierInput {
+  pathplan_segments : Array[@routesplines.PathplanSegment]
+  tail_slope_for : @geom.Point
+  head_slope_for : @geom.Point
+  join_dir : @geom.Point
+  force_segmented : Bool
+}
+
+///|
 fn segmented_pathplan_raw_bezier(
-  pathplan_segments : Array[@routesplines.PathplanSegment],
-  tail_slope_for : @geom.Point,
-  head_slope_for : @geom.Point,
-  join_dir : @geom.Point,
-  force_segmented : Bool,
+  input : SegmentedPathplanRawBezierInput,
 ) -> Array[@geom.Point] {
+  let pathplan_segments = input.pathplan_segments
+  let tail_slope_for = input.tail_slope_for
+  let head_slope_for = input.head_slope_for
+  let join_dir = input.join_dir
+  let force_segmented = input.force_segmented
   let segmented_raw : Array[@geom.Point] = []
   let segment_count = pathplan_segments.length()
   let mut seg_idx = 0
@@ -1483,11 +1493,13 @@ fn build_multi_point_routed_spline(
       // Graphviz parity: straight_path segment joins constrain slope along rankdir.
       let join_dir = straight_path_join_dir(base.layout_rankdir)
       segmented_pathplan_raw_bezier(
-        pathplan_segments,
-        tail_slope_for,
-        head_slope_for,
-        join_dir,
-        edge_force_segmented,
+        {
+          pathplan_segments,
+          tail_slope_for,
+          head_slope_for,
+          join_dir,
+          force_segmented: edge_force_segmented,
+        },
       )
     } else {
       []
