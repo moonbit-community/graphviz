@@ -334,32 +334,6 @@ fn trunc_int(value : Double) -> Int {
 }
 
 ///|
-fn nodesep_minlen(
-  tail_name : String,
-  head_name : String,
-  sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-) -> Int {
-  let tail_size = sizes.get(tail_name)
-  let head_size = sizes.get(head_name)
-  let tail_right = match tail_size {
-    Some(value) => value.right_pt
-    None => @dot_shared.default_node_width_in() * 72.0 / 2.0
-  }
-  let head_left = match head_size {
-    Some(value) => value.left_pt
-    None => @dot_shared.default_node_width_in() * 72.0 / 2.0
-  }
-  let sep = nodesep_pt
-  let minlen = tail_right + head_left + sep
-  if minlen <= 0.0 {
-    0
-  } else {
-    round_int(minlen)
-  }
-}
-
-///|
 fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
   match graph.get_attr("margin") {
     Some(value) => {
@@ -1658,13 +1632,6 @@ priv struct ReverseMergeMetadata {
 }
 
 ///|
-priv struct RankConstraintSeed {
-  rank_adj_constraints : Map[String, ConstraintEdge]
-  rank_adj_order : Array[String]
-  order_in_rank : Map[String, Int]
-}
-
-///|
 fn build_reverse_merge_metadata(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -1723,78 +1690,6 @@ fn build_reverse_merge_metadata(
     }
   }
   { merged_edge_weight_bonus, merged_edge_skip }
-}
-
-///|
-fn build_rank_constraint_seed(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-) -> RankConstraintSeed {
-  let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
-  let rank_adj_order : Array[String] = []
-  let order_in_rank : Map[String, Int] = Map::new()
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for i in 0..<names.length() {
-      order_in_rank[names[i]] = i
-    }
-    let rank_nodesep =
-      @positioning.rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
-    let mut i = 0
-    while i + 1 < names.length() {
-      let tail = names[i]
-      let head = names[i + 1]
-      let minlen = nodesep_minlen(tail, head, sizes, rank_nodesep)
-      let key = "\{tail}|\{head}"
-      rank_adj_constraints[key] = {
-        tail,
-        head,
-        minlen,
-        weight: 0,
-        tail_port: None,
-        head_port: None,
-      }
-      rank_adj_order.push(key)
-      i = i + 1
-    }
-  }
-  { rank_adj_constraints, rank_adj_order, order_in_rank }
-}
-
-///|
-fn for_each_edge_index_in_tail_order(
-  edges : Array[@cgraph.Edge],
-  edge_out_order : Map[String, Array[Int]],
-  nlist_order : Array[String],
-  visit : (Int) -> Unit,
-) -> Unit {
-  let seen_edges : Map[Int, Bool] = Map::new()
-  for tail_name in nlist_order {
-    let indices = match edge_out_order.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for edge_idx in indices {
-      if edge_idx < 0 || edge_idx >= edges.length() {
-        continue
-      }
-      seen_edges[edge_idx] = true
-      visit(edge_idx)
-    }
-  }
-  if seen_edges.length() < edges.length() {
-    for edge_idx in 0..<edges.length() {
-      if seen_edges.get(edge_idx) is None {
-        visit(edge_idx)
-      }
-    }
-  }
 }
 
 ///|
@@ -1915,7 +1810,7 @@ fn build_constraint_graph(
     base_positions,
   )
   let rank_constraint_seed =
-    build_rank_constraint_seed(
+    @positioning.build_rank_constraint_seed(
       rank_keys,
       groups,
       sizes,
@@ -2098,7 +1993,7 @@ fn build_constraint_graph(
       }
     }
   }
-  for_each_edge_index_in_tail_order(
+  @positioning.for_each_edge_index_in_tail_order(
     edges,
     edge_out_order,
     nlist_order,
