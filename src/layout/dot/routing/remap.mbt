@@ -7,14 +7,25 @@ fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
 }
 
 ///|
+priv struct PortLabelPosRemapInput {
+  edge : @cgraph.Edge
+  splines : Array[@geom.Spline]
+  label_attr : String
+  is_head : Bool
+  fallback : @geom.Point?
+  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
+}
+
+///|
 fn remap_port_label_pos(
-  edge : @cgraph.Edge,
-  splines : Array[@geom.Spline],
-  label_attr : String,
-  is_head : Bool,
-  fallback : @geom.Point?,
-  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
+  input : PortLabelPosRemapInput,
 ) -> @geom.Point? {
+  let edge = input.edge
+  let splines = input.splines
+  let label_attr = input.label_attr
+  let is_head = input.is_head
+  let fallback = input.fallback
+  let edge_port_label_pos_fn = input.edge_port_label_pos_fn
   if !edge_attr_non_empty(edge, label_attr) {
     return None
   }
@@ -63,20 +74,24 @@ fn remap_edge_layout_edge(
       None
     }
   let head_label_pos = remap_port_label_pos(
-    edge,
-    layout.splines,
-    "headlabel",
-    true,
-    layout.head_label_pos,
-    edge_port_label_pos_fn,
+    {
+      edge,
+      splines: layout.splines,
+      label_attr: "headlabel",
+      is_head: true,
+      fallback: layout.head_label_pos,
+      edge_port_label_pos_fn,
+    },
   )
   let tail_label_pos = remap_port_label_pos(
-    edge,
-    layout.splines,
-    "taillabel",
-    false,
-    layout.tail_label_pos,
-    edge_port_label_pos_fn,
+    {
+      edge,
+      splines: layout.splines,
+      label_attr: "taillabel",
+      is_head: false,
+      fallback: layout.tail_label_pos,
+      edge_port_label_pos_fn,
+    },
   )
   let xlabel_pos =
     if edge_attr_non_empty(edge, "xlabel") {
