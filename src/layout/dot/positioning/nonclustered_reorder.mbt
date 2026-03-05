@@ -1,6 +1,20 @@
 type NodeSize = @shared.NodeSize
 
 ///|
+pub struct XposPortSampleInput {
+  nodes : Array[@cgraph.Node]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  x_order_sizes : Map[String, NodeSize]
+}
+
+///|
+pub type XposPortSampleFn = (
+  XposPortSampleInput,
+) -> (Array[Double], Array[Double])
+
+///|
 /// Graphviz parity: non-cluster xpos reorder build input keeps order-edge
 /// snapshots, vnode expansion metadata, and reorder constraints grouped before
 /// order-edge port hint sampling.
@@ -160,24 +174,28 @@ fn reorder_nonclustered_x_groups(
 pub fn build_nonclustered_xpos_groups(
   input : NonclusteredXposGroupBuildInput,
   x_groups : Map[Int, Array[String]],
-  compute_port_positions : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
-  compute_port_orders : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, NodeSize]) -> (Array[Double], Array[Double]),
+  compute_port_positions : XposPortSampleFn,
+  compute_port_orders : XposPortSampleFn,
 ) -> Map[Int, Array[String]] {
   let (order_edge_tail_port_x, order_edge_head_port_x) =
     compute_port_positions(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
+      {
+        nodes: input.nodes,
+        order_edges: input.order_edges,
+        order_edge_tail: input.order_edge_tail,
+        order_edge_head: input.order_edge_head,
+        x_order_sizes: input.x_order_sizes,
+      },
     )
   let (order_edge_tail_port_order, order_edge_head_port_order) =
     compute_port_orders(
-      input.nodes,
-      input.order_edges,
-      input.order_edge_tail,
-      input.order_edge_head,
-      input.x_order_sizes,
+      {
+        nodes: input.nodes,
+        order_edges: input.order_edges,
+        order_edge_tail: input.order_edge_tail,
+        order_edge_head: input.order_edge_head,
+        x_order_sizes: input.x_order_sizes,
+      },
     )
   reorder_nonclustered_x_groups(
     {

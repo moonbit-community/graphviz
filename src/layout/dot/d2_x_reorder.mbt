@@ -71,13 +71,16 @@ fn build_xpos_reorder_pipeline_input(
 /// derived from compass/record port geometry before reorder scoring.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_xpos_reorder_port_positions(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
+  input : @positioning.XposPortSampleInput,
 ) -> (Array[Double], Array[Double]) {
-  let samples = compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+  let samples =
+    compute_edge_port_positions(
+      input.nodes,
+      input.order_edges,
+      input.order_edge_tail,
+      input.order_edge_head,
+      input.x_order_sizes,
+    )
   (samples.tail_values, samples.head_values)
 }
 
@@ -86,13 +89,16 @@ fn compute_xpos_reorder_port_positions(
 /// break mincross scoring ties consistently with Graphviz.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_xpos_reorder_port_orders(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
+  input : @positioning.XposPortSampleInput,
 ) -> (Array[Double], Array[Double]) {
-  let samples = compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+  let samples =
+    compute_edge_port_orders(
+      input.nodes,
+      input.order_edges,
+      input.order_edge_tail,
+      input.order_edge_head,
+      input.x_order_sizes,
+    )
   (samples.tail_values, samples.head_values)
 }
 

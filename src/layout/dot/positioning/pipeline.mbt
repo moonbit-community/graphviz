@@ -201,8 +201,8 @@ fn apply_clustered_xpos_reorder_path(
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 fn apply_nonclustered_xpos_reorder(
   input : XposReorderPipelineInput,
-  compute_port_positions : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double]),
-  compute_port_orders : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double]),
+  compute_port_positions : XposPortSampleFn,
+  compute_port_orders : XposPortSampleFn,
 ) -> Map[Int, Array[String]] {
   build_nonclustered_xpos_groups(
     {
@@ -264,8 +264,8 @@ fn maybe_apply_xpos_transpose_cleanup(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_x_groups_after_reorder(
   input : XposReorderPipelineInput,
-  compute_port_positions : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double]),
-  compute_port_orders : (Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @shared.NodeSize]) -> (Array[Double], Array[Double]),
+  compute_port_positions : XposPortSampleFn,
+  compute_port_orders : XposPortSampleFn,
 ) -> Map[Int, Array[String]] {
   let path_flags = build_xpos_reorder_path_flags(input)
   let x_groups =
