@@ -2187,94 +2187,17 @@ fn x_positions_from_simplex(
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
 ) -> Map[String, Double] {
-  // Graphviz parity: class2/decompose creation order is the reverse of
-  // GD_nlist iteration order consumed by create_aux_edges/position.
-  let nlist_source =
-    if gdnlist_order.length() > 0 {
-      gdnlist_order
-    } else {
-      nlist_order
-    }
-  let nlist_reversed : Array[String] = []
-  let mut nlist_idx = nlist_source.length()
-  while nlist_idx > 0 {
-    nlist_idx = nlist_idx - 1
-    nlist_reversed.push(nlist_source[nlist_idx])
-  }
-  let xpos_nlist_order : Array[String] = []
-  let cluster_order : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
-  let rankdir = graph_rankdir(graph_root)
-  let prefer_source_for_lr =
-    rankdir == RankDir::LR || rankdir == RankDir::RL
-  for name in nlist_reversed {
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
-    if cluster != "" && cluster_seen.get(cluster) is None {
-      cluster_seen[cluster] = true
-      cluster_order.push(cluster)
-    }
-  }
-  if prefer_source_for_lr || cluster_order.length() == 0 {
-    for name in nlist_source {
-      xpos_nlist_order.push(name)
-    }
-  } else {
-    let xpos_seen : Map[String, Bool] = Map::new()
-    for cluster in cluster_order {
-      let mut rank_idx = rank_keys.length()
-      while rank_idx > 0 {
-        rank_idx = rank_idx - 1
-        let rank = rank_keys[rank_idx]
-        let names = match groups.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        // Graphviz parity: decompose-created virtual nodes are visited before
-        // their rank peers in clustered GD_nlist traversals.
-        let mut name_idx = names.length()
-        while name_idx > 0 {
-          name_idx = name_idx - 1
-          let name = names[name_idx]
-          if !is_edge_vnode_name(name) {
-            continue
-          }
-          let name_cluster = match cluster_keys.get(name) {
-            Some(value) => value
-            None => ""
-          }
-          if name_cluster == cluster && xpos_seen.get(name) is None {
-            xpos_nlist_order.push(name)
-            xpos_seen[name] = true
-          }
-        }
-        let mut name_idx = names.length()
-        while name_idx > 0 {
-          name_idx = name_idx - 1
-          let name = names[name_idx]
-          if is_edge_vnode_name(name) {
-            continue
-          }
-          let name_cluster = match cluster_keys.get(name) {
-            Some(value) => value
-            None => ""
-          }
-          if name_cluster == cluster && xpos_seen.get(name) is None {
-            xpos_nlist_order.push(name)
-            xpos_seen[name] = true
-          }
-        }
-      }
-    }
-    for name in nlist_reversed {
-      if xpos_seen.get(name) is None {
-        xpos_nlist_order.push(name)
-        xpos_seen[name] = true
-      }
-    }
-  }
+  let xpos_nlist_order =
+    @positioning.build_xpos_nlist_order(
+      {
+        rankdir: graph_rankdir(graph_root),
+        nlist_order,
+        gdnlist_order,
+        cluster_keys,
+        rank_keys,
+        groups,
+      },
+    )
   let order_index = @ordering.build_order_index(groups)
   let constraint_graph = build_constraint_graph(
     nodes,
