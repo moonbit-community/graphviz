@@ -130,7 +130,7 @@ fn clip_polygon_attr_int(
   fallback : Int,
 ) -> Int {
   match node.get_attr(key) {
-    Some(value) => parse_double(value, fallback.to_double()).round().to_int()
+    Some(value) => @dot_shared.parse_double_or(value, fallback.to_double()).round().to_int()
     None => fallback
   }
 }
@@ -142,7 +142,7 @@ fn clip_polygon_attr_double(
   fallback : Double,
 ) -> Double {
   match node.get_attr(key) {
-    Some(value) => parse_double(value, fallback)
+    Some(value) => @dot_shared.parse_double_or(value, fallback)
     None => fallback
   }
 }

@@ -31,11 +31,7 @@ fn default_point_size_in() -> Double {
 
 ///|
 fn parse_double(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
-    _ => fallback
-  } noraise {
-    parsed => parsed
-  }
+  @dot_shared.parse_double_or(value, fallback)
 }
 
 ///|

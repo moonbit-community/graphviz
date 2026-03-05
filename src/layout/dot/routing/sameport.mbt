@@ -1,13 +1,3 @@
-///|
-fn parse_double(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
-    _ => fallback
-  } noraise {
-    parsed => parsed
-  }
-}
-
-///|
 /// Graphviz parity: samehead/sametail group collection aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports/sameedge).
 /// Do not change behavior without updating fixtures/tests.
@@ -101,7 +91,7 @@ fn assign_sameport_group_size(
 fn sameport_node_penwidth_pt(node : @cgraph.Node) -> Double {
   match node.get_attr("penwidth") {
     Some(value) => {
-      let penwidth = parse_double(value, 1.0)
+      let penwidth = @dot_shared.parse_double_or(value, 1.0)
       if penwidth < 0.0 {
         0.0
       } else {

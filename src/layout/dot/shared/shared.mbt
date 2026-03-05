@@ -60,6 +60,15 @@ pub fn env_flag_enabled_nonempty(value : String?) -> Bool {
 }
 
 ///|
+pub fn parse_double_or(value : String, fallback : Double) -> Double {
+  try @strconv.parse_double(value) catch {
+    _ => fallback
+  } noraise {
+    parsed => parsed
+  }
+}
+
+///|
 pub fn node_size_from_points(
   width_pt : Double,
   height_pt : Double,
