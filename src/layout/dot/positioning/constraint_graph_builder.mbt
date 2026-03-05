@@ -26,8 +26,6 @@ pub(all) struct ConstraintGraphBuildInput {
   root_compress_weight : Int
   node_left_pt : (String, Map[String, @shared.NodeSize]) -> Double
   node_right_pt : (String, Map[String, @shared.NodeSize]) -> Double
-  round_int : (Double) -> Int
-  trunc_int : (Double) -> Int
 }
 
 ///|
@@ -61,7 +59,6 @@ pub fn build_constraint_graph(
         extra_nodes: input.extra_nodes,
         nlist_order: input.nlist_order,
         base_positions,
-        trunc_int: input.trunc_int,
       },
     )
   let index = node_setup.index
@@ -93,7 +90,6 @@ pub fn build_constraint_graph(
         rank_adj_constraints,
         edge_has_mid_label: input.edge_has_mid_label,
         edge_degree_increment: input.edge_degree_increment,
-        trunc_int: input.trunc_int,
       },
     )
   for key in rank_adj_order {
@@ -138,7 +134,6 @@ pub fn build_constraint_graph(
       root_compress_weight: input.root_compress_weight,
       node_left_pt: input.node_left_pt,
       node_right_pt: input.node_right_pt,
-      round_int: input.round_int,
     },
   )
   for edge in input.extra_edges {

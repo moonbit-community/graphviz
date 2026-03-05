@@ -82,7 +82,6 @@ fn add_ordered_constraint_nodes(
   real_by_name : Map[String, @cgraph.Node],
   extra_rank : Map[String, Int],
   base_positions : Map[String, Double],
-  trunc_int : (Double) -> Int,
 ) -> Unit {
   for name in ordered_names {
     match real_by_name.get(name) {
@@ -90,7 +89,7 @@ fn add_ordered_constraint_nodes(
         let idx = @network_simplex.add_node(graph, node.name())
         index[name] = idx
         let pos = base_positions.get(name).unwrap_or_default()
-        @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
+        @network_simplex.set_node_rank(graph, idx, @shared.trunc_int(pos))
       }
       None =>
         match extra_rank.get(name) {
@@ -98,7 +97,7 @@ fn add_ordered_constraint_nodes(
             let idx = @network_simplex.add_node(graph, name, kind=constraint_node_kind(name))
             index[name] = idx
             let pos = base_positions.get(name).unwrap_or(rank.to_double())
-            @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
+            @network_simplex.set_node_rank(graph, idx, @shared.trunc_int(pos))
           }
           None => ()
         }
@@ -115,7 +114,6 @@ pub(all) struct ConstraintNodesSetupInput {
   extra_nodes : Array[@ordering.ExtraConstraintNode]
   nlist_order : Array[String]
   base_positions : Map[String, Double]
-  trunc_int : (Double) -> Int
 }
 
 ///|
@@ -147,7 +145,6 @@ pub fn build_constraint_nodes_setup(
     seed.real_by_name,
     seed.extra_rank,
     input.base_positions,
-    input.trunc_int,
   )
   {
     index,

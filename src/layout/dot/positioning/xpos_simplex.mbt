@@ -26,8 +26,6 @@ pub(all) struct XposSimplexSolveInput {
   root_compress_weight : Int
   node_left_pt_fn : (String, Map[String, @shared.NodeSize]) -> Double
   node_right_pt_fn : (String, Map[String, @shared.NodeSize]) -> Double
-  round_int_fn : (Double) -> Int
-  trunc_int_fn : (Double) -> Int
   on_reordered_graph : (@network_simplex.NsGraph, Map[String, Int]) -> Unit
 }
 
@@ -68,8 +66,6 @@ pub fn solve_xpos_with_simplex(
         root_compress_weight: input.root_compress_weight,
         node_left_pt: input.node_left_pt_fn,
         node_right_pt: input.node_right_pt_fn,
-        round_int: input.round_int_fn,
-        trunc_int: input.trunc_int_fn,
       },
     )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.

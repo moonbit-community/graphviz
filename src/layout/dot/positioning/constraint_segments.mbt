@@ -15,7 +15,6 @@ pub(all) struct ConstraintSegmentPassInput {
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
   edge_degree_increment : (@cgraph.Edge) -> Int
-  trunc_int : (Double) -> Int
 }
 
 ///|
@@ -102,7 +101,6 @@ fn same_rank_constraint_minlen(
   nodesep_pt : Double,
   sizes : Map[String, @shared.NodeSize],
   has_ordering : Bool,
-  trunc_int : (Double) -> Int,
 ) -> Int {
   let width = node_side_pt(left, sizes, false) + node_side_pt(right, sizes, true)
   let mut minlen_value =
@@ -114,7 +112,7 @@ fn same_rank_constraint_minlen(
   if is_invis && has_ordering {
     minlen_value = minlen_value + nodesep_pt
   }
-  trunc_int(minlen_value)
+  @shared.trunc_int(minlen_value)
 }
 
 ///|
@@ -187,7 +185,6 @@ pub fn build_constraint_segment_pass(
                   input.nodesep_pt,
                   input.sizes,
                   has_ordering,
-                  input.trunc_int,
                 )
               let weight = @shared.edge_weight(edge)
               let flat_key = "\{left}|\{right}"
