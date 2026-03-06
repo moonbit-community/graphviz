@@ -2215,3 +2215,942 @@ fn collect_cluster_label_objects(
     collect_cluster_label_objects(subgraph, objects, flip)
   }
 }
+///|
+/// Xlabel dimension metrics and rankdir-flip helpers shared by candidate,
+/// update, and finalization stages.
+
+priv struct XLabelMetrics {
+  width : Double
+  height : Double
+}
+
+priv struct LabelDims {
+  width : Double
+  height : Double
+}
+
+
+fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
+  match node.get_attr("xlabel") {
+    Some(text) =>
+      if text == "" {
+        None
+      } else {
+        let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+        let font = @attrs.font_name(node.get_attr("fontname"))
+        let (width, height) = label_text_dimensions(text, font, font_size_pt)
+        Some({ width, height })
+      }
+    None => None
+  }
+}
+
+fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
+  match edge_label_metrics_for_attr(edge, "xlabel", false) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+fn maybe_flip_dims(
+  width : Double,
+  height : Double,
+  flip : Bool,
+) -> LabelDims {
+  if flip {
+    { width: height, height: width }
+  } else {
+    { width, height }
+  }
+}
+///|
+/// Edge anchor and midpoint helpers for exterior-label placement.
+
+///|
+const MILLIPOINT : Double = 0.001
+
+priv struct EdgeEndpoints {
+  tail : @geom.Point
+  head : @geom.Point
+}
+
+fn edge_tail_point_for_layout(edge_layout : DotLayoutEdge) -> @geom.Point? {
+  match edge_layout.splines.get(0) {
+    Some(spline) =>
+      match spline.start {
+        Some(point) => Some(point)
+        None =>
+          if spline.points.length() > 0 { Some(spline.points[0]) } else { None }
+      }
+    None => None
+  }
+}
+
+fn edge_head_point_for_layout(edge_layout : DotLayoutEdge) -> @geom.Point? {
+  if edge_layout.splines.length() == 0 {
+    return None
+  }
+  let last_idx = edge_layout.splines.length() - 1
+  match edge_layout.splines.get(last_idx) {
+    Some(spline) =>
+      match spline.end {
+        Some(point) => Some(point)
+        None =>
+          if spline.points.length() > 0 {
+            Some(spline.points[spline.points.length() - 1])
+          } else {
+            None
+          }
+      }
+    None => None
+  }
+}
+
+fn edge_endpoints(
+  edge_layout : DotLayoutEdge,
+) -> EdgeEndpoints? {
+  match (edge_tail_point_for_layout(edge_layout),
+    edge_head_point_for_layout(edge_layout)) {
+    (Some(tail), Some(head)) => Some({ tail, head })
+    _ => None
+  }
+}
+
+fn approx_eq_point(a : @geom.Point, b : @geom.Point) -> Bool {
+  let dx = a.x - b.x
+  let dy = a.y - b.y
+  dx * dx + dy * dy < MILLIPOINT * MILLIPOINT
+}
+
+///|
+/// Graphviz parity: closest spline point aligned to refs/graphviz/lib/common/utils.c
+/// (dotneato_closest).
+/// Do not change behavior without updating fixtures/tests.
+fn dotneato_closest_point(
+  edge_layout : DotLayoutEdge,
+  target : @geom.Point,
+) -> @geom.Point? {
+  if edge_layout.splines.length() == 0 {
+    return None
+  }
+  let mut best_i = 0
+  let mut best_j = 0
+  let mut best_dist = 1.0e38
+  let mut found = false
+  for i in 0..<edge_layout.splines.length() {
+    let spline = edge_layout.splines[i]
+    let points = spline.points
+    for j in 0..<points.length() {
+      let p = points[j]
+      let dx = p.x - target.x
+      let dy = p.y - target.y
+      let dist = dx * dx + dy * dy
+      if !found || dist < best_dist {
+        best_dist = dist
+        best_i = i
+        best_j = j
+        found = true
+      }
+    }
+  }
+  if !found {
+    return None
+  }
+  let spline = edge_layout.splines[best_i]
+  let points = spline.points
+  if points.length() == 0 {
+    return None
+  }
+  if points.length() < 4 {
+    return Some(points[0])
+  }
+  let mut closest_idx = best_j
+  if closest_idx == points.length() - 1 {
+    closest_idx = closest_idx - 1
+  }
+  let j = 3 * (closest_idx / 3)
+  if j + 3 >= points.length() {
+    return Some(points[points.length() - 1])
+  }
+  let p0 = points[j]
+  let p1 = points[j + 1]
+  let p2 = points[j + 2]
+  let p3 = points[j + 3]
+  let mut low = 0.0
+  let mut high = 1.0
+  let mut dlow = {
+    let dx = p0.x - target.x
+    let dy = p0.y - target.y
+    dx * dx + dy * dy
+  }
+  let mut dhigh = {
+    let dx = p3.x - target.x
+    let dy = p3.y - target.y
+    dx * dx + dy * dy
+  }
+  let mut pt2 = p0
+  while true {
+    let t = (low + high) / 2.0
+    pt2 = bezier_point_fma(p0, p1, p2, p3, t)
+    if Double::abs(dlow - dhigh) < 1.0 {
+      break
+    }
+    if Double::abs(high - low) < 0.00001 {
+      break
+    }
+    if dlow < dhigh {
+      high = t
+      let dx = pt2.x - target.x
+      let dy = pt2.y - target.y
+      dhigh = dx * dx + dy * dy
+    } else {
+      low = t
+      let dx = pt2.x - target.x
+      let dy = pt2.y - target.y
+      dlow = dx * dx + dy * dy
+    }
+  }
+  Some(pt2)
+}
+
+fn polyline_midpoint(edge_layout : DotLayoutEdge) -> @geom.Point? {
+  if edge_layout.splines.length() == 0 {
+    return None
+  }
+  let mut total = 0.0
+  for spline in edge_layout.splines {
+    let points = spline.points
+    let mut j = 0
+    while j + 3 < points.length() {
+      total = total + @edge_spline.segment_length(points[j], points[j + 3])
+      j = j + 3
+    }
+  }
+  if total <= 0.0 {
+    match edge_endpoints(edge_layout) {
+      Some(endpoints) => return Some(endpoints.tail)
+      None => return None
+    }
+  }
+  let mut dist = total / 2.0
+  for spline in edge_layout.splines {
+    let points = spline.points
+    let mut j = 0
+    while j + 3 < points.length() {
+      let pf = points[j]
+      let qf = points[j + 3]
+      let d = @edge_spline.segment_length(pf, qf)
+      if d >= dist {
+        let t = dist / d
+        let x = qf.x * t + pf.x * (1.0 - t)
+        let y = qf.y * t + pf.y * (1.0 - t)
+        return Some(@edge_spline.point(x, y))
+      }
+      dist = dist - d
+      j = j + 3
+    }
+  }
+  None
+}
+
+///|
+/// Graphviz parity: edge midpoint selection aligned to refs/graphviz/lib/common/splines.c
+/// (edgeMidpoint).
+/// Do not change behavior without updating fixtures/tests.
+fn edge_midpoint_for_layout(
+  edge_layout : DotLayoutEdge,
+  splines : SplinesMode,
+) -> @geom.Point? {
+  match edge_endpoints(edge_layout) {
+    Some(endpoints) => {
+      if approx_eq_point(endpoints.tail, endpoints.head) {
+        return Some(endpoints.tail)
+      }
+      match splines {
+        SplinesMode::Spline | SplinesMode::Curved => {
+          let mid =
+            @edge_spline.point(
+              (endpoints.tail.x + endpoints.head.x) / 2.0,
+              (endpoints.tail.y + endpoints.head.y) / 2.0,
+            )
+          match dotneato_closest_point(edge_layout, mid) {
+            Some(value) => Some(value)
+            None => Some(mid)
+          }
+        }
+        _ => polyline_midpoint(edge_layout)
+      }
+    }
+    None => None
+  }
+}
+///|
+/// Xlabel candidate collection from node/edge geometry and existing label
+/// placements before running xlabels.c-style search.
+
+fn build_edges_by_tail(
+  layout : DotLayoutGraph,
+) -> Map[String, Array[DotLayoutEdge]] {
+  let edges_by_tail : Map[String, Array[DotLayoutEdge]] = Map::new()
+  for edge_layout in layout.edges {
+    let tail_name = edge_layout.edge.tail().name()
+    let list = match edges_by_tail.get(tail_name) {
+      Some(value) => value
+      None => []
+    }
+    list.push(edge_layout)
+    edges_by_tail[tail_name] = list
+  }
+  edges_by_tail
+}
+
+fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+fn edge_attr_metrics_for_xlabel(
+  edge : @cgraph.Edge,
+  key : String,
+) -> XLabelMetrics? {
+  match edge_label_metrics_for_attr(edge, key, true) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+fn push_existing_label_object(
+  pos : @geom.Point,
+  metrics : XLabelMetrics,
+  flip : Bool,
+  objects : Array[XObject],
+) -> Unit {
+  let label_dims =
+    maybe_flip_dims(metrics.width, metrics.height, flip)
+  let pos_ll =
+    @edge_spline.point(
+      pos.x - label_dims.width / 2.0,
+      pos.y - label_dims.height / 2.0,
+    )
+  objects.push({
+    pos: pos_ll,
+    width: label_dims.width,
+    height: label_dims.height,
+    label_index: None,
+  })
+}
+
+fn push_unset_xlabel_label(
+  target : XLabelTarget,
+  metrics : XLabelMetrics,
+  flip : Bool,
+  labels : Array[XLabel],
+) -> Int {
+  let label_dims =
+    maybe_flip_dims(metrics.width, metrics.height, flip)
+  let idx = labels.length()
+  labels.push({
+    target,
+    width: label_dims.width,
+    height: label_dims.height,
+    pos: @edge_spline.point(0.0, 0.0),
+    set: false,
+  })
+  idx
+}
+
+fn push_deferred_label_anchor(
+  target : XLabelTarget,
+  metrics : XLabelMetrics,
+  anchor : @geom.Point,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  let idx =
+    push_unset_xlabel_label(target, metrics, flip, labels)
+  objects.push({
+    pos: anchor,
+    width: 0.0,
+    height: 0.0,
+    label_index: Some(idx),
+  })
+}
+
+fn collect_edge_label_candidate(
+  target : XLabelTarget,
+  current_pos : @geom.Point?,
+  metrics : XLabelMetrics?,
+  anchor : @geom.Point?,
+  has_geometry : Bool,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  match current_pos {
+    Some(pos) =>
+      match metrics {
+        Some(value) => push_existing_label_object(pos, value, flip, objects)
+        None => ()
+      }
+    None =>
+      if has_geometry {
+        match (metrics, anchor) {
+          (Some(value), Some(point)) =>
+            push_deferred_label_anchor(
+              target,
+              value,
+              point,
+              flip,
+              labels,
+              objects,
+            )
+          _ => ()
+        }
+      }
+  }
+}
+
+fn collect_xlabel_candidates(
+  layout : DotLayoutGraph,
+  splines : SplinesMode,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  let edges_by_tail = build_edges_by_tail(layout)
+  for node_layout in layout.nodes {
+    let node = node_layout.node
+    let width_pt = node_layout.width_in * 72.0
+    let height_pt = node_layout.height_in * 72.0
+    let obj_dims = maybe_flip_dims(width_pt, height_pt, flip)
+    let llx = node_layout.pos.x - obj_dims.width / 2.0
+    let lly = node_layout.pos.y - obj_dims.height / 2.0
+    let mut label_index : Int? = None
+    match xlabel_metrics_for_node(node) {
+      Some(metrics) =>
+        match node_layout.xlabel_pos {
+          Some(pos) =>
+            push_existing_label_object(pos, metrics, flip, objects)
+          None =>
+            label_index = Some(
+              push_unset_xlabel_label(
+                XLabelTarget::Node(node.name()),
+                metrics,
+                flip,
+                labels,
+              ),
+            )
+        }
+      None => ()
+    }
+    objects.push({
+      pos: @edge_spline.point(llx, lly),
+      width: obj_dims.width,
+      height: obj_dims.height,
+      label_index,
+    })
+
+    let edges_for_node = match edges_by_tail.get(node.name()) {
+      Some(value) => value
+      None => []
+    }
+    for edge_layout in edges_for_node {
+      let edge = edge_layout.edge
+      let edge_key = @dot_shared.edge_key(edge)
+      let has_geometry = edge_layout.splines.length() > 0
+      let mid_anchor =
+        if has_geometry {
+          edge_midpoint_for_layout(edge_layout, splines)
+        } else {
+          None
+        }
+      let tail_anchor =
+        if has_geometry {
+          edge_tail_point_for_layout(edge_layout)
+        } else {
+          None
+        }
+      let head_anchor =
+        if has_geometry {
+          edge_head_point_for_layout(edge_layout)
+        } else {
+          None
+        }
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeMid(edge_key),
+        edge_layout.label_pos,
+        edge_mid_metrics_for_xlabel(edge),
+        mid_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeTail(edge_key),
+        edge_layout.tail_label_pos,
+        edge_attr_metrics_for_xlabel(edge, "taillabel"),
+        tail_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeHead(edge_key),
+        edge_layout.head_label_pos,
+        edge_attr_metrics_for_xlabel(edge, "headlabel"),
+        head_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeXlabel(edge_key),
+        edge_layout.xlabel_pos,
+        xlabel_metrics_for_edge(edge),
+        mid_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+    }
+  }
+}
+///|
+/// Exterior-label placement core: xlabel metrics, overlap scoring, candidate
+/// search, and xlabels.c-style candidate selection.
+
+const XLXDENOM : Double = 8.0
+
+///|
+const XLYDENOM : Double = 2.0
+
+const XLPXPY : Int = 0
+const XLCXPY : Int = 1
+const XLNXPY : Int = 2
+const XLPXCY : Int = 3
+const XLNXCY : Int = 5
+const XLPXNY : Int = 6
+const XLCXNY : Int = 7
+const XLNXNY : Int = 8
+
+///|
+priv struct XBestPos {
+  n : Int
+  area : Double
+  pos : @geom.Point
+}
+
+fn rect_overlap_area(a : @geom.Rect, b : @geom.Rect) -> Double {
+  let min_x = if a.llx > b.llx { a.llx } else { b.llx }
+  let max_x = if a.urx < b.urx { a.urx } else { b.urx }
+  let min_y = if a.lly > b.lly { a.lly } else { b.lly }
+  let max_y = if a.ury < b.ury { a.ury } else { b.ury }
+  if max_x > min_x && max_y > min_y {
+    (max_x - min_x) * (max_y - min_y)
+  } else {
+    0.0
+  }
+}
+
+fn rect_from_object(obj : XObject) -> @geom.Rect {
+  let llx = obj.pos.x.round()
+  let lly = obj.pos.y.round()
+  let urx = (obj.pos.x + obj.width).round()
+  let ury = (obj.pos.y + obj.height).round()
+  { llx, lly, urx, ury }
+}
+
+fn rect_from_label(label : XLabel) -> @geom.Rect {
+  let llx = label.pos.x.round()
+  let lly = label.pos.y.round()
+  let urx = (label.pos.x + label.width).round()
+  let ury = (label.pos.y + label.height).round()
+  { llx, lly, urx, ury }
+}
+
+fn label_encloses_point(label : XLabel, point_obj : XObject) -> Bool {
+  let px = point_obj.pos.x
+  let py = point_obj.pos.y
+  px > label.pos.x &&
+    px < label.pos.x + label.width &&
+    py > label.pos.y &&
+    py < label.pos.y + label.height
+}
+
+fn get_intrsx_index(
+  op : XObject,
+  cp : XObject,
+  labels : Array[XLabel],
+) -> Int {
+  let op_set = match op.label_index {
+    Some(idx) => labels[idx].set
+    None => false
+  }
+  let cp_set = match cp.label_index {
+    Some(idx) => labels[idx].set
+    None => false
+  }
+  if !op_set || !cp_set {
+    return -1
+  }
+  if (op.pos.x == 0.0 && op.pos.y == 0.0) ||
+    (cp.pos.x == 0.0 && cp.pos.y == 0.0) {
+    return -1
+  }
+  if cp.pos.y < op.pos.y {
+    if cp.pos.x < op.pos.x {
+      return XLPXPY
+    }
+    if cp.pos.x > op.pos.x {
+      return XLNXPY
+    }
+    return XLCXPY
+  }
+  if cp.pos.y > op.pos.y {
+    if cp.pos.x < op.pos.x {
+      return XLPXNY
+    }
+    if cp.pos.x > op.pos.x {
+      return XLNXNY
+    }
+    return XLCXNY
+  }
+  if cp.pos.x < op.pos.x {
+    return XLPXCY
+  }
+  if cp.pos.x > op.pos.x {
+    return XLNXCY
+  }
+  -1
+}
+
+fn record_intersection_slot(
+  objs : Array[XObject],
+  labels : Array[XLabel],
+  op_idx : Int,
+  cp_idx : Int,
+  rect : @geom.Rect,
+  area : Double,
+  intrsx : Array[Int?],
+) -> Double {
+  let op = objs[op_idx]
+  let cp = objs[cp_idx]
+  let mut idx = get_intrsx_index(op, cp, labels)
+  if idx < 0 {
+    // Graphviz parity: default to XLNXCY when get_intrsx_index returns -1.
+    idx = XLNXCY
+  }
+  match intrsx[idx] {
+    Some(existing_idx) => {
+      let mut max_area = 0.0
+      let srect = rect_from_object(objs[existing_idx])
+      let sa = rect_overlap_area(rect, srect)
+      if sa > area {
+        max_area = sa
+      }
+      match objs[existing_idx].label_index {
+        Some(label_idx) => {
+          let existing_label = labels[label_idx]
+          let srect = rect_from_label(existing_label)
+          let sa = rect_overlap_area(rect, srect)
+          if sa > area && sa > max_area {
+            max_area = sa
+          }
+        }
+        None => ()
+      }
+      if max_area > 0.0 {
+        return max_area
+      }
+      intrsx[idx] = Some(cp_idx)
+      area
+    }
+    None => {
+      intrsx[idx] = Some(cp_idx)
+      area
+    }
+  }
+}
+
+fn xlintersections(
+  objs : Array[XObject],
+  labels : Array[XLabel],
+  obj_idx : Int,
+  intrsx : Array[Int?],
+) -> XBestPos {
+  let obj = objs[obj_idx]
+  let label_idx = match obj.label_index {
+    Some(value) => value
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
+  }
+  let label = labels[label_idx]
+  let mut count = 0
+  let mut area = 0.0
+  for i in 0..<objs.length() {
+    if i == obj_idx {
+      continue
+    }
+    let other = objs[i]
+    if other.width > 0.0 && other.height > 0.0 {
+      continue
+    }
+    if label_encloses_point(label, other) {
+      count = count + 1
+    }
+  }
+  let rect = rect_from_label(label)
+  for i in 0..<objs.length() {
+    if i == obj_idx {
+      continue
+    }
+    let other = objs[i]
+    let srect = rect_from_object(other)
+    let overlap = rect_overlap_area(rect, srect)
+    if overlap > 0.0 {
+      let ra =
+        record_intersection_slot(objs, labels, obj_idx, i, rect, overlap, intrsx)
+      count = count + 1
+      area = area + ra
+    }
+    match other.label_index {
+      Some(other_label_idx) => {
+        let other_label = labels[other_label_idx]
+        if other_label.set {
+          let srect = rect_from_label(other_label)
+          let overlap = rect_overlap_area(rect, srect)
+          if overlap > 0.0 {
+            let ra =
+              record_intersection_slot(
+                objs,
+                labels,
+                obj_idx,
+                i,
+                rect,
+                overlap,
+                intrsx,
+              )
+            count = count + 1
+            area = area + ra
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  { n: count, area, pos: label.pos }
+}
+
+fn xladjust(
+  objs : Array[XObject],
+  labels : Array[XLabel],
+  obj_idx : Int,
+) -> XBestPos {
+  let obj = objs[obj_idx]
+  let label_idx = match obj.label_index {
+    Some(value) => value
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
+  }
+  let label = labels[label_idx]
+  let xincr = (2.0 * label.width + obj.width) / XLXDENOM
+  let yincr = (2.0 * label.height + obj.height) / XLYDENOM
+  let intrsx : Array[Int?] = []
+  for _ in 0..<9 {
+    intrsx.push(None)
+  }
+  let set_label = (pos : @geom.Point) => {
+    let updated = {
+      target: label.target,
+      width: label.width,
+      height: label.height,
+      pos,
+      set: label.set,
+    }
+    labels[label_idx] = updated
+  }
+  // x left
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y + obj.height))
+  let mut best = xlintersections(objs, labels, obj_idx, intrsx)
+  if best.n == 0 {
+    return best
+  }
+  // mid
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y))
+  let mut candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+  // bottom
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y - label.height))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+
+  // x mid
+  set_label(@edge_spline.point(obj.pos.x, obj.pos.y + obj.height))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+  // bottom
+  set_label(@edge_spline.point(obj.pos.x, obj.pos.y - label.height))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+
+  // x right
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y + obj.height))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+  // mid
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+  // bottom
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y - label.height))
+  candidate = xlintersections(objs, labels, obj_idx, intrsx)
+  if candidate.n == 0 {
+    return candidate
+  }
+  if candidate.area < best.area {
+    best = candidate
+  }
+
+  // sliding from top left
+  if intrsx[XLPXNY] is Some(_) ||
+    intrsx[XLCXNY] is Some(_) ||
+    intrsx[XLNXNY] is Some(_) ||
+    intrsx[XLPXCY] is Some(_) ||
+    intrsx[XLPXPY] is Some(_) {
+    if intrsx[XLCXNY] is None && intrsx[XLNXNY] is None {
+      let mut x = obj.pos.x - label.width
+      while x <= obj.pos.x + obj.width {
+        set_label(@edge_spline.point(x, obj.pos.y + obj.height))
+        candidate = xlintersections(objs, labels, obj_idx, intrsx)
+        if candidate.n == 0 {
+          return candidate
+        }
+        if candidate.area < best.area {
+          best = candidate
+        }
+        x = x + xincr
+      }
+    }
+    if intrsx[XLPXCY] is None && intrsx[XLPXPY] is None {
+      let mut y = obj.pos.y + obj.height
+      while y >= obj.pos.y - label.height {
+        set_label(@edge_spline.point(obj.pos.x - label.width, y))
+        candidate = xlintersections(objs, labels, obj_idx, intrsx)
+        if candidate.n == 0 {
+          return candidate
+        }
+        if candidate.area < best.area {
+          best = candidate
+        }
+        y = y - yincr
+      }
+    }
+  }
+
+  // sliding from bottom right
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y - label.height))
+  if intrsx[XLNXPY] is Some(_) ||
+    intrsx[XLCXPY] is Some(_) ||
+    intrsx[XLPXPY] is Some(_) ||
+    intrsx[XLNXCY] is Some(_) ||
+    intrsx[XLNXNY] is Some(_) {
+    if intrsx[XLCXPY] is None && intrsx[XLPXPY] is None {
+      let mut x = obj.pos.x + obj.width
+      while x >= obj.pos.x - label.width {
+        set_label(@edge_spline.point(x, obj.pos.y - label.height))
+        candidate = xlintersections(objs, labels, obj_idx, intrsx)
+        if candidate.n == 0 {
+          return candidate
+        }
+        if candidate.area < best.area {
+          best = candidate
+        }
+        x = x - xincr
+      }
+    }
+    if intrsx[XLNXCY] is None && intrsx[XLNXNY] is None {
+      let mut y = obj.pos.y - label.height
+      while y <= obj.pos.y + obj.height {
+        set_label(@edge_spline.point(obj.pos.x + obj.width, y))
+        candidate = xlintersections(objs, labels, obj_idx, intrsx)
+        if candidate.n == 0 {
+          return candidate
+        }
+        if candidate.area < best.area {
+          best = candidate
+        }
+        y = y + yincr
+      }
+    }
+  }
+  best
+}
+
+fn place_labels(
+  objs : Array[XObject],
+  labels : Array[XLabel],
+  force : Bool,
+) -> Unit {
+  for i in 0..<objs.length() {
+    let obj = objs[i]
+    let label_idx = match obj.label_index {
+      Some(value) => value
+      None => continue
+    }
+    let best = xladjust(objs, labels, i)
+    if best.n == 0 {
+      let label = labels[label_idx]
+      labels[label_idx] = {
+        target: label.target,
+        width: label.width,
+        height: label.height,
+        pos: label.pos,
+        set: true,
+      }
+    } else if best.area == 0.0 || force {
+      let label = labels[label_idx]
+      labels[label_idx] = {
+        target: label.target,
+        width: label.width,
+        height: label.height,
+        pos: best.pos,
+        set: true,
+      }
+    }
+  }
+}
