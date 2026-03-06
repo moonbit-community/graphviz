@@ -3,6 +3,20 @@
 /// sibling-overlap postprocessing.
 
 ///|
+priv struct EdgeLabelEntry {
+  key : String
+  pos : @geom.Point
+  base_axis : Double
+  half_axis : Double
+}
+
+///|
+priv struct AdjustedEdgeLabels {
+  edges : Array[DotLayoutEdge]
+  updates : Map[String, @geom.Point]
+}
+
+///|
 fn collect_cluster_label_rects(
   graphs : Array[DotLayoutGraph],
   pad : Double,

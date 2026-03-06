@@ -2,20 +2,6 @@
 /// Edge-label rank/vnode helpers aligned with Graphviz dotsplines label flows.
 
 ///|
-priv struct EdgeLabelEntry {
-  key : String
-  pos : @geom.Point
-  base_axis : Double
-  half_axis : Double
-}
-
-///|
-priv struct AdjustedEdgeLabels {
-  edges : Array[DotLayoutEdge]
-  updates : Map[String, @geom.Point]
-}
-
-///|
 fn edge_label_rank_info(
   edge : @cgraph.Edge,
   ranks : Map[String, Int],
