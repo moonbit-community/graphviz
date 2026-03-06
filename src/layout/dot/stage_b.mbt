@@ -400,6 +400,12 @@ priv struct ClusterRankBounds {
 }
 
 ///|
+priv struct RankSameMetadata {
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+}
+
+///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -620,6 +626,33 @@ fn seed_cluster_node_order(
 }
 
 ///|
+/// Graphviz parity: intercluster keys mirror each node's local cluster
+/// membership for compound edge ordering paths.
+/// Do not change behavior without updating fixtures/tests.
+fn build_intercluster_key_map(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, String] {
+  let intercluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    intercluster_keys[node.name()] = @clustering.node_local_cluster_key(node)
+  }
+  intercluster_keys
+}
+
+///|
+/// Graphviz parity: rank=same group/order metadata is collected once from graph
+/// attributes before clustered reorder and flat-constraint wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_rank_same_metadata(
+  graph : @cgraph.Graph,
+) -> RankSameMetadata {
+  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map::new()
+  let _ = @ordering.collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  { rank_same_groups, rank_same_order }
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -658,17 +691,10 @@ fn compute_cluster_metadata(
     cluster_first_order,
     node_order,
   )
-  // Graphviz parity: intercluster keys mirror local cluster membership
-  // used by Graphviz compound edge ordering.
-  let intercluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    intercluster_keys[node.name()] = @clustering.node_local_cluster_key(node)
-  }
-  // Graphviz parity: rank=same groups/order are collected once for clustered
-  // ordering constraints, matching Graphviz same-rank preprocessing.
-  let rank_same_groups : Map[String, Int] = Map::new()
-  let rank_same_order : Map[String, Int] = Map::new()
-  let _ = @ordering.collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  let intercluster_keys = build_intercluster_key_map(nodes)
+  let rank_same_metadata = collect_rank_same_metadata(graph)
+  let rank_same_groups = rank_same_metadata.rank_same_groups
+  let rank_same_order = rank_same_metadata.rank_same_order
   // Graphviz parity: flat ordering constraints include Graphviz ordering attrs
   // plus same-rank edge constraints before clustered reorder dispatch.
   let flat_constraints_output = @ordering.build_flat_constraints(
