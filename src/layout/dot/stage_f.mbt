@@ -2583,7 +2583,7 @@ fn dotneato_closest_point(
   let mut pt2 = p0
   while true {
     let t = (low + high) / 2.0
-    pt2 = bezier_point_fma(p0, p1, p2, p3, t)
+    pt2 = @routing.bezier_point_fma(p0, p1, p2, p3, t)
     if Double::abs(dlow - dhigh) < 1.0 {
       break
     }
