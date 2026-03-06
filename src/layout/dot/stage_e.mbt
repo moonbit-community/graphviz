@@ -767,6 +767,68 @@ fn routing_spline_mode(splines : SplinesMode) -> Int {
   }
 }
 
+///|
+fn route_edge_mid_label_metrics(
+  edge : @cgraph.Edge,
+) -> @routing.RouteLabelMetrics? {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+///|
+fn route_port_geometry_for_label_ports(
+  node_name : String,
+  port : @cgraph.Port?,
+  routing_label_ports_map : Map[String, Map[String, RecordPort]],
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> @routing.RoutePortGeometry {
+  let geometry =
+    port_geometry(
+      node_name,
+      port,
+      routing_label_ports_map,
+      node_pos,
+      node_size,
+    )
+  { center: geometry.center, size: geometry.size }
+}
+
+///|
+fn route_record_border_adjust(node : @cgraph.Node) -> Double {
+  if is_record_shape(node) &&
+    !@html_label.is_html_label_text(label_text(node)) {
+    @dot_shared.RECORD_BORDER_PT
+  } else {
+    0.0
+  }
+}
+
+///|
+fn route_dynamic_port_anchor_for_label_ports(
+  port : @cgraph.Port?,
+  node_name : String,
+  routing_label_ports_raw : Map[String, Map[String, RecordPort]],
+  node_pos : @geom.Point,
+  other_pos : @geom.Point,
+  rankdir : RankDir,
+  record_border_adjust : Double,
+) -> @routing.RouteDynamicPortAnchor {
+  let anchor =
+    dynamic_port_anchor_for_edge(
+      port,
+      node_name,
+      routing_label_ports_raw,
+      node_pos,
+      other_pos,
+      rankdir,
+      record_border_adjust,
+    )
+  { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic }
+}
+
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
@@ -774,51 +836,35 @@ fn build_route_base_deps_for_dot(
 ) -> @routing.RouteBaseDeps {
   {
     node_size_for_missing: (node) => node_size(node, record_orientation),
-    edge_mid_label_metrics:
-      (edge) =>
-        match edge_mid_label_metrics(edge) {
-          Some(metrics) => Some({ width: metrics.width, height: metrics.height })
-          None => None
-        },
+    edge_mid_label_metrics: edge => route_edge_mid_label_metrics(edge),
     record_port_path_box,
     port_geometry:
       (node_name, port, node_pos, node_size) => {
-        let geometry =
-          port_geometry(
-            node_name,
-            port,
-            routing_label_ports_map,
-            node_pos,
-            node_size,
-          )
-        { center: geometry.center, size: geometry.size }
+        route_port_geometry_for_label_ports(
+          node_name,
+          port,
+          routing_label_ports_map,
+          node_pos,
+          node_size,
+        )
       },
     port_rect_from_geometry,
     port_is_label_port:
       (node_name, port) =>
         port_is_label_port(node_name, port, routing_label_ports_raw),
     is_record_shape,
-    record_border_adjust:
-      (node) =>
-        if is_record_shape(node) &&
-          !@html_label.is_html_label_text(label_text(node)) {
-          @dot_shared.RECORD_BORDER_PT
-        } else {
-          0.0
-        },
+    record_border_adjust: node => route_record_border_adjust(node),
     dynamic_port_anchor_for_edge:
       (port, node_name, node_pos, other_pos, rankdir, record_border_adjust) => {
-        let anchor =
-          dynamic_port_anchor_for_edge(
-            port,
-            node_name,
-            routing_label_ports_raw,
-            node_pos,
-            other_pos,
-            rankdir,
-            record_border_adjust,
-          )
-        { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic }
+        route_dynamic_port_anchor_for_label_ports(
+          port,
+          node_name,
+          routing_label_ports_raw,
+          node_pos,
+          other_pos,
+          rankdir,
+          record_border_adjust,
+        )
       },
     port_side_mask_from_anchor,
     port_side_for_edge:
