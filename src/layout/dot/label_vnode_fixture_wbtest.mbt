@@ -208,7 +208,7 @@ fn collect_label_vnode_actuals(
     let name = nodes[i].name()
     edge_out_order[name] = out_edges[i].copy()
   }
-  let vnode_info = build_edge_vnodes(
+  let vnode_info = @ordering.build_edge_vnodes(
     nodes,
     edges,
     edge_tail,
@@ -220,6 +220,14 @@ fn collect_label_vnode_actuals(
     existing_names,
     edge_cluster_keys,
     cluster_parents,
+    {
+      edge_mid_label_metrics_for:
+        edge =>
+          match edge_mid_label_metrics(edge) {
+            Some(value) => Some((value.width, value.height))
+            None => None
+          },
+    },
   )
   let actuals : Array[LabelVnodeActual] = []
   for edge in edges {

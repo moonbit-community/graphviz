@@ -31,7 +31,7 @@ fn build_ordering_context(
         node_order: input.node_order,
       },
     )
-  let vnode_info = build_edge_vnodes(
+  let vnode_info = @ordering.build_edge_vnodes(
     input.nodes,
     input.edges,
     input.edge_tail,
@@ -43,6 +43,14 @@ fn build_ordering_context(
     runtime_core.existing_names,
     runtime_core.edge_cluster_keys,
     input.cluster_meta.cluster_parents,
+    {
+      edge_mid_label_metrics_for:
+        edge =>
+          match edge_mid_label_metrics(edge) {
+            Some(value) => Some((value.width, value.height))
+            None => None
+          },
+    },
   )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()

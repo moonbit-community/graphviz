@@ -1,8 +1,13 @@
 
 ///|
+pub(all) struct EdgeVnodeBuildDeps {
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
+}
+
+///|
 /// Graphviz parity: class2 virtual node creation order + sizing.
 /// Do not change behavior without updating fixtures/tests.
-fn build_edge_vnodes(
+pub fn build_edge_vnodes(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -10,13 +15,14 @@ fn build_edge_vnodes(
   edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
   nodesep_pt : Double,
-  rankdir : RankDir,
+  rankdir : @shared.RankDir,
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
+  deps : EdgeVnodeBuildDeps,
 ) -> @routing.EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
-  let vnode_sizes : Map[String, NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @shared.NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
@@ -49,7 +55,7 @@ fn build_edge_vnodes(
   for idx in edge_indices {
     let edge = edges[idx]
     let (tail, head) =
-      @ordering.edge_endpoints_at(
+      edge_endpoints_at(
         edge,
         idx,
         edge_tail,
@@ -61,7 +67,7 @@ fn build_edge_vnodes(
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
     let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
-    let key = @dot_shared.edge_vnode_key(edge)
+    let key = @shared.edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
         for name in list {
@@ -70,7 +76,7 @@ fn build_edge_vnodes(
               let left = size.left_pt + delta
               let right = size.right_pt + delta
               vnode_sizes[name] =
-                @dot_shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
+                @shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
             }
             None => ()
           }
@@ -87,7 +93,7 @@ fn build_edge_vnodes(
       // Graphviz parity: reverse-direction duplicate edges reuse the
       // existing virtual chain and only widen shared virtual nodes.
       let reverse_key =
-        "\{edge.head().name()}|\{edge.tail().name()}|\{@dot_shared.port_key(edge.head_port())}|\{@dot_shared.port_key(edge.tail_port())}"
+        "\{edge.head().name()}|\{edge.tail().name()}|\{@shared.port_key(edge.head_port())}|\{@shared.port_key(edge.tail_port())}"
       match edge_vnodes.get(reverse_key) {
         Some(list) => {
           for name in list {
@@ -96,7 +102,7 @@ fn build_edge_vnodes(
                 let left = size.left_pt + delta
                 let right = size.right_pt + delta
                 vnode_sizes[name] =
-                  @dot_shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
+                  @shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
               }
               None => ()
             }
@@ -113,7 +119,7 @@ fn build_edge_vnodes(
       if tail_cluster != "" || head_cluster != "" {
         @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
+        match edge_cluster_keys.get(@shared.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -135,13 +141,13 @@ fn build_edge_vnodes(
     if max_rank - min_rank <= 1 {
       continue
     }
-    let label_metrics = edge_mid_label_metrics(edge)
-    let (label_width, label_height) = match label_metrics {
-      Some(metrics) =>
-        if rankdir == RankDir::LR || rankdir == RankDir::RL {
-          (metrics.height, metrics.width)
+    let (label_width, label_height) =
+      match (deps.edge_mid_label_metrics_for)(edge) {
+      Some((width, height)) =>
+        if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
+          (height, width)
         } else {
-          (metrics.width, metrics.height)
+          (width, height)
         }
       None => (0.0, 0.0)
     }
@@ -150,8 +156,8 @@ fn build_edge_vnodes(
     let mut rank = min_rank + 1
     while rank < max_rank {
       let is_label_rank = rank == label_rank && label_width > 0.0
-      let name = @dot_shared.unique_virtual_node_name(
-        @dot_shared.EDGE_VNODE_PREFIX,
+      let name = @shared.unique_virtual_node_name(
+        @shared.EDGE_VNODE_PREFIX,
         idx,
         rank,
         existing_names,
@@ -159,13 +165,13 @@ fn build_edge_vnodes(
       vnode_ranks[name] = rank
       vnode_sizes[name] =
         if is_label_rank {
-        @dot_shared.vnode_size_from_widths_with_h(
+        @shared.vnode_size_from_widths_with_h(
           nodesep_pt,
           label_width,
           label_height,
         )
       } else {
-        @dot_shared.vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
+        @shared.vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
       }
       vnode_clusters[name] = vnode_cluster
       match vnodes_by_rank.get(rank) {
