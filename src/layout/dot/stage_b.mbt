@@ -404,13 +404,6 @@ priv struct ClusterMetadataInput {
 }
 
 ///|
-priv struct ClusterRankBounds {
-  min_rank : Map[String, Int]
-  max_rank : Map[String, Int]
-  first_order : Map[String, Int]
-}
-
-///|
 priv struct FlatConstraintMetadata {
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
@@ -503,52 +496,6 @@ fn build_cluster_skeleton(
 }
 
 ///|
-/// Graphviz parity: cluster min/max rank and first order are collected
-/// from cluster member nodes before clustered reorder setup.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_cluster_rank_bounds(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-) -> ClusterRankBounds {
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let rank = match ranks.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    match cluster_min_rank.get(cluster) {
-      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
-      None => cluster_min_rank[cluster] = rank
-    }
-    match cluster_max_rank.get(cluster) {
-      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
-      None => cluster_max_rank[cluster] = rank
-    }
-    if cluster_first_order.get(cluster) is None {
-      let order_value = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      cluster_first_order[cluster] = order_value
-    }
-  }
-  {
-    min_rank: cluster_min_rank,
-    max_rank: cluster_max_rank,
-    first_order: cluster_first_order,
-  }
-}
-
-///|
 /// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
 /// with optional graphviz_flip reversal before clustered reorder setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -632,7 +579,12 @@ fn compute_cluster_metadata(
   // Graphviz parity: cluster rank bounds are collected from member node rank
   // and first appearance order before cluster-order base expansion.
   let cluster_rank_bounds =
-    collect_cluster_rank_bounds(nodes, cluster_keys, ranks, node_order)
+    @clustering.collect_cluster_rank_bounds(
+      nodes,
+      cluster_keys,
+      ranks,
+      node_order,
+    )
   let cluster_min_rank = cluster_rank_bounds.min_rank
   let cluster_max_rank = cluster_rank_bounds.max_rank
   let cluster_first_order = cluster_rank_bounds.first_order

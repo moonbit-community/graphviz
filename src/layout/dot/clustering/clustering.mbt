@@ -187,6 +187,52 @@ pub fn build_cluster_membership_maps(
 }
 
 ///|
+pub(all) struct ClusterNodeRankBounds {
+  min_rank : Map[String, Int]
+  max_rank : Map[String, Int]
+  first_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: cluster min/max rank and first order are collected from
+/// member node rank snapshots before clustered reorder setup.
+/// Do not change behavior without updating fixtures/tests.
+pub fn collect_cluster_rank_bounds(
+  nodes : Array[@cgraph.Node],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+) -> ClusterNodeRankBounds {
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = cluster_keys.get(name).unwrap_or_default()
+    if cluster == "" {
+      continue
+    }
+    let rank = ranks.get(name).unwrap_or_default()
+    match cluster_min_rank.get(cluster) {
+      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
+      None => cluster_min_rank[cluster] = rank
+    }
+    match cluster_max_rank.get(cluster) {
+      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
+      None => cluster_max_rank[cluster] = rank
+    }
+    if cluster_first_order.get(cluster) is None {
+      cluster_first_order[cluster] = node_order.get(name).unwrap_or_default()
+    }
+  }
+  {
+    min_rank: cluster_min_rank,
+    max_rank: cluster_max_rank,
+    first_order: cluster_first_order,
+  }
+}
+
+///|
 pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
