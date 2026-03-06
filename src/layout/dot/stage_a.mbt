@@ -399,35 +399,6 @@ fn lookup_record_port_order(
 }
 
 ///|
-fn accumulate_port_order_total(
-  order_sum : Map[String, PortOrderTotal],
-  target : String,
-  order : Double,
-) -> Unit {
-  let current = match order_sum.get(target) {
-    Some(value) => value
-    None => { sum: 0.0, count: 0 }
-  }
-  order_sum[target] = {
-    sum: current.sum + order,
-    count: current.count + 1,
-  }
-}
-
-///|
-fn append_port_order_contrib(
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  target : String,
-  anchor : String,
-  order : Double,
-) -> Unit {
-  match port_order_contrib.get(target) {
-    Some(list) => list.push((anchor, order))
-    None => port_order_contrib[target] = [(anchor, order)]
-  }
-}
-
-///|
 /// Graphviz parity: edge-side port-order contributions are accumulated from
 /// explicit record/html ports onto opposite endpoints before averaging.
 /// Do not change behavior without updating fixtures/tests.
@@ -438,8 +409,18 @@ fn accumulate_port_order_contrib(
   let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
     match lookup_record_port_order(input.record_port_order, anchor, port) {
       Some(order) => {
-        accumulate_port_order_total(order_sum, target, order)
-        append_port_order_contrib(input.port_order_contrib, target, anchor, order)
+        let current = match order_sum.get(target) {
+          Some(value) => value
+          None => { sum: 0.0, count: 0 }
+        }
+        order_sum[target] = {
+          sum: current.sum + order,
+          count: current.count + 1,
+        }
+        match input.port_order_contrib.get(target) {
+          Some(list) => list.push((anchor, order))
+          None => input.port_order_contrib[target] = [(anchor, order)]
+        }
       }
       None => ()
     }
