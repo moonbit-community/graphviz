@@ -2030,6 +2030,31 @@ fn record_xlabel_update(
   }
 }
 
+///|
+fn collect_xlabels_and_objects(
+  layout : DotLayoutGraph,
+  splines : SplinesMode,
+  flip : Bool,
+) -> (Array[XLabel], Array[XObject]) {
+  let labels : Array[XLabel] = []
+  let objects : Array[XObject] = []
+  collect_xlabel_candidates(layout, splines, flip, labels, objects)
+  collect_cluster_label_objects(layout, objects, flip)
+  (labels, objects)
+}
+
+///|
+fn maybe_place_xlabels(
+  graph : @cgraph.Graph,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  if labels.length() > 0 {
+    let force = parse_forcelabels(graph)
+    place_labels(objects, labels, force)
+  }
+}
+
 fn apply_xlabels(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
@@ -2037,15 +2062,9 @@ fn apply_xlabels(
 ) -> DotLayoutGraph {
   let rankdir = @dot_shared.graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let labels : Array[XLabel] = []
-  let objects : Array[XObject] = []
-
-  collect_xlabel_candidates(layout, splines, flip, labels, objects)
-  collect_cluster_label_objects(layout, objects, flip)
-  if labels.length() > 0 {
-    let force = parse_forcelabels(graph)
-    place_labels(objects, labels, force)
-  }
+  let (labels, objects) =
+    collect_xlabels_and_objects(layout, splines, flip)
+  maybe_place_xlabels(graph, labels, objects)
   finalize_xlabels(layout, labels, flip)
 }
 ///|
