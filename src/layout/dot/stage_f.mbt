@@ -478,6 +478,13 @@ priv struct LabelExtent {
   height : Double
 }
 
+///|
+priv struct FlatEdgeLabelFlags {
+  is_flat : Bool
+  has_flat_label_vnode : Bool
+  skip_mid_label : Bool
+}
+
 fn expand_bbox_for_label_pos(
   bbox : @geom.Rect,
   pos : @geom.Point?,
@@ -503,6 +510,47 @@ fn expand_bbox_for_label_pos(
 }
 
 ///|
+fn edge_label_extent_for_rankdir(
+  metrics : EdgeLabelMetrics?,
+  flip : Bool,
+) -> LabelExtent? {
+  match metrics {
+    Some(value) =>
+      if flip {
+        Some({ width: value.height, height: value.width })
+      } else {
+        Some({ width: value.width, height: value.height })
+      }
+    None => None
+  }
+}
+
+///|
+fn classify_flat_edge_label(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+  flat_label_edge_vnodes : Map[String, String],
+) -> FlatEdgeLabelFlags {
+  let tail = edge.tail().name()
+  let head = edge.head().name()
+  let is_flat =
+    match (ranks.get(tail), ranks.get(head)) {
+      (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
+      _ => false
+    }
+  let has_flat_label_vnode =
+    match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+      Some(_) => true
+      None => false
+    }
+  // Graphviz parity: adjacent flat-edge labels do not update BB
+  // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
+  // Graphviz parity: self-edge labels still update BB via dotsplines.
+  let skip_mid_label = is_flat && !has_flat_label_vnode && tail != head
+  { is_flat, has_flat_label_vnode, skip_mid_label }
+}
+
+///|
 /// Graphviz parity: edge label bbox expansion aligned to refs/graphviz/lib/common/utils.c
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
@@ -519,49 +567,22 @@ fn expand_bbox_for_edge_labels(
   // dimensions in pre-rotation space to match compute_bb.
   let rankdir = @dot_shared.graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let adjust_metrics = (metrics : EdgeLabelMetrics?) => {
-    match metrics {
-      Some(value) => {
-        let extent : LabelExtent =
-          if flip {
-            { width: value.height, height: value.width }
-          } else {
-            { width: value.width, height: value.height }
-          }
-        Some(extent)
-      }
-      None => None
-    }
-  }
   let mut bbox = layout.bbox
   for edge_layout in layout.edges {
     let edge = edge_layout.edge
     let tail = edge.tail().name()
     let head = edge.head().name()
-    let is_flat =
-      match (ranks.get(tail), ranks.get(head)) {
-        (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
-        _ => false
-      }
-    let has_flat_label_vnode =
-      match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
-        Some(_) => true
-        None => false
-      }
-    // Graphviz parity: adjacent flat-edge labels do not update BB
-    // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
-    // Graphviz parity: self-edge labels still update BB via dotsplines.
-    let skip_mid_label = is_flat && !has_flat_label_vnode && tail != head
+    let flags = classify_flat_edge_label(edge, ranks, flat_label_edge_vnodes)
     bbox = expand_bbox_for_label_pos(
       bbox,
-      if skip_mid_label { None } else { edge_layout.label_pos },
-      if skip_mid_label {
+      if flags.skip_mid_label { None } else { edge_layout.label_pos },
+      if flags.skip_mid_label {
         None
       } else {
-        adjust_metrics(edge_mid_label_metrics(edge))
+        edge_label_extent_for_rankdir(edge_mid_label_metrics(edge), flip)
       },
     )
-    if !flip && is_flat && has_flat_label_vnode && tail != head {
+    if !flip && flags.is_flat && flags.has_flat_label_vnode && tail != head {
       match edge_layout.label_pos {
         Some(center) => {
           let orientation = record_layout_orientation(rankdir)
@@ -581,23 +602,25 @@ fn expand_bbox_for_edge_labels(
     bbox = expand_bbox_for_label_pos(
       bbox,
       edge_layout.head_label_pos,
-      adjust_metrics(
+      edge_label_extent_for_rankdir(
         edge_label_metrics_for_attr(
           edge_layout.edge,
           "headlabel",
           true,
         ),
+        flip,
       ),
     )
     bbox = expand_bbox_for_label_pos(
       bbox,
       edge_layout.tail_label_pos,
-      adjust_metrics(
+      edge_label_extent_for_rankdir(
         edge_label_metrics_for_attr(
           edge_layout.edge,
           "taillabel",
           true,
         ),
+        flip,
       ),
     )
   }
