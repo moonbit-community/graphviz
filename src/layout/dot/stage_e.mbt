@@ -768,35 +768,6 @@ fn routing_spline_mode(splines : SplinesMode) -> Int {
 }
 
 ///|
-fn route_edge_mid_label_metrics(
-  edge : @cgraph.Edge,
-) -> @routing.RouteLabelMetrics? {
-  match edge_mid_label_metrics(edge) {
-    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
-    None => None
-  }
-}
-
-///|
-fn route_port_geometry_for_label_ports(
-  node_name : String,
-  port : @cgraph.Port?,
-  routing_label_ports_map : Map[String, Map[String, RecordPort]],
-  node_pos : @geom.Point,
-  node_size : NodeSize,
-) -> @routing.RoutePortGeometry {
-  let geometry =
-    port_geometry(
-      node_name,
-      port,
-      routing_label_ports_map,
-      node_pos,
-      node_size,
-    )
-  { center: geometry.center, size: geometry.size }
-}
-
-///|
 fn route_record_border_adjust(node : @cgraph.Node) -> Double {
   if is_record_shape(node) &&
     !@html_label.is_html_label_text(label_text(node)) {
@@ -807,56 +778,69 @@ fn route_record_border_adjust(node : @cgraph.Node) -> Double {
 }
 
 ///|
-fn route_dynamic_port_anchor_for_label_ports(
-  port : @cgraph.Port?,
-  node_name : String,
-  routing_label_ports_raw : Map[String, Map[String, RecordPort]],
-  node_pos : @geom.Point,
-  other_pos : @geom.Point,
-  rankdir : RankDir,
-  record_border_adjust : Double,
-) -> @routing.RouteDynamicPortAnchor {
-  let anchor =
-    dynamic_port_anchor_for_edge(
-      port,
-      node_name,
-      routing_label_ports_raw,
-      node_pos,
-      other_pos,
-      rankdir,
-      record_border_adjust,
-    )
-  { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic }
-}
-
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
   routing_label_ports_raw : Map[String, Map[String, RecordPort]],
 ) -> @routing.RouteBaseDeps {
-  {
-    node_size_for_missing: (node) => node_size(node, record_orientation),
-    edge_mid_label_metrics: edge => route_edge_mid_label_metrics(edge),
-    record_port_path_box,
-    port_geometry:
-      (node_name, port, node_pos, node_size) => {
-        route_port_geometry_for_label_ports(
+  let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
+    (edge : @cgraph.Edge) =>
+      match edge_mid_label_metrics(edge) {
+        Some(metrics) => {
+          let route_metrics : @routing.RouteLabelMetrics = {
+            width: metrics.width,
+            height: metrics.height,
+          }
+          Some(route_metrics)
+        }
+        None => None
+      }
+  let route_port_geometry :
+    (
+      String,
+      @cgraph.Port?,
+      @geom.Point,
+      NodeSize,
+    ) -> @routing.RoutePortGeometry =
+    (
+      node_name : String,
+      port : @cgraph.Port?,
+      node_pos : @geom.Point,
+      node_size : NodeSize,
+    ) => {
+      let geometry =
+        port_geometry(
           node_name,
           port,
           routing_label_ports_map,
           node_pos,
           node_size,
         )
-      },
-    port_rect_from_geometry,
-    port_is_label_port:
-      (node_name, port) =>
-        port_is_label_port(node_name, port, routing_label_ports_raw),
-    is_record_shape,
-    record_border_adjust: node => route_record_border_adjust(node),
-    dynamic_port_anchor_for_edge:
-      (port, node_name, node_pos, other_pos, rankdir, record_border_adjust) => {
-        route_dynamic_port_anchor_for_label_ports(
+      let route_geometry : @routing.RoutePortGeometry = {
+        center: geometry.center,
+        size: geometry.size,
+      }
+      route_geometry
+    }
+  let route_dynamic_port_anchor :
+    (
+      @cgraph.Port?,
+      String,
+      @geom.Point,
+      @geom.Point,
+      RankDir,
+      Double,
+    ) -> @routing.RouteDynamicPortAnchor =
+    (
+      port : @cgraph.Port?,
+      node_name : String,
+      node_pos : @geom.Point,
+      other_pos : @geom.Point,
+      rankdir : RankDir,
+      record_border_adjust : Double,
+    ) => {
+      let anchor =
+        dynamic_port_anchor_for_edge(
           port,
           node_name,
           routing_label_ports_raw,
@@ -865,7 +849,25 @@ fn build_route_base_deps_for_dot(
           rankdir,
           record_border_adjust,
         )
-      },
+      let route_anchor : @routing.RouteDynamicPortAnchor = {
+        anchor: anchor.anchor,
+        side: anchor.side,
+        is_dynamic: anchor.is_dynamic,
+      }
+      route_anchor
+    }
+  {
+    node_size_for_missing: (node) => node_size(node, record_orientation),
+    edge_mid_label_metrics: route_mid_label_metrics,
+    record_port_path_box,
+    port_geometry: route_port_geometry,
+    port_rect_from_geometry,
+    port_is_label_port:
+      (node_name, port) =>
+        port_is_label_port(node_name, port, routing_label_ports_raw),
+    is_record_shape,
+    record_border_adjust: node => route_record_border_adjust(node),
+    dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
     port_side_mask_from_anchor,
     port_side_for_edge:
       (port, port_rect, node_pos, node_size) =>
@@ -953,22 +955,6 @@ fn build_edge_layout_input_for_dot_routing(
 }
 
 ///|
-fn build_route_edges_pipeline_deps_for_dot(
-  input : RouteEdgesForDotInput,
-  edge_layout_input : @routing.EdgeLayoutInput,
-) -> @routing.RouteEdgesPipelineDeps {
-  {
-    route_base_deps:
-      build_route_base_deps_for_dot(
-        input.prep.record_orientation,
-        input.routing_label_ports_map,
-        input.routing_label_ports_raw,
-      ),
-    callbacks: build_routing_callbacks_for_dot(edge_layout_input),
-  }
-}
-
-///|
 fn build_route_edges_pipeline_input_for_dot(
   input : RouteEdgesForDotInput,
 ) -> @routing.RouteEdgesPipelineInput {
@@ -1002,8 +988,15 @@ fn build_route_edges_pipeline_input_for_dot(
 fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
   let edge_layout_input =
     build_edge_layout_input_for_dot_routing(input)
-  let deps =
-    build_route_edges_pipeline_deps_for_dot(input, edge_layout_input)
+  let deps : @routing.RouteEdgesPipelineDeps = {
+    route_base_deps:
+      build_route_base_deps_for_dot(
+        input.prep.record_orientation,
+        input.routing_label_ports_map,
+        input.routing_label_ports_raw,
+      ),
+    callbacks: build_routing_callbacks_for_dot(edge_layout_input),
+  }
   let pipeline_input =
     build_route_edges_pipeline_input_for_dot(input)
   @routing.route_edges_pipeline(
