@@ -36,6 +36,9 @@ priv struct OrderingDispatchOutput {
 type OrderingRuntimeContext = @ordering.OrderingRuntimeContext
 
 ///|
+type OrderingResult = @ordering.OrderingResult
+
+///|
 /// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
 /// extraction, and reorder-setup snapshots together for C0 dispatch/replay.
 priv struct OrderingPipelineContext {
@@ -181,22 +184,6 @@ fn build_ordering_pipeline_context(
   let reorder_setup =
     build_ordering_reorder_setup(input, runtime_context, edge_port_data)
   { runtime_context, edge_port_data, reorder_setup }
-}
-
-///|
-priv struct OrderingResult {
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  vnode_info : @routing.EdgeVnodeInfo
-  vnode_count : Int
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  edge_order : Map[String, Int]
-  edge_cluster_keys : Map[String, String]
-  nlist_order : Array[String]
-  gdnlist_order : Array[String]
-  vnode_creation_order : Array[String]
 }
 
 /// Graphviz parity: ordering result assembly forwards dispatch and pipeline

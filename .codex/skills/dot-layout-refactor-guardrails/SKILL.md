@@ -15,8 +15,10 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 6. Do not inline solely because a function has one caller; inline only when it clearly improves readability/maintainability.
 7. Extract shared helpers only when the abstraction has clear domain meaning (for example: “build raw label ports”, “assemble routing precompute input”) or removes real divergence risk; do not extract helpers that merely wrap trivial `match`/`if` syntax.
 8. When a subpackage extraction leaves only an outer entry wrapper, move that entry into the subpackage and update call sites directly.
-9. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
-10. If a dot-root stage is left with mostly orchestration-only phase files, merge them into one stage file (for example `stage_c.mbt`, `stage_d.mbt`).
+9. Stage-internal orchestration may live inside the owning subpackage; keep only cross-stage boundary orchestration in the root `dot` package.
+10. If a dot-root stage is left with only thin cross-stage boundary wiring, merge that boundary logic into `layout.mbt` instead of preserving a wrapper-heavy `stage_x.mbt` file.
+11. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
+12. If a dot-root stage still owns several orchestration-only phase files before extraction, merge them into one focused stage file (for example `stage_c.mbt`, `stage_d.mbt`) until the package boundary is ready.
 
 ## Preserve behavior and parity
 

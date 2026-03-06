@@ -15,18 +15,7 @@ priv struct PositionStageInput {
 }
 
 ///|
-priv struct PositionResult {
-  x_groups : Map[Int, Array[String]]
-  rank_y : Map[Int, Double]
-  positions : Map[String, @geom.Point]
-  vnode_positions : Map[String, @geom.Point]
-  cluster_ln_x : Map[String, Double]
-  cluster_rn_x : Map[String, Double]
-  flat_label_edge_vnodes : Map[String, String]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
-}
+type PositionResult = @positioning.PositionResult
 
 ///|
 /// Graphviz parity: shared position pipeline context keeps graph/rank/cluster

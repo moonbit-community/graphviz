@@ -226,6 +226,24 @@ pub fn build_dot_cluster_metadata(
 }
 
 ///|
+/// Graphviz parity: ordering stage result keeps reordered rank groups, vnode
+/// metadata, and derived edge-order snapshots grouped for downstream stages.
+pub(all) struct OrderingResult {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  vnode_info : @routing.EdgeVnodeInfo
+  vnode_count : Int
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  edge_order : Map[String, Int]
+  edge_cluster_keys : Map[String, String]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
 fn position_key(
   name : String,
   desired : Map[String, Double],

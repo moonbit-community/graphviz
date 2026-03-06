@@ -41,6 +41,22 @@ pub fn build_position_mode_flags(
 }
 
 ///|
+/// Graphviz parity: position stage result keeps x/y coordinates, vnode
+/// positions, and cluster bbox metadata grouped for downstream stages.
+pub(all) struct PositionResult {
+  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int, Double]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  flat_label_edge_vnodes : Map[String, String]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  cluster_bbox_heights : Map[String, @clustering.ClusterBboxHeightPair]
+}
+
+///|
 /// Graphviz parity: x-position solve input keeps reordered rank metadata,
 /// vnode extra-node toggles, and size overlays grouped for one xpos call.
 pub struct XposComputationInput {
