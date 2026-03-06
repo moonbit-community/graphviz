@@ -2136,6 +2136,34 @@ fn maybe_place_xlabels(
 }
 
 ///|
+fn expand_bbox_for_existing_xlabel(
+  bbox : @geom.Rect,
+  pos : @geom.Point?,
+  metrics : XLabelMetrics?,
+  flip : Bool,
+) -> @geom.Rect {
+  let mut expanded = bbox
+  match pos {
+    Some(value) =>
+      match metrics {
+        Some(label_metrics) => {
+          let dims =
+            maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
+          expanded =
+            expand_bbox_for_label_pos(
+              expanded,
+              Some(value),
+              Some({ width: dims.width, height: dims.height }),
+            )
+        }
+        None => ()
+      }
+    None => ()
+  }
+  expanded
+}
+
+///|
 fn expand_bbox_for_existing_node_xlabels(
   bbox : @geom.Rect,
   nodes : Array[DotLayoutNode],
@@ -2143,23 +2171,13 @@ fn expand_bbox_for_existing_node_xlabels(
 ) -> @geom.Rect {
   let mut expanded = bbox
   for node_layout in nodes {
-    match node_layout.xlabel_pos {
-      Some(pos) =>
-        match xlabel_metrics_for_node(node_layout.node) {
-          Some(metrics) => {
-            let dims =
-              maybe_flip_dims(metrics.width, metrics.height, flip)
-            expanded =
-              expand_bbox_for_label_pos(
-                expanded,
-                Some(pos),
-                Some({ width: dims.width, height: dims.height }),
-              )
-          }
-          None => ()
-        }
-      None => ()
-    }
+    expanded =
+      expand_bbox_for_existing_xlabel(
+        expanded,
+        node_layout.xlabel_pos,
+        xlabel_metrics_for_node(node_layout.node),
+        flip,
+      )
   }
   expanded
 }
@@ -2172,23 +2190,13 @@ fn expand_bbox_for_existing_edge_xlabels(
 ) -> @geom.Rect {
   let mut expanded = bbox
   for edge_layout in edges {
-    match edge_layout.xlabel_pos {
-      Some(pos) =>
-        match xlabel_metrics_for_edge(edge_layout.edge) {
-          Some(metrics) => {
-            let dims =
-              maybe_flip_dims(metrics.width, metrics.height, flip)
-            expanded =
-              expand_bbox_for_label_pos(
-                expanded,
-                Some(pos),
-                Some({ width: dims.width, height: dims.height }),
-              )
-          }
-          None => ()
-        }
-      None => ()
-    }
+    expanded =
+      expand_bbox_for_existing_xlabel(
+        expanded,
+        edge_layout.xlabel_pos,
+        xlabel_metrics_for_edge(edge_layout.edge),
+        flip,
+      )
   }
   expanded
 }
