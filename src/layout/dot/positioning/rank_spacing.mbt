@@ -9,6 +9,58 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
 
 ///|
+pub fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
+  match graph.get_attr("margin") {
+    Some(value) => {
+      let margin = @shared.parse_first_double(value, CLUSTER_MARGIN_PT)
+      if margin < 0.0 {
+        CLUSTER_MARGIN_PT
+      } else {
+        margin
+      }
+    }
+    None => CLUSTER_MARGIN_PT
+  }
+}
+
+///|
+/// Graphviz parity: ratio=compress detection aligned to
+/// refs/graphviz/lib/dotgen/dotinit.c.
+fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("ratio") {
+    Some(value) => value.trim().to_lower() == "compress"
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c
+/// and dotgen/position.c (compress_graph input width).
+/// Graphviz parity: compress_graph width clamp aligned to
+/// refs/graphviz/lib/dotgen/position.c (MIN(size, USHRT_MAX)).
+pub fn compress_width_minlen_pt(
+  graph : @cgraph.Graph,
+  rankdir : @shared.RankDir,
+) -> Int? {
+  if !graph_ratio_is_compress(graph) {
+    return None
+  }
+  let size = match @shared.parse_graph_size_pt_attr(graph) {
+    Some(value) => value
+    None => return None
+  }
+  let width_pt = match rankdir {
+    @shared.RankDir::LR | @shared.RankDir::RL => size.height_pt
+    _ => size.width_pt
+  }
+  if width_pt <= 1.0 {
+    return None
+  }
+  let clamped = if width_pt > 65535.0 { 65535.0 } else { width_pt }
+  Some(@shared.round_int(clamped))
+}
+
+///|
 fn size_left_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double {
   match sizes.get(name) {
     Some(size) => size.left_pt

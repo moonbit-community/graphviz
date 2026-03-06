@@ -49,7 +49,7 @@ fn prepare_xpos_constraint_inputs(
     all_extra_edges.push(edge)
   }
   let rankdir = @dot_shared.graph_rankdir(graph)
-  let compress_width_minlen = compress_width_minlen_pt(graph, rankdir)
+  let compress_width_minlen = @positioning.compress_width_minlen_pt(graph, rankdir)
   let all_root_ln_targets = cluster_constraints.root_ln_targets.copy()
   let all_root_rn_targets = cluster_constraints.root_rn_targets.copy()
   match compress_width_minlen {

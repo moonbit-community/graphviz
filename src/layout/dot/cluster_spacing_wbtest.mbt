@@ -134,7 +134,7 @@ test "cluster bbox includes margin and label padding" {
   let bbox = spacing_parse_rect(bb_text)
   let pos = spacing_node_pos(graph, "a")
   let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
-  let margin = cluster_margin_pt(cluster)
+  let margin = @positioning.cluster_margin_pt(cluster)
   let label_height = match graph_label_metrics(cluster) {
     Some(metrics) => metrics.height_pt
     None => 0.0
@@ -178,7 +178,7 @@ test "nested clusters include parent margin" {
     Some(value) => spacing_parse_rect(value)
     None => fail("missing inner cluster bb")
   }
-  let margin = cluster_margin_pt(outer)
+  let margin = @positioning.cluster_margin_pt(outer)
   guard outer_bb.llx <= inner_bb.llx - margin + 0.1 else {
     fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - margin}")
   }

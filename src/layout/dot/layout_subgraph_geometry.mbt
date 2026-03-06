@@ -136,7 +136,7 @@ fn layout_subgraphs(
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
     if @dot_shared.is_cluster_graph(subgraph) {
-      let pad = cluster_margin_pt(subgraph)
+      let pad = @positioning.cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
       let mut pad_y = pad

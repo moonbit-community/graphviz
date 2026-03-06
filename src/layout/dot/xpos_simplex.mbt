@@ -59,7 +59,7 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
       RankDir::TB
     }
   let root_margin = if input.nodes.length() > 0 {
-    cluster_margin_pt(input.nodes[0].graph())
+    @positioning.cluster_margin_pt(input.nodes[0].graph())
   } else {
     CLUSTER_MARGIN_PT
   }
