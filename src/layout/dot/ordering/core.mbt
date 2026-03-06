@@ -108,6 +108,48 @@ pub fn collect_rank_same_metadata(
 }
 
 ///|
+/// Graphviz parity: ordering metadata payload keeps rank=same and flat
+/// constraint snapshots grouped for clustered reorder dispatch wiring.
+pub(all) struct ClusterOrderingMetadata {
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
+/// Graphviz parity: ordering metadata assembly collects rank=same groups/order
+/// and flat constraints before clustered reorder setup.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_cluster_ordering_metadata(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> ClusterOrderingMetadata {
+  let rank_same_metadata = collect_rank_same_metadata(graph)
+  let flat_constraint_metadata =
+    build_cluster_flat_constraints(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      ranks,
+      cluster_keys,
+    )
+  {
+    rank_same_groups: rank_same_metadata.rank_same_groups,
+    rank_same_order: rank_same_metadata.rank_same_order,
+    flat_constraints: flat_constraint_metadata.flat_constraints,
+    ordering_set: flat_constraint_metadata.ordering_set,
+  }
+}
+
+///|
 fn position_key(
   name : String,
   desired : Map[String, Double],

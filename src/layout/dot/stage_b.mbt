@@ -405,10 +405,7 @@ fn compute_cluster_metadata(
   let cluster_order = cluster_core.cluster_order
   let cluster_parents = cluster_core.cluster_parents
   let intercluster_keys = cluster_core.intercluster_keys
-  let rank_same_metadata = @ordering.collect_rank_same_metadata(graph)
-  let rank_same_groups = rank_same_metadata.rank_same_groups
-  let rank_same_order = rank_same_metadata.rank_same_order
-  let flat_constraint_metadata = @ordering.build_cluster_flat_constraints(
+  let ordering_metadata = @ordering.build_cluster_ordering_metadata(
     graph,
     nodes,
     edges,
@@ -417,8 +414,10 @@ fn compute_cluster_metadata(
     ranks,
     cluster_keys,
   )
-  let flat_constraints = flat_constraint_metadata.flat_constraints
-  let ordering_set = flat_constraint_metadata.ordering_set
+  let rank_same_groups = ordering_metadata.rank_same_groups
+  let rank_same_order = ordering_metadata.rank_same_order
+  let flat_constraints = ordering_metadata.flat_constraints
+  let ordering_set = ordering_metadata.ordering_set
   {
     has_clusters,
     cluster_keys,
