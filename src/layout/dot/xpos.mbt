@@ -119,12 +119,17 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
       root_compress_weight: ROOT_COMPRESS_WEIGHT,
       segment_minlen_fn:
         (segment, real_by_name) =>
-          segment_slack_minlen(
+          @positioning.segment_slack_minlen(
             segment,
-            port_offsets,
-            input.sizes,
-            rankdir,
-            real_by_name,
+            (node_name, port) =>
+              edge_port_offset(
+                node_name,
+                port,
+                port_offsets,
+                input.sizes,
+                rankdir,
+                real_by_name,
+              ),
           ),
       edge_has_mid_label_fn: edge => edge_mid_label_metrics(edge) is Some(_),
       edge_degree_increment_fn:

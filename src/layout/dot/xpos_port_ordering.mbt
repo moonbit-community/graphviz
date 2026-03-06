@@ -2,9 +2,6 @@
 /// X-position port ordering and slack minlen helpers.
 
 ///|
-type SlackSegment = @positioning.SlackSegment
-
-///|
 /// Graphviz parity: port order uses compassPort angle quantization
 /// (MC_SCALE=256) for mincross medians (shapes.c + mincross.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -115,33 +112,4 @@ fn edge_port_order(
       }
     None => 0.5
   }
-}
-
-fn segment_slack_minlen(
-  segment : SlackSegment,
-  port_offsets : Map[String, Map[String, RecordPort]],
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  real_by_name : Map[String, @cgraph.Node],
-) -> (Int, Int) {
-  let tail_offset = edge_port_offset(
-    segment.tail,
-    segment.tail_port,
-    port_offsets,
-    sizes,
-    rankdir,
-    real_by_name,
-  )
-  let head_offset = edge_port_offset(
-    segment.head,
-    segment.head_port,
-    port_offsets,
-    sizes,
-    rankdir,
-    real_by_name,
-  )
-  let delta = head_offset - tail_offset
-  let m0 = if delta > 0.0 { @dot_shared.trunc_int(delta) } else { 0 }
-  let m1 = if delta < 0.0 { @dot_shared.trunc_int(-delta) } else { 0 }
-  (m0, m1)
 }
