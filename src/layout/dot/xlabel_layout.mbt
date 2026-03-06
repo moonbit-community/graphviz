@@ -2,22 +2,6 @@
 /// Graphviz parity: exterior label placement aligned to refs/graphviz/lib/label/xlabels.c
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).
 /// Do not change behavior without updating fixtures/tests.
-const XLXDENOM : Double = 8.0
-
-///|
-const XLYDENOM : Double = 2.0
-
-///|
-const MILLIPOINT : Double = 0.001
-
-const XLPXPY : Int = 0
-const XLCXPY : Int = 1
-const XLNXPY : Int = 2
-const XLPXCY : Int = 3
-const XLNXCY : Int = 5
-const XLPXNY : Int = 6
-const XLCXNY : Int = 7
-const XLNXNY : Int = 8
 
 ///|
 priv enum XLabelTarget {
