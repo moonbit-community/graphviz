@@ -256,18 +256,6 @@ fn simplify_polyline(
 }
 
 ///|
-fn is_record_shape(node : @cgraph.Node) -> Bool {
-  match node.get_attr("shape") {
-    Some(value) =>
-      match value.to_lower() {
-        "record" | "mrecord" => true
-        _ => false
-      }
-    None => false
-  }
-}
-
-///|
 const DEFAULT_VNODE_WEIGHT : Double = 1.0
 
 ///|
@@ -1182,7 +1170,7 @@ fn compute_curve_offset(
     let head_port_key = @dot_shared.port_key(edge.head_port())
     let key =
       if head_port_key == "" {
-      if is_record_shape(edge.head()) { base.orig_head_name } else { "" }
+      if @dot_shared.is_record_shape(edge.head()) { base.orig_head_name } else { "" }
     } else {
       "\{base.orig_head_name}:\{head_port_key}"
     }

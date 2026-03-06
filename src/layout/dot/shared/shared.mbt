@@ -514,6 +514,21 @@ pub fn edge_rank_span(
 }
 
 ///|
+/// Graphviz parity: record-shape detection follows shape attr values
+/// recognized by dot (`record` / `mrecord`).
+/// Do not change behavior without updating fixtures/tests.
+pub fn is_record_shape(node : @cgraph.Node) -> Bool {
+  match node.get_attr("shape") {
+    Some(value) =>
+      match value.to_lower() {
+        "record" | "mrecord" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")

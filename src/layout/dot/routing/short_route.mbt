@@ -15,18 +15,6 @@ fn route_has_single_arrowhead(
 }
 
 ///|
-fn short_route_is_record_shape(node : @cgraph.Node) -> Bool {
-  match node.get_attr("shape") {
-    Some(value) =>
-      match value.to_lower() {
-        "record" | "mrecord" => true
-        _ => false
-      }
-    None => false
-  }
-}
-
-///|
 priv struct RecordPortDetourNeedInput {
   using_pathplan : Bool
   is_flat_edge : Bool
@@ -45,11 +33,11 @@ fn needs_record_port_detour(
 ) -> Bool {
   let record_port_edge =
     (
-      short_route_is_record_shape(input.tail_node) &&
+      @dot_shared.is_record_shape(input.tail_node) &&
       @dot_shared.port_is_explicit(input.tail_port)
     ) ||
     (
-      short_route_is_record_shape(input.head_node) &&
+      @dot_shared.is_record_shape(input.head_node) &&
       @dot_shared.port_is_explicit(input.head_port)
     )
   !input.using_pathplan &&
