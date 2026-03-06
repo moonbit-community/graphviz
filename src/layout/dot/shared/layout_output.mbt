@@ -9,3 +9,15 @@ pub(all) struct DotLayoutNode {
   label_pos : @geom.Point?
   xlabel_pos : @geom.Point?
 }
+
+///|
+/// Edge layout output.
+/// Splines use points in points; label positions are optional.
+pub(all) struct DotLayoutEdge {
+  edge : @cgraph.Edge
+  splines : Array[@geom.Spline]
+  label_pos : @geom.Point?
+  head_label_pos : @geom.Point?
+  tail_label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
+}

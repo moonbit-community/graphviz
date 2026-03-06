@@ -150,14 +150,7 @@ pub(all) struct SelfEdgeRoute {
 }
 
 ///|
-pub(all) struct DotLayoutEdge {
-  edge : @cgraph.Edge
-  splines : Array[@geom.Spline]
-  label_pos : @geom.Point?
-  head_label_pos : @geom.Point?
-  tail_label_pos : @geom.Point?
-  xlabel_pos : @geom.Point?
-}
+pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
 
 ///|
 pub(all) struct EdgeVnodeInfo {

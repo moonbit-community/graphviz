@@ -40,7 +40,7 @@ type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
 ///|
 /// Edge layout output.
 /// Splines use points in points; label positions are optional.
-pub type DotLayoutEdge = @routing.DotLayoutEdge
+pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
 
 ///|
 /// Graph layout output.
