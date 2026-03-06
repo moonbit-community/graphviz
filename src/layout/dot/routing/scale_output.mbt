@@ -3,33 +3,6 @@
 /// map snapshots synchronized when stage-e runs pre-route ratio=fill scaling.
 
 ///|
-fn scale_point_value(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
-  { x: point.x * sx, y: point.y * sy }
-}
-
-///|
-fn scale_point_value_rounded(
-  point : @geom.Point,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point {
-  let scaled = scale_point_value(point, sx, sy)
-  { x: scaled.x.round(), y: scaled.y.round() }
-}
-
-///|
-fn scale_optional_point_value(
-  point : @geom.Point?,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point? {
-  match point {
-    Some(value) => Some(scale_point_value(value, sx, sy))
-    None => None
-  }
-}
-
-///|
 fn scale_spline_value(
   spline : @geom.Spline,
   sx : Double,
@@ -37,11 +10,11 @@ fn scale_spline_value(
 ) -> @geom.Spline {
   let points : Array[@geom.Point] = []
   for point in spline.points {
-    points.push(scale_point_value(point, sx, sy))
+    points.push(@dot_shared.scale_point(point, sx, sy))
   }
   {
-    start: scale_optional_point_value(spline.start, sx, sy),
-    end: scale_optional_point_value(spline.end, sx, sy),
+    start: @dot_shared.scale_optional_point(spline.start, sx, sy),
+    end: @dot_shared.scale_optional_point(spline.end, sx, sy),
     points,
   }
 }
@@ -61,18 +34,18 @@ pub fn scale_edge_layout_output(
     scaled.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: scale_optional_point_value(edge_layout.label_pos, sx, sy),
-      head_label_pos: scale_optional_point_value(
+      label_pos: @dot_shared.scale_optional_point(edge_layout.label_pos, sx, sy),
+      head_label_pos: @dot_shared.scale_optional_point(
         edge_layout.head_label_pos,
         sx,
         sy,
       ),
-      tail_label_pos: scale_optional_point_value(
+      tail_label_pos: @dot_shared.scale_optional_point(
         edge_layout.tail_label_pos,
         sx,
         sy,
       ),
-      xlabel_pos: scale_optional_point_value(edge_layout.xlabel_pos, sx, sy),
+      xlabel_pos: @dot_shared.scale_optional_point(edge_layout.xlabel_pos, sx, sy),
     })
   }
   scaled
@@ -86,7 +59,7 @@ pub fn scale_point_map_rounded(
 ) -> Map[String, @geom.Point] {
   let scaled : Map[String, @geom.Point] = Map::new()
   for name, point in points {
-    scaled[name] = scale_point_value_rounded(point, sx, sy)
+    scaled[name] = @dot_shared.scale_point_rounded(point, sx, sy)
   }
   scaled
 }
@@ -153,7 +126,7 @@ pub fn scale_record_port_maps(
     let scaled_ports : Map[String, @dot_shared.RecordPort] = Map::new()
     for port_name, port in ports {
       scaled_ports[port_name] = {
-        center: scale_point_value(port.center, sx, sy),
+        center: @dot_shared.scale_point(port.center, sx, sy),
         size: scale_node_size_value(port.size, sx, sy),
         sides: port.sides,
       }

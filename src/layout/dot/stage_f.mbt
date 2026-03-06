@@ -425,17 +425,17 @@ fn scale_layout_graph(
   for node_layout in layout.nodes {
     let scaled_pos =
       if round_node_pos {
-        scale_point_value_rounded(node_layout.pos, sx, sy)
+        @dot_shared.scale_point_rounded(node_layout.pos, sx, sy)
       } else {
-        scale_point_value(node_layout.pos, sx, sy)
+        @dot_shared.scale_point(node_layout.pos, sx, sy)
       }
     nodes.push({
       node: node_layout.node,
       pos: scaled_pos,
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: scale_optional_point_value(node_layout.label_pos, sx, sy),
-      xlabel_pos: scale_optional_point_value(node_layout.xlabel_pos, sx, sy),
+      label_pos: @dot_shared.scale_optional_point(node_layout.label_pos, sx, sy),
+      xlabel_pos: @dot_shared.scale_optional_point(node_layout.xlabel_pos, sx, sy),
     })
   }
   let edges = @routing.scale_edge_layout_output(layout.edges, sx, sy)
@@ -451,7 +451,7 @@ fn scale_layout_graph(
       urx: layout.bbox.urx * sx,
       ury: layout.bbox.ury * sy,
     },
-    label_pos: scale_optional_point_value(layout.label_pos, sx, sy),
+    label_pos: @dot_shared.scale_optional_point(layout.label_pos, sx, sy),
     nodes,
     edges,
     subgraphs,
@@ -1693,32 +1693,6 @@ fn adjust_labels_for_overlaps(
 ///|
 fn edge_label_adjust_enabled() -> Bool {
   @dot_shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
-}
-
-fn scale_point_value(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
-  { x: point.x * sx, y: point.y * sy }
-}
-
-///|
-fn scale_point_value_rounded(
-  point : @geom.Point,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point {
-  let scaled = scale_point_value(point, sx, sy)
-  { x: scaled.x.round(), y: scaled.y.round() }
-}
-
-///|
-fn scale_optional_point_value(
-  point : @geom.Point?,
-  sx : Double,
-  sy : Double,
-) -> @geom.Point? {
-  match point {
-    Some(value) => Some(scale_point_value(value, sx, sy))
-    None => None
-  }
 }
 
 ///|
