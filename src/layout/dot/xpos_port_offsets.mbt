@@ -72,7 +72,8 @@ fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
   }
 }
 
-fn compass_port_point(
+///|
+fn compass_port_point_for_layout(
   node_name : String,
   node : @cgraph.Node?,
   compass : @cgraph.Compass,
@@ -99,28 +100,6 @@ fn compass_port_point(
 }
 
 ///|
-fn compass_port_offset(
-  compass : @cgraph.Compass,
-  node_name : String,
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  nodes_by_name : Map[String, @cgraph.Node],
-) -> Double {
-  @positioning.compass_port_offset(
-    compass,
-    node_name,
-    sizes,
-    rankdir,
-    nodes_by_name.get(node_name),
-    compass_port_point,
-    node =>
-      is_record_shape(node) ||
-      @html_label.is_html_label_text(label_text(node)),
-    layout_port_offset,
-  )
-}
-
-///|
 fn edge_port_offset(
   node_name : String,
   port : @cgraph.Port?,
@@ -134,12 +113,17 @@ fn edge_port_offset(
     port,
     offsets,
     compass =>
-      compass_port_offset(
+      @positioning.compass_port_offset(
         compass,
         node_name,
         sizes,
         rankdir,
-        nodes_by_name,
+        nodes_by_name.get(node_name),
+        compass_port_point_for_layout,
+        node =>
+          is_record_shape(node) ||
+          @html_label.is_html_label_text(label_text(node)),
+        layout_port_offset,
       ),
   )
 }

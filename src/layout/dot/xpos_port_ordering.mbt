@@ -15,7 +15,7 @@ fn edge_port_order(
     port,
     offsets,
     compass =>
-      compass_port_point(
+      compass_port_point_for_layout(
         node_name,
         nodes_by_name.get(node_name),
         compass,
