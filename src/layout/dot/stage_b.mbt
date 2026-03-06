@@ -8,6 +8,7 @@ type RankData = @rank_assignment.RankData
 ///|
 type RankHeights = @rank_assignment.RankHeights
 type OrderingStageDeps = @ordering_stage.OrderingStageDeps
+type OrderingStageOutput = @ordering_stage.OrderingStageOutput
 type OrderingResult = @ordering.OrderingResult
 
 ///|
@@ -113,26 +114,11 @@ fn compute_dot_rank_stage(
         cluster_label_padding_for_layout,
       ),
     )
-  // Graphviz parity: cluster metadata in rank/order stage uses
-  // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
-  let cluster_meta =
-    @ordering.build_dot_cluster_metadata(
-      {
-        graph,
-        nodes: prep.nodes,
-        edges: prep.edges,
-        groups: rank_data.groups,
-        ranks: rank_data.ranks,
-        node_order: prep.node_order,
-        edge_tail: rank_data.edge_tail,
-        edge_head: rank_data.edge_head,
-        graphviz_flip: prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
-      }
-    )
-  // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
-  // and cluster metadata with unchanged Graphviz call wiring.
-  let ordering =
-    @ordering_stage.compute_ordering_and_vnodes(
+  // Graphviz parity: ordering stage owns cluster-metadata preparation plus
+  // vnode ordering dispatch; the root stage only passes rank/order inputs and
+  // root-owned deps across the package boundary.
+  let ordering_stage_output : OrderingStageOutput =
+    @ordering_stage.compute_ordering_stage(
       {
         graph,
         nodes: prep.nodes,
@@ -149,12 +135,13 @@ fn compute_dot_rank_stage(
         nodesep_pt: rank_heights.nodesep_pt,
         has_edge_labels: prep.has_edge_labels,
         rankdir: prep.rankdir,
-        cluster_meta,
         port_order_positions: prep.port_order_positions,
         port_order_contrib: prep.port_order_contrib,
       },
       build_ordering_stage_deps(),
     )
+  let cluster_meta = ordering_stage_output.cluster_meta
+  let ordering = ordering_stage_output.ordering
   // Graphviz parity: rank-stage result object keeps computed
   // rank/cluster/order artifacts unchanged.
   { rank_data, rank_heights, cluster_meta, ordering }
