@@ -880,32 +880,8 @@ fn build_route_base_deps_for_dot(
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
-  let edge_layout_deps : @routing.EdgeLayoutDeps =
-    {
-      edge_label_rank_for_routing_fn: (edge, ranks, mid_label_width_pt) =>
-        match edge_label_rank_info(edge, ranks) {
-          Some(info) =>
-            if mid_label_width_pt > 0.0 {
-              Some((info.label_rank, info.span))
-            } else {
-              None
-            }
-          None => None
-        },
-      edge_label_rank_y_fn: edge_label_rank_y,
-      edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
-        edge_label_rank_x(
-          edge,
-          label_rank,
-          vnode_info.vnode_ranks,
-          vnode_info.edge_vnodes,
-          vnode_positions,
-        ),
-      edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
-      flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
-      edge_label_pos_fn: edge_label_pos_from_input,
-      edge_port_label_pos_fn: edge_port_label_pos,
-    }
+  let edge_layout_deps =
+    build_edge_layout_deps_for_dot()
   {
     recover_slack_vnodes_fn: recover_slack_vnodes,
     build_edge_layout_fn: (input) =>
@@ -920,6 +896,43 @@ fn build_routing_callbacks_for_dot(
       ),
     self_edge_label_height_fn: self_edge_label_height_pt,
     self_edge_label_width_fn: self_edge_label_width_pt,
+    edge_port_label_pos_fn: edge_port_label_pos,
+  }
+}
+
+///|
+fn edge_label_rank_for_routing(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+  mid_label_width_pt : Double,
+) -> (Int, Int)? {
+  match edge_label_rank_info(edge, ranks) {
+    Some(info) =>
+      if mid_label_width_pt > 0.0 {
+        Some((info.label_rank, info.span))
+      } else {
+        None
+      }
+    None => None
+  }
+}
+
+///|
+fn build_edge_layout_deps_for_dot() -> @routing.EdgeLayoutDeps {
+  {
+    edge_label_rank_for_routing_fn: edge_label_rank_for_routing,
+    edge_label_rank_y_fn: edge_label_rank_y,
+    edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
+      edge_label_rank_x(
+        edge,
+        label_rank,
+        vnode_info.vnode_ranks,
+        vnode_info.edge_vnodes,
+        vnode_positions,
+      ),
+    edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
+    flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
+    edge_label_pos_fn: edge_label_pos_from_input,
     edge_port_label_pos_fn: edge_port_label_pos,
   }
 }
