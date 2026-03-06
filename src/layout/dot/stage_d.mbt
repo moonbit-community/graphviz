@@ -226,27 +226,29 @@ fn build_x_seed_port_samples(
   pipeline : PositionPipelineContext,
   x_order_sizes : Map[String, NodeSize],
 ) -> @positioning.XSeedPortSamples {
+  let build_port_sample_bundle =
+    (edges, edge_tail, edge_head) =>
+      @positioning.build_edge_port_sample_bundle(
+        pipeline.prep.nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        x_order_sizes,
+        port_offsets_for_nodes,
+        edge_port_offset,
+        edge_port_order,
+      )
   let x_port_samples =
-    @positioning.build_edge_port_sample_bundle(
-      pipeline.prep.nodes,
+    build_port_sample_bundle(
       pipeline.prep.edges,
       pipeline.rank_data.edge_tail,
       pipeline.rank_data.edge_head,
-      x_order_sizes,
-      port_offsets_for_nodes,
-      edge_port_offset,
-      edge_port_order,
     )
   let order_edge_port_samples =
-    @positioning.build_edge_port_sample_bundle(
-      pipeline.prep.nodes,
+    build_port_sample_bundle(
       pipeline.ordering.order_edges,
       pipeline.ordering.order_edge_tail,
       pipeline.ordering.order_edge_head,
-      x_order_sizes,
-      port_offsets_for_nodes,
-      edge_port_offset,
-      edge_port_order,
     )
   {
     x_edge_tail_port_x: x_port_samples.tail_port_x,
