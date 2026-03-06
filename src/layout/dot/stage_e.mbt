@@ -122,7 +122,11 @@ fn compute_dot_routing_stage(
     )
   let edges_out =
     if ratio_scaled {
-      scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
+      @routing.scale_edge_layout_output(
+        edges_routed,
+        1.0 / ratio_sx,
+        1.0 / ratio_sy,
+      )
     } else {
       edges_routed
     }
@@ -205,16 +209,23 @@ fn build_routing_ratio_adjusted_data(
   }
   let adjusted_positions_state : PositionResult = {
     x_groups: positions_state.x_groups,
-    rank_y: scale_double_map_rounded(positions_state.rank_y, ratio_sy),
-    positions: scale_point_map_rounded(positions_state.positions, ratio_sx, ratio_sy),
+    rank_y: @routing.scale_double_map_rounded(positions_state.rank_y, ratio_sy),
+    positions:
+      @routing.scale_point_map_rounded(
+        positions_state.positions,
+        ratio_sx,
+        ratio_sy,
+      ),
     vnode_positions:
-      scale_point_map_rounded(
+      @routing.scale_point_map_rounded(
         positions_state.vnode_positions,
         ratio_sx,
         ratio_sy,
       ),
-    cluster_ln_x: scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
-    cluster_rn_x: scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
+    cluster_ln_x:
+      @routing.scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
+    cluster_rn_x:
+      @routing.scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
     flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
     rank_ht1: positions_state.rank_ht1,
     rank_ht2: positions_state.rank_ht2,
@@ -225,11 +236,24 @@ fn build_routing_ratio_adjusted_data(
     ratio_sx,
     ratio_sy,
     positions_state: adjusted_positions_state,
-    cluster_bboxes: scale_rect_map(input.cluster_bboxes, ratio_sx, ratio_sy),
+    cluster_bboxes:
+      @routing.scale_rect_map(
+        input.cluster_bboxes,
+        ratio_sx,
+        ratio_sy,
+      ),
     label_ports_map:
-      scale_record_port_maps(input.label_ports_map, ratio_sx, ratio_sy),
+      @routing.scale_record_port_maps(
+        input.label_ports_map,
+        ratio_sx,
+        ratio_sy,
+      ),
     label_ports_raw:
-      scale_record_port_maps(input.label_ports_raw, ratio_sx, ratio_sy),
+      @routing.scale_record_port_maps(
+        input.label_ports_raw,
+        ratio_sx,
+        ratio_sy,
+      ),
   }
 }
 ///|
