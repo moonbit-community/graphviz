@@ -120,7 +120,12 @@ fn compute_dot_routing_stage(
         enable_complex_tuning,
       },
     )
-  let edges_out = maybe_rescale_routed_edges(edges_routed, ratio_scaled, ratio_sx, ratio_sy)
+  let edges_out =
+    if ratio_scaled {
+      scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
+    } else {
+      edges_routed
+    }
   // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding.
   { nodes_out, edges_out, port_pad_below, port_pad_above }
@@ -678,29 +683,6 @@ priv struct RouteEdgesForDotInput {
   enable_complex_tuning : Bool
 }
 
-fn maybe_rescale_routed_edges(
-  edges_routed : Array[DotLayoutEdge],
-  ratio_scaled : Bool,
-  ratio_sx : Double,
-  ratio_sy : Double,
-) -> Array[DotLayoutEdge] {
-  if ratio_scaled {
-    scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
-  } else {
-    edges_routed
-  }
-}
-
-///|
-fn routing_spline_mode(splines : SplinesMode) -> Int {
-  match splines {
-    SplinesMode::None | SplinesMode::Polyline => 0
-    SplinesMode::Ortho => 1
-    _ => 2
-  }
-}
-
-///|
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
@@ -898,7 +880,12 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
     routing_context: input.routing_context,
     enable_complex_tuning: input.enable_complex_tuning,
     use_spline_prepass: input.prep.splines == SplinesMode::Spline,
-    spline_mode: routing_spline_mode(input.prep.splines),
+    spline_mode:
+      match input.prep.splines {
+        SplinesMode::None | SplinesMode::Polyline => 0
+        SplinesMode::Ortho => 1
+        _ => 2
+      },
   }
   @routing.route_edges_pipeline(
     pipeline_input,
