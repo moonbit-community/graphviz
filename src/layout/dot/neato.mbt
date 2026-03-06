@@ -182,12 +182,7 @@ pub fn layout_neato(
   scale? : Double = 72.0,
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
-  let active_graph = if prune {
-    let keep = prune_keep_set(graph)
-    clone_pruned_graph(graph, keep)
-  } else {
-    graph
-  }
+  let active_graph = active_graph_for_prune(graph, prune)
   validate_layout_graph(active_graph)
   reset_label_caches()
   validate_neato_edge_lengths(active_graph)
@@ -334,67 +329,5 @@ pub fn layout_neato(
       xlabel_pos: None,
     })
   }
-  let base_bbox = compute_bbox(nodes_out, edges_out)
-  let empty_cluster_ln_x : Map[String, Double] = Map::new()
-  let empty_cluster_rn_x : Map[String, Double] = Map::new()
-  let empty_cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map::new()
-  let empty_ranks : Map[String, Int] = Map::new()
-  let empty_rank_y : Map[Int, Double] = Map::new()
-  let empty_rank_ht1 : Map[Int, Double] = Map::new()
-  let empty_rank_ht2 : Map[Int, Double] = Map::new()
-  let subgraphs =
-    layout_subgraphs(
-      {
-        graph: active_graph,
-        nodes_out,
-        edges_out,
-        cluster_ln_x: empty_cluster_ln_x,
-        cluster_rn_x: empty_cluster_rn_x,
-        cluster_bbox_heights: empty_cluster_bbox_heights,
-        rankdir,
-        ranks: empty_ranks,
-        rank_y: empty_rank_y,
-        rank_ht1: empty_rank_ht1,
-        rank_ht2: empty_rank_ht2,
-      },
-    )
-  let mut final_bbox = if subgraphs.length() > 0 {
-    expand_bbox_with_subgraphs(base_bbox, subgraphs)
-  } else {
-    base_bbox
-  }
-  let mut label_pos : @geom.Point? = None
-  if active_graph.is_root() {
-    match graph_label_metrics(active_graph) {
-      Some(metrics) => {
-        let loc = graph_label_loc(active_graph)
-        let just = graph_label_just(active_graph)
-        final_bbox =
-          expand_bbox_for_label(
-            final_bbox,
-            metrics.width_pt,
-            metrics.height_pt,
-            loc,
-          )
-        label_pos = Some(
-          graph_label_pos(
-            final_bbox,
-            metrics.width_pt,
-            metrics.height_pt,
-            loc,
-            just,
-          ),
-        )
-      }
-      None => ()
-    }
-  }
-  {
-    graph: active_graph,
-    bbox: final_bbox,
-    label_pos,
-    nodes: nodes_out,
-    edges: edges_out,
-    subgraphs,
-  }
+  finalize_unranked_layout_graph(active_graph, rankdir, nodes_out, edges_out)
 }
