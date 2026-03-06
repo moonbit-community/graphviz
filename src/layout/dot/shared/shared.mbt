@@ -59,6 +59,14 @@ pub(all) struct NodeSize {
 }
 
 ///|
+/// Record/html label port geometry in layout coordinates.
+pub(all) struct RecordPort {
+  center : @geom.Point
+  size : NodeSize
+  sides : Int
+}
+
+///|
 pub(all) struct GraphSizePt {
   width_pt : Double
   height_pt : Double

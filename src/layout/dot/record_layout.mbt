@@ -148,13 +148,6 @@ priv struct RecordField {
 }
 
 ///|
-priv struct RecordPort {
-  center : @geom.Point
-  size : NodeSize
-  sides : Int
-}
-
-///|
 priv enum RecordOrientation {
   Horizontal
   Vertical
@@ -364,4 +357,3 @@ fn record_nodes(label : String) -> Array[RecordNode] {
     }
   }
 }
-
