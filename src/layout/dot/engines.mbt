@@ -541,6 +541,130 @@ priv struct NeatoEdge {
 }
 
 ///|
+priv struct NeatoNodeSizing {
+  sizes : Map[String, NodeSize]
+  indices : Map[String, Int]
+  radii : Array[Double]
+  max_half : Double
+}
+
+///|
+fn build_neato_node_sizing(
+  nodes : Array[@cgraph.Node],
+  record_orientation : RecordOrientation,
+) -> NeatoNodeSizing {
+  let sizes : Map[String, NodeSize] = Map::new()
+  let indices : Map[String, Int] = Map::new()
+  let radii : Array[Double] = []
+  let mut max_half = 0.0
+  for i in 0..<nodes.length() {
+    let node = nodes[i]
+    let size = node_size(node, record_orientation)
+    sizes[node.name()] = size
+    indices[node.name()] = i
+    let half = if size.width_pt > size.height_pt {
+      size.width_pt / 2.0
+    } else {
+      size.height_pt / 2.0
+    }
+    radii.push(half)
+    if half > max_half {
+      max_half = half
+    }
+  }
+  { sizes, indices, radii, max_half }
+}
+
+///|
+priv struct NeatoInitialNodeState {
+  positions : Array[@geom.Point]
+  pinned : Array[Bool]
+}
+
+///|
+fn build_neato_initial_node_state(
+  nodes : Array[@cgraph.Node],
+  spacing : Double,
+) -> NeatoInitialNodeState {
+  let node_count = nodes.length()
+  let mut radius = if node_count > 1 {
+    spacing * node_count.to_double() / (2.0 * @math.PI)
+  } else {
+    0.0
+  }
+  if node_count > 1 && radius < spacing {
+    radius = spacing
+  }
+  let positions : Array[@geom.Point] = []
+  let pinned : Array[Bool] = []
+  for i in 0..<node_count {
+    let node = nodes[i]
+    let angle = if node_count > 0 {
+      2.0 * @math.PI * i.to_double() / node_count.to_double()
+    } else {
+      0.0
+    }
+    let base_pos : @geom.Point = {
+      x: radius * @math.cos(angle),
+      y: radius * @math.sin(angle),
+    }
+    let hint_data = node_pos_hint(node)
+    let pos = match hint_data.pos {
+      Some(value) => value
+      None => base_pos
+    }
+    positions.push(pos)
+    pinned.push(hint_data.is_pinned)
+  }
+  { positions, pinned }
+}
+
+///|
+fn build_neato_edges(
+  graph : @cgraph.Graph,
+  indices : Map[String, Int],
+  radii : Array[Double],
+  nodesep_pt : Double,
+) -> Array[NeatoEdge] {
+  let edges : Array[NeatoEdge] = []
+  for edge in graph.edges() {
+    let tail = edge.tail()
+    let head = edge.head()
+    let tail_index = match indices.get(tail.name()) {
+      Some(value) => value
+      None => continue
+    }
+    let head_index = match indices.get(head.name()) {
+      Some(value) => value
+      None => continue
+    }
+    if tail_index == head_index {
+      continue
+    }
+    let len_in = match edge.get_attr("len") {
+      Some(value) => @dot_shared.parse_double_or(value, 1.0)
+      None => 1.0
+    }
+    let length_in = if len_in <= 0.0 { 1.0 } else { len_in }
+    let length_pt = length_in * 72.0
+    let raw_weight = match edge.get_attr("weight") {
+      Some(value) => @dot_shared.parse_double_or(value, 1.0)
+      None => 1.0
+    }
+    let weight = if raw_weight <= 0.0 { 1.0 } else { raw_weight }
+    let min_len = radii[tail_index] + radii[head_index] + nodesep_pt
+    let desired = if length_pt > min_len { length_pt } else { min_len }
+    edges.push({
+      tail: tail_index,
+      head: head_index,
+      length_pt: desired,
+      weight,
+    })
+  }
+  edges
+}
+
+///|
 fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
     Some(value) => @dot_shared.parse_double_or(value, default_nodesep_in())
@@ -685,105 +809,40 @@ pub fn layout_neato(
   let record_orientation = record_layout_orientation(rankdir)
   let nodes = active_graph.nodes()
   let node_count = nodes.length()
-  let sizes : Map[String, NodeSize] = Map::new()
-  let indices : Map[String, Int] = Map::new()
-  let radii : Array[Double] = []
-  let mut max_half = 0.0
-  for i in 0..<node_count {
-    let node = nodes[i]
-    let size = node_size(node, record_orientation)
-    sizes[node.name()] = size
-    indices[node.name()] = i
-    let half = if size.width_pt > size.height_pt {
-      size.width_pt / 2.0
-    } else {
-      size.height_pt / 2.0
-    }
-    radii.push(half)
-    if half > max_half {
-      max_half = half
-    }
-  }
+  let sizing = build_neato_node_sizing(nodes, record_orientation)
   let nodesep_pt = neato_nodesep_pt(active_graph)
-  let base_spacing = max_half * 2.0 + nodesep_pt
+  let base_spacing = sizing.max_half * 2.0 + nodesep_pt
   let spacing = if base_spacing <= 1.0 { 1.0 } else { base_spacing }
-  let mut radius = if node_count > 1 {
-    spacing * node_count.to_double() / (2.0 * @math.PI)
-  } else {
-    0.0
-  }
-  if node_count > 1 && radius < spacing {
-    radius = spacing
-  }
-  let positions : Array[@geom.Point] = []
-  let pinned : Array[Bool] = []
-  for i in 0..<node_count {
-    let node = nodes[i]
-    let angle = if node_count > 0 {
-      2.0 * @math.PI * i.to_double() / node_count.to_double()
-    } else {
-      0.0
-    }
-    let base_pos : @geom.Point = {
-      x: radius * @math.cos(angle),
-      y: radius * @math.sin(angle),
-    }
-    let hint_data = node_pos_hint(node)
-    let pos = match hint_data.pos {
-      Some(value) => value
-      None => base_pos
-    }
-    positions.push(pos)
-    pinned.push(hint_data.is_pinned)
-  }
-  let edges : Array[NeatoEdge] = []
-  for edge in active_graph.edges() {
-    let tail = edge.tail()
-    let head = edge.head()
-    let tail_index = match indices.get(tail.name()) {
-      Some(value) => value
-      None => continue
-    }
-    let head_index = match indices.get(head.name()) {
-      Some(value) => value
-      None => continue
-    }
-    if tail_index == head_index {
-      continue
-    }
-    let len_in = match edge.get_attr("len") {
-      Some(value) => @dot_shared.parse_double_or(value, 1.0)
-      None => 1.0
-    }
-    let length_in = if len_in <= 0.0 { 1.0 } else { len_in }
-    let length_pt = length_in * 72.0
-    let raw_weight = match edge.get_attr("weight") {
-      Some(value) => @dot_shared.parse_double_or(value, 1.0)
-      None => 1.0
-    }
-    let weight = if raw_weight <= 0.0 { 1.0 } else { raw_weight }
-    let min_len = radii[tail_index] + radii[head_index] + nodesep_pt
-    let desired = if length_pt > min_len { length_pt } else { min_len }
-    edges.push({
-      tail: tail_index,
-      head: head_index,
-      length_pt: desired,
-      weight,
-    })
-  }
+  let node_state = build_neato_initial_node_state(nodes, spacing)
+  let positions = node_state.positions
+  let pinned = node_state.pinned
+  let edges = build_neato_edges(
+    active_graph,
+    sizing.indices,
+    sizing.radii,
+    nodesep_pt,
+  )
   if node_count > 1 {
-    relax_positions(positions, pinned, radii, edges, spacing, nodesep_pt, 100)
+    relax_positions(
+      positions,
+      pinned,
+      sizing.radii,
+      edges,
+      spacing,
+      nodesep_pt,
+      100,
+    )
   }
   let node_projection =
     project_neato_nodes(
       nodes,
       positions,
       scale_factor,
-      sizes,
+      sizing.sizes,
       record_orientation,
     )
   let node_size_for = (node : @cgraph.Node) =>
-    node_size_with_fallback(sizes, node, record_orientation)
+    node_size_with_fallback(sizing.sizes, node, record_orientation)
   let edges_out =
     build_edges_from_positions(
       active_graph,
