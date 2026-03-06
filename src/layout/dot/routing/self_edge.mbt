@@ -21,6 +21,86 @@ const PORT_SIDE_TOP : Int = 4
 const PORT_SIDE_LEFT : Int = 8
 
 ///|
+pub(all) struct SelfEdgeRightSpaceInput {
+  edges : Array[@cgraph.Edge]
+  sizes : Map[String, @dot_shared.NodeSize]
+  rankdir : RankDir
+  self_edge_size_pt : Double
+  self_edge_label_width_for : (@cgraph.Edge, RankDir) -> Double
+  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int
+}
+
+///|
+fn self_edge_right_space_for(
+  edge : @cgraph.Edge,
+  input : SelfEdgeRightSpaceInput,
+) -> Double {
+  let tail_port = edge.tail_port()
+  let head_port = edge.head_port()
+  let tail_explicit = @dot_shared.port_is_explicit(tail_port)
+  let head_explicit = @dot_shared.port_is_explicit(head_port)
+  let label_width =
+    (input.self_edge_label_width_for)(edge, input.rankdir)
+  if !tail_explicit && !head_explicit {
+    return input.self_edge_size_pt + label_width
+  }
+  let tail_sides = (input.port_side_mask_for)(edge.tail(), tail_port)
+  let head_sides = (input.port_side_mask_for)(edge.head(), head_port)
+  let tail_left = (tail_sides & PORT_SIDE_LEFT) != 0
+  let head_left = (head_sides & PORT_SIDE_LEFT) != 0
+  if !tail_left && !head_left {
+    let same_side = tail_sides == head_sides
+    let top_bottom = (tail_sides & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
+    if !same_side || !top_bottom {
+      return input.self_edge_size_pt + label_width
+    }
+  }
+  0.0
+}
+
+///|
+/// Graphviz parity: self-edge right-side spacing aligned to
+/// refs/graphviz/lib/dotgen/position.c (self-edge width padding).
+/// Do not change behavior without updating fixtures/tests.
+pub fn apply_self_edge_right_space(
+  input : SelfEdgeRightSpaceInput,
+) -> Map[String, @dot_shared.NodeSize] {
+  let extra_right : Map[String, Double] = Map::new()
+  for edge in input.edges {
+    if !@dot_shared.edge_is_self(edge) {
+      continue
+    }
+    let tail = edge.tail().name()
+    let extra = self_edge_right_space_for(edge, input)
+    if extra <= 0.0 {
+      continue
+    }
+    let current = match extra_right.get(tail) {
+      Some(value) => value
+      None => 0.0
+    }
+    extra_right[tail] = current + extra
+  }
+  if extra_right.length() == 0 {
+    return input.sizes
+  }
+  let adjusted : Map[String, @dot_shared.NodeSize] = Map::new()
+  for name, size in input.sizes {
+    match extra_right.get(name) {
+      Some(extra) =>
+        adjusted[name] =
+          @dot_shared.vnode_size_from_widths_with_h(
+            size.left_pt,
+            size.right_pt + extra,
+            size.height_pt,
+          )
+      None => adjusted[name] = size
+    }
+  }
+  adjusted
+}
+
+///|
 priv struct RankBounds {
   min_rank : Int
   max_rank : Int

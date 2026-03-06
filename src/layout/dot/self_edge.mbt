@@ -60,45 +60,6 @@ fn port_side_mask_for_self_edge(
 }
 
 ///|
-fn self_edge_extra_right_space(
-  edge : @cgraph.Edge,
-  rankdir : RankDir,
-  port_maps : Map[String, Map[String, RecordPort]],
-) -> Double {
-  let tail_port = edge.tail_port()
-  let head_port = edge.head_port()
-  let tail_explicit = @dot_shared.port_is_explicit(tail_port)
-  let head_explicit = @dot_shared.port_is_explicit(head_port)
-  let label_width = self_edge_label_width_pt(edge, rankdir)
-  if !tail_explicit && !head_explicit {
-    return SELF_EDGE_SIZE_PT + label_width
-  }
-  let tail_sides = port_side_mask_for_self_edge(edge.tail(), tail_port, port_maps)
-  let head_sides = port_side_mask_for_self_edge(edge.head(), head_port, port_maps)
-  let tail_left = (tail_sides & PORT_SIDE_LEFT) != 0
-  let head_left = (head_sides & PORT_SIDE_LEFT) != 0
-  if !tail_left && !head_left {
-    let same_side = tail_sides == head_sides
-    let top_bottom = (tail_sides & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
-    if !same_side || !top_bottom {
-      return SELF_EDGE_SIZE_PT + label_width
-    }
-  }
-  0.0
-}
-
-///|
-fn collect_self_edges(edges : Array[@cgraph.Edge]) -> Array[@cgraph.Edge] {
-  let self_edges : Array[@cgraph.Edge] = []
-  for edge in edges {
-    if @dot_shared.edge_is_self(edge) {
-      self_edges.push(edge)
-    }
-  }
-  self_edges
-}
-
-///|
 /// Graphviz parity: self-edge right-side spacing aligned to
 /// refs/graphviz/lib/dotgen/position.c (self-edge width padding).
 /// Do not change behavior without updating fixtures/tests.
@@ -109,33 +70,16 @@ fn apply_self_edge_right_space(
   rankdir : RankDir,
   record_orientation : RecordOrientation,
 ) -> Map[String, NodeSize] {
-  let self_edges = collect_self_edges(edges)
-  if self_edges.length() == 0 {
-    return sizes
-  }
   let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
-  let extra_right : Map[String, Double] = Map::new()
-  for edge in self_edges {
-    let tail = edge.tail().name()
-    let extra = self_edge_extra_right_space(edge, rankdir, port_maps)
-    if extra <= 0.0 {
-      continue
-    }
-    let current = match extra_right.get(tail) {
-      Some(value) => value
-      None => 0.0
-    }
-    extra_right[tail] = current + extra
-  }
-  if extra_right.length() == 0 {
-    return sizes
-  }
-  let adjusted : Map[String, NodeSize] = Map::new()
-  for name, size in sizes {
-    match extra_right.get(name) {
-      Some(extra) => adjusted[name] = size_with_extra_right(size, extra)
-      None => adjusted[name] = size
-    }
-  }
-  adjusted
+  @routing.apply_self_edge_right_space(
+    {
+      edges,
+      sizes,
+      rankdir,
+      self_edge_size_pt: SELF_EDGE_SIZE_PT,
+      self_edge_label_width_for: self_edge_label_width_pt,
+      port_side_mask_for:
+        (node, port) => port_side_mask_for_self_edge(node, port, port_maps),
+    },
+  )
 }

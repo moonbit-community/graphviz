@@ -93,19 +93,6 @@ fn swap_node_size(size : NodeSize) -> NodeSize {
 }
 
 ///|
-fn size_with_extra_right(size : NodeSize, extra_right_pt : Double) -> NodeSize {
-  if extra_right_pt <= 0.0 {
-    size
-  } else {
-    @dot_shared.vnode_size_from_widths_with_h(
-      size.left_pt,
-      size.right_pt + extra_right_pt,
-      size.height_pt,
-    )
-  }
-}
-
-///|
 fn record_layout_nodes(
   nodes : Array[RecordNode],
   rect : @geom.Rect,
