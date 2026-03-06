@@ -432,7 +432,7 @@ fn build_routing_stage_deps() -> RoutingStageDeps {
     edge_has_mid_label: edge_has_mid_label_for_routing_stage,
     record_port_padding: routing_port_padding_for_stage,
     build_head_port_metrics: build_head_port_metrics_for_stage,
-    apply_self_edge_right_space,
+    apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
     build_route_base_deps: build_route_base_deps_for_dot,
     build_routing_callbacks: build_routing_callbacks_for_dot,
   }

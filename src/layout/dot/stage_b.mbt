@@ -64,9 +64,9 @@ fn build_ordering_stage_deps() -> OrderingStageDeps {
           edge_tail,
           edge_head,
           order_sizes,
-          port_offsets_for_nodes,
-          edge_port_offset,
-          edge_port_order,
+          @port_bridge.port_offsets_for_nodes,
+          @port_bridge.edge_port_offset,
+          @port_bridge.edge_port_order,
         ),
   }
 }

@@ -2,6 +2,8 @@
 /// Stage F finalization stage file: postprocess payload + pre/post-rotation
 /// finalize pipeline helpers.
 
+type PositionResult = @positioning.PositionResult
+
 ///|
 /// Graphviz parity: final postprocess payload keeps stage outputs and layout
 /// options grouped so finalize pipeline wiring remains explicit and stable.

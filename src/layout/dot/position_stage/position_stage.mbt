@@ -169,7 +169,7 @@ fn build_x_with_flat_labels(
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_positions(
   input : PositionStageInput,
-  deps : PositionStageDeps,
+  deps? : PositionStageDeps = build_position_stage_deps(),
 ) -> PositionResult {
   let pipeline : PositionPipelineContext = {
     graph: input.graph,

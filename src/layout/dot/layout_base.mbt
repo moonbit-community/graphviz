@@ -30,7 +30,6 @@ fn default_ranksep_in() -> Double {
 
 ///|
 const CL_BACK : Int = 10
-const CL_CROSS : Int = 1000
 const VNODE_HEIGHT_PT : Double = 1.0
 
 ///|
@@ -146,9 +145,3 @@ fn parse_splines(value : String) -> SplinesMode? {
     _ => None
   }
 }
-
-///|
-const MAX_XPOS_VNODES : Int = 100000
-
-///|
-const MAX_XPOS_REORDER_VNODES : Int = 5000

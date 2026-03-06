@@ -22,7 +22,7 @@ pub fn layout_dot(
   let cluster_meta = rank_stage_output.cluster_meta
   let ordering = rank_stage_output.ordering
   let positions_state =
-    compute_positions(
+    @position_stage.compute_positions(
       {
         graph,
         prep,

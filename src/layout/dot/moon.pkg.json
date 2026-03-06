@@ -8,6 +8,7 @@
     "moonbit-community/graphviz/layout/dot/label_layout",
     "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/layout/dot/coordinate_transform",
+    "moonbit-community/graphviz/layout/dot/port_bridge",
     "moonbit-community/graphviz/layout/dot/xlabel_collection",
     "moonbit-community/graphviz/layout/dot/unranked_engine",
     "moonbit-community/graphviz/layout/dot/xlabel_solver",

@@ -2,6 +2,8 @@
 /// Root-only bbox recursion helpers that still depend on DotLayoutGraph trees;
 /// pure bbox kernels live in the bbox subpackage.
 
+const CLUSTER_MARGIN_PT : Double = 8.0
+
 ///|
 fn expand_bbox_with_subgraphs(
   bbox : @geom.Rect,
