@@ -977,9 +977,9 @@ pub fn build_cluster_graph_order(
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
 ) -> LocalClusterGraphOrderOutput {
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  @shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let cluster_maps = @shared.collect_cluster_graph_maps(graph)
+  let cluster_graphs = cluster_maps.cluster_graphs
+  let cluster_parents = cluster_maps.cluster_parents
   let cluster_names : Array[String] = []
   for name, _ in cluster_graphs {
     cluster_names.push(name)

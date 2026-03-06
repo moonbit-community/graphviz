@@ -633,9 +633,8 @@ fn collect_cluster_traversal_metadata(
 ) -> ClusterTraversalMetadata {
   let cluster_order : Array[String] = []
   @clustering.collect_cluster_names_order(graph, cluster_order)
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let cluster_maps = @dot_shared.collect_cluster_graph_maps(graph)
+  let cluster_parents = cluster_maps.cluster_parents
   { cluster_order, cluster_parents }
 }
 

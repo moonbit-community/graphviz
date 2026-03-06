@@ -23,14 +23,9 @@ pub struct TopClustersCollected {
 pub fn collect_top_clusters(
   source : @cgraph.Graph,
 ) -> TopClustersCollected {
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  @shared.collect_cluster_graphs(
-    source,
-    None,
-    cluster_graphs,
-    cluster_parents,
-  )
+  let cluster_maps = @shared.collect_cluster_graph_maps(source)
+  let cluster_graphs = cluster_maps.cluster_graphs
+  let cluster_parents = cluster_maps.cluster_parents
   let root_cluster_name =
     if @shared.is_cluster_graph(source) {
     match source.name() {
