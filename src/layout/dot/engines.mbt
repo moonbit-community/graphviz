@@ -335,7 +335,7 @@ fn node_size_with_fallback(
 ) -> NodeSize {
   match sizes.get(node.name()) {
     Some(value) => value
-    None => node_size(node, record_orientation)
+    None => @node_geometry.node_size(node, record_orientation)
   }
 }
 
@@ -457,7 +457,7 @@ fn collect_noop_nodes_with_sizes(
   for node in graph.nodes() {
     let pos = parse_required_noop_node_pos(node, scale_factor)
     positions[node.name()] = pos
-    let size = node_size(node, record_orientation)
+    let size = @node_geometry.node_size(node, record_orientation)
     sizes[node.name()] = size
     nodes_out.push({
       node,
@@ -615,7 +615,7 @@ fn build_neato_node_sizing(
   let mut max_half = 0.0
   for i in 0..<nodes.length() {
     let node = nodes[i]
-    let size = node_size(node, record_orientation)
+    let size = @node_geometry.node_size(node, record_orientation)
     sizes[node.name()] = size
     indices[node.name()] = i
     let half = if size.width_pt > size.height_pt {

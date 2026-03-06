@@ -120,14 +120,14 @@ test "port label positions match Graphviz" {
   guard fixtures.length() > 0 else { fail("missing port label fixtures") }
   for fixture in fixtures {
     assert_eq(fixture.label_html, false)
-    assert_eq(fixture.dist, PORT_LABEL_DISTANCE_PT * fixture.labeldistance)
+    assert_eq(fixture.dist, @node_geometry.PORT_LABEL_DISTANCE_PT * fixture.labeldistance)
     let actual = @routing.port_label_pos_from_points(
       @edge_spline.point(fixture.pe_x, fixture.pe_y),
       @edge_spline.point(fixture.pf_x, fixture.pf_y),
       fixture.labelangle,
       fixture.labeldistance,
-      PORT_LABEL_DISTANCE_PT,
-      GRAPHVIZ_PI,
+      @node_geometry.PORT_LABEL_DISTANCE_PT,
+      @node_geometry.GRAPHVIZ_PI,
     )
     if actual.x != fixture.pos_x || actual.y != fixture.pos_y {
       fail(
@@ -154,8 +154,8 @@ test "port label params match Graphviz defaults" {
     assert_port_label_edge(edge, fixture)
     let (angle_deg, distance_scale) = match @routing.port_label_params(
       edge,
-      PORT_LABEL_ANGLE_DEG,
-      PORT_LABEL_ANGLE_MIN_DEG,
+      @node_geometry.PORT_LABEL_ANGLE_DEG,
+      @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
     ) {
       Some(value) => value
       None =>

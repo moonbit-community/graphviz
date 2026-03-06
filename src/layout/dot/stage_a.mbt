@@ -140,7 +140,7 @@ fn resolve_splines(
 fn build_input_stage_deps() -> InputStageDeps {
   {
     graph_has_edge_labels: @label_metrics.graph_has_edge_labels,
-    node_size_for: node_size,
+    node_size_for: @node_geometry.node_size,
     swap_node_size: @dot_shared.swap_node_size,
     raw_label_ports_for_node: @label_layout.raw_label_ports_for_node,
     layout_port_offset: @label_layout.layout_port_offset,

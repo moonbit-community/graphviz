@@ -39,7 +39,7 @@ fn port_offsets_for_nodes(
     output_sizes,
     (node, rankdir) => {
       let record_orientation = @dot_shared.record_layout_orientation(rankdir)
-      node_size(node, record_orientation)
+      @node_geometry.node_size(node, record_orientation)
     },
     (node, origin, base_size, rankdir) => {
       let record_orientation = @dot_shared.record_layout_orientation(rankdir)
@@ -50,48 +50,6 @@ fn port_offsets_for_nodes(
   )
 }
 
-///|
-fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
-  let shape = match node.get_attr("shape") {
-    Some(value) => value.to_lower()
-    None => ""
-  }
-  match shape {
-    "" | "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
-      true
-    "diamond"
-    | "mdiamond"
-    | "triangle"
-    | "invtriangle"
-    | "trapezium"
-    | "invtrapezium"
-    | "parallelogram"
-    | "egg"
-    | "house"
-    | "invhouse"
-    | "pentagon"
-    | "hexagon"
-    | "septagon"
-    | "octagon"
-    | "doubleoctagon"
-    | "tripleoctagon" =>
-      true
-    "polygon" => {
-      let attrs = polygon_shape_attrs(node)
-      if attrs.sides < 3 {
-        true
-      } else {
-        !polygon_is_box_like(
-          attrs.sides,
-          attrs.orientation,
-          attrs.distortion,
-          attrs.skew,
-        )
-      }
-    }
-    _ => false
-  }
-}
 
 ///|
 fn compass_port_point_for_layout(
@@ -107,7 +65,7 @@ fn compass_port_point_for_layout(
     compass,
     sizes,
     rankdir,
-    compass_uses_shape_clipping,
+    @node_geometry.compass_uses_shape_clipping,
     (shape_node, size, shape_compass, shape_rankdir) =>
       @edge_spline.compass_port_point_on_shape(
         shape_node,
@@ -293,7 +251,7 @@ fn build_port_maps_for_nodes(
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
     let name = node.name()
-    let size = @dot_shared.resolve_node_output_size(sizes, node, record_orientation, node_size)
+    let size = @dot_shared.resolve_node_output_size(sizes, node, record_orientation, @node_geometry.node_size)
     let ports =
       @label_layout.raw_label_ports_for_node(
         node,
@@ -353,7 +311,7 @@ fn apply_self_edge_right_space(
       edges,
       sizes,
       rankdir,
-      self_edge_size_pt: SELF_EDGE_SIZE_PT,
+      self_edge_size_pt: @node_geometry.SELF_EDGE_SIZE_PT,
       self_edge_label_width_for: @label_metrics.self_edge_label_width_pt,
       port_side_mask_for:
         (node, port) => port_side_mask_for_self_edge(node, port, port_maps),

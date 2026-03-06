@@ -98,6 +98,11 @@ pub fn default_node_height_in() -> Double {
 }
 
 ///|
+pub fn default_point_size_in() -> Double {
+  0.05
+}
+
+///|
 pub fn env_flag_enabled(
   value : String?,
   default_enabled : Bool,

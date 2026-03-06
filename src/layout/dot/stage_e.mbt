@@ -34,7 +34,7 @@ fn build_layout_nodes_for_routing_stage(
         output_sizes,
         node,
         record_orientation,
-        node_size,
+        @node_geometry.node_size,
       )
     nodes_out.push({
       node,
@@ -67,7 +67,7 @@ fn build_port_layout_maps_for_routing_stage(
           output_sizes,
           node_layout.node,
           record_orientation,
-          node_size,
+        @node_geometry.node_size,
         )
       let name = node_layout.node.name()
       let raw_ports =
@@ -198,7 +198,7 @@ fn build_head_port_metrics_for_stage(
     },
     {
       is_record_shape: @dot_shared.is_record_shape,
-      node_size_for_missing: node => node_size(node, record_orientation),
+      node_size_for_missing: node => @node_geometry.node_size(node, record_orientation),
       port_geometry_for:
         (node_name, port, node_pos, node_size) => {
           let geometry =
@@ -303,7 +303,7 @@ fn build_route_base_deps_for_dot(
       route_anchor
     }
   {
-    node_size_for_missing: (node) => node_size(node, record_orientation),
+    node_size_for_missing: (node) => @node_geometry.node_size(node, record_orientation),
     edge_mid_label_metrics: route_mid_label_metrics,
     record_port_path_box: @label_layout.record_port_path_box,
     port_geometry: route_port_geometry,
@@ -339,10 +339,10 @@ fn build_routing_callbacks_for_dot(
     (input : @routing.EdgePortLabelPosInput) =>
       @routing.edge_port_label_pos(
         input,
-        PORT_LABEL_ANGLE_DEG,
-        PORT_LABEL_ANGLE_MIN_DEG,
-        PORT_LABEL_DISTANCE_PT,
-        GRAPHVIZ_PI,
+        @node_geometry.PORT_LABEL_ANGLE_DEG,
+        @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
+        @node_geometry.PORT_LABEL_DISTANCE_PT,
+        @node_geometry.GRAPHVIZ_PI,
       )
   let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
     (edge : @cgraph.Edge) =>
@@ -380,14 +380,14 @@ fn build_routing_callbacks_for_dot(
           tail_right_pt,
           head_left_pt,
           label_height_pt,
-          EDGE_LABEL_FLAT_SPACE_PT,
+          @node_geometry.EDGE_LABEL_FLAT_SPACE_PT,
         ),
     edge_label_pos_fn:
       input =>
         @routing.edge_label_pos_from_input(
           input,
           route_mid_label_metrics,
-          EDGE_LABEL_PAD_WIDTH_PT,
+          @node_geometry.EDGE_LABEL_PAD_WIDTH_PT,
         ),
     edge_port_label_pos_fn: edge_port_label_pos_for_dot,
   }

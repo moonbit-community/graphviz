@@ -238,7 +238,7 @@ fn expand_bbox_for_edge_labels(
         node_half_height_pt_for:
           (node, rankdir) => {
             let orientation = @dot_shared.record_layout_orientation(rankdir)
-            node_size(node, orientation).height_pt / 2.0
+            @node_geometry.node_size(node, orientation).height_pt / 2.0
           },
       },
     )

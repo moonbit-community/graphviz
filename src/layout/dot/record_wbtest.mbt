@@ -59,7 +59,7 @@ test "record_ports include nested port names" {
   let record_orientation =
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
-  let size = node_size(node, record_orientation)
+  let size = @node_geometry.node_size(node, record_orientation)
   let ports = @label_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
@@ -85,7 +85,7 @@ test "html_ports include td port names" {
   let record_orientation =
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
-  let size = node_size(node, record_orientation)
+  let size = @node_geometry.node_size(node, record_orientation)
   let ports = @label_layout.html_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
   match ports.get("p1") {
     Some(port) => {
@@ -106,7 +106,7 @@ test "record_ports honor rankdir LR field order" {
   let record_orientation =
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
-  let size = node_size(node, record_orientation)
+  let size = @node_geometry.node_size(node, record_orientation)
   let ports = @label_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
@@ -129,7 +129,7 @@ test "record_ports rotate into layout coords for rankdir LR" {
   let record_orientation =
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
-  let size = node_size(node, record_orientation)
+  let size = @node_geometry.node_size(node, record_orientation)
   let ports = @label_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
@@ -160,7 +160,7 @@ test "node_size keeps fixedsize=true circle dimensions" {
   )
   let orientation = @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
-  let size = node_size(node, orientation)
+  let size = @node_geometry.node_size(node, orientation)
   assert_close(size.width_in, 0.5, 0.0001)
   assert_close(size.height_in, 0.5, 0.0001)
 }
@@ -172,7 +172,7 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
   )
   let orientation = @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("d")
-  let size = node_size(node, orientation)
+  let size = @node_geometry.node_size(node, orientation)
   assert_close(size.width_in, 3.5833, 0.001)
   assert_close(size.height_in, 0.51042, 0.001)
 }

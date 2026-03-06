@@ -34,10 +34,6 @@ const CL_CROSS : Int = 1000
 const VNODE_HEIGHT_PT : Double = 1.0
 
 ///|
-fn default_point_size_in() -> Double {
-  0.05
-}
-
 ///|
 fn validate_nonnegative_attr(
   owner : String,

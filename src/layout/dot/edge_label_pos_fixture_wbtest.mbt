@@ -224,7 +224,7 @@ test "flat edge label positions match Graphviz" {
       fixture.tail_rw,
       fixture.head_lw,
       fixture.dimen_y,
-      EDGE_LABEL_FLAT_SPACE_PT,
+      @node_geometry.EDGE_LABEL_FLAT_SPACE_PT,
     )
     if actual.x != fixture.pos_x || actual.y != fixture.pos_y {
       fail(

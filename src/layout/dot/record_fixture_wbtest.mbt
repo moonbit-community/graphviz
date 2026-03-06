@@ -492,7 +492,7 @@ test "record fixtures match Graphviz layout" {
       let node = graph.node(fixture.node)
       let label = unescape_quotes(@label_layout.label_text(node))
       let expected_flip = orientation_is_horizontal(record_orientation)
-      let size = node_size(node, record_orientation)
+      let size = @node_geometry.node_size(node, record_orientation)
       let record_size : RecordFixturePoint = {
         x: size.width_pt,
         y: size.height_pt - @dot_shared.RECORD_BORDER_PT * 2.0,
@@ -540,7 +540,7 @@ test "record fixtures match Graphviz layout" {
     let expected_flip = orientation_is_horizontal(record_orientation)
     assert_eq(fixture.flip, expected_flip)
     assert_eq(fixture.lr, expected_flip)
-    let size = node_size(node, record_orientation)
+    let size = @node_geometry.node_size(node, record_orientation)
     assert_double_eq(fixture.node, "width_in", fixture.width_in, size.width_in)
     assert_double_eq(fixture.node, "height_in", fixture.height_in, size.height_in)
     let record_size : RecordFixturePoint = {

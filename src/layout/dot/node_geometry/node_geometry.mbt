@@ -1,6 +1,8 @@
 ///|
-/// Node-size computation for dot shapes stays in the root package while label,
-/// html, and port layout kernels live in subpackages.
+/// Node-size and shape-geometry kernels shared across dot stages, routing,
+/// engines, and dot layout postprocess.
+type RecordOrientation = @dot_shared.RecordOrientation
+type NodeSize = @dot_shared.NodeSize
 priv struct SizePt {
   width_pt : Double
   height_pt : Double
@@ -429,11 +431,55 @@ fn polygon_outline_for_size(
   out
 }
 ///|
+/// Shape-aware compass clipping policy for dot endpoint sampling.
+pub fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "" | "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
+      true
+    "diamond"
+    | "mdiamond"
+    | "triangle"
+    | "invtriangle"
+    | "trapezium"
+    | "invtrapezium"
+    | "parallelogram"
+    | "egg"
+    | "house"
+    | "invhouse"
+    | "pentagon"
+    | "hexagon"
+    | "septagon"
+    | "octagon"
+    | "doubleoctagon"
+    | "tripleoctagon" =>
+      true
+    "polygon" => {
+      let attrs = polygon_shape_attrs(node)
+      if attrs.sides < 3 {
+        true
+      } else {
+        !polygon_is_box_like(
+          attrs.sides,
+          attrs.orientation,
+          attrs.distortion,
+          attrs.skew,
+        )
+      }
+    }
+    _ => false
+  }
+}
+
+///|
 /// Node-size computation for plain/html/record/polygon shapes, aligned with
 /// Graphviz shapes.c behavior and dot layout sizing invariants.
 
 ///|
-fn node_size(
+pub fn node_size(
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
 ) -> NodeSize {
@@ -469,7 +515,7 @@ fn node_size(
     _ => true
   }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
-    (default_point_size_in(), default_point_size_in())
+    (@dot_shared.default_point_size_in(), @dot_shared.default_point_size_in())
   } else if regular_shape {
     let height = @dot_shared.default_node_height_in()
     (height, height)
@@ -827,25 +873,25 @@ fn node_size(
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|
-const SELF_EDGE_SIZE_PT : Double = 18.0
+pub const SELF_EDGE_SIZE_PT : Double = 18.0
 
 ///|
-const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
+pub const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
 
 ///|
-const EDGE_LABEL_FLAT_SPACE_PT : Double = 6.0
+pub const EDGE_LABEL_FLAT_SPACE_PT : Double = 6.0
 
 ///|
-const PORT_LABEL_DISTANCE_PT : Double = 10.0
+pub const PORT_LABEL_DISTANCE_PT : Double = 10.0
 
 ///|
-const GRAPHVIZ_PI : Double = 3.14159265358979323846
+pub const GRAPHVIZ_PI : Double = 3.14159265358979323846
 
 ///|
-const PORT_LABEL_ANGLE_DEG : Double = -25.0
+pub const PORT_LABEL_ANGLE_DEG : Double = -25.0
 
 ///|
-const PORT_LABEL_ANGLE_MIN_DEG : Double = -180.0
+pub const PORT_LABEL_ANGLE_MIN_DEG : Double = -180.0
 
 ///|
 const ELLIPSE_LABEL_SCALE : Double = 1.0
