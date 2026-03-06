@@ -1,0 +1,6 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+    "moonbit-community/graphviz/geom"
+  ]
+}
