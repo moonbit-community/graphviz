@@ -32,18 +32,16 @@ fn build_x_order_sizes(
 fn build_x_seed_port_samples(
   pipeline : PositionPipelineContext,
   x_order_sizes : Map[String, NodeSize],
+  deps : PositionStageDeps,
 ) -> @positioning.XSeedPortSamples {
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      @positioning.build_edge_port_sample_bundle(
+      (deps.build_x_seed_port_samples)(
         pipeline.prep.nodes,
         edges,
         edge_tail,
         edge_head,
         x_order_sizes,
-        port_offsets_for_nodes,
-        edge_port_offset,
-        edge_port_order,
       )
   let x_port_samples =
     build_port_sample_bundle(
@@ -75,12 +73,11 @@ fn build_x_seed_port_samples(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_seed_data(
   input : XSeedBuildInput,
+  deps : PositionStageDeps,
 ) -> @positioning.XPositionSeedData {
   let pipeline = input.pipeline
-  // Graphviz parity: x-positioning uses layout-coordinate node sizes before
-  // vnode overlays, so self-edge right-space adjustment must run first.
   let x_base_sizes =
-    apply_self_edge_right_space(
+    (deps.apply_self_edge_right_space)(
       pipeline.prep.nodes,
       pipeline.prep.edges,
       pipeline.prep.sizes,
@@ -94,7 +91,7 @@ fn build_x_seed_data(
       pipeline.ordering.vnode_info.vnode_sizes,
     )
   let port_samples =
-    build_x_seed_port_samples(pipeline, x_order_sizes)
+    build_x_seed_port_samples(pipeline, x_order_sizes, deps)
   @positioning.build_x_seed_data_from_sources(
     {
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,

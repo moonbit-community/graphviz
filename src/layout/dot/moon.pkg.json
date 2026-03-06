@@ -14,6 +14,7 @@
     },
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/position_stage",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/routing",

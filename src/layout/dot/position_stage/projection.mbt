@@ -12,6 +12,7 @@ priv struct ProjectionBuildInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_projection_result(
   input : ProjectionBuildInput,
+  deps : PositionStageDeps,
 ) -> PositionResult {
   let pipeline = input.pipeline
   let x_data = input.x_data
@@ -21,14 +22,10 @@ fn build_projection_result(
         pipeline,
         flat_label_ranks: x_data.flat_label_ranks,
       },
+      deps,
     )
   let x_positions =
-    compute_layout_x_positions(
-      {
-        pipeline,
-        x_data,
-      },
-    )
+    compute_layout_x_positions(pipeline, x_data, deps)
   let position_output_maps =
     build_position_output_maps(
       {
@@ -38,6 +35,7 @@ fn build_projection_result(
         y_positions: y_position_data.y_positions,
         rank_y: y_position_data.rank_y,
       },
+      deps,
     )
   {
     x_groups: x_data.x_groups,
@@ -52,11 +50,11 @@ fn build_projection_result(
     cluster_bbox_heights: y_position_data.cluster_bbox_heights,
   }
 }
+
 ///|
 /// Stage D y-position stage helpers for rank-height adjustments and y-coordinate
 /// solve wiring.
 
-///|
 type YPositionComputationData = @positioning.YPositionPipelineOutput
 
 ///|
@@ -73,6 +71,7 @@ priv struct YPositionBuildInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_y_position_data(
   input : YPositionBuildInput,
+  deps : PositionStageDeps,
 ) -> YPositionComputationData {
   @positioning.build_y_position_pipeline(
     {
@@ -91,9 +90,9 @@ fn build_y_position_data(
       flat_label_ranks: input.flat_label_ranks,
       vnode_sizes: input.pipeline.ordering.vnode_info.vnode_sizes,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
-      cluster_label_padding_for: cluster_label_padding_for_layout,
+      cluster_label_padding_for: (graph, rankdir) => (deps.cluster_label_padding_for)(graph, rankdir),
       node_half_height_pt_for: @positioning.node_half_height_pt,
-      cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
+      cluster_label_width_pt_for: deps.cluster_label_width_with_pad_for,
     },
   )
 }
@@ -122,6 +121,7 @@ priv struct PositionOutputBuildInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_position_output_maps(
   input : PositionOutputBuildInput,
+  deps : PositionStageDeps,
 ) -> PositionOutputMaps {
   @positioning.build_position_output_pipeline(
     {
@@ -145,18 +145,7 @@ fn build_position_output_maps(
       vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
       sizes: input.pipeline.prep.sizes,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
-      expand_cluster_label_bbox:
-        (graph, bbox) =>
-          match graph_label_metrics(graph) {
-            Some(metrics) =>
-              @dot_shared.expand_bbox_for_label(
-                bbox,
-                metrics.width_pt,
-                metrics.height_pt,
-                @dot_shared.graph_label_loc(graph),
-              )
-            None => bbox
-          },
+      expand_cluster_label_bbox: deps.expand_cluster_label_bbox,
     },
   )
 }

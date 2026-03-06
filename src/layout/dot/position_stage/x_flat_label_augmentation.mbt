@@ -38,6 +38,7 @@ type XposFlatLabelAugmentation = @positioning.XFlatLabelAugmentationOutput
 /// Do not change behavior without updating fixtures/tests.
 fn build_flat_label_augmentation(
   input : FlatLabelAugmentationBuildInput,
+  deps : PositionStageDeps,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
   @positioning.build_x_flat_label_augmentation(
@@ -65,12 +66,7 @@ fn build_flat_label_augmentation(
             pipeline.ordering.vnode_info,
             x_groups,
             {
-              edge_mid_label_metrics_for:
-                (edge) =>
-                  match edge_mid_label_metrics(edge) {
-                    Some(value) => Some((value.width, value.height))
-                    None => None
-                  },
+              edge_mid_label_metrics_for: (edge) => (deps.edge_mid_label_metrics_for)(edge),
             },
           )
         },
@@ -84,6 +80,7 @@ fn build_flat_label_augmentation(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_flat_label_reorder_sources(
   input : XFlatLabelBuildInput,
+  deps : PositionStageDeps,
 ) -> @positioning.XposReorderPipelineSources {
   let pipeline = input.pipeline
   {
@@ -99,7 +96,7 @@ fn build_x_flat_label_reorder_sources(
     cluster_min_rank: pipeline.cluster_meta.cluster_min_rank,
     cluster_max_rank: pipeline.cluster_meta.cluster_max_rank,
     node_order: pipeline.prep.node_order,
-    cluster_skeleton_size: @dot_shared.vnode_size_from_widths(1.0, 1.0),
+    cluster_skeleton_size: @shared.vnode_size_from_widths(1.0, 1.0),
     edges: pipeline.prep.edges,
     edge_tail: pipeline.rank_data.edge_tail,
     edge_head: pipeline.rank_data.edge_head,
@@ -110,7 +107,7 @@ fn build_x_flat_label_reorder_sources(
     edge_head_port_x: input.x_seed.x_edge_head_port_x,
     edge_tail_port_order: input.x_seed.x_edge_tail_port_order,
     edge_head_port_order: input.x_seed.x_edge_head_port_order,
-    cluster_skeleton_penalty: CL_CROSS,
+    cluster_skeleton_penalty: deps.cluster_skeleton_penalty,
     rank_same_groups: pipeline.cluster_meta.rank_same_groups,
     rank_same_order: pipeline.cluster_meta.rank_same_order,
     nodesep_pt: pipeline.rank_heights.nodesep_pt,
@@ -139,9 +136,10 @@ fn build_x_flat_label_reorder_sources(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
+  deps : PositionStageDeps,
 ) -> XposFlatLabelAugmentation {
   let reorder_sources =
-    build_x_flat_label_reorder_sources(input)
+    build_x_flat_label_reorder_sources(input, deps)
   @positioning.build_x_flat_label_pipeline(
     {
       reorder_sources,
@@ -155,6 +153,7 @@ fn build_x_flat_labels(
               x_groups,
               x_cluster_keys: input.x_seed.x_cluster_keys,
             },
+            deps,
           ),
     },
   )

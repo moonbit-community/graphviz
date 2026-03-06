@@ -1,0 +1,11 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/rank_assignment",
+    "moonbit-community/graphviz/layout/dot/clustering",
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom"
+  ]
+}
