@@ -746,6 +746,119 @@ fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Unit raise DotLayoutErr
 }
 
 ///|
+fn zero_double_array(length : Int) -> Array[Double] {
+  let values : Array[Double] = []
+  for _ in 0..<length {
+    values.push(0.0)
+  }
+  values
+}
+
+///|
+fn accumulate_repulsive_forces(
+  positions : Array[@geom.Point],
+  radii : Array[Double],
+  spacing : Double,
+  nodesep_pt : Double,
+  eps : Double,
+  disp_x : Array[Double],
+  disp_y : Array[Double],
+) -> Unit {
+  let node_count = positions.length()
+  for i in 0..<node_count {
+    let pos_i = positions[i]
+    for j in (i + 1)..<node_count {
+      let pos_j = positions[j]
+      let dx = pos_i.x - pos_j.x
+      let dy = pos_i.y - pos_j.y
+      let dist = Double::sqrt(dx * dx + dy * dy) + eps
+      let min_dist = radii[i] + radii[j] + nodesep_pt
+      let mut rep = spacing * spacing / dist
+      if dist < min_dist {
+        let overlap = min_dist - dist
+        rep = rep + overlap * spacing / min_dist
+      }
+      let fx = dx / dist * rep
+      let fy = dy / dist * rep
+      disp_x[i] = disp_x[i] + fx
+      disp_y[i] = disp_y[i] + fy
+      disp_x[j] = disp_x[j] - fx
+      disp_y[j] = disp_y[j] - fy
+    }
+  }
+}
+
+///|
+fn accumulate_spring_forces(
+  positions : Array[@geom.Point],
+  edges : Array[NeatoEdge],
+  eps : Double,
+  disp_x : Array[Double],
+  disp_y : Array[Double],
+) -> Unit {
+  for edge in edges {
+    let u = edge.tail
+    let v = edge.head
+    let pos_u = positions[u]
+    let pos_v = positions[v]
+    let dx = pos_u.x - pos_v.x
+    let dy = pos_u.y - pos_v.y
+    let dist = Double::sqrt(dx * dx + dy * dy) + eps
+    let force = (dist - edge.length_pt) * edge.weight
+    let fx = dx / dist * force
+    let fy = dy / dist * force
+    disp_x[u] = disp_x[u] - fx
+    disp_y[u] = disp_y[u] - fy
+    disp_x[v] = disp_x[v] + fx
+    disp_y[v] = disp_y[v] + fy
+  }
+}
+
+///|
+fn apply_displacements(
+  positions : Array[@geom.Point],
+  pinned : Array[Bool],
+  temperature : Double,
+  disp_x : Array[Double],
+  disp_y : Array[Double],
+) -> Unit {
+  for i in 0..<positions.length() {
+    if pinned[i] {
+      continue
+    }
+    let dx = disp_x[i]
+    let dy = disp_y[i]
+    let disp_len = Double::sqrt(dx * dx + dy * dy)
+    if disp_len > 0.0 {
+      let step = if disp_len < temperature { disp_len } else { temperature }
+      positions[i] = {
+        x: positions[i].x + dx / disp_len * step,
+        y: positions[i].y + dy / disp_len * step,
+      }
+    }
+  }
+}
+
+///|
+fn recenter_positions(positions : Array[@geom.Point]) -> Unit {
+  if positions.length() == 0 {
+    return ()
+  }
+  let mut cx = 0.0
+  let mut cy = 0.0
+  for pos in positions {
+    cx = cx + pos.x
+    cy = cy + pos.y
+  }
+  let inv = 1.0 / positions.length().to_double()
+  cx = cx * inv
+  cy = cy * inv
+  for i in 0..<positions.length() {
+    positions[i] = { x: positions[i].x - cx, y: positions[i].y - cy }
+  }
+}
+
+///|
 fn relax_positions(
   positions : Array[@geom.Point],
   pinned : Array[Bool],
@@ -772,77 +885,21 @@ fn relax_positions(
   let eps = 0.01
   let mut iter = 0
   while iter < iterations && temperature > 0.01 {
-    let disp_x : Array[Double] = []
-    let disp_y : Array[Double] = []
-    for _ in 0..<node_count {
-      disp_x.push(0.0)
-      disp_y.push(0.0)
-    }
-    for i in 0..<node_count {
-      let pos_i = positions[i]
-      for j in (i + 1)..<node_count {
-        let pos_j = positions[j]
-        let dx = pos_i.x - pos_j.x
-        let dy = pos_i.y - pos_j.y
-        let dist = Double::sqrt(dx * dx + dy * dy) + eps
-        let min_dist = radii[i] + radii[j] + nodesep_pt
-        let mut rep = spacing * spacing / dist
-        if dist < min_dist {
-          let overlap = min_dist - dist
-          rep = rep + overlap * spacing / min_dist
-        }
-        let fx = dx / dist * rep
-        let fy = dy / dist * rep
-        disp_x[i] = disp_x[i] + fx
-        disp_y[i] = disp_y[i] + fy
-        disp_x[j] = disp_x[j] - fx
-        disp_y[j] = disp_y[j] - fy
-      }
-    }
-    for edge in edges {
-      let u = edge.tail
-      let v = edge.head
-      let pos_u = positions[u]
-      let pos_v = positions[v]
-      let dx = pos_u.x - pos_v.x
-      let dy = pos_u.y - pos_v.y
-      let dist = Double::sqrt(dx * dx + dy * dy) + eps
-      let force = (dist - edge.length_pt) * edge.weight
-      let fx = dx / dist * force
-      let fy = dy / dist * force
-      disp_x[u] = disp_x[u] - fx
-      disp_y[u] = disp_y[u] - fy
-      disp_x[v] = disp_x[v] + fx
-      disp_y[v] = disp_y[v] + fy
-    }
-    for i in 0..<node_count {
-      if pinned[i] {
-        continue
-      }
-      let dx = disp_x[i]
-      let dy = disp_y[i]
-      let disp_len = Double::sqrt(dx * dx + dy * dy)
-      if disp_len > 0.0 {
-        let step = if disp_len < temperature { disp_len } else { temperature }
-        positions[i] = {
-          x: positions[i].x + dx / disp_len * step,
-          y: positions[i].y + dy / disp_len * step,
-        }
-      }
-    }
+    let disp_x = zero_double_array(node_count)
+    let disp_y = zero_double_array(node_count)
+    accumulate_repulsive_forces(
+      positions,
+      radii,
+      spacing,
+      nodesep_pt,
+      eps,
+      disp_x,
+      disp_y,
+    )
+    accumulate_spring_forces(positions, edges, eps, disp_x, disp_y)
+    apply_displacements(positions, pinned, temperature, disp_x, disp_y)
     if pinned_count == 0 {
-      let mut cx = 0.0
-      let mut cy = 0.0
-      for pos in positions {
-        cx = cx + pos.x
-        cy = cy + pos.y
-      }
-      let inv = 1.0 / node_count.to_double()
-      cx = cx * inv
-      cy = cy * inv
-      for i in 0..<node_count {
-        positions[i] = { x: positions[i].x - cx, y: positions[i].y - cy }
-      }
+      recenter_positions(positions)
     }
     temperature = temperature * 0.9
     iter = iter + 1
