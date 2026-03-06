@@ -348,16 +348,6 @@ priv struct FlatLabelAugmentationBuildInput {
 type XposFlatLabelAugmentation = @positioning.XFlatLabelAugmentationOutput
 
 ///|
-fn flat_label_edge_mid_label_dimensions(
-  edge : @cgraph.Edge,
-) -> (Double, Double)? {
-  match edge_mid_label_metrics(edge) {
-    Some(value) => Some((value.width, value.height))
-    None => None
-  }
-}
-
-///|
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
 /// label edges, and vnode cluster-key overlay only on vnode-xpos path.
 /// Do not change behavior without updating fixtures/tests.
@@ -391,7 +381,11 @@ fn build_flat_label_augmentation(
             x_groups,
             {
               edge_mid_label_metrics_for:
-                edge => flat_label_edge_mid_label_dimensions(edge),
+                (edge) =>
+                  match edge_mid_label_metrics(edge) {
+                    Some(value) => Some((value.width, value.height))
+                    None => None
+                  },
             },
           )
         },
