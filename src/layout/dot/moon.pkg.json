@@ -17,7 +17,6 @@
       "path": "moonbit-community/graphviz/layout/dot/shared",
       "alias": "dot_shared"
     },
-    "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/ordering_stage",
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/positioning",
@@ -55,6 +54,7 @@
       "path": "moonbit-community/graphviz/layout/dot/network_simplex",
       "alias": "network_simplex"
     },
+    "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/attrs",
     "moonbitlang/core/json",
     "moonbitlang/x/fs"

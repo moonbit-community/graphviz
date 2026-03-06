@@ -88,6 +88,12 @@ pub const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
 pub const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
 
 ///|
+pub const CL_BACK : Int = 10
+
+///|
+pub const VNODE_HEIGHT_PT : Double = 1.0
+
+///|
 pub fn default_node_width_in() -> Double {
   0.75
 }

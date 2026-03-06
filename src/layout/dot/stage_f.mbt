@@ -2,6 +2,8 @@
 /// Stage F finalization stage file: postprocess payload + pre/post-rotation
 /// finalize pipeline helpers.
 
+type RankData = @rank_assignment.RankData
+type RankHeights = @rank_assignment.RankHeights
 type PositionResult = @positioning.PositionResult
 
 ///|

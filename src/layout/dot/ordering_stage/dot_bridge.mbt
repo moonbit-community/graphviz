@@ -1,31 +1,23 @@
 ///|
-/// Stage B rank stage orchestration with rank-assignment kernels delegated to
-/// the rank_assignment subpackage.
+/// Dot-owned bridge logic for ordering_stage default dependencies plus Stage B
+/// rank/order pipeline assembly.
 
-///|
+type LayoutPrep = @shared.LayoutPrep
 type RankData = @rank_assignment.RankData
-
-///|
 type RankHeights = @rank_assignment.RankHeights
-type OrderingStageDeps = @ordering_stage.OrderingStageDeps
-type OrderingStageOutput = @ordering_stage.OrderingStageOutput
-type OrderingResult = @ordering.OrderingResult
-
-///|
-/// Graphviz parity: cluster metadata payload keeps rank and cluster snapshots
-/// grouped so Stage B clustered-ordering wiring remains explicit and stable.
-type ClusterMetadata = @ordering.DotClusterMetadata
 
 ///|
 /// Graphviz parity: rank stage payload keeps Stage A-prepared inputs grouped
 /// so Stage B wiring remains explicit and stable.
-priv struct DotRankStageInput {
+pub(all) struct RankStageInput {
   graph : @cgraph.Graph
   prep : LayoutPrep
 }
 
 ///|
-priv struct DotRankStageOutput {
+/// Graphviz parity: stage-B output keeps rank, cluster, and ordering artifacts
+/// grouped for downstream position/routing stages.
+pub(all) struct RankStageOutput {
   rank_data : RankData
   rank_heights : RankHeights
   cluster_meta : ClusterMetadata
@@ -46,9 +38,8 @@ fn edge_mid_label_metrics_for_rank_heights(
 }
 
 ///|
-/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
-/// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
-/// Do not change behavior without updating fixtures/tests.
+/// Graphviz parity: root-owned ordering deps keep label metrics and port-sample
+/// bridges explicit while the subpackage owns Stage C dispatch orchestration.
 fn build_ordering_stage_deps() -> OrderingStageDeps {
   {
     edge_mid_label_metrics_for: edge =>
@@ -75,12 +66,11 @@ fn build_ordering_stage_deps() -> OrderingStageDeps {
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_dot_rank_stage(
-  input : DotRankStageInput,
-) -> DotRankStageOutput {
+pub fn compute_dot_rank_stage(
+  input : RankStageInput,
+) -> RankStageOutput {
   let graph = input.graph
   let prep = input.prep
-  // Graphviz parity: rank-data creation remains first before downstream stage assembly.
   let rank_data =
     @rank_assignment.compute_rank_data(
       @rank_assignment.make_rank_data_input(
@@ -88,12 +78,10 @@ fn compute_dot_rank_stage(
         prep.nodes,
         prep.edges,
         prep.has_edge_labels,
-        CL_BACK,
+        @shared.CL_BACK,
         @label_metrics.edge_label_height_pt,
       ),
     )
-  // Graphviz parity: rank-height stage consumes computed ranks/groups
-  // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
     @rank_assignment.compute_rank_heights(
       @rank_assignment.make_rank_heights_input(
@@ -109,16 +97,13 @@ fn compute_dot_rank_stage(
         prep.nodesep_in,
         prep.ranksep_in,
         prep.has_edge_labels,
-        VNODE_HEIGHT_PT,
+        @shared.VNODE_HEIGHT_PT,
         edge_mid_label_metrics_for_rank_heights,
         @clustering.cluster_label_padding_for_layout,
       ),
     )
-  // Graphviz parity: ordering stage owns cluster-metadata preparation plus
-  // vnode ordering dispatch; the root stage only passes rank/order inputs and
-  // root-owned deps across the package boundary.
-  let ordering_stage_output : OrderingStageOutput =
-    @ordering_stage.compute_ordering_stage(
+  let ordering_stage_output =
+    compute_ordering_stage(
       {
         graph,
         nodes: prep.nodes,
@@ -140,9 +125,10 @@ fn compute_dot_rank_stage(
       },
       build_ordering_stage_deps(),
     )
-  let cluster_meta = ordering_stage_output.cluster_meta
-  let ordering = ordering_stage_output.ordering
-  // Graphviz parity: rank-stage result object keeps computed
-  // rank/cluster/order artifacts unchanged.
-  { rank_data, rank_heights, cluster_meta, ordering }
+  {
+    rank_data,
+    rank_heights,
+    cluster_meta: ordering_stage_output.cluster_meta,
+    ordering: ordering_stage_output.ordering,
+  }
 }

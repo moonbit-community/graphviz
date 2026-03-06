@@ -2,6 +2,11 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/port_bridge",
+    "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/rank_assignment",
+    "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/cgraph"
   ]
 }

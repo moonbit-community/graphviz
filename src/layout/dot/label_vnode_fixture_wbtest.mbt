@@ -171,7 +171,7 @@ fn compute_ranks_directed_with_clusters_for_tests(
     nodes,
     edges,
     has_edge_labels,
-    CL_BACK,
+    @dot_shared.CL_BACK,
   )
 }
 

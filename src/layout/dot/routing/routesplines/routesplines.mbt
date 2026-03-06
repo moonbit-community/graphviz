@@ -53,9 +53,6 @@ const ROUTE_FUDGE : Double = 4.0
 ///|
 const ROUTE_LABEL_PAD : Double = 10.0
 
-///| Keep in sync with layout_base.VNODE_HEIGHT_PT.
-const VNODE_HEIGHT_PT : Double = 1.0
-
 ///|
 const ROUTE_MIN_WIDTH : Double = 16.0
 
@@ -308,10 +305,10 @@ fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
 }
 
 ///|
-///| Graphviz parity: label vnodes are virtual nodes with label height (> VNODE_HEIGHT_PT).
+///| Graphviz parity: label vnodes are virtual nodes with label height (> @dot_shared.VNODE_HEIGHT_PT).
 fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   match vnode_sizes.get(name) {
-    Some(size) => size.height_pt > VNODE_HEIGHT_PT
+    Some(size) => size.height_pt > @dot_shared.VNODE_HEIGHT_PT
     None => false
   }
 }

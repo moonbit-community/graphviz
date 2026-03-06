@@ -28,8 +28,6 @@ fn default_ranksep_in() -> Double {
 }
 
 ///|
-const CL_BACK : Int = 10
-const VNODE_HEIGHT_PT : Double = 1.0
 
 ///|
 ///|
