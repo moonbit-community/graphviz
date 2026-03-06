@@ -1,11 +1,31 @@
 ///|
+type RankDir = @shared.RankDir
+type NodeSize = @shared.NodeSize
+type ClusterMetadata = @ordering.DotClusterMetadata
+type EdgePortSampleBundle = @ordering.EdgePortSampleBundle
+
+///|
 /// Stage C ordering stage file: contracts, runtime pipeline context, and
 /// clustered/non-clustered dispatch orchestration.
 
 ///|
+/// Graphviz parity: Stage C dependency payload keeps root-owned geometry and
+/// label-metric bridges explicit while the subpackage owns ordering dispatch.
+pub(all) struct OrderingStageDeps {
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
+  build_edge_port_sample_bundle : (
+    Array[@cgraph.Node],
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+    Map[String, NodeSize],
+  ) -> EdgePortSampleBundle
+}
+
+///|
 /// Graphviz parity: ordering stage payload keeps rank and order-context maps
 /// grouped so Stage C wiring stays explicit and stable.
-priv struct OrderingStageInput {
+pub(all) struct OrderingStageInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -53,6 +73,7 @@ priv struct OrderingPipelineContext {
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_runtime_context(
   input : OrderingStageInput,
+  deps : OrderingStageDeps,
 ) -> OrderingRuntimeContext {
   @ordering.build_ordering_runtime_context(
     {
@@ -68,12 +89,7 @@ fn build_ordering_runtime_context(
       rankdir: input.rankdir,
       intercluster_keys: input.cluster_meta.intercluster_keys,
       cluster_parents: input.cluster_meta.cluster_parents,
-      edge_mid_label_metrics_for:
-        (edge) =>
-          match edge_mid_label_metrics(edge) {
-            Some(value) => Some((value.width, value.height))
-            None => None
-          },
+      edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
     },
   )
 }
@@ -84,18 +100,16 @@ fn build_ordering_runtime_context(
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_edge_port_data(
   input : OrderingStageInput,
+  deps : OrderingStageDeps,
 ) -> @ordering.OrderingEdgePortData {
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      @positioning.build_edge_port_sample_bundle(
+      (deps.build_edge_port_sample_bundle)(
         input.nodes,
         edges,
         edge_tail,
         edge_head,
         input.order_sizes,
-        port_offsets_for_nodes,
-        edge_port_offset,
-        edge_port_order,
       )
   let edge_port_samples =
     build_port_sample_bundle(
@@ -178,9 +192,10 @@ fn build_ordering_reorder_setup(
 /// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
 fn build_ordering_pipeline_context(
   input : OrderingStageInput,
+  deps : OrderingStageDeps,
 ) -> OrderingPipelineContext {
-  let runtime_context = build_ordering_runtime_context(input)
-  let edge_port_data = build_ordering_edge_port_data(input)
+  let runtime_context = build_ordering_runtime_context(input, deps)
+  let edge_port_data = build_ordering_edge_port_data(input, deps)
   let reorder_setup =
     build_ordering_reorder_setup(input, runtime_context, edge_port_data)
   { runtime_context, edge_port_data, reorder_setup }
@@ -301,7 +316,7 @@ fn build_clustered_pre_root(
       order_sizes: dispatch_context.order_sizes,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
       // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-      skeleton_size: @dot_shared.vnode_size_from_widths(1.0, 1.0),
+      skeleton_size: @shared.vnode_size_from_widths(1.0, 1.0),
       node_order: dispatch_context.node_order,
       real_nodes: runtime_context.real_nodes,
       has_clusters: dispatch_context.cluster_meta.has_clusters,
@@ -360,7 +375,7 @@ fn run_clustered_root_phase(
     )
   @ordering.run_clustered_root_phase_stage_from_sources(
     root_phase_sources,
-    @ordering.build_root_snapshot_capture_callback(@dot_shared.edge_xpenalty),
+    @ordering.build_root_snapshot_capture_callback(@shared.edge_xpenalty),
   )
 }
 
@@ -420,7 +435,7 @@ fn run_clustered_finalize_phase(
     @ordering.run_clustered_finalize_stage_from_root_phase_sources(
       finalize_sources,
       @ordering.build_remincross_snapshot_capture_callback(
-        @dot_shared.edge_xpenalty,
+        @shared.edge_xpenalty,
       ),
       @ordering.run_remincross_cleanup_reorder,
     )
@@ -498,11 +513,12 @@ fn run_ordering_dispatch(
 ///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn compute_ordering_and_vnodes(
+pub fn compute_ordering_and_vnodes(
   input : OrderingStageInput,
+  deps : OrderingStageDeps,
 ) -> OrderingResult {
   let pipeline_context =
-    build_ordering_pipeline_context(input)
+    build_ordering_pipeline_context(input, deps)
   let dispatch_context =
     build_clustered_dispatch_context(input, pipeline_context)
   let dispatch_output =

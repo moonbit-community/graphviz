@@ -7,6 +7,8 @@ type RankData = @rank_assignment.RankData
 
 ///|
 type RankHeights = @rank_assignment.RankHeights
+type OrderingStageDeps = @ordering_stage.OrderingStageDeps
+type OrderingResult = @ordering.OrderingResult
 
 ///|
 /// Graphviz parity: cluster metadata payload keeps rank and cluster snapshots
@@ -39,6 +41,32 @@ fn edge_mid_label_metrics_for_rank_heights(
     Some(metrics) =>
       Some(@rank_assignment.make_edge_mid_label_metrics(metrics.width, metrics.height))
     None => None
+  }
+}
+
+///|
+/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
+/// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_stage_deps() -> OrderingStageDeps {
+  {
+    edge_mid_label_metrics_for: edge =>
+      match edge_mid_label_metrics(edge) {
+        Some(value) => Some((value.width, value.height))
+        None => None
+      },
+    build_edge_port_sample_bundle:
+      (nodes, edges, edge_tail, edge_head, order_sizes) =>
+        @positioning.build_edge_port_sample_bundle(
+          nodes,
+          edges,
+          edge_tail,
+          edge_head,
+          order_sizes,
+          port_offsets_for_nodes,
+          edge_port_offset,
+          edge_port_order,
+        ),
   }
 }
 
@@ -99,12 +127,12 @@ fn compute_dot_rank_stage(
         edge_tail: rank_data.edge_tail,
         edge_head: rank_data.edge_head,
         graphviz_flip: prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
-      },
+      }
     )
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
   let ordering =
-    compute_ordering_and_vnodes(
+    @ordering_stage.compute_ordering_and_vnodes(
       {
         graph,
         nodes: prep.nodes,
@@ -125,6 +153,7 @@ fn compute_dot_rank_stage(
         port_order_positions: prep.port_order_positions,
         port_order_contrib: prep.port_order_contrib,
       },
+      build_ordering_stage_deps(),
     )
   // Graphviz parity: rank-stage result object keeps computed
   // rank/cluster/order artifacts unchanged.
