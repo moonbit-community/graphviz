@@ -2,80 +2,7 @@
 /// Stage C runtime/pipeline context builders used by dispatch orchestration.
 
 ///|
-priv struct OrderingRuntimeContext {
-  real_nodes : Map[String, Bool]
-  edge_cluster_keys : Map[String, String]
-  vnode_info : @routing.EdgeVnodeInfo
-  port_edge_nodes : Map[String, Bool]
-  local_cluster_order : Map[String, Int]
-  rank_same_constraints : Map[String, Bool]
-}
-
-/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
-/// in the same position as Graphviz ordering setup, even when only used for
-/// parity diagnostics.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_context(
-  input : OrderingStageInput,
-) -> OrderingRuntimeContext {
-  let runtime_core =
-    @ordering.build_ordering_runtime_core(
-      {
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        intercluster_keys: input.cluster_meta.intercluster_keys,
-        ranks: input.ranks,
-        node_order: input.node_order,
-      },
-    )
-  let vnode_info = @ordering.build_edge_vnodes(
-    input.nodes,
-    input.edges,
-    input.edge_tail,
-    input.edge_head,
-    input.edge_out_order,
-    input.ranks,
-    input.nodesep_pt,
-    input.rankdir,
-    runtime_core.existing_names,
-    runtime_core.edge_cluster_keys,
-    input.cluster_meta.cluster_parents,
-    {
-      edge_mid_label_metrics_for:
-        edge =>
-          match edge_mid_label_metrics(edge) {
-            Some(value) => Some((value.width, value.height))
-            None => None
-          },
-    },
-  )
-  // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
-  let rank_same_constraints : Map[String, Bool] = Map::new()
-  let runtime_context : OrderingRuntimeContext =
-    {
-      real_nodes: runtime_core.real_nodes,
-      edge_cluster_keys: runtime_core.edge_cluster_keys,
-      vnode_info,
-      port_edge_nodes: runtime_core.port_edge_nodes,
-      local_cluster_order: runtime_core.local_cluster_order,
-      rank_same_constraints,
-    }
-  // Graphviz parity: setup probes vnode tail constraints in setup order even
-  // when the probe output is only used for parity diagnostics.
-  let _ =
-    if runtime_context.vnode_info.vnode_ranks.length() > 0 {
-      @ordering.build_vnode_tail_constraints(
-        runtime_context.vnode_info.vnodes_by_rank,
-        input.edge_tail,
-      )
-    } else {
-      Map::new()
-    }
-  runtime_context
-}
+type OrderingRuntimeContext = @ordering.OrderingRuntimeContext
 
 ///|
 /// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
@@ -93,7 +20,28 @@ fn build_ordering_pipeline_context(
   input : OrderingStageInput,
 ) -> OrderingPipelineContext {
   let runtime_context =
-    build_ordering_context(input)
+    @ordering.build_ordering_runtime_context(
+      {
+        graph: input.graph,
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        edge_out_order: input.edge_out_order,
+        ranks: input.ranks,
+        node_order: input.node_order,
+        nodesep_pt: input.nodesep_pt,
+        rankdir: input.rankdir,
+        intercluster_keys: input.cluster_meta.intercluster_keys,
+        cluster_parents: input.cluster_meta.cluster_parents,
+        edge_mid_label_metrics_for:
+          edge =>
+            match edge_mid_label_metrics(edge) {
+              Some(value) => Some((value.width, value.height))
+              None => None
+            },
+      },
+    )
   let edge_port_samples =
     @positioning.build_edge_port_sample_bundle(
       input.nodes,
