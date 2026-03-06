@@ -240,6 +240,32 @@ fn build_pre_rotation_layout_data(
 }
 
 ///|
+/// Graphviz parity: postprocess rankdir transform keeps TB passthrough,
+/// non-TB rotation, and LR cluster mirror policy in fixed order.
+/// Do not change behavior without updating fixtures/tests.
+fn rotate_and_mirror_final_layout(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+  pre_rotation : PreRotationLayoutData,
+) -> DotLayoutGraph {
+  let rotated = if rankdir == RankDir::TB {
+    pre_rotation.layout
+  } else {
+    rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
+  }
+  apply_cluster_lr_mirror_after_rotation(
+    {
+      graph,
+      rankdir,
+      rotated,
+      pre_rotation_bbox: pre_rotation.layout.bbox,
+      rank_bbox: pre_rotation.rank_bbox,
+      subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: postprocess pipeline aligned to refs/graphviz/lib/common/postproc.c
 /// (gv_postprocess) + dotgen/position.c (cluster/label spacing).
 /// Do not change behavior without updating fixtures/tests.
@@ -249,22 +275,8 @@ fn finalize_layout_graph(
   let graph = input.graph
   let rankdir = input.rankdir
   let pre_rotation = build_pre_rotation_layout_data(input)
-  let rotated = if rankdir == RankDir::TB {
-    pre_rotation.layout
-  } else {
-    rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
-  }
   let rotated =
-    apply_cluster_lr_mirror_after_rotation(
-      {
-        graph,
-        rankdir,
-        rotated,
-        pre_rotation_bbox: pre_rotation.layout.bbox,
-        rank_bbox: pre_rotation.rank_bbox,
-        subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
-      },
-    )
+    rotate_and_mirror_final_layout(graph, rankdir, pre_rotation)
   finalize_root_coordinates(
     graph,
     rotated,
