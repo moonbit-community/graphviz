@@ -444,6 +444,23 @@ fn run_clustered_finalize_phase(
 }
 
 ///|
+/// Graphviz parity: clustered ordering dispatch keeps pre-root/root/finalize
+/// stage sequencing unchanged while delegating each phase to dedicated helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_dispatch(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let pre_root_stage = build_clustered_pre_root(dispatch_context)
+  let root_phase_output =
+    run_clustered_root_phase(dispatch_context, pre_root_stage)
+  run_clustered_finalize_phase(
+    dispatch_context,
+    pre_root_stage,
+    root_phase_output,
+  )
+}
+
+///|
 /// Graphviz parity: ordering dispatch context captures stage-C clustered/non-
 /// clustered inputs without reordering fields before dispatch execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -484,16 +501,7 @@ fn run_ordering_dispatch(
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
   if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
-    // Graphviz parity: clustered ordering path keeps build_ranks/mincross
-    // phase boundaries unchanged while delegating each phase to base helpers.
-    let pre_root_stage = build_clustered_pre_root(dispatch_context)
-    let root_phase_output =
-      run_clustered_root_phase(dispatch_context, pre_root_stage)
-    run_clustered_finalize_phase(
-      dispatch_context,
-      pre_root_stage,
-      root_phase_output,
-    )
+    run_clustered_ordering_dispatch(dispatch_context)
   } else {
     run_nonclustered_ordering_dispatch(dispatch_context)
   }
