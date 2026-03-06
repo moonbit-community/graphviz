@@ -326,14 +326,14 @@ fn build_node_port_order(
   size : NodeSize,
   rankdir : RankDir,
   record_orientation : RecordOrientation,
-  has_html : Bool,
 ) -> Map[String, Double] {
   let raw_ports =
-    if has_html {
-      html_ports(node, { x: 0.0, y: 0.0 }, size)
-    } else {
-      record_ports(node, { x: 0.0, y: 0.0 }, size, record_orientation)
-    }
+    raw_label_ports_for_node(
+      node,
+      { x: 0.0, y: 0.0 },
+      size,
+      record_orientation,
+    )
   let order_map : Map[String, Double] = Map::new()
   for port_name, port in raw_ports {
     let offset = layout_port_offset(port.center, rankdir)
@@ -362,7 +362,6 @@ fn build_record_port_order_map(
           size,
           input.rankdir,
           input.record_orientation,
-          has_html,
         )
       record_port_order[name] = order_map
     }

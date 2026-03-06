@@ -634,23 +634,6 @@ fn build_position_output_maps(
 ///|
 /// X-position port geometry, offset, and ordering helpers.
 
-fn raw_label_ports_for_node(
-  node : @cgraph.Node,
-  origin : @geom.Point,
-  base_size : NodeSize,
-  record_orientation : RecordOrientation,
-) -> Map[String, RecordPort] {
-  let label = label_text(node)
-  let has_html = @html_label.is_html_label_text(label)
-  if has_html {
-    html_ports(node, origin, base_size)
-  } else if is_record_shape(node) {
-    record_ports(node, origin, base_size, record_orientation)
-  } else {
-    Map::new()
-  }
-}
-
 ///|
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
