@@ -260,6 +260,42 @@ pub fn add_same_rank_constraint_edges_to_flat_constraints(
 }
 
 ///|
+/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
+/// plus same-rank constrained edges before clustered reorder dispatch.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_cluster_flat_constraints(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> FlatConstraintsOutput {
+  let flat_constraints_output =
+    build_flat_constraints(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+    )
+  let flat_constraints = flat_constraints_output.flat_constraints
+  add_same_rank_constraint_edges_to_flat_constraints(
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    flat_constraints,
+  )
+  {
+    flat_constraints,
+    ordering_set: flat_constraints_output.ordering_set,
+  }
+}
+
+///|
 pub(all) struct EdgeIndexData {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]

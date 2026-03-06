@@ -404,45 +404,6 @@ priv struct ClusterMetadataInput {
 }
 
 ///|
-priv struct FlatConstraintMetadata {
-  flat_constraints : Map[String, Bool]
-  ordering_set : Bool
-}
-
-///|
-/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
-/// plus same-rank edge constraints before clustered reorder dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_flat_constraint_metadata(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  cluster_keys : Map[String, String],
-) -> FlatConstraintMetadata {
-  let flat_constraints_output = @ordering.build_flat_constraints(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    cluster_keys,
-  )
-  let flat_constraints = flat_constraints_output.flat_constraints
-  let ordering_set = flat_constraints_output.ordering_set
-  @ordering.add_same_rank_constraint_edges_to_flat_constraints(
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    flat_constraints,
-  )
-  { flat_constraints, ordering_set }
-}
-
-///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -493,7 +454,7 @@ fn compute_cluster_metadata(
   let rank_same_metadata = @ordering.collect_rank_same_metadata(graph)
   let rank_same_groups = rank_same_metadata.rank_same_groups
   let rank_same_order = rank_same_metadata.rank_same_order
-  let flat_constraint_metadata = build_cluster_flat_constraint_metadata(
+  let flat_constraint_metadata = @ordering.build_cluster_flat_constraints(
     graph,
     nodes,
     edges,
