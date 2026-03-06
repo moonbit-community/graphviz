@@ -11,6 +11,27 @@ const CLUSTER_COMPACT_WEIGHT : Int = 128
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
 ///|
+fn cluster_label_borders_for_xpos_constraints(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+) -> (Double, Double) {
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  if !flip {
+    return (0.0, 0.0)
+  }
+  match graph_label_metrics(graph) {
+    Some(metrics) => {
+      let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
+      match graph_label_loc(graph) {
+        LabelLoc::Top => (0.0, border)
+        LabelLoc::Bottom => (border, 0.0)
+      }
+    }
+    None => (0.0, 0.0)
+  }
+}
+
+///|
 /// Graphviz parity: xpos payload keeps rank/group/cluster snapshots grouped so
 /// position.c/cluster.c constraint wiring remains explicit and stable.
 type XPositionsInput = @positioning.XPositionSolveInput
@@ -23,7 +44,7 @@ fn compute_x_positions(
 ) -> Map[String, Double] {
   let graph = input.graph
   let prepared =
-    prepare_xpos_constraint_inputs(
+    @positioning.prepare_xpos_constraint_inputs(
       graph,
       input.nodes,
       input.edges,
@@ -37,6 +58,11 @@ fn compute_x_positions(
       input.edge_vnodes,
       input.extra_nodes,
       input.flat_label_edges,
+      {
+        cluster_label_borders_for: cluster_label_borders_for_xpos_constraints,
+        cluster_label_width_with_pad_for: cluster_label_width_with_pad_for_layout,
+        cluster_compact_weight: CLUSTER_COMPACT_WEIGHT,
+      },
     )
   x_positions_from_simplex(
     {
