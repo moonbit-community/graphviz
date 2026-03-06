@@ -417,12 +417,6 @@ priv struct FlatConstraintMetadata {
 }
 
 ///|
-priv struct ClusterMembershipMaps {
-  cluster_keys : Map[String, String]
-  intercluster_keys : Map[String, String]
-}
-
-///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -555,23 +549,6 @@ fn collect_cluster_rank_bounds(
 }
 
 ///|
-/// Graphviz parity: cluster membership maps mirror per-node cluster ownership
-/// used across clustered ordering and compound-edge preprocessing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_membership_maps(
-  nodes : Array[@cgraph.Node],
-) -> ClusterMembershipMaps {
-  let cluster_keys : Map[String, String] = Map::new()
-  let intercluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    cluster_keys[name] = @clustering.node_cluster_key(node)
-    intercluster_keys[name] = @clustering.node_local_cluster_key(node)
-  }
-  { cluster_keys, intercluster_keys }
-}
-
-///|
 /// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
 /// with optional graphviz_flip reversal before clustered reorder setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -647,7 +624,7 @@ fn compute_cluster_metadata(
   let edge_tail = input.edge_tail
   let edge_head = input.edge_head
   let has_clusters = @dot_shared.graph_has_cluster(graph)
-  let cluster_membership = build_cluster_membership_maps(nodes)
+  let cluster_membership = @clustering.build_cluster_membership_maps(nodes)
   let cluster_keys = cluster_membership.cluster_keys
   let intercluster_keys = cluster_membership.intercluster_keys
   seed_cluster_node_order(nodes, cluster_keys, input.graphviz_flip, node_order)

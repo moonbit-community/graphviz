@@ -164,6 +164,29 @@ pub fn node_local_cluster_key(node : @cgraph.Node) -> String {
 }
 
 ///|
+pub(all) struct ClusterMembershipMaps {
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+}
+
+///|
+/// Graphviz parity: cluster membership maps mirror per-node outer/local
+/// cluster ownership used across clustered ordering and compound-edge paths.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_cluster_membership_maps(
+  nodes : Array[@cgraph.Node],
+) -> ClusterMembershipMaps {
+  let cluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    cluster_keys[name] = node_cluster_key(node)
+    intercluster_keys[name] = node_local_cluster_key(node)
+  }
+  { cluster_keys, intercluster_keys }
+}
+
+///|
 pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
