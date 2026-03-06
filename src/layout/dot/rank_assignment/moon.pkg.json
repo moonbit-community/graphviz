@@ -1,6 +1,9 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/network_simplex",
     "moonbit-community/graphviz/cgraph"
   ]

@@ -1,353 +1,17 @@
 ///|
-/// Stage B stage-local type definitions shared by rank assignment and
-/// rank-height assembly.
+/// Stage B rank stage orchestration with rank-assignment kernels delegated to
+/// the rank_assignment subpackage.
 
 ///|
-/// Graphviz parity: rank-data payload keeps stage-B rank inputs grouped so
-/// edge direction/orientation wiring remains explicit and stable.
-priv struct RankDataInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  has_edge_labels : Bool
-}
+type RankData = @rank_assignment.RankData
 
 ///|
-priv struct RankData {
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
-  self_edge_labels : Map[String, Double]
-}
-
-///|
-priv struct RankHeights {
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  nodesep_pt : Double
-  ranksep_pt : Double
-}
+type RankHeights = @rank_assignment.RankHeights
 
 ///|
 /// Graphviz parity: cluster metadata payload keeps rank and cluster snapshots
 /// grouped so Stage B clustered-ordering wiring remains explicit and stable.
 type ClusterMetadata = @ordering.DotClusterMetadata
-
-///|
-/// Stage B rank-data scaffolding helpers for layered ordering preparation.
-
-///|
-/// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_rank_data(
-  input : RankDataInput,
-) -> RankData {
-  let graph = input.graph
-  let nodes = input.nodes
-  let edges = input.edges
-  // Graphviz parity: edge direction/order comes from acyclic.c for both
-  // directed and undirected inputs (dot rank preprocessing orients edges first).
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let acyclic_directions =
-    @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
-  let edge_tail = acyclic_directions.tail
-  let edge_head = acyclic_directions.head
-  let edge_reversed = acyclic_directions.reversed
-  let out_edges = acyclic_directions.out_edges
-  for i in 0..<nodes.length() {
-    let name = nodes[i].name()
-    edge_out_order[name] = out_edges[i].copy()
-  }
-  let ranks = @rank_assignment.compute_ranks_directed(
-    graph,
-    nodes,
-    edges,
-    input.has_edge_labels,
-    edge_tail,
-    edge_head,
-    CL_BACK,
-  )
-  let groups = @ordering.build_rank_groups(nodes, ranks)
-  let rank_keys : Array[Int] = []
-  for key, _ in groups {
-    rank_keys.push(key)
-  }
-  rank_keys.sort()
-  // Graphviz parity: rank sweep iterates the closed min..max rank interval
-  // from sorted rank keys, including missing intermediate ranks.
-  let all_ranks =
-    @positioning.build_all_ranks_with_overlays(
-      rank_keys,
-      [],
-    )
-  let self_edge_labels =
-    @positioning.self_edge_label_half_heights(
-      edges,
-      edge => edge_label_height_pt(edge),
-    )
-  {
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    rank_keys,
-    all_ranks,
-    self_edge_labels,
-  }
-}
-///|
-/// Stage B rank-height assembly helpers for layered spacing preparation.
-
-///|
-/// Graphviz parity: rank-height payload keeps rank and spacing snapshots
-/// grouped so Stage B height wiring remains explicit and stable.
-priv struct RankHeightsInput {
-  graph : @cgraph.Graph
-  edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
-  sizes : Map[String, NodeSize]
-  self_edge_labels : Map[String, Double]
-  rankdir : RankDir
-  nodesep_in : Double
-  ranksep_in : Double
-  has_edge_labels : Bool
-}
-
-///|
-/// Graphviz parity: long-edge label midpoint contributes half height to the
-/// midpoint rank slot before rank height normalization.
-/// Do not change behavior without updating fixtures/tests.
-fn update_rank_pht_for_label(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
-  rankdir : RankDir,
-) -> Unit {
-  if !@dot_shared.edge_has_label(edge) {
-    return
-  }
-  let span = match @dot_shared.edge_rank_span(edge, ranks) {
-    Some(value) => value
-    None => return
-  }
-  if span.max_rank - span.min_rank <= 1 {
-    return
-  }
-  let label_rank = (span.min_rank + span.max_rank) / 2
-  let half_height = match edge_mid_label_metrics(edge) {
-    Some(metrics) =>
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        metrics.width / 2.0
-      } else {
-        metrics.height / 2.0
-      }
-    None => 0.0
-  }
-  let current = match rank_pht.get(label_rank) {
-    Some(value) => value
-    None => 0.0
-  }
-  if half_height > current {
-    rank_pht[label_rank] = half_height
-  }
-}
-
-///|
-priv struct RankHeightCopies {
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-}
-
-///|
-priv struct BaseRankHalfHeights {
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-}
-
-///|
-fn init_rank_half_heights(
-  all_ranks : Array[Int],
-) -> Map[Int, Double] {
-  let rank_pht : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
-    rank_pht[rank] = 0.0
-  }
-  rank_pht
-}
-
-///|
-fn apply_node_rank_half_heights(
-  rank_pht : Map[Int, Double],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-) -> Unit {
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let mut max_half = 0.0
-    for name in names {
-      let half_height =
-        @positioning.node_half_height_pt(name, sizes, self_edge_labels)
-      if half_height > max_half {
-        max_half = half_height
-      }
-    }
-    rank_pht[rank] = max_half
-  }
-}
-
-///|
-fn apply_edge_label_rank_half_heights(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
-  rankdir : RankDir,
-) -> Unit {
-  for edge in edges {
-    update_rank_pht_for_label(edge, ranks, rank_pht, rankdir)
-  }
-}
-
-///|
-fn apply_vnode_rank_half_heights(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
-) -> Unit {
-  // Graphviz parity: long edges reserve vnode half-height across
-  // intermediate ranks before cluster rank height adjustments.
-  let vnode_half_height = VNODE_HEIGHT_PT / 2.0
-  for edge in edges {
-    let span = match @dot_shared.edge_rank_span(edge, ranks) {
-      Some(value) => value
-      None => continue
-    }
-    if span.max_rank - span.min_rank <= 1 {
-      continue
-    }
-    for rank in (span.min_rank + 1)..<span.max_rank {
-      let current = match rank_pht.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if vnode_half_height > current {
-        rank_pht[rank] = vnode_half_height
-      }
-    }
-  }
-}
-
-///|
-fn clone_rank_half_heights(
-  all_ranks : Array[Int],
-  rank_pht : Map[Int, Double],
-) -> RankHeightCopies {
-  // Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
-  // before cluster-specific adjustments.
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
-    let half_height = match rank_pht.get(rank) {
-      Some(value) => value
-      None => 0.0
-    }
-    rank_ht1[rank] = half_height
-    rank_ht2[rank] = half_height
-  }
-  { rank_ht1, rank_ht2 }
-}
-
-///|
-/// Graphviz parity: base rank half-heights are computed before cluster-specific
-/// rank height adjustment in the same node->edge-label->vnode order as rank.c.
-/// Do not change behavior without updating fixtures/tests.
-fn build_base_rank_half_heights(
-  input : RankHeightsInput,
-) -> BaseRankHalfHeights {
-  let rank_pht = init_rank_half_heights(input.all_ranks)
-  apply_node_rank_half_heights(
-    rank_pht,
-    input.rank_keys,
-    input.groups,
-    input.sizes,
-    input.self_edge_labels,
-  )
-  if input.has_edge_labels {
-    apply_edge_label_rank_half_heights(
-      input.edges,
-      input.ranks,
-      rank_pht,
-      input.rankdir,
-    )
-  }
-  apply_vnode_rank_half_heights(input.edges, input.ranks, rank_pht)
-  let rank_height_copies = clone_rank_half_heights(input.all_ranks, rank_pht)
-  {
-    rank_pht,
-    rank_ht1: rank_height_copies.rank_ht1,
-    rank_ht2: rank_height_copies.rank_ht2,
-  }
-}
-
-///|
-/// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_rank_heights(
-  input : RankHeightsInput,
-) -> RankHeights {
-  let graph = input.graph
-  let ranks = input.ranks
-  let sizes = input.sizes
-  let self_edge_labels = input.self_edge_labels
-  let base_half_heights = build_base_rank_half_heights(input)
-  let rank_pht = base_half_heights.rank_pht
-  let rank_ht1 = base_half_heights.rank_ht1
-  let rank_ht2 = base_half_heights.rank_ht2
-  let _ = @clustering.apply_cluster_rank_heights(
-    {
-      graph,
-      ranks,
-      sizes,
-      self_edge_labels,
-      rank_ht1,
-      rank_ht2,
-      rankdir: input.rankdir,
-      cluster_margin_pt_for: @positioning.cluster_margin_pt,
-      cluster_label_padding_for: cluster_label_padding_for_layout,
-      node_half_height_pt_for: @positioning.node_half_height_pt,
-    },
-  )
-  let nodesep_pt = @dot_shared.round_int(input.nodesep_in * 72.0).to_double()
-  let mut ranksep_pt_int = @dot_shared.round_int(input.ranksep_in * 72.0)
-  if input.has_edge_labels {
-    ranksep_pt_int = (ranksep_pt_int + 1) / 2
-  }
-  let ranksep_pt = ranksep_pt_int.to_double()
-  { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
-}
-///|
-/// Stage B cluster metadata preprocessing and rank-same helper flow for
-/// clustered ordering inputs.
-
-///|
-/// Stage B rank stage file: orchestrator plus rank/height preprocessing
-/// helpers with cluster metadata assembly delegated to ordering package.
 
 ///|
 /// Graphviz parity: rank stage payload keeps Stage A-prepared inputs grouped
@@ -366,6 +30,19 @@ priv struct DotRankStageOutput {
 }
 
 ///|
+/// Graphviz parity: stage-B rank height computation uses the same edge label
+/// width/height inputs as node geometry to preserve midpoint label spacing.
+fn edge_mid_label_metrics_for_rank_heights(
+  edge : @cgraph.Edge,
+) -> @rank_assignment.EdgeMidLabelMetrics? {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) =>
+      Some(@rank_assignment.make_edge_mid_label_metrics(metrics.width, metrics.height))
+    None => None
+  }
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
@@ -376,32 +53,37 @@ fn compute_dot_rank_stage(
   let prep = input.prep
   // Graphviz parity: rank-data creation remains first before downstream stage assembly.
   let rank_data =
-    compute_rank_data(
-      {
+    @rank_assignment.compute_rank_data(
+      @rank_assignment.make_rank_data_input(
         graph,
-        nodes: prep.nodes,
-        edges: prep.edges,
-        has_edge_labels: prep.has_edge_labels,
-      },
+        prep.nodes,
+        prep.edges,
+        prep.has_edge_labels,
+        CL_BACK,
+        edge_label_height_pt,
+      ),
     )
   // Graphviz parity: rank-height stage consumes computed ranks/groups
   // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
-    compute_rank_heights(
-      {
+    @rank_assignment.compute_rank_heights(
+      @rank_assignment.make_rank_heights_input(
         graph,
-        edges: prep.edges,
-        ranks: rank_data.ranks,
-        groups: rank_data.groups,
-        rank_keys: rank_data.rank_keys,
-        all_ranks: rank_data.all_ranks,
-        sizes: prep.sizes,
-        self_edge_labels: rank_data.self_edge_labels,
-        rankdir: prep.rankdir,
-        nodesep_in: prep.nodesep_in,
-        ranksep_in: prep.ranksep_in,
-        has_edge_labels: prep.has_edge_labels,
-      },
+        prep.edges,
+        rank_data.ranks,
+        rank_data.groups,
+        rank_data.rank_keys,
+        rank_data.all_ranks,
+        prep.sizes,
+        rank_data.self_edge_labels,
+        prep.rankdir,
+        prep.nodesep_in,
+        prep.ranksep_in,
+        prep.has_edge_labels,
+        VNODE_HEIGHT_PT,
+        edge_mid_label_metrics_for_rank_heights,
+        cluster_label_padding_for_layout,
+      ),
     )
   // Graphviz parity: cluster metadata in rank/order stage uses
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
