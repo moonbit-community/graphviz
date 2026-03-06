@@ -623,21 +623,14 @@ fn seed_cluster_node_order(
   graphviz_flip : Bool,
   node_order : Map[String, Int],
 ) -> Unit {
-  let creation_order : Map[String, Int] = Map::new()
-  for i, node in nodes {
-    creation_order[node.name()] = i
-  }
   let total_nodes = nodes.length()
-  for node in nodes {
+  for i, node in nodes {
     let name = node.name()
     let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
-    let base_order = match creation_order.get(name) {
-      Some(value) => value
-      None => 0
-    }
+    let base_order = i
     let order_value =
       if graphviz_flip {
         total_nodes - 1 - base_order
