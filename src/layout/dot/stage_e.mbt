@@ -723,16 +723,6 @@ fn routing_spline_mode(splines : SplinesMode) -> Int {
 }
 
 ///|
-fn route_record_border_adjust(node : @cgraph.Node) -> Double {
-  if is_record_shape(node) &&
-    !@html_label.is_html_label_text(label_text(node)) {
-    @dot_shared.RECORD_BORDER_PT
-  } else {
-    0.0
-  }
-}
-
-///|
 fn build_route_base_deps_for_dot(
   record_orientation : RecordOrientation,
   routing_label_ports_map : Map[String, Map[String, RecordPort]],
@@ -821,7 +811,14 @@ fn build_route_base_deps_for_dot(
       (node_name, port) =>
         port_is_label_port(node_name, port, routing_label_ports_raw),
     is_record_shape,
-    record_border_adjust: node => route_record_border_adjust(node),
+    record_border_adjust:
+      (node) =>
+        if is_record_shape(node) &&
+          !@html_label.is_html_label_text(label_text(node)) {
+          @dot_shared.RECORD_BORDER_PT
+        } else {
+          0.0
+        },
     dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
     port_side_mask_from_anchor,
     port_side_for_edge:
@@ -858,26 +855,19 @@ fn build_routing_callbacks_for_dot(
 }
 
 ///|
-fn edge_label_rank_for_routing(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  mid_label_width_pt : Double,
-) -> (Int, Int)? {
-  match edge_label_rank_info(edge, ranks) {
-    Some(info) =>
-      if mid_label_width_pt > 0.0 {
-        Some((info.label_rank, info.span))
-      } else {
-        None
-      }
-    None => None
-  }
-}
-
-///|
 fn build_edge_layout_deps_for_dot() -> @routing.EdgeLayoutDeps {
   {
-    edge_label_rank_for_routing_fn: edge_label_rank_for_routing,
+    edge_label_rank_for_routing_fn:
+      (edge, ranks, mid_label_width_pt) =>
+        match edge_label_rank_info(edge, ranks) {
+          Some(info) =>
+            if mid_label_width_pt > 0.0 {
+              Some((info.label_rank, info.span))
+            } else {
+              None
+            }
+          None => None
+        },
     edge_label_rank_y_fn: edge_label_rank_y,
     edge_label_rank_x_fn: (edge, label_rank, vnode_info, vnode_positions) =>
       edge_label_rank_x(
