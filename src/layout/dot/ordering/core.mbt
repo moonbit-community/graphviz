@@ -89,6 +89,25 @@ pub fn collect_rank_same_order(
 }
 
 ///|
+pub(all) struct RankSameMetadata {
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: rank=same group/order metadata is collected from graph
+/// attributes before ordering setup and flat-constraint wiring.
+/// Do not change behavior without updating fixtures/tests.
+pub fn collect_rank_same_metadata(
+  graph : @cgraph.Graph,
+) -> RankSameMetadata {
+  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map::new()
+  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  { rank_same_groups, rank_same_order }
+}
+
+///|
 fn position_key(
   name : String,
   desired : Map[String, Double],

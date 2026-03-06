@@ -411,12 +411,6 @@ priv struct ClusterRankBounds {
 }
 
 ///|
-priv struct RankSameMetadata {
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-}
-
-///|
 priv struct ClusterTraversalMetadata {
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
@@ -612,19 +606,6 @@ fn seed_cluster_node_order(
 }
 
 ///|
-/// Graphviz parity: rank=same group/order metadata is collected once from graph
-/// attributes before clustered reorder and flat-constraint wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_rank_same_metadata(
-  graph : @cgraph.Graph,
-) -> RankSameMetadata {
-  let rank_same_groups : Map[String, Int] = Map::new()
-  let rank_same_order : Map[String, Int] = Map::new()
-  let _ = @ordering.collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
-  { rank_same_groups, rank_same_order }
-}
-
-///|
 /// Graphviz parity: cluster order traversal and parent mapping are collected
 /// before clustered ordering stages with Graphviz traversal order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -708,7 +689,7 @@ fn compute_cluster_metadata(
     cluster_first_order,
     node_order,
   )
-  let rank_same_metadata = collect_rank_same_metadata(graph)
+  let rank_same_metadata = @ordering.collect_rank_same_metadata(graph)
   let rank_same_groups = rank_same_metadata.rank_same_groups
   let rank_same_order = rank_same_metadata.rank_same_order
   let flat_constraint_metadata = build_cluster_flat_constraint_metadata(
