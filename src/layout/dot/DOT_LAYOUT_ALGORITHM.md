@@ -393,29 +393,11 @@ Main files:
 
 - `src/layout/dot/stage_e.mbt`
 - `src/layout/dot/routing/*`
-- `src/layout/dot/routing_render_layout.mbt`
-- `src/layout/dot/routing_self_edge.mbt`
-- `src/layout/dot/routing_sameport.mbt`
-- `src/layout/dot/routing/flat_adjacent.mbt`
-- `src/layout/dot/routing/self_edge_grouping.mbt`
-- `src/layout/dot/routing/parallel_selection.mbt`
-- `src/layout/dot/routing/parallel_remap.mbt`
-- `src/layout/dot/routing/parallel_reuse.mbt`
-- `src/layout/dot/routing/output_ids.mbt`
-- `src/layout/dot/routing/base_cache.mbt`
-- `src/layout/dot/routing/route_prepass.mbt`
-- `src/layout/dot/routing/self_edge_cache.mbt`
-- `src/layout/dot/routing/edge_order.mbt`
-- `src/layout/dot/routing/bezier_layout_spline.mbt`
-- `src/layout/dot/routing/pathplan_recover.mbt`
-- `src/layout/dot/routing/spline_core.mbt`
-- `src/layout/dot/routing_clip_shape.mbt`
-- `src/layout/dot/routing/routesplines/*`
-- `src/layout/dot/routing/pathplan/*`
-- `src/layout/dot/routing/edge_spline/*`
 - `src/layout/dot/routing/edge_ops/*`
-- `src/layout/dot/routing/parallel_offsets.mbt`
-- `src/layout/dot/routing/polyline_points.mbt`
+- `src/layout/dot/routing/edge_spline/*`
+- `src/layout/dot/routing/pathplan/*`
+- `src/layout/dot/routing/routesplines/*`
+- `src/layout/dot/node_geometry.mbt` (ports/shape geometry used by routing)
 
 ### What it does
 
@@ -521,13 +503,19 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `stage_e.mbt`, `stage_f.mbt`
+  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `stage_e.mbt`, `stage_f.mbt`
+- Alternative engines (`dot -n` / `neato -n` / `neato`):
+  - `engines.mbt`
+- Shared validation/constants:
+  - `layout_base.mbt`
+- Node/label/port geometry and metrics:
+  - `node_geometry.mbt`
 - Input canonicalization:
   - `stage_a.mbt`
 - Rank assignment and rank heights:
   - `stage_b.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `stage_b.mbt`, `cluster.mbt`
+  - `stage_b.mbt`, `clustering/*`
 - Ordering dispatch + shared stage logic:
   - `stage_c.mbt`
 - Ordering edge materialization:
@@ -547,12 +535,11 @@ Repository guard validates:
   - `ordering/snapshot_edges.mbt`
   - `ordering/remincross_pass.mbt`
   - `ordering/remincross_materialized.mbt`
-  - `ordering/remincross.mbt`
 - Stage D position/xpos internals:
   - `stage_d.mbt`
   - `positioning/*`
 - Crossing helpers:
-  - `xpos.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
+  - `stage_d.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
 - Routing:
   - `stage_e.mbt`, `routing/*`
 - Final graph writeback:
