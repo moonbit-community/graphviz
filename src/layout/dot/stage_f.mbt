@@ -200,6 +200,33 @@ fn build_pre_rotation_layout_data(
     )
   let root_padded =
     build_root_padded_layout_data(input, final_geometry, subgraphs_and_bbox)
+  let layout =
+    apply_pre_rotation_layout_postprocess(input, root_padded)
+  {
+    layout: {
+      graph: layout.graph,
+      bbox: layout.bbox,
+      label_pos: layout.label_pos,
+      nodes: layout.nodes,
+      edges: layout.edges,
+      subgraphs: layout.subgraphs,
+    },
+    rank_bbox: final_geometry.rank_bbox,
+    subgraph_base_bbox: subgraphs_and_bbox.base_bbox,
+  }
+}
+
+///|
+/// Graphviz parity: pre-rotation postprocess applies edge bbox expansion,
+/// ratio scaling, edge-label adjustment, exterior xlabels, and root label bbox
+/// in fixed Graphviz-equivalent order.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_pre_rotation_layout_postprocess(
+  input : FinalizeLayoutInput,
+  root_padded : RootPaddedLayoutData,
+) -> DotLayoutGraph {
+  let graph = input.graph
+  let rankdir = input.rankdir
   let layout_with_root_pad = root_padded.layout_with_root_pad
   // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
   let bbox =
@@ -226,16 +253,12 @@ fn build_pre_rotation_layout_data(
   let root_label_bbox =
     apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   {
-    layout: {
-      graph: with_xlabels.graph,
-      bbox: root_label_bbox.bbox,
-      label_pos: root_label_bbox.label_pos,
-      nodes: with_xlabels.nodes,
-      edges: with_xlabels.edges,
-      subgraphs: with_xlabels.subgraphs,
-    },
-    rank_bbox: final_geometry.rank_bbox,
-    subgraph_base_bbox: subgraphs_and_bbox.base_bbox,
+    graph: with_xlabels.graph,
+    bbox: root_label_bbox.bbox,
+    label_pos: root_label_bbox.label_pos,
+    nodes: with_xlabels.nodes,
+    edges: with_xlabels.edges,
+    subgraphs: with_xlabels.subgraphs,
   }
 }
 
