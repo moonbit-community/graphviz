@@ -1990,6 +1990,46 @@ priv struct XLabel {
   set : Bool
 }
 
+///|
+priv struct XLabelUpdateMaps {
+  node_updates : Map[String, @geom.Point]
+  edge_mid_updates : Map[String, @geom.Point]
+  edge_head_updates : Map[String, @geom.Point]
+  edge_tail_updates : Map[String, @geom.Point]
+  edge_xlabel_updates : Map[String, @geom.Point]
+}
+
+///|
+fn make_xlabel_update_maps() -> XLabelUpdateMaps {
+  {
+    node_updates: Map::new(),
+    edge_mid_updates: Map::new(),
+    edge_head_updates: Map::new(),
+    edge_tail_updates: Map::new(),
+    edge_xlabel_updates: Map::new(),
+  }
+}
+
+///|
+fn xlabel_center(label : XLabel) -> @geom.Point {
+  @edge_spline.point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
+}
+
+///|
+fn record_xlabel_update(
+  updates : XLabelUpdateMaps,
+  target : XLabelTarget,
+  center : @geom.Point,
+) -> Unit {
+  match target {
+    XLabelTarget::Node(name) => updates.node_updates[name] = center
+    XLabelTarget::EdgeMid(key) => updates.edge_mid_updates[key] = center
+    XLabelTarget::EdgeHead(key) => updates.edge_head_updates[key] = center
+    XLabelTarget::EdgeTail(key) => updates.edge_tail_updates[key] = center
+    XLabelTarget::EdgeXlabel(key) => updates.edge_xlabel_updates[key] = center
+  }
+}
+
 fn apply_xlabels(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
@@ -2017,11 +2057,7 @@ fn finalize_xlabels(
   labels : Array[XLabel],
   flip : Bool,
 ) -> DotLayoutGraph {
-  let node_updates : Map[String, @geom.Point] = Map::new()
-  let edge_mid_updates : Map[String, @geom.Point] = Map::new()
-  let edge_head_updates : Map[String, @geom.Point] = Map::new()
-  let edge_tail_updates : Map[String, @geom.Point] = Map::new()
-  let edge_xlabel_updates : Map[String, @geom.Point] = Map::new()
+  let updates = make_xlabel_update_maps()
   let mut bbox = layout.bbox
   for node_layout in layout.nodes {
     match node_layout.xlabel_pos {
@@ -2065,29 +2101,18 @@ fn finalize_xlabels(
     if !label.set {
       continue
     }
-    let center =
-      @edge_spline.point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
+    let center = xlabel_center(label)
     bbox = expand_bbox_for_label_pos(
       bbox,
       Some(center),
       Some({ width: label.width, height: label.height }),
     )
-    match label.target {
-      XLabelTarget::Node(name) => node_updates[name] = center
-      XLabelTarget::EdgeMid(key) => edge_mid_updates[key] = center
-      XLabelTarget::EdgeHead(key) => edge_head_updates[key] = center
-      XLabelTarget::EdgeTail(key) => edge_tail_updates[key] = center
-      XLabelTarget::EdgeXlabel(key) => edge_xlabel_updates[key] = center
-    }
+    record_xlabel_update(updates, label.target, center)
   }
   let updated =
     apply_xlabel_updates(
       layout,
-      node_updates,
-      edge_mid_updates,
-      edge_head_updates,
-      edge_tail_updates,
-      edge_xlabel_updates,
+      updates,
     )
   {
     graph: updated.graph,
@@ -2161,15 +2186,11 @@ fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
 
 fn apply_xlabel_updates(
   layout : DotLayoutGraph,
-  node_updates : Map[String, @geom.Point],
-  edge_mid_updates : Map[String, @geom.Point],
-  edge_head_updates : Map[String, @geom.Point],
-  edge_tail_updates : Map[String, @geom.Point],
-  edge_xlabel_updates : Map[String, @geom.Point],
+  updates : XLabelUpdateMaps,
 ) -> DotLayoutGraph {
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
-    let xlabel_pos = match node_updates.get(node_layout.node.name()) {
+    let xlabel_pos = match updates.node_updates.get(node_layout.node.name()) {
       Some(pos) => Some(pos)
       None => node_layout.xlabel_pos
     }
@@ -2185,19 +2206,19 @@ fn apply_xlabel_updates(
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
     let key = @dot_shared.edge_key(edge_layout.edge)
-    let label_pos = match edge_mid_updates.get(key) {
+    let label_pos = match updates.edge_mid_updates.get(key) {
       Some(pos) => Some(pos)
       None => edge_layout.label_pos
     }
-    let head_label_pos = match edge_head_updates.get(key) {
+    let head_label_pos = match updates.edge_head_updates.get(key) {
       Some(pos) => Some(pos)
       None => edge_layout.head_label_pos
     }
-    let tail_label_pos = match edge_tail_updates.get(key) {
+    let tail_label_pos = match updates.edge_tail_updates.get(key) {
       Some(pos) => Some(pos)
       None => edge_layout.tail_label_pos
     }
-    let xlabel_pos = match edge_xlabel_updates.get(key) {
+    let xlabel_pos = match updates.edge_xlabel_updates.get(key) {
       Some(pos) => Some(pos)
       None => edge_layout.xlabel_pos
     }
@@ -2215,11 +2236,7 @@ fn apply_xlabel_updates(
     subgraphs.push(
       apply_xlabel_updates(
         subgraph,
-        node_updates,
-        edge_mid_updates,
-        edge_head_updates,
-        edge_tail_updates,
-        edge_xlabel_updates,
+        updates,
       ),
     )
   }
