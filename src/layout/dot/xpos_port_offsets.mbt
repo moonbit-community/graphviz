@@ -203,72 +203,17 @@ fn edge_port_offset(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  match port {
-    Some(value) =>
-      match value.name {
-        Some(name) =>
-          match offsets.get(node_name) {
-            Some(node_offsets) =>
-              match node_offsets.get(name) {
-                Some(port_info) =>
-                  match value.compass {
-                    Some(compass) =>
-                      match compass {
-                        @cgraph.Compass::E
-                        | @cgraph.Compass::NE
-                        | @cgraph.Compass::SE => {
-                          let half = port_info.size.width_pt / 2.0
-                          port_info.center.x + half
-                        }
-                        @cgraph.Compass::W
-                        | @cgraph.Compass::NW
-                        | @cgraph.Compass::SW => {
-                          let half = port_info.size.width_pt / 2.0
-                          port_info.center.x - half
-                        }
-                        _ => port_info.center.x
-                      }
-                    None => port_info.center.x
-                  }
-                None =>
-                  match value.compass {
-                    Some(compass) =>
-                      compass_port_offset(
-                        compass,
-                        node_name,
-                        sizes,
-                        rankdir,
-                        nodes_by_name,
-                      )
-                    None => 0.0
-                  }
-              }
-            None =>
-              match value.compass {
-                Some(compass) =>
-                  compass_port_offset(
-                    compass,
-                    node_name,
-                    sizes,
-                    rankdir,
-                    nodes_by_name,
-                  )
-                None => 0.0
-              }
-          }
-        None =>
-          match value.compass {
-            Some(compass) =>
-              compass_port_offset(
-                compass,
-                node_name,
-                sizes,
-                rankdir,
-                nodes_by_name,
-              )
-            None => 0.0
-          }
-      }
-    None => 0.0
-  }
+  @positioning.edge_port_offset(
+    node_name,
+    port,
+    offsets,
+    compass =>
+      compass_port_offset(
+        compass,
+        node_name,
+        sizes,
+        rankdir,
+        nodes_by_name,
+      ),
+  )
 }
