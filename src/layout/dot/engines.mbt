@@ -102,65 +102,46 @@ fn clone_edge_with_optional_name_ports(
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
 ) -> @cgraph.Edge {
-  if name is Some(_) {
-    match name {
-      Some(label) =>
-        if tail_port is Some(_) {
-          match tail_port {
-            Some(tail_value) =>
-              if head_port is Some(_) {
-                match head_port {
-                  Some(head_value) =>
-                    graph.edge(
-                      tail,
-                      head,
-                      name=label,
-                      tail_port=tail_value,
-                      head_port=head_value,
-                    )
-                  None => graph.edge(tail, head, name=label, tail_port=tail_value)
-                }
-              } else {
-                graph.edge(tail, head, name=label, tail_port=tail_value)
-              }
-            None => graph.edge(tail, head, name=label)
-          }
-        } else if head_port is Some(_) {
-          match head_port {
-            Some(head_value) => graph.edge(tail, head, name=label, head_port=head_value)
-            None => graph.edge(tail, head, name=label)
-          }
-        } else {
-          graph.edge(tail, head, name=label)
-        }
-      None => graph.edge(tail, head)
-    }
-  } else if tail_port is Some(_) {
-    match tail_port {
-      Some(tail_value) =>
-        if head_port is Some(_) {
-          match head_port {
-            Some(head_value) =>
-              graph.edge(
-                tail,
-                head,
-                tail_port=tail_value,
-                head_port=head_value,
-              )
-            None => graph.edge(tail, head, tail_port=tail_value)
-          }
-        } else {
-          graph.edge(tail, head, tail_port=tail_value)
-        }
-      None => graph.edge(tail, head)
-    }
-  } else if head_port is Some(_) {
-    match head_port {
-      Some(head_value) => graph.edge(tail, head, head_port=head_value)
-      None => graph.edge(tail, head)
-    }
-  } else {
-    graph.edge(tail, head)
+  match name {
+    Some(label) =>
+      match (tail_port, head_port) {
+        (Some(tail_value), Some(head_value)) =>
+          graph.edge(
+            tail,
+            head,
+            name=label,
+            tail_port=tail_value,
+            head_port=head_value,
+          )
+        (Some(tail_value), None) =>
+          graph.edge(
+            tail,
+            head,
+            name=label,
+            tail_port=tail_value,
+          )
+        (None, Some(head_value)) =>
+          graph.edge(
+            tail,
+            head,
+            name=label,
+            head_port=head_value,
+          )
+        (None, None) => graph.edge(tail, head, name=label)
+      }
+    None =>
+      match (tail_port, head_port) {
+        (Some(tail_value), Some(head_value)) =>
+          graph.edge(
+            tail,
+            head,
+            tail_port=tail_value,
+            head_port=head_value,
+          )
+        (Some(tail_value), None) => graph.edge(tail, head, tail_port=tail_value)
+        (None, Some(head_value)) => graph.edge(tail, head, head_port=head_value)
+        (None, None) => graph.edge(tail, head)
+      }
   }
 }
 
