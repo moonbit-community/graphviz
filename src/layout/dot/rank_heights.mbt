@@ -92,7 +92,8 @@ fn compute_rank_heights(
     }
     let mut max_half = 0.0
     for name in names {
-      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      let half_height =
+        @positioning.node_half_height_pt(name, sizes, self_edge_labels)
       if half_height > max_half {
         max_half = half_height
       }
@@ -158,7 +159,7 @@ fn compute_rank_heights(
       rankdir: input.rankdir,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
       cluster_label_padding_for: cluster_label_padding_for_layout,
-      node_half_height_pt_for: node_half_height_pt,
+      node_half_height_pt_for: @positioning.node_half_height_pt,
     },
   )
   let nodesep_pt = @dot_shared.round_int(input.nodesep_in * 72.0).to_double()

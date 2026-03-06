@@ -161,24 +161,3 @@ fn self_edge_label_half_heights(
   }
   heights
 }
-
-///|
-fn node_half_height_pt(
-  name : String,
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-) -> Double {
-  let base_height = match sizes.get(name) {
-    Some(value) => value.height_pt / 2.0
-    None => 0.0
-  }
-  let label_height = match self_edge_labels.get(name) {
-    Some(value) => value
-    None => 0.0
-  }
-  if label_height > base_height {
-    label_height
-  } else {
-    base_height
-  }
-}

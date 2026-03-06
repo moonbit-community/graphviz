@@ -77,6 +77,27 @@ fn size_right_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double
 }
 
 ///|
+pub fn node_half_height_pt(
+  name : String,
+  sizes : Map[String, @shared.NodeSize],
+  self_edge_labels : Map[String, Double],
+) -> Double {
+  let base_height = match sizes.get(name) {
+    Some(value) => value.height_pt / 2.0
+    None => 0.0
+  }
+  let label_height = match self_edge_labels.get(name) {
+    Some(value) => value
+    None => 0.0
+  }
+  if label_height > base_height {
+    label_height
+  } else {
+    base_height
+  }
+}
+
+///|
 pub fn rank_nodesep_pt(
   rank : Int,
   nodesep_pt : Double,

@@ -87,7 +87,7 @@ fn build_y_position_data(
       vnode_sizes: input.pipeline.ordering.vnode_info.vnode_sizes,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
       cluster_label_padding_for: cluster_label_padding_for_layout,
-      node_half_height_pt_for: node_half_height_pt,
+      node_half_height_pt_for: @positioning.node_half_height_pt,
       cluster_label_width_pt_for: cluster_label_width_with_pad_for_layout,
     },
   )

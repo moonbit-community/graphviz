@@ -555,7 +555,8 @@ test "flat label node sizes match Graphviz fixtures" {
     }
     let mut max_half = 0.0
     for name in names {
-      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      let half_height =
+        @positioning.node_half_height_pt(name, sizes, self_edge_labels)
       if half_height > max_half {
         max_half = half_height
       }
@@ -614,7 +615,7 @@ test "flat label node sizes match Graphviz fixtures" {
       rankdir,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
       cluster_label_padding_for: cluster_label_padding_for_layout,
-      node_half_height_pt_for: node_half_height_pt,
+      node_half_height_pt_for: @positioning.node_half_height_pt,
     },
   )
   let ranksep_in = match graph.get_attr("ranksep") {
