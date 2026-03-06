@@ -206,7 +206,7 @@ fn build_flat_label_augmentation(
       vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
       build_flat_label_vnodes_fn:
         (existing_names, x_groups) => {
-          build_flat_label_vnodes_for_positioning(
+          @positioning.build_flat_label_vnodes_for_positioning(
             pipeline.prep.edges,
             pipeline.rank_data.edge_tail,
             pipeline.rank_data.edge_head,
@@ -220,6 +220,14 @@ fn build_flat_label_augmentation(
             existing_names,
             pipeline.ordering.vnode_info,
             x_groups,
+            {
+              edge_mid_label_metrics_for:
+                edge =>
+                  match edge_mid_label_metrics(edge) {
+                    Some(value) => Some((value.width, value.height))
+                    None => None
+                  },
+            },
           )
         },
     },

@@ -659,7 +659,12 @@ test "flat label node sizes match Graphviz fixtures" {
     assert_eq(metrics.width, entry.dimen_x)
     assert_eq(metrics.height, entry.dimen_y)
     assert_eq(
-      flat_label_adjacent(tail_rank, entry.tail, entry.head, ordered_groups),
+      @positioning.flat_label_adjacent(
+        tail_rank,
+        entry.tail,
+        entry.head,
+        ordered_groups,
+      ),
       false,
     )
     let half_height = entry.dimen_y / 2.0

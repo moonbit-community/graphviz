@@ -10,7 +10,12 @@ priv struct FlatLabelNodeInfo {
 }
 
 ///|
-fn flat_label_adjacent(
+pub(all) struct FlatLabelVNodeDeps {
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
+}
+
+///|
+pub fn flat_label_adjacent(
   rank : Int,
   tail : String,
   head : String,
@@ -63,7 +68,7 @@ fn collect_vnode_out_heads(
         edge_head,
       )
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -96,7 +101,7 @@ fn collect_vnode_out_heads(
     while i + 1 < path.length() {
       let from = path[i]
       let to = path[i + 1]
-      if @dot_shared.is_edge_vnode_name(from) {
+      if @shared.is_edge_vnode_name(from) {
         match out_heads.get(from) {
           Some(list) => list.push(to)
           None => out_heads[from] = [to]
@@ -136,7 +141,7 @@ fn flat_limits(
   let bounds : Array[Int] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
   let setbounds = (name : String) => {
     let is_flat = flat_label_nodes.get(name) is Some(_)
-    if !is_flat && !@dot_shared.is_edge_vnode_name(name) {
+    if !is_flat && !@shared.is_edge_vnode_name(name) {
       return ()
     }
     let ord = match order_index.get(name) {
@@ -226,13 +231,14 @@ fn add_flat_label_vnodes(
   ranks : Map[String, Int],
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
-  rankdir : RankDir,
-  sizes : Map[String, NodeSize],
+  rankdir : @shared.RankDir,
+  sizes : Map[String, @shared.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
   vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
+  deps : FlatLabelVNodeDeps,
 ) -> FlatLabelVnodeResult {
   let order_index = @ordering.build_order_index(x_groups)
   let vnode_out_heads =
@@ -293,14 +299,13 @@ fn add_flat_label_vnodes(
     if tail_rank != head_rank {
       continue
     }
-    let metrics = match edge_mid_label_metrics(edge) {
+    let (metric_width, metric_height) =
+      match (deps.edge_mid_label_metrics_for)(edge) {
       Some(value) => value
       None => continue
     }
-    let metric_width = metrics.width
-    let metric_height = metrics.height
     let (label_width, label_height) =
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
       (metric_height, metric_width)
     } else {
       (metric_width, metric_height)
@@ -316,11 +321,11 @@ fn add_flat_label_vnodes(
         _ => tail
       }
     let right = if left == tail { head } else { tail }
-    let left_right = @dot_shared.node_right_pt(left, sizes)
-    let right_left = @dot_shared.node_left_pt(right, sizes)
+    let left_right = @shared.node_right_pt(left, sizes)
+    let right_left = @shared.node_left_pt(right, sizes)
     let width = left_right + right_left
     let base_minlen =
-      Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
+      Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt + width
     if is_adjacent {
       let label_minlen = width + nodesep_pt + label_width
       // Graphviz parity: LR/RL flat-label adjacency uses integer rounding that
@@ -328,17 +333,17 @@ fn add_flat_label_vnodes(
       let minlen_base =
         if base_minlen > label_minlen { base_minlen } else { label_minlen }
       let minlen_adjusted =
-        if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
         minlen_base + 1.0
       } else {
         minlen_base
       }
-      let minlen = @dot_shared.round_int(minlen_adjusted)
+      let minlen = @shared.round_int(minlen_adjusted)
       extra_edges.push({
         tail: left,
         head: right,
         minlen,
-        weight: @dot_shared.edge_weight(edge),
+        weight: @shared.edge_weight(edge),
         tail_port: None,
         head_port: None,
       })
@@ -351,8 +356,8 @@ fn add_flat_label_vnodes(
     }
     let place =
       flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
-    let name = @dot_shared.unique_virtual_node_name(
-      @dot_shared.EDGE_VNODE_PREFIX,
+    let name = @shared.unique_virtual_node_name(
+      @shared.EDGE_VNODE_PREFIX,
       current_idx,
       label_rank,
       existing_names,
@@ -360,14 +365,14 @@ fn add_flat_label_vnodes(
     let half_width = label_width / 2.0
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
-      @dot_shared.vnode_size_from_widths_with_h(half_width, half_width, label_height)
+      @shared.vnode_size_from_widths_with_h(half_width, half_width, label_height)
     let tail_cluster = @clustering.node_cluster_key(edge.tail())
     let head_cluster = @clustering.node_cluster_key(edge.head())
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
         @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
+        match edge_cluster_keys.get(@shared.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -385,8 +390,8 @@ fn add_flat_label_vnodes(
       head,
       rank: label_rank,
     }
-    flat_label_edges[@dot_shared.edge_key(edge)] = name
-    let vnode_edge_key = @dot_shared.edge_vnode_key(edge)
+    flat_label_edges[@shared.edge_key(edge)] = name
+    let vnode_edge_key = @shared.edge_vnode_key(edge)
     match vnode_info.edge_vnodes.get(vnode_edge_key) {
       Some(list) => list.push(name)
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
@@ -402,14 +407,14 @@ fn add_flat_label_vnodes(
     } else {
       0.5
     }
-    let m0 = Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt * m0_scale
-    let minlen_left = @dot_shared.round_int(m0 + left_right + half_width)
-    let minlen_right = @dot_shared.round_int(m0 + half_width + right_left)
+    let m0 = Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt * m0_scale
+    let minlen_left = @shared.round_int(m0 + left_right + half_width)
+    let minlen_right = @shared.round_int(m0 + half_width + right_left)
     extra_edges.push({
       tail: left,
       head: name,
       minlen: minlen_left,
-      weight: @dot_shared.edge_weight(edge),
+      weight: @shared.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })
@@ -417,7 +422,7 @@ fn add_flat_label_vnodes(
       tail: name,
       head: right,
       minlen: minlen_right,
-      weight: @dot_shared.edge_weight(edge),
+      weight: @shared.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })
@@ -439,21 +444,22 @@ priv struct FlatLabelVnodeResult {
 }
 
 ///|
-fn build_flat_label_vnodes_for_positioning(
+pub fn build_flat_label_vnodes_for_positioning(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
-  rankdir : RankDir,
-  x_base_sizes : Map[String, NodeSize],
+  rankdir : @shared.RankDir,
+  x_base_sizes : Map[String, @shared.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
   vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
-) -> @positioning.FlatLabelVnodeBuildOutput {
+  deps : FlatLabelVNodeDeps,
+) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(
     edges,
     edge_tail,
@@ -468,6 +474,7 @@ fn build_flat_label_vnodes_for_positioning(
     existing_names,
     vnode_info,
     x_groups,
+    deps,
   )
   let flat_label_ranks : Map[String, Int] = Map::new()
   for name, info in flat_label_vnodes.flat_label_nodes {
