@@ -328,6 +328,36 @@ fn node_size_with_fallback(
 }
 
 ///|
+priv struct EngineGeometryContext {
+  scale_factor : Double
+  rankdir : RankDir
+  record_orientation : RecordOrientation
+}
+
+///|
+fn build_engine_geometry_context(
+  graph : @cgraph.Graph,
+  scale : Double,
+) -> EngineGeometryContext {
+  let scale_value = if scale <= 0.0 { 72.0 } else { scale }
+  let scale_factor = 72.0 / scale_value
+  let rankdir = @dot_shared.graph_rankdir(graph)
+  let record_orientation = record_layout_orientation(rankdir)
+  { scale_factor, rankdir, record_orientation }
+}
+
+///|
+fn straight_line_edge_splines(
+  _edge : @cgraph.Edge,
+  tail_pos : @geom.Point,
+  head_pos : @geom.Point,
+  tail_size : NodeSize,
+  head_size : NodeSize,
+) -> Array[@geom.Spline] {
+  [line_spline(tail_pos, head_pos, tail_size, head_size)]
+}
+
+///|
 fn build_edges_from_positions(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
@@ -803,13 +833,10 @@ pub fn layout_neato(
   validate_layout_graph(active_graph)
   reset_label_caches()
   validate_neato_edge_lengths(active_graph)
-  let scale_value = if scale <= 0.0 { 72.0 } else { scale }
-  let scale_factor = 72.0 / scale_value
-  let rankdir = @dot_shared.graph_rankdir(active_graph)
-  let record_orientation = record_layout_orientation(rankdir)
+  let geometry = build_engine_geometry_context(active_graph, scale)
   let nodes = active_graph.nodes()
   let node_count = nodes.length()
-  let sizing = build_neato_node_sizing(nodes, record_orientation)
+  let sizing = build_neato_node_sizing(nodes, geometry.record_orientation)
   let nodesep_pt = neato_nodesep_pt(active_graph)
   let base_spacing = sizing.max_half * 2.0 + nodesep_pt
   let spacing = if base_spacing <= 1.0 { 1.0 } else { base_spacing }
@@ -837,23 +864,22 @@ pub fn layout_neato(
     project_neato_nodes(
       nodes,
       positions,
-      scale_factor,
+      geometry.scale_factor,
       sizing.sizes,
-      record_orientation,
+      geometry.record_orientation,
     )
   let node_size_for = (node : @cgraph.Node) =>
-    node_size_with_fallback(sizing.sizes, node, record_orientation)
+    node_size_with_fallback(sizing.sizes, node, geometry.record_orientation)
   let edges_out =
     build_edges_from_positions(
       active_graph,
       node_projection.positions,
       node_size_for,
-      (_edge, tail_pos, head_pos, tail_size, head_size) =>
-        [line_spline(tail_pos, head_pos, tail_size, head_size)],
+      straight_line_edge_splines,
     )
   finalize_unranked_layout_graph(
     active_graph,
-    rankdir,
+    geometry.rankdir,
     node_projection.nodes_out,
     edges_out,
   )
@@ -949,6 +975,46 @@ fn parse_required_noop_node_pos(
 }
 
 ///|
+fn noop_edge_splines(
+  edge : @cgraph.Edge,
+  use_edge_pos : Bool,
+  scale_factor : Double,
+  tail_pos : @geom.Point,
+  head_pos : @geom.Point,
+  tail_size : NodeSize,
+  head_size : NodeSize,
+) -> Array[@geom.Spline] {
+  if use_edge_pos {
+    match edge.get_attr("pos") {
+      Some(value) => {
+        let parsed = parse_edge_pos(value, scale_factor)
+        if parsed.length() > 0 {
+          parsed
+        } else {
+          straight_line_edge_splines(
+            edge,
+            tail_pos,
+            head_pos,
+            tail_size,
+            head_size,
+          )
+        }
+      }
+      None =>
+        straight_line_edge_splines(
+          edge,
+          tail_pos,
+          head_pos,
+          tail_size,
+          head_size,
+        )
+    }
+  } else {
+    straight_line_edge_splines(edge, tail_pos, head_pos, tail_size, head_size)
+  }
+}
+
+///|
 ///|
 pub fn layout_neato_noop(
   graph : @cgraph.Graph,
@@ -958,40 +1024,35 @@ pub fn layout_neato_noop(
 ) -> DotLayoutGraph raise DotLayoutError {
   let active_graph = active_graph_for_prune(graph, prune)
   reset_label_caches()
-  let scale_value = if scale <= 0.0 { 72.0 } else { scale }
-  let scale_factor = 72.0 / scale_value
-  let rankdir = @dot_shared.graph_rankdir(active_graph)
-  let record_orientation = record_layout_orientation(rankdir)
+  let geometry = build_engine_geometry_context(active_graph, scale)
   let node_projection =
-    collect_noop_nodes(active_graph, scale_factor, record_orientation)
+    collect_noop_nodes(
+      active_graph,
+      geometry.scale_factor,
+      geometry.record_orientation,
+    )
   let use_edge_pos = no_op_level > 1
   let node_size_for = (node : @cgraph.Node) =>
-    node_size(node, record_orientation)
+    node_size(node, geometry.record_orientation)
   let edges_out =
     build_edges_from_positions(
       active_graph,
       node_projection.positions,
       node_size_for,
       (edge, tail_pos, head_pos, tail_size, head_size) =>
-        if use_edge_pos {
-          match edge.get_attr("pos") {
-            Some(value) => {
-              let parsed = parse_edge_pos(value, scale_factor)
-              if parsed.length() > 0 {
-                parsed
-              } else {
-                [line_spline(tail_pos, head_pos, tail_size, head_size)]
-              }
-            }
-            None => [line_spline(tail_pos, head_pos, tail_size, head_size)]
-          }
-        } else {
-          [line_spline(tail_pos, head_pos, tail_size, head_size)]
-        },
+        noop_edge_splines(
+          edge,
+          use_edge_pos,
+          geometry.scale_factor,
+          tail_pos,
+          head_pos,
+          tail_size,
+          head_size,
+        ),
     )
   finalize_unranked_layout_graph(
     active_graph,
-    rankdir,
+    geometry.rankdir,
     node_projection.nodes_out,
     edges_out,
   )
