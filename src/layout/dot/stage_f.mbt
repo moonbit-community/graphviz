@@ -1837,6 +1837,60 @@ fn apply_edge_label_updates(
 }
 
 ///|
+fn recurse_adjust_labels_for_overlaps(
+  subgraphs : Array[DotLayoutGraph],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+) -> Array[DotLayoutGraph] {
+  let adjusted : Array[DotLayoutGraph] = []
+  for subgraph in subgraphs {
+    adjusted.push(
+      adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
+    )
+  }
+  adjusted
+}
+
+///|
+fn apply_overlap_updates_to_edges(
+  edges : Array[DotLayoutEdge],
+  updates : Map[String, @geom.Point],
+) -> Array[DotLayoutEdge] {
+  let adjusted : Array[DotLayoutEdge] = []
+  for edge_layout in edges {
+    let label_pos = match updates.get(@dot_shared.edge_key(edge_layout.edge)) {
+      Some(pos) => Some(pos)
+      None => edge_layout.label_pos
+    }
+    adjusted.push({
+      edge: edge_layout.edge,
+      splines: edge_layout.splines,
+      label_pos,
+      head_label_pos: edge_layout.head_label_pos,
+      tail_label_pos: edge_layout.tail_label_pos,
+      xlabel_pos: edge_layout.xlabel_pos,
+    })
+  }
+  adjusted
+}
+
+///|
+fn rebuild_layout_edges_subgraphs(
+  layout : DotLayoutGraph,
+  edges : Array[DotLayoutEdge],
+  subgraphs : Array[DotLayoutGraph],
+) -> DotLayoutGraph {
+  {
+    graph: layout.graph,
+    bbox: layout.bbox,
+    label_pos: layout.label_pos,
+    nodes: layout.nodes,
+    edges,
+    subgraphs,
+  }
+}
+
+///|
 fn adjust_labels_for_clusters(
   layout : DotLayoutGraph,
   nodesep_pt : Double,
@@ -1976,51 +2030,15 @@ fn adjust_labels_for_overlaps(
     }
   }
   if updates.length() == 0 {
-    let subgraphs : Array[DotLayoutGraph] = []
-    for subgraph in layout.subgraphs {
-      subgraphs.push(
-        adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
-      )
-    }
-    {
-      graph: layout.graph,
-      bbox: layout.bbox,
-      label_pos: layout.label_pos,
-      nodes: layout.nodes,
-      edges: layout.edges,
-      subgraphs,
-    }
+    let subgraphs =
+      recurse_adjust_labels_for_overlaps(layout.subgraphs, nodesep_pt, rankdir)
+    rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
-    let edges : Array[DotLayoutEdge] = []
-    for edge_layout in layout.edges {
-      let label_pos = match updates.get(@dot_shared.edge_key(edge_layout.edge)) {
-        Some(pos) => Some(pos)
-        None => edge_layout.label_pos
-      }
-      edges.push({
-        edge: edge_layout.edge,
-        splines: edge_layout.splines,
-        label_pos,
-        head_label_pos: edge_layout.head_label_pos,
-        tail_label_pos: edge_layout.tail_label_pos,
-        xlabel_pos: edge_layout.xlabel_pos,
-      })
-    }
+    let edges = apply_overlap_updates_to_edges(layout.edges, updates)
     let updated_subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
-    let subgraphs : Array[DotLayoutGraph] = []
-    for subgraph in updated_subgraphs {
-      subgraphs.push(
-        adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
-      )
-    }
-    {
-      graph: layout.graph,
-      bbox: layout.bbox,
-      label_pos: layout.label_pos,
-      nodes: layout.nodes,
-      edges,
-      subgraphs,
-    }
+    let subgraphs =
+      recurse_adjust_labels_for_overlaps(updated_subgraphs, nodesep_pt, rankdir)
+    rebuild_layout_edges_subgraphs(layout, edges, subgraphs)
   }
 }
 
