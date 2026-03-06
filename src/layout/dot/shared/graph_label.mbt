@@ -104,3 +104,74 @@ pub fn graph_label_metrics_with(
     None => None
   }
 }
+
+///|
+/// Graphviz parity: label-anchor placement aligned to refs/graphviz/lib/common/labels.c.
+pub fn graph_label_pos(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+  just : LabelJust,
+) -> @geom.Point {
+  let x = match just {
+    LabelJust::Left => bbox.llx + label_width_pt / 2.0
+    LabelJust::Right => bbox.urx - label_width_pt / 2.0
+    LabelJust::Center => (bbox.llx + bbox.urx) / 2.0
+  }
+  let y = match loc {
+    LabelLoc::Top => bbox.ury - label_height_pt / 2.0
+    LabelLoc::Bottom => bbox.lly + label_height_pt / 2.0
+  }
+  { x, y }
+}
+
+///|
+/// Graphviz parity: flipped label-anchor placement aligned to
+/// refs/graphviz/lib/common/postproc.c (place_flip_graph_label).
+pub fn graph_label_pos_flip(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+  just : LabelJust,
+) -> @geom.Point {
+  let x = match loc {
+    LabelLoc::Top => bbox.urx - label_width_pt / 2.0
+    LabelLoc::Bottom => bbox.llx + label_width_pt / 2.0
+  }
+  let y = match just {
+    LabelJust::Left => bbox.ury - label_height_pt / 2.0
+    LabelJust::Right => bbox.lly + label_height_pt / 2.0
+    LabelJust::Center => (bbox.lly + bbox.ury) / 2.0
+  }
+  { x, y }
+}
+
+///|
+/// Graphviz parity: label bbox expansion aligned to refs/graphviz/lib/common/input.c
+/// border handling used by root/cluster label postprocess.
+pub fn expand_bbox_for_label(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+) -> @geom.Rect {
+  let pad = 8.0
+  let mut llx = bbox.llx
+  let mut lly = bbox.lly
+  let mut urx = bbox.urx
+  let mut ury = bbox.ury
+  match loc {
+    LabelLoc::Top => ury = ury + label_height_pt + pad
+    LabelLoc::Bottom => lly = lly - label_height_pt - pad
+  }
+  let label_width = label_width_pt + pad * 2.0
+  let current_width = urx - llx
+  if label_width > current_width {
+    let extra = label_width - current_width
+    llx = llx - extra / 2.0
+    urx = urx + extra / 2.0
+  }
+  { llx, lly, urx, ury }
+}

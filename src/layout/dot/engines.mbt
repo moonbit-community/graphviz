@@ -519,14 +519,14 @@ fn finalize_unranked_layout_graph(
         let loc = @dot_shared.graph_label_loc(graph)
         let just = @dot_shared.graph_label_just(graph)
         final_bbox =
-          expand_bbox_for_label(
+          @dot_shared.expand_bbox_for_label(
             final_bbox,
             metrics.width_pt,
             metrics.height_pt,
             loc,
           )
         label_pos = Some(
-          graph_label_pos(
+          @dot_shared.graph_label_pos(
             final_bbox,
             metrics.width_pt,
             metrics.height_pt,

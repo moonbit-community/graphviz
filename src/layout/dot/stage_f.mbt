@@ -822,7 +822,7 @@ fn refresh_cluster_labels(
         Some(metrics) => {
           let pad = CLUSTER_LABEL_PAD_PT
           Some(
-            graph_label_pos(
+            @dot_shared.graph_label_pos(
               layout.bbox,
               metrics.width_pt + pad * 2.0,
               metrics.height_pt + pad,
@@ -1475,7 +1475,7 @@ fn apply_root_label_bbox(
           rankdir,
         )
       label_pos = Some(
-        graph_label_pos(
+        @dot_shared.graph_label_pos(
           bbox,
           spec.padded_width,
           spec.padded_height,
@@ -1500,7 +1500,7 @@ fn root_label_pos_for_bbox(
   match root_label_placement_spec(graph) {
     Some(spec) =>
       Some(
-        graph_label_pos(
+        @dot_shared.graph_label_pos(
           bbox,
           spec.padded_width,
           spec.padded_height,
@@ -1717,31 +1717,6 @@ fn edge_label_adjust_enabled() -> Bool {
   @dot_shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
 }
 
-///|
-fn expand_bbox_for_label(
-  bbox : @geom.Rect,
-  label_width_pt : Double,
-  label_height_pt : Double,
-  loc : LabelLoc,
-) -> @geom.Rect {
-  let pad = 8.0
-  let mut llx = bbox.llx
-  let mut lly = bbox.lly
-  let mut urx = bbox.urx
-  let mut ury = bbox.ury
-  match loc {
-    LabelLoc::Top => ury = ury + label_height_pt + pad
-    LabelLoc::Bottom => lly = lly - label_height_pt - pad
-  }
-  let label_width = label_width_pt + pad * 2.0
-  let current_width = urx - llx
-  if label_width > current_width {
-    let extra = label_width - current_width
-    llx = llx - extra / 2.0
-    urx = urx + extra / 2.0
-  }
-  { llx, lly, urx, ury }
-}
 ///|
 /// Graphviz parity: exterior label placement aligned to refs/graphviz/lib/label/xlabels.c
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).
@@ -2917,49 +2892,6 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> GraphLabelMetrics? {
 }
 
 ///|
-fn graph_label_pos(
-  bbox : @geom.Rect,
-  label_width_pt : Double,
-  label_height_pt : Double,
-  loc : LabelLoc,
-  just : LabelJust,
-) -> @geom.Point {
-  let x = match just {
-    LabelJust::Left => bbox.llx + label_width_pt / 2.0
-    LabelJust::Right => bbox.urx - label_width_pt / 2.0
-    LabelJust::Center => (bbox.llx + bbox.urx) / 2.0
-  }
-  let y = match loc {
-    LabelLoc::Top => bbox.ury - label_height_pt / 2.0
-    LabelLoc::Bottom => bbox.lly + label_height_pt / 2.0
-  }
-  { x, y }
-}
-
-///|
-/// Graphviz parity: flipped cluster label placement aligned to
-/// refs/graphviz/lib/common/postproc.c (place_flip_graph_label).
-/// Do not change behavior without updating fixtures/tests.
-fn graph_label_pos_flip(
-  bbox : @geom.Rect,
-  label_width_pt : Double,
-  label_height_pt : Double,
-  loc : LabelLoc,
-  just : LabelJust,
-) -> @geom.Point {
-  let x = match loc {
-    LabelLoc::Top => bbox.urx - label_width_pt / 2.0
-    LabelLoc::Bottom => bbox.llx + label_width_pt / 2.0
-  }
-  let y = match just {
-    LabelJust::Left => bbox.ury - label_height_pt / 2.0
-    LabelJust::Right => bbox.lly + label_height_pt / 2.0
-    LabelJust::Center => (bbox.lly + bbox.ury) / 2.0
-  }
-  { x, y }
-}
-
-///|
 fn rect_from_center(
   center : @geom.Point,
   width : Double,
@@ -3236,7 +3168,7 @@ fn layout_subgraphs(
           } else {
             if !use_rank_bbox {
               bbox =
-                expand_bbox_for_label(
+                @dot_shared.expand_bbox_for_label(
                   bbox,
                   metrics.width_pt,
                   metrics.height_pt,
@@ -3261,7 +3193,7 @@ fn layout_subgraphs(
         label_pos =
           Some(
             if value.flipped {
-              graph_label_pos_flip(
+              @dot_shared.graph_label_pos_flip(
                 bbox,
                 value.width_pt,
                 value.height_pt,
@@ -3269,7 +3201,7 @@ fn layout_subgraphs(
                 value.just,
               )
             } else {
-              graph_label_pos(
+              @dot_shared.graph_label_pos(
                 bbox,
                 value.width_pt,
                 value.height_pt,

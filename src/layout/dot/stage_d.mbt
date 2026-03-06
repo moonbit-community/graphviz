@@ -620,7 +620,7 @@ fn build_position_output_maps(
         (graph, bbox) =>
           match graph_label_metrics(graph) {
             Some(metrics) =>
-              expand_bbox_for_label(
+              @dot_shared.expand_bbox_for_label(
                 bbox,
                 metrics.width_pt,
                 metrics.height_pt,
