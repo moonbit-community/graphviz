@@ -146,3 +146,53 @@ pub fn edge_port_order(
     None => 0.5
   }
 }
+
+///|
+/// Graphviz parity: shared edge-port sampling setup keeps endpoint remap and
+/// per-edge iteration order identical for both x-offset and port-order passes.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_edge_port_sample_bundle(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, @shared.NodeSize],
+  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @shared.NodeSize]) -> Map[String, Map[String, @shared.RecordPort]],
+  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @shared.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @shared.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+) -> @ordering.EdgePortSampleBundle {
+  let rankdir =
+    if nodes.length() > 0 {
+      @shared.graph_rankdir(nodes[0].graph())
+    } else {
+      @shared.RankDir::TB
+    }
+  let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
+  for node in nodes {
+    nodes_by_name[node.name()] = node
+  }
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  @ordering.build_edge_port_sample_bundle(
+    edges,
+    edge_tail,
+    edge_head,
+    (name, port) =>
+      edge_port_x(
+        name,
+        port,
+        port_offsets,
+        sizes,
+        rankdir,
+        nodes_by_name,
+      ),
+    (name, port) =>
+      edge_port_order(
+        name,
+        port,
+        port_offsets,
+        sizes,
+        rankdir,
+        nodes_by_name,
+      ),
+  )
+}

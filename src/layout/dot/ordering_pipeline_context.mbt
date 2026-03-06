@@ -95,12 +95,15 @@ fn build_ordering_pipeline_context(
   let runtime_context =
     build_ordering_context(input)
   let edge_port_samples =
-    build_edge_port_sample_bundle(
+    @positioning.build_edge_port_sample_bundle(
       input.nodes,
       input.edges,
       input.edge_tail,
       input.edge_head,
       input.order_sizes,
+      port_offsets_for_nodes,
+      edge_port_offset,
+      edge_port_order,
     )
   let dedup_order_edges =
     @ordering.dedup_ordering_edges(
@@ -109,12 +112,15 @@ fn build_ordering_pipeline_context(
       input.edge_head,
     )
   let order_edge_port_samples =
-    build_edge_port_sample_bundle(
+    @positioning.build_edge_port_sample_bundle(
       input.nodes,
       dedup_order_edges.order_edges,
       dedup_order_edges.order_edge_tail,
       dedup_order_edges.order_edge_head,
       input.order_sizes,
+      port_offsets_for_nodes,
+      edge_port_offset,
+      edge_port_order,
     )
   let edge_port_data =
     @ordering.build_ordering_edge_port_data(

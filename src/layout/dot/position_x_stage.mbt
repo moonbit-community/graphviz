@@ -104,20 +104,26 @@ fn build_x_seed_data(
       x_base_sizes
     }
   let x_port_samples =
-    build_edge_port_sample_bundle(
+    @positioning.build_edge_port_sample_bundle(
       pipeline.prep.nodes,
       pipeline.prep.edges,
       pipeline.rank_data.edge_tail,
       pipeline.rank_data.edge_head,
       x_order_sizes,
+      port_offsets_for_nodes,
+      edge_port_offset,
+      edge_port_order,
     )
   let order_edge_port_samples =
-    build_edge_port_sample_bundle(
+    @positioning.build_edge_port_sample_bundle(
       pipeline.prep.nodes,
       pipeline.ordering.order_edges,
       pipeline.ordering.order_edge_tail,
       pipeline.ordering.order_edge_head,
       x_order_sizes,
+      port_offsets_for_nodes,
+      edge_port_offset,
+      edge_port_order,
     )
   @positioning.build_x_seed_data_from_sources(
     {
