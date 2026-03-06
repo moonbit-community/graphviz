@@ -1007,29 +1007,42 @@ fn normalize_spline_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
+fn parse_edge_pos_segment(
+  segment : String,
+  scale_factor : Double,
+) -> @geom.Spline? {
+  let mut start : @geom.Point? = None
+  let mut end : @geom.Point? = None
+  let points : Array[@geom.Point] = []
+  for token in segment.split(" ") {
+    let parsed = parse_edge_token(token.to_string())
+    match parsed.point {
+      Some(value) => {
+        let scaled = scale_point(value, scale_factor)
+        match parsed.tag {
+          Some(EdgeTokenTag::Start) => start = Some(scaled)
+          Some(EdgeTokenTag::End) => end = Some(scaled)
+          None => points.push(scaled)
+        }
+      }
+      None => ()
+    }
+  }
+  let normalized = normalize_spline_points(points)
+  if normalized.length() > 0 {
+    Some({ start, end, points: normalized })
+  } else {
+    None
+  }
+}
+
+///|
 fn parse_edge_pos(value : String, scale_factor : Double) -> Array[@geom.Spline] {
   let splines : Array[@geom.Spline] = []
   for segment in value.split(";") {
-    let mut start : @geom.Point? = None
-    let mut end : @geom.Point? = None
-    let points : Array[@geom.Point] = []
-    for token in segment.split(" ") {
-      let parsed = parse_edge_token(token.to_string())
-      match parsed.point {
-        Some(value) => {
-          let scaled = scale_point(value, scale_factor)
-          match parsed.tag {
-            Some(EdgeTokenTag::Start) => start = Some(scaled)
-            Some(EdgeTokenTag::End) => end = Some(scaled)
-            None => points.push(scaled)
-          }
-        }
-        None => ()
-      }
-    }
-    let normalized = normalize_spline_points(points)
-    if normalized.length() > 0 {
-      splines.push({ start, end, points: normalized })
+    match parse_edge_pos_segment(segment.to_string(), scale_factor) {
+      Some(spline) => splines.push(spline)
+      None => ()
     }
   }
   splines
