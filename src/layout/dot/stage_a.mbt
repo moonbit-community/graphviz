@@ -298,6 +298,44 @@ fn build_size_maps(
 /// Graphviz parity: record/html nodes expose per-port horizontal order offsets
 /// (layout_port_offset.x) used by later opposite-endpoint averaging.
 /// Do not change behavior without updating fixtures/tests.
+fn resolve_node_output_size(
+  output_sizes : Map[String, NodeSize],
+  node : @cgraph.Node,
+  record_orientation : RecordOrientation,
+) -> NodeSize {
+  let name = node.name()
+  match output_sizes.get(name) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+}
+
+///|
+fn build_node_port_order(
+  node : @cgraph.Node,
+  size : NodeSize,
+  rankdir : RankDir,
+  record_orientation : RecordOrientation,
+  has_html : Bool,
+) -> Map[String, Double] {
+  let raw_ports =
+    if has_html {
+      html_ports(node, { x: 0.0, y: 0.0 }, size)
+    } else {
+      record_ports(node, { x: 0.0, y: 0.0 }, size, record_orientation)
+    }
+  let order_map : Map[String, Double] = Map::new()
+  for port_name, port in raw_ports {
+    let offset = layout_port_offset(port.center, rankdir)
+    order_map[port_name] = offset.x
+  }
+  order_map
+}
+
+///|
+/// Graphviz parity: record/html nodes expose per-port horizontal order offsets
+/// (layout_port_offset.x) used by later opposite-endpoint averaging.
+/// Do not change behavior without updating fixtures/tests.
 fn build_record_port_order_map(
   input : RecordPortOrderInput,
 ) -> Map[String, Map[String, Double]] {
@@ -307,27 +345,70 @@ fn build_record_port_order_map(
     let has_html = @html_label.is_html_label_text(label)
     if has_html || is_record_shape(node) {
       let name = node.name()
-      let size = match input.output_sizes.get(name) {
-        Some(value) => value
-        None => node_size(node, input.record_orientation)
-      }
-      let raw_ports =
-        if has_html {
-          html_ports(node, { x: 0.0, y: 0.0 }, size)
-        } else {
-          record_ports(node, { x: 0.0, y: 0.0 }, size, input.record_orientation)
-        }
-      let order_map : Map[String, Double] = Map::new()
-      for port_name, port in raw_ports {
-        let offset = layout_port_offset(port.center, input.rankdir)
-        order_map[port_name] = offset.x
-      }
+      let size = resolve_node_output_size(input.output_sizes, node, input.record_orientation)
+      let order_map =
+        build_node_port_order(
+          node,
+          size,
+          input.rankdir,
+          input.record_orientation,
+          has_html,
+        )
       record_port_order[name] = order_map
     }
   }
   record_port_order
 }
 
+
+///|
+fn lookup_record_port_order(
+  record_port_order : Map[String, Map[String, Double]],
+  anchor : String,
+  port : @cgraph.Port?,
+) -> Double? {
+  match port {
+    Some(value) =>
+      match value.name {
+        Some(port_name) =>
+          match record_port_order.get(anchor) {
+            Some(ports) => ports.get(port_name)
+            None => None
+          }
+        None => None
+      }
+    None => None
+  }
+}
+
+///|
+fn accumulate_port_order_total(
+  order_sum : Map[String, PortOrderTotal],
+  target : String,
+  order : Double,
+) -> Unit {
+  let current = match order_sum.get(target) {
+    Some(value) => value
+    None => { sum: 0.0, count: 0 }
+  }
+  order_sum[target] = {
+    sum: current.sum + order,
+    count: current.count + 1,
+  }
+}
+
+///|
+fn append_port_order_contrib(
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  target : String,
+  anchor : String,
+  order : Double,
+) -> Unit {
+  match port_order_contrib.get(target) {
+    Some(list) => list.push((anchor, order))
+    None => port_order_contrib[target] = [(anchor, order)]
+  }
+}
 
 ///|
 /// Graphviz parity: edge-side port-order contributions are accumulated from
@@ -338,33 +419,11 @@ fn accumulate_port_order_contrib(
 ) -> Map[String, PortOrderTotal] {
   let order_sum : Map[String, PortOrderTotal] = Map::new()
   let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
-    match port {
-      Some(value) =>
-        match value.name {
-          Some(port_name) =>
-            match input.record_port_order.get(anchor) {
-              Some(ports) =>
-                match ports.get(port_name) {
-                  Some(order) => {
-                    let current = match order_sum.get(target) {
-                      Some(value) => value
-                      None => { sum: 0.0, count: 0 }
-                    }
-                    order_sum[target] = {
-                      sum: current.sum + order,
-                      count: current.count + 1,
-                    }
-                    match input.port_order_contrib.get(target) {
-                      Some(list) => list.push((anchor, order))
-                      None => input.port_order_contrib[target] = [(anchor, order)]
-                    }
-                  }
-                  None => ()
-                }
-              None => ()
-            }
-          None => ()
-        }
+    match lookup_record_port_order(input.record_port_order, anchor, port) {
+      Some(order) => {
+        accumulate_port_order_total(order_sum, target, order)
+        append_port_order_contrib(input.port_order_contrib, target, anchor, order)
+      }
       None => ()
     }
   }
