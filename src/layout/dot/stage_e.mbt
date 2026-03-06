@@ -834,29 +834,7 @@ fn build_route_base_deps_for_dot(
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
-  let edge_layout_deps =
-    build_edge_layout_deps_for_dot()
-  {
-    recover_slack_vnodes_fn: recover_slack_vnodes,
-    build_edge_layout_fn: (input) =>
-      @routing.build_edge_layout(
-        {
-          base: input.base,
-          spline: input.spline,
-          spline_result: input.spline_result,
-          edge_layout_input,
-          deps: edge_layout_deps,
-        }
-      ),
-    self_edge_label_height_fn: self_edge_label_height_pt,
-    self_edge_label_width_fn: self_edge_label_width_pt,
-    edge_port_label_pos_fn: edge_port_label_pos,
-  }
-}
-
-///|
-fn build_edge_layout_deps_for_dot() -> @routing.EdgeLayoutDeps {
-  {
+  let edge_layout_deps : @routing.EdgeLayoutDeps = {
     edge_label_rank_for_routing_fn:
       (edge, ranks, mid_label_width_pt) =>
         match edge_label_rank_info(edge, ranks) {
@@ -880,6 +858,22 @@ fn build_edge_layout_deps_for_dot() -> @routing.EdgeLayoutDeps {
     edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
     flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
     edge_label_pos_fn: edge_label_pos_from_input,
+    edge_port_label_pos_fn: edge_port_label_pos,
+  }
+  {
+    recover_slack_vnodes_fn: recover_slack_vnodes,
+    build_edge_layout_fn: (input) =>
+      @routing.build_edge_layout(
+        {
+          base: input.base,
+          spline: input.spline,
+          spline_result: input.spline_result,
+          edge_layout_input,
+          deps: edge_layout_deps,
+        }
+      ),
+    self_edge_label_height_fn: self_edge_label_height_pt,
+    self_edge_label_width_fn: self_edge_label_width_pt,
     edge_port_label_pos_fn: edge_port_label_pos,
   }
 }
