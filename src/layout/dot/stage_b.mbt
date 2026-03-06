@@ -411,12 +411,6 @@ priv struct ClusterRankBounds {
 }
 
 ///|
-priv struct ClusterTraversalMetadata {
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-}
-
-///|
 priv struct FlatConstraintMetadata {
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
@@ -606,20 +600,6 @@ fn seed_cluster_node_order(
 }
 
 ///|
-/// Graphviz parity: cluster order traversal and parent mapping are collected
-/// before clustered ordering stages with Graphviz traversal order unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_cluster_traversal_metadata(
-  graph : @cgraph.Graph,
-) -> ClusterTraversalMetadata {
-  let cluster_order : Array[String] = []
-  @clustering.collect_cluster_names_order(graph, cluster_order)
-  let cluster_maps = @dot_shared.collect_cluster_graph_maps(graph)
-  let cluster_parents = cluster_maps.cluster_parents
-  { cluster_order, cluster_parents }
-}
-
-///|
 /// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
 /// plus same-rank edge constraints before clustered reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -679,7 +659,7 @@ fn compute_cluster_metadata(
   let cluster_min_rank = cluster_rank_bounds.min_rank
   let cluster_max_rank = cluster_rank_bounds.max_rank
   let cluster_first_order = cluster_rank_bounds.first_order
-  let cluster_traversal_metadata = collect_cluster_traversal_metadata(graph)
+  let cluster_traversal_metadata = @clustering.collect_cluster_traversal_metadata(graph)
   let cluster_order = cluster_traversal_metadata.cluster_order
   let cluster_parents = cluster_traversal_metadata.cluster_parents
   apply_cluster_order_metadata(
