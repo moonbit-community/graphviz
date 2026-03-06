@@ -551,7 +551,11 @@ test "flat label node sizes match Graphviz fixtures" {
       all_ranks.push(rank)
     }
   }
-  let self_edge_labels = self_edge_label_half_heights(edges)
+  let self_edge_labels =
+    @positioning.self_edge_label_half_heights(
+      edges,
+      edge => edge_label_height_pt(edge),
+    )
   let rank_pht : Map[Int, Double] = Map::new()
   for rank in all_ranks {
     rank_pht[rank] = 0.0

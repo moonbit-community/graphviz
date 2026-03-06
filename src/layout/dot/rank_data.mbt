@@ -84,7 +84,11 @@ fn compute_rank_data(
       all_ranks.push(rank)
     }
   }
-  let self_edge_labels = self_edge_label_half_heights(edges)
+  let self_edge_labels =
+    @positioning.self_edge_label_half_heights(
+      edges,
+      edge => edge_label_height_pt(edge),
+    )
   {
     edge_tail,
     edge_head,

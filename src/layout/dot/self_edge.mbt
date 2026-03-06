@@ -139,25 +139,3 @@ fn apply_self_edge_right_space(
   }
   adjusted
 }
-
-///|
-fn self_edge_label_half_heights(
-  edges : Array[@cgraph.Edge],
-) -> Map[String, Double] {
-  let heights : Map[String, Double] = Map::new()
-  for edge in edges {
-    if !@dot_shared.edge_is_self(edge) {
-      continue
-    }
-    let tail = edge.tail().name()
-    let half_height = edge_label_height_pt(edge) / 2.0
-    let current = match heights.get(tail) {
-      Some(value) => value
-      None => 0.0
-    }
-    if half_height > current {
-      heights[tail] = half_height
-    }
-  }
-  heights
-}
