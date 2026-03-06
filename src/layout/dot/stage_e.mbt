@@ -767,7 +767,7 @@ fn build_routing_callbacks_for_dot(
         ),
       edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
       flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
-      edge_label_pos_fn: edge_label_pos,
+      edge_label_pos_fn: edge_label_pos_from_input,
       edge_port_label_pos_fn: edge_port_label_pos,
     }
   {
@@ -977,12 +977,6 @@ fn edge_label_pos_from_input(
   }
 }
 
-///|
-fn edge_label_pos(
-  input : @routing.EdgeLabelPosInput,
-) -> @geom.Point? {
-  edge_label_pos_from_input(input)
-}
 ///|
 /// Port-label parameter parsing and placement helpers for edge endpoints.
 
