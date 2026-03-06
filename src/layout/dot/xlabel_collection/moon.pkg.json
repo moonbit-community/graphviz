@@ -1,0 +1,12 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/xlabel_solver",
+    "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/routing",
+    "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+    "moonbit-community/graphviz/attrs",
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom"
+  ]
+}
