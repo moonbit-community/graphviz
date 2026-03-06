@@ -149,6 +149,33 @@ fn resolve_rankdir(
 }
 
 ///|
+/// Graphviz parity: spacing scalar parsing resolves option override first, then
+/// graph attribute/default fallback, rejects negatives, and clamps to minimum.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_spacing_scalar(
+  graph : @cgraph.Graph,
+  option_value : Double?,
+  attr_name : String,
+  default_value : Double,
+  min_value : Double,
+) -> Double raise DotLayoutError {
+  let raw = match option_value {
+    Some(value) => value
+    None =>
+      match graph.get_attr(attr_name) {
+        Some(value) => @dot_shared.parse_first_double(value, default_value)
+        None => default_value
+      }
+  }
+  if raw < 0.0 {
+    raise DotLayoutError::InvalidGraph(
+      message="\{attr_name} must be non-negative",
+    )
+  }
+  if raw < min_value { min_value } else { raw }
+}
+
+///|
 /// Graphviz parity: nodesep/ranksep parse option overrides first, then graph
 /// attributes, reject negatives, and clamp with Graphviz minima.
 /// Do not change behavior without updating fixtures/tests.
@@ -157,34 +184,24 @@ fn resolve_spacing(
   option_nodesep : Double?,
   option_ranksep : Double?,
 ) -> SpacingResolution raise DotLayoutError {
-  let nodesep_raw = match option_nodesep {
-    Some(value) => value
-    None =>
-      match graph.get_attr("nodesep") {
-        Some(value) => @dot_shared.parse_first_double(value, default_nodesep_in())
-        None => default_nodesep_in()
-      }
-  }
-  if nodesep_raw < 0.0 {
-    raise DotLayoutError::InvalidGraph(message="nodesep must be non-negative")
-  }
   // Graphviz parity: late_double clamps nodesep to MIN_NODESEP.
   let nodesep_in =
-    if nodesep_raw < MIN_NODESEP_IN { MIN_NODESEP_IN } else { nodesep_raw }
-  let ranksep_raw = match option_ranksep {
-    Some(value) => value
-    None =>
-      match graph.get_attr("ranksep") {
-        Some(value) => @dot_shared.parse_first_double(value, default_ranksep_in())
-        None => default_ranksep_in()
-      }
-  }
-  if ranksep_raw < 0.0 {
-    raise DotLayoutError::InvalidGraph(message="ranksep must be non-negative")
-  }
+    resolve_spacing_scalar(
+      graph,
+      option_nodesep,
+      "nodesep",
+      default_nodesep_in(),
+      MIN_NODESEP_IN,
+    )
   // Graphviz parity: ranksep clamps to MIN_RANKSEP.
   let ranksep_in =
-    if ranksep_raw < MIN_RANKSEP_IN { MIN_RANKSEP_IN } else { ranksep_raw }
+    resolve_spacing_scalar(
+      graph,
+      option_ranksep,
+      "ranksep",
+      default_ranksep_in(),
+      MIN_RANKSEP_IN,
+    )
   { nodesep_in, ranksep_in }
 }
 
