@@ -186,7 +186,7 @@ fn build_routing_ratio_adjusted_data(
       },
     )
   let (ratio_sx, ratio_sy) =
-    match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+    match @dot_shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
       Some(scale_factors) =>
         if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
           (scale_factors.sx, scale_factors.sy)
