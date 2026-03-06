@@ -583,13 +583,57 @@ priv struct RoutingSpatialInput {
 }
 
 ///|
+/// Graphviz parity: routing port maps are built from final node geometry and
+/// rankdir/port-edge flags before padding and edge routing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_port_maps(
+  prep : LayoutPrep,
+  nodes_out : Array[DotLayoutNode],
+) -> PortLayoutMaps {
+  build_port_layout_maps(
+    {
+      nodes_out,
+      output_sizes: prep.output_sizes,
+      record_orientation: prep.record_orientation,
+      rankdir: prep.rankdir,
+      has_port_edges: prep.has_port_edges,
+    },
+  )
+}
+
+///|
+/// Graphviz parity: routing cluster bboxes are derived from typed routing-stage
+/// inputs, positioned nodes, and rank/cluster maps.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_cluster_bboxes(
+  input : RoutingSpatialInput,
+  nodes_out : Array[DotLayoutNode],
+) -> Map[String, @geom.Rect] {
+  let prep = input.prep
+  let positions_state = input.positions_state
+  compute_cluster_route_bboxes(
+    {
+      graph: input.graph,
+      nodes_out,
+      cluster_ln_x: positions_state.cluster_ln_x,
+      cluster_rn_x: positions_state.cluster_rn_x,
+      cluster_bbox_heights: positions_state.cluster_bbox_heights,
+      rankdir: prep.rankdir,
+      ranks: input.ranks,
+      rank_y: positions_state.rank_y,
+      rank_ht1: positions_state.rank_ht1,
+      rank_ht2: positions_state.rank_ht2,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_data(
   input : RoutingSpatialInput,
 ) -> RoutingSpatialData {
-  let graph = input.graph
   let prep = input.prep
   let positions_state = input.positions_state
   // Graphviz parity: node geometry projection and port-map derivation
@@ -603,39 +647,14 @@ fn build_routing_spatial_data(
         record_orientation: prep.record_orientation,
       },
     )
-  // Graphviz parity: routing port maps are built from final node
-  // geometry and rankdir/port-edge flags before padding and edge routing.
   let port_maps =
-    build_port_layout_maps(
-      {
-        nodes_out,
-        output_sizes: prep.output_sizes,
-        record_orientation: prep.record_orientation,
-        rankdir: prep.rankdir,
-        has_port_edges: prep.has_port_edges,
-      },
-    )
+    build_routing_port_maps(prep, nodes_out)
   let label_ports_map = port_maps.label_ports_map
   let label_ports_raw = port_maps.label_ports_raw
   // Graphviz parity: routing spatial output object consumes typed
   // routing-stage inputs and node/port precompute output without remapping.
-  // Graphviz parity: routing cluster bboxes are derived from typed
-  // routing-stage inputs, positioned nodes, and rank/cluster maps.
   let cluster_bboxes =
-    compute_cluster_route_bboxes(
-      {
-        graph,
-        nodes_out,
-        cluster_ln_x: positions_state.cluster_ln_x,
-        cluster_rn_x: positions_state.cluster_rn_x,
-        cluster_bbox_heights: positions_state.cluster_bbox_heights,
-        rankdir: prep.rankdir,
-        ranks: input.ranks,
-        rank_y: positions_state.rank_y,
-        rank_ht1: positions_state.rank_ht1,
-        rank_ht2: positions_state.rank_ht2,
-      },
-    )
+    build_routing_cluster_bboxes(input, nodes_out)
   { nodes_out, label_ports_map, label_ports_raw, cluster_bboxes }
 }
 ///|
