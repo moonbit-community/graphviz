@@ -895,10 +895,8 @@ fn build_edge_layout_deps_for_dot() -> @routing.EdgeLayoutDeps {
 }
 
 ///|
-fn build_edge_layout_input_for_dot_routing(
-  input : RouteEdgesForDotInput,
-) -> @routing.EdgeLayoutInput {
-  {
+fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
+  let edge_layout_input : @routing.EdgeLayoutInput = {
     ranks: input.rank_data.ranks,
     rank_y: input.routing_positions_state.rank_y,
     vnode_info: input.ordering.vnode_info,
@@ -907,13 +905,16 @@ fn build_edge_layout_input_for_dot_routing(
     nodesep_pt: input.rank_heights.nodesep_pt,
     flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
   }
-}
-
-///|
-fn build_route_edges_pipeline_input_for_dot(
-  input : RouteEdgesForDotInput,
-) -> @routing.RouteEdgesPipelineInput {
-  {
+  let deps : @routing.RouteEdgesPipelineDeps = {
+    route_base_deps:
+      build_route_base_deps_for_dot(
+        input.prep.record_orientation,
+        input.routing_label_ports_map,
+        input.routing_label_ports_raw,
+      ),
+    callbacks: build_routing_callbacks_for_dot(edge_layout_input),
+  }
+  let pipeline_input : @routing.RouteEdgesPipelineInput = {
     graph_kind: input.graph.kind(),
     rankdir: input.prep.rankdir,
     layout_rankdir: RankDir::TB,
@@ -937,23 +938,6 @@ fn build_route_edges_pipeline_input_for_dot(
     use_spline_prepass: input.prep.splines == SplinesMode::Spline,
     spline_mode: routing_spline_mode(input.prep.splines),
   }
-}
-
-///|
-fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
-  let edge_layout_input =
-    build_edge_layout_input_for_dot_routing(input)
-  let deps : @routing.RouteEdgesPipelineDeps = {
-    route_base_deps:
-      build_route_base_deps_for_dot(
-        input.prep.record_orientation,
-        input.routing_label_ports_map,
-        input.routing_label_ports_raw,
-      ),
-    callbacks: build_routing_callbacks_for_dot(edge_layout_input),
-  }
-  let pipeline_input =
-    build_route_edges_pipeline_input_for_dot(input)
   @routing.route_edges_pipeline(
     pipeline_input,
     deps,
