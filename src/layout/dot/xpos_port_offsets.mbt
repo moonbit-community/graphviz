@@ -30,32 +30,6 @@ fn port_offsets_for_nodes(
 }
 
 ///|
-fn fallback_compass_size() -> NodeSize {
-  let width_pt = @dot_shared.default_node_width_in() * 72.0
-  let height_pt = @dot_shared.default_node_height_in() * 72.0
-  let half = width_pt / 2.0
-  {
-    width_in: width_pt / 72.0,
-    height_in: height_pt / 72.0,
-    width_pt,
-    height_pt,
-    left_pt: half,
-    right_pt: half,
-  }
-}
-
-///|
-fn node_size_for_compass(
-  node_name : String,
-  sizes : Map[String, NodeSize],
-) -> NodeSize {
-  match sizes.get(node_name) {
-    Some(value) => value
-    None => fallback_compass_size()
-  }
-}
-
-///|
 fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
   let shape = match node.get_attr("shape") {
     Some(value) => value.to_lower()
@@ -105,53 +79,23 @@ fn compass_port_point(
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
 ) -> @geom.Point {
-  let base_size = node_size_for_compass(node_name, sizes)
-  let half_height = base_size.height_pt / 2.0
-  let left = -base_size.left_pt
-  let right = base_size.right_pt
-  let top = half_height
-  let bottom = -half_height
-  let base_point = match compass {
-    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
-    _ =>
-      match node {
-        Some(value) =>
-          if compass_uses_shape_clipping(value) {
-            @edge_spline.compass_port_point_on_shape(
-              value,
-              @edge_spline.point(0.0, 0.0),
-              base_size,
-              compass,
-              rankdir,
-            )
-          } else {
-            match compass {
-              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
-              @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
-              @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
-              @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
-              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
-              @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
-              @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
-              @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
-              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
-            }
-          }
-        None =>
-          match compass {
-            @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
-            @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
-            @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
-            @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
-            @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
-            @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
-            @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
-            @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
-            @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
-          }
-      }
-  }
-  layout_port_offset(base_point, rankdir)
+  @positioning.compass_port_point(
+    node_name,
+    node,
+    compass,
+    sizes,
+    rankdir,
+    compass_uses_shape_clipping,
+    (shape_node, size, shape_compass, shape_rankdir) =>
+      @edge_spline.compass_port_point_on_shape(
+        shape_node,
+        @edge_spline.point(0.0, 0.0),
+        size,
+        shape_compass,
+        shape_rankdir,
+      ),
+    layout_port_offset,
+  )
 }
 
 ///|
