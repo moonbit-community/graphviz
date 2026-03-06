@@ -641,6 +641,24 @@ fn cluster_rounding_enabled() -> Bool {
 ///|
 /// X-position port geometry, offset, and ordering helpers.
 
+fn raw_label_ports_for_node(
+  node : @cgraph.Node,
+  origin : @geom.Point,
+  base_size : NodeSize,
+  record_orientation : RecordOrientation,
+) -> Map[String, RecordPort] {
+  let label = label_text(node)
+  let has_html = @html_label.is_html_label_text(label)
+  if has_html {
+    html_ports(node, origin, base_size)
+  } else if is_record_shape(node) {
+    record_ports(node, origin, base_size, record_orientation)
+  } else {
+    Map::new()
+  }
+}
+
+///|
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
@@ -654,15 +672,7 @@ fn port_offsets_for_nodes(
     },
     (node, origin, base_size, rankdir) => {
       let record_orientation = record_layout_orientation(rankdir)
-      let label = label_text(node)
-      let has_html = @html_label.is_html_label_text(label)
-      if has_html {
-        html_ports(node, origin, base_size)
-      } else if is_record_shape(node) {
-        record_ports(node, origin, base_size, record_orientation)
-      } else {
-        Map::new()
-      }
+      raw_label_ports_for_node(node, origin, base_size, record_orientation)
     },
     layout_port_offset,
     swap_node_size,
@@ -1002,23 +1012,18 @@ fn build_port_maps_for_nodes(
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
-    let label = label_text(node)
-    let has_html = @html_label.is_html_label_text(label)
-    let has_record = is_record_shape(node)
-    if !has_html && !has_record {
-      continue
-    }
     let name = node.name()
     let size = match sizes.get(name) {
       Some(value) => value
       None => node_size(node, record_orientation)
     }
     let ports =
-      if has_html {
-      html_ports(node, origin, size)
-    } else {
-      record_ports(node, origin, size, record_orientation)
-    }
+      raw_label_ports_for_node(
+        node,
+        origin,
+        size,
+        record_orientation,
+      )
     if ports.length() > 0 {
       port_maps[name] = ports
     }

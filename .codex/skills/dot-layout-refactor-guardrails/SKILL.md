@@ -13,9 +13,10 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 4. Rename files by meaningful responsibility or stage role; remove redundant prefixes/suffixes (`layout_pipeline_`, verbose `stage_x_phase_y`, `_helpers`) unless needed for disambiguation.
 5. Eliminate thin forwarding functions when they add no behavior; either inline call sites or move the real entry into the target subpackage.
 6. Do not inline solely because a function has one caller; inline only when it clearly improves readability/maintainability.
-7. When a subpackage extraction leaves only an outer entry wrapper, move that entry into the subpackage and update call sites directly.
-8. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
-9. If a dot-root stage is left with mostly orchestration-only phase files, merge them into one stage file (for example `stage_c.mbt`, `stage_d.mbt`).
+7. Extract shared helpers only when the abstraction has clear domain meaning (for example: “build raw label ports”, “assemble routing precompute input”) or removes real divergence risk; do not extract helpers that merely wrap trivial `match`/`if` syntax.
+8. When a subpackage extraction leaves only an outer entry wrapper, move that entry into the subpackage and update call sites directly.
+9. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
+10. If a dot-root stage is left with mostly orchestration-only phase files, merge them into one stage file (for example `stage_c.mbt`, `stage_d.mbt`).
 
 ## Preserve behavior and parity
 
