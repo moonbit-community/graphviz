@@ -153,22 +153,14 @@ fn update_rank_pht_for_label(
   if !@dot_shared.edge_has_label(edge) {
     return
   }
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  let tail_rank = match ranks.get(tail) {
+  let span = match edge_rank_span(edge, ranks) {
     Some(value) => value
     None => return
   }
-  let head_rank = match ranks.get(head) {
-    Some(value) => value
-    None => return
-  }
-  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-  if max_rank - min_rank <= 1 {
+  if span.max_rank - span.min_rank <= 1 {
     return
   }
-  let label_rank = (min_rank + max_rank) / 2
+  let label_rank = (span.min_rank + span.max_rank) / 2
   let half_height = match edge_mid_label_metrics(edge) {
     Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
@@ -198,6 +190,33 @@ priv struct BaseRankHalfHeights {
   rank_pht : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
+}
+
+///|
+priv struct EdgeRankSpan {
+  min_rank : Int
+  max_rank : Int
+}
+
+///|
+/// Graphviz parity: edge rank span is resolved from tail/head node ranks
+/// before long-edge label and vnode half-height adjustments.
+/// Do not change behavior without updating fixtures/tests.
+fn edge_rank_span(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+) -> EdgeRankSpan? {
+  let tail_rank = match ranks.get(edge.tail().name()) {
+    Some(value) => value
+    None => return None
+  }
+  let head_rank = match ranks.get(edge.head().name()) {
+    Some(value) => value
+    None => return None
+  }
+  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+  Some({ min_rank, max_rank })
 }
 
 ///|
@@ -258,22 +277,14 @@ fn apply_vnode_rank_half_heights(
   // intermediate ranks before cluster rank height adjustments.
   let vnode_half_height = VNODE_HEIGHT_PT / 2.0
   for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    let tail_rank = match ranks.get(tail) {
+    let span = match edge_rank_span(edge, ranks) {
       Some(value) => value
       None => continue
     }
-    let head_rank = match ranks.get(head) {
-      Some(value) => value
-      None => continue
-    }
-    let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-    let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-    if max_rank - min_rank <= 1 {
+    if span.max_rank - span.min_rank <= 1 {
       continue
     }
-    for rank in (min_rank + 1)..<max_rank {
+    for rank in (span.min_rank + 1)..<span.max_rank {
       let current = match rank_pht.get(rank) {
         Some(value) => value
         None => 0.0
