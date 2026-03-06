@@ -770,6 +770,12 @@ fn build_route_base_deps_for_dot(
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
+  let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
+    (edge : @cgraph.Edge) =>
+      match edge_mid_label_metrics(edge) {
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        None => None
+      }
   let edge_layout_deps : @routing.EdgeLayoutDeps = {
     edge_label_rank_for_routing_fn:
       (edge, ranks, mid_label_width_pt) =>
@@ -791,9 +797,24 @@ fn build_routing_callbacks_for_dot(
         vnode_info.edge_vnodes,
         vnode_positions,
       ),
-    edge_label_pos_from_vnode_fn: edge_label_pos_from_vnode,
-    flat_edge_label_pos_simple_fn: flat_edge_label_pos_simple,
-    edge_label_pos_fn: edge_label_pos_from_input,
+    edge_label_pos_from_vnode_fn: @routing.edge_label_pos_from_vnode,
+    flat_edge_label_pos_simple_fn:
+      (tail_port, head_port, tail_right_pt, head_left_pt, label_height_pt) =>
+        @routing.flat_edge_label_pos_simple(
+          tail_port,
+          head_port,
+          tail_right_pt,
+          head_left_pt,
+          label_height_pt,
+          EDGE_LABEL_FLAT_SPACE_PT,
+        ),
+    edge_label_pos_fn:
+      input =>
+        @routing.edge_label_pos_from_input(
+          input,
+          route_mid_label_metrics,
+          EDGE_LABEL_PAD_WIDTH_PT,
+        ),
     edge_port_label_pos_fn: edge_port_label_pos,
   }
   {
@@ -868,143 +889,6 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
     deps,
   )
 }
-///|
-/// Edge-label position computation from spline samples and rank-guided anchors,
-/// including flat-edge fallback and routing entry wrappers.
-
-///|
-fn flat_edge_label_pos_simple(
-  tail_port : @geom.Point,
-  head_port : @geom.Point,
-  tail_right_pt : Double,
-  head_left_pt : Double,
-  label_height_pt : Double,
-) -> @geom.Point {
-  let left_end = tail_port.x + tail_right_pt
-  let right_end = head_port.x - head_left_pt
-  let ctrx = (left_end + right_end) / 2.0
-  let ctry = tail_port.y + (label_height_pt + EDGE_LABEL_FLAT_SPACE_PT) / 2.0
-  @edge_spline.point(ctrx, ctry)
-}
-
-///|
-fn edge_label_pos_from_input(
-  input : @routing.EdgeLabelPosInput,
-) -> @geom.Point? {
-  let edge = input.edge
-  let spline = input.spline
-  let tail_clip = input.tail_clip
-  let head_clip = input.head_clip
-  let rankdir = input.rankdir
-  let label_rank_y = input.label_rank_y
-  let label_rank_x = input.label_rank_x
-  let apply_label_pad = input.apply_label_pad
-  let nodesep_pt = input.nodesep_pt
-  let label_pad_boost = input.label_pad_boost
-  let samples = @routing.sample_spline_points(spline.points, 96)
-  let fallback = match @routing.spline_label_pos_with_samples(samples) {
-    Some(value) => value
-    None => {
-      let mid = @edge_spline.point(
-        (tail_clip.x + head_clip.x) / 2.0,
-        (tail_clip.y + head_clip.y) / 2.0,
-      )
-      let delta = @edge_spline.point_sub(head_clip, tail_clip)
-      let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
-      let tangent =
-        if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
-      @routing.make_point_with_tangent(mid, tangent)
-    }
-  }
-  let label_point = match label_rank_y {
-    Some(axis) =>
-      match @routing.spline_label_pos_at_samples(
-        samples,
-        axis,
-        false,
-      ) {
-        Some(value) => value
-        None => fallback
-      }
-    None => fallback
-  }
-  let raw_pos = label_point.pos
-  let dir = label_point.tangent
-  let base_pos =
-    match (label_rank_x, label_rank_y) {
-      (Some(x_axis), Some(y_axis)) =>
-        match rankdir {
-          RankDir::LR | RankDir::RL => @edge_spline.point(y_axis, x_axis)
-          _ => @edge_spline.point(x_axis, y_axis)
-        }
-      (Some(value), None) =>
-        match rankdir {
-          RankDir::LR | RankDir::RL => @edge_spline.point(raw_pos.x, value)
-          _ => @edge_spline.point(value, raw_pos.y)
-        }
-      _ => raw_pos
-    }
-  if @dot_shared.edge_is_self(edge) {
-    return Some(base_pos)
-  }
-  match label_rank_y {
-    Some(_) =>
-      match edge_mid_label_metrics(edge) {
-        Some(metrics) => {
-          let half_extent = match rankdir {
-            RankDir::LR | RankDir::RL => metrics.height / 2.0
-            _ => metrics.width / 2.0
-          }
-          let sign = match rankdir {
-            RankDir::RL => -1.0
-            _ => 1.0
-          }
-          let mut pad = label_pad_boost
-          if label_rank_x is None {
-            if apply_label_pad {
-              pad = pad + nodesep_pt * 0.22
-            } else if metrics.width >= EDGE_LABEL_PAD_WIDTH_PT {
-              pad = pad + nodesep_pt * 0.22
-            }
-          } else {
-            pad = 0.0
-          }
-          Some(@edge_spline.point(base_pos.x + sign * (half_extent + pad), base_pos.y))
-        }
-        None => Some(base_pos)
-      }
-    None => {
-      let metrics = match edge_mid_label_metrics(edge) {
-        Some(value) => value
-        None => return Some(base_pos)
-      }
-      let normal = @edge_spline.point(-dir.y, dir.x)
-      let axis_threshold = 0.1
-      let abs_dx = Double::abs(dir.x)
-      let abs_dy = Double::abs(dir.y)
-      if spline.points.length() > 4 &&
-        abs_dx > axis_threshold &&
-        abs_dy > axis_threshold {
-        return Some(base_pos)
-      }
-      let offset =
-        if abs_dx <= axis_threshold {
-          metrics.width / 2.0
-        } else if abs_dy <= axis_threshold {
-          metrics.height / 2.0
-        } else {
-          0.0
-        }
-      if offset <= 0.0 {
-        Some(base_pos)
-      } else {
-        let pad = label_pad_boost
-        Some(@edge_spline.point_add(base_pos, @edge_spline.point_scale(normal, offset + pad)))
-      }
-    }
-  }
-}
-
 ///|
 /// Port-label parameter parsing and placement helpers for edge endpoints.
 
@@ -1168,25 +1052,6 @@ fn edge_label_rank_x(
     None => ()
   }
   None
-}
-
-///|
-/// Graphviz parity: label vnode offset aligned to refs/graphviz/lib/dotgen/dotsplines.c
-/// (place_vnlabel, GD_flip).
-/// Do not change behavior without updating fixtures/tests.
-fn edge_label_pos_from_vnode(
-  vnode_pos : @geom.Point,
-  label_width_pt : Double,
-  label_height_pt : Double,
-  rankdir : RankDir,
-) -> @geom.Point {
-  let width =
-    if rankdir == RankDir::LR || rankdir == RankDir::RL {
-      label_height_pt
-    } else {
-      label_width_pt
-    }
-  @edge_spline.point(vnode_pos.x + width / 2.0, vnode_pos.y)
 }
 
 ///|
