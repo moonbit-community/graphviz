@@ -316,6 +316,52 @@ fn line_spline(
 }
 
 ///|
+fn node_size_with_fallback(
+  sizes : Map[String, NodeSize],
+  node : @cgraph.Node,
+  record_orientation : RecordOrientation,
+) -> NodeSize {
+  match sizes.get(node.name()) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+}
+
+///|
+fn build_edges_from_positions(
+  graph : @cgraph.Graph,
+  positions : Map[String, @geom.Point],
+  node_size_for : (@cgraph.Node) -> NodeSize,
+  edge_splines_for :
+    (@cgraph.Edge, @geom.Point, @geom.Point, NodeSize, NodeSize) -> Array[@geom.Spline],
+) -> Array[DotLayoutEdge] {
+  let edges_out : Array[DotLayoutEdge] = []
+  for edge in graph.edges() {
+    let tail = edge.tail()
+    let head = edge.head()
+    let tail_pos = match positions.get(tail.name()) {
+      Some(value) => value
+      None => { x: 0.0, y: 0.0 }
+    }
+    let head_pos = match positions.get(head.name()) {
+      Some(value) => value
+      None => { x: 0.0, y: 0.0 }
+    }
+    let tail_size = node_size_for(tail)
+    let head_size = node_size_for(head)
+    edges_out.push({
+      edge,
+      splines: edge_splines_for(edge, tail_pos, head_pos, tail_size, head_size),
+      label_pos: None,
+      head_label_pos: None,
+      tail_label_pos: None,
+      xlabel_pos: None,
+    })
+  }
+  edges_out
+}
+
+///|
 /// Graphviz parity: noop/neato output assembly mirrors dot postprocess shape:
 /// cluster subgraph recursion + bbox expansion + root label placement.
 fn finalize_unranked_layout_graph(
@@ -677,10 +723,7 @@ pub fn layout_neato(
     let node = nodes[i]
     let scaled = scale_point(positions[i], scale_factor)
     positions_map[node.name()] = scaled
-    let size = match sizes.get(node.name()) {
-      Some(value) => value
-      None => node_size(node, record_orientation)
-    }
+    let size = node_size_with_fallback(sizes, node, record_orientation)
     nodes_out.push({
       node,
       pos: scaled,
@@ -690,35 +733,16 @@ pub fn layout_neato(
       xlabel_pos: None,
     })
   }
-  let edges_out : Array[DotLayoutEdge] = []
-  for edge in active_graph.edges() {
-    let tail = edge.tail()
-    let head = edge.head()
-    let tail_pos = match positions_map.get(tail.name()) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let head_pos = match positions_map.get(head.name()) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let tail_size = match sizes.get(tail.name()) {
-      Some(value) => value
-      None => node_size(tail, record_orientation)
-    }
-    let head_size = match sizes.get(head.name()) {
-      Some(value) => value
-      None => node_size(head, record_orientation)
-    }
-    edges_out.push({
-      edge,
-      splines: [line_spline(tail_pos, head_pos, tail_size, head_size)],
-      label_pos: None,
-      head_label_pos: None,
-      tail_label_pos: None,
-      xlabel_pos: None,
-    })
-  }
+  let node_size_for = (node : @cgraph.Node) =>
+    node_size_with_fallback(sizes, node, record_orientation)
+  let edges_out =
+    build_edges_from_positions(
+      active_graph,
+      positions_map,
+      node_size_for,
+      (_edge, tail_pos, head_pos, tail_size, head_size) =>
+        [line_spline(tail_pos, head_pos, tail_size, head_size)],
+    )
   finalize_unranked_layout_graph(active_graph, rankdir, nodes_out, edges_out)
 }
 ///|
@@ -790,6 +814,28 @@ fn parse_edge_pos(value : String, scale_factor : Double) -> Array[@geom.Spline] 
 }
 
 ///|
+fn parse_required_noop_node_pos(
+  node : @cgraph.Node,
+  scale_factor : Double,
+) -> @geom.Point raise DotLayoutError {
+  let pos_value = match node.get_attr("pos") {
+    Some(value) => value
+    None =>
+      raise DotLayoutError::InvalidGraph(
+        message="neato -n requires pos for node \{node.name()}",
+      )
+  }
+  let parsed = match parse_point_attr(pos_value) {
+    Some(value) => value
+    None =>
+      raise DotLayoutError::InvalidGraph(
+        message="invalid pos for node \{node.name()}",
+      )
+  }
+  scale_point(parsed, scale_factor)
+}
+
+///|
 ///|
 pub fn layout_neato_noop(
   graph : @cgraph.Graph,
@@ -806,21 +852,7 @@ pub fn layout_neato_noop(
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
   for node in active_graph.nodes() {
-    let pos_value = match node.get_attr("pos") {
-      Some(value) => value
-      None =>
-        raise DotLayoutError::InvalidGraph(
-          message="neato -n requires pos for node \{node.name()}",
-        )
-    }
-    let parsed = match parse_point_attr(pos_value) {
-      Some(value) => value
-      None =>
-        raise DotLayoutError::InvalidGraph(
-          message="invalid pos for node \{node.name()}",
-        )
-    }
-    let pos = scale_point(parsed, scale_factor)
+    let pos = parse_required_noop_node_pos(node, scale_factor)
     positions[node.name()] = pos
     let size = node_size(node, record_orientation)
     nodes_out.push({
@@ -833,46 +865,30 @@ pub fn layout_neato_noop(
     })
   }
   let use_edge_pos = no_op_level > 1
-  let edges_out : Array[DotLayoutEdge] = []
-  for edge in active_graph.edges() {
-    let tail = edge.tail()
-    let head = edge.head()
-    let tail_name = tail.name()
-    let head_name = head.name()
-    let tail_pos = match positions.get(tail_name) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let head_pos = match positions.get(head_name) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let tail_size = node_size(tail, record_orientation)
-    let head_size = node_size(head, record_orientation)
-    let splines = if use_edge_pos {
-      match edge.get_attr("pos") {
-        Some(value) => {
-          let parsed = parse_edge_pos(value, scale_factor)
-          if parsed.length() > 0 {
-            parsed
-          } else {
-            [line_spline(tail_pos, head_pos, tail_size, head_size)]
+  let node_size_for = (node : @cgraph.Node) =>
+    node_size(node, record_orientation)
+  let edges_out =
+    build_edges_from_positions(
+      active_graph,
+      positions,
+      node_size_for,
+      (edge, tail_pos, head_pos, tail_size, head_size) =>
+        if use_edge_pos {
+          match edge.get_attr("pos") {
+            Some(value) => {
+              let parsed = parse_edge_pos(value, scale_factor)
+              if parsed.length() > 0 {
+                parsed
+              } else {
+                [line_spline(tail_pos, head_pos, tail_size, head_size)]
+              }
+            }
+            None => [line_spline(tail_pos, head_pos, tail_size, head_size)]
           }
-        }
-        None => [line_spline(tail_pos, head_pos, tail_size, head_size)]
-      }
-    } else {
-      [line_spline(tail_pos, head_pos, tail_size, head_size)]
-    }
-    edges_out.push({
-      edge,
-      splines,
-      label_pos: None,
-      head_label_pos: None,
-      tail_label_pos: None,
-      xlabel_pos: None,
-    })
-  }
+        } else {
+          [line_spline(tail_pos, head_pos, tail_size, head_size)]
+        },
+    )
   finalize_unranked_layout_graph(active_graph, rankdir, nodes_out, edges_out)
 }
 
