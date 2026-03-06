@@ -406,6 +406,18 @@ priv struct RankSameMetadata {
 }
 
 ///|
+priv struct ClusterTraversalMetadata {
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+}
+
+///|
+priv struct FlatConstraintMetadata {
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -653,6 +665,54 @@ fn collect_rank_same_metadata(
 }
 
 ///|
+/// Graphviz parity: cluster order traversal and parent mapping are collected
+/// before clustered ordering stages with Graphviz traversal order unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_cluster_traversal_metadata(
+  graph : @cgraph.Graph,
+) -> ClusterTraversalMetadata {
+  let cluster_order : Array[String] = []
+  @clustering.collect_cluster_names_order(graph, cluster_order)
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  { cluster_order, cluster_parents }
+}
+
+///|
+/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
+/// plus same-rank edge constraints before clustered reorder dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_flat_constraint_metadata(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> FlatConstraintMetadata {
+  let flat_constraints_output = @ordering.build_flat_constraints(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_keys,
+  )
+  let flat_constraints = flat_constraints_output.flat_constraints
+  let ordering_set = flat_constraints_output.ordering_set
+  promote_same_rank_edges_to_flat_constraints(
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    flat_constraints,
+  )
+  { flat_constraints, ordering_set }
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -677,13 +737,9 @@ fn compute_cluster_metadata(
   let cluster_min_rank = cluster_rank_bounds.min_rank
   let cluster_max_rank = cluster_rank_bounds.max_rank
   let cluster_first_order = cluster_rank_bounds.first_order
-  // Graphviz parity: cluster order and parent map are collected from
-  // Graphviz cluster traversal before clustered ordering stages.
-  let cluster_order : Array[String] = []
-  @clustering.collect_cluster_names_order(graph, cluster_order)
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let cluster_traversal_metadata = collect_cluster_traversal_metadata(graph)
+  let cluster_order = cluster_traversal_metadata.cluster_order
+  let cluster_parents = cluster_traversal_metadata.cluster_parents
   apply_cluster_order_metadata(
     nodes,
     cluster_keys,
@@ -695,19 +751,17 @@ fn compute_cluster_metadata(
   let rank_same_metadata = collect_rank_same_metadata(graph)
   let rank_same_groups = rank_same_metadata.rank_same_groups
   let rank_same_order = rank_same_metadata.rank_same_order
-  // Graphviz parity: flat ordering constraints include Graphviz ordering attrs
-  // plus same-rank edge constraints before clustered reorder dispatch.
-  let flat_constraints_output = @ordering.build_flat_constraints(
+  let flat_constraint_metadata = build_cluster_flat_constraint_metadata(
     graph,
     nodes,
     edges,
     edge_tail,
     edge_head,
+    ranks,
     cluster_keys,
   )
-  let flat_constraints = flat_constraints_output.flat_constraints
-  let ordering_set = flat_constraints_output.ordering_set
-  promote_same_rank_edges_to_flat_constraints(edges, edge_tail, edge_head, ranks, flat_constraints)
+  let flat_constraints = flat_constraint_metadata.flat_constraints
+  let ordering_set = flat_constraint_metadata.ordering_set
   {
     has_clusters,
     cluster_keys,
