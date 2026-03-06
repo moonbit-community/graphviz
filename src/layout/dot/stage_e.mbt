@@ -445,6 +445,18 @@ priv struct PortLayoutMaps {
 }
 
 ///|
+fn final_node_size_for_routing(
+  node : @cgraph.Node,
+  output_sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+) -> NodeSize {
+  match output_sizes.get(node.name()) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+}
+
+///|
 /// Graphviz parity: node layout assembly aligned to refs/graphviz/lib/dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_layout_nodes(
@@ -457,10 +469,12 @@ fn build_layout_nodes(
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let size = match input.output_sizes.get(name) {
-      Some(value) => value
-      None => node_size(node, input.record_orientation)
-    }
+    let size =
+      final_node_size_for_routing(
+        node,
+        input.output_sizes,
+        input.record_orientation,
+      )
     nodes_out.push({
       node,
       pos,
@@ -494,11 +508,13 @@ fn build_port_layout_maps(
   let label_ports_raw : Map[String, Map[String, RecordPort]] = Map::new()
   if input.has_port_edges {
     for node_layout in input.nodes_out {
+      let final_size =
+        final_node_size_for_routing(
+          node_layout.node,
+          input.output_sizes,
+          input.record_orientation,
+        )
       let name = node_layout.node.name()
-      let final_size = match input.output_sizes.get(name) {
-        Some(value) => value
-        None => node_size(node_layout.node, input.record_orientation)
-      }
       let label = label_text(node_layout.node)
       let has_html = @html_label.is_html_label_text(label)
       if has_html {
