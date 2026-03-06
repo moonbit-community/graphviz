@@ -107,55 +107,7 @@ fn get_intrsx_index(
   -1
 }
 
-fn record_obj_intersection(
-  objs : Array[XObject],
-  labels : Array[XLabel],
-  op_idx : Int,
-  cp_idx : Int,
-  rect : @geom.Rect,
-  area : Double,
-  intrsx : Array[Int?],
-) -> Double {
-  let op = objs[op_idx]
-  let cp = objs[cp_idx]
-  let mut idx = get_intrsx_index(op, cp, labels)
-  if idx < 0 {
-    // Graphviz parity: default to XLNXCY when get_intrsx_index returns -1.
-    idx = XLNXCY
-  }
-  match intrsx[idx] {
-    Some(existing_idx) => {
-      let mut max_area = 0.0
-      let srect = rect_from_object(objs[existing_idx])
-      let sa = rect_overlap_area(rect, srect)
-      if sa > area {
-        max_area = sa
-      }
-      match objs[existing_idx].label_index {
-        Some(label_idx) => {
-          let existing_label = labels[label_idx]
-          let srect = rect_from_label(existing_label)
-          let sa = rect_overlap_area(rect, srect)
-          if sa > area && sa > max_area {
-            max_area = sa
-          }
-        }
-        None => ()
-      }
-      if max_area > 0.0 {
-        return max_area
-      }
-      intrsx[idx] = Some(cp_idx)
-      area
-    }
-    None => {
-      intrsx[idx] = Some(cp_idx)
-      area
-    }
-  }
-}
-
-fn record_label_intersection(
+fn record_intersection_slot(
   objs : Array[XObject],
   labels : Array[XLabel],
   op_idx : Int,
@@ -239,7 +191,7 @@ fn xlintersections(
     let overlap = rect_overlap_area(rect, srect)
     if overlap > 0.0 {
       let ra =
-        record_obj_intersection(objs, labels, obj_idx, i, rect, overlap, intrsx)
+        record_intersection_slot(objs, labels, obj_idx, i, rect, overlap, intrsx)
       count = count + 1
       area = area + ra
     }
@@ -251,7 +203,7 @@ fn xlintersections(
           let overlap = rect_overlap_area(rect, srect)
           if overlap > 0.0 {
             let ra =
-              record_label_intersection(
+              record_intersection_slot(
                 objs,
                 labels,
                 obj_idx,
