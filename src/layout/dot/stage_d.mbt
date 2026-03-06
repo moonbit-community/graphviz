@@ -869,6 +869,21 @@ priv struct XSimplexInput {
 }
 
 ///|
+fn resolve_x_simplex_root_context(
+  nodes : Array[@cgraph.Node],
+) -> (RankDir, Double) {
+  if nodes.length() > 0 {
+    let root_graph = nodes[0].graph()
+    (
+      @dot_shared.graph_rankdir(root_graph),
+      @positioning.cluster_margin_pt(root_graph),
+    )
+  } else {
+    (RankDir::TB, CLUSTER_MARGIN_PT)
+  }
+}
+
+///|
 fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   let order_index = @ordering.build_order_index(input.groups)
   let mut has_port_edges = false
@@ -884,17 +899,8 @@ fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
     } else {
       Map::new()
     }
-  let rankdir =
-    if input.nodes.length() > 0 {
-      @dot_shared.graph_rankdir(input.nodes[0].graph())
-    } else {
-      RankDir::TB
-    }
-  let root_margin = if input.nodes.length() > 0 {
-    @positioning.cluster_margin_pt(input.nodes[0].graph())
-  } else {
-    CLUSTER_MARGIN_PT
-  }
+  let (rankdir, root_margin) =
+    resolve_x_simplex_root_context(input.nodes)
   @positioning.x_positions_from_simplex(
     {
       graph_root: input.graph_root,
