@@ -11,6 +11,27 @@ priv struct PreparedXposConstraintInputs {
 }
 
 ///|
+fn cluster_label_borders_for_xpos_constraints(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+) -> (Double, Double) {
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  if !flip {
+    return (0.0, 0.0)
+  }
+  match graph_label_metrics(graph) {
+    Some(metrics) => {
+      let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
+      match graph_label_loc(graph) {
+        LabelLoc::Top => (0.0, border)
+        LabelLoc::Bottom => (border, 0.0)
+      }
+    }
+    None => (0.0, 0.0)
+  }
+}
+
+///|
 fn prepare_xpos_constraint_inputs(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -27,7 +48,7 @@ fn prepare_xpos_constraint_inputs(
   flat_label_edges : Array[ConstraintEdge],
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints =
-    build_cluster_constraints(
+    @positioning.build_cluster_constraints(
       graph,
       nodes,
       edges,
@@ -39,6 +60,11 @@ fn prepare_xpos_constraint_inputs(
       nodesep_pt,
       has_edge_labels,
       edge_vnodes,
+      {
+        cluster_label_borders_for: cluster_label_borders_for_xpos_constraints,
+        cluster_label_width_with_pad_for: cluster_label_width_with_pad_for_layout,
+        cluster_compact_weight: CLUSTER_COMPACT_WEIGHT,
+      },
     )
   let all_extra_nodes = base_extra_nodes.copy()
   for pair in cluster_constraints.extra_nodes {
