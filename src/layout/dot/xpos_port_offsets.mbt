@@ -1,5 +1,5 @@
 ///|
-/// X-position port geometry and offset helpers.
+/// X-position port geometry, offset, and ordering helpers.
 
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
@@ -124,6 +124,30 @@ fn edge_port_offset(
           is_record_shape(node) ||
           @html_label.is_html_label_text(label_text(node)),
         layout_port_offset,
+      ),
+  )
+}
+
+///|
+fn edge_port_order(
+  node_name : String,
+  port : @cgraph.Port?,
+  offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
+) -> Double {
+  @positioning.edge_port_order(
+    node_name,
+    port,
+    offsets,
+    compass =>
+      compass_port_point_for_layout(
+        node_name,
+        nodes_by_name.get(node_name),
+        compass,
+        sizes,
+        rankdir,
       ),
   )
 }
