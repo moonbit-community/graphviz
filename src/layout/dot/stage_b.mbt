@@ -35,6 +35,24 @@ priv struct RankHeights {
 }
 
 ///|
+/// Graphviz parity: cluster metadata payload keeps rank and cluster snapshots
+/// grouped so Stage B clustered-ordering wiring remains explicit and stable.
+priv struct ClusterMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
 /// Stage B rank-data scaffolding helpers for layered ordering preparation.
 
 ///|

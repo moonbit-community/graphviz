@@ -33,22 +33,6 @@ priv struct OrderingDispatchOutput {
 }
 
 ///|
-priv struct ClusterMetadata {
-  has_clusters : Bool
-  cluster_keys : Map[String, String]
-  cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-  intercluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  flat_constraints : Map[String, Bool]
-  ordering_set : Bool
-}
-
-///|
 type OrderingRuntimeContext = @ordering.OrderingRuntimeContext
 
 ///|
