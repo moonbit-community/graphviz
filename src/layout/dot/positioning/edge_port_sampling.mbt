@@ -3,6 +3,49 @@
 /// tie-break preprocessing and xpos simplex slack construction.
 
 ///|
+/// Graphviz parity: edge-port sampling context keeps rankdir lookup, node
+/// index, and per-node port offsets fixed before edge endpoint iteration.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_port_offsets_for_nodes(
+  nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, @shared.NodeSize],
+  node_size_for_missing : (@cgraph.Node, @shared.RankDir) -> @shared.NodeSize,
+  ports_for_node : (@cgraph.Node, @geom.Point, @shared.NodeSize, @shared.RankDir) -> Map[String, @shared.RecordPort],
+  layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
+  swap_node_size : (@shared.NodeSize) -> @shared.NodeSize,
+) -> Map[String, Map[String, @shared.RecordPort]] {
+  let offsets : Map[String, Map[String, @shared.RecordPort]] = Map::new()
+  let rankdir =
+    if nodes.length() > 0 {
+      @shared.graph_rankdir(nodes[0].graph())
+    } else {
+      @shared.RankDir::TB
+    }
+  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
+  for node in nodes {
+    let name = node.name()
+    let base_size = match output_sizes.get(name) {
+      Some(value) => value
+      None => node_size_for_missing(node, rankdir)
+    }
+    let ports = ports_for_node(node, origin, base_size, rankdir)
+    if ports.length() > 0 {
+      let node_offsets : Map[String, @shared.RecordPort] = Map::new()
+      for port_name, port_info in ports {
+        let offset = layout_port_offset(port_info.center, rankdir)
+        let size = match rankdir {
+          @shared.RankDir::LR | @shared.RankDir::RL => swap_node_size(port_info.size)
+          _ => port_info.size
+        }
+        node_offsets[port_name] = { center: offset, size, sides: port_info.sides }
+      }
+      offsets[name] = node_offsets
+    }
+  }
+  offsets
+}
+
+///|
 /// Graphviz parity: port order uses compassPort angle quantization
 /// (MC_SCALE=256) for mincross medians (shapes.c + mincross.c).
 /// Do not change behavior without updating fixtures/tests.

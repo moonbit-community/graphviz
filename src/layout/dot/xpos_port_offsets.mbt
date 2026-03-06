@@ -5,23 +5,17 @@ fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
-  let offsets : Map[String, Map[String, RecordPort]] = Map::new()
-  let rankdir = if nodes.length() > 0 {
-    @dot_shared.graph_rankdir(nodes[0].graph())
-  } else {
-    RankDir::TB
-  }
-  let record_orientation = record_layout_orientation(rankdir)
-  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
-  for node in nodes {
-    let name = node.name()
-    let base_size = match output_sizes.get(name) {
-      Some(value) => value
-      None => node_size(node, record_orientation)
-    }
-    let label = label_text(node)
-    let has_html = @html_label.is_html_label_text(label)
-    let ports =
+  @positioning.build_port_offsets_for_nodes(
+    nodes,
+    output_sizes,
+    (node, rankdir) => {
+      let record_orientation = record_layout_orientation(rankdir)
+      node_size(node, record_orientation)
+    },
+    (node, origin, base_size, rankdir) => {
+      let record_orientation = record_layout_orientation(rankdir)
+      let label = label_text(node)
+      let has_html = @html_label.is_html_label_text(label)
       if has_html {
         html_ports(node, origin, base_size)
       } else if is_record_shape(node) {
@@ -29,20 +23,10 @@ fn port_offsets_for_nodes(
       } else {
         Map::new()
       }
-    if ports.length() > 0 {
-      let node_offsets : Map[String, RecordPort] = Map::new()
-      for port_name, port_info in ports {
-        let offset = layout_port_offset(port_info.center, rankdir)
-        let size = match rankdir {
-          RankDir::LR | RankDir::RL => swap_node_size(port_info.size)
-          _ => port_info.size
-        }
-        node_offsets[port_name] = { center: offset, size, sides: port_info.sides }
-      }
-      offsets[name] = node_offsets
-    }
-  }
-  offsets
+    },
+    layout_port_offset,
+    swap_node_size,
+  )
 }
 
 ///|
