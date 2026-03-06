@@ -121,11 +121,13 @@ test "port label positions match Graphviz" {
   for fixture in fixtures {
     assert_eq(fixture.label_html, false)
     assert_eq(fixture.dist, PORT_LABEL_DISTANCE_PT * fixture.labeldistance)
-    let actual = port_label_pos_from_points(
+    let actual = @routing.port_label_pos_from_points(
       @edge_spline.point(fixture.pe_x, fixture.pe_y),
       @edge_spline.point(fixture.pf_x, fixture.pf_y),
       fixture.labelangle,
       fixture.labeldistance,
+      PORT_LABEL_DISTANCE_PT,
+      GRAPHVIZ_PI,
     )
     if actual.x != fixture.pos_x || actual.y != fixture.pos_y {
       fail(
@@ -150,17 +152,21 @@ test "port label params match Graphviz defaults" {
         )
     }
     assert_port_label_edge(edge, fixture)
-    let params = match port_label_params(edge) {
+    let (angle_deg, distance_scale) = match @routing.port_label_params(
+      edge,
+      PORT_LABEL_ANGLE_DEG,
+      PORT_LABEL_ANGLE_MIN_DEG,
+    ) {
       Some(value) => value
       None =>
         fail(
           "missing port label params for edge \{fixture.tail} -> \{fixture.head}",
         )
     }
-    if params.angle_deg != fixture.labelangle ||
-      params.distance_scale != fixture.labeldistance {
+    if angle_deg != fixture.labelangle ||
+      distance_scale != fixture.labeldistance {
       fail(
-        "port label params mismatch (\{fixture.tail}->\{fixture.head}) got (\{params.angle_deg},\{params.distance_scale}) expected (\{fixture.labelangle},\{fixture.labeldistance})",
+        "port label params mismatch (\{fixture.tail}->\{fixture.head}) got (\{angle_deg},\{distance_scale}) expected (\{fixture.labelangle},\{fixture.labeldistance})",
       )
     }
   }

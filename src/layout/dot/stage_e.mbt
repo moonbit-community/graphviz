@@ -770,6 +770,15 @@ fn build_route_base_deps_for_dot(
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
+  let edge_port_label_pos_for_dot =
+    (input : @routing.EdgePortLabelPosInput) =>
+      @routing.edge_port_label_pos(
+        input,
+        PORT_LABEL_ANGLE_DEG,
+        PORT_LABEL_ANGLE_MIN_DEG,
+        PORT_LABEL_DISTANCE_PT,
+        GRAPHVIZ_PI,
+      )
   let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
     (edge : @cgraph.Edge) =>
       match edge_mid_label_metrics(edge) {
@@ -815,7 +824,7 @@ fn build_routing_callbacks_for_dot(
           route_mid_label_metrics,
           EDGE_LABEL_PAD_WIDTH_PT,
         ),
-    edge_port_label_pos_fn: edge_port_label_pos,
+    edge_port_label_pos_fn: edge_port_label_pos_for_dot,
   }
   {
     recover_slack_vnodes_fn:
@@ -844,7 +853,7 @@ fn build_routing_callbacks_for_dot(
       ),
     self_edge_label_height_fn: self_edge_label_height_pt,
     self_edge_label_width_fn: self_edge_label_width_pt,
-    edge_port_label_pos_fn: edge_port_label_pos,
+    edge_port_label_pos_fn: edge_port_label_pos_for_dot,
   }
 }
 
@@ -903,106 +912,7 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
   )
 }
 ///|
-/// Port-label parameter parsing and placement helpers for edge endpoints.
-
-///|
-priv struct PortLabelParams {
-  angle_deg : Double
-  distance_scale : Double
-}
-
-///|
-fn port_label_params(edge : @cgraph.Edge) -> PortLabelParams? {
-  let angle_attr = edge.get_attr("labelangle")
-  let distance_attr = edge.get_attr("labeldistance")
-  let has_angle = match angle_attr {
-    Some(value) => value != ""
-    None => false
-  }
-  let has_distance = match distance_attr {
-    Some(value) => value != ""
-    None => false
-  }
-  if !has_angle && !has_distance {
-    return None
-  }
-  let angle_deg = match angle_attr {
-    Some(value) =>
-      if value == "" {
-        PORT_LABEL_ANGLE_DEG
-      } else {
-        @dot_shared.parse_attr_double(
-          value,
-          PORT_LABEL_ANGLE_DEG,
-          PORT_LABEL_ANGLE_MIN_DEG,
-        )
-      }
-    None => PORT_LABEL_ANGLE_DEG
-  }
-  let distance_scale = match distance_attr {
-    Some(value) =>
-      if value == "" {
-        1.0
-      } else {
-        @dot_shared.parse_attr_double(value, 1.0, 0.0)
-      }
-    None => 1.0
-  }
-  Some({ angle_deg, distance_scale })
-}
-
-///|
-fn port_label_pos_from_points(
-  pe : @geom.Point,
-  pf : @geom.Point,
-  angle_deg : Double,
-  distance_scale : Double,
-) -> @geom.Point {
-  let angle =
-    @edge_spline.libm_fma(
-      angle_deg / 180.0,
-      GRAPHVIZ_PI,
-      @edge_spline.libm_atan2(pf.y - pe.y, pf.x - pe.x),
-    )
-  let dist = PORT_LABEL_DISTANCE_PT * distance_scale
-  @edge_spline.point(
-    @edge_spline.libm_fma(dist, @edge_spline.libm_cos(angle), pe.x),
-    @edge_spline.libm_fma(dist, @edge_spline.libm_sin(angle), pe.y),
-  )
-}
-
-///|
-fn edge_port_label_pos(
-  input : @routing.EdgePortLabelPosInput,
-) -> @geom.Point? {
-  let edge = input.edge
-  let spline = input.spline
-  let head_p = input.is_head
-  // Graphviz parity: map edge dir + arrow attrs to place_portlabel eflag/sflag.
-  let graph_kind = edge.tail().graph().kind()
-  let marker_present =
-    if head_p {
-      @dot_shared.edge_has_head_marker(edge, graph_kind)
-    } else {
-      @dot_shared.edge_has_tail_marker(edge, graph_kind)
-    }
-  let params = match port_label_params(edge) {
-    Some(value) => value
-    None => return None
-  }
-  let port_points = match @routing.port_label_points(spline, head_p, marker_present) {
-    Some(value) => value
-    None => return None
-  }
-  Some(
-    port_label_pos_from_points(
-      port_points.pos,
-      port_points.tangent,
-      params.angle_deg,
-      params.distance_scale,
-    ),
-  )
-}
+/// Port-label parameter parsing and placement is delegated to routing package.
 /// Edge-label overlap nudge geometry and shared edge-endpoint helpers.
 
 ///|
