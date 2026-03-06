@@ -368,23 +368,6 @@ fn resolve_routing_port_padding(
 }
 
 ///|
-/// Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right
-/// space) before routing context assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_pathplan_sizes_for_routing(
-  prep : LayoutPrep,
-  sizes : Map[String, NodeSize],
-) -> Map[String, NodeSize] {
-  apply_self_edge_right_space(
-    prep.nodes,
-    prep.edges,
-    sizes,
-    prep.rankdir,
-    prep.record_orientation,
-  )
-}
-
-///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -401,8 +384,16 @@ fn build_routing_precompute_data(
       input.label_ports_map,
       input.enable_complex_tuning,
     )
+  // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right
+  // space) before routing context assembly.
   let pathplan_sizes =
-    build_pathplan_sizes_for_routing(prep, input.sizes)
+    apply_self_edge_right_space(
+      prep.nodes,
+      prep.edges,
+      input.sizes,
+      prep.rankdir,
+      prep.record_orientation,
+    )
   @routing.build_routing_precompute_pipeline(
     {
       edges: prep.edges,
