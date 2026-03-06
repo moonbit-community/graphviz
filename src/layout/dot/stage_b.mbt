@@ -194,6 +194,13 @@ priv struct RankHeightCopies {
 }
 
 ///|
+priv struct BaseRankHalfHeights {
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+///|
 fn init_rank_half_heights(
   all_ranks : Array[Int],
 ) -> Map[Int, Double] {
@@ -298,7 +305,37 @@ fn clone_rank_half_heights(
   { rank_ht1, rank_ht2 }
 }
 
-
+///|
+/// Graphviz parity: base rank half-heights are computed before cluster-specific
+/// rank height adjustment in the same node->edge-label->vnode order as rank.c.
+/// Do not change behavior without updating fixtures/tests.
+fn build_base_rank_half_heights(
+  input : RankHeightsInput,
+) -> BaseRankHalfHeights {
+  let rank_pht = init_rank_half_heights(input.all_ranks)
+  apply_node_rank_half_heights(
+    rank_pht,
+    input.rank_keys,
+    input.groups,
+    input.sizes,
+    input.self_edge_labels,
+  )
+  if input.has_edge_labels {
+    apply_edge_label_rank_half_heights(
+      input.edges,
+      input.ranks,
+      rank_pht,
+      input.rankdir,
+    )
+  }
+  apply_vnode_rank_half_heights(input.edges, input.ranks, rank_pht)
+  let rank_height_copies = clone_rank_half_heights(input.all_ranks, rank_pht)
+  {
+    rank_pht,
+    rank_ht1: rank_height_copies.rank_ht1,
+    rank_ht2: rank_height_copies.rank_ht2,
+  }
+}
 
 ///|
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
@@ -307,29 +344,13 @@ fn compute_rank_heights(
   input : RankHeightsInput,
 ) -> RankHeights {
   let graph = input.graph
-  let edges = input.edges
   let ranks = input.ranks
   let sizes = input.sizes
   let self_edge_labels = input.self_edge_labels
-  // Graphviz parity: initial per-rank half-heights come from the tallest
-  // real node (plus self-edge label inflation) in each rank.
-  let rank_pht = init_rank_half_heights(input.all_ranks)
-  apply_node_rank_half_heights(
-    rank_pht,
-    input.rank_keys,
-    input.groups,
-    sizes,
-    self_edge_labels,
-  )
-  // Graphviz parity: edge labels can raise intermediate rank half-heights
-  // for long edges before vnode rank expansion in rank.c/position.c flow.
-  if input.has_edge_labels {
-    apply_edge_label_rank_half_heights(edges, ranks, rank_pht, input.rankdir)
-  }
-  apply_vnode_rank_half_heights(edges, ranks, rank_pht)
-  let rank_height_copies = clone_rank_half_heights(input.all_ranks, rank_pht)
-  let rank_ht1 = rank_height_copies.rank_ht1
-  let rank_ht2 = rank_height_copies.rank_ht2
+  let base_half_heights = build_base_rank_half_heights(input)
+  let rank_pht = base_half_heights.rank_pht
+  let rank_ht1 = base_half_heights.rank_ht1
+  let rank_ht2 = base_half_heights.rank_ht2
   let _ = @clustering.apply_cluster_rank_heights(
     {
       graph,
