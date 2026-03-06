@@ -567,36 +567,6 @@ fn collect_cluster_rank_bounds(
 }
 
 ///|
-/// Graphviz parity: same-rank edges are promoted to flat ordering
-/// constraints for clustered metadata reorder paths.
-/// Do not change behavior without updating fixtures/tests.
-fn promote_same_rank_edges_to_flat_constraints(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  flat_constraints : Map[String, Bool],
-) -> Unit {
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    if tail != head {
-      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
-      if tail_rank == head_rank {
-        flat_constraints["\{tail}|\{head}"] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-}
-
-///|
 /// Graphviz parity: cluster membership maps mirror per-node cluster ownership
 /// used across clustered ordering and compound-edge preprocessing.
 /// Do not change behavior without updating fixtures/tests.
@@ -692,7 +662,7 @@ fn build_cluster_flat_constraint_metadata(
   )
   let flat_constraints = flat_constraints_output.flat_constraints
   let ordering_set = flat_constraints_output.ordering_set
-  promote_same_rank_edges_to_flat_constraints(
+  @ordering.add_same_rank_constraint_edges_to_flat_constraints(
     edges,
     edge_tail,
     edge_head,
