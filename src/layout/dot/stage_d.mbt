@@ -886,15 +886,9 @@ fn resolve_x_simplex_root_context(
 ///|
 fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   let order_index = @ordering.build_order_index(input.groups)
-  let mut has_port_edges = false
-  for edge in input.edges {
-    if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
-      has_port_edges = true
-      break
-    }
-  }
+  let edge_flags = scan_edge_flags(input.edges)
   let port_offsets =
-    if has_port_edges {
+    if edge_flags.has_port_edges {
       port_offsets_for_nodes(input.nodes, input.output_sizes)
     } else {
       Map::new()
