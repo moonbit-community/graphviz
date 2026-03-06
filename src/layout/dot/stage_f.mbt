@@ -1846,30 +1846,15 @@ fn apply_edge_label_updates(
 }
 
 ///|
-fn recurse_adjust_labels_for_clusters(
+fn map_layout_subgraphs(
   subgraphs : Array[DotLayoutGraph],
-  nodesep_pt : Double,
+  mapper : (DotLayoutGraph) -> DotLayoutGraph,
 ) -> Array[DotLayoutGraph] {
-  let adjusted : Array[DotLayoutGraph] = []
+  let mapped : Array[DotLayoutGraph] = []
   for subgraph in subgraphs {
-    adjusted.push(adjust_labels_for_clusters(subgraph, nodesep_pt))
+    mapped.push(mapper(subgraph))
   }
-  adjusted
-}
-
-///|
-fn recurse_adjust_labels_for_overlaps(
-  subgraphs : Array[DotLayoutGraph],
-  nodesep_pt : Double,
-  rankdir : RankDir,
-) -> Array[DotLayoutGraph] {
-  let adjusted : Array[DotLayoutGraph] = []
-  for subgraph in subgraphs {
-    adjusted.push(
-      adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
-    )
-  }
-  adjusted
+  mapped
 }
 
 ///|
@@ -1911,7 +1896,11 @@ fn adjust_labels_for_clusters(
     label_rects.push(rect)
   }
   if label_rects.length() == 0 {
-    let subgraphs = recurse_adjust_labels_for_clusters(layout.subgraphs, nodesep_pt)
+    let subgraphs =
+      map_layout_subgraphs(
+        layout.subgraphs,
+        subgraph => adjust_labels_for_clusters(subgraph, nodesep_pt),
+      )
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
     let adjusted_labels = adjust_edge_label_positions(
@@ -1922,7 +1911,10 @@ fn adjust_labels_for_clusters(
     let updated_subgraphs =
       apply_edge_label_updates(layout.subgraphs, adjusted_labels.updates)
     let subgraphs =
-      recurse_adjust_labels_for_clusters(updated_subgraphs, nodesep_pt)
+      map_layout_subgraphs(
+        updated_subgraphs,
+        subgraph => adjust_labels_for_clusters(subgraph, nodesep_pt),
+      )
     rebuild_layout_edges_subgraphs(layout, adjusted_labels.edges, subgraphs)
   }
 }
@@ -2006,13 +1998,19 @@ fn adjust_labels_for_overlaps(
   }
   if updates.length() == 0 {
     let subgraphs =
-      recurse_adjust_labels_for_overlaps(layout.subgraphs, nodesep_pt, rankdir)
+      map_layout_subgraphs(
+        layout.subgraphs,
+        subgraph => adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
+      )
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
     let edges = apply_label_updates_to_edges(layout.edges, updates)
     let updated_subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
     let subgraphs =
-      recurse_adjust_labels_for_overlaps(updated_subgraphs, nodesep_pt, rankdir)
+      map_layout_subgraphs(
+        updated_subgraphs,
+        subgraph => adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
+      )
     rebuild_layout_edges_subgraphs(layout, edges, subgraphs)
   }
 }
