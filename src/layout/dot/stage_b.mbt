@@ -571,28 +571,29 @@ fn promote_same_rank_edges_to_flat_constraints(
 }
 
 ///|
-/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Graphviz parity: cluster keys mirror per-node cluster ownership used across
+/// clustered ordering and compound-edge preprocessing.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_cluster_metadata(
-  input : ClusterMetadataInput,
-) -> ClusterMetadata {
-  let graph = input.graph
-  let nodes = input.nodes
-  let edges = input.edges
-  let groups = input.groups
-  let ranks = input.ranks
-  let node_order = input.node_order
-  let edge_tail = input.edge_tail
-  let edge_head = input.edge_head
-  let has_clusters = @dot_shared.graph_has_cluster(graph)
-  // Graphviz parity: cluster key map comes from per-node cluster ownership
-  // used throughout clustered ordering and compound-edge setup.
+fn build_cluster_key_map(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, String] {
   let cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     cluster_keys[node.name()] = @clustering.node_cluster_key(node)
   }
-  // Graphviz parity: cluster subgraph node order follows GD_nlist traversal
-  // direction and rankdir flip behavior from dotgen cluster ordering.
+  cluster_keys
+}
+
+///|
+/// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
+/// with optional graphviz_flip reversal before clustered reorder setup.
+/// Do not change behavior without updating fixtures/tests.
+fn seed_cluster_node_order(
+  nodes : Array[@cgraph.Node],
+  cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+  node_order : Map[String, Int],
+) -> Unit {
   let creation_order : Map[String, Int] = Map::new()
   for i, node in nodes {
     creation_order[node.name()] = i
@@ -609,13 +610,32 @@ fn compute_cluster_metadata(
       None => 0
     }
     let order_value =
-      if input.graphviz_flip {
+      if graphviz_flip {
         total_nodes - 1 - base_order
       } else {
         base_order
       }
     node_order[name] = order_value
   }
+}
+
+///|
+/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_cluster_metadata(
+  input : ClusterMetadataInput,
+) -> ClusterMetadata {
+  let graph = input.graph
+  let nodes = input.nodes
+  let edges = input.edges
+  let groups = input.groups
+  let ranks = input.ranks
+  let node_order = input.node_order
+  let edge_tail = input.edge_tail
+  let edge_head = input.edge_head
+  let has_clusters = @dot_shared.graph_has_cluster(graph)
+  let cluster_keys = build_cluster_key_map(nodes)
+  seed_cluster_node_order(nodes, cluster_keys, input.graphviz_flip, node_order)
   let cluster_skeleton = build_cluster_skeleton(groups, cluster_keys)
   // Graphviz parity: cluster rank bounds are collected from member node rank
   // and first appearance order before cluster-order base expansion.
