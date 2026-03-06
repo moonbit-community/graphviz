@@ -89,7 +89,7 @@ priv struct FinalLayoutGeometryInput {
 fn build_final_layout_geometry(
   input : FinalLayoutGeometryInput,
 ) -> FinalLayoutGeometry {
-  let base_bbox = compute_dot_bbox(
+  let base_bbox = @bbox.compute_dot_bbox(
     {
       nodes_out: input.nodes_out,
       all_ranks: input.all_ranks,

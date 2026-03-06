@@ -153,7 +153,7 @@ fn compute_routing_bbox_for_stage(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
 ) -> @geom.Rect {
-  compute_dot_bbox(
+  @bbox.compute_dot_bbox(
     {
       nodes_out,
       all_ranks,

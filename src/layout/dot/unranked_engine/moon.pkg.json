@@ -1,0 +1,10 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math",
+    "moonbitlang/core/strconv"
+  ]
+}

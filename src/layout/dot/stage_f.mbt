@@ -230,7 +230,7 @@ fn apply_pre_rotation_layout_postprocess(
   let layout_with_root_pad = root_padded.layout_with_root_pad
   // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
   let bbox =
-    expand_bbox_with_edges(layout_with_root_pad.bbox, layout_with_root_pad.edges)
+    @bbox.expand_bbox_with_edges(layout_with_root_pad.bbox, layout_with_root_pad.edges)
   let layout = {
     graph: layout_with_root_pad.graph,
     bbox,

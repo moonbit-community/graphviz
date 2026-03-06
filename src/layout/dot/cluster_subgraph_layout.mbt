@@ -75,7 +75,7 @@ fn layout_subgraphs(
         }
       }
     }
-    let mut bbox = compute_bbox(sub_nodes, sub_edges)
+    let mut bbox = @bbox.compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
     let mut label_info : ClusterLabelPlacementInfo? = None
     let sub_subgraphs =
@@ -247,7 +247,7 @@ fn layout_subgraphs(
         }
         None => ()
       }
-      bbox = round_bbox(bbox)
+      bbox = @bbox.round_bbox(bbox)
     }
     match label_info {
       Some(value) =>
