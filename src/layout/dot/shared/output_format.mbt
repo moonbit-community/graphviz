@@ -16,7 +16,7 @@ fn pow10_double(exp : Int) -> Double {
 }
 
 ///|
-fn trim_trailing_zeros(text : String) -> String {
+pub fn trim_trailing_zeros(text : String) -> String {
   if !text.contains(".") {
     return text
   }
@@ -72,7 +72,7 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
 }
 
 ///|
-fn format_fixed(value : Double, decimals : Int) -> String {
+pub fn format_fixed(value : Double, decimals : Int) -> String {
   if decimals <= 0 {
     return "\{round_half_even(value, 0).to_int()}"
   }
@@ -91,12 +91,12 @@ fn format_fixed(value : Double, decimals : Int) -> String {
 }
 
 ///|
-fn format_fixed_trim(value : Double, decimals : Int) -> String {
+pub fn format_fixed_trim(value : Double, decimals : Int) -> String {
   trim_trailing_zeros(format_fixed(value, decimals))
 }
 
 ///|
-fn round_to(value : Double, decimals : Int) -> Double {
+pub fn round_to(value : Double, decimals : Int) -> Double {
   round_half_even(value, decimals)
 }
 
@@ -131,7 +131,7 @@ fn format_scientific(abs : Double, exp : Int, precision : Int, sign : String) ->
 }
 
 ///|
-fn format_float(value : Double) -> String {
+pub fn format_float(value : Double) -> String {
   if value == 0.0 {
     return "0"
   }
@@ -162,22 +162,22 @@ fn format_float(value : Double) -> String {
 }
 
 ///|
-fn format_dim(value : Double) -> String {
+pub fn format_dim(value : Double) -> String {
   format_float(value)
 }
 
 ///|
-fn format_point(point : @geom.Point) -> String {
+pub fn format_point(point : @geom.Point) -> String {
   "\{format_float(point.x)},\{format_float(point.y)}"
 }
 
 ///|
-fn format_rect(rect : @geom.Rect) -> String {
+pub fn format_rect(rect : @geom.Rect) -> String {
   "\{format_float(rect.llx)},\{format_float(rect.lly)},\{format_float(rect.urx)},\{format_float(rect.ury)}"
 }
 
 ///|
-fn format_rects(rects : Array[@geom.Rect]) -> String {
+pub fn format_rects(rects : Array[@geom.Rect]) -> String {
   let parts : Array[String] = []
   for rect in rects {
     parts.push(format_rect(rect))

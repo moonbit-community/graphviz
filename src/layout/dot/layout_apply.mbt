@@ -8,7 +8,7 @@ fn set_edge_label_pos_if_present(
   match pos {
     Some(value) =>
       match edge.get_attr(label_attr) {
-        Some(text) => if text != "" { edge.set_attr(pos_attr, format_point(value)) }
+        Some(text) => if text != "" { edge.set_attr(pos_attr, @dot_shared.format_point(value)) }
         None => ()
       }
     None => ()
@@ -30,22 +30,22 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   let record_orientation =
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(self.graph))
   if write_bb {
-    self.graph.set_attr("bb", format_rect(self.bbox))
+    self.graph.set_attr("bb", @dot_shared.format_rect(self.bbox))
   }
   if write_bb {
     match @label_metrics.graph_label_metrics(self.graph) {
       Some(metrics) => {
-        self.graph.set_attr("lwidth", format_fixed(metrics.width_pt / 72.0, 2))
+        self.graph.set_attr("lwidth", @dot_shared.format_fixed(metrics.width_pt / 72.0, 2))
         self.graph.set_attr(
           "lheight",
-          format_fixed(metrics.height_pt / 72.0, 2),
+          @dot_shared.format_fixed(metrics.height_pt / 72.0, 2),
         )
       }
       None => ()
     }
   }
   match self.label_pos {
-    Some(pos) => self.graph.set_attr("lp", format_point(pos))
+    Some(pos) => self.graph.set_attr("lp", @dot_shared.format_point(pos))
     None => ()
   }
   for node_layout in self.nodes {
@@ -56,9 +56,9 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
         { x: node_layout.pos.x, y: node_layout.pos.y + 0.0005 }
       _ => node_layout.pos
     }
-    node.set_attr("pos", format_point(output_pos))
-    node.set_attr("width", format_dim(node_layout.width_in))
-    node.set_attr("height", format_dim(node_layout.height_in))
+    node.set_attr("pos", @dot_shared.format_point(output_pos))
+    node.set_attr("width", @dot_shared.format_dim(node_layout.width_in))
+    node.set_attr("height", @dot_shared.format_dim(node_layout.height_in))
     let is_mrecord = match node.get_attr("shape") {
       Some(value) => value.to_lower() == "mrecord"
       None => false
@@ -77,15 +77,15 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
         record_orientation,
       )
       if rects.length() > 0 {
-        node.set_attr("rects", format_rects(rects))
+        node.set_attr("rects", @dot_shared.format_rects(rects))
       }
     }
     match node_layout.label_pos {
-      Some(pos) => node.set_attr("lp", format_point(pos))
+      Some(pos) => node.set_attr("lp", @dot_shared.format_point(pos))
       None => ()
     }
     match node_layout.xlabel_pos {
-      Some(pos) => node.set_attr("xlp", format_point(pos))
+      Some(pos) => node.set_attr("xlp", @dot_shared.format_point(pos))
       None => ()
     }
   }
@@ -99,18 +99,18 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
       let parts : Array[String] = []
       if include_tail {
         match spline.start {
-          Some(point) => parts.push("s,\{format_point(point)}")
+          Some(point) => parts.push("s,\{@dot_shared.format_point(point)}")
           None => ()
         }
       }
       if include_head {
         match spline.end {
-          Some(point) => parts.push("e,\{format_point(point)}")
+          Some(point) => parts.push("e,\{@dot_shared.format_point(point)}")
           None => ()
         }
       }
       for point in spline.points {
-        parts.push(format_point(point))
+        parts.push(@dot_shared.format_point(point))
       }
       segments.push(parts.join(" "))
     }
