@@ -2055,6 +2055,64 @@ fn maybe_place_xlabels(
   }
 }
 
+///|
+fn expand_bbox_for_existing_node_xlabels(
+  bbox : @geom.Rect,
+  nodes : Array[DotLayoutNode],
+  flip : Bool,
+) -> @geom.Rect {
+  let mut expanded = bbox
+  for node_layout in nodes {
+    match node_layout.xlabel_pos {
+      Some(pos) =>
+        match xlabel_metrics_for_node(node_layout.node) {
+          Some(metrics) => {
+            let dims =
+              maybe_flip_dims(metrics.width, metrics.height, flip)
+            expanded =
+              expand_bbox_for_label_pos(
+                expanded,
+                Some(pos),
+                Some({ width: dims.width, height: dims.height }),
+              )
+          }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  expanded
+}
+
+///|
+fn expand_bbox_for_existing_edge_xlabels(
+  bbox : @geom.Rect,
+  edges : Array[DotLayoutEdge],
+  flip : Bool,
+) -> @geom.Rect {
+  let mut expanded = bbox
+  for edge_layout in edges {
+    match edge_layout.xlabel_pos {
+      Some(pos) =>
+        match xlabel_metrics_for_edge(edge_layout.edge) {
+          Some(metrics) => {
+            let dims =
+              maybe_flip_dims(metrics.width, metrics.height, flip)
+            expanded =
+              expand_bbox_for_label_pos(
+                expanded,
+                Some(pos),
+                Some({ width: dims.width, height: dims.height }),
+              )
+          }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  expanded
+}
+
 fn apply_xlabels(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
@@ -2077,45 +2135,10 @@ fn finalize_xlabels(
   flip : Bool,
 ) -> DotLayoutGraph {
   let updates = make_xlabel_update_maps()
-  let mut bbox = layout.bbox
-  for node_layout in layout.nodes {
-    match node_layout.xlabel_pos {
-      Some(pos) =>
-        match xlabel_metrics_for_node(node_layout.node) {
-          Some(metrics) => {
-            let dims =
-              maybe_flip_dims(metrics.width, metrics.height, flip)
-            bbox =
-              expand_bbox_for_label_pos(
-                bbox,
-                Some(pos),
-                Some({ width: dims.width, height: dims.height }),
-              )
-          }
-          None => ()
-        }
-      None => ()
-    }
-  }
-  for edge_layout in layout.edges {
-    match edge_layout.xlabel_pos {
-      Some(pos) =>
-        match xlabel_metrics_for_edge(edge_layout.edge) {
-          Some(metrics) => {
-            let dims =
-              maybe_flip_dims(metrics.width, metrics.height, flip)
-            bbox =
-              expand_bbox_for_label_pos(
-                bbox,
-                Some(pos),
-                Some({ width: dims.width, height: dims.height }),
-              )
-          }
-          None => ()
-        }
-      None => ()
-    }
-  }
+  let mut bbox =
+    expand_bbox_for_existing_node_xlabels(layout.bbox, layout.nodes, flip)
+  bbox =
+    expand_bbox_for_existing_edge_xlabels(bbox, layout.edges, flip)
   for label in labels {
     if !label.set {
       continue
