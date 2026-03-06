@@ -387,40 +387,24 @@ fn compute_cluster_metadata(
   let node_order = input.node_order
   let edge_tail = input.edge_tail
   let edge_head = input.edge_head
-  let has_clusters = @dot_shared.graph_has_cluster(graph)
-  let cluster_membership = @clustering.build_cluster_membership_maps(nodes)
-  let cluster_keys = cluster_membership.cluster_keys
-  let intercluster_keys = cluster_membership.intercluster_keys
-  @clustering.seed_cluster_node_order(
-    nodes,
-    cluster_keys,
-    input.graphviz_flip,
-    node_order,
-  )
-  let cluster_skeleton = @clustering.build_cluster_skeleton(groups, cluster_keys)
-  // Graphviz parity: cluster rank bounds are collected from member node rank
-  // and first appearance order before cluster-order base expansion.
-  let cluster_rank_bounds =
-    @clustering.collect_cluster_rank_bounds(
+  let cluster_core =
+    @clustering.build_cluster_core_metadata_for_ordering(
+      graph,
       nodes,
-      cluster_keys,
+      groups,
       ranks,
       node_order,
+      input.graphviz_flip,
+      @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
     )
-  let cluster_min_rank = cluster_rank_bounds.min_rank
-  let cluster_max_rank = cluster_rank_bounds.max_rank
-  let cluster_first_order = cluster_rank_bounds.first_order
-  let cluster_traversal_metadata = @clustering.collect_cluster_traversal_metadata(graph)
-  let cluster_order = cluster_traversal_metadata.cluster_order
-  let cluster_parents = cluster_traversal_metadata.cluster_parents
-  @clustering.apply_cluster_order_base(
-    nodes,
-    cluster_keys,
-    cluster_min_rank,
-    cluster_first_order,
-    node_order,
-    @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
-  )
+  let has_clusters = cluster_core.has_clusters
+  let cluster_keys = cluster_core.cluster_keys
+  let cluster_skeleton = cluster_core.cluster_skeleton
+  let cluster_min_rank = cluster_core.cluster_min_rank
+  let cluster_max_rank = cluster_core.cluster_max_rank
+  let cluster_order = cluster_core.cluster_order
+  let cluster_parents = cluster_core.cluster_parents
+  let intercluster_keys = cluster_core.intercluster_keys
   let rank_same_metadata = @ordering.collect_rank_same_metadata(graph)
   let rank_same_groups = rank_same_metadata.rank_same_groups
   let rank_same_order = rank_same_metadata.rank_same_order
