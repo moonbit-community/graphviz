@@ -612,7 +612,7 @@ fn build_position_output_maps(
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,
       vnode_ranks: input.pipeline.ordering.vnode_info.vnode_ranks,
       edge_vnodes: input.pipeline.ordering.vnode_info.edge_vnodes,
-      cluster_rounding_enabled: cluster_rounding_enabled(),
+      cluster_rounding_enabled: @positioning.cluster_rounding_enabled(),
       vnode_clusters: input.pipeline.ordering.vnode_info.vnode_clusters,
       sizes: input.pipeline.prep.sizes,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
@@ -629,13 +629,6 @@ fn build_position_output_maps(
             None => bbox
           },
     },
-  )
-}
-
-///|
-fn cluster_rounding_enabled() -> Bool {
-  @dot_shared.env_flag_enabled_nonempty(
-    @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
   )
 }
 ///|

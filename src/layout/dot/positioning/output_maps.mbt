@@ -6,6 +6,15 @@ pub fn intercluster_alignment_enabled() -> Bool {
 }
 
 ///|
+/// Graphviz parity: cluster rounding gate uses DOT_ADJUST_CLUSTER_ROUNDING
+/// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
+pub fn cluster_rounding_enabled() -> Bool {
+  @shared.env_flag_enabled_nonempty(
+    @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
+  )
+}
+
+///|
 /// Graphviz parity: intercluster alignment payload keeps rank and cluster maps
 /// grouped so cross-cluster x-shift wiring remains explicit and stable.
 priv struct InterclusterAlignmentInput {
