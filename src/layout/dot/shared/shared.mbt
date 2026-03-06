@@ -487,6 +487,33 @@ pub fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
 }
 
 ///|
+pub(all) struct EdgeRankSpan {
+  min_rank : Int
+  max_rank : Int
+}
+
+///|
+/// Graphviz parity: edge rank span is resolved from tail/head node ranks
+/// before long-edge label and vnode rank-based adjustments.
+/// Do not change behavior without updating fixtures/tests.
+pub fn edge_rank_span(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+) -> EdgeRankSpan? {
+  let tail_rank = match ranks.get(edge.tail().name()) {
+    Some(value) => value
+    None => return None
+  }
+  let head_rank = match ranks.get(edge.head().name()) {
+    Some(value) => value
+    None => return None
+  }
+  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+  Some({ min_rank, max_rank })
+}
+
+///|
 pub fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
   match graph.name() {
     Some(name) => name.has_prefix("cluster")

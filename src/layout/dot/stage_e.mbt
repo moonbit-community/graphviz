@@ -1170,16 +1170,12 @@ fn edge_label_rank_info(
   if edge_mid_label_width_pt(edge) <= 0.0 {
     return None
   }
-  let tail_rank = match ranks.get(edge.tail().name()) {
+  let rank_span = match @dot_shared.edge_rank_span(edge, ranks) {
     Some(value) => value
     None => return None
   }
-  let head_rank = match ranks.get(edge.head().name()) {
-    Some(value) => value
-    None => return None
-  }
-  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+  let min_rank = rank_span.min_rank
+  let max_rank = rank_span.max_rank
   let span = max_rank - min_rank
   if span <= 1 {
     return None

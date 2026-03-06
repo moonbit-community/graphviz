@@ -153,7 +153,7 @@ fn update_rank_pht_for_label(
   if !@dot_shared.edge_has_label(edge) {
     return
   }
-  let span = match edge_rank_span(edge, ranks) {
+  let span = match @dot_shared.edge_rank_span(edge, ranks) {
     Some(value) => value
     None => return
   }
@@ -190,33 +190,6 @@ priv struct BaseRankHalfHeights {
   rank_pht : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
-}
-
-///|
-priv struct EdgeRankSpan {
-  min_rank : Int
-  max_rank : Int
-}
-
-///|
-/// Graphviz parity: edge rank span is resolved from tail/head node ranks
-/// before long-edge label and vnode half-height adjustments.
-/// Do not change behavior without updating fixtures/tests.
-fn edge_rank_span(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-) -> EdgeRankSpan? {
-  let tail_rank = match ranks.get(edge.tail().name()) {
-    Some(value) => value
-    None => return None
-  }
-  let head_rank = match ranks.get(edge.head().name()) {
-    Some(value) => value
-    None => return None
-  }
-  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-  Some({ min_rank, max_rank })
 }
 
 ///|
@@ -277,7 +250,7 @@ fn apply_vnode_rank_half_heights(
   // intermediate ranks before cluster rank height adjustments.
   let vnode_half_height = VNODE_HEIGHT_PT / 2.0
   for edge in edges {
-    let span = match edge_rank_span(edge, ranks) {
+    let span = match @dot_shared.edge_rank_span(edge, ranks) {
       Some(value) => value
       None => continue
     }
