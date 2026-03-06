@@ -779,7 +779,7 @@ fn build_routing_callbacks_for_dot(
   let edge_layout_deps : @routing.EdgeLayoutDeps = {
     edge_label_rank_for_routing_fn:
       (edge, ranks, mid_label_width_pt) =>
-        match edge_label_rank_info(edge, ranks) {
+        match @routing.edge_label_rank_info(edge, ranks, mid_label_width_pt) {
           Some(info) =>
             if mid_label_width_pt > 0.0 {
               Some((info.label_rank, info.span))
@@ -788,7 +788,14 @@ fn build_routing_callbacks_for_dot(
             }
           None => None
         },
-    edge_label_rank_y_fn: edge_label_rank_y,
+    edge_label_rank_y_fn:
+      (edge, ranks, rank_y) =>
+        @routing.edge_label_rank_y(
+          edge,
+          ranks,
+          rank_y,
+          edge_mid_label_width_pt(edge),
+        ),
     edge_label_rank_x_fn: @routing.edge_label_rank_x,
     edge_label_pos_from_vnode_fn: @routing.edge_label_pos_from_vnode,
     flat_edge_label_pos_simple_fn:
@@ -816,7 +823,11 @@ fn build_routing_callbacks_for_dot(
         @routing.recover_slack_vnodes(
           input,
           (edge, ranks) =>
-            match edge_label_rank_info(edge, ranks) {
+            match @routing.edge_label_rank_info(
+              edge,
+              ranks,
+              edge_mid_label_width_pt(edge),
+            ) {
               Some(info) => Some(info.label_rank)
               None => None
             },
@@ -992,51 +1003,7 @@ fn edge_port_label_pos(
     ),
   )
 }
-///|
-/// Edge-label rank/vnode helpers aligned with Graphviz dotsplines label flows.
-
-///|
-fn edge_label_rank_info(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-) -> EdgeLabelRankInfo? {
-  if edge_mid_label_width_pt(edge) <= 0.0 {
-    return None
-  }
-  let rank_span = match @dot_shared.edge_rank_span(edge, ranks) {
-    Some(value) => value
-    None => return None
-  }
-  let min_rank = rank_span.min_rank
-  let max_rank = rank_span.max_rank
-  let span = max_rank - min_rank
-  if span <= 1 {
-    return None
-  }
-  let label_rank = (min_rank + max_rank) / 2
-  Some({ label_rank, span })
-}
-
-///|
-fn edge_label_rank_y(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-) -> Double? {
-  match edge_label_rank_info(edge, ranks) {
-    Some(info) => rank_y.get(info.label_rank)
-    None => None
-  }
-}
-
-///|
 /// Edge-label overlap nudge geometry and shared edge-endpoint helpers.
-
-///|
-priv struct EdgeLabelRankInfo {
-  label_rank : Int
-  span : Int
-}
 
 ///|
 priv struct RectOverlapAmount {
