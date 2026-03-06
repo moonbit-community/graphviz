@@ -94,6 +94,100 @@ fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
 }
 
 ///|
+fn clone_edge_with_optional_name_ports(
+  graph : @cgraph.Graph,
+  tail : @cgraph.Node,
+  head : @cgraph.Node,
+  name : String?,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+) -> @cgraph.Edge {
+  if name is Some(_) {
+    match name {
+      Some(label) =>
+        if tail_port is Some(_) {
+          match tail_port {
+            Some(tail_value) =>
+              if head_port is Some(_) {
+                match head_port {
+                  Some(head_value) =>
+                    graph.edge(
+                      tail,
+                      head,
+                      name=label,
+                      tail_port=tail_value,
+                      head_port=head_value,
+                    )
+                  None => graph.edge(tail, head, name=label, tail_port=tail_value)
+                }
+              } else {
+                graph.edge(tail, head, name=label, tail_port=tail_value)
+              }
+            None => graph.edge(tail, head, name=label)
+          }
+        } else if head_port is Some(_) {
+          match head_port {
+            Some(head_value) => graph.edge(tail, head, name=label, head_port=head_value)
+            None => graph.edge(tail, head, name=label)
+          }
+        } else {
+          graph.edge(tail, head, name=label)
+        }
+      None => graph.edge(tail, head)
+    }
+  } else if tail_port is Some(_) {
+    match tail_port {
+      Some(tail_value) =>
+        if head_port is Some(_) {
+          match head_port {
+            Some(head_value) =>
+              graph.edge(
+                tail,
+                head,
+                tail_port=tail_value,
+                head_port=head_value,
+              )
+            None => graph.edge(tail, head, tail_port=tail_value)
+          }
+        } else {
+          graph.edge(tail, head, tail_port=tail_value)
+        }
+      None => graph.edge(tail, head)
+    }
+  } else if head_port is Some(_) {
+    match head_port {
+      Some(head_value) => graph.edge(tail, head, head_port=head_value)
+      None => graph.edge(tail, head)
+    }
+  } else {
+    graph.edge(tail, head)
+  }
+}
+
+///|
+fn copy_graph_attrs_and_defaults(
+  source : @cgraph.Graph,
+  target : @cgraph.Graph,
+) -> Unit {
+  for pair in source.attrs() {
+    let (key, value) = pair
+    target.set_attr(key, value)
+  }
+  for pair in source.default_attrs(@cgraph.AttrKind::Graph) {
+    let (key, value) = pair
+    target.set_default_attr(@cgraph.AttrKind::Graph, key, value)
+  }
+  for pair in source.default_attrs(@cgraph.AttrKind::Node) {
+    let (key, value) = pair
+    target.set_default_attr(@cgraph.AttrKind::Node, key, value)
+  }
+  for pair in source.default_attrs(@cgraph.AttrKind::Edge) {
+    let (key, value) = pair
+    target.set_default_attr(@cgraph.AttrKind::Edge, key, value)
+  }
+}
+
+///|
 fn clone_pruned_graph(
   graph : @cgraph.Graph,
   keep : Map[String, Bool],
@@ -103,22 +197,7 @@ fn clone_pruned_graph(
       @cgraph.Graph::new(graph.kind(), name~, strict=graph.is_strict())
     None => @cgraph.Graph::new(graph.kind(), strict=graph.is_strict())
   }
-  for pair in graph.attrs() {
-    let (key, value) = pair
-    cloned.set_attr(key, value)
-  }
-  for pair in graph.default_attrs(@cgraph.AttrKind::Graph) {
-    let (key, value) = pair
-    cloned.set_default_attr(@cgraph.AttrKind::Graph, key, value)
-  }
-  for pair in graph.default_attrs(@cgraph.AttrKind::Node) {
-    let (key, value) = pair
-    cloned.set_default_attr(@cgraph.AttrKind::Node, key, value)
-  }
-  for pair in graph.default_attrs(@cgraph.AttrKind::Edge) {
-    let (key, value) = pair
-    cloned.set_default_attr(@cgraph.AttrKind::Edge, key, value)
-  }
+  copy_graph_attrs_and_defaults(graph, cloned)
   for node in graph.nodes() {
     let name = node.name()
     if keep.get(name) is None {
@@ -140,63 +219,15 @@ fn clone_pruned_graph(
     }
     let new_tail = cloned.node(tail_name)
     let new_head = cloned.node(head_name)
-    let name = edge.name()
-    let tail_port = edge.tail_port()
-    let head_port = edge.head_port()
-    let new_edge = match name {
-      Some(label) =>
-        match tail_port {
-          Some(tail_value) =>
-            match head_port {
-              Some(head_value) =>
-                cloned.edge(
-                  new_tail,
-                  new_head,
-                  name=label,
-                  tail_port=tail_value,
-                  head_port=head_value,
-                )
-              None =>
-                cloned.edge(
-                  new_tail,
-                  new_head,
-                  name=label,
-                  tail_port=tail_value,
-                )
-            }
-          None =>
-            match head_port {
-              Some(head_value) =>
-                cloned.edge(
-                  new_tail,
-                  new_head,
-                  name=label,
-                  head_port=head_value,
-                )
-              None => cloned.edge(new_tail, new_head, name=label)
-            }
-        }
-      None =>
-        match tail_port {
-          Some(tail_value) =>
-            match head_port {
-              Some(head_value) =>
-                cloned.edge(
-                  new_tail,
-                  new_head,
-                  tail_port=tail_value,
-                  head_port=head_value,
-                )
-              None => cloned.edge(new_tail, new_head, tail_port=tail_value)
-            }
-          None =>
-            match head_port {
-              Some(head_value) =>
-                cloned.edge(new_tail, new_head, head_port=head_value)
-              None => cloned.edge(new_tail, new_head)
-            }
-        }
-    }
+    let new_edge =
+      clone_edge_with_optional_name_ports(
+        cloned,
+        new_tail,
+        new_head,
+        edge.name(),
+        edge.tail_port(),
+        edge.head_port(),
+      )
     for pair in edge.attrs() {
       let (key, value) = pair
       new_edge.set_attr(key, value)
