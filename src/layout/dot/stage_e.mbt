@@ -506,25 +506,14 @@ fn build_port_layout_maps(
           input.record_orientation,
         )
       let name = node_layout.node.name()
-      let label = label_text(node_layout.node)
-      let has_html = @html_label.is_html_label_text(label)
-      if has_html {
-        let raw_ports = html_ports(
-          node_layout.node,
-          { x: 0.0, y: 0.0 },
-          final_size,
-        )
-        label_ports_raw[name] = raw_ports
-        let ports =
-          layout_ports_from_final(raw_ports, node_layout.pos, input.rankdir)
-        label_ports_map[name] = ports
-      } else if is_record_shape(node_layout.node) {
-        let raw_ports = record_ports(
+      let raw_ports =
+        raw_label_ports_for_node(
           node_layout.node,
           { x: 0.0, y: 0.0 },
           final_size,
           input.record_orientation,
         )
+      if raw_ports.length() > 0 {
         label_ports_raw[name] = raw_ports
         let ports =
           layout_ports_from_final(raw_ports, node_layout.pos, input.rankdir)
