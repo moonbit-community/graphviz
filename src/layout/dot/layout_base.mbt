@@ -1,4 +1,9 @@
 ///|
+/// Shared internal dot-package type aliases.
+type NodeSize = @dot_shared.NodeSize
+type RecordPort = @dot_shared.RecordPort
+
+///|
 fn default_nodesep_in() -> Double {
   0.25
 }
