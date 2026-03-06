@@ -2887,11 +2887,6 @@ fn scale_spline_value(
 /// Xlabel placement lives in xlabel_layout.mbt (refs/graphviz/lib/label/xlabels.c).
 /// Do not change behavior without updating fixtures/tests.
 ///|
-fn graph_label_metrics(graph : @cgraph.Graph) -> GraphLabelMetrics? {
-  @dot_shared.graph_label_metrics_with(graph, label_text_dimensions)
-}
-
-///|
 fn rect_from_center(
   center : @geom.Point,
   width : Double,
