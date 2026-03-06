@@ -457,6 +457,40 @@ fn accumulate_port_order_contrib(
   order_sum
 }
 
+///|
+/// Graphviz parity: LR/RL explicit-port hints are computed by accumulating
+/// opposite-endpoint contributions and averaging per-target totals.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_port_order_positions(
+  input : PortOrderMetadataInput,
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> Map[String, Double] {
+  let record_port_order =
+    build_record_port_order_map(
+      {
+        nodes: input.nodes,
+        output_sizes: input.output_sizes,
+        rankdir: input.rankdir,
+        record_orientation: input.record_orientation,
+      },
+    )
+  let order_sum =
+    accumulate_port_order_contrib(
+      {
+        edges: input.edges,
+        record_port_order,
+        port_order_contrib,
+      },
+    )
+  let positions : Map[String, Double] = Map::new()
+  for name, entry in order_sum {
+    if entry.count > 0 {
+      positions[name] = entry.sum / entry.count.to_double()
+    }
+  }
+  positions
+}
+
 
 ///|
 /// Graphviz parity: record/html port order hints are collected for LR/RL only
@@ -465,32 +499,13 @@ fn accumulate_port_order_contrib(
 fn build_port_order_metadata(
   input : PortOrderMetadataInput,
 ) -> PortOrderMetadata {
-  let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
-  if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    input.has_port_edges {
-    let record_port_order =
-      build_record_port_order_map(
-        {
-          nodes: input.nodes,
-          output_sizes: input.output_sizes,
-          rankdir: input.rankdir,
-          record_orientation: input.record_orientation,
-        },
-      )
-    let order_sum =
-      accumulate_port_order_contrib(
-        {
-          edges: input.edges,
-          record_port_order,
-          port_order_contrib,
-        },
-      )
-    for name, entry in order_sum {
-      if entry.count > 0 {
-        port_order_positions[name] = entry.sum / entry.count.to_double()
-      }
+  let port_order_positions =
+    if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
+      input.has_port_edges {
+      compute_port_order_positions(input, port_order_contrib)
+    } else {
+      Map::new()
     }
-  }
   { positions: port_order_positions, contributions: port_order_contrib }
 }
