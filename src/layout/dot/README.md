@@ -16,20 +16,20 @@ Manual regeneration:
 
 Graphviz source map (layout/dot parity)
 - Rank assignment / network simplex
-  - MoonBit: `src/layout/dot/network_simplex/network_simplex.mbt` + `src/layout/dot/layout.mbt` (rank build/merge)
+  - MoonBit: `src/layout/dot/stage_b.mbt`, `src/layout/dot/rank_assignment/*`, `src/layout/dot/network_simplex/network_simplex.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/rank.c`, `refs/graphviz/lib/common/ns.c`, `refs/graphviz/lib/dotgen/acyclic.c`
 - Crossing reduction (mincross / ordering)
-  - MoonBit: `src/layout/dot/ordering/rank_reorder.mbt` + `src/layout/dot/ordering/rank_groups.mbt` + `src/layout/dot/ordering/core.mbt`
+  - MoonBit: `src/layout/dot/stage_c.mbt`, `src/layout/dot/ordering/*`
   - Graphviz: `refs/graphviz/lib/dotgen/mincross.c`, `refs/graphviz/lib/dotgen/flat.c`
 - X-position constraints (class2 / position)
-  - MoonBit: `src/layout/dot/xpos.mbt` + `src/layout/dot/layout.mbt` (order index, vnode ordering)
+  - MoonBit: `src/layout/dot/stage_d.mbt`, `src/layout/dot/positioning/*`, `src/layout/dot/ordering/core.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/position.c`, `refs/graphviz/lib/dotgen/class2.c`, `refs/graphviz/lib/dotgen/cluster.c`, `refs/graphviz/lib/dotgen/sameport.c`
 - Edge routing + splines / pathplan
-  - MoonBit: `src/layout/dot/routing/pathplan/pathplan.mbt`, `src/layout/dot/routing/routesplines/routesplines.mbt`, `src/layout/dot/routing/edge_spline/edge_spline.mbt`, `src/layout/dot/routing/edge_ops/edge_ops.mbt`, `src/layout/dot/routing/parallel_offsets.mbt`, `src/layout/dot/routing/polyline_points.mbt`
+  - MoonBit: `src/layout/dot/stage_e.mbt`, `src/layout/dot/routing/*`, `src/layout/dot/routing/pathplan/*`, `src/layout/dot/routing/routesplines/*`, `src/layout/dot/routing/edge_spline/*`, `src/layout/dot/routing/edge_ops/*`
   - Graphviz: `refs/graphviz/lib/pathplan/route.c`, `refs/graphviz/lib/pathplan/shortest.c`, `refs/graphviz/lib/pathplan/visibility.c`, `refs/graphviz/lib/common/routespl.c`, `refs/graphviz/lib/common/splines.c`, `refs/graphviz/lib/dotgen/dotsplines.c`
 - Label placement + text metrics
-  - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/textspan.mbt` (text metrics), `src/layout/dot/label_layout.mbt` (label positions)
+  - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/node_geometry.mbt` (text/label metrics), `src/layout/dot/stage_f.mbt` (label/xlabel placement and writeback)
   - Graphviz: `refs/graphviz/lib/common/textspan.c`, `refs/graphviz/lib/common/labels.c`, `refs/graphviz/lib/label/xlabels.c`
 - Record shape layout / ports
-  - MoonBit: `src/layout/dot/record_layout.mbt` (record sizing, port centers)
+  - MoonBit: `src/layout/dot/node_geometry.mbt` (record/html sizing, port centers, dynamic port geometry)
   - Graphviz: `refs/graphviz/lib/common/shapes.c` (record_*), `refs/graphviz/lib/common/output.c` (record rects)
