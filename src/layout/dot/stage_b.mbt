@@ -311,6 +311,13 @@ priv struct ClusterMetadataInput {
 }
 
 ///|
+priv struct ClusterRankBounds {
+  min_rank : Map[String, Int]
+  max_rank : Map[String, Int]
+  first_order : Map[String, Int]
+}
+
+///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -377,6 +384,111 @@ fn apply_cluster_order_metadata(
 }
 
 ///|
+/// Graphviz parity: each cluster contributes one skeleton node per rank
+/// (first node encountered in rank order).
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_skeleton(
+  groups : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
+) -> Map[String, Bool] {
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_rank_seen : Map[String, Bool] = Map::new()
+  for rank, names in groups {
+    for name in names {
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        continue
+      }
+      let key = "\{cluster}@\{rank}"
+      if cluster_rank_seen.get(key) is None {
+        cluster_rank_seen[key] = true
+        cluster_skeleton[name] = true
+      }
+    }
+  }
+  cluster_skeleton
+}
+
+///|
+/// Graphviz parity: cluster min/max rank and first order are collected
+/// from cluster member nodes before clustered reorder setup.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_cluster_rank_bounds(
+  nodes : Array[@cgraph.Node],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+) -> ClusterRankBounds {
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
+    }
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    match cluster_min_rank.get(cluster) {
+      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
+      None => cluster_min_rank[cluster] = rank
+    }
+    match cluster_max_rank.get(cluster) {
+      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
+      None => cluster_max_rank[cluster] = rank
+    }
+    if cluster_first_order.get(cluster) is None {
+      let order_value = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      cluster_first_order[cluster] = order_value
+    }
+  }
+  {
+    min_rank: cluster_min_rank,
+    max_rank: cluster_max_rank,
+    first_order: cluster_first_order,
+  }
+}
+
+///|
+/// Graphviz parity: same-rank edges are promoted to flat ordering
+/// constraints for clustered metadata reorder paths.
+/// Do not change behavior without updating fixtures/tests.
+fn promote_same_rank_edges_to_flat_constraints(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  flat_constraints : Map[String, Bool],
+) -> Unit {
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
+      edge_idx = edge_idx + 1
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
+      if tail_rank == head_rank {
+        flat_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -422,59 +534,14 @@ fn compute_cluster_metadata(
       }
     node_order[name] = order_value
   }
-  // Graphviz parity: each cluster contributes one skeleton node per rank
-  // (first node encountered in rank order).
-  let cluster_skeleton : Map[String, Bool] = Map::new()
-  let cluster_rank_seen : Map[String, Bool] = Map::new()
-  for rank, names in groups {
-    for name in names {
-      let cluster = match cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      if cluster == "" {
-        continue
-      }
-      let key = "\{cluster}@\{rank}"
-      if cluster_rank_seen.get(key) is None {
-        cluster_rank_seen[key] = true
-        cluster_skeleton[name] = true
-      }
-    }
-  }
+  let cluster_skeleton = build_cluster_skeleton(groups, cluster_keys)
   // Graphviz parity: cluster rank bounds are collected from member node rank
   // and first appearance order before cluster-order base expansion.
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
-  // Graphviz parity: cluster min/max rank and first order are collected
-  // from cluster member nodes before clustered reorder setup.
-  for node in nodes {
-    let name = node.name()
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let rank = match ranks.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    match cluster_min_rank.get(cluster) {
-      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
-      None => cluster_min_rank[cluster] = rank
-    }
-    match cluster_max_rank.get(cluster) {
-      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
-      None => cluster_max_rank[cluster] = rank
-    }
-    if cluster_first_order.get(cluster) is None {
-      let order_value = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      cluster_first_order[cluster] = order_value
-    }
-  }
+  let cluster_rank_bounds =
+    collect_cluster_rank_bounds(nodes, cluster_keys, ranks, node_order)
+  let cluster_min_rank = cluster_rank_bounds.min_rank
+  let cluster_max_rank = cluster_rank_bounds.max_rank
+  let cluster_first_order = cluster_rank_bounds.first_order
   // Graphviz parity: cluster order and parent map are collected from
   // Graphviz cluster traversal before clustered ordering stages.
   let cluster_order : Array[String] = []
@@ -512,25 +579,7 @@ fn compute_cluster_metadata(
   )
   let flat_constraints = flat_constraints_output.flat_constraints
   let ordering_set = flat_constraints_output.ordering_set
-  // Graphviz parity: same-rank edges are promoted to flat ordering
-  // constraints for clustered metadata reorder paths.
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    if tail != head {
-      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
-      if tail_rank == head_rank {
-        flat_constraints["\{tail}|\{head}"] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
+  promote_same_rank_edges_to_flat_constraints(edges, edge_tail, edge_head, ranks, flat_constraints)
   {
     has_clusters,
     cluster_keys,
