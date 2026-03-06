@@ -18,10 +18,6 @@
     "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/routing",
     {
-      "path": "moonbit-community/graphviz/layout/dot/routing/routesplines",
-      "alias": "routesplines"
-    },
-    {
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
       "alias": "edge_spline"
     },
