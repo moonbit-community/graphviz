@@ -1,26 +1,5 @@
 ///|
-/// Stage A input stage file: stage-local input type definitions plus layout
-/// input preparation and canonicalization helpers.
-
-///|
-priv struct LayoutPrep {
-  rankdir : RankDir
-  nodesep_in : Double
-  ranksep_in : Double
-  splines : SplinesMode
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  has_dotted_edges : Bool
-  has_port_edges : Bool
-  has_edge_labels : Bool
-  node_order : Map[String, Int]
-  record_orientation : RecordOrientation
-  output_sizes : Map[String, NodeSize]
-  order_sizes : Map[String, NodeSize]
-  sizes : Map[String, NodeSize]
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-}
+/// Stage A input stage file: layout input preparation and canonicalization helpers.
 
 ///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
@@ -39,7 +18,7 @@ fn prepare_layout_inputs(
     scan_edge_flags(edges)
   let has_edge_labels = graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, rankdir)
-  let record_orientation = record_layout_orientation(rankdir)
+  let record_orientation = @dot_shared.record_layout_orientation(rankdir)
   let size_maps =
     build_size_maps(nodes, rankdir, record_orientation)
   let port_order_metadata =

@@ -28,7 +28,7 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     }
   }
   let record_orientation =
-    record_layout_orientation(@dot_shared.graph_rankdir(self.graph))
+    @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(self.graph))
   if write_bb {
     self.graph.set_attr("bb", format_rect(self.bbox))
   }

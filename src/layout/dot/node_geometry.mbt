@@ -136,20 +136,6 @@ priv struct RecordField {
 }
 
 ///|
-priv enum RecordOrientation {
-  Horizontal
-  Vertical
-}
-
-///|
-fn record_layout_orientation(_rankdir : RankDir) -> RecordOrientation {
-  match _rankdir {
-    RankDir::LR | RankDir::RL => RecordOrientation::Vertical
-    _ => RecordOrientation::Horizontal
-  }
-}
-
-///|
 priv enum RecordNode {
   Field(RecordField)
   Group(Array[RecordNode])
@@ -1177,7 +1163,7 @@ fn record_port_path_box(
   if !@dot_shared.is_record_shape(node) {
     return None
   }
-  let orientation = record_layout_orientation(rankdir)
+  let orientation = @dot_shared.record_layout_orientation(rankdir)
   let raw_ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
   let resolved_port = resolve_label_port_for_node(port, raw_ports)
   let name = match resolved_port.name {

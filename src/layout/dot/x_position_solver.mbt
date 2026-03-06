@@ -10,11 +10,11 @@ fn port_offsets_for_nodes(
     nodes,
     output_sizes,
     (node, rankdir) => {
-      let record_orientation = record_layout_orientation(rankdir)
+      let record_orientation = @dot_shared.record_layout_orientation(rankdir)
       node_size(node, record_orientation)
     },
     (node, origin, base_size, rankdir) => {
-      let record_orientation = record_layout_orientation(rankdir)
+      let record_orientation = @dot_shared.record_layout_orientation(rankdir)
       raw_label_ports_for_node(node, origin, base_size, record_orientation)
     },
     layout_port_offset,

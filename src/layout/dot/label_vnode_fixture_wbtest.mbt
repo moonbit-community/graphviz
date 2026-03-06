@@ -532,7 +532,7 @@ test "flat label node sizes match Graphviz fixtures" {
   let rankdir = @dot_shared.graph_rankdir(graph)
   let expected_flip =
     rankdir == RankDir::LR || rankdir == RankDir::RL
-  let record_orientation = record_layout_orientation(rankdir)
+  let record_orientation = @dot_shared.record_layout_orientation(rankdir)
   let sizes : Map[String, NodeSize] = Map::new()
   for node in nodes {
     let size = node_size(node, record_orientation)

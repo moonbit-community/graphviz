@@ -354,7 +354,7 @@ fn build_engine_geometry_context(
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
   let rankdir = @dot_shared.graph_rankdir(graph)
-  let record_orientation = record_layout_orientation(rankdir)
+  let record_orientation = @dot_shared.record_layout_orientation(rankdir)
   { scale_factor, rankdir, record_orientation }
 }
 

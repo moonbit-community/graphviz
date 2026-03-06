@@ -4,13 +4,7 @@ pub type RankDir = @dot_shared.RankDir
 
 ///|
 /// Edge routing mode for dot layouts.
-pub(all) enum SplinesMode {
-  Spline
-  Polyline
-  Ortho
-  Curved
-  None
-} derive(Show, Eq)
+pub type SplinesMode = @dot_shared.SplinesMode
 
 ///|
 /// Options for dot layout.

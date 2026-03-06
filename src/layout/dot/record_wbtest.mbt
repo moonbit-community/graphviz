@@ -57,7 +57,7 @@ test "record_ports include nested port names" {
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
   let record_orientation =
-    record_layout_orientation(@dot_shared.graph_rankdir(graph))
+    @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
   let size = node_size(node, record_orientation)
   let ports = record_ports(
@@ -83,7 +83,7 @@ test "html_ports include td port names" {
     "digraph { node [shape=plaintext]; a [label=<<TABLE><TR><TD PORT=\\\"p1\\\">one</TD></TR></TABLE>>]; }",
   )
   let record_orientation =
-    record_layout_orientation(@dot_shared.graph_rankdir(graph))
+    @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
   let size = node_size(node, record_orientation)
   let ports = html_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
@@ -104,7 +104,7 @@ test "record_ports honor rankdir LR field order" {
     "digraph { rankdir=LR; node [shape=record]; b [label=\"<left>   |<mid> b |   \"]; }",
   )
   let record_orientation =
-    record_layout_orientation(@dot_shared.graph_rankdir(graph))
+    @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
   let size = node_size(node, record_orientation)
   let ports = record_ports(
@@ -127,7 +127,7 @@ test "record_ports rotate into layout coords for rankdir LR" {
     "digraph { rankdir=LR; node [shape=record]; b [label=\"<left>   |<mid> b |   \"]; }",
   )
   let record_orientation =
-    record_layout_orientation(@dot_shared.graph_rankdir(graph))
+    @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
   let size = node_size(node, record_orientation)
   let ports = record_ports(
@@ -158,7 +158,7 @@ test "node_size keeps fixedsize=true circle dimensions" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [margin=0 fontsize=32 width=0.5 shape=circle style=filled]; b [fixedsize=true label=\"a very long label\"]; }",
   )
-  let orientation = record_layout_orientation(@dot_shared.graph_rankdir(graph))
+  let orientation = @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
   let size = node_size(node, orientation)
   assert_close(size.width_in, 0.5, 0.0001)
@@ -170,7 +170,7 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [margin=0 fontsize=32 width=0.5 shape=circle style=filled]; d [fixedsize=shape label=\"an even longer label\"]; }",
   )
-  let orientation = record_layout_orientation(@dot_shared.graph_rankdir(graph))
+  let orientation = @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("d")
   let size = node_size(node, orientation)
   assert_close(size.width_in, 3.5833, 0.001)
