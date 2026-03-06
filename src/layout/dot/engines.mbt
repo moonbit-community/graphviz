@@ -398,13 +398,19 @@ priv struct EngineNodeProjection {
 }
 
 ///|
-fn project_neato_nodes(
+priv struct EngineNodeProjectionWithSizes {
+  projection : EngineNodeProjection
+  sizes : Map[String, NodeSize]
+}
+
+///|
+fn project_neato_nodes_with_sizes(
   nodes : Array[@cgraph.Node],
   positions : Array[@geom.Point],
   scale_factor : Double,
   sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
-) -> EngineNodeProjection {
+) -> EngineNodeProjectionWithSizes {
   let positions_map : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
   for i in 0..<nodes.length() {
@@ -421,21 +427,26 @@ fn project_neato_nodes(
       xlabel_pos: None,
     })
   }
-  { positions: positions_map, nodes_out }
+  {
+    projection: { positions: positions_map, nodes_out },
+    sizes,
+  }
 }
 
 ///|
-fn collect_noop_nodes(
+fn collect_noop_nodes_with_sizes(
   graph : @cgraph.Graph,
   scale_factor : Double,
   record_orientation : RecordOrientation,
-) -> EngineNodeProjection raise DotLayoutError {
+) -> EngineNodeProjectionWithSizes raise DotLayoutError {
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
+  let sizes : Map[String, NodeSize] = Map::new()
   for node in graph.nodes() {
     let pos = parse_required_noop_node_pos(node, scale_factor)
     positions[node.name()] = pos
     let size = node_size(node, record_orientation)
+    sizes[node.name()] = size
     nodes_out.push({
       node,
       pos,
@@ -445,7 +456,10 @@ fn collect_noop_nodes(
       xlabel_pos: None,
     })
   }
-  { positions, nodes_out }
+  {
+    projection: { positions, nodes_out },
+    sizes,
+  }
 }
 
 ///|
@@ -860,8 +874,8 @@ pub fn layout_neato(
       100,
     )
   }
-  let node_projection =
-    project_neato_nodes(
+  let node_data =
+    project_neato_nodes_with_sizes(
       nodes,
       positions,
       geometry.scale_factor,
@@ -869,18 +883,18 @@ pub fn layout_neato(
       geometry.record_orientation,
     )
   let node_size_for = (node : @cgraph.Node) =>
-    node_size_with_fallback(sizing.sizes, node, geometry.record_orientation)
+    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
   let edges_out =
     build_edges_from_positions(
       active_graph,
-      node_projection.positions,
+      node_data.projection.positions,
       node_size_for,
       straight_line_edge_splines,
     )
   finalize_unranked_layout_graph(
     active_graph,
     geometry.rankdir,
-    node_projection.nodes_out,
+    node_data.projection.nodes_out,
     edges_out,
   )
 }
@@ -1025,19 +1039,19 @@ pub fn layout_neato_noop(
   let active_graph = active_graph_for_prune(graph, prune)
   reset_label_caches()
   let geometry = build_engine_geometry_context(active_graph, scale)
-  let node_projection =
-    collect_noop_nodes(
+  let node_data =
+    collect_noop_nodes_with_sizes(
       active_graph,
       geometry.scale_factor,
       geometry.record_orientation,
     )
   let use_edge_pos = no_op_level > 1
   let node_size_for = (node : @cgraph.Node) =>
-    node_size(node, geometry.record_orientation)
+    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
   let edges_out =
     build_edges_from_positions(
       active_graph,
-      node_projection.positions,
+      node_data.projection.positions,
       node_size_for,
       (edge, tail_pos, head_pos, tail_size, head_size) =>
         noop_edge_splines(
@@ -1053,7 +1067,7 @@ pub fn layout_neato_noop(
   finalize_unranked_layout_graph(
     active_graph,
     geometry.rankdir,
-    node_projection.nodes_out,
+    node_data.projection.nodes_out,
     edges_out,
   )
 }
