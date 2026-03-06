@@ -2315,89 +2315,72 @@ fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn lookup_optional_update(
-  updates : Map[String, @geom.Point],
-  key : String,
-  fallback : @geom.Point?,
-) -> @geom.Point? {
-  match updates.get(key) {
-    Some(pos) => Some(pos)
-    None => fallback
-  }
-}
-
-///|
-fn apply_xlabel_update_to_node_layout(
-  node_layout : DotLayoutNode,
-  updates : XLabelUpdateMaps,
-) -> DotLayoutNode {
-  let xlabel_pos =
-    lookup_optional_update(
-      updates.node_updates,
-      node_layout.node.name(),
-      node_layout.xlabel_pos,
-    )
-  {
-    node: node_layout.node,
-    pos: node_layout.pos,
-    width_in: node_layout.width_in,
-    height_in: node_layout.height_in,
-    label_pos: node_layout.label_pos,
-    xlabel_pos,
-  }
-}
-
-///|
-fn apply_xlabel_update_to_edge_layout(
-  edge_layout : DotLayoutEdge,
-  updates : XLabelUpdateMaps,
-) -> DotLayoutEdge {
-  let key = @dot_shared.edge_key(edge_layout.edge)
-  let label_pos =
-    lookup_optional_update(
-      updates.edge_mid_updates,
-      key,
-      edge_layout.label_pos,
-    )
-  let head_label_pos =
-    lookup_optional_update(
-      updates.edge_head_updates,
-      key,
-      edge_layout.head_label_pos,
-    )
-  let tail_label_pos =
-    lookup_optional_update(
-      updates.edge_tail_updates,
-      key,
-      edge_layout.tail_label_pos,
-    )
-  let xlabel_pos =
-    lookup_optional_update(
-      updates.edge_xlabel_updates,
-      key,
-      edge_layout.xlabel_pos,
-    )
-  {
-    edge: edge_layout.edge,
-    splines: edge_layout.splines,
-    label_pos,
-    head_label_pos,
-    tail_label_pos,
-    xlabel_pos,
-  }
-}
-
 fn apply_xlabel_updates(
   layout : DotLayoutGraph,
   updates : XLabelUpdateMaps,
 ) -> DotLayoutGraph {
+  let update_or_fallback =
+    (
+      update_map : Map[String, @geom.Point],
+      key : String,
+      fallback : @geom.Point?,
+    ) =>
+      match update_map.get(key) {
+        Some(pos) => Some(pos)
+        None => fallback
+      }
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
-    nodes.push(apply_xlabel_update_to_node_layout(node_layout, updates))
+    let xlabel_pos =
+      update_or_fallback(
+        updates.node_updates,
+        node_layout.node.name(),
+        node_layout.xlabel_pos,
+      )
+    nodes.push({
+      node: node_layout.node,
+      pos: node_layout.pos,
+      width_in: node_layout.width_in,
+      height_in: node_layout.height_in,
+      label_pos: node_layout.label_pos,
+      xlabel_pos,
+    })
   }
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
-    edges.push(apply_xlabel_update_to_edge_layout(edge_layout, updates))
+    let key = @dot_shared.edge_key(edge_layout.edge)
+    let label_pos =
+      update_or_fallback(
+        updates.edge_mid_updates,
+        key,
+        edge_layout.label_pos,
+      )
+    let head_label_pos =
+      update_or_fallback(
+        updates.edge_head_updates,
+        key,
+        edge_layout.head_label_pos,
+      )
+    let tail_label_pos =
+      update_or_fallback(
+        updates.edge_tail_updates,
+        key,
+        edge_layout.tail_label_pos,
+      )
+    let xlabel_pos =
+      update_or_fallback(
+        updates.edge_xlabel_updates,
+        key,
+        edge_layout.xlabel_pos,
+      )
+    edges.push({
+      edge: edge_layout.edge,
+      splines: edge_layout.splines,
+      label_pos,
+      head_label_pos,
+      tail_label_pos,
+      xlabel_pos,
+    })
   }
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
