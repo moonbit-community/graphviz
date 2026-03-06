@@ -321,3 +321,30 @@ pub fn compass_port_point(
   }
   layout_port_offset(base_point, rankdir)
 }
+
+///|
+/// Graphviz parity: make_edge_pairs consumes compassPort rankdir-rotated
+/// ED_{tail,head}_port.p.x for non-record endpoints; record/html explicit ports
+/// keep unrotated x order behavior.
+pub fn compass_port_offset(
+  compass : @cgraph.Compass,
+  node_name : String,
+  sizes : Map[String, @shared.NodeSize],
+  rankdir : @shared.RankDir,
+  node : @cgraph.Node?,
+  compass_port_point : (String, @cgraph.Node?, @cgraph.Compass, Map[String, @shared.NodeSize], @shared.RankDir) -> @geom.Point,
+  use_unrotated_x_for_node : (@cgraph.Node) -> Bool,
+  layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
+) -> Double {
+  let unrotated =
+    compass_port_point(node_name, node, compass, sizes, @shared.RankDir::TB)
+  match node {
+    Some(value) =>
+      if use_unrotated_x_for_node(value) {
+        unrotated.x
+      } else {
+        layout_port_offset(unrotated, rankdir).x
+      }
+    None => layout_port_offset(unrotated, rankdir).x
+  }
+}

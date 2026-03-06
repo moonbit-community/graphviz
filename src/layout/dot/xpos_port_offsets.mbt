@@ -106,20 +106,18 @@ fn compass_port_offset(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  let node = nodes_by_name.get(node_name)
-  let unrotated = compass_port_point(node_name, node, compass, sizes, RankDir::TB)
-  match node {
-    Some(value) =>
-      if is_record_shape(value) || @html_label.is_html_label_text(label_text(value)) {
-        // Preserve record/html order behavior for explicit label ports.
-        unrotated.x
-      } else {
-        // Graphviz parity: make_edge_pairs consumes compassPort rankdir-rotated
-        // ED_{tail,head}_port.p.x for non-record compass-only endpoints.
-        layout_port_offset(unrotated, rankdir).x
-      }
-    None => layout_port_offset(unrotated, rankdir).x
-  }
+  @positioning.compass_port_offset(
+    compass,
+    node_name,
+    sizes,
+    rankdir,
+    nodes_by_name.get(node_name),
+    compass_port_point,
+    node =>
+      is_record_shape(node) ||
+      @html_label.is_html_label_text(label_text(node)),
+    layout_port_offset,
+  )
 }
 
 ///|
