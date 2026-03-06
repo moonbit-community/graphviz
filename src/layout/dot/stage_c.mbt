@@ -45,16 +45,6 @@ priv struct OrderingPipelineContext {
 }
 
 ///|
-fn edge_mid_label_dimensions(
-  edge : @cgraph.Edge,
-) -> (Double, Double)? {
-  match edge_mid_label_metrics(edge) {
-    Some(value) => Some((value.width, value.height))
-    None => None
-  }
-}
-
-///|
 /// Graphviz parity: ordering runtime context assembly keeps vnode expansion and
 /// cluster edge wiring aligned with Graphviz preprocessing sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -75,7 +65,12 @@ fn build_ordering_runtime_context(
       rankdir: input.rankdir,
       intercluster_keys: input.cluster_meta.intercluster_keys,
       cluster_parents: input.cluster_meta.cluster_parents,
-      edge_mid_label_metrics_for: edge => edge_mid_label_dimensions(edge),
+      edge_mid_label_metrics_for:
+        (edge) =>
+          match edge_mid_label_metrics(edge) {
+            Some(value) => Some((value.width, value.height))
+            None => None
+          },
     },
   )
 }
@@ -87,16 +82,23 @@ fn build_ordering_runtime_context(
 fn build_ordering_edge_port_data(
   input : OrderingStageInput,
 ) -> @ordering.OrderingEdgePortData {
+  let build_port_sample_bundle =
+    (edges, edge_tail, edge_head) =>
+      @positioning.build_edge_port_sample_bundle(
+        input.nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        input.order_sizes,
+        port_offsets_for_nodes,
+        edge_port_offset,
+        edge_port_order,
+      )
   let edge_port_samples =
-    @positioning.build_edge_port_sample_bundle(
-      input.nodes,
+    build_port_sample_bundle(
       input.edges,
       input.edge_tail,
       input.edge_head,
-      input.order_sizes,
-      port_offsets_for_nodes,
-      edge_port_offset,
-      edge_port_order,
     )
   let dedup_order_edges =
     @ordering.dedup_ordering_edges(
@@ -105,15 +107,10 @@ fn build_ordering_edge_port_data(
       input.edge_head,
     )
   let order_edge_port_samples =
-    @positioning.build_edge_port_sample_bundle(
-      input.nodes,
+    build_port_sample_bundle(
       dedup_order_edges.order_edges,
       dedup_order_edges.order_edge_tail,
       dedup_order_edges.order_edge_head,
-      input.order_sizes,
-      port_offsets_for_nodes,
-      edge_port_offset,
-      edge_port_order,
     )
   @ordering.build_ordering_edge_port_data(
     {
