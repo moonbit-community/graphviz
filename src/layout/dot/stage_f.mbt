@@ -508,157 +508,6 @@ fn apply_ratio_fill_scale(
 /// Edge-label bbox expansion helpers used in final postprocess.
 
 ///|
-priv struct LabelExtent {
-  width : Double
-  height : Double
-}
-
-///|
-priv struct FlatEdgeLabelFlags {
-  is_flat : Bool
-  has_flat_label_vnode : Bool
-  skip_mid_label : Bool
-}
-
-fn expand_bbox_for_label_pos(
-  bbox : @geom.Rect,
-  pos : @geom.Point?,
-  metrics : LabelExtent?,
-) -> @geom.Rect {
-  match (pos, metrics) {
-    (Some(center), Some(extent)) => {
-      let half_w = extent.width / 2.0
-      let half_h = extent.height / 2.0
-      let min_x = center.x - half_w
-      let max_x = center.x + half_w
-      let min_y = center.y - half_h
-      let max_y = center.y + half_h
-      {
-        llx: if min_x < bbox.llx { min_x } else { bbox.llx },
-        lly: if min_y < bbox.lly { min_y } else { bbox.lly },
-        urx: if max_x > bbox.urx { max_x } else { bbox.urx },
-        ury: if max_y > bbox.ury { max_y } else { bbox.ury },
-      }
-    }
-    _ => bbox
-  }
-}
-
-///|
-fn edge_label_extent_for_rankdir(
-  metrics : EdgeLabelMetrics?,
-  flip : Bool,
-) -> LabelExtent? {
-  match metrics {
-    Some(value) =>
-      if flip {
-        Some({ width: value.height, height: value.width })
-      } else {
-        Some({ width: value.width, height: value.height })
-      }
-    None => None
-  }
-}
-
-///|
-fn classify_flat_edge_label(
-  edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  flat_label_edge_vnodes : Map[String, String],
-) -> FlatEdgeLabelFlags {
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  let is_flat =
-    match (ranks.get(tail), ranks.get(head)) {
-      (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
-      _ => false
-    }
-  let has_flat_label_vnode =
-    match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
-      Some(_) => true
-      None => false
-    }
-  // Graphviz parity: adjacent flat-edge labels do not update BB
-  // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
-  // Graphviz parity: self-edge labels still update BB via dotsplines.
-  let skip_mid_label = is_flat && !has_flat_label_vnode && tail != head
-  { is_flat, has_flat_label_vnode, skip_mid_label }
-}
-
-///|
-fn expand_bbox_for_edge_mid_label(
-  bbox : @geom.Rect,
-  edge_layout : DotLayoutEdge,
-  flags : FlatEdgeLabelFlags,
-  flip : Bool,
-) -> @geom.Rect {
-  expand_bbox_for_label_pos(
-    bbox,
-    if flags.skip_mid_label { None } else { edge_layout.label_pos },
-    if flags.skip_mid_label {
-      None
-    } else {
-      edge_label_extent_for_rankdir(edge_mid_label_metrics(edge_layout.edge), flip)
-    },
-  )
-}
-
-///|
-fn maybe_raise_flat_edge_vnode_bbox_top(
-  bbox : @geom.Rect,
-  edge_layout : DotLayoutEdge,
-  flags : FlatEdgeLabelFlags,
-  rankdir : RankDir,
-  flip : Bool,
-) -> @geom.Rect {
-  let edge = edge_layout.edge
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  if flip || !flags.is_flat || !flags.has_flat_label_vnode || tail == head {
-    return bbox
-  }
-  match edge_layout.label_pos {
-    Some(center) => {
-      let orientation = record_layout_orientation(rankdir)
-      let tail_size = node_size(edge.tail(), orientation)
-      let head_size = node_size(edge.head(), orientation)
-      let tail_half = tail_size.height_pt / 2.0
-      let head_half = head_size.height_pt / 2.0
-      let half_height = if tail_half > head_half { tail_half } else { head_half }
-      let top = center.y + half_height
-      if top > bbox.ury {
-        { llx: bbox.llx, lly: bbox.lly, urx: bbox.urx, ury: top }
-      } else {
-        bbox
-      }
-    }
-    None => bbox
-  }
-}
-
-///|
-fn expand_bbox_for_edge_endpoint_label(
-  bbox : @geom.Rect,
-  edge_layout : DotLayoutEdge,
-  label_pos : @geom.Point?,
-  label_attr : String,
-  flip : Bool,
-) -> @geom.Rect {
-  expand_bbox_for_label_pos(
-    bbox,
-    label_pos,
-    edge_label_extent_for_rankdir(
-      edge_label_metrics_for_attr(
-        edge_layout.edge,
-        label_attr,
-        true,
-      ),
-      flip,
-    ),
-  )
-}
-
-///|
 /// Graphviz parity: edge label bbox expansion aligned to refs/graphviz/lib/common/utils.c
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
@@ -671,46 +520,35 @@ fn expand_bbox_for_edge_labels(
   if !graph.is_root() {
     return layout
   }
-  // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
-  // dimensions in pre-rotation space to match compute_bb.
-  let rankdir = @dot_shared.graph_rankdir(graph)
-  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let mut bbox = layout.bbox
-  for edge_layout in layout.edges {
-    let flags =
-      classify_flat_edge_label(edge_layout.edge, ranks, flat_label_edge_vnodes)
-    bbox =
-      expand_bbox_for_edge_mid_label(
-        bbox,
-        edge_layout,
-        flags,
-        flip,
-      )
-    bbox =
-      maybe_raise_flat_edge_vnode_bbox_top(
-        bbox,
-        edge_layout,
-        flags,
-        rankdir,
-        flip,
-      )
-    bbox =
-      expand_bbox_for_edge_endpoint_label(
-        bbox,
-        edge_layout,
-        edge_layout.head_label_pos,
-        "headlabel",
-        flip,
-      )
-    bbox =
-      expand_bbox_for_edge_endpoint_label(
-        bbox,
-        edge_layout,
-        edge_layout.tail_label_pos,
-        "taillabel",
-        flip,
-      )
-  }
+  let bbox =
+    @routing.expand_bbox_for_edge_labels(
+      {
+        bbox: layout.bbox,
+        edges: layout.edges,
+        ranks,
+        flat_label_edge_vnodes,
+        rankdir: @dot_shared.graph_rankdir(graph),
+      },
+      {
+        edge_mid_label_metrics_for:
+          edge =>
+            match edge_mid_label_metrics(edge) {
+              Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+              None => None
+            },
+        edge_label_metrics_for_attr:
+          (edge, label_attr) =>
+            match edge_label_metrics_for_attr(edge, label_attr, true) {
+              Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+              None => None
+            },
+        node_half_height_pt_for:
+          (node, rankdir) => {
+            let orientation = record_layout_orientation(rankdir)
+            node_size(node, orientation).height_pt / 2.0
+          },
+      },
+    )
   if bbox == layout.bbox {
     layout
   } else {
@@ -2205,7 +2043,7 @@ fn expand_bbox_for_existing_xlabel(
           let dims =
             maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
           expanded =
-            expand_bbox_for_label_pos(
+            @routing.expand_bbox_for_label_pos(
               expanded,
               Some(value),
               Some({ width: dims.width, height: dims.height }),
@@ -2292,7 +2130,7 @@ fn finalize_xlabels(
       continue
     }
     let center = xlabel_center(label)
-    bbox = expand_bbox_for_label_pos(
+    bbox = @routing.expand_bbox_for_label_pos(
       bbox,
       Some(center),
       Some({ width: label.width, height: label.height }),
