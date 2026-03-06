@@ -2,13 +2,9 @@
 /// Xlabel candidate collection from node/edge geometry and existing label
 /// placements before running xlabels.c-style search.
 
-fn collect_xlabel_candidates(
+fn build_edges_by_tail(
   layout : DotLayoutGraph,
-  splines : SplinesMode,
-  flip : Bool,
-  labels : Array[XLabel],
-  objects : Array[XObject],
-) -> Unit {
+) -> Map[String, Array[DotLayoutEdge]] {
   let edges_by_tail : Map[String, Array[DotLayoutEdge]] = Map::new()
   for edge_layout in layout.edges {
     let tail_name = edge_layout.edge.tail().name()
@@ -19,7 +15,126 @@ fn collect_xlabel_candidates(
     list.push(edge_layout)
     edges_by_tail[tail_name] = list
   }
+  edges_by_tail
+}
 
+fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+fn edge_attr_metrics_for_xlabel(
+  edge : @cgraph.Edge,
+  key : String,
+) -> XLabelMetrics? {
+  match edge_label_metrics_for_attr(edge, key, true) {
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    None => None
+  }
+}
+
+fn push_existing_label_object(
+  pos : @geom.Point,
+  metrics : XLabelMetrics,
+  flip : Bool,
+  objects : Array[XObject],
+) -> Unit {
+  let label_dims =
+    maybe_flip_dims(metrics.width, metrics.height, flip)
+  let pos_ll =
+    @edge_spline.point(
+      pos.x - label_dims.width / 2.0,
+      pos.y - label_dims.height / 2.0,
+    )
+  objects.push({
+    pos: pos_ll,
+    width: label_dims.width,
+    height: label_dims.height,
+    label_index: None,
+  })
+}
+
+fn push_unset_xlabel_label(
+  target : XLabelTarget,
+  metrics : XLabelMetrics,
+  flip : Bool,
+  labels : Array[XLabel],
+) -> Int {
+  let label_dims =
+    maybe_flip_dims(metrics.width, metrics.height, flip)
+  let idx = labels.length()
+  labels.push({
+    target,
+    width: label_dims.width,
+    height: label_dims.height,
+    pos: @edge_spline.point(0.0, 0.0),
+    set: false,
+  })
+  idx
+}
+
+fn push_deferred_label_anchor(
+  target : XLabelTarget,
+  metrics : XLabelMetrics,
+  anchor : @geom.Point,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  let idx =
+    push_unset_xlabel_label(target, metrics, flip, labels)
+  objects.push({
+    pos: anchor,
+    width: 0.0,
+    height: 0.0,
+    label_index: Some(idx),
+  })
+}
+
+fn collect_edge_label_candidate(
+  target : XLabelTarget,
+  current_pos : @geom.Point?,
+  metrics : XLabelMetrics?,
+  anchor : @geom.Point?,
+  has_geometry : Bool,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  match current_pos {
+    Some(pos) =>
+      match metrics {
+        Some(value) => push_existing_label_object(pos, value, flip, objects)
+        None => ()
+      }
+    None =>
+      if has_geometry {
+        match (metrics, anchor) {
+          (Some(value), Some(point)) =>
+            push_deferred_label_anchor(
+              target,
+              value,
+              point,
+              flip,
+              labels,
+              objects,
+            )
+          _ => ()
+        }
+      }
+  }
+}
+
+fn collect_xlabel_candidates(
+  layout : DotLayoutGraph,
+  splines : SplinesMode,
+  flip : Bool,
+  labels : Array[XLabel],
+  objects : Array[XObject],
+) -> Unit {
+  let edges_by_tail = build_edges_by_tail(layout)
   for node_layout in layout.nodes {
     let node = node_layout.node
     let width_pt = node_layout.width_in * 72.0
@@ -28,38 +143,21 @@ fn collect_xlabel_candidates(
     let llx = node_layout.pos.x - obj_dims.width / 2.0
     let lly = node_layout.pos.y - obj_dims.height / 2.0
     let mut label_index : Int? = None
-    let mut label_object : XObject? = None
     match xlabel_metrics_for_node(node) {
-      Some(metrics) => {
-        let label_dims =
-          maybe_flip_dims(metrics.width, metrics.height, flip)
+      Some(metrics) =>
         match node_layout.xlabel_pos {
-          Some(pos) => {
-            let pos_ll =
-              @edge_spline.point(
-                pos.x - label_dims.width / 2.0,
-                pos.y - label_dims.height / 2.0,
-              )
-            label_object = Some({
-              pos: pos_ll,
-              width: label_dims.width,
-              height: label_dims.height,
-              label_index: None,
-            })
-          }
-          None => {
-            let idx = labels.length()
-            labels.push({
-              target: XLabelTarget::Node(node.name()),
-              width: label_dims.width,
-              height: label_dims.height,
-              pos: @edge_spline.point(0.0, 0.0),
-              set: false,
-            })
-            label_index = Some(idx)
-          }
+          Some(pos) =>
+            push_existing_label_object(pos, metrics, flip, objects)
+          None =>
+            label_index = Some(
+              push_unset_xlabel_label(
+                XLabelTarget::Node(node.name()),
+                metrics,
+                flip,
+                labels,
+              ),
+            )
         }
-      }
       None => ()
     }
     objects.push({
@@ -68,10 +166,6 @@ fn collect_xlabel_candidates(
       height: obj_dims.height,
       label_index,
     })
-    match label_object {
-      Some(obj) => objects.push(obj)
-      None => ()
-    }
 
     let edges_for_node = match edges_by_tail.get(node.name()) {
       Some(value) => value
@@ -79,204 +173,66 @@ fn collect_xlabel_candidates(
     }
     for edge_layout in edges_for_node {
       let edge = edge_layout.edge
-      let edge_key_value = @dot_shared.edge_key(edge)
+      let edge_key = @dot_shared.edge_key(edge)
       let has_geometry = edge_layout.splines.length() > 0
-      match edge_layout.label_pos {
-        Some(pos) =>
-          match edge_mid_label_metrics(edge) {
-            Some(metrics) => {
-              let label_dims =
-                maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll =
-                @edge_spline.point(
-                  pos.x - label_dims.width / 2.0,
-                  pos.y - label_dims.height / 2.0,
-                )
-              objects.push({
-                pos: pos_ll,
-                width: label_dims.width,
-                height: label_dims.height,
-                label_index: None,
-              })
-            }
-            None => ()
-          }
-        None =>
-          if has_geometry {
-            match edge_mid_label_metrics(edge) {
-              Some(metrics) =>
-                match edge_midpoint_for_layout(edge_layout, splines) {
-                  Some(anchor) => {
-                    let label_dims =
-                      maybe_flip_dims(metrics.width, metrics.height, flip)
-                    let idx = labels.length()
-                    labels.push({
-                      target: XLabelTarget::EdgeMid(edge_key_value),
-                      width: label_dims.width,
-                      height: label_dims.height,
-                      pos: @edge_spline.point(0.0, 0.0),
-                      set: false,
-                    })
-                    objects.push({
-                      pos: anchor,
-                      width: 0.0,
-                      height: 0.0,
-                      label_index: Some(idx),
-                    })
-                  }
-                  None => ()
-                }
-              None => ()
-            }
-          }
-      }
-      match edge_layout.tail_label_pos {
-        Some(pos) =>
-          match edge_label_metrics_for_attr(edge, "taillabel", true) {
-            Some(metrics) => {
-              let label_dims =
-                maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll =
-                @edge_spline.point(
-                  pos.x - label_dims.width / 2.0,
-                  pos.y - label_dims.height / 2.0,
-                )
-              objects.push({
-                pos: pos_ll,
-                width: label_dims.width,
-                height: label_dims.height,
-                label_index: None,
-              })
-            }
-            None => ()
-          }
-        None =>
-          if has_geometry {
-            match edge_label_metrics_for_attr(edge, "taillabel", true) {
-              Some(metrics) =>
-                match edge_tail_point_for_layout(edge_layout) {
-                  Some(anchor) => {
-                    let label_dims =
-                      maybe_flip_dims(metrics.width, metrics.height, flip)
-                    let idx = labels.length()
-                    labels.push({
-                      target: XLabelTarget::EdgeTail(edge_key_value),
-                      width: label_dims.width,
-                      height: label_dims.height,
-                      pos: @edge_spline.point(0.0, 0.0),
-                      set: false,
-                    })
-                    objects.push({
-                      pos: anchor,
-                      width: 0.0,
-                      height: 0.0,
-                      label_index: Some(idx),
-                    })
-                  }
-                  None => ()
-                }
-              None => ()
-            }
-          }
-      }
-      match edge_layout.head_label_pos {
-        Some(pos) =>
-          match edge_label_metrics_for_attr(edge, "headlabel", true) {
-            Some(metrics) => {
-              let label_dims =
-                maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll =
-                @edge_spline.point(
-                  pos.x - label_dims.width / 2.0,
-                  pos.y - label_dims.height / 2.0,
-                )
-              objects.push({
-                pos: pos_ll,
-                width: label_dims.width,
-                height: label_dims.height,
-                label_index: None,
-              })
-            }
-            None => ()
-          }
-        None =>
-          if has_geometry {
-            match edge_label_metrics_for_attr(edge, "headlabel", true) {
-              Some(metrics) =>
-                match edge_head_point_for_layout(edge_layout) {
-                  Some(anchor) => {
-                    let label_dims =
-                      maybe_flip_dims(metrics.width, metrics.height, flip)
-                    let idx = labels.length()
-                    labels.push({
-                      target: XLabelTarget::EdgeHead(edge_key_value),
-                      width: label_dims.width,
-                      height: label_dims.height,
-                      pos: @edge_spline.point(0.0, 0.0),
-                      set: false,
-                    })
-                    objects.push({
-                      pos: anchor,
-                      width: 0.0,
-                      height: 0.0,
-                      label_index: Some(idx),
-                    })
-                  }
-                  None => ()
-                }
-              None => ()
-            }
-          }
-      }
-      match edge_layout.xlabel_pos {
-        Some(pos) =>
-          match xlabel_metrics_for_edge(edge) {
-            Some(metrics) => {
-              let label_dims =
-                maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll =
-                @edge_spline.point(
-                  pos.x - label_dims.width / 2.0,
-                  pos.y - label_dims.height / 2.0,
-                )
-              objects.push({
-                pos: pos_ll,
-                width: label_dims.width,
-                height: label_dims.height,
-                label_index: None,
-              })
-            }
-            None => ()
-          }
-        None =>
-          if has_geometry {
-            match xlabel_metrics_for_edge(edge) {
-              Some(metrics) =>
-                match edge_midpoint_for_layout(edge_layout, splines) {
-                  Some(anchor) => {
-                    let label_dims =
-                      maybe_flip_dims(metrics.width, metrics.height, flip)
-                    let idx = labels.length()
-                    labels.push({
-                      target: XLabelTarget::EdgeXlabel(edge_key_value),
-                      width: label_dims.width,
-                      height: label_dims.height,
-                      pos: @edge_spline.point(0.0, 0.0),
-                      set: false,
-                    })
-                    objects.push({
-                      pos: anchor,
-                      width: 0.0,
-                      height: 0.0,
-                      label_index: Some(idx),
-                    })
-                  }
-                  None => ()
-                }
-              None => ()
-            }
-          }
-      }
+      let mid_anchor =
+        if has_geometry {
+          edge_midpoint_for_layout(edge_layout, splines)
+        } else {
+          None
+        }
+      let tail_anchor =
+        if has_geometry {
+          edge_tail_point_for_layout(edge_layout)
+        } else {
+          None
+        }
+      let head_anchor =
+        if has_geometry {
+          edge_head_point_for_layout(edge_layout)
+        } else {
+          None
+        }
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeMid(edge_key),
+        edge_layout.label_pos,
+        edge_mid_metrics_for_xlabel(edge),
+        mid_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeTail(edge_key),
+        edge_layout.tail_label_pos,
+        edge_attr_metrics_for_xlabel(edge, "taillabel"),
+        tail_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeHead(edge_key),
+        edge_layout.head_label_pos,
+        edge_attr_metrics_for_xlabel(edge, "headlabel"),
+        head_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
+      collect_edge_label_candidate(
+        XLabelTarget::EdgeXlabel(edge_key),
+        edge_layout.xlabel_pos,
+        xlabel_metrics_for_edge(edge),
+        mid_anchor,
+        has_geometry,
+        flip,
+        labels,
+        objects,
+      )
     }
   }
 }
