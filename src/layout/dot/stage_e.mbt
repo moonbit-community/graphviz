@@ -261,7 +261,7 @@ fn routing_head_metric_key(edge : @cgraph.Edge) -> String {
   let head_name = edge.head().name()
   let head_port = @dot_shared.port_key(edge.head_port())
   if head_port == "" {
-    if is_record_shape(edge.head()) { head_name } else { "" }
+    if @dot_shared.is_record_shape(edge.head()) { head_name } else { "" }
   } else {
     "\{head_name}:\{head_port}"
   }
@@ -746,10 +746,10 @@ fn build_route_base_deps_for_dot(
     port_is_label_port:
       (node_name, port) =>
         port_is_label_port(node_name, port, routing_label_ports_raw),
-    is_record_shape,
+    is_record_shape: @dot_shared.is_record_shape,
     record_border_adjust:
       (node) =>
-        if is_record_shape(node) &&
+        if @dot_shared.is_record_shape(node) &&
           !@html_label.is_html_label_text(label_text(node)) {
           @dot_shared.RECORD_BORDER_PT
         } else {

@@ -747,7 +747,7 @@ fn edge_port_offset(
         nodes_by_name.get(node_name),
         compass_port_point_for_layout,
         node =>
-          is_record_shape(node) ||
+          @dot_shared.is_record_shape(node) ||
           @html_label.is_html_label_text(label_text(node)),
         layout_port_offset,
       ),

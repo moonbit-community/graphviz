@@ -76,18 +76,6 @@ fn label_text(node : @cgraph.Node) -> String {
 }
 
 ///|
-fn is_record_shape(node : @cgraph.Node) -> Bool {
-  match node.get_attr("shape") {
-    Some(value) =>
-      match value.to_lower() {
-        "record" | "mrecord" => true
-        _ => false
-      }
-    None => false
-  }
-}
-
-///|
 fn node_padding(node : @cgraph.Node) -> NodePadding {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
@@ -1186,7 +1174,7 @@ fn record_port_path_box(
   if !@dot_shared.port_is_explicit(port) {
     return None
   }
-  if !is_record_shape(node) {
+  if !@dot_shared.is_record_shape(node) {
     return None
   }
   let orientation = record_layout_orientation(rankdir)
@@ -1331,10 +1319,12 @@ fn record_port_padding_y(
     }
   }
   for edge in edges {
-    if @dot_shared.port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+    if @dot_shared.port_is_explicit(edge.tail_port()) &&
+      @dot_shared.is_record_shape(edge.tail()) {
       update_padding(edge.tail().name(), edge.tail_port())
     }
-    if @dot_shared.port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+    if @dot_shared.port_is_explicit(edge.head_port()) &&
+      @dot_shared.is_record_shape(edge.head()) {
       update_padding(edge.head().name(), edge.head_port())
     }
   }
@@ -1565,7 +1555,7 @@ fn raw_label_ports_for_node(
   let has_html = @html_label.is_html_label_text(label)
   if has_html {
     html_ports(node, origin, base_size)
-  } else if is_record_shape(node) {
+  } else if @dot_shared.is_record_shape(node) {
     record_ports(node, origin, base_size, record_orientation)
   } else {
     Map::new()
@@ -2146,7 +2136,7 @@ fn node_size(
       None => ()
     }
   }
-  if is_record_shape(node) {
+  if @dot_shared.is_record_shape(node) {
     let nodes = record_nodes(label)
     let record_size = record_group_size(
       nodes,

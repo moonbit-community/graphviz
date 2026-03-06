@@ -809,7 +809,7 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
       Some(value) => value.to_lower() == "mrecord"
       None => false
     }
-    if is_record_shape(node) &&
+    if @dot_shared.is_record_shape(node) &&
       !is_mrecord &&
       !@html_label.is_html_label_text(label_text(node)) {
       let size = @dot_shared.node_size_from_points(
