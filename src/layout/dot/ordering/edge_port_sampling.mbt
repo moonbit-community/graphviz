@@ -22,6 +22,16 @@ pub(all) struct EdgeEndpointPortSamples {
 }
 
 ///|
+/// Graphviz parity: edge-port sample bundle keeps x-offset and port-order
+/// arrays aligned by edge traversal order for tie-break and median passes.
+pub(all) struct EdgePortSampleBundle {
+  tail_port_x : Array[Double]
+  head_port_x : Array[Double]
+  tail_port_order : Array[Double]
+  head_port_order : Array[Double]
+}
+
+///|
 /// Graphviz parity: edge endpoint projection caches tail/head names and ports
 /// in edge traversal order shared by both x-offset and port-order passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -71,4 +81,38 @@ pub fn sample_edge_endpoint_ports(
     idx = idx + 1
   }
   { tail_values, head_values }
+}
+
+///|
+/// Graphviz parity: x-offset and port-order endpoint samples are computed from
+/// the same endpoint projection for deterministic pairing.
+pub fn build_edge_port_sample_bundle(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sample_x_fn : (String, @cgraph.Port?) -> Double,
+  sample_order_fn : (String, @cgraph.Port?) -> Double,
+) -> EdgePortSampleBundle {
+  if edges.length() == 0 {
+    return {
+      tail_port_x: [],
+      head_port_x: [],
+      tail_port_order: [],
+      head_port_order: [],
+    }
+  }
+  let endpoint_projection =
+    build_edge_endpoint_port_projection(
+      edges,
+      edge_tail,
+      edge_head,
+    )
+  let x_samples = sample_edge_endpoint_ports(endpoint_projection, sample_x_fn)
+  let order_samples = sample_edge_endpoint_ports(endpoint_projection, sample_order_fn)
+  {
+    tail_port_x: x_samples.tail_values,
+    head_port_x: x_samples.head_values,
+    tail_port_order: order_samples.tail_values,
+    head_port_order: order_samples.head_values,
+  }
 }
