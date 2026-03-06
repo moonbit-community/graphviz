@@ -410,120 +410,6 @@ priv struct FlatConstraintMetadata {
 }
 
 ///|
-/// Graphviz parity: optional cluster order base expansion follows the
-/// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_cluster_order_metadata(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  cluster_min_rank : Map[String, Int],
-  cluster_first_order : Map[String, Int],
-  node_order : Map[String, Int],
-) -> Unit {
-  let cluster_order_list : Array[(String, Int, Int)] = []
-  for cluster, rank in cluster_min_rank {
-    let order = match cluster_first_order.get(cluster) {
-      Some(value) => value
-      None => 0
-    }
-    cluster_order_list.push((cluster, rank, order))
-  }
-  if cluster_order_list.length() <= 1 || @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is None {
-    return
-  }
-  cluster_order_list.sort_by((a, b) => {
-    let (_name_a, rank_a, order_a) = a
-    let (_name_b, rank_b, order_b) = b
-    if rank_a < rank_b {
-      -1
-    } else if rank_a > rank_b {
-      1
-    } else if order_a < order_b {
-      -1
-    } else if order_a > order_b {
-      1
-    } else {
-      0
-    }
-  })
-  let step = nodes.length() + 1
-  let cluster_order_base : Map[String, Int] = Map::new()
-  let mut base = 0
-  for entry in cluster_order_list {
-    let (cluster, _rank, _order) = entry
-    cluster_order_base[cluster] = base
-    base = base + step
-  }
-  for node in nodes {
-    let name = node.name()
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let base_order = cluster_order_base.get(cluster).unwrap_or_default()
-    let inner = node_order.get(name).unwrap_or_default()
-    node_order[name] = base_order + inner
-  }
-}
-
-///|
-/// Graphviz parity: each cluster contributes one skeleton node per rank
-/// (first node encountered in rank order).
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_skeleton(
-  groups : Map[Int, Array[String]],
-  cluster_keys : Map[String, String],
-) -> Map[String, Bool] {
-  let cluster_skeleton : Map[String, Bool] = Map::new()
-  let cluster_rank_seen : Map[String, Bool] = Map::new()
-  for rank, names in groups {
-    for name in names {
-      let cluster = match cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      if cluster == "" {
-        continue
-      }
-      let key = "\{cluster}@\{rank}"
-      if cluster_rank_seen.get(key) is None {
-        cluster_rank_seen[key] = true
-        cluster_skeleton[name] = true
-      }
-    }
-  }
-  cluster_skeleton
-}
-
-///|
-/// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
-/// with optional graphviz_flip reversal before clustered reorder setup.
-/// Do not change behavior without updating fixtures/tests.
-fn seed_cluster_node_order(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  graphviz_flip : Bool,
-  node_order : Map[String, Int],
-) -> Unit {
-  let total_nodes = nodes.length()
-  for i, node in nodes {
-    let name = node.name()
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let base_order = i
-    let order_value =
-      if graphviz_flip {
-        total_nodes - 1 - base_order
-      } else {
-        base_order
-      }
-    node_order[name] = order_value
-  }
-}
-
-///|
 /// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
 /// plus same-rank edge constraints before clustered reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -574,8 +460,13 @@ fn compute_cluster_metadata(
   let cluster_membership = @clustering.build_cluster_membership_maps(nodes)
   let cluster_keys = cluster_membership.cluster_keys
   let intercluster_keys = cluster_membership.intercluster_keys
-  seed_cluster_node_order(nodes, cluster_keys, input.graphviz_flip, node_order)
-  let cluster_skeleton = build_cluster_skeleton(groups, cluster_keys)
+  @clustering.seed_cluster_node_order(
+    nodes,
+    cluster_keys,
+    input.graphviz_flip,
+    node_order,
+  )
+  let cluster_skeleton = @clustering.build_cluster_skeleton(groups, cluster_keys)
   // Graphviz parity: cluster rank bounds are collected from member node rank
   // and first appearance order before cluster-order base expansion.
   let cluster_rank_bounds =
@@ -591,12 +482,13 @@ fn compute_cluster_metadata(
   let cluster_traversal_metadata = @clustering.collect_cluster_traversal_metadata(graph)
   let cluster_order = cluster_traversal_metadata.cluster_order
   let cluster_parents = cluster_traversal_metadata.cluster_parents
-  apply_cluster_order_metadata(
+  @clustering.apply_cluster_order_base(
     nodes,
     cluster_keys,
     cluster_min_rank,
     cluster_first_order,
     node_order,
+    @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
   )
   let rank_same_metadata = @ordering.collect_rank_same_metadata(graph)
   let rank_same_groups = rank_same_metadata.rank_same_groups

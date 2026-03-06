@@ -233,6 +233,115 @@ pub fn collect_cluster_rank_bounds(
 }
 
 ///|
+/// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
+/// with optional graphviz_flip reversal before clustered reorder setup.
+/// Do not change behavior without updating fixtures/tests.
+pub fn seed_cluster_node_order(
+  nodes : Array[@cgraph.Node],
+  cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+  node_order : Map[String, Int],
+) -> Unit {
+  let total_nodes = nodes.length()
+  for i, node in nodes {
+    let name = node.name()
+    let cluster = cluster_keys.get(name).unwrap_or_default()
+    if cluster == "" {
+      continue
+    }
+    let base_order = i
+    let order_value =
+      if graphviz_flip {
+        total_nodes - 1 - base_order
+      } else {
+        base_order
+      }
+    node_order[name] = order_value
+  }
+}
+
+///|
+/// Graphviz parity: each cluster contributes one skeleton node per rank
+/// (first node encountered in rank order).
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_cluster_skeleton(
+  groups : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
+) -> Map[String, Bool] {
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_rank_seen : Map[String, Bool] = Map::new()
+  for rank, names in groups {
+    for name in names {
+      let cluster = cluster_keys.get(name).unwrap_or_default()
+      if cluster == "" {
+        continue
+      }
+      let key = "\{cluster}@\{rank}"
+      if cluster_rank_seen.get(key) is None {
+        cluster_rank_seen[key] = true
+        cluster_skeleton[name] = true
+      }
+    }
+  }
+  cluster_skeleton
+}
+
+///|
+/// Graphviz parity: optional cluster order base expansion follows the
+/// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
+/// Do not change behavior without updating fixtures/tests.
+pub fn apply_cluster_order_base(
+  nodes : Array[@cgraph.Node],
+  cluster_keys : Map[String, String],
+  cluster_min_rank : Map[String, Int],
+  cluster_first_order : Map[String, Int],
+  node_order : Map[String, Int],
+  cluster_order_base_enabled : Bool,
+) -> Unit {
+  let cluster_order_list : Array[(String, Int, Int)] = []
+  for cluster, rank in cluster_min_rank {
+    let order = cluster_first_order.get(cluster).unwrap_or_default()
+    cluster_order_list.push((cluster, rank, order))
+  }
+  if cluster_order_list.length() <= 1 || !cluster_order_base_enabled {
+    return
+  }
+  cluster_order_list.sort_by((a, b) => {
+    let (_name_a, rank_a, order_a) = a
+    let (_name_b, rank_b, order_b) = b
+    if rank_a < rank_b {
+      -1
+    } else if rank_a > rank_b {
+      1
+    } else if order_a < order_b {
+      -1
+    } else if order_a > order_b {
+      1
+    } else {
+      0
+    }
+  })
+  let step = nodes.length() + 1
+  let cluster_order_base : Map[String, Int] = Map::new()
+  let mut base = 0
+  for entry in cluster_order_list {
+    let (cluster, _rank, _order) = entry
+    cluster_order_base[cluster] = base
+    base = base + step
+  }
+  for node in nodes {
+    let name = node.name()
+    let cluster = cluster_keys.get(name).unwrap_or_default()
+    if cluster == "" {
+      continue
+    }
+    let base_order = cluster_order_base.get(cluster).unwrap_or_default()
+    let inner = node_order.get(name).unwrap_or_default()
+    node_order[name] = base_order + inner
+  }
+}
+
+///|
 pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
