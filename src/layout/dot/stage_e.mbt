@@ -1037,47 +1037,36 @@ fn port_label_points(
   if points.length() < 4 {
     return None
   }
+  let head_bezier_sample = () => {
+    let start = points.length() - 4
+    let p0 = points[start]
+    let p1 = points[start + 1]
+    let p2 = points[start + 2]
+    let p3 = points[start + 3]
+    { pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) }
+  }
+  let tail_bezier_sample = () => {
+    let p0 = points[0]
+    let p1 = points[1]
+    let p2 = points[2]
+    let p3 = points[3]
+    { pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) }
+  }
   if head_p {
+    if !marker_present {
+      return Some(head_bezier_sample())
+    }
     match spline.end {
-      Some(end_point) =>
-        if marker_present {
-          Some({ pos: end_point, tangent: points[points.length() - 1] })
-        } else {
-          let start = points.length() - 4
-          let p0 = points[start]
-          let p1 = points[start + 1]
-          let p2 = points[start + 2]
-          let p3 = points[start + 3]
-          Some({ pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) })
-        }
-      None => {
-        let start = points.length() - 4
-        let p0 = points[start]
-        let p1 = points[start + 1]
-        let p2 = points[start + 2]
-        let p3 = points[start + 3]
-        Some({ pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) })
-      }
+      Some(end_point) => Some({ pos: end_point, tangent: points[points.length() - 1] })
+      None => Some(head_bezier_sample())
     }
   } else {
+    if !marker_present {
+      return Some(tail_bezier_sample())
+    }
     match spline.start {
-      Some(start_point) =>
-        if marker_present {
-          Some({ pos: start_point, tangent: points[0] })
-        } else {
-          let p0 = points[0]
-          let p1 = points[1]
-          let p2 = points[2]
-          let p3 = points[3]
-          Some({ pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) })
-        }
-      None => {
-        let p0 = points[0]
-        let p1 = points[1]
-        let p2 = points[2]
-        let p3 = points[3]
-        Some({ pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) })
-      }
+      Some(start_point) => Some({ pos: start_point, tangent: points[0] })
+      None => Some(tail_bezier_sample())
     }
   }
 }
@@ -1117,22 +1106,22 @@ fn edge_port_label_pos(
     } else {
       @dot_shared.edge_has_tail_marker(edge, graph_kind)
     }
-  match port_label_params(edge) {
-    Some(params) =>
-      match port_label_points(spline, head_p, marker_present) {
-        Some(port_points) =>
-          Some(
-            port_label_pos_from_points(
-              port_points.pos,
-              port_points.tangent,
-              params.angle_deg,
-              params.distance_scale,
-            ),
-          )
-        None => None
-      }
-    None => None
+  let params = match port_label_params(edge) {
+    Some(value) => value
+    None => return None
   }
+  let port_points = match port_label_points(spline, head_p, marker_present) {
+    Some(value) => value
+    None => return None
+  }
+  Some(
+    port_label_pos_from_points(
+      port_points.pos,
+      port_points.tangent,
+      params.angle_deg,
+      params.distance_scale,
+    ),
+  )
 }
 ///|
 /// Edge-label rank/vnode helpers aligned with Graphviz dotsplines label flows.
