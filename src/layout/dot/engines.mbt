@@ -147,7 +147,7 @@ fn finalize_unranked_layout_graph(
   }
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
-    match graph_label_metrics(graph) {
+    match @label_metrics.graph_label_metrics(graph) {
       Some(metrics) => {
         let loc = @dot_shared.graph_label_loc(graph)
         let just = @dot_shared.graph_label_just(graph)

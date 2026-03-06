@@ -506,6 +506,13 @@ pub fn label_text_dimensions(
 }
 
 ///|
+/// Graphviz parity: graph label text metrics honor inherited graph font
+/// attributes while binding dot label measurement to this package.
+pub fn graph_label_metrics(graph : @cgraph.Graph) -> @shared.GraphLabelMetrics? {
+  @shared.graph_label_metrics_with(graph, label_text_dimensions)
+}
+
+///|
 pub fn record_label_text_dimensions(
   label : String,
   font_name : String,

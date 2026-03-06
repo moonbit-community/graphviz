@@ -33,7 +33,7 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     self.graph.set_attr("bb", format_rect(self.bbox))
   }
   if write_bb {
-    match graph_label_metrics(self.graph) {
+    match @label_metrics.graph_label_metrics(self.graph) {
       Some(metrics) => {
         self.graph.set_attr("lwidth", format_fixed(metrics.width_pt / 72.0, 2))
         self.graph.set_attr(

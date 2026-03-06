@@ -11,7 +11,7 @@ fn collect_cluster_label_rects(
   for subgraph in graphs {
     match subgraph.label_pos {
       Some(pos) =>
-        match graph_label_metrics(subgraph.graph) {
+        match @label_metrics.graph_label_metrics(subgraph.graph) {
           Some(metrics) =>
             rects.push(
               rect_from_center(
@@ -91,7 +91,7 @@ fn adjust_labels_for_clusters(
   let label_rects : Array[@geom.Rect] = []
   match layout.label_pos {
     Some(pos) =>
-      match graph_label_metrics(layout.graph) {
+      match @label_metrics.graph_label_metrics(layout.graph) {
         Some(metrics) =>
           label_rects.push(
             rect_from_center(pos, metrics.width_pt, metrics.height_pt, pad),

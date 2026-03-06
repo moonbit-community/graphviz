@@ -315,7 +315,7 @@ fn collect_cluster_label_objects(
   for subgraph in layout.subgraphs {
     match subgraph.label_pos {
       Some(pos) =>
-        match graph_label_metrics(subgraph.graph) {
+        match @label_metrics.graph_label_metrics(subgraph.graph) {
           Some(metrics) => {
             let dims =
               @xlabel_collection.maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)

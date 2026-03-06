@@ -192,7 +192,7 @@ fn layout_subgraphs(
       let urx = bbox.urx + pad_right
       let ury = bbox.ury + pad_y
       bbox = { llx, lly, urx, ury }
-      match graph_label_metrics(subgraph) {
+      match @label_metrics.graph_label_metrics(subgraph) {
         Some(metrics) => {
           let loc = @dot_shared.graph_label_loc(subgraph)
           let just = @dot_shared.graph_label_just(subgraph)

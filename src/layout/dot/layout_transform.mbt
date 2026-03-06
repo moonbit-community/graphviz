@@ -97,7 +97,7 @@ fn refresh_cluster_labels(
   }
   let label_pos =
     if @dot_shared.is_cluster_graph(layout.graph) {
-      match graph_label_metrics(layout.graph) {
+      match @label_metrics.graph_label_metrics(layout.graph) {
         Some(metrics) => {
           let pad = @clustering.CLUSTER_LABEL_PAD_PT
           Some(
