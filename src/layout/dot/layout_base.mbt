@@ -2,6 +2,9 @@
 /// Shared internal dot-package type aliases.
 type NodeSize = @dot_shared.NodeSize
 type RecordPort = @dot_shared.RecordPort
+type LabelLoc = @dot_shared.LabelLoc
+type LabelJust = @dot_shared.LabelJust
+type GraphLabelMetrics = @dot_shared.GraphLabelMetrics
 
 ///|
 fn default_nodesep_in() -> Double {

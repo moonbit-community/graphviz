@@ -826,8 +826,8 @@ fn refresh_cluster_labels(
               layout.bbox,
               metrics.width_pt + pad * 2.0,
               metrics.height_pt + pad,
-              graph_label_loc(layout.graph),
-              graph_label_just(layout.graph),
+              @dot_shared.graph_label_loc(layout.graph),
+              @dot_shared.graph_label_just(layout.graph),
             ),
           )
         }
@@ -1445,8 +1445,8 @@ fn root_label_placement_spec(
       Some({
         padded_width: metrics.width_pt + pad * 2.0,
         padded_height: metrics.height_pt + pad,
-        loc: graph_label_loc(graph),
-        just: graph_label_just(graph),
+        loc: @dot_shared.graph_label_loc(graph),
+        just: @dot_shared.graph_label_just(graph),
       })
     }
     None => None
@@ -2911,107 +2911,9 @@ fn scale_spline_value(
 /// Graphviz parity: label placement aligned to refs/graphviz/lib/common/labels.c (fixtures).
 /// Xlabel placement lives in xlabel_layout.mbt (refs/graphviz/lib/label/xlabels.c).
 /// Do not change behavior without updating fixtures/tests.
-priv enum LabelLoc {
-  Top
-  Bottom
-}
-
-///|
-priv enum LabelJust {
-  Left
-  Center
-  Right
-}
-
-///|
-fn parse_label_loc(value : String?, default_loc : LabelLoc) -> LabelLoc {
-  match value {
-    Some(text) => {
-      let lower = text.to_lower()
-      match lower {
-        "t" | "top" => LabelLoc::Top
-        "b" | "bottom" => LabelLoc::Bottom
-        _ => default_loc
-      }
-    }
-    None => default_loc
-  }
-}
-
-///|
-fn parse_label_just(value : String?) -> LabelJust {
-  match value {
-    Some(text) => {
-      let lower = text.to_lower()
-      match lower {
-        "l" | "left" => LabelJust::Left
-        "r" | "right" => LabelJust::Right
-        "c" | "center" => LabelJust::Center
-        _ => LabelJust::Center
-      }
-    }
-    None => LabelJust::Center
-  }
-}
-
-///|
-fn graph_label_loc(graph : @cgraph.Graph) -> LabelLoc {
-  let default_loc = if graph.is_root() {
-    LabelLoc::Bottom
-  } else {
-    LabelLoc::Top
-  }
-  parse_label_loc(graph.get_attr("labelloc"), default_loc)
-}
-
-///|
-fn graph_attr_inherited(
-  graph : @cgraph.Graph,
-  key : String,
-) -> String? {
-  let mut current = Some(graph)
-  while current is Some(_) {
-    match current {
-      Some(value) =>
-        match value.get_attr(key) {
-          Some(found) => return Some(found)
-          None => current = value.parent()
-        }
-      None => ()
-    }
-  }
-  None
-}
-
-///|
-fn graph_label_just(graph : @cgraph.Graph) -> LabelJust {
-  parse_label_just(graph_attr_inherited(graph, "labeljust"))
-}
-
-///|
-priv struct GraphLabelMetrics {
-  width_pt : Double
-  height_pt : Double
-}
-
 ///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> GraphLabelMetrics? {
-  match graph.get_attr("label") {
-    Some(value) =>
-      if value == "" {
-        None
-      } else {
-        let font_size_pt = @attrs.font_size(
-          graph_attr_inherited(graph, "fontsize"),
-        )
-        let font = @attrs.font_name(graph_attr_inherited(graph, "fontname"))
-        let (width_pt, height_pt) = label_text_dimensions(
-          value, font, font_size_pt,
-        )
-        Some({ width_pt, height_pt })
-      }
-    None => None
-  }
+  @dot_shared.graph_label_metrics_with(graph, label_text_dimensions)
 }
 
 ///|
@@ -3096,7 +2998,7 @@ fn cluster_label_padding_for_layout(
   }
   match graph_label_metrics(graph) {
     Some(metrics) => {
-      let loc = graph_label_loc(graph)
+      let loc = @dot_shared.graph_label_loc(graph)
       let pad = CLUSTER_LABEL_PAD_PT
       match loc {
         LabelLoc::Top => { top: metrics.height_pt + pad, bottom: 0.0 }
@@ -3299,8 +3201,8 @@ fn layout_subgraphs(
       bbox = { llx, lly, urx, ury }
       match graph_label_metrics(subgraph) {
         Some(metrics) => {
-          let loc = graph_label_loc(subgraph)
-          let just = graph_label_just(subgraph)
+          let loc = @dot_shared.graph_label_loc(subgraph)
+          let just = @dot_shared.graph_label_just(subgraph)
           let pad = CLUSTER_LABEL_PAD_PT
           let padded_width = metrics.width_pt + pad * 2.0
           let padded_height = metrics.height_pt + pad

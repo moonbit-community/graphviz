@@ -516,8 +516,8 @@ fn finalize_unranked_layout_graph(
   if graph.is_root() {
     match graph_label_metrics(graph) {
       Some(metrics) => {
-        let loc = graph_label_loc(graph)
-        let just = graph_label_just(graph)
+        let loc = @dot_shared.graph_label_loc(graph)
+        let just = @dot_shared.graph_label_just(graph)
         final_bbox =
           expand_bbox_for_label(
             final_bbox,

@@ -624,7 +624,7 @@ fn build_position_output_maps(
                 bbox,
                 metrics.width_pt,
                 metrics.height_pt,
-                graph_label_loc(graph),
+                @dot_shared.graph_label_loc(graph),
               )
             None => bbox
           },
@@ -801,7 +801,7 @@ fn cluster_label_borders_for_xpos_constraints(
   match graph_label_metrics(graph) {
     Some(metrics) => {
       let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
-      match graph_label_loc(graph) {
+      match @dot_shared.graph_label_loc(graph) {
         LabelLoc::Top => (0.0, border)
         LabelLoc::Bottom => (border, 0.0)
       }
