@@ -64,11 +64,6 @@ fn compute_dot_routing_stage(
   let ratio_sx = ratio_adjusted_data.ratio_sx
   let ratio_sy = ratio_adjusted_data.ratio_sy
   let routing_cluster_bboxes = ratio_adjusted_data.cluster_bboxes
-  let routing_label_ports_map = ratio_adjusted_data.label_ports_map
-  let routing_label_ports_raw = ratio_adjusted_data.label_ports_raw
-  let routing_sizes =
-    // Graphviz parity: route spline clipping keeps node extents in pre-ratio units.
-    prep.sizes
   let routing_positions_state = ratio_adjusted_data.positions_state
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
@@ -89,9 +84,9 @@ fn compute_dot_routing_stage(
         cluster_meta,
         ordering,
         positions_state: routing_positions_state,
-        label_ports_map: routing_label_ports_map,
+        label_ports_map: ratio_adjusted_data.label_ports_map,
         cluster_bboxes: routing_cluster_bboxes,
-        sizes: routing_sizes,
+        sizes: prep.sizes,
         enable_complex_tuning,
       },
     )
@@ -105,29 +100,25 @@ fn compute_dot_routing_stage(
   // Graphviz parity: edge routing call consumes edge/padding fields plus
   // grouped precompute payload while preserving Graphviz-aligned argument mapping.
   let edges_routed =
-    route_edges_for_dot({
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      routing_positions_state,
-      routing_label_ports_map,
-      routing_label_ports_raw,
-      routing_sizes,
-      path_groups,
-      routing_context,
-      label_edge_counts,
-      head_port_metrics,
-      enable_complex_tuning,
-    })
-  let edges_out =
-    if ratio_scaled {
-      scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
-    } else {
-      edges_routed
-    }
+    route_edges_for_dot(
+      build_route_edges_input_for_stage(
+        {
+          graph,
+          prep,
+          rank_data,
+          rank_heights,
+          cluster_meta,
+          ordering,
+          ratio_adjusted_data,
+          path_groups,
+          routing_context,
+          label_edge_counts,
+          head_port_metrics,
+          enable_complex_tuning,
+        },
+      ),
+    )
+  let edges_out = maybe_rescale_routed_edges(edges_routed, ratio_scaled, ratio_sx, ratio_sy)
   // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding.
   { nodes_out, edges_out, port_pad_below, port_pad_above }
@@ -666,6 +657,66 @@ priv struct RouteEdgesForDotInput {
   label_edge_counts : Map[String, Int]
   head_port_metrics : @routing.HeadPortMetrics
   enable_complex_tuning : Bool
+}
+
+///|
+/// Graphviz parity: edge routing call input keeps stage context and precompute
+/// snapshots grouped before solve dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RouteEdgesBuildInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  ratio_adjusted_data : RoutingRatioAdjustedData
+  path_groups : Map[Int, Array[String]]
+  routing_context : @routing.RoutingContext
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : @routing.HeadPortMetrics
+  enable_complex_tuning : Bool
+}
+
+///|
+/// Graphviz parity: route-edge solve input assembly preserves argument mapping
+/// and pre-ratio size usage expected by dotsplines clipping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_route_edges_input_for_stage(
+  input : RouteEdgesBuildInput,
+) -> RouteEdgesForDotInput {
+  {
+    graph: input.graph,
+    prep: input.prep,
+    rank_data: input.rank_data,
+    rank_heights: input.rank_heights,
+    cluster_meta: input.cluster_meta,
+    ordering: input.ordering,
+    routing_positions_state: input.ratio_adjusted_data.positions_state,
+    routing_label_ports_map: input.ratio_adjusted_data.label_ports_map,
+    routing_label_ports_raw: input.ratio_adjusted_data.label_ports_raw,
+    // Graphviz parity: route spline clipping keeps node extents in pre-ratio units.
+    routing_sizes: input.prep.sizes,
+    path_groups: input.path_groups,
+    routing_context: input.routing_context,
+    label_edge_counts: input.label_edge_counts,
+    head_port_metrics: input.head_port_metrics,
+    enable_complex_tuning: input.enable_complex_tuning,
+  }
+}
+
+///|
+fn maybe_rescale_routed_edges(
+  edges_routed : Array[DotLayoutEdge],
+  ratio_scaled : Bool,
+  ratio_sx : Double,
+  ratio_sy : Double,
+) -> Array[DotLayoutEdge] {
+  if ratio_scaled {
+    scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
+  } else {
+    edges_routed
+  }
 }
 
 ///|
