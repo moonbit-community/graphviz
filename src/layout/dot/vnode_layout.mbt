@@ -1,29 +1,5 @@
 
 ///|
-fn unique_virtual_node_name(
-  prefix : String,
-  edge_index : Int,
-  rank : Int,
-  existing : Map[String, Bool],
-) -> String {
-  let mut candidate = "\{prefix}\{edge_index}_\{rank}"
-  if existing.get(candidate) is None {
-    existing[candidate] = true
-    return candidate
-  }
-  let mut i = 1
-  while true {
-    candidate = "\{prefix}\{edge_index}_\{rank}_\{i}"
-    if existing.get(candidate) is None {
-      existing[candidate] = true
-      return candidate
-    }
-    i = i + 1
-  }
-  ""
-}
-
-///|
 /// Graphviz parity: class2 virtual node creation order + sizing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_vnodes(
@@ -94,7 +70,7 @@ fn build_edge_vnodes(
               let left = size.left_pt + delta
               let right = size.right_pt + delta
               vnode_sizes[name] =
-                vnode_size_from_widths_with_h(left, right, size.height_pt)
+                @dot_shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
             }
             None => ()
           }
@@ -120,7 +96,7 @@ fn build_edge_vnodes(
                 let left = size.left_pt + delta
                 let right = size.right_pt + delta
                 vnode_sizes[name] =
-                  vnode_size_from_widths_with_h(left, right, size.height_pt)
+                  @dot_shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
               }
               None => ()
             }
@@ -174,7 +150,7 @@ fn build_edge_vnodes(
     let mut rank = min_rank + 1
     while rank < max_rank {
       let is_label_rank = rank == label_rank && label_width > 0.0
-      let name = unique_virtual_node_name(
+      let name = @dot_shared.unique_virtual_node_name(
         @dot_shared.EDGE_VNODE_PREFIX,
         idx,
         rank,
@@ -183,13 +159,13 @@ fn build_edge_vnodes(
       vnode_ranks[name] = rank
       vnode_sizes[name] =
         if is_label_rank {
-        vnode_size_from_widths_with_h(
+        @dot_shared.vnode_size_from_widths_with_h(
           nodesep_pt,
           label_width,
           label_height,
         )
       } else {
-        vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
+        @dot_shared.vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
       }
       vnode_clusters[name] = vnode_cluster
       match vnodes_by_rank.get(rank) {

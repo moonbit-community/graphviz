@@ -283,6 +283,58 @@ pub fn node_size_from_points(
 }
 
 ///|
+pub fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
+  let width_pt = left_pt + right_pt
+  let width_in = width_pt / 72.0
+  let height_pt = 1.0
+  let height_in = height_pt / 72.0
+  {
+    width_in,
+    height_in,
+    width_pt,
+    height_pt,
+    left_pt,
+    right_pt,
+  }
+}
+
+///|
+pub fn vnode_size_from_widths_with_h(
+  left_pt : Double,
+  right_pt : Double,
+  height_pt : Double,
+) -> NodeSize {
+  let width_pt = left_pt + right_pt
+  let width_in = width_pt / 72.0
+  let height_in = height_pt / 72.0
+  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
+}
+
+///|
+pub fn unique_virtual_node_name(
+  prefix : String,
+  edge_index : Int,
+  rank : Int,
+  existing : Map[String, Bool],
+) -> String {
+  let mut candidate = "\{prefix}\{edge_index}_\{rank}"
+  if existing.get(candidate) is None {
+    existing[candidate] = true
+    return candidate
+  }
+  let mut i = 1
+  while true {
+    candidate = "\{prefix}\{edge_index}_\{rank}_\{i}"
+    if existing.get(candidate) is None {
+      existing[candidate] = true
+      return candidate
+    }
+    i = i + 1
+  }
+  ""
+}
+
+///|
 pub fn node_left_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
   match sizes.get(name) {
     Some(value) => value.left_pt

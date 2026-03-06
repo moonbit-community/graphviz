@@ -93,39 +93,11 @@ fn swap_node_size(size : NodeSize) -> NodeSize {
 }
 
 ///|
-fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
-  let width_pt = left_pt + right_pt
-  let width_in = width_pt / 72.0
-  let height_pt = VNODE_HEIGHT_PT
-  let height_in = height_pt / 72.0
-  {
-    width_in,
-    height_in,
-    width_pt,
-    height_pt,
-    left_pt,
-    right_pt,
-  }
-}
-
-///|
-fn vnode_size_from_widths_with_h(
-  left_pt : Double,
-  right_pt : Double,
-  height_pt : Double,
-) -> NodeSize {
-  let width_pt = left_pt + right_pt
-  let width_in = width_pt / 72.0
-  let height_in = height_pt / 72.0
-  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
-}
-
-///|
 fn size_with_extra_right(size : NodeSize, extra_right_pt : Double) -> NodeSize {
   if extra_right_pt <= 0.0 {
     size
   } else {
-    vnode_size_from_widths_with_h(
+    @dot_shared.vnode_size_from_widths_with_h(
       size.left_pt,
       size.right_pt + extra_right_pt,
       size.height_pt,

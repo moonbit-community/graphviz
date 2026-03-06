@@ -351,7 +351,7 @@ fn add_flat_label_vnodes(
     }
     let place =
       flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
-    let name = unique_virtual_node_name(
+    let name = @dot_shared.unique_virtual_node_name(
       @dot_shared.EDGE_VNODE_PREFIX,
       current_idx,
       label_rank,
@@ -360,7 +360,7 @@ fn add_flat_label_vnodes(
     let half_width = label_width / 2.0
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
-      vnode_size_from_widths_with_h(half_width, half_width, label_height)
+      @dot_shared.vnode_size_from_widths_with_h(half_width, half_width, label_height)
     let tail_cluster = @clustering.node_cluster_key(edge.tail())
     let head_cluster = @clustering.node_cluster_key(edge.head())
     let vnode_cluster =

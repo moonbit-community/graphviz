@@ -93,7 +93,7 @@ fn build_clustered_pre_root(
       order_sizes: dispatch_context.order_sizes,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
       // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-      skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      skeleton_size: @dot_shared.vnode_size_from_widths(1.0, 1.0),
       node_order: dispatch_context.node_order,
       real_nodes: runtime_context.real_nodes,
       has_clusters: dispatch_context.cluster_meta.has_clusters,
