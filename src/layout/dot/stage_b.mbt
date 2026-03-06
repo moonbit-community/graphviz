@@ -453,50 +453,41 @@ fn apply_cluster_order_metadata(
     }
     cluster_order_list.push((cluster, rank, order))
   }
+  if cluster_order_list.length() <= 1 || @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is None {
+    return
+  }
+  cluster_order_list.sort_by((a, b) => {
+    let (_name_a, rank_a, order_a) = a
+    let (_name_b, rank_b, order_b) = b
+    if rank_a < rank_b {
+      -1
+    } else if rank_a > rank_b {
+      1
+    } else if order_a < order_b {
+      -1
+    } else if order_a > order_b {
+      1
+    } else {
+      0
+    }
+  })
+  let step = nodes.length() + 1
   let cluster_order_base : Map[String, Int] = Map::new()
-  if cluster_order_list.length() > 1 &&
-    @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_) {
-    cluster_order_list.sort_by((a, b) => {
-      let (_name_a, rank_a, order_a) = a
-      let (_name_b, rank_b, order_b) = b
-      if rank_a < rank_b {
-        -1
-      } else if rank_a > rank_b {
-        1
-      } else if order_a < order_b {
-        -1
-      } else if order_a > order_b {
-        1
-      } else {
-        0
-      }
-    })
-    let step = nodes.length() + 1
-    let mut base = 0
-    for entry in cluster_order_list {
-      let (cluster, _rank, _order) = entry
-      cluster_order_base[cluster] = base
-      base = base + step
+  let mut base = 0
+  for entry in cluster_order_list {
+    let (cluster, _rank, _order) = entry
+    cluster_order_base[cluster] = base
+    base = base + step
+  }
+  for node in nodes {
+    let name = node.name()
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
     }
-    for node in nodes {
-      let name = node.name()
-      let cluster = match cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      if cluster == "" {
-        continue
-      }
-      let base_order = match cluster_order_base.get(cluster) {
-        Some(value) => value
-        None => 0
-      }
-      let inner = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      node_order[name] = base_order + inner
-    }
+    let base_order = cluster_order_base.get(cluster).unwrap_or_default()
+    let inner = node_order.get(name).unwrap_or_default()
+    node_order[name] = base_order + inner
   }
 }
 
