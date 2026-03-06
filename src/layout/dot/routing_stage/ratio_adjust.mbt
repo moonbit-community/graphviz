@@ -1,7 +1,4 @@
 ///|
-/// Stage E ratio=fill routing adjustment helpers.
-
-///|
 /// Graphviz parity: ratio-adjust payload keeps ratio inputs grouped so the
 /// pre-routing scaling boundary remains explicit and stable.
 priv struct RoutingRatioAdjustInput {
@@ -32,6 +29,7 @@ priv struct RoutingRatioAdjustedData {
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_ratio_adjusted_data(
   input : RoutingRatioAdjustInput,
+  deps : RoutingStageDeps,
 ) -> RoutingRatioAdjustedData {
   let graph = input.graph
   let prep = input.prep
@@ -39,18 +37,16 @@ fn build_routing_ratio_adjusted_data(
   let nodes_out = input.nodes_out
   let positions_state = input.positions_state
   let routing_bbox =
-    compute_dot_bbox(
-      {
-        nodes_out,
-        all_ranks: rank_data.all_ranks,
-        sizes: prep.sizes,
-        rank_y: positions_state.rank_y,
-        rank_ht1: positions_state.rank_ht1,
-        rank_ht2: positions_state.rank_ht2,
-      },
+    (deps.compute_routing_bbox)(
+      nodes_out,
+      rank_data.all_ranks,
+      prep.sizes,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
     )
   let (ratio_sx, ratio_sy) =
-    match @dot_shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+    match @shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
       Some(scale_factors) =>
         if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
           (scale_factors.sx, scale_factors.sy)

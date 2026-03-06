@@ -31,14 +31,7 @@ pub(all) suberror DotLayoutError {
 ///|
 /// Node layout output.
 /// pos is in points; width/height are in inches.
-pub(all) struct DotLayoutNode {
-  node : @cgraph.Node
-  pos : @geom.Point
-  width_in : Double
-  height_in : Double
-  label_pos : @geom.Point?
-  xlabel_pos : @geom.Point?
-}
+pub type DotLayoutNode = @dot_shared.DotLayoutNode
 
 ///|
 /// Cluster rank-height pair used by cluster bbox/rank alignment passes.
