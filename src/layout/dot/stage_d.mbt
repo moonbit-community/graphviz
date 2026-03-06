@@ -208,7 +208,7 @@ fn cluster_label_borders_for_xpos_constraints(
 
 ///|
 fn has_port_edges_for_position_stage(edges : Array[@cgraph.Edge]) -> Bool {
-  scan_edge_flags(edges).has_port_edges
+  @dot_shared.scan_edge_flags(edges).has_port_edges
 }
 
 ///|
@@ -293,7 +293,7 @@ fn build_port_maps_for_nodes(
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
     let name = node.name()
-    let size = resolve_node_output_size(sizes, node, record_orientation)
+    let size = @dot_shared.resolve_node_output_size(sizes, node, record_orientation, node_size)
     let ports =
       raw_label_ports_for_node(
         node,
