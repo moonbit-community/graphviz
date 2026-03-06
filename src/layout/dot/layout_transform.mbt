@@ -99,7 +99,7 @@ fn refresh_cluster_labels(
     if @dot_shared.is_cluster_graph(layout.graph) {
       match graph_label_metrics(layout.graph) {
         Some(metrics) => {
-          let pad = CLUSTER_LABEL_PAD_PT
+          let pad = @clustering.CLUSTER_LABEL_PAD_PT
           Some(
             @dot_shared.graph_label_pos(
               layout.bbox,

@@ -111,7 +111,7 @@ fn compute_dot_rank_stage(
         prep.has_edge_labels,
         VNODE_HEIGHT_PT,
         edge_mid_label_metrics_for_rank_heights,
-        cluster_label_padding_for_layout,
+        @clustering.cluster_label_padding_for_layout,
       ),
     )
   // Graphviz parity: ordering stage owns cluster-metadata preparation plus

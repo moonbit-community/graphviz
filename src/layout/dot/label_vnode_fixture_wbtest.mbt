@@ -633,7 +633,7 @@ test "flat label node sizes match Graphviz fixtures" {
       rank_ht2,
       rankdir,
       cluster_margin_pt_for: @positioning.cluster_margin_pt,
-      cluster_label_padding_for: cluster_label_padding_for_layout,
+      cluster_label_padding_for: @clustering.cluster_label_padding_for_layout,
       node_half_height_pt_for: @positioning.node_half_height_pt,
     },
   )

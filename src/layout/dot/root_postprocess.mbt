@@ -292,7 +292,7 @@ fn root_label_placement_spec(
   }
   match graph_label_metrics(graph) {
     Some(metrics) => {
-      let pad = CLUSTER_LABEL_PAD_PT
+      let pad = @clustering.CLUSTER_LABEL_PAD_PT
       Some({
         padded_width: metrics.width_pt + pad * 2.0,
         padded_height: metrics.height_pt + pad,

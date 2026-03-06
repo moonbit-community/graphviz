@@ -135,8 +135,6 @@ fn edge_port_order(
 const CLUSTER_MARGIN_PT : Double = 8.0
 
 ///|
-const CLUSTER_LABEL_PAD_PT : Double = 8.0
-
 ///|
 const CLUSTER_COMPACT_WEIGHT : Int = 128
 
@@ -144,26 +142,6 @@ const CLUSTER_COMPACT_WEIGHT : Int = 128
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
 ///|
-fn cluster_label_borders_for_xpos_constraints(
-  graph : @cgraph.Graph,
-  rankdir : RankDir,
-) -> (Double, Double) {
-  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  if !flip {
-    return (0.0, 0.0)
-  }
-  match graph_label_metrics(graph) {
-    Some(metrics) => {
-      let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
-      match @dot_shared.graph_label_loc(graph) {
-        LabelLoc::Top => (0.0, border)
-        LabelLoc::Bottom => (border, 0.0)
-      }
-    }
-    None => (0.0, 0.0)
-  }
-}
-
 ///|
 fn has_port_edges_for_position_stage(edges : Array[@cgraph.Edge]) -> Bool {
   @dot_shared.scan_edge_flags(edges).has_port_edges
@@ -211,8 +189,8 @@ fn compute_x_positions_for_stage(
   @positioning.compute_x_positions_with_prepared_constraints(
     input,
     {
-      cluster_label_borders_for: cluster_label_borders_for_xpos_constraints,
-      cluster_label_width_with_pad_for: cluster_label_width_with_pad_for_layout,
+      cluster_label_borders_for: @clustering.cluster_label_borders_for_xpos_constraints,
+      cluster_label_width_with_pad_for: @clustering.cluster_label_width_with_pad_for_layout,
       cluster_compact_weight: CLUSTER_COMPACT_WEIGHT,
     },
     root_margin,
@@ -320,22 +298,6 @@ fn apply_self_edge_right_space(
 }
 
 ///|
-fn expand_cluster_label_bbox_for_position_stage(
-  graph : @cgraph.Graph,
-  bbox : @geom.Rect,
-) -> @geom.Rect {
-  match graph_label_metrics(graph) {
-    Some(metrics) =>
-      @dot_shared.expand_bbox_for_label(
-        bbox,
-        metrics.width_pt,
-        metrics.height_pt,
-        @dot_shared.graph_label_loc(graph),
-      )
-    None => bbox
-  }
-}
-
 ///|
 fn build_position_stage_deps() -> PositionStageDeps {
   {
@@ -346,9 +308,9 @@ fn build_position_stage_deps() -> PositionStageDeps {
     apply_self_edge_right_space,
     edge_mid_label_metrics_for: edge_mid_label_metrics_for_position_stage,
     compute_x_positions: compute_x_positions_for_stage,
-    cluster_label_padding_for: cluster_label_padding_for_layout,
-    cluster_label_width_with_pad_for: cluster_label_width_with_pad_for_layout,
-    expand_cluster_label_bbox: expand_cluster_label_bbox_for_position_stage,
+    cluster_label_padding_for: @clustering.cluster_label_padding_for_layout,
+    cluster_label_width_with_pad_for: @clustering.cluster_label_width_with_pad_for_layout,
+    expand_cluster_label_bbox: @clustering.expand_cluster_label_bbox_for_position_stage,
   }
 }
 

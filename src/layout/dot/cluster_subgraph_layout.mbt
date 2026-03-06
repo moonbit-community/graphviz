@@ -196,7 +196,7 @@ fn layout_subgraphs(
         Some(metrics) => {
           let loc = @dot_shared.graph_label_loc(subgraph)
           let just = @dot_shared.graph_label_just(subgraph)
-          let pad = CLUSTER_LABEL_PAD_PT
+          let pad = @clustering.CLUSTER_LABEL_PAD_PT
           let padded_width = metrics.width_pt + pad * 2.0
           let padded_height = metrics.height_pt + pad
           if flip {
