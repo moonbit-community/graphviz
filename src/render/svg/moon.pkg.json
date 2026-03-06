@@ -4,6 +4,7 @@
       "path": "moonbit-community/graphviz/layout/dot",
       "alias": "layout_dot"
     },
+    "moonbit-community/graphviz/layout/dot/label_metrics",
     {
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
       "alias": "edge_spline"

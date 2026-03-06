@@ -822,7 +822,7 @@ fn label_metrics(
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) =
-      @layout_dot.label_text_metrics(
+      @label_metrics.label_text_metrics(
         metrics_text,
         font_name,
         font_size_pt,
@@ -923,13 +923,13 @@ fn record_label_metrics(
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, base_height_pt) =
-      @layout_dot.record_label_text_dimensions(
+      @label_metrics.record_label_text_dimensions(
         metrics_text,
         font_name,
         font_size_pt,
       )
     let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) =
-      @layout_dot.label_text_metrics(
+      @label_metrics.label_text_metrics(
         metrics_text,
         font_name,
         font_size_pt,

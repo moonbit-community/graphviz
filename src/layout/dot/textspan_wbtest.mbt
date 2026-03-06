@@ -30,7 +30,7 @@ test "textspan fixtures match label_text_dimensions" {
   let fixtures = load_textspan_fixtures()
   for fixture in fixtures {
     let (width, height, yoffset_layout, yoffset_centerline) =
-      label_text_metrics(fixture.text, fixture.font, fixture.size)
+      @label_metrics.label_text_metrics(fixture.text, fixture.font, fixture.size)
     assert_eq(fixture.flags, 0)
     assert_eq(width, fixture.width)
     assert_eq(height, fixture.height)
@@ -42,7 +42,7 @@ test "textspan fixtures match label_text_dimensions" {
 ///|
 test "textspan combines multiline overrides" {
   let (width, height) =
-    label_text_dimensions("Edge Label A\\nEdge Label B Longer", "Times-Roman", 14.0)
+    @label_metrics.label_text_dimensions("Edge Label A\\nEdge Label B Longer", "Times-Roman", 14.0)
   assert_eq(width, 117.75)
   assert_eq(height, 33.0)
 }

@@ -1,0 +1,8 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/font_metrics",
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/attrs",
+    "moonbit-community/graphviz/cgraph"
+  ]
+}

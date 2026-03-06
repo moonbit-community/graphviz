@@ -223,7 +223,7 @@ test "edge labels expand rank spacing" {
   let edges = with_label.edges()
   guard edges.length() > 0 else { fail("missing labeled edge") }
   let edge = edges[0]
-  let label_height = edge_label_height_pt(edge)
+  let label_height = @label_metrics.edge_label_height_pt(edge)
   let without_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
   )

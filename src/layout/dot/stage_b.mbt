@@ -38,7 +38,7 @@ priv struct DotRankStageOutput {
 fn edge_mid_label_metrics_for_rank_heights(
   edge : @cgraph.Edge,
 ) -> @rank_assignment.EdgeMidLabelMetrics? {
-  match edge_mid_label_metrics(edge) {
+  match @label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) =>
       Some(@rank_assignment.make_edge_mid_label_metrics(metrics.width, metrics.height))
     None => None
@@ -52,7 +52,7 @@ fn edge_mid_label_metrics_for_rank_heights(
 fn build_ordering_stage_deps() -> OrderingStageDeps {
   {
     edge_mid_label_metrics_for: edge =>
-      match edge_mid_label_metrics(edge) {
+      match @label_metrics.edge_mid_label_metrics(edge) {
         Some(value) => Some((value.width, value.height))
         None => None
       },
@@ -89,7 +89,7 @@ fn compute_dot_rank_stage(
         prep.edges,
         prep.has_edge_labels,
         CL_BACK,
-        edge_label_height_pt,
+        @label_metrics.edge_label_height_pt,
       ),
     )
   // Graphviz parity: rank-height stage consumes computed ranks/groups

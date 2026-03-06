@@ -215,7 +215,7 @@ fn has_port_edges_for_position_stage(edges : Array[@cgraph.Edge]) -> Bool {
 fn edge_mid_label_metrics_for_position_stage(
   edge : @cgraph.Edge,
 ) -> (Double, Double)? {
-  match edge_mid_label_metrics(edge) {
+  match @label_metrics.edge_mid_label_metrics(edge) {
     Some(value) => Some((value.width, value.height))
     None => None
   }
@@ -272,7 +272,7 @@ fn compute_x_positions_for_stage(
             real_by_name,
           ),
       ),
-    edge => edge_mid_label_metrics(edge) is Some(_),
+    edge => @label_metrics.edge_mid_label_metrics(edge) is Some(_),
     edge =>
       if @dot_shared.edge_dir_for(edge, edge.tail().graph().kind()) is @dot_shared.EdgeDir::Both {
         2
@@ -354,7 +354,7 @@ fn apply_self_edge_right_space(
       sizes,
       rankdir,
       self_edge_size_pt: SELF_EDGE_SIZE_PT,
-      self_edge_label_width_for: self_edge_label_width_pt,
+      self_edge_label_width_for: @label_metrics.self_edge_label_width_pt,
       port_side_mask_for:
         (node, port) => port_side_mask_for_self_edge(node, port, port_maps),
     },

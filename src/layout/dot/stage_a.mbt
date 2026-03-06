@@ -139,7 +139,7 @@ fn resolve_splines(
 /// Do not change behavior without updating fixtures/tests.
 fn build_input_stage_deps() -> InputStageDeps {
   {
-    graph_has_edge_labels,
+    graph_has_edge_labels: @label_metrics.graph_has_edge_labels,
     node_size_for: node_size,
     swap_node_size,
     raw_label_ports_for_node,

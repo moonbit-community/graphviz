@@ -4,10 +4,7 @@
       "path": "moonbit-community/graphviz/layout/html",
       "alias": "html_label"
     },
-    {
-      "path": "moonbit-community/graphviz/layout/dot/font_metrics",
-      "alias": "font_metrics"
-    },
+    "moonbit-community/graphviz/layout/dot/label_metrics",
     {
       "path": "moonbit-community/graphviz/layout/dot/shared",
       "alias": "dot_shared"

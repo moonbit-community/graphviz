@@ -118,7 +118,7 @@ fn adjust_labels_for_clusters(
         label_rects,
         pad,
         edge =>
-          match edge_mid_label_metrics(edge) {
+          match @label_metrics.edge_mid_label_metrics(edge) {
             Some(metrics) => Some({ width: metrics.width, height: metrics.height })
             None => None
           },
@@ -146,7 +146,7 @@ fn adjust_labels_for_overlaps(
       nodesep_pt,
       rankdir,
       edge =>
-        match edge_mid_label_metrics(edge) {
+        match @label_metrics.edge_mid_label_metrics(edge) {
           Some(metrics) => Some({ width: metrics.width, height: metrics.height })
           None => None
         },
@@ -225,13 +225,13 @@ fn expand_bbox_for_edge_labels(
       {
         edge_mid_label_metrics_for:
           edge =>
-            match edge_mid_label_metrics(edge) {
+            match @label_metrics.edge_mid_label_metrics(edge) {
               Some(metrics) => Some({ width: metrics.width, height: metrics.height })
               None => None
             },
         edge_label_metrics_for_attr:
           (edge, label_attr) =>
-            match edge_label_metrics_for_attr(edge, label_attr, true) {
+            match @label_metrics.edge_label_metrics_for_attr(edge, label_attr, true) {
               Some(metrics) => Some({ width: metrics.width, height: metrics.height })
               None => None
             },

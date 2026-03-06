@@ -383,7 +383,7 @@ fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
       } else {
         let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
         let font = @attrs.font_name(node.get_attr("fontname"))
-        let (width, height) = label_text_dimensions(text, font, font_size_pt)
+        let (width, height) = @label_metrics.label_text_dimensions(text, font, font_size_pt)
         Some({ width, height })
       }
     None => None
@@ -391,7 +391,7 @@ fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
 }
 
 fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match edge_label_metrics_for_attr(edge, "xlabel", false) {
+  match @label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }
@@ -429,7 +429,7 @@ fn build_edges_by_tail(
 }
 
 fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match edge_mid_label_metrics(edge) {
+  match @label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }
@@ -439,7 +439,7 @@ fn edge_attr_metrics_for_xlabel(
   edge : @cgraph.Edge,
   key : String,
 ) -> XLabelMetrics? {
-  match edge_label_metrics_for_attr(edge, key, true) {
+  match @label_metrics.edge_label_metrics_for_attr(edge, key, true) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }

@@ -220,7 +220,7 @@ fn build_head_port_metrics_for_stage(
 
 ///|
 fn edge_has_mid_label_for_routing_stage(edge : @cgraph.Edge) -> Bool {
-  edge_mid_label_text(edge) is Some(_)
+  @label_metrics.edge_mid_label_text(edge) is Some(_)
 }
 
 ///|
@@ -231,7 +231,7 @@ fn build_route_base_deps_for_dot(
 ) -> @routing.RouteBaseDeps {
   let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
     (edge : @cgraph.Edge) =>
-      match edge_mid_label_metrics(edge) {
+      match @label_metrics.edge_mid_label_metrics(edge) {
         Some(metrics) => {
           let route_metrics : @routing.RouteLabelMetrics = {
             width: metrics.width,
@@ -346,7 +346,7 @@ fn build_routing_callbacks_for_dot(
       )
   let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
     (edge : @cgraph.Edge) =>
-      match edge_mid_label_metrics(edge) {
+      match @label_metrics.edge_mid_label_metrics(edge) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height })
         None => None
       }
@@ -368,7 +368,7 @@ fn build_routing_callbacks_for_dot(
           edge,
           ranks,
           rank_y,
-          edge_mid_label_width_pt(edge),
+          @label_metrics.edge_mid_label_width_pt(edge),
         ),
     edge_label_rank_x_fn: @routing.edge_label_rank_x,
     edge_label_pos_from_vnode_fn: @routing.edge_label_pos_from_vnode,
@@ -400,7 +400,7 @@ fn build_routing_callbacks_for_dot(
             match @routing.edge_label_rank_info(
               edge,
               ranks,
-              edge_mid_label_width_pt(edge),
+              @label_metrics.edge_mid_label_width_pt(edge),
             ) {
               Some(info) => Some(info.label_rank)
               None => None
@@ -416,8 +416,8 @@ fn build_routing_callbacks_for_dot(
           deps: edge_layout_deps,
         }
       ),
-    self_edge_label_height_fn: self_edge_label_height_pt,
-    self_edge_label_width_fn: self_edge_label_width_pt,
+    self_edge_label_height_fn: @label_metrics.self_edge_label_height_pt,
+    self_edge_label_width_fn: @label_metrics.self_edge_label_width_pt,
     edge_port_label_pos_fn: edge_port_label_pos_for_dot,
   }
 }
