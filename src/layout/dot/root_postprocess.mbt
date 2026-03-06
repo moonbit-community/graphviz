@@ -372,7 +372,7 @@ fn apply_root_margin_x(
 ) -> @geom.Rect {
   if graph.is_root() {
     let margin_x = if @dot_shared.graph_has_cluster(graph) {
-      graph_margin_x_pt(graph)
+      @label_layout.graph_margin_x_pt(graph)
     } else {
       0.0
     }

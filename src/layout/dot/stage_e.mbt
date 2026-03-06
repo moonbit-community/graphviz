@@ -71,7 +71,7 @@ fn build_port_layout_maps_for_routing_stage(
         )
       let name = node_layout.node.name()
       let raw_ports =
-        raw_label_ports_for_node(
+        @label_layout.raw_label_ports_for_node(
           node_layout.node,
           { x: 0.0, y: 0.0 },
           final_size,
@@ -80,7 +80,7 @@ fn build_port_layout_maps_for_routing_stage(
       if raw_ports.length() > 0 {
         label_ports_raw[name] = raw_ports
         let ports =
-          layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+          @label_layout.layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
         label_ports_map[name] = ports
       }
     }
@@ -172,7 +172,7 @@ fn routing_port_padding_for_stage(
   label_ports_map : Map[String, Map[String, RecordPort]],
 ) -> RoutingPortPadding {
   let padding =
-    record_port_padding_y(
+    @label_layout.record_port_padding_y(
       edges,
       positions,
       label_ports_map,
@@ -202,7 +202,7 @@ fn build_head_port_metrics_for_stage(
       port_geometry_for:
         (node_name, port, node_pos, node_size) => {
           let geometry =
-            port_geometry(
+            @label_layout.port_geometry(
               node_name,
               port,
               label_ports_map,
@@ -255,7 +255,7 @@ fn build_route_base_deps_for_dot(
       node_size : NodeSize,
     ) => {
       let geometry =
-        port_geometry(
+        @label_layout.port_geometry(
           node_name,
           port,
           routing_label_ports_map,
@@ -286,7 +286,7 @@ fn build_route_base_deps_for_dot(
       record_border_adjust : Double,
     ) => {
       let anchor =
-        dynamic_port_anchor_for_edge(
+        @label_layout.dynamic_port_anchor_for_edge(
           port,
           node_name,
           routing_label_ports_raw,
@@ -305,27 +305,27 @@ fn build_route_base_deps_for_dot(
   {
     node_size_for_missing: (node) => node_size(node, record_orientation),
     edge_mid_label_metrics: route_mid_label_metrics,
-    record_port_path_box,
+    record_port_path_box: @label_layout.record_port_path_box,
     port_geometry: route_port_geometry,
-    port_rect_from_geometry,
+    port_rect_from_geometry: @label_layout.port_rect_from_geometry,
     port_is_label_port:
       (node_name, port) =>
-        port_is_label_port(node_name, port, routing_label_ports_raw),
+        @label_layout.port_is_label_port(node_name, port, routing_label_ports_raw),
     is_record_shape: @dot_shared.is_record_shape,
     record_border_adjust:
       (node) =>
         if @dot_shared.is_record_shape(node) &&
-          !@html_label.is_html_label_text(label_text(node)) {
+          !@html_label.is_html_label_text(@label_layout.label_text(node)) {
           @dot_shared.RECORD_BORDER_PT
         } else {
           0.0
         },
     dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
-    port_side_mask_from_anchor,
+    port_side_mask_from_anchor: @label_layout.port_side_mask_from_anchor,
     port_side_for_edge:
       (port, port_rect, node_pos, node_size) =>
-        port_side_for_edge(port, port_rect, node_pos, node_size, None),
-    layout_port_offset,
+        @label_layout.port_side_for_edge(port, port_rect, node_pos, node_size, None),
+    layout_port_offset: @label_layout.layout_port_offset,
     node_cluster_key: @clustering.node_cluster_key,
     node_local_cluster_key: @clustering.node_local_cluster_key,
   }

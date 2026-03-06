@@ -291,6 +291,16 @@ pub fn node_size_from_points(
 }
 
 ///|
+pub fn swap_node_size(size : NodeSize) -> NodeSize {
+  let width_in = size.height_in
+  let height_in = size.width_in
+  let width_pt = size.height_pt
+  let height_pt = size.width_pt
+  let half = width_pt / 2.0
+  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
+}
+
+///|
 pub fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
   let width_pt = left_pt + right_pt
   let width_in = width_pt / 72.0

@@ -914,7 +914,7 @@ pub fn layout_neato(
 ) -> DotLayoutGraph raise DotLayoutError {
   let active_graph = active_graph_for_prune(graph, prune)
   validate_layout_graph(active_graph)
-  reset_label_caches()
+  @label_layout.reset_label_caches()
   validate_neato_edge_lengths(active_graph)
   let geometry = build_engine_geometry_context(active_graph, scale)
   let nodes = active_graph.nodes()
@@ -1119,7 +1119,7 @@ pub fn layout_neato_noop(
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   let active_graph = active_graph_for_prune(graph, prune)
-  reset_label_caches()
+  @label_layout.reset_label_caches()
   let geometry = build_engine_geometry_context(active_graph, scale)
   let node_data =
     collect_noop_nodes_with_sizes(

@@ -65,12 +65,12 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     }
     if @dot_shared.is_record_shape(node) &&
       !is_mrecord &&
-      !@html_label.is_html_label_text(label_text(node)) {
+      !@html_label.is_html_label_text(@label_layout.label_text(node)) {
       let size = @dot_shared.node_size_from_points(
         node_layout.width_in * 72.0,
         node_layout.height_in * 72.0,
       )
-      let rects = record_rects(
+      let rects = @label_layout.record_rects(
         node,
         node_layout.pos,
         size,

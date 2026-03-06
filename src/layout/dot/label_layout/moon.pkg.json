@@ -1,0 +1,16 @@
+{
+  "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/html",
+      "alias": "html_label"
+    },
+    "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+    "moonbit-community/graphviz/attrs",
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math",
+    "moonbitlang/core/ref"
+  ]
+}

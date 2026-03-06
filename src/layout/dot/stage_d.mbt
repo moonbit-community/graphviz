@@ -43,10 +43,10 @@ fn port_offsets_for_nodes(
     },
     (node, origin, base_size, rankdir) => {
       let record_orientation = @dot_shared.record_layout_orientation(rankdir)
-      raw_label_ports_for_node(node, origin, base_size, record_orientation)
+      @label_layout.raw_label_ports_for_node(node, origin, base_size, record_orientation)
     },
-    layout_port_offset,
-    swap_node_size,
+    @label_layout.layout_port_offset,
+    @dot_shared.swap_node_size,
   )
 }
 
@@ -116,7 +116,7 @@ fn compass_port_point_for_layout(
         shape_compass,
         shape_rankdir,
       ),
-    layout_port_offset,
+    @label_layout.layout_port_offset,
   )
 }
 
@@ -143,8 +143,8 @@ fn edge_port_offset(
         compass_port_point_for_layout,
         node =>
           @dot_shared.is_record_shape(node) ||
-          @html_label.is_html_label_text(label_text(node)),
-        layout_port_offset,
+          @html_label.is_html_label_text(@label_layout.label_text(node)),
+        @label_layout.layout_port_offset,
       ),
   )
 }
@@ -295,7 +295,7 @@ fn build_port_maps_for_nodes(
     let name = node.name()
     let size = @dot_shared.resolve_node_output_size(sizes, node, record_orientation, node_size)
     let ports =
-      raw_label_ports_for_node(
+      @label_layout.raw_label_ports_for_node(
         node,
         origin,
         size,
@@ -318,7 +318,7 @@ fn port_side_mask_for_self_edge(
     None => 0
     Some(value) =>
       match value.compass {
-        Some(compass) => compass_side_mask(compass)
+        Some(compass) => @label_layout.compass_side_mask(compass)
         None =>
           match value.name {
             Some(port_name) =>

@@ -120,7 +120,7 @@ fn orientation_is_horizontal(orientation : RecordOrientation) -> Bool {
 
 ///|
 fn compute_record_fields(
-  nodes : Array[RecordNode],
+  nodes : Array[@label_layout.RecordNode],
   rect : @geom.Rect,
   orientation : RecordOrientation,
   sides : Int,
@@ -129,7 +129,7 @@ fn compute_record_fields(
   pad_x_pt : Double,
   pad_y_pt : Double,
 ) -> Array[RecordComputedField] {
-  let sizes = record_nodes_sizes(
+  let sizes = @label_layout.record_nodes_sizes(
     nodes,
     orientation,
     font_name,
@@ -202,7 +202,7 @@ fn compute_record_fields(
       sides & record_child_mask(parent_lr, i, last)
     }
     match nodes[i] {
-      RecordNode::Field(field) => {
+      @label_layout.RecordNode::Field(field) => {
         computed.push({
           id: field.name,
           lr: true,
@@ -213,8 +213,8 @@ fn compute_record_fields(
           text: Some(field.text),
         })
       }
-      RecordNode::Group(children) => {
-        let child_orientation = toggle_record_orientation(orientation)
+      @label_layout.RecordNode::Group(children) => {
+        let child_orientation = @label_layout.toggle_record_orientation(orientation)
         let child_fields = compute_record_fields(
           children,
           child_rect,
@@ -242,7 +242,7 @@ fn compute_record_fields(
 
 ///|
 fn compute_record_tree(
-  nodes : Array[RecordNode],
+  nodes : Array[@label_layout.RecordNode],
   rect : @geom.Rect,
   orientation : RecordOrientation,
   font_name : String,
@@ -412,13 +412,13 @@ fn unescape_quotes(label : String) -> String {
 }
 
 ///|
-fn record_nodes_unflattened(label : String) -> Array[RecordNode] {
+fn record_nodes_unflattened(label : String) -> Array[@label_layout.RecordNode] {
   let chars : Array[Char] = []
   for ch in label {
     chars.push(ch)
   }
-  let parser = RecordParser::{ chars, index: 0 }
-  parse_record_nodes(parser)
+  let parser = @label_layout.RecordParser::{ chars, index: 0 }
+  @label_layout.parse_record_nodes(parser)
 }
 
 ///|
@@ -490,7 +490,7 @@ test "record fixtures match Graphviz layout" {
     let output = StringBuilder::new()
     for fixture in fixtures {
       let node = graph.node(fixture.node)
-      let label = unescape_quotes(label_text(node))
+      let label = unescape_quotes(@label_layout.label_text(node))
       let expected_flip = orientation_is_horizontal(record_orientation)
       let size = node_size(node, record_orientation)
       let record_size : RecordFixturePoint = {
@@ -505,7 +505,7 @@ test "record fixtures match Graphviz layout" {
       }
       let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
       let font = @attrs.font_name(node.get_attr("fontname"))
-      let padding = node_padding(node)
+      let padding = @label_layout.node_padding(node)
       let computed = compute_record_tree(
         record_nodes_unflattened(label),
         rect,
@@ -534,7 +534,7 @@ test "record fixtures match Graphviz layout" {
   }
   for fixture in fixtures {
     let node = graph.node(fixture.node)
-    let label = unescape_quotes(label_text(node))
+    let label = unescape_quotes(@label_layout.label_text(node))
     assert_eq(label, fixture.label)
     assert_eq(fixture.html, false)
     let expected_flip = orientation_is_horizontal(record_orientation)
@@ -556,7 +556,7 @@ test "record fixtures match Graphviz layout" {
     }
     let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
     let font = @attrs.font_name(node.get_attr("fontname"))
-    let padding = node_padding(node)
+    let padding = @label_layout.node_padding(node)
     let computed = compute_record_tree(
       record_nodes_unflattened(label),
       rect,

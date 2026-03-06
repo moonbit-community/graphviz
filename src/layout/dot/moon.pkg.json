@@ -5,6 +5,7 @@
       "alias": "html_label"
     },
     "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/label_layout",
     {
       "path": "moonbit-community/graphviz/layout/dot/shared",
       "alias": "dot_shared"

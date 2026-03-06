@@ -13,7 +13,7 @@ pub fn layout_dot(
 ) -> DotLayoutGraph raise DotLayoutError {
   let opts = options
   validate_layout_graph(graph)
-  reset_label_caches()
+  @label_layout.reset_label_caches()
   let prep = prepare_layout_inputs(graph, opts)
   let rank_stage_output =
     compute_dot_rank_stage({ graph, prep })
