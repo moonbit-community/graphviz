@@ -265,21 +265,14 @@ fn build_node_order(
   rankdir : RankDir,
 ) -> Map[String, Int] {
   let node_order : Map[String, Int] = Map::new()
-  let nlist_nodes = nodes
-  let mut order_idx = 0
-  while order_idx < nlist_nodes.length() {
-    node_order[nlist_nodes[order_idx].name()] = order_idx
-    order_idx = order_idx + 1
-  }
   if rankdir == RankDir::RL {
     let total = nodes.length()
-    for node in nodes {
-      let name = node.name()
-      let base = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      node_order[name] = total - 1 - base
+    for i, node in nodes {
+      node_order[node.name()] = total - 1 - i
+    }
+  } else {
+    for i, node in nodes {
+      node_order[node.name()] = i
     }
   }
   node_order
