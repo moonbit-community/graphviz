@@ -97,26 +97,22 @@ fn build_root_padded_layout_data(
   let graph = input.graph
   let rankdir = input.rankdir
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
-    root_cluster_padding_for_rankdir(
+    @root_geometry.root_cluster_padding_for_rankdir(
       rankdir,
-      compute_root_cluster_padding(
-        {
-          graph,
-          nodes: input.nodes,
-          all_ranks: input.all_ranks,
-          ranks: input.ranks,
-        },
+      @root_geometry.compute_root_cluster_padding(
+        graph,
+        input.nodes,
+        input.all_ranks,
+        input.ranks,
       ),
     )
   let bbox =
-    apply_root_port_padding(
-      {
-        graph,
-        bbox: subgraphs_and_bbox.base_bbox,
-        rankdir,
-        port_pad_below: input.port_pad_below,
-        port_pad_above: input.port_pad_above,
-      },
+    @root_geometry.apply_root_port_padding(
+      graph,
+      subgraphs_and_bbox.base_bbox,
+      rankdir,
+      input.port_pad_below,
+      input.port_pad_above,
     )
   let layout_with_root_pad =
     apply_root_cluster_padding(
@@ -138,26 +134,6 @@ fn build_root_padded_layout_data(
   // padding that is part of set_ycoords before final edge bbox expansion.
   let ratio_bbox = layout_with_root_pad.bbox
   { layout_with_root_pad, ratio_bbox }
-}
-
-///|
-fn root_cluster_padding_for_rankdir(
-  rankdir : RankDir,
-  root_cluster_padding : RootClusterPadding,
-) -> (Double, Double) {
-  // Graphviz parity: rankdir=BT flips top/bottom cluster padding
-  // because ranks are inverted before postprocess transform.
-  if rankdir == RankDir::BT {
-    (
-      root_cluster_padding.root_cluster_pad_bottom,
-      root_cluster_padding.root_cluster_pad_top,
-    )
-  } else {
-    (
-      root_cluster_padding.root_cluster_pad_top,
-      root_cluster_padding.root_cluster_pad_bottom,
-    )
-  }
 }
 
 ///|
@@ -251,7 +227,7 @@ fn apply_pre_rotation_layout_postprocess(
     )
   let with_xlabels = apply_xlabels(graph, labeled, input.splines)
   let root_label_bbox =
-    apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
+    @root_geometry.apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   {
     graph: with_xlabels.graph,
     bbox: root_label_bbox.bbox,
