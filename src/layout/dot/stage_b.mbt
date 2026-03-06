@@ -37,20 +37,7 @@ priv struct RankHeights {
 ///|
 /// Graphviz parity: cluster metadata payload keeps rank and cluster snapshots
 /// grouped so Stage B clustered-ordering wiring remains explicit and stable.
-priv struct ClusterMetadata {
-  has_clusters : Bool
-  cluster_keys : Map[String, String]
-  cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-  intercluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  flat_constraints : Map[String, Bool]
-  ordering_set : Bool
-}
+type ClusterMetadata = @ordering.DotClusterMetadata
 
 ///|
 /// Stage B rank-data scaffolding helpers for layered ordering preparation.
@@ -359,83 +346,8 @@ fn compute_rank_heights(
 /// clustered ordering inputs.
 
 ///|
-/// Graphviz parity: cluster-metadata payload keeps rank and cluster snapshots
-/// grouped so Stage B clustered-ordering wiring remains explicit and stable.
-priv struct ClusterMetadataInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  graphviz_flip : Bool
-}
-
-///|
-/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_cluster_metadata(
-  input : ClusterMetadataInput,
-) -> ClusterMetadata {
-  let graph = input.graph
-  let nodes = input.nodes
-  let edges = input.edges
-  let groups = input.groups
-  let ranks = input.ranks
-  let node_order = input.node_order
-  let edge_tail = input.edge_tail
-  let edge_head = input.edge_head
-  let cluster_core =
-    @clustering.build_cluster_core_metadata_for_ordering(
-      graph,
-      nodes,
-      groups,
-      ranks,
-      node_order,
-      input.graphviz_flip,
-      @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
-    )
-  let has_clusters = cluster_core.has_clusters
-  let cluster_keys = cluster_core.cluster_keys
-  let cluster_skeleton = cluster_core.cluster_skeleton
-  let cluster_min_rank = cluster_core.cluster_min_rank
-  let cluster_max_rank = cluster_core.cluster_max_rank
-  let cluster_order = cluster_core.cluster_order
-  let cluster_parents = cluster_core.cluster_parents
-  let intercluster_keys = cluster_core.intercluster_keys
-  let ordering_metadata = @ordering.build_cluster_ordering_metadata(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    cluster_keys,
-  )
-  let rank_same_groups = ordering_metadata.rank_same_groups
-  let rank_same_order = ordering_metadata.rank_same_order
-  let flat_constraints = ordering_metadata.flat_constraints
-  let ordering_set = ordering_metadata.ordering_set
-  {
-    has_clusters,
-    cluster_keys,
-    cluster_skeleton,
-    cluster_min_rank,
-    cluster_max_rank,
-    cluster_order,
-    cluster_parents,
-    intercluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    flat_constraints,
-    ordering_set,
-  }
-}
-///|
-/// Stage B rank stage file: orchestrator plus rank/height/cluster preprocessing
-/// helpers.
+/// Stage B rank stage file: orchestrator plus rank/height preprocessing
+/// helpers with cluster metadata assembly delegated to ordering package.
 
 ///|
 /// Graphviz parity: rank stage payload keeps Stage A-prepared inputs grouped
@@ -494,7 +406,7 @@ fn compute_dot_rank_stage(
   // Graphviz parity: cluster metadata in rank/order stage uses
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
   let cluster_meta =
-    compute_cluster_metadata(
+    @ordering.build_dot_cluster_metadata(
       {
         graph,
         nodes: prep.nodes,

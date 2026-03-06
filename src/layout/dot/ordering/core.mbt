@@ -150,6 +150,82 @@ pub fn build_cluster_ordering_metadata(
 }
 
 ///|
+/// Graphviz parity: dot cluster-metadata assembly input keeps cluster snapshots,
+/// rank maps, and edge endpoints grouped for clustered ordering setup.
+pub(all) struct DotClusterMetadataInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: dot cluster metadata payload keeps cluster core + ordering
+/// snapshots grouped for stage-B/stage-C/stage-D wiring.
+pub(all) struct DotClusterMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
+/// Graphviz parity: dot cluster metadata assembly merges clustering core
+/// metadata and ordering metadata before clustered dispatch.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_dot_cluster_metadata(
+  input : DotClusterMetadataInput,
+) -> DotClusterMetadata {
+  let cluster_core =
+    @clustering.build_cluster_core_metadata_for_ordering(
+      input.graph,
+      input.nodes,
+      input.groups,
+      input.ranks,
+      input.node_order,
+      input.graphviz_flip,
+      @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
+    )
+  let ordering_metadata =
+    build_cluster_ordering_metadata(
+      input.graph,
+      input.nodes,
+      input.edges,
+      input.edge_tail,
+      input.edge_head,
+      input.ranks,
+      cluster_core.cluster_keys,
+    )
+  {
+    has_clusters: cluster_core.has_clusters,
+    cluster_keys: cluster_core.cluster_keys,
+    cluster_skeleton: cluster_core.cluster_skeleton,
+    cluster_min_rank: cluster_core.cluster_min_rank,
+    cluster_max_rank: cluster_core.cluster_max_rank,
+    cluster_order: cluster_core.cluster_order,
+    cluster_parents: cluster_core.cluster_parents,
+    intercluster_keys: cluster_core.intercluster_keys,
+    rank_same_groups: ordering_metadata.rank_same_groups,
+    rank_same_order: ordering_metadata.rank_same_order,
+    flat_constraints: ordering_metadata.flat_constraints,
+    ordering_set: ordering_metadata.ordering_set,
+  }
+}
+
+///|
 fn position_key(
   name : String,
   desired : Map[String, Double],
