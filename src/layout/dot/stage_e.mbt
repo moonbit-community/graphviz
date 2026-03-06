@@ -338,6 +338,46 @@ fn build_routing_head_port_metrics(
 }
 
 ///|
+/// Graphviz parity: routing port padding resolves cluster/port-edge gating and
+/// record-port y padding in the same order as dotsplines precompute.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_routing_port_padding(
+  input : RoutingPrecomputeInput,
+) -> (Double, Double) {
+  let prep = input.prep
+  @routing.resolve_routing_port_padding(
+    input.cluster_meta.has_clusters,
+    prep.has_port_edges,
+    () => {
+      let padding =
+        record_port_padding_y(
+          prep.edges,
+          input.positions_state.positions,
+          input.label_ports_map,
+        )
+      (padding.below, padding.above)
+    },
+  )
+}
+
+///|
+/// Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right
+/// space) before routing context assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_pathplan_sizes_for_routing(
+  prep : LayoutPrep,
+  sizes : Map[String, NodeSize],
+) -> Map[String, NodeSize] {
+  apply_self_edge_right_space(
+    prep.nodes,
+    prep.edges,
+    sizes,
+    prep.rankdir,
+    prep.record_orientation,
+  )
+}
+
+///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -345,20 +385,7 @@ fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
-  let (port_pad_below, port_pad_above) =
-    @routing.resolve_routing_port_padding(
-      input.cluster_meta.has_clusters,
-      prep.has_port_edges,
-      () => {
-        let padding =
-          record_port_padding_y(
-            prep.edges,
-            input.positions_state.positions,
-            input.label_ports_map,
-          )
-        (padding.below, padding.above)
-      },
-    )
+  let (port_pad_below, port_pad_above) = resolve_routing_port_padding(input)
   let head_port_metrics =
     build_routing_head_port_metrics(
       prep,
@@ -367,15 +394,8 @@ fn build_routing_precompute_data(
       input.label_ports_map,
       input.enable_complex_tuning,
     )
-  // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
   let pathplan_sizes =
-    apply_self_edge_right_space(
-      prep.nodes,
-      prep.edges,
-      input.sizes,
-      prep.rankdir,
-      prep.record_orientation,
-    )
+    build_pathplan_sizes_for_routing(prep, input.sizes)
   @routing.build_routing_precompute_pipeline(
     {
       edges: prep.edges,
