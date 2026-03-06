@@ -1020,10 +1020,7 @@ fn build_port_maps_for_nodes(
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
     let name = node.name()
-    let size = match sizes.get(name) {
-      Some(value) => value
-      None => node_size(node, record_orientation)
-    }
+    let size = resolve_node_output_size(sizes, node, record_orientation)
     let ports =
       raw_label_ports_for_node(
         node,
