@@ -6,8 +6,6 @@ struct FixturePoint {
 
 ///|
 struct FixtureEndpoint {
-  x : Double
-  y : Double
   theta : Double
   constrained : Bool
 } derive(FromJson)
@@ -205,10 +203,6 @@ fn run_spline_case(
   shortest_expected : Array[FixturePoint],
   output_expected : Array[FixturePoint],
 ) -> Unit raise {
-  let _ = input.start.x
-  let _ = input.start.y
-  let _ = input.end.x
-  let _ = input.end.y
   if input.polyline {
     fail(
       "case \{input.case_id} graph=\{input.graph} tail=\{input.tail} head=\{input.head} unexpected polyline input",

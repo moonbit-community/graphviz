@@ -16,6 +16,120 @@ fn assert_point_close(
 }
 
 ///|
+fn assert_points_close(
+  actual : Array[@geom.Point],
+  expected : Array[@geom.Point],
+  eps? : Double = 0.000001,
+) -> Unit raise {
+  if actual.length() != expected.length() {
+    fail("expected point count \{expected.length()} got \{actual.length()}")
+  }
+  for i in 0..<expected.length() {
+    assert_point_close(actual[i], expected[i], eps=eps)
+  }
+}
+
+///|
+test "route_polyline_to_bezier keeps unconstrained straight segments as degenerate cubic" {
+  let bezier = route_polyline_to_bezier(
+    [point(0.0, 12.0), point(0.0, 0.0)],
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    true,
+    1.0,
+    0.0,
+  )
+
+  assert_eq(
+    bezier,
+    [point(0.0, 12.0), point(0.0, 12.0), point(0.0, 0.0), point(0.0, 0.0)],
+  )
+}
+
+///|
+test "route_polyline_to_bezier honors a constrained head tangent on a straight segment" {
+  let bezier = route_polyline_to_bezier(
+    [point(0.0, 12.0), point(0.0, 0.0)],
+    point(0.0, 0.0),
+    point(0.0, -1.0),
+    true,
+    1.0,
+    0.0,
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(0.0, 12.0),
+      point(0.0, 12.0),
+      point(0.0, 16.0 / 3.0),
+      point(0.0, 0.0),
+    ],
+  )
+}
+
+///|
+test "route_polyline_to_bezier reproduces the barrier-aware bend fit from Graphviz fixtures" {
+  let shortest : Array[@geom.Point] = [
+    point(780.0, 178.5),
+    point(770.1103515625, 143.0),
+    point(770.1103515625, 129.0),
+    point(783.0, 43.5),
+  ]
+  let polygon : Array[@geom.Point] = [
+    point(833.0, 179.5),
+    point(833.0, 153.0),
+    point(1434.35693359375, 153.0),
+    point(1434.35693359375, 143.0),
+    point(770.1103515625, 143.0),
+    point(770.1103515625, 129.0),
+    point(1434.35693359375, 129.0),
+    point(1434.35693359375, 121.0),
+    point(819.0, 121.0),
+    point(819.0, 42.5),
+    point(-240.0, 42.5),
+    point(-240.0, 121.0),
+    point(-240.0, 121.0),
+    point(-240.0, 129.0),
+    point(-240.0, 129.0),
+    point(-240.0, 143.0),
+    point(-240.0, 143.0),
+    point(-240.0, 153.0),
+    point(-240.0, 153.0),
+    point(-240.0, 179.5),
+  ]
+  let route_barriers : Array[(@geom.Point, @geom.Point)] = []
+  for i in 0..<polygon.length() {
+    let next = if i + 1 < polygon.length() { i + 1 } else { 0 }
+    route_barriers.push((polygon[i], polygon[next]))
+  }
+
+  let bezier = route_polyline_to_bezier(
+    shortest,
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    true,
+    1.0,
+    0.0,
+    route_barriers=route_barriers,
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(780.0, 178.5),
+      point(780.0, 178.5),
+      point(772.3284867912414, 159.22768260618975),
+      point(770.1103515625, 143.0),
+      point(764.0713344784783, 98.81908117095833),
+      point(783.0, 43.5),
+      point(783.0, 43.5),
+    ],
+    eps=0.0001,
+  )
+}
+
+///|
 test "parse_arrow_flags handles defaults synonyms and invalid values" {
   assert_eq(parse_arrow_flags(None), [ARR_TYPE_NORM])
   assert_eq(parse_arrow_flags(Some("")), [ARR_TYPE_NORM])
