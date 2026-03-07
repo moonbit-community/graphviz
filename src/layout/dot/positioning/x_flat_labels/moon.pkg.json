@@ -10,6 +10,7 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-    "moonbit-community/graphviz/layout/dot/numeric"
+    "moonbit-community/graphviz/layout/dot/numeric",
+    "moonbit-community/graphviz/layout/dot/edge_label_metrics"
   ]
 }

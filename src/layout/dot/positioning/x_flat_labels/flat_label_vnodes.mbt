@@ -9,10 +9,6 @@ priv struct FlatLabelNodeInfo {
   rank : Int
 }
 
-///|
-pub(all) struct FlatLabelVNodeDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-}
 
 ///|
 pub fn flat_label_adjacent(
@@ -238,7 +234,6 @@ fn add_flat_label_vnodes(
   existing_names : Map[String, Bool],
   vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
-  deps : FlatLabelVNodeDeps,
 ) -> FlatLabelVnodeResult {
   let order_index = @ordering.build_order_index(x_groups)
   let vnode_out_heads =
@@ -300,8 +295,8 @@ fn add_flat_label_vnodes(
       continue
     }
     let (metric_width, metric_height) =
-      match (deps.edge_mid_label_metrics_for)(edge) {
-      Some(value) => value
+      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      Some(value) => (value.width, value.height)
       None => continue
     }
     let (label_width, label_height) =
@@ -458,7 +453,6 @@ pub fn build_flat_label_vnodes_for_positioning(
   existing_names : Map[String, Bool],
   vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
-  deps : FlatLabelVNodeDeps,
 ) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(
     edges,
@@ -474,7 +468,6 @@ pub fn build_flat_label_vnodes_for_positioning(
     existing_names,
     vnode_info,
     x_groups,
-    deps,
   )
   let flat_label_ranks : Map[String, Int] = Map::new()
   for name, info in flat_label_vnodes.flat_label_nodes {

@@ -64,14 +64,6 @@ fn build_flat_label_augmentation(
             existing_names,
             pipeline.ordering.vnode_info,
             x_groups,
-            {
-              edge_mid_label_metrics_for:
-                edge =>
-                  match @edge_label_metrics.edge_mid_label_metrics(edge) {
-                    Some(value) => Some((value.width, value.height))
-                    None => None
-                  },
-            },
           )
         },
     },
