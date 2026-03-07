@@ -2,10 +2,10 @@
 /// Graphviz parity: exterior label placement aligned to refs/graphviz/lib/label/xlabels.c
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).
 /// Do not change behavior without updating fixtures/tests.
-type XLabelTarget = @xlabel_solver.XLabelTarget
-type XLabel = @xlabel_solver.XLabel
-type XObject = @xlabel_solver.XObject
-type XLabelMetrics = @xlabel_collection.XLabelMetrics
+
+type LayoutTree = @shared.LayoutTree
+type RankDir = @shared.RankDir
+
 
 priv struct XLabelUpdateMaps {
   node_updates : Map[String, @geom.Point]
@@ -56,7 +56,7 @@ fn expand_bbox_for_existing_xlabel(
       match metrics {
         Some(label_metrics) => {
           let dims =
-            @xlabel_collection.maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
+            maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
           expanded =
             @routing.expand_bbox_for_label_pos(
               expanded,
@@ -83,7 +83,7 @@ fn expand_bbox_for_existing_node_xlabels(
       expand_bbox_for_existing_xlabel(
         expanded,
         node_layout.xlabel_pos,
-        @xlabel_collection.xlabel_metrics_for_node(node_layout.node),
+        xlabel_metrics_for_node(node_layout.node),
         flip,
       )
   }
@@ -102,26 +102,25 @@ fn expand_bbox_for_existing_edge_xlabels(
       expand_bbox_for_existing_xlabel(
         expanded,
         edge_layout.xlabel_pos,
-        @xlabel_collection.xlabel_metrics_for_edge(edge_layout.edge),
+        xlabel_metrics_for_edge(edge_layout.edge),
         flip,
       )
   }
   expanded
 }
 
-fn apply_xlabels(
-  graph : @cgraph.Graph,
-  layout : DotLayoutGraph,
+pub fn apply_xlabels(
+  layout : LayoutTree,
   splines : SplinesMode,
-) -> DotLayoutGraph {
-  let rankdir = @dot_shared.graph_rankdir(graph)
+) -> LayoutTree {
+  let rankdir = @shared.graph_rankdir(layout.graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   collect_xlabel_candidates(layout, splines, flip, labels, objects)
   collect_cluster_label_objects(layout, objects, flip)
   if labels.length() > 0 {
-    let force = parse_forcelabels(graph)
+    let force = parse_forcelabels(layout.graph)
     @xlabel_solver.place_labels(objects, labels, force)
   }
   finalize_xlabels(layout, labels, flip)
@@ -131,10 +130,10 @@ fn apply_xlabels(
 /// and expand the graph bbox accordingly.
 
 fn finalize_xlabels(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   labels : Array[XLabel],
   flip : Bool,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let updates = make_xlabel_update_maps()
   let mut bbox =
     expand_bbox_for_existing_node_xlabels(layout.bbox, layout.nodes, flip)
@@ -222,9 +221,9 @@ fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
 
 ///|
 fn apply_xlabel_updates(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   updates : XLabelUpdateMaps,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let update_or_fallback =
     (
       update_map : Map[String, @geom.Point],
@@ -254,7 +253,7 @@ fn apply_xlabel_updates(
   }
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
-    let key = @dot_shared.edge_key(edge_layout.edge)
+    let key = @shared.edge_key(edge_layout.edge)
     let label_pos =
       update_or_fallback(
         updates.edge_mid_updates,
@@ -288,7 +287,7 @@ fn apply_xlabel_updates(
       xlabel_pos,
     })
   }
-  let subgraphs : Array[DotLayoutGraph] = []
+  let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(
       apply_xlabel_updates(
@@ -308,7 +307,7 @@ fn apply_xlabel_updates(
 }
 
 fn collect_cluster_label_objects(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   objects : Array[XObject],
   flip : Bool,
 ) -> Unit {
@@ -318,7 +317,7 @@ fn collect_cluster_label_objects(
         match @label_metrics.graph_label_metrics(subgraph.graph) {
           Some(metrics) => {
             let dims =
-              @xlabel_collection.maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)
+              maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)
             let llx = pos.x - dims.width / 2.0
             let lly = pos.y - dims.height / 2.0
             objects.push({
@@ -336,16 +335,16 @@ fn collect_cluster_label_objects(
   }
 }
 fn collect_xlabel_candidates(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   splines : SplinesMode,
   flip : Bool,
   labels : Array[XLabel],
   objects : Array[XObject],
 ) -> Unit {
-  let edges_by_tail = @xlabel_collection.build_edges_by_tail(layout.edges)
+  let edges_by_tail = build_edges_by_tail(layout.edges)
   for node_layout in layout.nodes {
     objects.push(
-      @xlabel_collection.build_node_obstacle_with_xlabel_slot(
+      build_node_obstacle_with_xlabel_slot(
         node_layout,
         flip,
         labels,
@@ -358,7 +357,7 @@ fn collect_xlabel_candidates(
       None => []
     }
     for edge_layout in edges_for_node {
-      @xlabel_collection.collect_edge_xlabel_candidates(edge_layout, splines, flip, labels, objects)
+      collect_edge_xlabel_candidates(edge_layout, splines, flip, labels, objects)
     }
   }
 }

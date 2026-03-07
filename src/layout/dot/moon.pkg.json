@@ -10,7 +10,6 @@
     "moonbit-community/graphviz/layout/dot/coordinate_transform",
     "moonbit-community/graphviz/layout/dot/xlabel_collection",
     "moonbit-community/graphviz/layout/dot/unranked_engine",
-    "moonbit-community/graphviz/layout/dot/xlabel_solver",
     "moonbit-community/graphviz/layout/dot/bbox",
     {
       "path": "moonbit-community/graphviz/layout/dot/shared",
@@ -25,10 +24,6 @@
     "moonbit-community/graphviz/layout/dot/root_geometry",
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/routing_stage",
-    {
-      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
-      "alias": "edge_spline"
-    },
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
@@ -52,6 +47,10 @@
     {
       "path": "moonbit-community/graphviz/layout/dot/network_simplex",
       "alias": "network_simplex"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+      "alias": "edge_spline"
     },
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/attrs",

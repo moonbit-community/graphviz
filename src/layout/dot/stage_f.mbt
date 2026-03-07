@@ -243,7 +243,13 @@ fn apply_pre_rotation_layout_postprocess(
         input.flat_label_edge_vnodes,
       ),
     )
-  let with_xlabels = apply_xlabels(graph, labeled, input.splines)
+  let with_xlabels =
+    dot_layout_graph_from_layout_tree(
+      @xlabel_collection.apply_xlabels(
+        layout_tree_from_dot_layout_graph(labeled),
+        input.splines,
+      ),
+    )
   let root_label_bbox =
     @root_geometry.apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   {
