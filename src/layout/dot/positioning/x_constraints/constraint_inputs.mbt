@@ -25,7 +25,6 @@ pub fn prepare_xpos_constraint_inputs(
   edge_vnodes : Map[String, Array[String]],
   base_extra_nodes : Array[@ordering.ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
-  cluster_constraint_deps : ClusterConstraintLabelDeps,
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints =
     build_cluster_constraints(
@@ -40,7 +39,6 @@ pub fn prepare_xpos_constraint_inputs(
       nodesep_pt,
       has_edge_labels,
       edge_vnodes,
-      cluster_constraint_deps,
     )
   let all_extra_nodes = base_extra_nodes.copy()
   for pair in cluster_constraints.extra_nodes {

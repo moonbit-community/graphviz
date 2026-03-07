@@ -91,7 +91,6 @@ pub fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_x_positions_with_prepared_constraints(
   solve_input : XPositionSolveInput,
-  cluster_constraint_deps : ClusterConstraintLabelDeps,
   root_margin : Double,
   root_compress_weight : Int,
   segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int),
@@ -114,7 +113,6 @@ pub fn compute_x_positions_with_prepared_constraints(
       solve_input.edge_vnodes,
       solve_input.extra_nodes,
       solve_input.flat_label_edges,
-      cluster_constraint_deps,
     )
   let order_index = @ordering.build_order_index(solve_input.groups)
   x_positions_from_simplex(

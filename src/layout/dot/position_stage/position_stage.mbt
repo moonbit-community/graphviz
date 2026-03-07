@@ -135,7 +135,6 @@ const MAX_XPOS_REORDER_VNODES : Int = 5000
 
 const CLUSTER_MARGIN_PT : Double = 8.0
 
-const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 const ROOT_COMPRESS_WEIGHT : Int = 1000
 
@@ -171,11 +170,6 @@ fn compute_x_positions_for_stage(
     resolve_x_simplex_root_context(input.nodes)
   @x_constraints.compute_x_positions_with_prepared_constraints(
     input,
-    {
-      cluster_label_borders_for: @clustering.cluster_label_borders_for_xpos_constraints,
-      cluster_label_width_with_pad_for: @clustering.cluster_label_width_with_pad_for_layout,
-      cluster_compact_weight: CLUSTER_COMPACT_WEIGHT,
-    },
     root_margin,
     ROOT_COMPRESS_WEIGHT,
     (segment, real_by_name) =>

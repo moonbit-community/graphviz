@@ -9,15 +9,7 @@ pub(all) struct ClusterConstraintBuild {
   root_rn_targets : Array[String]
 }
 
-///|
-pub(all) struct ClusterConstraintLabelDeps {
-  cluster_label_borders_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> (Double, Double)
-  cluster_label_width_with_pad_for : (@cgraph.Graph) -> Double?
-  cluster_compact_weight : Int
-}
+const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 ///|
 priv struct ClusterBoundaryNodes {
@@ -41,7 +33,6 @@ pub fn build_cluster_constraints(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
-  deps : ClusterConstraintLabelDeps,
 ) -> ClusterConstraintBuild {
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_graphs = cluster_maps.cluster_graphs
@@ -155,7 +146,7 @@ pub fn build_cluster_constraints(
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
     let (left_border, right_border) =
-      (deps.cluster_label_borders_for)(cluster_graph, rankdir)
+      @clustering.cluster_label_borders_for_xpos_constraints(cluster_graph, rankdir)
     cluster_border_left[name] = left_border
     cluster_border_right[name] = right_border
   }
@@ -256,7 +247,7 @@ pub fn build_cluster_constraints(
     if !flip {
       match cluster_graphs.get(name) {
         Some(cluster_graph) =>
-          match (deps.cluster_label_width_with_pad_for)(cluster_graph) {
+          match @clustering.cluster_label_width_with_pad_for_layout(cluster_graph) {
             Some(label_width) => {
               let minlen = @numeric.round_int(label_width)
               if minlen > 0 {
@@ -274,7 +265,7 @@ pub fn build_cluster_constraints(
           tail: ln_name,
           head: rn_name,
           minlen,
-          weight: deps.cluster_compact_weight,
+          weight: CLUSTER_COMPACT_WEIGHT,
           tail_port: None,
           head_port: None,
         })
@@ -283,7 +274,7 @@ pub fn build_cluster_constraints(
           tail: ln_name,
           head: rn_name,
           minlen: 1,
-          weight: deps.cluster_compact_weight,
+          weight: CLUSTER_COMPACT_WEIGHT,
           tail_port: None,
           head_port: None,
         })
