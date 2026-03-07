@@ -2,12 +2,10 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+    "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
+    "moonbit-community/graphviz/layout/dot/positioning/x_reorder",
     "moonbit-community/graphviz/layout/dot/shared",
-    "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom",
-    "moonbitlang/core/math",
-    "moonbitlang/x/sys"
+    "moonbit-community/graphviz/cgraph"
   ]
 }

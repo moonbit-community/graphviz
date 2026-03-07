@@ -30,7 +30,7 @@ priv struct FlatLabelAugmentationBuildInput {
 }
 
 ///|
-type XposFlatLabelAugmentation = @positioning.XFlatLabelAugmentationOutput
+type XposFlatLabelAugmentation = @x_flat_labels.XFlatLabelAugmentationOutput
 
 ///|
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
@@ -41,7 +41,7 @@ fn build_flat_label_augmentation(
   deps : PositionStageDeps,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
-  @positioning.build_x_flat_label_augmentation(
+  @x_flat_labels.build_x_flat_label_augmentation(
     {
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,
       x_groups: input.x_groups,
@@ -51,7 +51,7 @@ fn build_flat_label_augmentation(
       vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
       build_flat_label_vnodes_fn:
         (existing_names, x_groups) => {
-          @positioning.build_flat_label_vnodes_for_positioning(
+          @x_flat_labels.build_flat_label_vnodes_for_positioning(
             pipeline.prep.edges,
             pipeline.rank_data.edge_tail,
             pipeline.rank_data.edge_head,
@@ -140,7 +140,7 @@ fn build_x_flat_labels(
 ) -> XposFlatLabelAugmentation {
   let reorder_sources =
     build_x_flat_label_reorder_sources(input, deps)
-  @positioning.build_x_flat_label_pipeline(
+  @x_flat_labels.build_x_flat_label_pipeline(
     {
       reorder_sources,
       augment_from_groups_fn:

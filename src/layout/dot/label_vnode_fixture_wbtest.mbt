@@ -678,7 +678,7 @@ test "flat label node sizes match Graphviz fixtures" {
     assert_eq(metrics.width, entry.dimen_x)
     assert_eq(metrics.height, entry.dimen_y)
     assert_eq(
-      @positioning.flat_label_adjacent(
+      @x_flat_labels.flat_label_adjacent(
         tail_rank,
         entry.tail,
         entry.head,
