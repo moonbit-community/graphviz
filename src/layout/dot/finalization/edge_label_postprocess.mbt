@@ -1,8 +1,23 @@
 ///|
-/// Edge-label collision adjustment and bbox expansion helpers for layout-tree
-/// cluster and sibling-overlap postprocessing.
+/// Edge-label collision adjustment and bbox expansion helpers on final
+/// layout trees during Stage F postprocess.
 
-type LayoutTree = @dot_shared.LayoutTree
+///|
+fn rect_from_center(
+  center : @geom.Point,
+  width : Double,
+  height : Double,
+  pad : Double,
+) -> @geom.Rect {
+  let half_w = width / 2.0 + pad
+  let half_h = height / 2.0 + pad
+  {
+    llx: center.x - half_w,
+    lly: center.y - half_h,
+    urx: center.x + half_w,
+    ury: center.y + half_h,
+  }
+}
 
 
 ///|
@@ -43,7 +58,7 @@ fn apply_edge_label_updates(
 ) -> Array[LayoutTree] {
   let updated : Array[LayoutTree] = []
   for graph in graphs {
-    let edges = apply_label_updates_to_edges(graph.edges, updates)
+    let edges = @edge_label.apply_label_updates_to_edges(graph.edges, updates)
     let subgraphs = apply_edge_label_updates(graph.subgraphs, updates)
     updated.push({
       graph: graph.graph,
@@ -116,7 +131,7 @@ fn adjust_labels_for_clusters(
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
     let adjusted_labels =
-      adjust_edge_label_positions(
+      @edge_label.adjust_edge_label_positions(
         layout.edges,
         label_rects,
         pad,
@@ -144,7 +159,7 @@ fn adjust_labels_for_overlaps(
   rankdir : RankDir,
 ) -> LayoutTree {
   let adjusted =
-    adjust_edge_label_overlaps(
+    @edge_label.adjust_edge_label_overlaps(
       layout.edges,
       nodesep_pt,
       rankdir,
@@ -153,7 +168,7 @@ fn adjust_labels_for_overlaps(
           Some(metrics) => Some({ width: metrics.width, height: metrics.height })
           None => None
         },
-      edge_tail_point_for_layout,
+      @edge_label.edge_tail_point_for_layout,
     )
   if adjusted.updates.length() == 0 {
     let subgraphs =
@@ -176,7 +191,7 @@ fn adjust_labels_for_overlaps(
 
 ///|
 fn edge_label_adjust_enabled() -> Bool {
-  @dot_shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
+  @shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
 }
 
 
@@ -196,13 +211,13 @@ pub fn expand_layout_tree_bbox_for_edge_labels(
     return layout
   }
   let bbox =
-    expand_bbox_for_edge_labels(
+    @edge_label.expand_bbox_for_edge_labels(
       {
         bbox: layout.bbox,
         edges: layout.edges,
         ranks,
         flat_label_edge_vnodes,
-        rankdir: @dot_shared.graph_rankdir(layout.graph),
+        rankdir: @shared.graph_rankdir(layout.graph),
       },
       {
         edge_mid_label_metrics_for:
@@ -219,7 +234,7 @@ pub fn expand_layout_tree_bbox_for_edge_labels(
             },
         node_half_height_pt_for:
           (node, rankdir) => {
-            let orientation = @dot_shared.record_layout_orientation(rankdir)
+            let orientation = @shared.record_layout_orientation(rankdir)
             @node_geometry.node_size(node, orientation).height_pt / 2.0
           },
       },
