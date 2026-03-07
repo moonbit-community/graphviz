@@ -27,7 +27,7 @@ pub(all) struct OrderingRuntimeContext {
 ///|
 /// Graphviz parity: runtime-core input keeps node/edge/rank snapshots and the
 /// edge-cluster collection context grouped in one setup boundary.
-pub(all) struct BuildOrderingRuntimeCoreInput {
+priv struct BuildOrderingRuntimeCoreInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -85,7 +85,7 @@ pub fn build_ordering_runtime_context_from_sources(
 ///|
 /// Graphviz parity: runtime-context input keeps runtime-core, vnode build, and
 /// tail-constraint probe dependencies grouped before Stage C dispatch.
-pub(all) struct BuildOrderingRuntimeContextInput {
+priv struct BuildOrderingRuntimeContextInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -104,7 +104,7 @@ pub(all) struct BuildOrderingRuntimeContextInput {
 /// Graphviz parity: ordering runtime-core setup keeps name-set build,
 /// edge-cluster collection, and order/port map derivation in fixed sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_runtime_core(
+fn build_ordering_runtime_core(
   input : BuildOrderingRuntimeCoreInput,
 ) -> OrderingRuntimeCore {
   let node_name_sets = build_ordering_node_name_sets(input.nodes)
@@ -138,7 +138,7 @@ pub fn build_ordering_runtime_core(
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint probe in
 /// the same setup position as Graphviz ordering pipeline.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_runtime_context(
+fn build_ordering_runtime_context(
   input : BuildOrderingRuntimeContextInput,
 ) -> OrderingRuntimeContext {
   let runtime_core =
@@ -223,7 +223,7 @@ fn edge_vnode_edge_index(name : String) -> Int? {
 /// Graphviz parity: vnode tail-order constraints keep vnode chains stable for
 /// edges sharing the same tail in each rank.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_vnode_tail_constraints(
+fn build_vnode_tail_constraints(
   vnodes_by_rank : Map[Int, Array[String]],
   edge_tail : Array[String],
 ) -> Map[String, Bool] {
