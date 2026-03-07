@@ -1,11 +1,20 @@
 {
   "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/html",
+      "alias": "html_label"
+    },
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/routing",
+    "moonbit-community/graphviz/layout/dot/bbox",
+    "moonbit-community/graphviz/layout/dot/label_layout",
+    "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbit-community/graphviz/layout/dot/port_bridge",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom"
   ]

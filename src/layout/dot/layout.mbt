@@ -33,7 +33,7 @@ pub fn layout_dot(
       },
     )
   let routing_stage_output =
-    compute_dot_routing_stage(
+    @routing_stage.compute_dot_routing_stage(
       {
         graph,
         prep,
@@ -43,6 +43,9 @@ pub fn layout_dot(
         ordering,
         positions_state,
       },
+      @routing_stage.build_dot_routing_stage_deps(
+        compute_cluster_route_bboxes_for_routing_stage,
+      ),
     )
   finalize_layout_graph(
     build_finalize_layout_input_from_sources(

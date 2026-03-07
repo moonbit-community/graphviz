@@ -5,6 +5,7 @@
 type RankData = @rank_assignment.RankData
 type RankHeights = @rank_assignment.RankHeights
 type PositionResult = @positioning.PositionResult
+type DotRoutingStageOutput = @routing_stage.DotRoutingStageOutput
 
 ///|
 /// Graphviz parity: final postprocess payload keeps stage outputs and layout
