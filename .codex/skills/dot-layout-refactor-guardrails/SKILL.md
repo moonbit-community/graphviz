@@ -29,7 +29,8 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 5. Before any commit, run `scripts/run_local_guard.sh` and require full pass, unless the repository explicitly documents a different mandatory guard workflow.
 6. Commit and push immediately after a no-regression milestone.
 7. When repository policy allows post-commit guard execution, you may pipeline long validations by committing a locally verified slice before the full guard finishes and preparing the next slice while it runs; if the guard fails, stash or shelve later WIP, return to the committed slice, fix it, rerun the guard, then resume. Repository-specific guard rules still take precedence.
-8. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
+8. When repository policy and local tooling allow parallel development, you may use temporary git worktrees to isolate independent refactor slices or let one worktree validate while another continues implementation. Keep write scopes disjoint, avoid overlapping edits across live worktrees, and remove temporary worktrees after merge or abandonment.
+9. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
 
 ## Keep naming and structure consistent
 
