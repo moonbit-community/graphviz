@@ -90,7 +90,7 @@ Pipeline orchestrator files:
 - `src/layout/dot/stage_c.mbt`
 - `src/layout/dot/stage_d.mbt`
 - `src/layout/dot/routing_stage/*`
-- `src/layout/dot/stage_f.mbt`
+- `src/layout/dot/finalization/finalization.mbt`
 
 Why this design:
 
@@ -418,7 +418,7 @@ Positioning tells “where nodes are.” Routing solves “how edges travel betw
 
 Main file:
 
-- `src/layout/dot/stage_f.mbt`
+- `src/layout/dot/finalization/finalization.mbt`
 
 What is written:
 
@@ -503,7 +503,7 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `routing_stage/*`, `stage_f.mbt`
+  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `routing_stage/*`, `finalization/finalization.mbt`
 - Alternative engines (`dot -n` / `neato -n` / `neato`):
   - `engines.mbt`
 - Shared validation/constants:
@@ -543,7 +543,7 @@ Repository guard validates:
 - Routing:
   - `routing_stage/*`, `clustering/subgraph_layout.mbt`, `routing/*`
 - Final graph writeback:
-  - `stage_f.mbt`
+  - `finalization/finalization.mbt`
 
 ---
 
@@ -559,6 +559,6 @@ If you are new to layout algorithms, read in this order:
 6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
 7. `stage_c.mbt` + `stage_d.mbt` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `routing_stage/*` + `clustering/subgraph_layout.mbt` + `routing/context.mbt` + `routing/regular_pass.mbt` + `routing/curve_mode.mbt` — understand edge geometry generation.
-9. `stage_f.mbt` — understand output attribute mapping.
+9. `finalization/finalization.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.

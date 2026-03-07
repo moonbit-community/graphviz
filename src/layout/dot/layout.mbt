@@ -45,8 +45,8 @@ pub fn layout_dot(
       },
       @routing_stage.build_dot_routing_stage_deps(),
     )
-  finalize_layout_graph(
-    build_finalize_layout_input_from_sources(
+  dot_layout_graph_from_layout_tree(
+    @finalization.finalize_layout_from_sources(
       {
         graph,
         prep,
