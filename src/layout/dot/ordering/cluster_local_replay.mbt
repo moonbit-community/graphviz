@@ -5,7 +5,7 @@
 /// Graphviz parity: cluster-local replay input keeps unmapped order-edge
 /// snapshots, neighbor replay maps, vnode/rank overlays, and cluster traversal
 /// metadata grouped before local reorder execution.
-pub(all) struct ClusterLocalRankReplayInput {
+priv struct ClusterLocalRankReplayInput {
   groups : Map[Int, Array[String]]
   graph : @cgraph.Graph
   cluster_order : Array[String]
@@ -75,7 +75,7 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
 /// Graphviz parity: post-root cluster-local replay gate and payload assembly
 /// are preserved before local mincross execution.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_cluster_local_rank_replay_after_root_from_sources(
+fn run_cluster_local_rank_replay_after_root_from_sources(
   sources : ClusterLocalRankReplayAfterRootSources,
 ) -> Unit {
   if !sources.order_with_clusters {
@@ -118,7 +118,7 @@ pub fn run_cluster_local_rank_replay_after_root_from_sources(
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-pub fn run_cluster_local_rank_replay(
+fn run_cluster_local_rank_replay(
   input : ClusterLocalRankReplayInput,
 ) -> Unit {
   if input.cluster_order.length() == 0 {

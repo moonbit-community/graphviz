@@ -130,7 +130,7 @@ fn reorder_cluster_rank_group(
 /// Graphviz parity: cluster-local reorder iterates clusters in deterministic
 /// build order and applies one independent local pass per cluster.
 /// Do not change behavior without updating fixtures/tests.
-pub fn reorder_cluster_rank_groups(
+fn reorder_cluster_rank_groups(
   cluster_names : Array[String],
   cluster_graphs : Map[String, @cgraph.Graph],
   groups : Map[Int, Array[String]],
@@ -1170,7 +1170,7 @@ fn seed_rank_real_nodes_from_previous_rank(
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_local_rank_groups(
+fn build_local_rank_groups(
   groups : Map[Int, Array[String]],
   cluster_node_set : Map[String, Bool],
   cluster_node_order : Map[String, Int],
@@ -1287,7 +1287,7 @@ fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> RawGraphvizNeighbo
 ///|
 /// Graphviz parity: source ND_out/ND_in maps are paired with raw AGSEQ maps so
 /// local replay can decide raw merge eligibility per node.
-pub fn build_cluster_local_neighbor_sources(
+fn build_cluster_local_neighbor_sources(
   graph : @cgraph.Graph,
   source_out_neighbors : Map[String, Array[String]],
   source_in_neighbors : Map[String, Array[String]],
