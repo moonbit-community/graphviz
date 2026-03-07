@@ -977,7 +977,7 @@ pub fn build_seeded_remincross(
     // and keeps remaining name order unchanged.
     let filtered : Array[String] = []
     for name in names {
-      if !@clustering.is_cluster_skeleton_name(name) {
+      if !@cluster_identity.is_cluster_skeleton_name(name) {
         filtered.push(name)
       }
     }
@@ -1097,7 +1097,7 @@ pub fn build_vnode_keys_from_nlist(
   }
   // Graphviz parity: ignore cluster skeleton nodes when seeding vnode order keys.
   let is_skeleton = (name : String) => {
-    @clustering.is_cluster_skeleton_name(name)
+    @cluster_identity.is_cluster_skeleton_name(name)
   }
   let assign_interval = (
     vnodes : Array[String],

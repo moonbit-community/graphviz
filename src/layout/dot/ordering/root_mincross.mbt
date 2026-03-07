@@ -35,8 +35,8 @@ pub fn normalize_synthetic_ports(
 ) -> (Double, Double, Double, Double) {
   // Graphviz parity: synthetic ordering nodes keep default mincross ports
   // unless a non-default port survives edge materialization.
-  let tail_is_skeleton = @clustering.is_cluster_skeleton_name(tail)
-  let head_is_skeleton = @clustering.is_cluster_skeleton_name(head)
+  let tail_is_skeleton = @cluster_identity.is_cluster_skeleton_name(tail)
+  let head_is_skeleton = @cluster_identity.is_cluster_skeleton_name(head)
   let synthetic_endpoint =
     @edge_identity.is_edge_vnode_name(tail) || @edge_identity.is_edge_vnode_name(head) ||
     tail_is_skeleton || head_is_skeleton
@@ -1439,7 +1439,7 @@ fn rebuild_root_override_names(
   // Graphviz parity: root-override skeleton checks treat non-skeleton names as
   // empty cluster keys when rebuilding attached-cluster bundles.
   let skeleton_cluster_or_empty = (name : String) =>
-    @clustering.cluster_key_from_skeleton(name).unwrap_or_default()
+    @cluster_identity.cluster_key_from_skeleton(name).unwrap_or_default()
   // Graphviz parity: any parsed skeleton cluster key is a skeleton marker.
   let is_root_override_skeleton_name = (name : String) =>
     skeleton_cluster_or_empty(name) != ""

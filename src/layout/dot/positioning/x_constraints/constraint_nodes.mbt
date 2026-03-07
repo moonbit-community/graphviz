@@ -13,7 +13,7 @@ fn build_constraint_node_seed(
   let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   let late_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   for extra_node in extra_nodes {
-    if @clustering.is_cluster_boundary_name(extra_node.name) {
+    if @cluster_identity.is_cluster_boundary_name(extra_node.name) {
       late_extra_nodes.push(extra_node)
     } else {
       early_extra_nodes.push(extra_node)
@@ -67,7 +67,7 @@ fn build_constraint_ordered_names(
 pub fn constraint_node_kind(name : String) -> @network_simplex.NodeKind {
   if @edge_identity.is_edge_vnode_name(name) {
     @network_simplex.NodeKind::Virtual
-  } else if @clustering.is_cluster_boundary_name(name) {
+  } else if @cluster_identity.is_cluster_boundary_name(name) {
     @network_simplex.NodeKind::Slack
   } else {
     @network_simplex.NodeKind::Normal

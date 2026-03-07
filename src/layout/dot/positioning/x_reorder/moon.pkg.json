@@ -1,10 +1,10 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/ordering",
-    "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/layout/dot/edge_identity",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+    "moonbit-community/graphviz/layout/dot/clustering/cluster_identity"
   ]
 }

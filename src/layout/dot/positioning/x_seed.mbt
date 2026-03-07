@@ -102,7 +102,7 @@ pub fn build_initial_x_groups(
     for rank, names in x_groups {
       let filtered : Array[String] = []
       for name in names {
-        if !@clustering.is_cluster_skeleton_name(name) {
+        if !@cluster_identity.is_cluster_skeleton_name(name) {
           filtered.push(name)
         }
       }

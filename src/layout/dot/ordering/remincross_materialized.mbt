@@ -759,7 +759,7 @@ fn cluster_key_for_tail_name(
   if direct != "" {
     return direct
   }
-  match @clustering.cluster_key_from_skeleton(name) {
+  match @cluster_identity.cluster_key_from_skeleton(name) {
     Some(cluster) =>
       match name.find("@") {
         Some(pos) => if pos > 0 { cluster } else { "" }

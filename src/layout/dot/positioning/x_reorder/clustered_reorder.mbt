@@ -209,7 +209,7 @@ fn append_skeleton_nodes(
   for cluster, min_rank in input.cluster_min_rank {
     let max_rank = input.cluster_max_rank.get(cluster).unwrap_or(min_rank)
     for rank in min_rank..=max_rank {
-      let name = @clustering.cluster_skeleton_name(cluster, rank)
+      let name = @cluster_identity.cluster_skeleton_name(cluster, rank)
       order_cluster_keys[name] = cluster
       order_cluster_skeleton[name] = true
       order_sizes[name] = input.cluster_skeleton_size
@@ -540,8 +540,8 @@ fn append_skeleton_edges(
     let max_rank = input.cluster_max_rank.get(cluster).unwrap_or(min_rank)
     let mut rank = min_rank
     while rank < max_rank {
-      let tail_name = @clustering.cluster_skeleton_name(cluster, rank)
-      let head_name = @clustering.cluster_skeleton_name(cluster, rank + 1)
+      let tail_name = @cluster_identity.cluster_skeleton_name(cluster, rank)
+      let head_name = @cluster_identity.cluster_skeleton_name(cluster, rank + 1)
       @ordering.add_order_edge(
         order_graph,
         order_node_map,

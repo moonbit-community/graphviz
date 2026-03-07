@@ -343,10 +343,10 @@ pub fn build_position_output_maps_from_sources(
         has_clusters: sources.has_clusters && cluster_names.length() > 0,
         x_positions: sources.x_positions,
         is_cluster_boundary:
-          (name) => @clustering.is_cluster_boundary_name(name),
+          (name) => @cluster_identity.is_cluster_boundary_name(name),
         boundary_cluster_key:
-          (name) => @clustering.cluster_key_from_boundary(name, cluster_names),
-        is_left_boundary: (name) => @clustering.is_cluster_left_boundary_name(name),
+          (name) => @cluster_identity.cluster_key_from_boundary(name, cluster_names),
+        is_left_boundary: (name) => @cluster_identity.is_cluster_left_boundary_name(name),
       },
     )
   // Let the final bounding-box translation handle normalization, matching Graphviz.

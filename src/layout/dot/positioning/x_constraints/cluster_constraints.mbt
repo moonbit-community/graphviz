@@ -75,7 +75,7 @@ pub fn build_cluster_constraints(
   if cluster_members.length() > 0 {
     for _rank, names in groups {
       for name in names {
-        match @clustering.cluster_key_from_skeleton(name) {
+        match @cluster_identity.cluster_key_from_skeleton(name) {
           Some(cluster_key) =>
             match cluster_members.get(cluster_key) {
               Some(members) => members[name] = true
@@ -198,12 +198,12 @@ pub fn build_cluster_constraints(
     }
     match (min_left, max_right) {
       (Some(left), Some(right)) => {
-        let ln_name = @clustering.unique_cluster_boundary_name(
-          @clustering.cluster_left_boundary_name(name),
+        let ln_name = @cluster_identity.unique_cluster_boundary_name(
+          @cluster_identity.cluster_left_boundary_name(name),
           existing_names,
         )
-        let rn_name = @clustering.unique_cluster_boundary_name(
-          @clustering.cluster_right_boundary_name(name),
+        let rn_name = @cluster_identity.unique_cluster_boundary_name(
+          @cluster_identity.cluster_right_boundary_name(name),
           existing_names,
         )
         cluster_nodes[name] = { left_node: ln_name, right_node: rn_name }
@@ -313,7 +313,7 @@ pub fn build_cluster_constraints(
           while i < names.length() {
             let node_name = names[i]
             if members.get(node_name) is Some(_) &&
-              @clustering.cluster_key_from_skeleton(node_name) is None {
+              @cluster_identity.cluster_key_from_skeleton(node_name) is None {
               if left_idx < 0 {
                 left_idx = i
               }
@@ -535,7 +535,7 @@ pub fn build_cluster_constraints(
                                     while idx < names.length() &&
                                           (first_i < 0 || first_j < 0) {
                                       let node_name = names[idx]
-                                      if @clustering.cluster_key_from_skeleton(node_name)
+                                      if @cluster_identity.cluster_key_from_skeleton(node_name)
                                         is Some(_) {
                                         idx = idx + 1
                                         continue

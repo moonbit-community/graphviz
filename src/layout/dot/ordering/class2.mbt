@@ -205,7 +205,7 @@ const CL_CROSS : Int = 1000
 
 ///|
 fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
-  @clustering.cluster_skeleton_name(cluster, rank)
+  @cluster_identity.cluster_skeleton_name(cluster, rank)
 }
 
 ///| 

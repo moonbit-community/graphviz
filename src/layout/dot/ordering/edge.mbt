@@ -667,13 +667,13 @@ pub fn build_order_edges_by_tail(
       let map_edge = use_mapping || (map_intercluster && intercluster)
       let mapped_tail =
         if map_edge && tail_cluster != "" {
-        @clustering.cluster_skeleton_name(tail_cluster, tail_rank)
+        @cluster_identity.cluster_skeleton_name(tail_cluster, tail_rank)
       } else {
         tail
       }
       let mapped_head =
         if map_edge && head_cluster != "" {
-        @clustering.cluster_skeleton_name(head_cluster, head_rank)
+        @cluster_identity.cluster_skeleton_name(head_cluster, head_rank)
       } else {
         head
       }

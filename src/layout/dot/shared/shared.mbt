@@ -48,15 +48,6 @@ pub(all) struct GraphSizePt {
 
 
 ///|
-pub const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
-
-///|
-pub const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
-
-///|
-pub const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
-
-///|
 pub const CL_BACK : Int = 10
 
 ///|

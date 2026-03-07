@@ -143,12 +143,12 @@ fn cluster_node_names(
   for cluster in clusters {
     match cluster.ln {
       Some(value) =>
-        names[value] = @clustering.cluster_left_boundary_name(cluster.name)
+        names[value] = @cluster_identity.cluster_left_boundary_name(cluster.name)
       None => ()
     }
     match cluster.rn {
       Some(value) =>
-        names[value] = @clustering.cluster_right_boundary_name(cluster.name)
+        names[value] = @cluster_identity.cluster_right_boundary_name(cluster.name)
       None => ()
     }
   }
@@ -186,7 +186,7 @@ fn snapshot_node_key(
 ) -> String {
   match node.name {
     Some(value) => {
-      if @clustering.is_cluster_boundary_name(value) {
+      if @cluster_identity.is_cluster_boundary_name(value) {
         return "N:\{value}"
       }
       if real_nodes.get(value) is Some(_) {
