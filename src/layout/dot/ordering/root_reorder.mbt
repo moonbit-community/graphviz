@@ -310,7 +310,7 @@ fn build_root_reorder_groups(
 /// Graphviz parity: root cluster-rank-order prep payload keeps root
 /// groups/edges/node-order values unchanged.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootClusterReorderInputs {
+priv struct RootClusterReorderInputs {
   root_groups : Map[Int, Array[String]]
   root_rank_keys : Array[Int]
   root_edges_out : Array[@cgraph.Edge]
@@ -330,7 +330,7 @@ pub(all) struct RootClusterReorderInputs {
 /// Graphviz parity: root cluster-reorder source bundle keeps the exact
 /// root/mincross input snapshots passed through context + edge stages.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootReorderBuildSources {
+priv struct RootReorderBuildSources {
   order_with_vnodes : Bool
   order_rank_keys : Array[Int]
   order_groups_for_mincross : Map[Int, Array[String]]
@@ -354,7 +354,7 @@ pub(all) struct RootReorderBuildSources {
 /// Graphviz parity: root-reorder source-base payload keeps the static source
 /// snapshot shared across root/finalize passes before rank groups are attached.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootReorderSourceBaseInputs {
+priv struct RootReorderSourceBaseInputs {
   order_with_vnodes : Bool
   order_rank_keys : Array[Int]
   order_cluster_keys : Map[String, String]
@@ -653,7 +653,7 @@ fn build_root_reorder_context(
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_reorder_inputs(
+fn build_root_reorder_inputs(
   sources : RootReorderBuildSources,
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) -> RootClusterReorderInputs {
@@ -685,7 +685,7 @@ pub fn build_root_reorder_inputs(
 /// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
 /// and ordered-root groups bundled for rank-transfer dispatch.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderPhaseOutput {
+priv struct RootRankOrderPhaseOutput {
   root_rank_keys : Array[Int]
   ordered_root : Map[Int, Array[String]]
 }
@@ -694,7 +694,7 @@ pub(all) struct RootRankOrderPhaseOutput {
 /// Graphviz parity: root cluster-rank-order phase context keeps clustered
 /// dispatch snapshots unchanged before attaching root reorder outputs.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderPhaseContext {
+priv struct RootRankOrderPhaseContext {
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   rank_same_groups : Map[String, Int]
@@ -713,7 +713,7 @@ pub(all) struct RootRankOrderPhaseContext {
 /// payload plus one static rank-order context reused across root/finalize
 /// callers, with only rank groups varying per pass.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderPhaseBase {
+struct RootRankOrderPhaseBase {
   order_with_clusters : Bool
   root_reorder_sources_base : RootReorderBuildSources
   root_rank_order_context : RootRankOrderPhaseContext
@@ -724,7 +724,7 @@ pub(all) struct RootRankOrderPhaseBase {
 /// Graphviz parity: root rank-order phase base inputs capture the static
 /// source/context snapshots shared by both root-phase and finalize replay.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderPhaseBaseInputs {
+priv struct RootRankOrderPhaseBaseInputs {
   order_with_clusters : Bool
   source_base_inputs : RootReorderSourceBaseInputs
   order_cluster_keys : Map[String, String]
@@ -745,7 +745,7 @@ pub(all) struct RootRankOrderPhaseBaseInputs {
 /// Graphviz parity: root rank-order phase source bundle keeps pre-root
 /// materialization and clustered metadata snapshots paired before base assembly.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderPhaseBaseBuildSources {
+struct RootRankOrderPhaseBaseBuildSources {
   reorder_setup : OrderingReorderSetup
   class2_data : OrderingClass2Data
   order_rank_keys : Array[Int]
@@ -772,7 +772,7 @@ pub(all) struct RootRankOrderPhaseBaseBuildSources {
 /// Graphviz parity: root rank-order phase base is assembled from one source
 /// snapshot and reused by both root pass and finalize replay.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_rank_order_phase_base_from_sources(
+fn build_root_rank_order_phase_base_from_sources(
   sources : RootRankOrderPhaseBaseBuildSources,
 ) -> RootRankOrderPhaseBase {
   let inputs : RootRankOrderPhaseBaseInputs = {
@@ -816,7 +816,7 @@ pub fn build_root_rank_order_phase_base_from_sources(
 /// Graphviz parity: root rank-order phase base reuses one static source
 /// payload plus one static rank-order context across both stage callers.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_rank_order_phase_base(
+fn build_root_rank_order_phase_base(
   inputs : RootRankOrderPhaseBaseInputs,
 ) -> RootRankOrderPhaseBase {
   let root_reorder_sources_base =
@@ -846,7 +846,7 @@ pub fn build_root_rank_order_phase_base(
 /// Graphviz parity: root cluster-rank-order call payload preserves the exact
 /// argument order expected by reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootRankOrderCallInputs {
+struct RootRankOrderCallInputs {
   root_rank_keys : Array[Int]
   root_groups : Map[Int, Array[String]]
   root_edges_out : Array[@cgraph.Edge]
@@ -997,7 +997,7 @@ fn finalize_root_rank_order_phase_output(
 /// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
 /// and dispatch context without reordering Graphviz call arguments.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_rank_order_phase(
+fn run_root_rank_order_phase(
   root_reorder_output : RootClusterReorderInputs,
   context : RootRankOrderPhaseContext,
 ) -> RootRankOrderPhaseOutput {
@@ -1032,7 +1032,7 @@ pub fn run_root_rank_order_phase(
 /// Graphviz parity: clustered root rank-order pass reuses one static base
 /// snapshot and only swaps rank groups before root reorder/rank-order run.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_reorder_and_rank_order_from_base(
+fn run_root_reorder_and_rank_order_from_base(
   phase_base : RootRankOrderPhaseBase,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
@@ -1070,7 +1070,7 @@ pub(all) struct ClusterRankOrderFromRootPhaseInputs {
 /// Graphviz parity: cluster-phase rank-order map is derived from root pass
 /// outputs and root-only replay inputs without mutating source snapshots.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_rank_order_from_root_phase(
+fn build_cluster_rank_order_from_root_phase(
   inputs : ClusterRankOrderFromRootPhaseInputs,
 ) -> Map[Int, Map[String, Int]] {
   if !inputs.phase_base.order_with_clusters {
@@ -1117,7 +1117,7 @@ fn build_root_tail_order_override(
 /// Graphviz parity: clustered root phase sets both tail-order and group
 /// overrides only in cluster mode; otherwise both override channels are empty.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_root_phase_overrides(
+fn build_clustered_root_phase_overrides(
   order_with_clusters : Bool,
   root_reorder_output : RootClusterReorderInputs,
   root_rank_order_phase_output : RootRankOrderPhaseOutput,
