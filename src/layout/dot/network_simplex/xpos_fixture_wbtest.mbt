@@ -189,10 +189,30 @@ fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
 }
 
 ///|
-test "xpos fixtures match network_simplex LR" {
+/// Graphviz parity: direct algorithm tests in algorithm_wbtest now cover the
+/// small canonical LR cases (port labels, xlabels LR/TB, flat labels, edge
+/// labels, small compound clusters). Keep fixture replay only for the large
+/// integrated graphs that still provide distinct regression signal.
+fn xpos_fixture_needs_complex_replay(graph : String) -> Bool {
+  match graph {
+    "yours_truly" => true
+    "edge_vnode_spacing" => true
+    "L0" => true
+    _ => false
+  }
+}
+
+///|
+test "xpos fixtures match network_simplex LR for complex integrated graphs" {
   let cases = load_xpos_fixtures()
+  let mut matched = 0
   for pair in cases {
     let (input, output) = pair
+    if !xpos_fixture_needs_complex_replay(input.graph) {
+      continue
+    }
+    matched = matched + 1
     run_xpos_case(input, output)
   }
+  assert_true(matched > 0)
 }
