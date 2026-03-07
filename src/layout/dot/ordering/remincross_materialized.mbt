@@ -5,7 +5,7 @@
 ///|
 /// Graphviz parity: nested intercluster merge-chain bonuses are applied to the
 /// first representative coalesced edge entry for each merge key.
-pub fn apply_intercluster_bonus(
+fn apply_intercluster_bonus(
   order_edges_by_tail_coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   intercluster_bonus : Map[String, Int],
 ) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
@@ -102,7 +102,7 @@ fn append_missing_creation_order_names(
 /// first-seen cluster sequence and replays each cluster block by rank-desc
 /// reverse-order before root-cluster nodes.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_remincross_nlist_order(
+fn build_remincross_nlist_order(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
   rem_edge_creation : Array[(String, String)],
@@ -144,7 +144,7 @@ pub fn build_remincross_nlist_order(
 ///|
 /// Graphviz parity: clustered ReMincross rematerialized-order-edge payload
 /// keeps bonus-adjusted tail buckets, vnode creation, and edge creation replay.
-pub(all) struct ReMincrossMaterializedOrderEdges {
+priv struct ReMincrossMaterializedOrderEdges {
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
   vnode_creation : Map[String, Array[String]]
   edge_creation : Array[(String, String)]
@@ -153,7 +153,7 @@ pub(all) struct ReMincrossMaterializedOrderEdges {
 ///|
 /// Graphviz parity: clustered ReMincross materialized-edge payload keeps node
 /// order plus rematerialized edge arrays for cleanup reorder input.
-pub(all) struct ReMincrossMaterializedEdgeArrays {
+priv struct ReMincrossMaterializedEdgeArrays {
   node_order : Map[String, Int]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
@@ -167,7 +167,7 @@ pub(all) struct ReMincrossMaterializedEdgeArrays {
 ///|
 /// Graphviz parity: clustered ReMincross order-edge materialization inputs keep
 /// dispatch snapshots unchanged before edge expansion/coalescing.
-pub(all) struct ReMincrossEdgeMaterializationInputs {
+priv struct ReMincrossEdgeMaterializationInputs {
   creation_order : Array[String]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -188,7 +188,7 @@ pub(all) struct ReMincrossEdgeMaterializationInputs {
 ///|
 /// Graphviz parity: ReMincross order-edge materialization applies ND_out
 /// expansion, coalescing, intercluster bonus, then tail-order replay.
-pub fn build_remincross_materialized_edges(
+fn build_remincross_materialized_edges(
   inputs : ReMincrossEdgeMaterializationInputs,
 ) -> ReMincrossMaterializedOrderEdges {
   let rem_order_edges_output =
@@ -255,7 +255,7 @@ pub fn build_remincross_materialized_edges(
 ///|
 /// Graphviz parity: clustered ReMincross array materialization inputs keep
 /// order-graph and rank-group snapshots unchanged before edge array rebuild.
-pub(all) struct ReMincrossArrayMaterializationInputs {
+priv struct ReMincrossArrayMaterializationInputs {
   creation_order : Array[String]
   rem_groups : Map[Int, Array[String]]
   rem_graph : @cgraph.Graph
@@ -269,7 +269,7 @@ pub(all) struct ReMincrossArrayMaterializationInputs {
 ///|
 /// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
 /// seeds node order, then materializes edge arrays in nlist tail order.
-pub fn build_remincross_materialized_arrays(
+fn build_remincross_materialized_arrays(
   inputs : ReMincrossArrayMaterializationInputs,
 ) -> ReMincrossMaterializedEdgeArrays {
   let rem_ranks = build_node_ranks(inputs.rem_groups)
@@ -390,7 +390,7 @@ fn assign_remincross_clusters(
 ///|
 /// Graphviz parity: clustered ReMincross cluster-key materialization inputs
 /// capture intercluster keys and vnode-edge context before cleanup reorder.
-pub(all) struct ReMincrossClusterKeyInputs {
+priv struct ReMincrossClusterKeyInputs {
   root_cluster : String
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -405,7 +405,7 @@ pub(all) struct ReMincrossClusterKeyInputs {
 /// Graphviz parity: ReMincross cluster-key map starts from intercluster keys,
 /// rewrites empty keys to root graph key, then applies vnode LCA assignments.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_remincross_cluster_keys(
+fn build_remincross_cluster_keys(
   inputs : ReMincrossClusterKeyInputs,
 ) -> Map[String, String] {
   let rem_cluster_keys =
@@ -436,7 +436,7 @@ pub fn build_remincross_cluster_keys(
 ///|
 /// Graphviz parity: clustered ReMincross flat-constraint inputs combine
 /// cluster-local and rank=same constraint snapshots before cleanup reorder.
-pub(all) struct ReMincrossFlatConstraintInputs {
+priv struct ReMincrossFlatConstraintInputs {
   order_with_clusters : Bool
   cluster_flat_constraints : Map[String, Bool]
   rank_same_constraints : Map[String, Bool]
@@ -446,7 +446,7 @@ pub(all) struct ReMincrossFlatConstraintInputs {
 /// Graphviz parity: ReMincross flat constraints combine cluster flat locks and
 /// rank=same constraints only for non-cluster reorder path.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_remincross_flat_constraints(
+fn build_remincross_flat_constraints(
   inputs : ReMincrossFlatConstraintInputs,
 ) -> Map[String, Bool] {
   let rem_flat_constraints : Map[String, Bool] = Map::new()
@@ -488,7 +488,7 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
 /// Graphviz parity: clustered ReMincross multi-rank materialization builds
 /// order graph context, rematerialized edge arrays, and reorder input maps
 /// before cleanup reorder dispatch.
-pub fn build_remincross_materialized_inputs(
+fn build_remincross_materialized_inputs(
   inputs : ReMincrossMaterializationInputs,
 ) -> ReMincrossCleanupMaterializedInputs {
   let rem_ranks = build_node_ranks(inputs.rem_groups)
@@ -595,7 +595,7 @@ fn append_names_in_order(target : Array[String], names : Array[String]) -> Unit 
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_tail_order(
+fn build_cluster_tail_order(
   rem_order_creation : Array[String],
   rem_ranks : Map[String, Int],
   rem_cluster_keys : Map[String, String],
