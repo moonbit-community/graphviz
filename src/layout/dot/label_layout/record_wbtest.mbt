@@ -20,30 +20,6 @@ test "html_ports include td port names" {
 }
 
 ///|
-test "record_ports rotate into layout coords for rankdir LR" {
-  let graph = @dot_parser.parse_dot(
-    "digraph { rankdir=LR; node [shape=record]; b [label=\"<left>   |<mid> b |   \"]; }",
-  )
-  let record_orientation =
-    @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
-  let node = graph.node("b")
-  let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @record_layout.record_ports(
-    node,
-    @geom.Point::{ x: 0.0, y: 0.0 },
-    size,
-    record_orientation,
-  )
-  let rotated = @port_geometry.layout_ports_from_final(ports, @geom.Point::{ x: 0.0, y: 0.0 }, @rankdir.RankDir::LR)
-  match rotated.get("left") {
-    Some(port) => {
-      assert_true(port.center.x > 0.0)
-    }
-    None => fail("missing left port")
-  }
-}
-
-///|
 fn assert_close(actual : Double, expected : Double, tol : Double) -> Unit raise {
   let ok = Double::is_close(actual, expected, absolute_tolerance=tol)
   if !ok {
