@@ -788,20 +788,11 @@ fn run_root_mincross_reorder_with_pass0_capture(
 /// Graphviz parity: root+cluster rank phase payload keeps root reorder inputs
 /// and root override replay context unchanged before cluster-local pass.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootAndClusterRanksInputs {
+priv struct RootAndClusterRanksInputs {
   order_with_vnodes : Bool
   graphviz_flip : Bool
   cluster_keys : Map[String, String]
   root_groups_override : Map[Int, Array[String]]?
-}
-
-///|
-/// Graphviz parity: root+cluster call-input bundle keeps root ReMincross input
-/// snapshots paired with root/cluster merge flags for one stage call.
-/// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootAndClusterRanksCallInputs {
-  root_mincross_reorder_inputs : RootMincrossReorderInputs
-  root_and_cluster_inputs : RootAndClusterRanksInputs
 }
 
 ///|
@@ -827,58 +818,22 @@ pub(all) struct RootAndClusterRanksCallInputSources {
 }
 
 ///|
-/// Graphviz parity: root+cluster stage call inputs are assembled from one
-/// pre-root source snapshot without changing root reorder call order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_and_cluster_ranks_call_inputs_from_sources(
-  sources : RootAndClusterRanksCallInputSources,
-) -> RootAndClusterRanksCallInputs {
-  let root_mincross_reorder_inputs =
-    build_root_mincross_reorder_inputs_from_sources(
-      {
-        reorder_setup: sources.reorder_setup,
-        reorder_context: sources.reorder_context,
-        materialized: sources.materialized,
-        order_groups: sources.order_groups,
-        order_cluster_keys: sources.order_cluster_keys,
-        order_cluster_skeleton: sources.order_cluster_skeleton,
-        order_sizes_out: sources.order_sizes_out,
-        rank_same_groups: sources.rank_same_groups,
-        rank_same_order: sources.rank_same_order,
-        nodesep_pt: sources.nodesep_pt,
-        has_edge_labels: sources.has_edge_labels,
-        port_order_positions: sources.port_order_positions,
-        port_order_contrib: sources.port_order_contrib,
-      },
-    )
-  let root_and_cluster_inputs : RootAndClusterRanksInputs = {
-    order_with_vnodes: sources.reorder_setup.order_with_vnodes,
-    graphviz_flip: sources.reorder_setup.graphviz_flip,
-    cluster_keys: sources.cluster_keys,
-    root_groups_override: sources.root_groups_override,
-  }
-  {
-    root_mincross_reorder_inputs,
-    root_and_cluster_inputs,
-  }
-}
-
-///|
 /// Graphviz parity: root+cluster stage run keeps root mincross capture/replay
 /// ordering unchanged, then applies root-override merge before local replay.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
-  call_inputs : RootAndClusterRanksCallInputs,
+fn run_root_and_cluster_ranks_with_pass0_capture(
+  root_mincross_reorder_inputs : RootMincrossReorderInputs,
+  root_and_cluster_inputs : RootAndClusterRanksInputs,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
   let root_reorder_result =
     run_root_mincross_reorder_with_pass0_capture(
-      call_inputs.root_mincross_reorder_inputs,
-      call_inputs.root_and_cluster_inputs.root_groups_override,
+      root_mincross_reorder_inputs,
+      root_and_cluster_inputs.root_groups_override,
       capture_call,
     )
   run_root_and_cluster_ranks(
-    call_inputs.root_and_cluster_inputs,
+    root_and_cluster_inputs,
     root_reorder_result,
   )
 }
@@ -911,13 +866,34 @@ fn run_root_and_cluster_ranks_stage_from_sources(
   sources : RootAndClusterRanksStageSources,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
-  let call_inputs =
-    build_root_and_cluster_ranks_call_inputs_from_sources(
-      sources.call_input_sources,
+  let root_mincross_reorder_inputs =
+    build_root_mincross_reorder_inputs_from_sources(
+      {
+        reorder_setup: sources.call_input_sources.reorder_setup,
+        reorder_context: sources.call_input_sources.reorder_context,
+        materialized: sources.call_input_sources.materialized,
+        order_groups: sources.call_input_sources.order_groups,
+        order_cluster_keys: sources.call_input_sources.order_cluster_keys,
+        order_cluster_skeleton: sources.call_input_sources.order_cluster_skeleton,
+        order_sizes_out: sources.call_input_sources.order_sizes_out,
+        rank_same_groups: sources.call_input_sources.rank_same_groups,
+        rank_same_order: sources.call_input_sources.rank_same_order,
+        nodesep_pt: sources.call_input_sources.nodesep_pt,
+        has_edge_labels: sources.call_input_sources.has_edge_labels,
+        port_order_positions: sources.call_input_sources.port_order_positions,
+        port_order_contrib: sources.call_input_sources.port_order_contrib,
+      },
     )
+  let root_and_cluster_inputs : RootAndClusterRanksInputs = {
+    order_with_vnodes: sources.call_input_sources.reorder_setup.order_with_vnodes,
+    graphviz_flip: sources.call_input_sources.reorder_setup.graphviz_flip,
+    cluster_keys: sources.call_input_sources.cluster_keys,
+    root_groups_override: sources.call_input_sources.root_groups_override,
+  }
   let root_cluster_stage =
-    run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
-      call_inputs,
+    run_root_and_cluster_ranks_with_pass0_capture(
+      root_mincross_reorder_inputs,
+      root_and_cluster_inputs,
       capture_call,
     )
   run_cluster_local_rank_replay_after_root_from_sources(
