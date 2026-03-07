@@ -329,3 +329,29 @@ test "network_simplex LR can move the predecessor side in a fan-in shape" {
   network_simplex(balanced.graph, 0x7fffffff, BalanceMode::LR)
   assert_eq(collect_node_ranks(balanced.graph), [0, 4, 2])
 }
+
+///|
+fn build_disconnected_graph() -> NsGraph {
+  let graph = new_graph()
+  let a = add_node(graph, "a")
+  let b = add_node(graph, "b")
+  let c = add_node(graph, "c")
+  let d = add_node(graph, "d")
+  ignore(add_edge(graph, a, b, 1, 1))
+  ignore(add_edge(graph, c, d, 1, 1))
+  graph
+}
+
+///|
+test "build_feasible_tree returns false for disconnected components" {
+  let graph = build_disconnected_graph()
+
+  assert_false(build_feasible_tree(graph))
+}
+
+///|
+test "network_simplex_pre_balance returns false for disconnected components" {
+  let graph = build_disconnected_graph()
+
+  assert_false(network_simplex_pre_balance(graph, 0x7fffffff))
+}
