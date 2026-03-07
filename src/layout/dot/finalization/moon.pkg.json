@@ -28,5 +28,16 @@
       "alias": "html_label"
     },
     "moonbit-community/graphviz/layout/dot/runtime_flags"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    "moonbit-community/graphviz/layout/dot/input_stage",
+    "moonbit-community/graphviz/layout/dot/ordering_stage",
+    "moonbit-community/graphviz/layout/dot/position_stage",
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs"
   ]
 }
