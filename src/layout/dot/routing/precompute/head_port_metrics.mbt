@@ -12,30 +12,6 @@ pub(all) struct HeadPortMetrics {
 }
 
 ///|
-/// Graphviz parity: head-port metric input keeps edge geometry snapshots and
-/// complex-tuning gate grouped before count/min/max aggregation.
-pub(all) struct HeadPortMetricBuildInput {
-  edges : Array[@cgraph.Edge]
-  enable_complex_tuning : Bool
-  positions : Map[String, @geom.Point]
-  sizes : Map[String, @node_primitives.NodeSize]
-}
-
-///|
-/// Graphviz parity: head-port metric deps keep record-shape key policy and
-/// endpoint-geometry projection explicit for dotsplines-equivalent distance.
-pub(all) struct HeadPortMetricBuildDeps {
-  is_record_shape : (@cgraph.Node) -> Bool
-  node_size_for_missing : (@cgraph.Node) -> @node_primitives.NodeSize
-  port_geometry_for : (
-    String,
-    @cgraph.Port?,
-    @geom.Point,
-    @node_primitives.NodeSize,
-  ) -> RoutePortGeometry
-}
-
-///|
 /// Graphviz parity: complex head-port tuning keys match dotsplines behavior:
 /// explicit port key when present, otherwise record-shape node key.
 fn head_metric_key_for_edge(
@@ -104,25 +80,35 @@ fn head_metric_distance_for_edge(
 ///|
 /// Graphviz parity: head-port metric aggregation mirrors dotsplines
 /// count/min/max accumulation for complex tuning.
-pub fn build_head_port_metrics_from_geometry(
-  input : HeadPortMetricBuildInput,
-  deps : HeadPortMetricBuildDeps,
+fn build_head_port_metrics_from_geometry(
+  edges : Array[@cgraph.Edge],
+  enable_complex_tuning : Bool,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, @node_primitives.NodeSize],
+  is_record_shape : (@cgraph.Node) -> Bool,
+  node_size_for_missing : (@cgraph.Node) -> @node_primitives.NodeSize,
+  port_geometry_for : (
+    String,
+    @cgraph.Port?,
+    @geom.Point,
+    @node_primitives.NodeSize,
+  ) -> RoutePortGeometry,
 ) -> HeadPortMetrics {
   build_head_port_metrics(
-    input.edges,
-    input.enable_complex_tuning,
+    edges,
+    enable_complex_tuning,
     edge => {
-      let key = head_metric_key_for_edge(edge, deps.is_record_shape)
+      let key = head_metric_key_for_edge(edge, is_record_shape)
       if key == "" {
         None
       } else {
         let dist =
           head_metric_distance_for_edge(
             edge,
-            input.positions,
-            input.sizes,
-            deps.node_size_for_missing,
-            deps.port_geometry_for,
+            positions,
+            sizes,
+            node_size_for_missing,
+            port_geometry_for,
           )
         Some((key, dist))
       }
@@ -148,31 +134,25 @@ pub fn build_dot_head_port_metrics(
   label_ports_map : Map[String, Map[String, RecordPort]],
 ) -> HeadPortMetrics {
   build_head_port_metrics_from_geometry(
-    {
-      edges,
-      enable_complex_tuning,
-      positions,
-      sizes,
-    },
-    {
-      is_record_shape: @record_geometry.is_record_shape,
-      node_size_for_missing: node => @node_geometry.node_size(node, record_orientation),
-      port_geometry_for:
-        (node_name, port, node_pos, node_size) => {
-          let geometry =
-            @port_geometry.port_geometry(
-              node_name,
-              port,
-              label_ports_map,
-              node_pos,
-              node_size,
-            )
-          {
-            center: geometry.center,
-            size: geometry.size,
-          }
-        },
+    edges,
+    enable_complex_tuning,
+    positions,
+    sizes,
+    @record_geometry.is_record_shape,
+    node => @node_geometry.node_size(node, record_orientation),
+    (node_name, port, node_pos, node_size) => {
+      let geometry =
+        @port_geometry.port_geometry(
+          node_name,
+          port,
+          label_ports_map,
+          node_pos,
+          node_size,
+        )
+      {
+        center: geometry.center,
+        size: geometry.size,
+      }
     },
   )
 }
-
