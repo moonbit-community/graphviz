@@ -568,7 +568,7 @@ pub(all) struct ClusteredOrderSeedStageBuildSources {
 /// Graphviz parity: clustered pre-root seed stage is assembled from one source
 /// snapshot before root/local reorder context materialization.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_order_seed_stage_from_sources(
+fn build_clustered_order_seed_stage_from_sources(
   sources : ClusteredOrderSeedStageBuildSources,
 ) -> OrderSeedGroupsOutput {
   build_order_seed_groups(
@@ -1184,7 +1184,7 @@ pub(all) struct ClusteredMaterializedStageOutput {
 /// context, materializes mapped/unmapped edges, then applies unconstrained
 /// seed-order overrides before root phase orchestration.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_materialized_stage_from_sources(
+fn build_clustered_materialized_stage_from_sources(
   sources : ClusteredMaterializedStageBuildSources,
 ) -> ClusteredMaterializedStageOutput {
   let reorder_context =

@@ -137,7 +137,7 @@ pub(all) struct ReMincrossPassSourceInput {
 /// Graphviz parity: clustered ReMincross source assembly keeps finalize
 /// snapshots and reorder setup data grouped before context conversion.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_remincross_pass_sources(
+fn build_remincross_pass_sources(
   input : ReMincrossPassSourceInput,
 ) -> ReMincrossPassBuildSources {
   {
@@ -185,7 +185,7 @@ pub fn build_remincross_pass_sources(
 /// Graphviz parity: clustered ReMincross context payload is assembled from one
 /// finalize snapshot without changing Graphviz startpass=2 call order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_remincross_pass_context_from_sources(
+fn build_remincross_pass_context_from_sources(
   sources : ReMincrossPassBuildSources,
 ) -> ReMincrossPassBuildContext {
   {
@@ -266,7 +266,7 @@ pub(all) struct ClusteredFinalizeInputsBuildSources {
 /// Graphviz parity: clustered finalize payload is assembled from one source
 /// bundle before final group cleanup and ReMincross pass.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_finalize_inputs_from_sources(
+fn build_clustered_finalize_inputs_from_sources(
   sources : ClusteredFinalizeInputsBuildSources,
 ) -> ClusteredFinalizeInputs {
   {

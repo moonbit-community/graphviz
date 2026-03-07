@@ -426,7 +426,7 @@ pub(all) struct RootMincrossReorderInputsBuildSources {
 /// snapshot by first seeding build_ranks groups then attaching root reorder
 /// context/state without changing Graphviz call order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_mincross_reorder_inputs_from_sources(
+fn build_root_mincross_reorder_inputs_from_sources(
   sources : RootMincrossReorderInputsBuildSources,
 ) -> RootMincrossReorderInputs {
   let seeded_context : SeededReorderBuildContext = {
@@ -830,7 +830,7 @@ pub(all) struct RootAndClusterRanksCallInputSources {
 /// Graphviz parity: root+cluster stage call inputs are assembled from one
 /// pre-root source snapshot without changing root reorder call order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_and_cluster_ranks_call_inputs_from_sources(
+fn build_root_and_cluster_ranks_call_inputs_from_sources(
   sources : RootAndClusterRanksCallInputSources,
 ) -> RootAndClusterRanksCallInputs {
   let root_mincross_reorder_inputs =
