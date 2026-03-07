@@ -8,7 +8,7 @@ pub(all) struct SlackSegment {
 }
 
 ///|
-pub fn push_slack_segment(
+fn push_slack_segment(
   segments_by_tail : Map[String, Array[SlackSegment]],
   seg_tail : String,
   seg_head : String,
@@ -24,7 +24,7 @@ pub fn push_slack_segment(
 }
 
 ///|
-pub(all) struct SegmentsInTailOrderInput {
+priv struct SegmentsInTailOrderInput {
   graph : @network_simplex.NsGraph
   index : Map[String, Int]
   segments_by_tail : Map[String, Array[SlackSegment]]
@@ -83,7 +83,7 @@ fn add_segment_slack_edges(
 ///|
 /// Graphviz parity: virtual-edge segment constraints are emitted in ND_nlist
 /// tail order before unseen tails, preserving stable simplex insertion.
-pub fn add_segments_in_tail_order(input : SegmentsInTailOrderInput) -> Unit {
+fn add_segments_in_tail_order(input : SegmentsInTailOrderInput) -> Unit {
   let tail_seen : Map[String, Bool] = Map::new()
   for tail_name in input.nlist_order {
     let segments = input.segments_by_tail.get(tail_name).unwrap_or_default()

@@ -13,7 +13,7 @@ pub(all) struct ConstraintEdge {
 ///|
 /// Graphviz parity: duplicated constraint keys keep the max(minlen, weight)
 /// just like constraint accumulation in xpos wiring.
-pub fn upsert_constraint_with_max(
+fn upsert_constraint_with_max(
   constraints : Map[String, ConstraintEdge],
   key : String,
   tail : String,

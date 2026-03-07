@@ -39,7 +39,7 @@ fn constraint_weight_scale(
 ///|
 /// Graphviz parity: edge segment weights are amplified for virtual/singleton
 /// endpoints so auxiliary chains remain tight in sparse local neighborhoods.
-pub fn scaled_segment_edge_weight(
+fn scaled_segment_edge_weight(
   base_weight : Int,
   tail_name : String,
   head_name : String,
@@ -55,7 +55,7 @@ pub fn scaled_segment_edge_weight(
 }
 
 ///|
-pub fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
+fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
   match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
     Some(value) => {
       let lower = value.to_lower()

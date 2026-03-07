@@ -1,6 +1,6 @@
 ///|
 /// Positioning domain: x-position simplex solve pipeline bridge.
-pub(all) struct XSimplexInput {
+priv struct XSimplexInput {
   graph_root : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -31,7 +31,7 @@ pub(all) struct XSimplexInput {
   order_index : Map[String, Int]
 }
 
-pub fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
+fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   let xpos_nlist_order =
     build_xpos_nlist_order(
       {

@@ -41,7 +41,7 @@ pub(all) struct ReverseMergeMetadata {
 ///|
 /// Graphviz parity: reverse-edge merge build consumes edge endpoint remap
 /// arrays and an exclusion predicate aligned with label/self-edge rules.
-pub(all) struct ReverseMergeMetadataInput {
+priv struct ReverseMergeMetadataInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -51,7 +51,7 @@ pub(all) struct ReverseMergeMetadataInput {
 ///|
 /// Graphviz parity: reversed edges merge into their forward representative
 /// unless excluded (labels/self-edge), matching constraint-graph assembly.
-pub fn build_reverse_merge_metadata(
+fn build_reverse_merge_metadata(
   input : ReverseMergeMetadataInput,
 ) -> ReverseMergeMetadata {
   let forward_rep_by_key : Map[String, Int] = Map::new()

@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: when root boundary slack nodes are enabled (compress mode),
 /// each non-empty rank contributes its leftmost/rightmost node once.
-pub fn append_missing_rank_boundary_targets(
+fn append_missing_rank_boundary_targets(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   root_ln_targets : Array[String],

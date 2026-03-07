@@ -67,7 +67,7 @@ pub fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-pub fn build_constraint_snapshot(
+fn build_constraint_snapshot(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   sizes : Map[String, SnapshotNodeSize],

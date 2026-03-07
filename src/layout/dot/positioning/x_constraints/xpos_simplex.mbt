@@ -1,5 +1,5 @@
 ///|
-pub(all) struct XposSimplexSolveInput {
+priv struct XposSimplexSolveInput {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -32,7 +32,7 @@ pub(all) struct XposSimplexSolveInput {
 /// order, builds/reorders the auxiliary constraint graph, and then runs
 /// network_simplex exactly once before reading node ranks.
 /// Do not change behavior without updating fixtures/tests.
-pub fn solve_xpos_with_simplex(
+fn solve_xpos_with_simplex(
   input : XposSimplexSolveInput,
 ) -> Map[String, Double] {
   let constraint_graph =

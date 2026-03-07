@@ -46,7 +46,7 @@ fn add_root_boundary_target_edges(
 ///|
 /// Graphviz parity: root boundary constraints add synthetic ln/rn slack nodes
 /// and optional compress-width edge before simplex solve.
-pub(all) struct RootBoundaryConstraintsInput {
+priv struct RootBoundaryConstraintsInput {
   graph : @network_simplex.NsGraph
   index : Map[String, Int]
   root_ln_targets : Array[String]
@@ -60,7 +60,7 @@ pub(all) struct RootBoundaryConstraintsInput {
 ///|
 /// Graphviz parity: root boundary links mirror contain_nodes/create_aux_edges
 /// order and include the optional compress edge when size=... is active.
-pub fn add_root_boundary_constraints(
+fn add_root_boundary_constraints(
   input : RootBoundaryConstraintsInput,
 ) -> Unit {
   if input.root_ln_targets.length() == 0 && input.root_rn_targets.length() == 0 {
