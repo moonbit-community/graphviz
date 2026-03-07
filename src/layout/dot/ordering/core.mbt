@@ -13,7 +13,7 @@ pub(all) struct ExtraConstraintNode {
 ///|
 /// Graphviz parity: cluster traversal order index is seeded from Graphviz
 /// cluster_order for cluster tie-breaking in ordering passes.
-pub fn build_cluster_order_index(
+fn build_cluster_order_index(
   cluster_order : Array[String],
 ) -> Map[String, Int] {
   let cluster_index : Map[String, Int] = Map::new()
@@ -57,7 +57,7 @@ pub fn merge_ranks_with_vnodes(
 }
 
 ///|
-pub fn collect_rank_same_order(
+fn collect_rank_same_order(
   graph : @cgraph.Graph,
   group_ids : Map[String, Int],
   order_ids : Map[String, Int],
@@ -89,7 +89,7 @@ pub fn collect_rank_same_order(
 }
 
 ///|
-pub(all) struct RankSameMetadata {
+priv struct RankSameMetadata {
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
 }
@@ -98,7 +98,7 @@ pub(all) struct RankSameMetadata {
 /// Graphviz parity: rank=same group/order metadata is collected from graph
 /// attributes before ordering setup and flat-constraint wiring.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_rank_same_metadata(
+fn collect_rank_same_metadata(
   graph : @cgraph.Graph,
 ) -> RankSameMetadata {
   let rank_same_groups : Map[String, Int] = Map::new()
@@ -110,7 +110,7 @@ pub fn collect_rank_same_metadata(
 ///|
 /// Graphviz parity: ordering metadata payload keeps rank=same and flat
 /// constraint snapshots grouped for clustered reorder dispatch wiring.
-pub(all) struct ClusterOrderingMetadata {
+priv struct ClusterOrderingMetadata {
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
   flat_constraints : Map[String, Bool]
@@ -121,7 +121,7 @@ pub(all) struct ClusterOrderingMetadata {
 /// Graphviz parity: ordering metadata assembly collects rank=same groups/order
 /// and flat constraints before clustered reorder setup.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_ordering_metadata(
+fn build_cluster_ordering_metadata(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -152,7 +152,7 @@ pub fn build_cluster_ordering_metadata(
 ///|
 /// Graphviz parity: dot cluster-metadata assembly input keeps cluster snapshots,
 /// rank maps, and edge endpoints grouped for clustered ordering setup.
-pub(all) struct DotClusterMetadataInput {
+priv struct DotClusterMetadataInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -227,7 +227,7 @@ pub(all) struct DotClusterMetadata {
 /// Graphviz parity: dot cluster metadata assembly merges clustering core
 /// metadata and ordering metadata before clustered dispatch.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_dot_cluster_metadata(
+fn build_dot_cluster_metadata(
   input : DotClusterMetadataInput,
 ) -> DotClusterMetadata {
   let cluster_core =
