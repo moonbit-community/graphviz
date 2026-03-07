@@ -187,7 +187,7 @@ fn build_rank_cluster_bucket_order_map(
 /// Graphviz parity: local cluster ordering uses minrank + first node order
 /// before deterministic cluster-name tie-breaks (cluster.c).
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_local_cluster_order(
+fn build_local_cluster_order(
   nodes : Array[@cgraph.Node],
   local_cluster_keys : Map[String, String],
   ranks : Map[String, Int],
@@ -249,7 +249,7 @@ pub fn build_local_cluster_order(
 /// Graphviz parity: cluster-phase rank-order map records first-seen cluster
 /// skeleton buckets (or root bucket) per rank, with root-anchor transfer
 /// between adjacent ranks when anchor preconditions match.
-pub fn build_cluster_order_from_root(
+fn build_cluster_order_from_root(
   root_rank_keys : Array[Int],
   ordered_root : Map[Int, Array[String]],
   order_cluster_keys : Map[String, String],
@@ -646,7 +646,7 @@ fn should_skip_cluster_rank_bucket_reorder(
 /// optionally apply cluster-rank bucket reorder, then apply local-cluster
 /// ordering before final ReMincross.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_finalize_groups(
+fn build_clustered_finalize_groups(
   cleaned_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
