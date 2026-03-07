@@ -48,7 +48,6 @@
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/label_layout/html_layout",
     "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/routing/edge_label",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
@@ -59,7 +58,6 @@
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-    "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
     "moonbit-community/graphviz/layout/dot/numeric"
   ]
 }

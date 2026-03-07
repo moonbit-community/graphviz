@@ -1,4 +1,83 @@
 ///|
+fn fixture_require_object(json : Json) -> Map[String, Json] raise {
+  match json {
+    Json::Object(obj) => obj
+    _ => fail("expected JSON object")
+  }
+}
+
+///|
+fn fixture_json_int_option(value : Json) -> Int? raise {
+  if value == Json::null() {
+    None
+  } else {
+    Some(@json.from_json(value))
+  }
+}
+
+///|
+fn fixture_json_string_option(value : Json) -> String? raise {
+  if value == Json::null() {
+    None
+  } else {
+    Some(@json.from_json(value))
+  }
+}
+
+///|
+fn fixture_build_rank_order_map(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
+  let map : Map[Int, Int] = Map::new()
+  let mut rank_idx = 0
+  for rank_nodes in ranks {
+    let mut order = 0
+    for id in rank_nodes {
+      if map.get(id) is Some(_) {
+        fail("duplicate node id \{id} in rank list \{rank_idx}")
+      }
+      map[id] = order
+      order = order + 1
+    }
+    rank_idx = rank_idx + 1
+  }
+  map
+}
+
+///|
+fn capture_position_stage_xpos_snapshot(
+  graph : @cgraph.Graph,
+  capture_value : String,
+) -> @x_constraints.XposConstraintSnapshot raise {
+  let prep = match @input_stage.prepare_layout_prep(
+    graph,
+    { rankdir: None, nodesep: None, ranksep: None, splines: None },
+  ) {
+    Ok(value) => value
+    Err(message) => fail(message)
+  }
+  let rank_stage_output =
+    @ordering_stage.compute_dot_rank_stage({ graph, prep })
+  @x_constraints.xpos_constraint_snapshot.val = None
+  @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", capture_value)
+  let _ = compute_positions(
+    {
+      graph,
+      prep,
+      rank_data: rank_stage_output.rank_data,
+      rank_heights: rank_stage_output.rank_heights,
+      cluster_meta: rank_stage_output.cluster_meta,
+      ordering: rank_stage_output.ordering,
+    },
+  )
+  @sys.unset_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS")
+  let snapshot = match @x_constraints.xpos_constraint_snapshot.val {
+    Some(value) => value
+    None => fail("missing xpos constraint snapshot")
+  }
+  @x_constraints.xpos_constraint_snapshot.val = None
+  snapshot
+}
+
+///|
 struct XposConstraintFixtureNode {
   id : Int
   name : String?
@@ -351,9 +430,32 @@ fn real_node_names(graph : @cgraph.Graph) -> Map[String, Bool] {
 }
 
 ///|
+struct XposConstraintCase {
+  fixture : XposConstraintFixture
+  real_nodes : Map[String, Bool]
+  snapshot : @x_constraints.XposConstraintSnapshot
+}
+
 ///|
-test "xpos constraint graph matches Graphviz for complex" {
-  let fixture = load_xpos_constraint_fixture("yours_truly", "initial")
+fn load_complex_xpos_fixture() -> XposConstraintFixture raise {
+  load_xpos_constraint_fixture("yours_truly", "initial")
+}
+
+///|
+fn load_complex_xpos_constraint_case() -> XposConstraintCase raise {
+  let fixture = load_complex_xpos_fixture()
+  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
+  {
+    fixture,
+    real_nodes: real_node_names(graph),
+    snapshot: capture_position_stage_xpos_snapshot(graph, fixture.graph),
+  }
+}
+
+///|
+fn assert_xpos_constraint_fixture_is_well_formed(
+  fixture : XposConstraintFixture,
+) -> Unit raise {
   if fixture.phase != "initial" {
     fail("unexpected fixture phase \{fixture.phase}")
   }
@@ -427,25 +529,29 @@ test "xpos constraint graph matches Graphviz for complex" {
       None => ()
     }
   }
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
-  let names = real_node_names(graph)
-  @x_constraints.xpos_constraint_snapshot.val = None
-  @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", fixture.graph)
-  let _ = layout_dot(graph)
-  @sys.unset_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS")
-  let snapshot = match @x_constraints.xpos_constraint_snapshot.val {
-    Some(value) => value
-    None => fail("missing xpos constraint snapshot")
-  }
-  @x_constraints.xpos_constraint_snapshot.val = None
-  let expected_nodes = fixture_node_counts(fixture)
-  let actual_nodes = snapshot_node_counts(snapshot, names)
+}
+
+///|
+fn assert_xpos_constraint_multisets_match(case : XposConstraintCase) -> Unit raise {
+  let expected_nodes = fixture_node_counts(case.fixture)
+  let actual_nodes = snapshot_node_counts(case.snapshot, case.real_nodes)
   assert_multiset_eq("nodes", actual_nodes, expected_nodes)
-  let expected_edges = fixture_edge_counts(fixture)
-  let actual_edges = snapshot_edge_counts(snapshot, names)
+  let expected_edges = fixture_edge_counts(case.fixture)
+  let actual_edges = snapshot_edge_counts(case.snapshot, case.real_nodes)
   assert_multiset_eq("edges", actual_edges, expected_edges)
-  let fixture_named = fixture_named_nodes(fixture)
-  let snapshot_named = snapshot_named_nodes(snapshot, names)
+}
+
+///|
+fn assert_xpos_constraint_named_nodes_match(
+  case : XposConstraintCase,
+) -> Unit raise {
+  let fixture_named = fixture_named_nodes(case.fixture)
+  let snapshot_named = snapshot_named_nodes(case.snapshot, case.real_nodes)
+  if snapshot_named.length() != fixture_named.length() {
+    fail(
+      "named node count mismatch expected=\{fixture_named.length()} actual=\{snapshot_named.length()}",
+    )
+  }
   for name, expected in fixture_named {
     let actual = match snapshot_named.get(name) {
       Some(value) => value
@@ -457,4 +563,66 @@ test "xpos constraint graph matches Graphviz for complex" {
     assert_eq(actual.right_pt, expected.rw)
     assert_eq(actual.height_pt, expected.ht)
   }
+}
+
+///|
+fn node_kind_name(kind : @network_simplex.NodeKind) -> String {
+  match kind {
+    @network_simplex.NodeKind::Normal => "normal"
+    @network_simplex.NodeKind::Virtual => "virtual"
+    @network_simplex.NodeKind::Slack => "slack"
+  }
+}
+
+///|
+test "xpos constraint fixture is well formed for complex" {
+  let fixture = load_complex_xpos_fixture()
+  assert_xpos_constraint_fixture_is_well_formed(fixture)
+}
+
+///|
+test "xpos constraint multisets match Graphviz for complex" {
+  let case = load_complex_xpos_constraint_case()
+  assert_xpos_constraint_fixture_is_well_formed(case.fixture)
+  assert_xpos_constraint_multisets_match(case)
+}
+
+///|
+test "xpos constraint named nodes match Graphviz for complex" {
+  let case = load_complex_xpos_constraint_case()
+  assert_xpos_constraint_fixture_is_well_formed(case.fixture)
+  assert_xpos_constraint_named_nodes_match(case)
+}
+
+///|
+test "dump xpos constraints" {
+  let input = match @sys.get_env_var("DOT_DUMP_XPOS_CONSTRAINTS") {
+    None => return ()
+    Some(value) => value
+  }
+  let out_path = match @sys.get_env_var("DOT_DUMP_XPOS_CONSTRAINTS_OUT") {
+    None => "/tmp/xpos_mbt.txt"
+    Some(value) => value
+  }
+  let graph = @dot_parser.parse_dot_file(input)
+  let snapshot = capture_position_stage_xpos_snapshot(graph, "1")
+  let sb = StringBuilder::new()
+  let mut idx = 0
+  for node in snapshot.nodes {
+    let name = match node.name {
+      Some(value) => value
+      None => ""
+    }
+    let kind = node_kind_name(node.kind)
+    sb.write_string(
+      "NODE id=\{idx} name=\{name} kind=\{kind} rank=\{node.rank} order=\{node.order} lw=\{node.left_pt} rw=\{node.right_pt} ht=\{node.height_pt}\n",
+    )
+    idx = idx + 1
+  }
+  for edge in snapshot.edges {
+    sb.write_string(
+      "EDGE tail=\{edge.tail} head=\{edge.head} minlen=\{edge.minlen} weight=\{edge.weight}\n",
+    )
+  }
+  @fs.write_string_to_file(out_path, sb.to_string())
 }
