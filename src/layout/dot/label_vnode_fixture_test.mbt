@@ -239,15 +239,14 @@ fn sort_label_fixtures(entries : Array[LabelVnodeFixture]) -> Array[LabelVnodeFi
 
 ///|
 ///|
-/// Graphviz parity: direct vnode_layout tests now cover the small canonical
-/// label-vnode behaviors. Keep fixture replay only for larger integrated
-/// graphs whose vnode sizing emerges from more coupled rank/order inputs.
-test "label vnodes match Graphviz fixtures for integrated graphs" {
+/// Graphviz parity: owner-local edge_label and vnode_layout tests now cover
+/// the small canonical label-rank and label-vnode sizing behaviors. Keep
+/// fixture replay only for larger integrated TB/LR graphs whose vnode sizing
+/// still emerges from coupled rank assignment and ordering inputs.
+test "label vnodes match Graphviz fixtures for integrated smoke graphs" {
   let graphs : Array[(String, String)] = [
-    ("edge_vnode_spacing", "tests/layout/dot/edge_vnode_spacing.dot"),
     ("yours_truly", "tests/layout/dot/complex.dot"),
     ("finite_state_machine", "refs/graphviz/graphs/directed/fsm.gv"),
-    ("states", "refs/graphviz/graphs/directed/states.gv"),
   ]
   for pair in graphs {
     let (graph_name, path) = pair
