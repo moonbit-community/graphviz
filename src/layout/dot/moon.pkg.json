@@ -37,10 +37,6 @@
       "path": "moonbit-community/graphviz/layout/dot/network_simplex",
       "alias": "network_simplex"
     },
-    {
-      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
-      "alias": "edge_spline"
-    },
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",
@@ -48,7 +44,6 @@
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/label_layout/html_layout",
     "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/routing/edge_label",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/label_metrics",
