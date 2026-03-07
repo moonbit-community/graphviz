@@ -358,6 +358,15 @@ fn simplex_case_has_distinct_final_output(case_info : SimplexCase) -> Bool {
 }
 
 ///|
+/// Graphviz parity: owner-local network_simplex tests now cover the small
+/// canonical feasible-tree and pre-balance kernels. Keep fixture replay only
+/// for larger integrated graphs whose tree shape/rank movement still emerges
+/// from coupled slack/virtual structure.
+fn simplex_case_needs_integrated_replay(case_info : SimplexCase) -> Bool {
+  case_info.input.nodes.length() >= 9
+}
+
+///|
 test "rank fixtures match network_simplex when balance changes pre-balanced ranks" {
   let cases = load_rank_fixtures()
   let mut matched = 0
@@ -372,17 +381,29 @@ test "rank fixtures match network_simplex when balance changes pre-balanced rank
 }
 
 ///|
-test "rank fixtures match feasible_tree" {
+test "rank fixtures match feasible_tree for integrated cases" {
   let cases = load_rank_fixtures()
+  let mut matched = 0
   for case_info in cases {
+    if !simplex_case_needs_integrated_replay(case_info) {
+      continue
+    }
+    matched = matched + 1
     run_feasible_tree_case(case_info)
   }
+  assert_true(matched > 0)
 }
 
 ///|
-test "rank fixtures match pre_balance" {
+test "rank fixtures match pre_balance for integrated cases" {
   let cases = load_rank_fixtures()
+  let mut matched = 0
   for case_info in cases {
+    if !simplex_case_needs_integrated_replay(case_info) {
+      continue
+    }
+    matched = matched + 1
     run_pre_balance_case(case_info)
   }
+  assert_true(matched > 0)
 }
