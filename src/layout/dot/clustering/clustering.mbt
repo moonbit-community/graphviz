@@ -190,7 +190,7 @@ pub(all) struct ClusterMembershipMaps {
 /// Graphviz parity: cluster membership maps mirror per-node outer/local
 /// cluster ownership used across clustered ordering and compound-edge paths.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_membership_maps(
+fn build_cluster_membership_maps(
   nodes : Array[@cgraph.Node],
 ) -> ClusterMembershipMaps {
   let cluster_keys : Map[String, String] = Map::new()
@@ -214,7 +214,7 @@ pub(all) struct ClusterNodeRankBounds {
 /// Graphviz parity: cluster min/max rank and first order are collected from
 /// member node rank snapshots before clustered reorder setup.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_cluster_rank_bounds(
+fn collect_cluster_rank_bounds(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   ranks : Map[String, Int],
@@ -253,7 +253,7 @@ pub fn collect_cluster_rank_bounds(
 /// Graphviz parity: initial cluster node order seeds follow GD_nlist traversal
 /// with optional graphviz_flip reversal before clustered reorder setup.
 /// Do not change behavior without updating fixtures/tests.
-pub fn seed_cluster_node_order(
+fn seed_cluster_node_order(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
@@ -281,7 +281,7 @@ pub fn seed_cluster_node_order(
 /// Graphviz parity: each cluster contributes one skeleton node per rank
 /// (first node encountered in rank order).
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_skeleton(
+fn build_cluster_skeleton(
   groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Map[String, Bool] {
@@ -307,7 +307,7 @@ pub fn build_cluster_skeleton(
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_cluster_order_base(
+fn apply_cluster_order_base(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   cluster_min_rank : Map[String, Int],
@@ -420,7 +420,7 @@ pub fn build_cluster_core_metadata_for_ordering(
 }
 
 ///|
-pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
+fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
   while !current.is_root() {
@@ -582,7 +582,7 @@ pub(all) struct ClusterTraversalMetadata {
 /// Graphviz parity: cluster order traversal and parent mapping are collected
 /// before clustered ordering stages with Graphviz traversal order unchanged.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_cluster_traversal_metadata(
+fn collect_cluster_traversal_metadata(
   graph : @cgraph.Graph,
 ) -> ClusterTraversalMetadata {
   let cluster_order : Array[String] = []
