@@ -5,7 +5,7 @@
 ///|
 /// Graphviz parity: per-rank half-height maxima from flat-edge label vnodes
 /// must update rank_pht/rank_ht1/rank_ht2 consistently before y placement.
-pub fn apply_rank_half_heights(
+fn apply_rank_half_heights(
   half_heights_by_rank : Map[Int, Double],
   rank_pht : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
@@ -57,7 +57,7 @@ pub fn build_all_ranks_with_overlays(
 ///|
 /// Graphviz parity: when flipped cluster-rank heights adjust rank_y, node y
 /// coordinates are rebuilt from rank order/groups without extra transforms.
-pub fn build_y_positions_from_rank_groups(
+fn build_y_positions_from_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   rank_y : Map[Int, Double],
@@ -76,7 +76,7 @@ pub fn build_y_positions_from_rank_groups(
 ///|
 /// Graphviz parity: y-position flip solve input keeps rank maps, rank spacing,
 /// cluster heights, and traversal bounds grouped for one fill+adjust pass.
-pub(all) struct YPositionsWithFlipInput {
+priv struct YPositionsWithFlipInput {
   graph : @cgraph.Graph
   rankdir : @rankdir.RankDir
   rank_keys : Array[Int]
@@ -93,7 +93,7 @@ pub(all) struct YPositionsWithFlipInput {
 }
 
 ///|
-pub(all) struct YPositionsWithFlipOutput {
+priv struct YPositionsWithFlipOutput {
   y_positions : Map[String, Double]
   rank_y : Map[Int, Double]
 }
@@ -102,7 +102,7 @@ pub(all) struct YPositionsWithFlipOutput {
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_y_positions_with_flip(
+fn build_y_positions_with_flip(
   input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()
