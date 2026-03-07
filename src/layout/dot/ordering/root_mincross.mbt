@@ -204,7 +204,7 @@ pub fn merge_root_mincross_groups(
 /// Graphviz parity: root ReMincross keeps only root + cluster-skeleton names
 /// from seeded build_ranks groups; cluster-internal names stay cluster-local.
 /// Do not change behavior without updating fixtures/tests.
-pub fn filter_root_mincross_seeded_groups_for_clusters(
+fn filter_root_mincross_seeded_groups_for_clusters(
   seeded_groups : Map[Int, Array[String]],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
@@ -1295,7 +1295,7 @@ fn merge_rank_with_attached_skeleton_replacements(
 ///|
 /// Graphviz parity: cluster->skeleton map keeps last-seen skeleton per cluster
 /// from input order and ignores names without a cluster skeleton key.
-pub fn build_skeleton_for_clusters(
+fn build_skeleton_for_clusters(
   names : Array[String],
   cluster_for_name : (String) -> String,
 ) -> Map[String, String] {
@@ -1312,7 +1312,7 @@ pub fn build_skeleton_for_clusters(
 ///|
 /// Graphviz parity: attached-by-skeleton buckets map non-skipped cluster
 /// members to their rankleader skeleton in input order.
-pub fn build_attached_by_skeleton(
+fn build_attached_by_skeleton(
   names : Array[String],
   cluster_keys : Map[String, String],
   skeleton_for_cluster : Map[String, String],
@@ -1342,7 +1342,7 @@ pub fn build_attached_by_skeleton(
 ///|
 /// Graphviz parity: attached cluster members are replayed after their
 /// skeleton only once, preserving original attached list order.
-pub fn append_attached_by_skeleton(
+fn append_attached_by_skeleton(
   target : Array[String],
   seen : Map[String, Bool],
   attached_by_skeleton : Map[String, Array[String]],
