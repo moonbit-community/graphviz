@@ -120,20 +120,21 @@ fn build_root_padded_layout_data(
       input.port_pad_above,
     )
   let layout_with_root_pad =
-    apply_root_cluster_padding(
-      {
-        graph,
-        layout: {
-          graph,
-          bbox,
-          label_pos: None,
-          nodes: final_geometry.final_nodes,
-          edges: final_geometry.final_edges,
-          subgraphs: subgraphs_and_bbox.subgraphs,
+    dot_layout_graph_from_layout_tree(
+      @coordinate_transform.apply_root_cluster_padding(
+        {
+          layout: layout_tree_from_dot_layout_graph({
+            graph,
+            bbox,
+            label_pos: None,
+            nodes: final_geometry.final_nodes,
+            edges: final_geometry.final_edges,
+            subgraphs: subgraphs_and_bbox.subgraphs,
+          }),
+          root_cluster_pad_top,
+          root_cluster_pad_bottom,
         },
-        root_cluster_pad_top,
-        root_cluster_pad_bottom,
-      },
+      ),
     )
   // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
   // padding that is part of set_ycoords before final edge bbox expansion.
@@ -221,7 +222,13 @@ fn apply_pre_rotation_layout_postprocess(
     subgraphs: layout_with_root_pad.subgraphs,
   }
   let layout =
-    apply_ratio_fill_scale(graph, layout, rankdir, root_padded.ratio_bbox)
+    dot_layout_graph_from_layout_tree(
+      @coordinate_transform.apply_ratio_fill_scale(
+        layout_tree_from_dot_layout_graph(layout),
+        rankdir,
+        root_padded.ratio_bbox,
+      ),
+    )
   let adjusted = adjust_edge_labels_if_enabled(layout, input.nodesep_pt, rankdir)
   let labeled =
     expand_bbox_for_edge_labels(
@@ -289,8 +296,9 @@ fn finalize_layout_graph(
   let pre_rotation = build_pre_rotation_layout_data(input)
   let rotated =
     rotate_and_mirror_final_layout(graph, rankdir, pre_rotation)
-  finalize_root_coordinates(
-    graph,
-    rotated,
+  dot_layout_graph_from_layout_tree(
+    @coordinate_transform.finalize_root_coordinates(
+      layout_tree_from_dot_layout_graph(rotated),
+    ),
   )
 }

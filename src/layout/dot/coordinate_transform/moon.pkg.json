@@ -3,6 +3,8 @@
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/root_geometry",
+    "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom"
   ]
