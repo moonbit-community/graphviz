@@ -165,31 +165,11 @@ priv struct ReMincrossMaterializedEdgeArrays {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross order-edge materialization inputs keep
-/// dispatch snapshots unchanged before edge expansion/coalescing.
-priv struct ReMincrossEdgeMaterializationInputs {
-  creation_order : Array[String]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
-  edge_vnodes : Map[String, Array[String]]
-  order_with_vnodes : Bool
-  intercluster_keys : Map[String, String]
-  order_with_clusters : Bool
-  edges_by_tail : Map[String, Array[Int]]
-  cluster_order_index : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: ReMincross order-edge materialization applies ND_out
 /// expansion, coalescing, intercluster bonus, then tail-order replay.
 fn build_remincross_materialized_edges(
-  inputs : ReMincrossEdgeMaterializationInputs,
+  inputs : ReMincrossMaterializationInputs,
+  cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedOrderEdges {
   let rem_order_edges_output =
     build_order_edges_by_tail(
@@ -209,7 +189,7 @@ fn build_remincross_materialized_edges(
       false,
       false,
       inputs.edges_by_tail,
-      cluster_order_index=inputs.cluster_order_index,
+      cluster_order_index=cluster_order_index,
     )
   let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
   let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
@@ -253,43 +233,33 @@ fn build_remincross_materialized_edges(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross array materialization inputs keep
-/// order-graph and rank-group snapshots unchanged before edge array rebuild.
-priv struct ReMincrossArrayMaterializationInputs {
-  creation_order : Array[String]
-  rem_groups : Map[Int, Array[String]]
-  rem_graph : @cgraph.Graph
-  rem_node_map : Map[String, @cgraph.Node]
-  rem_cluster_keys : Map[String, String]
-  cluster_order_index : Map[String, Int]
-  root_tail_order_override : Array[String]?
-  materialized_edges : ReMincrossMaterializedOrderEdges
-}
-
-///|
 /// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
 /// seeds node order, then materializes edge arrays in nlist tail order.
 fn build_remincross_materialized_arrays(
-  inputs : ReMincrossArrayMaterializationInputs,
+  inputs : ReMincrossMaterializationInputs,
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  cluster_order_index : Map[String, Int],
+  materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
   let rem_ranks = build_node_ranks(inputs.rem_groups)
   let rem_nlist_order =
     build_remincross_nlist_order(
       inputs.creation_order,
-      inputs.materialized_edges.vnode_creation,
-      inputs.materialized_edges.edge_creation,
+      materialized_edges.vnode_creation,
+      materialized_edges.edge_creation,
       rem_ranks,
-      inputs.rem_cluster_keys,
-      inputs.cluster_order_index,
+      inputs.intercluster_keys,
+      cluster_order_index,
       inputs.root_tail_order_override,
     )
   let rem_node_order = build_order_index(inputs.rem_groups)
   let rem_materialized =
     collect_order_edges_for_tails(
       rem_nlist_order,
-      inputs.materialized_edges.order_edges_by_tail,
-      inputs.rem_graph,
-      inputs.rem_node_map,
+      materialized_edges.order_edges_by_tail,
+      rem_graph,
+      rem_node_map,
     )
   {
     node_order: rem_node_order,
@@ -503,36 +473,16 @@ fn build_remincross_materialized_inputs(
   // and order-graph array materialization on one shared context snapshot.
   let materialized_edges =
     build_remincross_materialized_edges(
-      {
-        creation_order: inputs.creation_order,
-        edges: inputs.edges,
-        edge_tail: inputs.edge_tail,
-        edge_head: inputs.edge_head,
-        edge_tail_port_x: inputs.edge_tail_port_x,
-        edge_head_port_x: inputs.edge_head_port_x,
-        edge_tail_port_order: inputs.edge_tail_port_order,
-        edge_head_port_order: inputs.edge_head_port_order,
-        ranks: inputs.ranks,
-        edge_vnodes: inputs.edge_vnodes,
-        order_with_vnodes: inputs.order_with_vnodes,
-        intercluster_keys: inputs.intercluster_keys,
-        order_with_clusters: inputs.order_with_clusters,
-        edges_by_tail: inputs.edges_by_tail,
-        cluster_order_index,
-      },
+      inputs,
+      cluster_order_index,
     )
   let materialized_arrays =
     build_remincross_materialized_arrays(
-      {
-        creation_order: inputs.creation_order,
-        rem_groups: inputs.rem_groups,
-        rem_graph: rem_graph_output.order_graph,
-        rem_node_map: rem_graph_output.order_node_map,
-        rem_cluster_keys: inputs.intercluster_keys,
-        cluster_order_index,
-        root_tail_order_override: inputs.root_tail_order_override,
-        materialized_edges,
-      },
+      inputs,
+      rem_graph_output.order_graph,
+      rem_graph_output.order_node_map,
+      cluster_order_index,
+      materialized_edges,
     )
   let rem_cluster_keys =
     build_remincross_cluster_keys(
