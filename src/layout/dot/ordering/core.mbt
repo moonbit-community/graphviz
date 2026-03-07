@@ -150,21 +150,6 @@ fn build_cluster_ordering_metadata(
 }
 
 ///|
-/// Graphviz parity: dot cluster-metadata assembly input keeps cluster snapshots,
-/// rank maps, and edge endpoints grouped for clustered ordering setup.
-priv struct DotClusterMetadataInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  graphviz_flip : Bool
-}
-
-///|
 /// Graphviz parity: dot cluster-metadata source bundle keeps stage-side rank
 /// snapshots and rankdir grouped so ordering owner code computes graphviz_flip
 /// and metadata assembly together.
@@ -191,17 +176,8 @@ pub fn build_dot_cluster_metadata_from_sources(
   let graphviz_flip =
     sources.rankdir == @rankdir.RankDir::LR || sources.rankdir == @rankdir.RankDir::RL
   build_dot_cluster_metadata(
-    {
-      graph: sources.graph,
-      nodes: sources.nodes,
-      edges: sources.edges,
-      groups: sources.groups,
-      ranks: sources.ranks,
-      node_order: sources.node_order,
-      edge_tail: sources.edge_tail,
-      edge_head: sources.edge_head,
-      graphviz_flip,
-    },
+    sources,
+    graphviz_flip,
   )
 }
 
@@ -228,26 +204,27 @@ pub(all) struct DotClusterMetadata {
 /// metadata and ordering metadata before clustered dispatch.
 /// Do not change behavior without updating fixtures/tests.
 fn build_dot_cluster_metadata(
-  input : DotClusterMetadataInput,
+  sources : DotClusterMetadataSources,
+  graphviz_flip : Bool,
 ) -> DotClusterMetadata {
   let cluster_core =
     @clustering.build_cluster_core_metadata_for_ordering(
-      input.graph,
-      input.nodes,
-      input.groups,
-      input.ranks,
-      input.node_order,
-      input.graphviz_flip,
+      sources.graph,
+      sources.nodes,
+      sources.groups,
+      sources.ranks,
+      sources.node_order,
+      graphviz_flip,
       @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
     )
   let ordering_metadata =
     build_cluster_ordering_metadata(
-      input.graph,
-      input.nodes,
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-      input.ranks,
+      sources.graph,
+      sources.nodes,
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+      sources.ranks,
       cluster_core.cluster_keys,
     )
   {
