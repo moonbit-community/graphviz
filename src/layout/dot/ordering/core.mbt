@@ -165,6 +165,47 @@ pub(all) struct DotClusterMetadataInput {
 }
 
 ///|
+/// Graphviz parity: dot cluster-metadata source bundle keeps stage-side rank
+/// snapshots and rankdir grouped so ordering owner code computes graphviz_flip
+/// and metadata assembly together.
+pub(all) struct DotClusterMetadataSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  rankdir : @rankdir.RankDir
+}
+
+///|
+/// Graphviz parity: dot cluster metadata assembly merges clustering core and
+/// ordering metadata after deriving graphviz_flip from the grouped rankdir
+/// source.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_dot_cluster_metadata_from_sources(
+  sources : DotClusterMetadataSources,
+) -> DotClusterMetadata {
+  let graphviz_flip =
+    sources.rankdir == @rankdir.RankDir::LR || sources.rankdir == @rankdir.RankDir::RL
+  build_dot_cluster_metadata(
+    {
+      graph: sources.graph,
+      nodes: sources.nodes,
+      edges: sources.edges,
+      groups: sources.groups,
+      ranks: sources.ranks,
+      node_order: sources.node_order,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      graphviz_flip,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: dot cluster metadata payload keeps cluster core + ordering
 /// snapshots grouped for stage-B/stage-C/stage-D wiring.
 pub(all) struct DotClusterMetadata {

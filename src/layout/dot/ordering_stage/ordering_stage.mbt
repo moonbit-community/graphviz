@@ -102,54 +102,6 @@ priv struct OrderingPipelineContext {
 }
 
 ///|
-/// Graphviz parity: ordering stage first derives cluster metadata from rank
-/// groups and edge endpoint snapshots before any vnode/runtime expansion.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_metadata(input : OrderingStageInput) -> ClusterMetadata {
-  @ordering.build_dot_cluster_metadata(
-    {
-      graph: input.graph,
-      nodes: input.nodes,
-      edges: input.edges,
-      groups: input.groups,
-      ranks: input.ranks,
-      node_order: input.node_order,
-      edge_tail: input.edge_tail,
-      edge_head: input.edge_head,
-      graphviz_flip: input.rankdir == RankDir::LR || input.rankdir == RankDir::RL,
-    },
-  )
-}
-
-///|
-/// Graphviz parity: ordering runtime context assembly keeps vnode expansion and
-/// cluster edge wiring aligned with Graphviz preprocessing sequence.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context(
-  input : OrderingStageInput,
-  cluster_meta : ClusterMetadata,
-  deps : OrderingStageDeps,
-) -> OrderingRuntimeContext {
-  @ordering.build_ordering_runtime_context(
-    {
-      graph: input.graph,
-      nodes: input.nodes,
-      edges: input.edges,
-      edge_tail: input.edge_tail,
-      edge_head: input.edge_head,
-      edge_out_order: input.edge_out_order,
-      ranks: input.ranks,
-      node_order: input.node_order,
-      nodesep_pt: input.nodesep_pt,
-      rankdir: input.rankdir,
-      intercluster_keys: cluster_meta.intercluster_keys,
-      cluster_parents: cluster_meta.cluster_parents,
-      edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
-    },
-  )
-}
-
-///|
 /// Graphviz parity: ordering pipeline context assembles runtime expansion,
 /// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
 fn build_ordering_pipeline_context(
@@ -157,7 +109,23 @@ fn build_ordering_pipeline_context(
   cluster_meta : ClusterMetadata,
   deps : OrderingStageDeps,
 ) -> OrderingPipelineContext {
-  let runtime_context = build_ordering_runtime_context(input, cluster_meta, deps)
+  let runtime_context =
+    @ordering.build_ordering_runtime_context_from_sources(
+      {
+        graph: input.graph,
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        edge_out_order: input.edge_out_order,
+        ranks: input.ranks,
+        node_order: input.node_order,
+        nodesep_pt: input.nodesep_pt,
+        rankdir: input.rankdir,
+        cluster_meta,
+      },
+      { edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for },
+    )
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
       (deps.build_edge_port_sample_bundle)(
@@ -514,7 +482,20 @@ pub fn compute_ordering_stage(
   input : OrderingStageInput,
   deps? : OrderingStageDeps = build_ordering_stage_deps(),
 ) -> OrderingStageOutput {
-  let cluster_meta = build_cluster_metadata(input)
+  let cluster_meta =
+    @ordering.build_dot_cluster_metadata_from_sources(
+      {
+        graph: input.graph,
+        nodes: input.nodes,
+        edges: input.edges,
+        groups: input.groups,
+        ranks: input.ranks,
+        node_order: input.node_order,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        rankdir: input.rankdir,
+      },
+    )
   let pipeline_context =
     build_ordering_pipeline_context(input, cluster_meta, deps)
   let dispatch_context =

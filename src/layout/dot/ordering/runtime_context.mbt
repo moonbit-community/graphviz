@@ -39,6 +39,58 @@ pub(all) struct BuildOrderingRuntimeCoreInput {
 }
 
 ///|
+/// Graphviz parity: runtime-context source bundle keeps stage-side graph/rank
+/// snapshots plus cluster metadata grouped so ordering owner code owns the
+/// cluster-key/parent unpacking.
+pub(all) struct BuildOrderingRuntimeContextSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  nodesep_pt : Double
+  rankdir : @rankdir.RankDir
+  cluster_meta : DotClusterMetadata
+}
+
+///|
+/// Graphviz parity: runtime-context dep bundle keeps label-metric vnode wiring
+/// explicit while ordering owner code assembles the remaining runtime input.
+pub(all) struct BuildOrderingRuntimeContextDeps {
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
+}
+
+///|
+/// Graphviz parity: ordering runtime prep keeps vnode build and cluster-key
+/// wiring derived from grouped sources before Stage C dispatch.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_runtime_context_from_sources(
+  sources : BuildOrderingRuntimeContextSources,
+  deps : BuildOrderingRuntimeContextDeps,
+) -> OrderingRuntimeContext {
+  build_ordering_runtime_context(
+    {
+      graph: sources.graph,
+      nodes: sources.nodes,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      edge_out_order: sources.edge_out_order,
+      ranks: sources.ranks,
+      node_order: sources.node_order,
+      nodesep_pt: sources.nodesep_pt,
+      rankdir: sources.rankdir,
+      intercluster_keys: sources.cluster_meta.intercluster_keys,
+      cluster_parents: sources.cluster_meta.cluster_parents,
+      edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: runtime-context input keeps runtime-core, vnode build, and
 /// tail-constraint probe dependencies grouped before Stage C dispatch.
 pub(all) struct BuildOrderingRuntimeContextInput {
