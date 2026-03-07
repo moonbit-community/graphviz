@@ -31,7 +31,7 @@ pub(all) struct OrderingReorderSetup {
 ///|
 /// Graphviz parity: flat edge constraints include same-rank non-self edges
 /// and use missing-rank fallback 0 exactly as class2 input pre-pass.
-pub fn build_flat_rank_constraints(
+fn build_flat_rank_constraints(
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
@@ -57,7 +57,7 @@ pub fn build_flat_rank_constraints(
 /// Graphviz parity: GD_nlist follows decompose DFS order over fast graph
 /// edges, with optional creation-order reverse debug/flip override.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_gdnlist_order(
+fn build_gdnlist_order(
   class2_data : OrderingClass2Data,
   graphviz_flip : Bool,
   cluster_order : Array[String],
@@ -140,7 +140,7 @@ pub fn build_ordering_reorder_setup_from_sources(
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct OrderingReorderSetupInput {
+priv struct OrderingReorderSetupInput {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -171,7 +171,7 @@ pub(all) struct OrderingReorderSetupInput {
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_reorder_setup(
+fn build_ordering_reorder_setup(
   input : OrderingReorderSetupInput,
 ) -> OrderingReorderSetup {
   let ordering_groups_base = apply_rank_same_order(
@@ -373,7 +373,7 @@ fn build_skeleton_edge_creation(
 /// Graphviz parity: class2/decompose ordering prep follows creation order,
 /// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_class2_data(
+fn build_ordering_class2_data(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -627,7 +627,7 @@ pub(all) struct OrderingEdgePortData {
 ///|
 /// Graphviz parity: ordering edge-port data input keeps precomputed full-edge
 /// and dedup-order-edge samples grouped before class2 reorder setup.
-pub(all) struct OrderingEdgePortDataInput {
+priv struct OrderingEdgePortDataInput {
   edges : Array[@cgraph.Edge]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
@@ -705,7 +705,7 @@ pub fn build_ordering_edge_port_data_from_sources(
 /// Graphviz parity: order-edge data keeps original edge sequence and deduped
 /// order-edge snapshots identical to precomputed Stage C sampling.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_edge_port_data(
+fn build_ordering_edge_port_data(
   input : OrderingEdgePortDataInput,
 ) -> OrderingEdgePortData {
   let edge_order = collect_edge_order(input.edges)
