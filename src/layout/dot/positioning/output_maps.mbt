@@ -206,7 +206,7 @@ fn build_node_positions_map(
 /// Graphviz parity: vnode output positions are either direct xpos/rank pairs
 /// (when xpos consumed vnode graph) or endpoint-interpolated fallback.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct VnodePositionsInput {
+priv struct VnodePositionsInput {
   use_vnodes_for_xpos : Bool
   vnode_ranks : Map[String, Int]
   x_positions : Map[String, Double]
@@ -234,7 +234,7 @@ fn build_vnode_positions(
 }
 
 ///|
-pub struct ClusterBoundaryXOutput {
+priv struct ClusterBoundaryXOutput {
   cluster_ln_x : Map[String, Double]
   cluster_rn_x : Map[String, Double]
 }
@@ -242,7 +242,7 @@ pub struct ClusterBoundaryXOutput {
 ///|
 /// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterBoundaryXInput {
+priv struct ClusterBoundaryXInput {
   has_clusters : Bool
   x_positions : Map[String, Double]
   is_cluster_boundary : (String) -> Bool
