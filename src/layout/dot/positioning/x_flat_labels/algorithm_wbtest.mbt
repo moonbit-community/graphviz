@@ -210,3 +210,80 @@ test "non-adjacent flat edge injects a label vnode and splits constraints" {
   assert_eq(right_edge.minlen, expected_minlen)
   assert_eq(right_edge.weight, 1)
 }
+
+///|
+test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
+  let order_index : Map[String, Int] = Map::new()
+  order_index["x"] = 0
+  order_index["a"] = 1
+  order_index["b"] = 3
+  order_index["left_label"] = 0
+
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  flat_label_nodes["left_label"] = { tail: "x", head: "a", rank: -1 }
+
+  let vnode_out_heads : Map[String, Array[String]] = Map::new()
+  assert_eq(
+    flat_limits(
+      ["left_label", "slot1", "slot2"],
+      order_index,
+      flat_label_nodes,
+      vnode_out_heads,
+      "a",
+      "b",
+    ),
+    2,
+  )
+}
+
+///|
+test "non-adjacent flat edge uses half-scale minlen when graph ordering is unset" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let c = graph.node("c")
+  let b = graph.node("b")
+  ignore(c)
+  let edge = graph.edge(a, b)
+  edge.set_attr("label", "default-ordering")
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 0
+  ranks["b"] = 0
+  ranks["c"] = 0
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "c", "b"]
+  let x_groups : Map[Int, Array[String]] = Map::new()
+  x_groups[0] = ["a", "c", "b"]
+  let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
+  let vnode_info = empty_vnode_info()
+  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+    Some(value) => value
+    None => fail("expected edge label metrics")
+  }
+
+  let result = build_flat_label_vnodes_for_positioning(
+    [edge],
+    ["a"],
+    ["b"],
+    ranks,
+    ordered_groups,
+    20.0,
+    @rankdir.RankDir::TB,
+    sizes,
+    Map::new(),
+    Map::new(),
+    make_existing_names(["a", "b", "c"]),
+    vnode_info,
+    x_groups,
+  )
+
+  let label_vnode = match result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+    Some(value) => value
+    None => fail("expected flat label vnode mapping")
+  }
+  let expected_minlen = @numeric.round_int(10.0 + 5.0 + metrics.width / 2.0)
+  assert_eq(result.flat_label_ranks.get(label_vnode), Some(-1))
+  assert_eq(result.flat_label_edges.length(), 2)
+  assert_eq(result.flat_label_edges[0].minlen, expected_minlen)
+  assert_eq(result.flat_label_edges[1].minlen, expected_minlen)
+}
