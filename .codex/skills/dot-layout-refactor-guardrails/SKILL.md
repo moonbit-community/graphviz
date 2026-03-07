@@ -26,9 +26,10 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 2. Keep refactor commits behavior-preserving; separate functional changes from structural changes.
 3. Run focused checks after each logical step (`moon check`, targeted tests) before broader validation.
 4. Prefer file-by-file migration for large moves; validate each moved file (or small batch) before continuing.
-5. Before any commit, run `scripts/run_local_guard.sh` and require full pass.
+5. Before any commit, run `scripts/run_local_guard.sh` and require full pass, unless the repository explicitly documents a different mandatory guard workflow.
 6. Commit and push immediately after a no-regression milestone.
-7. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
+7. When repository policy allows post-commit guard execution, you may pipeline long validations by committing a locally verified slice before the full guard finishes and preparing the next slice while it runs; if the guard fails, stash or shelve later WIP, return to the committed slice, fix it, rerun the guard, then resume. Repository-specific guard rules still take precedence.
+8. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
 
 ## Keep naming and structure consistent
 

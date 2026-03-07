@@ -4,11 +4,20 @@ This repository aims for strict Graphviz parity (`dot` / `xdot` / `svg`) using b
 
 ## Commit Guard Rules (Mandatory)
 
-Before creating **any commit**, run the full local guard and ensure it passes:
+Before pushing a no-regression milestone, run the full local guard and ensure it passes:
 
 ```bash
 scripts/run_local_guard.sh
 ```
+
+For long-running refactors, once the current slice passes local validation, you may create a checkpoint commit before the full guard finishes and begin the next slice while the guard runs. The minimum local validation for such a checkpoint is:
+
+```bash
+moon check --target native --deny-warn
+moon test <affected packages> --target native --release --deny-warn
+```
+
+Do not push a checkpoint commit until `scripts/run_local_guard.sh` passes for that checkpoint.
 
 `scripts/run_local_guard.sh` validates:
 
@@ -40,9 +49,10 @@ Performance/reliability mode:
 
 If the guard fails:
 
-- do **not** commit
-- fix regressions first
-- rerun the guard until it passes
+- do **not** push the failing checkpoint or milestone commit
+- stash or shelve any later WIP based on top of that checkpoint
+- return to the failing commit, fix regressions first, and rerun the guard until it passes
+- resume later queued work only after the checkpoint is green again
 
 ## Guard Changes
 
