@@ -3,5 +3,9 @@
     "moonbit-community/graphviz/layout/dot/font_metrics",
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/cgraph"
+  ],
+  "wbtest-import": [
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs"
   ]
 }

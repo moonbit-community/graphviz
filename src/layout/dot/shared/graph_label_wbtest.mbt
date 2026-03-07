@@ -13,62 +13,62 @@ test "graph_label_pos matches Graphviz place_root_label" {
   let width = 20.0
   let height = 10.0
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Top,
-      @dot_shared.LabelJust::Left,
+      LabelLoc::Top,
+      LabelJust::Left,
     ),
     { x: 20.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Top,
-      @dot_shared.LabelJust::Center,
+      LabelLoc::Top,
+      LabelJust::Center,
     ),
     { x: 60.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Top,
-      @dot_shared.LabelJust::Right,
+      LabelLoc::Top,
+      LabelJust::Right,
     ),
     { x: 100.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Bottom,
-      @dot_shared.LabelJust::Left,
+      LabelLoc::Bottom,
+      LabelJust::Left,
     ),
     { x: 20.0, y: 25.0 },
   )
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Bottom,
-      @dot_shared.LabelJust::Center,
+      LabelLoc::Bottom,
+      LabelJust::Center,
     ),
     { x: 60.0, y: 25.0 },
   )
   assert_label_pos_point_eq(
-    @dot_shared.graph_label_pos(
+    graph_label_pos(
       bbox,
       width,
       height,
-      @dot_shared.LabelLoc::Bottom,
-      @dot_shared.LabelJust::Right,
+      LabelLoc::Bottom,
+      LabelJust::Right,
     ),
     { x: 100.0, y: 25.0 },
   )
