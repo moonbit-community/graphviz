@@ -101,7 +101,7 @@ pub(all) struct OrderingReorderSetupSources {
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence from
 /// grouped runtime + cluster sources.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_reorder_setup_from_sources(
+fn build_ordering_reorder_setup_from_sources(
   sources : OrderingReorderSetupSources,
 ) -> OrderingReorderSetup {
   let graphviz_flip =
@@ -657,7 +657,7 @@ pub(all) struct OrderingEdgePortDataSources {
 /// extraction and endpoint port samples in Graphviz-compatible construction
 /// order from grouped sources.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_edge_port_data_from_sources(
+fn build_ordering_edge_port_data_from_sources(
   sources : OrderingEdgePortDataSources,
   build_port_sample_bundle : (
     Array[@cgraph.Edge],
