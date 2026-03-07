@@ -118,7 +118,7 @@ fn same_rank_constraint_minlen(
 ///|
 /// Graphviz parity: build make_edge_pairs-style segment constraints in
 /// ND_out/ND_nlist order, including reverse-merge handling and same-rank flats.
-pub fn build_constraint_segment_pass(
+fn build_constraint_segment_pass(
   input : ConstraintSegmentPassInput,
 ) -> ConstraintSegmentPassOutput {
   let node_degrees =

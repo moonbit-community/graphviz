@@ -14,7 +14,7 @@ pub(all) struct XposNlistOrderInput {
 ///|
 /// Graphviz parity: class2/decompose creation order is consumed in reverse for
 /// clustered xpos (except LR/RL), with virtual nodes visited before rank peers.
-pub fn build_xpos_nlist_order(
+fn build_xpos_nlist_order(
   input : XposNlistOrderInput,
 ) -> Array[String] {
   let nlist_source =

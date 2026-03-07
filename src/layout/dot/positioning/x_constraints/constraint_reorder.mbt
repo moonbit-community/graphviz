@@ -10,7 +10,7 @@ pub(all) struct ConstraintReorderInput {
 ///|
 /// Graphviz parity: order mirrors position.c's auxiliary-graph sweep and keeps
 /// slack helper nodes ahead of non-slack constraints.
-pub fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
+fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
   let total = input.graph.nodes.length()
   let order : Array[Int] = []
   if total == 0 {
@@ -71,7 +71,7 @@ pub(all) struct ReorderConstraintGraphOutput {
 ///|
 /// Graphviz parity: preserves node rank values while rewriting node ids to the
 /// computed order vector consumed by network simplex.
-pub fn reorder_constraint_graph(
+fn reorder_constraint_graph(
   input : ReorderConstraintGraphInput,
 ) -> ReorderConstraintGraphOutput {
   let total = input.graph.nodes.length()

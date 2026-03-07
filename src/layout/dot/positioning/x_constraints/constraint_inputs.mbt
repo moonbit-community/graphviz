@@ -11,7 +11,7 @@ pub(all) struct PreparedXposConstraintInputs {
 }
 
 ///|
-pub fn prepare_xpos_constraint_inputs(
+fn prepare_xpos_constraint_inputs(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],

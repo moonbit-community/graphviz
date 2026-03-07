@@ -36,7 +36,7 @@ pub(all) struct ConstraintGraphBuildOutput {
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_constraint_graph(
+fn build_constraint_graph(
   input : ConstraintGraphBuildInput,
 ) -> ConstraintGraphBuildOutput {
   let graph = @network_simplex.new_graph()

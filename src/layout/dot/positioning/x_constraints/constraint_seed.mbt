@@ -44,7 +44,7 @@ pub(all) struct RankConstraintSeed {
 ///|
 /// Graphviz parity: rank-adjacent constraints use rank_nodesep and node widths
 /// exactly once per adjacent pair in each rank group.
-pub fn build_rank_constraint_seed(
+fn build_rank_constraint_seed(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, @node_primitives.NodeSize],
@@ -85,7 +85,7 @@ pub fn build_rank_constraint_seed(
 ///|
 /// Graphviz parity: edge iteration follows ND_out tail order first and then
 /// falls back to unseen edge indices in input sequence.
-pub fn for_each_edge_index_in_tail_order(
+fn for_each_edge_index_in_tail_order(
   edges : Array[@cgraph.Edge],
   edge_out_order : Map[String, Array[Int]],
   nlist_order : Array[String],

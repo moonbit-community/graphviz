@@ -126,7 +126,7 @@ pub(all) struct ConstraintNodesSetupOutput {
 }
 
 ///|
-pub fn build_constraint_nodes_setup(
+fn build_constraint_nodes_setup(
   input : ConstraintNodesSetupInput,
 ) -> ConstraintNodesSetupOutput {
   let seed = build_constraint_node_seed(input.nodes, input.extra_nodes)
@@ -163,7 +163,7 @@ pub(all) struct LateConstraintNodesInput {
 ///|
 /// Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
 /// and are later positioned by constraints, not by seed x ranks.
-pub fn append_late_constraint_nodes(input : LateConstraintNodesInput) -> Unit {
+fn append_late_constraint_nodes(input : LateConstraintNodesInput) -> Unit {
   for extra_node in input.late_extra_nodes {
     let idx = @network_simplex.add_node(
       input.graph,

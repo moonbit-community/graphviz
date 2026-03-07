@@ -21,7 +21,7 @@ priv struct ClusterBoundaryNodes {
 /// Graphviz parity: cluster constraints aligned to refs/graphviz/lib/dotgen/position.c
 /// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_constraints(
+fn build_cluster_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
