@@ -325,7 +325,7 @@ pub fn collect_intercluster_bonus(
       let intercluster =
         order_with_clusters && tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
-      if !intercluster || !@shared.edge_is_constraint(edge) || @shared.edge_xpenalty(edge) <= 0 {
+      if !intercluster || !@edge_semantics.edge_is_constraint(edge) || @edge_semantics.edge_xpenalty(edge) <= 0 {
         continue
       }
       let tail_port_order =
@@ -1403,9 +1403,9 @@ pub fn build_transpose_seed_maps(
   }
   for edge_idx in 0..<order_edges_out.length() {
     let edge = order_edges_out[edge_idx]
-    let penalty = @shared.edge_xpenalty(edge)
+    let penalty = @edge_semantics.edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if penalty <= 0 || !@shared.edge_is_constraint(edge) {
+    if penalty <= 0 || !@edge_semantics.edge_is_constraint(edge) {
       continue
     }
     let tail = order_edge_tail_out[edge_idx]

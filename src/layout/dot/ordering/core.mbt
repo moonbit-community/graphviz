@@ -1285,7 +1285,7 @@ pub fn count_crossings(
   let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    if !@shared.edge_is_constraint(edge) {
+    if !@edge_semantics.edge_is_constraint(edge) {
       continue
     }
     let tail = edge_tail[edge_idx]
@@ -1501,9 +1501,9 @@ pub fn count_crossings_port_aware(
   let edge_penalty : Array[Int] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = @shared.edge_xpenalty(edge)
+    let penalty = @edge_semantics.edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if !@shared.edge_is_constraint(edge) {
+    if !@edge_semantics.edge_is_constraint(edge) {
       continue
     }
     if penalty <= 0 {

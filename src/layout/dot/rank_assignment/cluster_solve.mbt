@@ -130,7 +130,7 @@ pub fn solve_clustered_leader_ranks(
   let direct_active : Array[Bool] = []
   let mut slack_id = 0
   for edge in edges {
-    if !@shared.edge_is_constraint(edge) {
+    if !@edge_semantics.edge_is_constraint(edge) {
       continue
     }
     let tail_name = edge.tail().name()
@@ -143,9 +143,9 @@ pub fn solve_clustered_leader_ranks(
       Some(value) => value
       None => ""
     }
-    let minlen_value = @shared.edge_minlen(edge)
+    let minlen_value = @edge_semantics.edge_minlen(edge)
     let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
-    let weight = @shared.edge_weight(edge)
+    let weight = @edge_semantics.edge_weight(edge)
     if tail_cluster == head_cluster {
       if tail_cluster == "" && tail_name != head_name {
         direct_tail.push(tail_name)

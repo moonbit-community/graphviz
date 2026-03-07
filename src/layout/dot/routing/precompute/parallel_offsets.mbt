@@ -51,7 +51,7 @@ pub fn collect_parallel_offset_edge_flags(
       )
     let reversed = edge_orientation_is_reversed(edge, oriented_tail, oriented_head)
     edge_reversed_by_id[edge.id()] = reversed
-    edge_has_label_by_id[edge.id()] = @dot_shared.edge_has_label(edge)
+    edge_has_label_by_id[edge.id()] = @edge_semantics.edge_has_label(edge)
   }
   (edge_reversed_by_id, edge_has_label_by_id)
 }

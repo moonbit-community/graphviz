@@ -81,19 +81,19 @@ test "graph_rankdir walks parent chain" {
 
 ///|
 test "base edge dir parser" {
-  guard @dot_shared.parse_edge_dir("forward") is Some(@dot_shared.EdgeDir::Forward) else {
+  guard @edge_semantics.parse_edge_dir("forward") is Some(@edge_semantics.EdgeDir::Forward) else {
     fail("expected dir=forward")
   }
-  guard @dot_shared.parse_edge_dir("b") is Some(@dot_shared.EdgeDir::Back) else {
+  guard @edge_semantics.parse_edge_dir("b") is Some(@edge_semantics.EdgeDir::Back) else {
     fail("expected dir=b to map to Back")
   }
-  guard @dot_shared.parse_edge_dir("both") is Some(@dot_shared.EdgeDir::Both) else {
+  guard @edge_semantics.parse_edge_dir("both") is Some(@edge_semantics.EdgeDir::Both) else {
     fail("expected dir=both")
   }
-  guard @dot_shared.parse_edge_dir("none") is Some(@dot_shared.EdgeDir::None) else {
+  guard @edge_semantics.parse_edge_dir("none") is Some(@edge_semantics.EdgeDir::None) else {
     fail("expected dir=none")
   }
-  guard @dot_shared.parse_edge_dir("invalid") is None else {
+  guard @edge_semantics.parse_edge_dir("invalid") is None else {
     fail("expected invalid dir to return None")
   }
 }
@@ -103,18 +103,18 @@ test "edge_dir_for uses graph kind and defaults" {
   let directed = @dot_parser.parse_dot(
     "digraph { a -> b [dir=back]; c -> d [dir=invalid]; e -> f }",
   )
-  guard @dot_shared.edge_dir_for(edge_at(directed, 0), directed.kind()) is @dot_shared.EdgeDir::Back else {
+  guard @edge_semantics.edge_dir_for(edge_at(directed, 0), directed.kind()) is @edge_semantics.EdgeDir::Back else {
     fail("expected first edge to be Back")
   }
-  guard @dot_shared.edge_dir_for(edge_at(directed, 1), directed.kind()) is @dot_shared.EdgeDir::Forward else {
+  guard @edge_semantics.edge_dir_for(edge_at(directed, 1), directed.kind()) is @edge_semantics.EdgeDir::Forward else {
     fail("expected invalid dir attr to default Forward")
   }
-  guard @dot_shared.edge_dir_for(edge_at(directed, 2), directed.kind()) is @dot_shared.EdgeDir::Forward else {
+  guard @edge_semantics.edge_dir_for(edge_at(directed, 2), directed.kind()) is @edge_semantics.EdgeDir::Forward else {
     fail("expected missing dir attr to default Forward")
   }
 
   let undirected = @dot_parser.parse_dot("graph { a -- b [dir=both] }")
-  guard @dot_shared.edge_dir_for(edge_at(undirected, 0), undirected.kind()) is @dot_shared.EdgeDir::None else {
+  guard @edge_semantics.edge_dir_for(edge_at(undirected, 0), undirected.kind()) is @edge_semantics.EdgeDir::None else {
     fail("expected undirected edges to use EdgeDir::None")
   }
 }

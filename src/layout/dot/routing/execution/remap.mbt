@@ -32,7 +32,7 @@ fn remap_port_label_pos(
   let is_head = input.is_head
   let fallback = input.fallback
   let edge_port_label_pos_fn = input.edge_port_label_pos_fn
-  if !@dot_shared.edge_attr_non_empty(edge, label_attr) {
+  if !@edge_semantics.edge_attr_non_empty(edge, label_attr) {
     return None
   }
   if splines.length() == 0 {
@@ -74,7 +74,7 @@ fn remap_edge_layout_edge(
   edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> DotLayoutEdge {
   let label_pos =
-    if @dot_shared.edge_attr_non_empty(edge, "label") {
+    if @edge_semantics.edge_attr_non_empty(edge, "label") {
       layout.label_pos
     } else {
       None
@@ -100,7 +100,7 @@ fn remap_edge_layout_edge(
     },
   )
   let xlabel_pos =
-    if @dot_shared.edge_attr_non_empty(edge, "xlabel") {
+    if @edge_semantics.edge_attr_non_empty(edge, "xlabel") {
       layout.xlabel_pos
     } else {
       None
@@ -127,7 +127,7 @@ fn collect_parallel_remap_edge_ids(
   let group_first_direction : Map[String, String] = Map::new()
   let group_has_mixed_direction : Map[String, Bool] = Map::new()
   for edge in edges {
-    if @dot_shared.edge_has_label(edge) {
+    if @edge_semantics.edge_has_label(edge) {
       continue
     }
     let tail = edge.tail().name()

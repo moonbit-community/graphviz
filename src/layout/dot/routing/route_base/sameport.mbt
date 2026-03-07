@@ -18,7 +18,7 @@ fn add_sameport_group_edge(
 
 ///|
 fn sameport_merge_key(edge : @cgraph.Edge) -> String {
-  let label = @dot_shared.edge_attr_or_empty(edge, "label")
+  let label = @edge_semantics.edge_attr_or_empty(edge, "label")
   "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{@dot_shared.port_key(edge.tail_port())}|\{@dot_shared.port_key(edge.head_port())}"
 }
 
@@ -28,7 +28,7 @@ fn collect_sameport_classes(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if @dot_shared.edge_is_self(edge) {
+    if @edge_semantics.edge_is_self(edge) {
       continue
     }
     let key = sameport_merge_key(edge)
@@ -46,7 +46,7 @@ fn for_each_sameport_class_member_edge_id(
   edge : @cgraph.Edge,
   apply_id : (Int) -> Unit,
 ) -> Unit {
-  if @dot_shared.edge_has_label(edge) {
+  if @edge_semantics.edge_has_label(edge) {
     apply_id(edge.id())
     return ()
   }
@@ -443,10 +443,10 @@ fn collect_sameport_overrides(
   let sametail_group_order : Array[String] = []
   let merge_classes = collect_sameport_classes(edges)
   for edge in edges {
-    if @dot_shared.edge_is_self(edge) {
+    if @edge_semantics.edge_is_self(edge) {
       continue
     }
-    let samehead_id = @dot_shared.edge_attr_or_empty(edge, "samehead")
+    let samehead_id = @edge_semantics.edge_attr_or_empty(edge, "samehead")
     if samehead_id != "" {
       add_sameport_group_edge(
         samehead_groups,
@@ -455,7 +455,7 @@ fn collect_sameport_overrides(
         edge,
       )
     }
-    let sametail_id = @dot_shared.edge_attr_or_empty(edge, "sametail")
+    let sametail_id = @edge_semantics.edge_attr_or_empty(edge, "sametail")
     if sametail_id != "" {
       add_sameport_group_edge(
         sametail_groups,

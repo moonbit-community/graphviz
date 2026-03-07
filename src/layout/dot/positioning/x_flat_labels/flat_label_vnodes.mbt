@@ -325,7 +325,7 @@ fn add_flat_label_vnodes(
     let right_left = @shared.node_left_pt(right, sizes)
     let width = left_right + right_left
     let base_minlen =
-      Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt + width
+      Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt + width
     if is_adjacent {
       let label_minlen = width + nodesep_pt + label_width
       // Graphviz parity: LR/RL flat-label adjacency uses integer rounding that
@@ -343,7 +343,7 @@ fn add_flat_label_vnodes(
         tail: left,
         head: right,
         minlen,
-        weight: @shared.edge_weight(edge),
+        weight: @edge_semantics.edge_weight(edge),
         tail_port: None,
         head_port: None,
       })
@@ -407,14 +407,14 @@ fn add_flat_label_vnodes(
     } else {
       0.5
     }
-    let m0 = Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt * m0_scale
+    let m0 = Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt * m0_scale
     let minlen_left = @shared.round_int(m0 + left_right + half_width)
     let minlen_right = @shared.round_int(m0 + half_width + right_left)
     extra_edges.push({
       tail: left,
       head: name,
       minlen: minlen_left,
-      weight: @shared.edge_weight(edge),
+      weight: @edge_semantics.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })
@@ -422,7 +422,7 @@ fn add_flat_label_vnodes(
       tail: name,
       head: right,
       minlen: minlen_right,
-      weight: @shared.edge_weight(edge),
+      weight: @edge_semantics.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })

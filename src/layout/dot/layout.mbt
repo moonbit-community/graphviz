@@ -448,8 +448,8 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   for edge_layout in self.edges {
     let edge = edge_layout.edge
     // Graphviz parity: omit e/s markers when arrowhead/arrowtail is none.
-    let include_tail = @dot_shared.edge_has_tail_marker(edge, self.graph.kind())
-    let include_head = @dot_shared.edge_has_head_marker(edge, self.graph.kind())
+    let include_tail = @edge_semantics.edge_has_tail_marker(edge, self.graph.kind())
+    let include_head = @edge_semantics.edge_has_head_marker(edge, self.graph.kind())
     let segments : Array[String] = []
     for spline in edge_layout.splines {
       let parts : Array[String] = []

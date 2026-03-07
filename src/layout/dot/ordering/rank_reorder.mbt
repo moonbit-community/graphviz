@@ -1334,7 +1334,7 @@ pub fn reorder_rank_groups(
   let node_penalty : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = @shared.edge_xpenalty(edge)
+    let penalty = @edge_semantics.edge_xpenalty(edge)
     if penalty <= 0 {
       continue
     }
@@ -1425,11 +1425,11 @@ pub fn reorder_rank_groups(
   let coalesced_edge_index : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let base_penalty = @shared.edge_xpenalty(edge)
+    let base_penalty = @edge_semantics.edge_xpenalty(edge)
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     let mut penalty = base_penalty
-    if coalesce_parallel_edges && base_penalty > 0 && @shared.edge_is_constraint(edge) {
+    if coalesce_parallel_edges && base_penalty > 0 && @edge_semantics.edge_is_constraint(edge) {
       let tail_port_order =
         if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
           0.5
@@ -1450,7 +1450,7 @@ pub fn reorder_rank_groups(
       }
     }
     edge_penalty.push(penalty)
-    if penalty <= 0 || !@shared.edge_is_constraint(edge) {
+    if penalty <= 0 || !@edge_semantics.edge_is_constraint(edge) {
       continue
     }
     let tail_rank = match node_ranks.get(tail) {

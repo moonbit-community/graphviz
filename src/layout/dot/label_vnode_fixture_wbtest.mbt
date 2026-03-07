@@ -584,7 +584,7 @@ test "flat label node sizes match Graphviz fixtures" {
   }
   if has_edge_labels {
     for edge in edges {
-      if !@dot_shared.edge_has_label(edge) {
+      if !@edge_semantics.edge_has_label(edge) {
         continue
       }
       let tail = edge.tail().name()

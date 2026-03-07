@@ -188,7 +188,7 @@ pub fn compute_ranks_directed_base(
     }
     for edge_idx in indices {
       let edge = edges[edge_idx]
-      if !@shared.edge_is_constraint(edge) {
+      if !@edge_semantics.edge_is_constraint(edge) {
         continue
       }
       let tail = edge_tail[edge_idx]
@@ -208,9 +208,9 @@ pub fn compute_ranks_directed_base(
       if tail_idx == head_idx {
         continue
       }
-      let minlen_value = @shared.edge_minlen(edge)
+      let minlen_value = @edge_semantics.edge_minlen(edge)
       let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
-      let weight = @shared.edge_weight(edge)
+      let weight = @edge_semantics.edge_weight(edge)
       let key = "\{tail_idx}:\{head_idx}"
       match merged_edges.get(key) {
         Some(entry) => {

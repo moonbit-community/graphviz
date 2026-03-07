@@ -254,7 +254,7 @@ fn compute_x_positions_for_stage(
       ),
     edge => @edge_label_metrics.edge_mid_label_metrics(edge) is Some(_),
     edge =>
-      if @shared.edge_dir_for(edge, edge.tail().graph().kind()) is @shared.EdgeDir::Both {
+      if @edge_semantics.edge_dir_for(edge, edge.tail().graph().kind()) is @edge_semantics.EdgeDir::Both {
         2
       } else {
         1

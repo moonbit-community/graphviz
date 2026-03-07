@@ -242,7 +242,7 @@ pub fn add_same_rank_constraint_edges_to_flat_constraints(
 ) -> Unit {
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !@shared.edge_is_constraint(edges[edge_idx]) {
+    if edge_idx < edges.length() && !@edge_semantics.edge_is_constraint(edges[edge_idx]) {
       edge_idx = edge_idx + 1
       continue
     }
@@ -677,8 +677,8 @@ pub fn build_order_edges_by_tail(
       } else {
         head
       }
-      let penalty = @shared.edge_xpenalty(edge)
-      let constraint = @shared.edge_is_constraint(edge)
+      let penalty = @edge_semantics.edge_xpenalty(edge)
+      let constraint = @edge_semantics.edge_is_constraint(edge)
       let tail_port_x =
         if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else {
           0.0

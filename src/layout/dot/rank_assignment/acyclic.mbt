@@ -273,7 +273,7 @@ pub fn acyclic_edge_directions_with_order(
     edge_tail_orig.push(tail)
     edge_head_orig.push(head)
     edge_reversed.push(false)
-    let active = @shared.edge_is_constraint(edge)
+    let active = @edge_semantics.edge_is_constraint(edge)
     edge_is_active.push(active)
     let edge_idx = edge_tail_orig.length() - 1
     match node_index.get(tail) {

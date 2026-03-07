@@ -20,10 +20,10 @@ fn collect_flat_adjacent_beziers(
 ) -> Map[Int, Array[@geom.Point]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if @dot_shared.edge_is_self(edge) {
+    if @edge_semantics.edge_is_self(edge) {
       continue
     }
-    if @dot_shared.edge_has_label(edge) {
+    if @edge_semantics.edge_has_label(edge) {
       continue
     }
     if @dot_shared.port_is_explicit(edge.tail_port()) ||

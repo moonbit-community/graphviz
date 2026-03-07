@@ -29,10 +29,10 @@ test "edge weight and minlen parsing clamps values" {
     Some(edge) => edge
     None => fail("missing edge e -> f")
   }
-  assert_eq(@dot_shared.edge_weight(edge_ab), 2)
-  assert_eq(@dot_shared.edge_minlen(edge_ab), 3)
-  assert_eq(@dot_shared.edge_weight(edge_cd), 0)
-  assert_eq(@dot_shared.edge_minlen(edge_cd), 1)
-  assert_eq(@dot_shared.edge_weight(edge_ef), 1)
-  assert_eq(@dot_shared.edge_minlen(edge_ef), 1)
+  assert_eq(@edge_semantics.edge_weight(edge_ab), 2)
+  assert_eq(@edge_semantics.edge_minlen(edge_ab), 3)
+  assert_eq(@edge_semantics.edge_weight(edge_cd), 0)
+  assert_eq(@edge_semantics.edge_minlen(edge_cd), 1)
+  assert_eq(@edge_semantics.edge_weight(edge_ef), 1)
+  assert_eq(@edge_semantics.edge_minlen(edge_ef), 1)
 }

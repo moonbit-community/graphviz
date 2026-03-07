@@ -432,7 +432,7 @@ fn run_clustered_root_phase(
     )
   @ordering.run_clustered_root_phase_stage_from_sources(
     root_phase_sources,
-    @ordering.build_root_snapshot_capture_callback(@shared.edge_xpenalty),
+    @ordering.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
   )
 }
 
@@ -492,7 +492,7 @@ fn run_clustered_finalize_phase(
     @ordering.run_clustered_finalize_stage_from_root_phase_sources(
       finalize_sources,
       @ordering.build_remincross_snapshot_capture_callback(
-        @shared.edge_xpenalty,
+        @edge_semantics.edge_xpenalty,
       ),
       @ordering.run_remincross_cleanup_reorder,
     )

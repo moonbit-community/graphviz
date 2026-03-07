@@ -16,7 +16,7 @@ pub fn edge_label_rank_info(
   if mid_label_width_pt <= 0.0 {
     return None
   }
-  let rank_span = match @dot_shared.edge_rank_span(edge, ranks) {
+  let rank_span = match @edge_semantics.edge_rank_span(edge, ranks) {
     Some(value) => value
     None => return None
   }

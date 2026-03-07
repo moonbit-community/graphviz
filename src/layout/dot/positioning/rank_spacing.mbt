@@ -33,7 +33,7 @@ pub fn self_edge_label_half_heights(
 ) -> Map[String, Double] {
   let heights : Map[String, Double] = Map::new()
   for edge in edges {
-    if !@shared.edge_is_self(edge) {
+    if !@edge_semantics.edge_is_self(edge) {
       continue
     }
     let tail = edge.tail().name()

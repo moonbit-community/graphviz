@@ -82,9 +82,9 @@ pub fn edge_port_label_pos(
   let graph_kind = edge.tail().graph().kind()
   let marker_present =
     if is_head {
-      @dot_shared.edge_has_head_marker(edge, graph_kind)
+      @edge_semantics.edge_has_head_marker(edge, graph_kind)
     } else {
-      @dot_shared.edge_has_tail_marker(edge, graph_kind)
+      @edge_semantics.edge_has_tail_marker(edge, graph_kind)
     }
   let (angle_deg, distance_scale) =
     match port_label_params(edge, default_angle_deg, min_angle_deg) {

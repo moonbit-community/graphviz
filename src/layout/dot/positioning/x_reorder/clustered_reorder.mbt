@@ -488,8 +488,8 @@ fn append_clustered_input_edges(
   for edge in input.edges {
     let tail = edge_name_at(input.edge_tail, edge_idx, edge.tail().name())
     let head = edge_name_at(input.edge_head, edge_idx, edge.head().name())
-    let penalty = @shared.edge_xpenalty(edge)
-    let constraint = @shared.edge_is_constraint(edge)
+    let penalty = @edge_semantics.edge_xpenalty(edge)
+    let constraint = @edge_semantics.edge_is_constraint(edge)
     let tail_port_x = edge_port_value_or_default(input.edge_tail_port_x, edge_idx, 0.0)
     let head_port_x = edge_port_value_or_default(input.edge_head_port_x, edge_idx, 0.0)
     let tail_port_order =

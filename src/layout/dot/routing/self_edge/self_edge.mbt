@@ -73,7 +73,7 @@ pub fn apply_self_edge_right_space(
 ) -> Map[String, @dot_shared.NodeSize] {
   let extra_right : Map[String, Double] = Map::new()
   for edge in input.edges {
-    if !@dot_shared.edge_is_self(edge) {
+    if !@edge_semantics.edge_is_self(edge) {
       continue
     }
     let tail = edge.tail().name()

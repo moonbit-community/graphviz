@@ -110,7 +110,7 @@ pub fn build_reverse_merge_metadata(
         }
         merged_edge_skip[edge_idx] = true
         let prev_bonus = merged_edge_weight_bonus.get(rep_idx).unwrap_or_default()
-        merged_edge_weight_bonus[rep_idx] = prev_bonus + @shared.edge_weight(edge)
+        merged_edge_weight_bonus[rep_idx] = prev_bonus + @edge_semantics.edge_weight(edge)
       }
       None => ()
     }

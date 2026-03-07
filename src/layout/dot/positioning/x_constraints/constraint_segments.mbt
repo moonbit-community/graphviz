@@ -104,7 +104,7 @@ fn same_rank_constraint_minlen(
 ) -> Int {
   let width = node_side_pt(left, sizes, false) + node_side_pt(right, sizes, true)
   let mut minlen_value =
-    Double::from_int(@shared.edge_minlen(edge)) * nodesep_pt + width
+    Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt + width
   let is_invis = match edge.get_attr("style") {
     Some(style) => style.to_lower().contains("invis")
     None => false
@@ -130,7 +130,7 @@ pub fn build_constraint_segment_pass(
         edge_tail: input.edge_tail,
         edge_head: input.edge_head,
         edge_excluded_from_reverse_merge:
-          edge => (input.edge_has_mid_label)(edge) || @shared.edge_is_self(edge),
+          edge => (input.edge_has_mid_label)(edge) || @edge_semantics.edge_is_self(edge),
       },
     )
   let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus
@@ -169,7 +169,7 @@ pub fn build_constraint_segment_pass(
             let has_ordering = edge_tail_ordering_is_out_or_in(edge)
             let has_mid_label = (input.edge_has_mid_label)(edge)
             if tail_rank == head_rank &&
-              @shared.edge_is_constraint(edge) &&
+              @edge_semantics.edge_is_constraint(edge) &&
               !has_mid_label {
               let (left, right) =
                 choose_flat_constraint_endpoints(
@@ -186,7 +186,7 @@ pub fn build_constraint_segment_pass(
                   input.sizes,
                   has_ordering,
                 )
-              let weight = @shared.edge_weight(edge)
+              let weight = @edge_semantics.edge_weight(edge)
               let flat_key = "\{left}|\{right}"
               if input.rank_adj_constraints.get(flat_key) is Some(_) {
                 upsert_constraint_with_max(
@@ -219,7 +219,7 @@ pub fn build_constraint_segment_pass(
               if tail_name != head_name || ordered_vnodes.length() == 0 {
                 chain.push(head_name)
               }
-              let base_weight = @shared.edge_weight(edge)
+              let base_weight = @edge_semantics.edge_weight(edge)
               let orig_tail = edge.tail().name()
               let mut chain_idx = 0
               while chain_idx + 1 < chain.length() {

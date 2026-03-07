@@ -87,7 +87,7 @@ pub fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
 ///|
 pub fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
   for edge in edges {
-    if @shared.edge_has_label(edge) {
+    if @edge_semantics.edge_has_label(edge) {
       return true
     }
   }

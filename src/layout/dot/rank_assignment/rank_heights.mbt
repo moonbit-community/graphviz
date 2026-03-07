@@ -99,10 +99,10 @@ fn update_rank_pht_for_label(
   rankdir : @shared.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
 ) -> Unit {
-  if !@shared.edge_has_label(edge) {
+  if !@edge_semantics.edge_has_label(edge) {
     return
   }
-  let span = match @shared.edge_rank_span(edge, ranks) {
+  let span = match @edge_semantics.edge_rank_span(edge, ranks) {
     Some(value) => value
     None => return
   }
@@ -201,7 +201,7 @@ fn apply_vnode_rank_half_heights(
   // intermediate ranks before cluster rank height adjustments.
   let vnode_half_height = vnode_height_pt / 2.0
   for edge in edges {
-    let span = match @shared.edge_rank_span(edge, ranks) {
+    let span = match @edge_semantics.edge_rank_span(edge, ranks) {
       Some(value) => value
       None => continue
     }
