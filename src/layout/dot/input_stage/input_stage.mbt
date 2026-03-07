@@ -508,11 +508,10 @@ fn build_record_port_order_map(
     if has_html || @record_geometry.is_record_shape(node) {
       let name = node.name()
       let size =
-        @shared.resolve_node_output_size(
+        @node_geometry.resolve_node_output_size(
           input.output_sizes,
           node,
-          input.record_orientation,
-          @node_geometry.node_size,
+          input.record_orientation
         )
       let order_map =
         build_node_port_order(

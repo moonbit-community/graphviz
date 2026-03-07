@@ -137,11 +137,10 @@ fn build_layout_nodes_for_routing_stage(
       None => { x: 0.0, y: 0.0 }
     }
     let size =
-      @shared.resolve_node_output_size(
+      @node_geometry.resolve_node_output_size(
         output_sizes,
         node,
-        record_orientation,
-        @node_geometry.node_size,
+        record_orientation
       )
     nodes_out.push({
       node,
@@ -170,11 +169,10 @@ fn build_port_layout_maps_for_routing_stage(
   if has_port_edges {
     for node_layout in nodes_out {
       let final_size =
-        @shared.resolve_node_output_size(
+        @node_geometry.resolve_node_output_size(
           output_sizes,
           node_layout.node,
-          record_orientation,
-          @node_geometry.node_size,
+          record_orientation
         )
       let name = node_layout.node.name()
       let raw_ports =

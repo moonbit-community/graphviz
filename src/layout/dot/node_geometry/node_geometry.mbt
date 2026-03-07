@@ -870,6 +870,23 @@ pub fn node_size(
 
 ///|
 
+
+///|
+/// Graphviz parity: output-size lookup prefers precomputed output sizes and
+/// falls back to node geometry calculation when a node is not present.
+pub fn resolve_node_output_size(
+  output_sizes : Map[String, NodeSize],
+  node : @cgraph.Node,
+  record_orientation : RecordOrientation,
+) -> NodeSize {
+  let name = node.name()
+  match output_sizes.get(name) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+}
+
+
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|

@@ -121,7 +121,7 @@ fn build_port_maps_for_nodes(
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
     let name = node.name()
-    let size = @shared.resolve_node_output_size(sizes, node, record_orientation, @node_geometry.node_size)
+    let size = @node_geometry.resolve_node_output_size(sizes, node, record_orientation)
     let ports =
       @label_layout.raw_label_ports_for_node(
         node,
