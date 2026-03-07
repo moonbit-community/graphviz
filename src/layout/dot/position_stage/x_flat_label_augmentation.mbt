@@ -81,7 +81,7 @@ fn build_flat_label_augmentation(
 fn build_x_flat_label_reorder_sources(
   input : XFlatLabelBuildInput,
   deps : PositionStageDeps,
-) -> @positioning.XposReorderPipelineSources {
+) -> @x_reorder.XposReorderPipelineSources {
   let pipeline = input.pipeline
   {
     xpos_reorder_enabled: input.xpos_reorder_enabled,
