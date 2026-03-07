@@ -177,7 +177,7 @@ Later stages assume a clean canonical view of the graph. If option parsing or si
 
 Orchestrator:
 
-- `compute_dot_rank_stage` in `src/layout/dot/ordering_stage/dot_bridge.mbt`
+- `compute_dot_rank_stage` in `src/layout/dot/ordering_stage/ordering_stage.mbt`
 
 This stage decides vertical layering and ordering inputs.
 
@@ -185,7 +185,7 @@ This stage decides vertical layering and ordering inputs.
 
 Main files:
 
-- `src/layout/dot/ordering_stage/dot_bridge.mbt`
+- `src/layout/dot/ordering_stage/ordering_stage.mbt`
 - `src/layout/dot/rank_assignment/*`
 - `src/layout/dot/network_simplex/*`
 
@@ -216,7 +216,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
-- implemented across `src/layout/dot/ordering_stage/dot_bridge.mbt` and `src/layout/dot/clustering/*`
+- implemented across `src/layout/dot/ordering_stage/ordering_stage.mbt` and `src/layout/dot/clustering/*`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -505,15 +505,15 @@ Repository guard validates:
 - Alternative engines (`dot -n` / `neato -n` / `neato`):
   - `engines.mbt`
 - Shared validation/constants:
-  - `layout_base.mbt`
+  - `layout.mbt`
 - Node/label/port geometry and metrics:
   - `node_geometry.mbt`
 - Input canonicalization:
   - `layout.mbt`, `input_stage/*`
 - Rank assignment and rank heights:
-  - `ordering_stage/dot_bridge.mbt`, `rank_assignment/*`, `network_simplex/*`
+  - `ordering_stage/ordering_stage.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `ordering_stage/dot_bridge.mbt`, `clustering/*`
+  - `ordering_stage/ordering_stage.mbt`, `clustering/*`
 - Ordering dispatch + shared stage logic:
   - `ordering_stage/*`
 - Ordering edge materialization:
@@ -550,13 +550,13 @@ Repository guard validates:
 If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
-2. `ordering_stage/dot_bridge.mbt` + `routing_stage/*` — understand rank/routing stage boundaries.
+2. `ordering_stage/ordering_stage.mbt` + `routing_stage/*` — understand rank/routing stage boundaries.
 3. `layout.mbt` + `input_stage/*` — understand canonical input formation.
-4. `ordering_stage/dot_bridge.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
+4. `ordering_stage/ordering_stage.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
 5. `ordering_stage/*` + `ordering/graph.mbt` — understand order graph construction.
 6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
 7. `ordering_stage/*` + `position_stage/*` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
-8. `routing_stage/*` + `clustering/subgraph_layout.mbt` + `routing/context.mbt` + `routing/regular_pass.mbt` + `routing/curve_mode.mbt` — understand edge geometry generation.
+8. `routing_stage/*` + `clustering/subgraph_layout.mbt` + `routing/precompute/context.mbt` + `routing/execution/regular_pass.mbt` + `routing/curve_mode/curve_mode.mbt` — understand edge geometry generation.
 9. `finalization/finalization.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
