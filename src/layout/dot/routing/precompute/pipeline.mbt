@@ -42,7 +42,7 @@ pub fn build_label_edge_counts(
 /// Graphviz parity: complex tuning toggle mirrors fixture gating for dotsplines heuristics.
 /// Do not change behavior without updating fixtures/tests.
 pub fn complex_tuning_enabled() -> Bool {
-  @dot_shared.env_flag_enabled(@sys.get_env_var("DOT_COMPLEX_TUNING"), false)
+  @runtime_flags.env_flag_enabled(@sys.get_env_var("DOT_COMPLEX_TUNING"), false)
 }
 
 ///|

@@ -1,4 +1,7 @@
 ///|
+pub const CL_BACK : Int = 10
+
+///|
 /// Graphviz parity: rank-data payload keeps Stage-B rank inputs grouped so
 /// edge direction/orientation wiring remains explicit and stable.
 pub struct RankDataInput {

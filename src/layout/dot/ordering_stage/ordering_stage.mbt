@@ -642,7 +642,7 @@ pub fn compute_dot_rank_stage(
         prep.nodes,
         prep.edges,
         prep.has_edge_labels,
-        @shared.CL_BACK,
+        @rank_assignment.CL_BACK,
         @edge_label_metrics.edge_label_height_pt,
       ),
     )

@@ -191,7 +191,7 @@ fn adjust_labels_for_overlaps(
 
 ///|
 fn edge_label_adjust_enabled() -> Bool {
-  @shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
+  @runtime_flags.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
 }
 
 

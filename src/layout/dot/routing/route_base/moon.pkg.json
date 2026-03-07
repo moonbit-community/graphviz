@@ -1,9 +1,5 @@
 {
   "import": [
-    {
-      "path": "moonbit-community/graphviz/layout/dot/shared",
-      "alias": "dot_shared"
-    },
     "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/routing",
@@ -15,6 +11,7 @@
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-    "moonbit-community/graphviz/layout/dot/numeric"
+    "moonbit-community/graphviz/layout/dot/numeric",
+    "moonbit-community/graphviz/layout/dot/runtime_flags"
   ]
 }

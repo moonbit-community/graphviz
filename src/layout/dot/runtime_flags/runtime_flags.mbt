@@ -1,7 +1,4 @@
 ///|
-pub const CL_BACK : Int = 10
-
-///|
 pub fn env_flag_enabled(
   value : String?,
   default_enabled : Bool,

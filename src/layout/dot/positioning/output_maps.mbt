@@ -2,14 +2,14 @@
 /// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 pub fn intercluster_alignment_enabled() -> Bool {
-  @shared.env_flag_enabled(@sys.get_env_var("DOT_INTERCLUSTER_ALIGN"), false)
+  @runtime_flags.env_flag_enabled(@sys.get_env_var("DOT_INTERCLUSTER_ALIGN"), false)
 }
 
 ///|
 /// Graphviz parity: cluster rounding gate uses DOT_ADJUST_CLUSTER_ROUNDING
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 pub fn cluster_rounding_enabled() -> Bool {
-  @shared.env_flag_enabled_nonempty(
+  @runtime_flags.env_flag_enabled_nonempty(
     @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
   )
 }

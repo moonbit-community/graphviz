@@ -6,7 +6,6 @@
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/routing/edge_spline",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
-    "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
@@ -15,6 +14,7 @@
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-    "moonbit-community/graphviz/layout/dot/clustering/cluster_identity"
+    "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
+    "moonbit-community/graphviz/layout/dot/runtime_flags"
   ]
 }
