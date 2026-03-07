@@ -48,8 +48,8 @@ fn finalize_unranked_layout_graph(
   let empty_rank_y : Map[Int, Double] = Map::new()
   let empty_rank_ht1 : Map[Int, Double] = Map::new()
   let empty_rank_ht2 : Map[Int, Double] = Map::new()
-  let subgraphs =
-    layout_subgraphs(
+  let subgraph_trees =
+    @clustering.layout_subgraphs(
       {
         graph,
         nodes_out,
@@ -64,11 +64,12 @@ fn finalize_unranked_layout_graph(
         rank_ht2: empty_rank_ht2,
       },
     )
-  let mut final_bbox = if subgraphs.length() > 0 {
-    expand_bbox_with_subgraphs(base_bbox, subgraphs)
+  let mut final_bbox = if subgraph_trees.length() > 0 {
+    @clustering.expand_bbox_with_subgraphs(base_bbox, subgraph_trees)
   } else {
     base_bbox
   }
+  let subgraphs = dot_layout_graphs_from_layout_trees(subgraph_trees)
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
     match @label_metrics.graph_label_metrics(graph) {

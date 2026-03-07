@@ -292,7 +292,7 @@ pub fn compute_rank_heights(
       rank_ht1,
       rank_ht2,
       rankdir: input.rankdir,
-      cluster_margin_pt_for: @positioning.cluster_margin_pt,
+      cluster_margin_pt_for: @clustering.cluster_margin_pt,
       cluster_label_padding_for: input.cluster_label_padding_for,
       node_half_height_pt_for: @positioning.node_half_height_pt,
     },

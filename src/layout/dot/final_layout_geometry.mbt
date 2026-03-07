@@ -32,8 +32,8 @@ priv struct SubgraphsAndBBoxInput {
 fn build_subgraphs_and_bbox(
   input : SubgraphsAndBBoxInput,
 ) -> SubgraphsAndBBox {
-  let subgraphs =
-    layout_subgraphs(
+  let subgraph_trees =
+    @clustering.layout_subgraphs(
       {
         graph: input.graph,
         nodes_out: input.nodes,
@@ -48,12 +48,15 @@ fn build_subgraphs_and_bbox(
         rank_ht2: input.rank_ht2,
       },
     )
-  let expanded = if subgraphs.length() > 0 {
-    expand_bbox_with_clusters(input.bbox, subgraphs)
+  let expanded = if subgraph_trees.length() > 0 {
+    @clustering.expand_bbox_with_clusters(input.bbox, subgraph_trees)
   } else {
     input.bbox
   }
-  { subgraphs, base_bbox: expanded }
+  {
+    subgraphs: dot_layout_graphs_from_layout_trees(subgraph_trees),
+    base_bbox: expanded,
+  }
 }
 
 ///|

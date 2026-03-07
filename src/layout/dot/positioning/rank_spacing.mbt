@@ -9,21 +9,6 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
 
 ///|
-pub fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
-  match graph.get_attr("margin") {
-    Some(value) => {
-      let margin = @shared.parse_first_double(value, CLUSTER_MARGIN_PT)
-      if margin < 0.0 {
-        CLUSTER_MARGIN_PT
-      } else {
-        margin
-      }
-    }
-    None => CLUSTER_MARGIN_PT
-  }
-}
-
-///|
 /// Graphviz parity: ratio=compress detection aligned to
 /// refs/graphviz/lib/dotgen/dotinit.c.
 fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {

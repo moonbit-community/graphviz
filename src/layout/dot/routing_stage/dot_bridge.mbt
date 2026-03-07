@@ -356,27 +356,14 @@ fn build_routing_callbacks_for_dot(
 }
 
 ///|
-/// Graphviz parity: default dot routing deps keep all tree-free routing-stage
-/// geometry and callback bridges inside the routing_stage package, while the
-/// root package supplies only the cluster-bbox tree bridge.
-pub fn build_dot_routing_stage_deps(
-  compute_cluster_route_bboxes : (
-    @cgraph.Graph,
-    Array[DotLayoutNode],
-    Map[String, Double],
-    Map[String, Double],
-    Map[String, ClusterBboxHeightPair],
-    RankDir,
-    Map[String, Int],
-    Map[Int, Double],
-    Map[Int, Double],
-    Map[Int, Double],
-  ) -> Map[String, @geom.Rect],
-) -> RoutingStageDeps {
+/// Graphviz parity: default dot routing deps keep routing-stage geometry,
+/// callback bridges, and cluster-bbox tree recursion inside subpackages so the
+/// root package no longer needs a Stage E-specific bridge file.
+pub fn build_dot_routing_stage_deps() -> RoutingStageDeps {
   {
     build_layout_nodes: build_layout_nodes_for_routing_stage,
     build_port_layout_maps: build_port_layout_maps_for_routing_stage,
-    compute_cluster_route_bboxes,
+    compute_cluster_route_bboxes: @clustering.compute_cluster_route_bboxes,
     compute_routing_bbox: compute_routing_bbox_for_stage,
     edge_has_mid_label: edge_has_mid_label_for_routing_stage,
     record_port_padding: routing_port_padding_for_stage,

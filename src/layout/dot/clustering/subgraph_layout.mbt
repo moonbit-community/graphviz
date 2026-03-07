@@ -1,5 +1,12 @@
 ///|
-/// Cluster subgraph geometry/layout helpers shared by routing and finalization.
+/// Cluster subgraph layout tree helpers: recursive cluster layout, subtree bbox
+/// expansion, and routing bbox extraction shared by routing/finalization paths.
+
+type LayoutTree = @shared.LayoutTree
+type LabelLoc = @shared.LabelLoc
+type LabelJust = @shared.LabelJust
+type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutEdge = @shared.DotLayoutEdge
 
 ///|
 priv struct ClusterLabelPlacementInfo {
@@ -13,7 +20,7 @@ priv struct ClusterLabelPlacementInfo {
 ///|
 /// Graphviz parity: subgraph layout payload keeps cluster/rank snapshots
 /// grouped so recursive cluster-bbox wiring remains explicit and stable.
-priv struct LayoutSubgraphsInput {
+pub(all) struct LayoutSubgraphsInput {
   graph : @cgraph.Graph
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
@@ -31,9 +38,9 @@ priv struct LayoutSubgraphsInput {
 /// Graphviz parity: cluster bbox + label placement aligned to refs/graphviz/lib/common/postproc.c
 /// (place_graph_label) + lib/common/input.c (cluster label borders) + dotgen/position.c (cluster margins).
 /// Do not change behavior without updating fixtures/tests.
-fn layout_subgraphs(
+pub fn layout_subgraphs(
   input : LayoutSubgraphsInput,
-) -> Array[DotLayoutGraph] {
+) -> Array[LayoutTree] {
   let graph = input.graph
   let nodes_out = input.nodes_out
   let edges_out = input.edges_out
@@ -46,17 +53,17 @@ fn layout_subgraphs(
   let rank_ht1 = input.rank_ht1
   let rank_ht2 = input.rank_ht2
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let result : Array[DotLayoutGraph] = []
+  let result : Array[LayoutTree] = []
   for subgraph in graph.subgraphs() {
     let node_set : Map[String, Bool] = Map::new()
     for node in subgraph.nodes() {
-      if @clustering.graph_contains_node(subgraph, node) {
+      if graph_contains_node(subgraph, node) {
         node_set[node.name()] = true
       }
     }
     let edge_set : Map[String, Bool] = Map::new()
     for edge in subgraph.edges() {
-      edge_set[@dot_shared.edge_key(edge)] = true
+      edge_set[@shared.edge_key(edge)] = true
     }
     let sub_nodes : Array[DotLayoutNode] = []
     for node_layout in nodes_out {
@@ -66,7 +73,7 @@ fn layout_subgraphs(
     }
     let sub_edges : Array[DotLayoutEdge] = []
     for edge_layout in edges_out {
-      if edge_set.get(@dot_shared.edge_key(edge_layout.edge)) is Some(_) {
+      if edge_set.get(@shared.edge_key(edge_layout.edge)) is Some(_) {
         let tail_name = edge_layout.edge.tail().name()
         let head_name = edge_layout.edge.head().name()
         if node_set.get(tail_name) is Some(_) &&
@@ -94,10 +101,10 @@ fn layout_subgraphs(
           rank_ht2,
         },
       )
-    if @dot_shared.is_cluster_graph(subgraph) {
+    if @shared.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
       let cluster_nodes : Map[String, Bool] = Map::new()
-      @dot_shared.collect_graph_nodes(subgraph, cluster_nodes)
+      @shared.collect_graph_nodes(subgraph, cluster_nodes)
       if cluster_nodes.length() == 0 {
         continue
       }
@@ -105,8 +112,8 @@ fn layout_subgraphs(
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
-    if @dot_shared.is_cluster_graph(subgraph) {
-      let pad = @positioning.cluster_margin_pt(subgraph)
+    if @shared.is_cluster_graph(subgraph) {
+      let pad = cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
       let mut pad_y = pad
@@ -115,7 +122,7 @@ fn layout_subgraphs(
       let mut min_rank : Int? = None
       let mut max_rank : Int? = None
       let cluster_nodes : Map[String, Bool] = Map::new()
-      @dot_shared.collect_graph_nodes(subgraph, cluster_nodes)
+      @shared.collect_graph_nodes(subgraph, cluster_nodes)
       for name, _ in cluster_nodes {
         match ranks.get(name) {
           Some(rank) => {
@@ -194,9 +201,9 @@ fn layout_subgraphs(
       bbox = { llx, lly, urx, ury }
       match @label_metrics.graph_label_metrics(subgraph) {
         Some(metrics) => {
-          let loc = @dot_shared.graph_label_loc(subgraph)
-          let just = @dot_shared.graph_label_just(subgraph)
-          let pad = @clustering.CLUSTER_LABEL_PAD_PT
+          let loc = @shared.graph_label_loc(subgraph)
+          let just = @shared.graph_label_just(subgraph)
+          let pad = CLUSTER_LABEL_PAD_PT
           let padded_width = metrics.width_pt + pad * 2.0
           let padded_height = metrics.height_pt + pad
           if flip {
@@ -229,7 +236,7 @@ fn layout_subgraphs(
           } else {
             if !use_rank_bbox {
               bbox =
-                @dot_shared.expand_bbox_for_label(
+                @shared.expand_bbox_for_label(
                   bbox,
                   metrics.width_pt,
                   metrics.height_pt,
@@ -254,7 +261,7 @@ fn layout_subgraphs(
         label_pos =
           Some(
             if value.flipped {
-              @dot_shared.graph_label_pos_flip(
+              @shared.graph_label_pos_flip(
                 bbox,
                 value.width_pt,
                 value.height_pt,
@@ -262,7 +269,7 @@ fn layout_subgraphs(
                 value.just,
               )
             } else {
-              @dot_shared.graph_label_pos(
+              @shared.graph_label_pos(
                 bbox,
                 value.width_pt,
                 value.height_pt,
@@ -283,4 +290,104 @@ fn layout_subgraphs(
     })
   }
   result
+}
+
+
+///|
+pub fn expand_bbox_with_subgraphs(
+  bbox : @geom.Rect,
+  subgraphs : Array[LayoutTree],
+) -> @geom.Rect {
+  let mut result = bbox
+  for subgraph in subgraphs {
+    result = @bbox.merge_bbox(result, subgraph.bbox)
+    if subgraph.subgraphs.length() > 0 {
+      result = expand_bbox_with_subgraphs(result, subgraph.subgraphs)
+    }
+  }
+  result
+}
+
+///|
+/// Graphviz parity: root bbox only expands to include cluster subgraphs
+/// (dot_compute_bb uses GD_clust list, not generic subgraphs).
+/// Do not change behavior without updating fixtures/tests.
+pub fn expand_bbox_with_clusters(
+  bbox : @geom.Rect,
+  subgraphs : Array[LayoutTree],
+) -> @geom.Rect {
+  let mut result = bbox
+  for subgraph in subgraphs {
+    if @shared.is_cluster_graph(subgraph.graph) {
+      // Graphviz parity: dot_compute_bb expands root bbox by CL_OFFSET for
+      // cluster subgraphs in x direction.
+      let padded : @geom.Rect = {
+        llx: subgraph.bbox.llx - CLUSTER_MARGIN_PT,
+        lly: subgraph.bbox.lly,
+        urx: subgraph.bbox.urx + CLUSTER_MARGIN_PT,
+        ury: subgraph.bbox.ury,
+      }
+      result = @bbox.merge_bbox(result, padded)
+    }
+    if subgraph.subgraphs.length() > 0 {
+      result = expand_bbox_with_clusters(result, subgraph.subgraphs)
+    }
+  }
+  result
+}
+
+///|
+fn collect_cluster_route_bboxes(
+  subgraphs : Array[LayoutTree],
+  out : Map[String, @geom.Rect],
+) -> Unit {
+  for layout in subgraphs {
+    if @shared.is_cluster_graph(layout.graph) {
+      match layout.graph.name() {
+        Some(name) => out[name] = layout.bbox
+        None => ()
+      }
+    }
+    if layout.subgraphs.length() > 0 {
+      collect_cluster_route_bboxes(layout.subgraphs, out)
+    }
+  }
+}
+
+///|
+/// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
+pub fn compute_cluster_route_bboxes(
+  graph : @cgraph.Graph,
+  nodes_out : Array[DotLayoutNode],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> Map[String, @geom.Rect] {
+  let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
+  if @shared.graph_has_cluster(graph) {
+    let cluster_layouts =
+      layout_subgraphs(
+        {
+          graph,
+          nodes_out,
+          edges_out: [],
+          cluster_ln_x,
+          cluster_rn_x,
+          cluster_bbox_heights,
+          rankdir,
+          ranks,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+        },
+      )
+    collect_cluster_route_bboxes(cluster_layouts, cluster_bboxes)
+  }
+  cluster_bboxes
 }

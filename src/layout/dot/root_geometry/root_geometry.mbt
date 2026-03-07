@@ -51,7 +51,7 @@ pub fn compute_root_cluster_padding(
         break
       }
     }
-    let pad = @positioning.cluster_margin_pt(graph)
+    let pad = @clustering.cluster_margin_pt(graph)
     {
       root_cluster_pad_top: if cluster_at_min { pad } else { 0.0 },
       root_cluster_pad_bottom: if cluster_at_max { pad } else { 0.0 },

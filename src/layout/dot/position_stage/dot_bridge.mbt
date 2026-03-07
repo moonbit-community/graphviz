@@ -42,7 +42,7 @@ fn resolve_x_simplex_root_context(
     let root_graph = nodes[0].graph()
     (
       @shared.graph_rankdir(root_graph),
-      @positioning.cluster_margin_pt(root_graph),
+      @clustering.cluster_margin_pt(root_graph),
     )
   } else {
     (RankDir::TB, CLUSTER_MARGIN_PT)

@@ -43,9 +43,7 @@ pub fn layout_dot(
         ordering,
         positions_state,
       },
-      @routing_stage.build_dot_routing_stage_deps(
-        compute_cluster_route_bboxes_for_routing_stage,
-      ),
+      @routing_stage.build_dot_routing_stage_deps(),
     )
   finalize_layout_graph(
     build_finalize_layout_input_from_sources(

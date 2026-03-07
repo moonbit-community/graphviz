@@ -2,6 +2,7 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/bbox",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom"
   ]

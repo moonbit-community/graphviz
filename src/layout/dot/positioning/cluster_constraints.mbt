@@ -153,7 +153,7 @@ pub fn build_cluster_constraints(
   let extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
-    cluster_margins[name] = cluster_margin_pt(cluster_graph)
+    cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
     let (left_border, right_border) =
       (deps.cluster_label_borders_for)(cluster_graph, rankdir)
     cluster_border_left[name] = left_border
@@ -458,7 +458,7 @@ pub fn build_cluster_constraints(
       None => parent_children[key] = [name]
     }
   }
-  let root_margin = cluster_margin_pt(graph)
+  let root_margin = @clustering.cluster_margin_pt(graph)
   for parent_key, children in parent_children {
     let margin = if parent_key == "" {
       root_margin

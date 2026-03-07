@@ -25,7 +25,7 @@ Graphviz source map (layout/dot parity)
   - MoonBit: `src/layout/dot/stage_d.mbt`, `src/layout/dot/positioning/*`, `src/layout/dot/ordering/core.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/position.c`, `refs/graphviz/lib/dotgen/class2.c`, `refs/graphviz/lib/dotgen/cluster.c`, `refs/graphviz/lib/dotgen/sameport.c`
 - Edge routing + splines / pathplan
-  - MoonBit: `src/layout/dot/stage_e.mbt`, `src/layout/dot/routing/*`, `src/layout/dot/routing/pathplan/*`, `src/layout/dot/routing/routesplines/*`, `src/layout/dot/routing/edge_spline/*`, `src/layout/dot/routing/edge_ops/*`
+  - MoonBit: `src/layout/dot/routing_stage/*`, `src/layout/dot/clustering/subgraph_layout.mbt`, `src/layout/dot/routing/*`, `src/layout/dot/routing/pathplan/*`, `src/layout/dot/routing/routesplines/*`, `src/layout/dot/routing/edge_spline/*`, `src/layout/dot/routing/edge_ops/*`
   - Graphviz: `refs/graphviz/lib/pathplan/route.c`, `refs/graphviz/lib/pathplan/shortest.c`, `refs/graphviz/lib/pathplan/visibility.c`, `refs/graphviz/lib/common/routespl.c`, `refs/graphviz/lib/common/splines.c`, `refs/graphviz/lib/dotgen/dotsplines.c`
 - Label placement + text metrics
   - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/node_geometry.mbt` (text/label metrics), `src/layout/dot/stage_f.mbt` (label/xlabel placement and writeback)

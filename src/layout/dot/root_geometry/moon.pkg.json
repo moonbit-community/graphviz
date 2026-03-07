@@ -2,7 +2,6 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/label_layout",
     "moonbit-community/graphviz/layout/dot/label_metrics",
     "moonbit-community/graphviz/cgraph",

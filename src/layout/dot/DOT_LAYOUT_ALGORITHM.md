@@ -89,7 +89,7 @@ Pipeline orchestrator files:
 - `src/layout/dot/stage_b.mbt`
 - `src/layout/dot/stage_c.mbt`
 - `src/layout/dot/stage_d.mbt`
-- `src/layout/dot/stage_e.mbt`
+- `src/layout/dot/routing_stage/*`
 - `src/layout/dot/stage_f.mbt`
 
 Why this design:
@@ -387,11 +387,11 @@ Final geometry needs both coordinates and cluster envelope data for routing/fina
 
 Entry:
 
-- `compute_dot_routing_stage` in `src/layout/dot/stage_e.mbt`
+- `compute_dot_routing_stage` in `src/layout/dot/routing_stage/routing_stage.mbt`
 
 Main files:
 
-- `src/layout/dot/stage_e.mbt`
+- `src/layout/dot/routing_stage/*`
 - `src/layout/dot/routing/*`
 - `src/layout/dot/routing/edge_ops/*`
 - `src/layout/dot/routing/edge_spline/*`
@@ -503,7 +503,7 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `stage_e.mbt`, `stage_f.mbt`
+  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `routing_stage/*`, `stage_f.mbt`
 - Alternative engines (`dot -n` / `neato -n` / `neato`):
   - `engines.mbt`
 - Shared validation/constants:
@@ -541,7 +541,7 @@ Repository guard validates:
 - Crossing helpers:
   - `stage_d.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
 - Routing:
-  - `stage_e.mbt`, `routing/*`
+  - `routing_stage/*`, `clustering/subgraph_layout.mbt`, `routing/*`
 - Final graph writeback:
   - `stage_f.mbt`
 
@@ -552,13 +552,13 @@ Repository guard validates:
 If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
-2. `stage_b.mbt` + `stage_e.mbt` — understand rank/routing stage boundaries.
+2. `stage_b.mbt` + `routing_stage/*` — understand rank/routing stage boundaries.
 3. `stage_a.mbt` — understand canonical input formation.
 4. `stage_b.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
 5. `stage_c.mbt` + `ordering/graph.mbt` — understand order graph construction.
 6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
 7. `stage_c.mbt` + `stage_d.mbt` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
-8. `stage_e.mbt` + `routing/context.mbt` + `routing/regular_pass.mbt` + `routing/curve_mode.mbt` — understand edge geometry generation.
+8. `routing_stage/*` + `clustering/subgraph_layout.mbt` + `routing/context.mbt` + `routing/regular_pass.mbt` + `routing/curve_mode.mbt` — understand edge geometry generation.
 9. `stage_f.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
