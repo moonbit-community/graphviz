@@ -33,11 +33,11 @@ fn needs_record_port_detour(
 ) -> Bool {
   let record_port_edge =
     (
-      @dot_shared.is_record_shape(input.tail_node) &&
+      @record_geometry.is_record_shape(input.tail_node) &&
       @edge_identity.port_is_explicit(input.tail_port)
     ) ||
     (
-      @dot_shared.is_record_shape(input.head_node) &&
+      @record_geometry.is_record_shape(input.head_node) &&
       @edge_identity.port_is_explicit(input.head_port)
     )
   !input.using_pathplan &&

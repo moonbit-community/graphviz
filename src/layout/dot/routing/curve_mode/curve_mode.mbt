@@ -1062,7 +1062,7 @@ fn adjust_route_points(
   let using_pathplan = input.using_pathplan
   let nodesep_pt = input.nodesep_pt
   let mut points = input.points
-  let touch_eps = curve_max_double(@dot_shared.RECORD_BORDER_PT + 0.01, 1.5)
+  let touch_eps = curve_max_double(@record_geometry.RECORD_BORDER_PT + 0.01, 1.5)
   let head_lr_touch =
     match head_port_rect {
       Some(rect) => {
@@ -1170,7 +1170,7 @@ fn compute_curve_offset(
     let head_port_key = @edge_identity.port_key(edge.head_port())
     let key =
       if head_port_key == "" {
-      if @dot_shared.is_record_shape(edge.head()) { base.orig_head_name } else { "" }
+      if @record_geometry.is_record_shape(edge.head()) { base.orig_head_name } else { "" }
     } else {
       "\{base.orig_head_name}:\{head_port_key}"
     }

@@ -117,13 +117,13 @@ pub fn scale_rect_map(
 
 ///|
 pub fn scale_record_port_maps(
-  maps : Map[String, Map[String, @dot_shared.RecordPort]],
+  maps : Map[String, Map[String, @record_geometry.RecordPort]],
   sx : Double,
   sy : Double,
-) -> Map[String, Map[String, @dot_shared.RecordPort]] {
-  let scaled : Map[String, Map[String, @dot_shared.RecordPort]] = Map::new()
+) -> Map[String, Map[String, @record_geometry.RecordPort]] {
+  let scaled : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
   for node_name, ports in maps {
-    let scaled_ports : Map[String, @dot_shared.RecordPort] = Map::new()
+    let scaled_ports : Map[String, @record_geometry.RecordPort] = Map::new()
     for port_name, port in ports {
       scaled_ports[port_name] = {
         center: @dot_shared.scale_point(port.center, sx, sy),

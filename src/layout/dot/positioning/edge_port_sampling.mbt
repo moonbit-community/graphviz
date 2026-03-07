@@ -10,11 +10,11 @@ pub fn build_port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, @shared.NodeSize],
   node_size_for_missing : (@cgraph.Node, @shared.RankDir) -> @shared.NodeSize,
-  ports_for_node : (@cgraph.Node, @geom.Point, @shared.NodeSize, @shared.RankDir) -> Map[String, @shared.RecordPort],
+  ports_for_node : (@cgraph.Node, @geom.Point, @shared.NodeSize, @shared.RankDir) -> Map[String, @record_geometry.RecordPort],
   layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
   swap_node_size : (@shared.NodeSize) -> @shared.NodeSize,
-) -> Map[String, Map[String, @shared.RecordPort]] {
-  let offsets : Map[String, Map[String, @shared.RecordPort]] = Map::new()
+) -> Map[String, Map[String, @record_geometry.RecordPort]] {
+  let offsets : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
   let rankdir =
     if nodes.length() > 0 {
       @shared.graph_rankdir(nodes[0].graph())
@@ -30,7 +30,7 @@ pub fn build_port_offsets_for_nodes(
     }
     let ports = ports_for_node(node, origin, base_size, rankdir)
     if ports.length() > 0 {
-      let node_offsets : Map[String, @shared.RecordPort] = Map::new()
+      let node_offsets : Map[String, @record_geometry.RecordPort] = Map::new()
       for port_name, port_info in ports {
         let offset = layout_port_offset(port_info.center, rankdir)
         let size = match rankdir {
@@ -64,7 +64,7 @@ fn port_order_fraction(point : @geom.Point) -> Double {
 
 ///|
 fn record_port_point(
-  port_info : @shared.RecordPort,
+  port_info : @record_geometry.RecordPort,
   compass : @cgraph.Compass?,
 ) -> @geom.Point {
   let center = port_info.center
@@ -94,7 +94,7 @@ fn record_port_point(
 pub fn edge_port_offset(
   node_name : String,
   port : @cgraph.Port?,
-  offsets : Map[String, Map[String, @shared.RecordPort]],
+  offsets : Map[String, Map[String, @record_geometry.RecordPort]],
   compass_offset_for : (@cgraph.Compass) -> Double,
 ) -> Double {
   match port {
@@ -153,7 +153,7 @@ pub fn edge_port_offset(
 pub fn edge_port_order(
   node_name : String,
   port : @cgraph.Port?,
-  offsets : Map[String, Map[String, @shared.RecordPort]],
+  offsets : Map[String, Map[String, @record_geometry.RecordPort]],
   compass_point_for : (@cgraph.Compass) -> @geom.Point,
 ) -> Double {
   if !@edge_identity.port_is_explicit(port) {
@@ -200,9 +200,9 @@ pub fn build_edge_port_sample_bundle(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, @shared.NodeSize],
-  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @shared.NodeSize]) -> Map[String, Map[String, @shared.RecordPort]],
-  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @shared.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
-  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @shared.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @shared.NodeSize]) -> Map[String, Map[String, @record_geometry.RecordPort]],
+  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
 ) -> @ordering.EdgePortSampleBundle {
   let rankdir =
     if nodes.length() > 0 {

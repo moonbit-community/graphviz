@@ -188,7 +188,7 @@ fn build_record_port_order_map(
   for node in input.nodes {
     let label = @label_attrs.label_text(node)
     let has_html = @html_label.is_html_label_text(label)
-    if has_html || @shared.is_record_shape(node) {
+    if has_html || @record_geometry.is_record_shape(node) {
       let name = node.name()
       let size =
         @shared.resolve_node_output_size(
@@ -261,11 +261,11 @@ fn accumulate_port_order_contrib(
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
     if @edge_identity.port_is_explicit(edge.tail_port()) &&
-      @shared.is_record_shape(edge.tail()) {
+      @record_geometry.is_record_shape(edge.tail()) {
       update_order(head_name, tail_name, edge.tail_port())
     }
     if @edge_identity.port_is_explicit(edge.head_port()) &&
-      @shared.is_record_shape(edge.head()) {
+      @record_geometry.is_record_shape(edge.head()) {
       update_order(tail_name, head_name, edge.head_port())
     }
   }

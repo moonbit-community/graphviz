@@ -3,7 +3,7 @@
 /// geometry and raw label-port preparation.
 
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 type SizePt = @shared.GraphSizePt
 
 ///|

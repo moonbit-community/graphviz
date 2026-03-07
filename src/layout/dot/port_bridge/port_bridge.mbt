@@ -5,7 +5,7 @@
 type RankDir = @shared.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 
 ///|
 /// Graphviz parity: port offset sampling aligned to dot position/order logic,
@@ -80,7 +80,7 @@ pub fn edge_port_offset(
         nodes_by_name.get(node_name),
         compass_port_point_for_layout,
         node =>
-          @shared.is_record_shape(node) ||
+          @record_geometry.is_record_shape(node) ||
           @html_label.is_html_label_text(@label_attrs.label_text(node)),
         @port_geometry.layout_port_offset,
       ),

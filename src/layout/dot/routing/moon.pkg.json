@@ -11,6 +11,7 @@
     "moonbit-community/graphviz/layout/dot/routing/precompute",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbitlang/core/math"
+    "moonbitlang/core/math",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
   ]
 }

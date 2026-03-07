@@ -5,7 +5,7 @@ type NodeSize = @dot_shared.NodeSize
 type RankDir = @dot_shared.RankDir
 
 ///|
-const RECORD_BORDER_PT : Double = @dot_shared.RECORD_BORDER_PT
+const RECORD_BORDER_PT : Double = @record_geometry.RECORD_BORDER_PT
 
 ///|
 const PORT_SIDE_BOTTOM : Int = 1
@@ -1271,7 +1271,7 @@ fn builtin_polygon_clip_params(
 ///|
 /// Graphviz parity: clip_shape_kind mirrors shape clipping in refs/graphviz/lib/common/shapes.c.
 fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
-  if @edge_identity.port_is_explicit(port) && @dot_shared.is_record_shape(node) {
+  if @edge_identity.port_is_explicit(port) && @record_geometry.is_record_shape(node) {
     return ClipShape::Rect
   }
   let shape = match node.get_attr("shape") {
@@ -2219,13 +2219,13 @@ fn clip_spline_to_nodes(
   let tail_base_size = fixedshape_clip_size(tail_node, tail_size)
   let head_base_size = fixedshape_clip_size(head_node, head_size)
   let tail_shape_size =
-    if @dot_shared.is_record_shape(tail_node) && !@edge_identity.port_is_explicit(tail_port) {
+    if @record_geometry.is_record_shape(tail_node) && !@edge_identity.port_is_explicit(tail_port) {
       trim_record_border_for_clip(tail_base_size, rankdir_lr_rl)
     } else {
       tail_base_size
     }
   let head_shape_size =
-    if @dot_shared.is_record_shape(head_node) && !@edge_identity.port_is_explicit(head_port) {
+    if @record_geometry.is_record_shape(head_node) && !@edge_identity.port_is_explicit(head_port) {
       trim_record_border_for_clip(head_base_size, rankdir_lr_rl)
     } else {
       head_base_size

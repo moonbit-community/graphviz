@@ -8,7 +8,8 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbitlang/core/bigint",
-    "moonbit-community/graphviz/layout/dot/edge_identity"
+    "moonbit-community/graphviz/layout/dot/edge_identity",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
   ],
   "wbtest-import": [
     "moonbitlang/core/json",

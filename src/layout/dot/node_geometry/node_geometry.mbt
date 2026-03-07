@@ -593,7 +593,7 @@ pub fn node_size(
       None => ()
     }
   }
-  if @dot_shared.is_record_shape(node) {
+  if @record_geometry.is_record_shape(node) {
     let nodes = @record_layout.record_nodes(label)
     let record_size = @record_layout.record_group_size(
       nodes,
@@ -630,7 +630,7 @@ pub fn node_size(
         },
       )
     }
-    let bordered_height = height_pt + @dot_shared.RECORD_BORDER_PT * 2.0
+    let bordered_height = height_pt + @record_geometry.RECORD_BORDER_PT * 2.0
     return @dot_shared.node_size_from_points(width_pt, bordered_height)
   }
   let (text_width_pt, text_height_pt) = @label_metrics.label_text_dimensions(

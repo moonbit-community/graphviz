@@ -4,7 +4,7 @@ type RankDir = @shared.RankDir
 type SplinesMode = @shared.SplinesMode
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 type DotLayoutNode = @shared.DotLayoutNode
 type DotLayoutEdge = @routing.DotLayoutEdge
 type RankData = @rank_assignment.RankData
@@ -248,7 +248,7 @@ fn build_head_port_metrics_for_stage(
       sizes,
     },
     {
-      is_record_shape: @shared.is_record_shape,
+      is_record_shape: @record_geometry.is_record_shape,
       node_size_for_missing: node => @node_geometry.node_size(node, record_orientation),
       port_geometry_for:
         (node_name, port, node_pos, node_size) => {
@@ -362,12 +362,12 @@ fn build_route_base_deps_for_dot(
     port_is_label_port:
       (node_name, port) =>
         @port_geometry.port_is_label_port(node_name, port, routing_label_ports_raw),
-    is_record_shape: @shared.is_record_shape,
+    is_record_shape: @record_geometry.is_record_shape,
     record_border_adjust:
       (node) =>
-        if @shared.is_record_shape(node) &&
+        if @record_geometry.is_record_shape(node) &&
           !@html_label.is_html_label_text(@label_attrs.label_text(node)) {
-          @shared.RECORD_BORDER_PT
+          @record_geometry.RECORD_BORDER_PT
         } else {
           0.0
         },

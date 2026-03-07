@@ -17,6 +17,7 @@
       "alias": "edge_spline"
     },
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
   ]
 }

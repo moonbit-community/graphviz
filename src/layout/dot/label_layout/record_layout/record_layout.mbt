@@ -5,7 +5,7 @@
 type RankDir = @shared.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 type SizePt = @shared.GraphSizePt
 
 pub(all) struct RecordField {
@@ -457,9 +457,9 @@ pub fn record_rects(
   }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
-    lly: rect.lly + @shared.RECORD_BORDER_PT,
+    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
     urx: rect.urx,
-    ury: rect.ury - @shared.RECORD_BORDER_PT,
+    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
   }
   record_layout_nodes(
     nodes,
@@ -506,9 +506,9 @@ pub fn record_ports(
   }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
-    lly: rect.lly + @shared.RECORD_BORDER_PT,
+    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
     urx: rect.urx,
-    ury: rect.ury - @shared.RECORD_BORDER_PT,
+    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
   }
   record_layout_nodes(
     nodes,
@@ -627,7 +627,7 @@ pub fn record_port_path_box(
   if !@edge_identity.port_is_explicit(port) {
     return None
   }
-  if !@shared.is_record_shape(node) {
+  if !@record_geometry.is_record_shape(node) {
     return None
   }
   let orientation = @shared.record_layout_orientation(rankdir)
@@ -653,9 +653,9 @@ pub fn record_port_path_box(
   }
   let inner_rect : @geom.Rect = {
     llx: node_rect.llx,
-    lly: node_rect.lly + @shared.RECORD_BORDER_PT,
+    lly: node_rect.lly + @record_geometry.RECORD_BORDER_PT,
     urx: node_rect.urx,
-    ury: node_rect.ury - @shared.RECORD_BORDER_PT,
+    ury: node_rect.ury - @record_geometry.RECORD_BORDER_PT,
   }
   let top_rects =
     record_top_level_rects(
@@ -744,7 +744,7 @@ pub fn record_port_padding_y(
                         let dy = port_info.center.y - node_pos.y
                         let half_height =
                           port_info.size.height_pt / 2.0 -
-                          @shared.RECORD_BORDER_PT / 2.0 -
+                          @record_geometry.RECORD_BORDER_PT / 2.0 -
                           0.01
                         let adjusted =
                           if half_height < 0.0 {
@@ -771,11 +771,11 @@ pub fn record_port_padding_y(
   }
   for edge in edges {
     if @edge_identity.port_is_explicit(edge.tail_port()) &&
-      @shared.is_record_shape(edge.tail()) {
+      @record_geometry.is_record_shape(edge.tail()) {
       update_padding(edge.tail().name(), edge.tail_port())
     }
     if @edge_identity.port_is_explicit(edge.head_port()) &&
-      @shared.is_record_shape(edge.head()) {
+      @record_geometry.is_record_shape(edge.head()) {
       update_padding(edge.head().name(), edge.head_port())
     }
   }

@@ -4,7 +4,7 @@
 
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 
 ///|
 pub fn reset_label_caches() -> Unit {
@@ -25,7 +25,7 @@ pub fn raw_label_ports_for_node(
   let label = @label_attrs.label_text(node)
   if @html_label.is_html_label_text(label) {
     @html_layout.html_ports(node, label, origin, base_size)
-  } else if @shared.is_record_shape(node) {
+  } else if @record_geometry.is_record_shape(node) {
     @record_layout.record_ports(node, origin, base_size, record_orientation)
   } else {
     Map::new()

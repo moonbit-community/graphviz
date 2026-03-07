@@ -4,7 +4,7 @@
 
 type RankDir = @shared.RankDir
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
+type RecordPort = @record_geometry.RecordPort
 
 ///|
 pub fn layout_port_offset(offset : @geom.Point, rankdir : RankDir) -> @geom.Point {
@@ -99,8 +99,8 @@ pub fn port_side_mask_from_rects(
   port_rect : @geom.Rect,
   node_rect : @geom.Rect,
 ) -> Int {
-  let eps = if @shared.RECORD_BORDER_PT > 0.01 {
-    @shared.RECORD_BORDER_PT + 0.01
+  let eps = if @record_geometry.RECORD_BORDER_PT > 0.01 {
+    @record_geometry.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }
@@ -345,8 +345,8 @@ pub fn port_side_mask_from_anchor(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> Int {
-  let eps = if @shared.RECORD_BORDER_PT > 0.01 {
-    @shared.RECORD_BORDER_PT + 0.01
+  let eps = if @record_geometry.RECORD_BORDER_PT > 0.01 {
+    @record_geometry.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }
@@ -404,8 +404,8 @@ pub fn port_rect_from_geometry(
   if !@edge_identity.port_is_explicit(port) {
     return None
   }
-  let eps = if @shared.RECORD_BORDER_PT > 0.01 {
-    @shared.RECORD_BORDER_PT + 0.01
+  let eps = if @record_geometry.RECORD_BORDER_PT > 0.01 {
+    @record_geometry.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }

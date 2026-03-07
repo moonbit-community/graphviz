@@ -23,7 +23,8 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbitlang/core/ref",
-    "moonbitlang/core/strconv"
+    "moonbitlang/core/strconv",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
   ],
   "test-import": [
     {
@@ -68,6 +69,7 @@
     "moonbitlang/core/json",
     "moonbitlang/x/fs",
     "moonbitlang/x/sys",
-    "moonbit-community/graphviz/layout/dot/edge_identity"
+    "moonbit-community/graphviz/layout/dot/edge_identity",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
   ]
 }

@@ -49,13 +49,6 @@ pub(all) struct NodeSize {
   right_pt : Double
 }
 
-///|
-/// Record/html label port geometry in layout coordinates.
-pub(all) struct RecordPort {
-  center : @geom.Point
-  size : NodeSize
-  sides : Int
-}
 
 ///|
 pub(all) struct GraphSizePt {
@@ -63,8 +56,6 @@ pub(all) struct GraphSizePt {
   height_pt : Double
 }
 
-///|
-pub const RECORD_BORDER_PT : Double = 0.5
 
 ///|
 pub const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
@@ -311,18 +302,4 @@ pub fn clip_to_rect(
   { x: center.x + dx * t, y: center.y + dy * t }
 }
 
-///|
-/// Graphviz parity: record-shape detection follows shape attr values
-/// recognized by dot (`record` / `mrecord`).
-/// Do not change behavior without updating fixtures/tests.
-pub fn is_record_shape(node : @cgraph.Node) -> Bool {
-  match node.get_attr("shape") {
-    Some(value) =>
-      match value.to_lower() {
-        "record" | "mrecord" => true
-        _ => false
-      }
-    None => false
-  }
-}
 
