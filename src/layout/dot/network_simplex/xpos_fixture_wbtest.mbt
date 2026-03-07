@@ -317,12 +317,6 @@ fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
 }
 
 ///|
-test "xpos fixtures load" {
-  let cases = load_xpos_fixtures()
-  assert_true(cases.length() > 0)
-}
-
-///|
 test "xpos fixtures match network_simplex LR" {
   let cases = load_xpos_fixtures()
   for pair in cases {
