@@ -1,6 +1,5 @@
 ///|
-/// Dot-owned bridge logic for ordering_stage default dependencies plus Stage B
-/// rank/order pipeline assembly.
+/// Dot-owned bridge logic for Stage B rank/order pipeline assembly.
 
 type LayoutPrep = @shared.LayoutPrep
 type RankData = @rank_assignment.RankData
@@ -34,31 +33,6 @@ fn edge_mid_label_metrics_for_rank_heights(
     Some(metrics) =>
       Some(@rank_assignment.make_edge_mid_label_metrics(metrics.width, metrics.height))
     None => None
-  }
-}
-
-///|
-/// Graphviz parity: root-owned ordering deps keep label metrics and port-sample
-/// bridges explicit while the subpackage owns Stage C dispatch orchestration.
-fn build_ordering_stage_deps() -> OrderingStageDeps {
-  {
-    edge_mid_label_metrics_for: edge =>
-      match @label_metrics.edge_mid_label_metrics(edge) {
-        Some(value) => Some((value.width, value.height))
-        None => None
-      },
-    build_edge_port_sample_bundle:
-      (nodes, edges, edge_tail, edge_head, order_sizes) =>
-        @positioning.build_edge_port_sample_bundle(
-          nodes,
-          edges,
-          edge_tail,
-          edge_head,
-          order_sizes,
-          @port_bridge.port_offsets_for_nodes,
-          @port_bridge.edge_port_offset,
-          @port_bridge.edge_port_order,
-        ),
   }
 }
 
@@ -123,7 +97,6 @@ pub fn compute_dot_rank_stage(
         port_order_positions: prep.port_order_positions,
         port_order_contrib: prep.port_order_contrib,
       },
-      build_ordering_stage_deps(),
     )
   {
     rank_data,

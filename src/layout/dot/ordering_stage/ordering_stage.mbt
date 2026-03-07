@@ -23,6 +23,32 @@ pub(all) struct OrderingStageDeps {
 }
 
 ///|
+/// Graphviz parity: Stage C default deps live with the owning stage package so
+/// Stage B only wires cross-stage inputs while label/port bridge behavior stays
+/// centralized here.
+fn build_ordering_stage_deps() -> OrderingStageDeps {
+  {
+    edge_mid_label_metrics_for: edge =>
+      match @label_metrics.edge_mid_label_metrics(edge) {
+        Some(value) => Some((value.width, value.height))
+        None => None
+      },
+    build_edge_port_sample_bundle:
+      (nodes, edges, edge_tail, edge_head, order_sizes) =>
+        @positioning.build_edge_port_sample_bundle(
+          nodes,
+          edges,
+          edge_tail,
+          edge_head,
+          order_sizes,
+          @port_bridge.port_offsets_for_nodes,
+          @port_bridge.edge_port_offset,
+          @port_bridge.edge_port_order,
+        ),
+  }
+}
+
+///|
 /// Graphviz parity: ordering stage payload keeps rank and order-context maps
 /// grouped so Stage C wiring stays explicit and stable.
 pub(all) struct OrderingStageInput {
@@ -547,7 +573,7 @@ fn run_ordering_dispatch(
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_ordering_stage(
   input : OrderingStageInput,
-  deps : OrderingStageDeps,
+  deps? : OrderingStageDeps = build_ordering_stage_deps(),
 ) -> OrderingStageOutput {
   let cluster_meta = build_cluster_metadata(input)
   let pipeline_context =
