@@ -1784,7 +1784,7 @@ fn collect_components_from_traversal(
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_noncluster_components(
+fn collect_noncluster_components(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   order_node_order : Map[String, Int],
@@ -1819,7 +1819,7 @@ pub fn collect_noncluster_components(
 }
 
 ///|
-pub fn filter_component_neighbor_map(
+fn filter_component_neighbor_map(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
   neighbors : Map[String, Array[String]],
@@ -1842,7 +1842,7 @@ pub fn filter_component_neighbor_map(
 }
 
 ///|
-pub fn filter_component_positions(
+fn filter_component_positions(
   component_set : Map[String, Bool],
   positions : Map[String, Double],
 ) -> Map[String, Double] {
@@ -1856,7 +1856,7 @@ pub fn filter_component_positions(
 }
 
 ///|
-pub fn filter_component_port_order_contrib(
+fn filter_component_port_order_contrib(
   component_set : Map[String, Bool],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Array[(String, Double)]] {
@@ -1879,7 +1879,7 @@ pub fn filter_component_port_order_contrib(
 }
 
 ///|
-pub fn filter_component_flat_constraints(
+fn filter_component_flat_constraints(
   component_set : Map[String, Bool],
   order_flat_constraints : Map[String, Bool],
 ) -> Map[String, Bool] {
@@ -1904,7 +1904,7 @@ pub fn filter_component_flat_constraints(
 }
 
 ///|
-pub(all) struct RootComponentProjection {
+priv struct RootComponentProjection {
   order_groups_for_mincross : Map[Int, Array[String]]
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
@@ -1924,7 +1924,7 @@ pub(all) struct RootComponentProjection {
 }
 
 ///|
-pub(all) struct RootRankReorderInputs {
+struct RootRankReorderInputs {
   order_rank_keys_for_mincross : Array[Int]
   order_groups_for_mincross : Map[Int, Array[String]]
   order_edges_out_mincross : Array[@cgraph.Edge]
@@ -1958,7 +1958,7 @@ pub(all) struct RootRankReorderInputs {
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_component_projection(
+fn build_root_component_projection(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
   order_rank_keys_for_mincross : Array[Int],
@@ -2072,7 +2072,7 @@ pub fn build_root_component_projection(
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_component_reorder_inputs(
+fn build_root_component_reorder_inputs(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
   root_inputs : RootRankReorderInputs,
@@ -2132,7 +2132,7 @@ pub fn build_root_component_reorder_inputs(
   }
 }
 
-pub fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
+fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
   for _name, cluster in order_cluster_keys {
     if cluster != "" {
       return true
@@ -2144,7 +2144,7 @@ pub fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> B
 ///|
 /// Graphviz parity: component reorder keeps each rank's relative extraction
 /// order from the full group list before running mincross on that component.
-pub fn filter_component_rank_groups(
+fn filter_component_rank_groups(
   order_rank_keys_for_mincross : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
   component_set : Map[String, Bool],
@@ -2166,7 +2166,7 @@ pub fn filter_component_rank_groups(
 }
 
 ///|
-pub fn append_component_rank_groups(
+fn append_component_rank_groups(
   order_rank_keys_for_mincross : Array[Int],
   merged : Map[Int, Array[String]],
   ordered_component : Map[Int, Array[String]],
@@ -2226,7 +2226,7 @@ fn run_componentwise_root_rank_reorder(
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_rank_reorder(
+fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
 ) -> Map[Int, Array[String]] {
   let (components, root_graphviz_flip) =
@@ -2262,7 +2262,7 @@ pub fn run_root_rank_reorder(
 /// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
 /// component traversal plan, and graphviz_flip mode aligned with Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_component_runtime_plan(
+fn build_root_component_runtime_plan(
   order_cluster_keys : Map[String, String],
   graphviz_flip : Bool,
   order_rank_keys_for_mincross : Array[Int],
