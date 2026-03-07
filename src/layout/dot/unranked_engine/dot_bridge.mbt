@@ -176,3 +176,96 @@ pub fn finalize_unranked_layout_tree(
     subgraphs,
   }
 }
+
+///|
+fn required_scaled_noop_node_pos(
+  node : @cgraph.Node,
+  scale_factor : Double,
+) -> Result[@geom.Point, String] {
+  let pos_value = match node.get_attr("pos") {
+    Some(value) => value
+    None => return Err("neato -n requires pos for node \{node.name()}")
+  }
+  let parsed = match parse_point_attr(pos_value) {
+    Some(value) => value
+    None => return Err("invalid pos for node \{node.name()}")
+  }
+  Ok(scale_point(parsed, scale_factor))
+}
+
+///|
+fn collect_noop_nodes_with_sizes(
+  graph : @cgraph.Graph,
+  scale_factor : Double,
+  record_orientation : RecordOrientation,
+) -> Result[EngineNodeProjectionWithSizes, String] {
+  let nodes = graph.nodes()
+  let positions : Map[String, @geom.Point] = Map::new()
+  let sizes : Map[String, NodeSize] = Map::new()
+  for node in nodes {
+    let pos = match required_scaled_noop_node_pos(node, scale_factor) {
+      Ok(value) => value
+      Err(message) => return Err(message)
+    }
+    positions[node.name()] = pos
+    sizes[node.name()] = @node_geometry.node_size(node, record_orientation)
+  }
+  let nodes_out =
+    build_projected_nodes_from_positions(
+      nodes,
+      positions,
+      node => node_size_with_fallback(sizes, node, record_orientation),
+    )
+  Ok({
+    projection: { positions, nodes_out },
+    sizes,
+  })
+}
+
+///|
+/// Graphviz parity: noop output assembly keeps fixed-position node parsing,
+/// optional edge-pos reuse, and final layout-tree writeback together inside the
+/// unranked_engine package so the root API boundary stays thin.
+pub fn build_noop_layout_tree(
+  graph : @cgraph.Graph,
+  no_op_level : Int,
+  scale : Double,
+) -> Result[LayoutTree, String] {
+  let geometry = build_engine_geometry_context(graph, scale)
+  let node_data =
+    match collect_noop_nodes_with_sizes(
+      graph,
+      geometry.scale_factor,
+      geometry.record_orientation,
+    ) {
+      Ok(value) => value
+      Err(message) => return Err(message)
+    }
+  let use_edge_pos = no_op_level > 1
+  let node_size_for = (node : @cgraph.Node) =>
+    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
+  let edges_out =
+    build_edges_from_positions(
+      graph,
+      node_data.projection.positions,
+      node_size_for,
+      (edge, tail_pos, head_pos, tail_size, head_size) =>
+        noop_edge_splines(
+          edge,
+          use_edge_pos,
+          geometry.scale_factor,
+          tail_pos,
+          head_pos,
+          tail_size,
+          head_size,
+        ),
+    )
+  Ok(
+    finalize_unranked_layout_tree(
+      graph,
+      geometry.rankdir,
+      node_data.projection.nodes_out,
+      edges_out,
+    ),
+  )
+}

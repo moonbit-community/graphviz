@@ -1,7 +1,5 @@
 ///|
 /// Shared internal dot-package type aliases.
-type NodeSize = @dot_shared.NodeSize
-type RecordOrientation = @dot_shared.RecordOrientation
 type LayoutPrep = @dot_shared.LayoutPrep
 
 ///|
