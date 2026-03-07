@@ -12,5 +12,18 @@
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    "moonbit-community/graphviz/layout/dot/rankdir",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
+    "moonbit-community/graphviz/attrs",
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ]
 }

@@ -485,7 +485,7 @@ test "record fixtures match Graphviz layout" {
   let fixtures = load_record_fixtures()
   let source = @fs.read_file_to_string("tests/layout/dot/complex.dot")
   let graph = @dot_parser.parse_dot(source)
-  let record_orientation = @dot_shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let record_orientation = @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
   if dump_path is Some(out_path) {
     let output = StringBuilder::new()
     for fixture in fixtures {
