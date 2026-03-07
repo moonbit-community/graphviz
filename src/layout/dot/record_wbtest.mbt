@@ -86,7 +86,7 @@ test "html_ports include td port names" {
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
   let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @label_layout.html_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
+  let ports = @html_layout.html_ports(node, @label_layout.label_text(node), @geom.Point::{ x: 0.0, y: 0.0 }, size)
   match ports.get("p1") {
     Some(port) => {
       let half_w = size.width_pt / 2.0

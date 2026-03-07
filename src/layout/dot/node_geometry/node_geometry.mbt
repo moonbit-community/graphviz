@@ -548,9 +548,9 @@ pub fn node_size(
   }
   let label = @label_layout.label_text(node)
   if @html_label.is_html_label_text(label) {
-    match @label_layout.parse_html_label_cached(label) {
+    match @html_layout.parse_html_label_cached(label) {
       Some(html_label) => {
-        let html_dims = @label_layout.html_label_size(
+        let html_dims = @html_layout.html_label_size(
           html_label, font, font_size_pt,
         )
         let padded_dims =
