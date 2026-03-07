@@ -407,56 +407,40 @@ priv struct RootMincrossReorderBuildContext {
 }
 
 ///|
-/// Graphviz parity: root ReMincross input-source bundle keeps seeded
-/// build_ranks snapshots plus pre-root materialized ordering data unchanged
-/// before root-only reorder input assembly.
+/// Graphviz parity: root ReMincross inputs are assembled directly from the
+/// clustered root-phase stage snapshot by first seeding build_ranks groups,
+/// then attaching root reorder context/state without changing call order.
 /// Do not change behavior without updating fixtures/tests.
-priv struct RootMincrossReorderInputsBuildSources {
-  reorder_setup : OrderingReorderSetup
-  reorder_context : OrderReorderContext
-  materialized : OrderMaterializationData
-  order_groups : Map[Int, Array[String]]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  order_sizes_out : Map[String, @node_primitives.NodeSize]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-}
-
-///|
-/// Graphviz parity: root ReMincross inputs are assembled from one pre-root
-/// snapshot by first seeding build_ranks groups then attaching root reorder
-/// context/state without changing Graphviz call order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_reorder_inputs_from_sources(
-  sources : RootMincrossReorderInputsBuildSources,
+fn build_root_mincross_reorder_inputs_from_stage_sources(
+  sources : ClusteredRootPhaseStageSources,
 ) -> RootMincrossReorderInputs {
   let seeded_context : SeededReorderBuildContext = {
     order_rank_keys: sources.reorder_context.order_rank_keys,
-    order_groups: sources.order_groups,
+    order_groups: sources.order_groups_for_root_phase,
     order_edge_tail_out: sources.materialized.order_edge_tail_out,
     order_edge_head_out: sources.materialized.order_edge_head_out,
     order_ranks: sources.reorder_context.order_ranks,
     order_node_order: sources.reorder_context.order_node_order,
-    order_cluster_keys: sources.order_cluster_keys,
-    order_cluster_skeleton: sources.order_cluster_skeleton,
+    order_cluster_keys:
+      sources.root_rank_order_phase_base_sources.order_cluster_keys,
+    order_cluster_skeleton:
+      sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
     order_flat_constraints: sources.materialized.order_flat_constraints,
-    graphviz_flip: sources.reorder_setup.graphviz_flip,
+    graphviz_flip: sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
     graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
     graphviz_in_neighbors: sources.materialized.graphviz_in_neighbors,
     order_edges_out: sources.materialized.order_edges_out,
     order_edge_tail_port_x: sources.materialized.order_edge_tail_port_x,
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
-    flat_rank_constraints: sources.reorder_setup.flat_rank_constraints,
+    flat_rank_constraints:
+      sources.root_rank_order_phase_base_sources.reorder_setup.flat_rank_constraints,
   }
   let seeded_groups = build_seeded_reorder_groups(seeded_context)
   let root_reorder_context : RootMincrossReorderBuildContext = {
-    order_with_clusters: sources.reorder_setup.order_with_clusters,
-    order_with_vnodes: sources.reorder_setup.order_with_vnodes,
+    order_with_clusters:
+      sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
+    order_with_vnodes:
+      sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
     order_rank_keys: sources.reorder_context.order_rank_keys,
     order_ranks: sources.reorder_context.order_ranks,
     order_edges_out: sources.materialized.order_edges_out,
@@ -466,22 +450,29 @@ fn build_root_mincross_reorder_inputs_from_sources(
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
     order_edge_tail_port_order: sources.materialized.order_edge_tail_port_order,
     order_edge_head_port_order: sources.materialized.order_edge_head_port_order,
-    order_cluster_keys: sources.order_cluster_keys,
-    order_cluster_skeleton: sources.order_cluster_skeleton,
-    rank_same_groups: sources.rank_same_groups,
-    rank_same_order: sources.rank_same_order,
+    order_cluster_keys:
+      sources.root_rank_order_phase_base_sources.order_cluster_keys,
+    order_cluster_skeleton:
+      sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
+    rank_same_groups:
+      sources.root_rank_order_phase_base_sources.rank_same_groups,
+    rank_same_order:
+      sources.root_rank_order_phase_base_sources.rank_same_order,
     vnode_order_keys_for_ordering:
-      sources.reorder_setup.vnode_order_keys_for_ordering,
+      sources.root_rank_order_phase_base_sources.reorder_setup.vnode_order_keys_for_ordering,
     order_node_order: sources.reorder_context.order_node_order,
-    order_sizes_out: sources.order_sizes_out,
-    nodesep_pt: sources.nodesep_pt,
-    has_edge_labels: sources.has_edge_labels,
-    port_order_positions: sources.port_order_positions,
-    port_order_contrib: sources.port_order_contrib,
+    order_sizes_out: sources.root_rank_order_phase_base_sources.order_sizes_out,
+    nodesep_pt: sources.root_rank_order_phase_base_sources.nodesep_pt,
+    has_edge_labels:
+      sources.root_rank_order_phase_base_sources.has_edge_labels,
+    port_order_positions:
+      sources.root_rank_order_phase_base_sources.port_order_positions,
+    port_order_contrib:
+      sources.root_rank_order_phase_base_sources.port_order_contrib,
     order_flat_constraints: sources.materialized.order_flat_constraints,
     graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
     graphviz_in_neighbors: sources.materialized.graphviz_in_neighbors,
-    graphviz_flip: sources.reorder_setup.graphviz_flip,
+    graphviz_flip: sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
   }
   build_root_mincross_reorder_inputs(
     seeded_groups,
@@ -843,31 +834,7 @@ fn run_root_and_cluster_ranks_stage_from_sources(
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
   let root_mincross_reorder_inputs =
-    build_root_mincross_reorder_inputs_from_sources(
-      {
-        reorder_setup: sources.root_rank_order_phase_base_sources.reorder_setup,
-        reorder_context: sources.reorder_context,
-        materialized: sources.materialized,
-        order_groups: sources.order_groups_for_root_phase,
-        order_cluster_keys:
-          sources.root_rank_order_phase_base_sources.order_cluster_keys,
-        order_cluster_skeleton:
-          sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
-        order_sizes_out:
-          sources.root_rank_order_phase_base_sources.order_sizes_out,
-        rank_same_groups:
-          sources.root_rank_order_phase_base_sources.rank_same_groups,
-        rank_same_order:
-          sources.root_rank_order_phase_base_sources.rank_same_order,
-        nodesep_pt: sources.root_rank_order_phase_base_sources.nodesep_pt,
-        has_edge_labels:
-          sources.root_rank_order_phase_base_sources.has_edge_labels,
-        port_order_positions:
-          sources.root_rank_order_phase_base_sources.port_order_positions,
-        port_order_contrib:
-          sources.root_rank_order_phase_base_sources.port_order_contrib,
-      },
-    )
+    build_root_mincross_reorder_inputs_from_stage_sources(sources)
   let root_and_cluster_inputs : RootAndClusterRanksInputs = {
     order_with_vnodes:
       sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
