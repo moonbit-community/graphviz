@@ -102,7 +102,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage files (mainly `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, and `stage_d.mbt`).
+Defined across the root layout entry and stage/subpackage boundaries (for example `layout.mbt`, `stage_b.mbt`, `stage_c.mbt`, and `stage_d.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -154,7 +154,8 @@ flowchart LR
 
 Main files:
 
-- `src/layout/dot/stage_a.mbt`
+- `src/layout/dot/layout.mbt`
+- `src/layout/dot/input_stage/*`
 
 ### What it does
 
@@ -503,7 +504,7 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `stage_a.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `routing_stage/*`, `finalization/finalization.mbt`
+  - `layout.mbt`, `stage_b.mbt`, `stage_c.mbt`, `stage_d.mbt`, `routing_stage/*`, `finalization/finalization.mbt`
 - Alternative engines (`dot -n` / `neato -n` / `neato`):
   - `engines.mbt`
 - Shared validation/constants:
@@ -511,7 +512,7 @@ Repository guard validates:
 - Node/label/port geometry and metrics:
   - `node_geometry.mbt`
 - Input canonicalization:
-  - `stage_a.mbt`
+  - `layout.mbt`, `input_stage/*`
 - Rank assignment and rank heights:
   - `stage_b.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
@@ -553,7 +554,7 @@ If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
 2. `stage_b.mbt` + `routing_stage/*` — understand rank/routing stage boundaries.
-3. `stage_a.mbt` — understand canonical input formation.
+3. `layout.mbt` + `input_stage/*` — understand canonical input formation.
 4. `stage_b.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
 5. `stage_c.mbt` + `ordering/graph.mbt` — understand order graph construction.
 6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
