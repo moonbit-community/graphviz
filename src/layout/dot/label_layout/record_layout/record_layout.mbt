@@ -1,13 +1,21 @@
 ///|
 /// Record-label parsing, sizing, layout, and port helpers for dot record
 /// shapes and record-port routing behavior.
-
 type RankDir = @rankdir.RankDir
+
+///|
 type RecordOrientation = @shared.RecordOrientation
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
+
+///|
 type SizePt = @numeric.GraphSizePt
 
+///|
 pub(all) struct RecordField {
   name : String?
   text : String
@@ -20,12 +28,22 @@ pub(all) enum RecordNode {
 }
 
 ///|
-let record_nodes_cache : Ref[Map[String, Array[RecordNode]]] =
-  @ref.new(Map::new())
+priv struct RecordLayoutNode {
+  rect : @geom.Rect
+  sides : Int
+  field : RecordField?
+  children : Array[RecordLayoutNode]
+}
 
 ///|
-let record_ports_cache : Ref[Map[String, Map[String, RecordPort]]] =
-  @ref.new(Map::new())
+let record_nodes_cache : Ref[Map[String, Array[RecordNode]]] = @ref.new(
+  Map::new(),
+)
+
+///|
+let record_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
+  Map::new(),
+)
 
 ///|
 pub fn reset_record_layout_caches() -> Unit {
@@ -149,7 +167,9 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     (None, trimmed)
   }
-  let normalized = normalize_record_text(raw_text).trim(chars=" \n\r\t").to_string()
+  let normalized = normalize_record_text(raw_text)
+    .trim(chars=" \n\r\t")
+    .to_string()
   let text = if normalized == "" { " " } else { normalized }
   { name: port_name, text }
 }
@@ -199,10 +219,10 @@ pub fn record_nodes(label : String) -> Array[RecordNode] {
     }
   }
 }
+
 ///|
 /// Record-field sizing, rectangle layout, and port geometry helpers used by
 /// label/edge routing and vnode preparation paths.
-
 
 ///|
 pub fn record_nodes_sizes(
@@ -279,21 +299,15 @@ pub fn record_group_size(
 }
 
 ///|
-fn record_layout_nodes(
+fn record_axis_sizes(
   nodes : Array[RecordNode],
-  rect : @geom.Rect,
   orientation : RecordOrientation,
   font_name : String,
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
-  sides : Int,
-  rects : Array[@geom.Rect],
-  ports : Map[String, RecordPort],
-) -> Unit {
-  if nodes.length() == 0 {
-    return ()
-  }
+  axis_total : Double,
+) -> Array[Double] {
   let sizes = record_nodes_sizes(
     nodes, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
@@ -307,10 +321,6 @@ fn record_layout_nodes(
     axis_sizes.push(axis)
     axis_sum = axis_sum + axis
   }
-  let axis_total = match orientation {
-    RecordOrientation::Vertical => rect.ury - rect.lly
-    RecordOrientation::Horizontal => rect.urx - rect.llx
-  }
   if axis_sizes.length() > 0 {
     // Match Graphviz resize_reclbl: distribute extra size evenly with int rounding.
     let delta = axis_total - axis_sum
@@ -324,214 +334,11 @@ fn record_layout_nodes(
       }
     }
   }
-  let mut cursor = match orientation {
-    RecordOrientation::Vertical => rect.ury
-    RecordOrientation::Horizontal => rect.llx
-  }
-  let last = nodes.length() - 1
-  for i in 0..<nodes.length() {
-    let axis = axis_sizes[i]
-    let child_rect = match orientation {
-      RecordOrientation::Vertical => {
-        let bottom = cursor - axis
-        let child : @geom.Rect = {
-          llx: rect.llx,
-          lly: bottom,
-          urx: rect.urx,
-          ury: cursor,
-        }
-        cursor = bottom
-        child
-      }
-      RecordOrientation::Horizontal => {
-        let right = cursor + axis
-        let child : @geom.Rect = {
-          llx: cursor,
-          lly: rect.lly,
-          urx: right,
-          ury: rect.ury,
-        }
-        cursor = right
-        child
-      }
-    }
-    let child_sides =
-      if sides == 0 {
-      0
-    } else {
-      let mut mask = 0
-      match orientation {
-        RecordOrientation::Horizontal =>
-          if i == 0 {
-            if i == last {
-              mask =
-                @port_geometry.PORT_SIDE_TOP |
-                @port_geometry.PORT_SIDE_BOTTOM |
-                @port_geometry.PORT_SIDE_LEFT |
-                @port_geometry.PORT_SIDE_RIGHT
-            } else {
-              mask = @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_LEFT
-            }
-          } else if i == last {
-            mask = @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_RIGHT
-          } else {
-            mask = @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM
-          }
-        RecordOrientation::Vertical =>
-          if i == 0 {
-            if i == last {
-              mask =
-                @port_geometry.PORT_SIDE_TOP |
-                @port_geometry.PORT_SIDE_BOTTOM |
-                @port_geometry.PORT_SIDE_LEFT |
-                @port_geometry.PORT_SIDE_RIGHT
-            } else {
-              mask = @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT
-            }
-          } else if i == last {
-            mask = @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_RIGHT
-          } else {
-            mask = @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT
-          }
-      }
-      sides & mask
-    }
-    match nodes[i] {
-      RecordNode::Field(field) => {
-        rects.push(child_rect)
-        match field.name {
-          Some(name) => {
-            let center = @geom.Point::{
-              x: (child_rect.llx + child_rect.urx) / 2.0,
-              y: (child_rect.lly + child_rect.ury) / 2.0,
-            }
-            let field_size = @node_primitives.node_size_from_points(
-              child_rect.urx - child_rect.llx,
-              child_rect.ury - child_rect.lly,
-            )
-            ports[name] = {
-              center,
-              size: field_size,
-              sides: child_sides,
-            }
-          }
-          None => ()
-        }
-      }
-      RecordNode::Group(children) =>
-        record_layout_nodes(
-          children,
-          child_rect,
-          toggle_record_orientation(orientation),
-          font_name,
-          font_size_pt,
-          pad_x_pt,
-          pad_y_pt,
-          child_sides,
-          rects,
-          ports,
-        )
-    }
-  }
+  axis_sizes
 }
 
 ///|
-pub fn record_rects(
-  node : @cgraph.Node,
-  pos : @geom.Point,
-  size : NodeSize,
-  orientation : RecordOrientation,
-) -> Array[@geom.Rect] {
-  let label = @label_attrs.label_text(node)
-  let nodes = record_nodes(label)
-  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
-  let font = @attrs.font_name(node.get_attr("fontname"))
-  let padding = @label_attrs.node_padding(node)
-  let rects : Array[@geom.Rect] = []
-  let ports : Map[String, RecordPort] = Map::new()
-  let rect : @geom.Rect = {
-    llx: pos.x - size.width_pt / 2.0,
-    lly: pos.y - size.height_pt / 2.0,
-    urx: pos.x + size.width_pt / 2.0,
-    ury: pos.y + size.height_pt / 2.0,
-  }
-  let inner_rect : @geom.Rect = {
-    llx: rect.llx,
-    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
-    urx: rect.urx,
-    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
-  }
-  record_layout_nodes(
-    nodes,
-    inner_rect,
-    orientation,
-    font,
-    font_size_pt,
-    padding.pad_x_pt,
-    padding.pad_y_pt,
-    @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT,
-    rects,
-    ports,
-  )
-  rects
-}
-
-///|
-pub fn record_ports(
-  node : @cgraph.Node,
-  pos : @geom.Point,
-  size : NodeSize,
-  orientation : RecordOrientation,
-) -> Map[String, RecordPort] {
-  let is_origin = pos.x == 0.0 && pos.y == 0.0
-  if is_origin {
-    let name = node.name()
-    match record_ports_cache.val.get(name) {
-      Some(cached) => return cached
-      None => ()
-    }
-  }
-  let label = @label_attrs.label_text(node)
-  let nodes = record_nodes(label)
-  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
-  let font = @attrs.font_name(node.get_attr("fontname"))
-  let padding = @label_attrs.node_padding(node)
-  let ports : Map[String, RecordPort] = Map::new()
-  let rects : Array[@geom.Rect] = []
-  let rect : @geom.Rect = {
-    llx: pos.x - size.width_pt / 2.0,
-    lly: pos.y - size.height_pt / 2.0,
-    urx: pos.x + size.width_pt / 2.0,
-    ury: pos.y + size.height_pt / 2.0,
-  }
-  let inner_rect : @geom.Rect = {
-    llx: rect.llx,
-    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
-    urx: rect.urx,
-    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
-  }
-  record_layout_nodes(
-    nodes,
-    inner_rect,
-    orientation,
-    font,
-    font_size_pt,
-    padding.pad_x_pt,
-    padding.pad_y_pt,
-    @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT,
-    rects,
-    ports,
-  )
-  if is_origin {
-    record_ports_cache.val[node.name()] = ports
-  }
-  ports
-}
-
-///|
-/// Graphviz parity: record_path field selection aligned to refs/graphviz/lib/common/shapes.c.
-/// Do not change behavior without updating fixtures/tests.
-fn record_top_level_rects(
+fn record_child_rects(
   nodes : Array[RecordNode],
   rect : @geom.Rect,
   orientation : RecordOrientation,
@@ -543,41 +350,13 @@ fn record_top_level_rects(
   if nodes.length() == 0 {
     return []
   }
-  let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
-  )
-  let axis_sizes : Array[Double] = []
-  let mut axis_sum = 0.0
-  for size in sizes {
-    let axis = match orientation {
-      RecordOrientation::Vertical => size.height_pt
-      RecordOrientation::Horizontal => size.width_pt
-    }
-    axis_sizes.push(axis)
-    axis_sum = axis_sum + axis
-  }
   let axis_total = match orientation {
     RecordOrientation::Vertical => rect.ury - rect.lly
     RecordOrientation::Horizontal => rect.urx - rect.llx
   }
-  if axis_sizes.length() > 0 {
-    // Match Graphviz resize_reclbl: distribute extra size evenly with int rounding.
-    let delta = axis_total - axis_sum
-    if delta != 0.0 {
-      let inc = delta / axis_sizes.length().to_double()
-      for i in 0..<axis_sizes.length() {
-        let before = (i.to_double() * inc).trunc().to_int()
-        let after = ((i + 1).to_double() * inc).trunc().to_int()
-        let amt = after - before
-        axis_sizes[i] = axis_sizes[i] + Double::from_int(amt)
-      }
-    }
-  }
+  let axis_sizes = record_axis_sizes(
+    nodes, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt, axis_total,
+  )
   let rects : Array[@geom.Rect] = []
   let mut cursor = match orientation {
     RecordOrientation::Vertical => rect.ury
@@ -610,6 +389,277 @@ fn record_top_level_rects(
       }
     }
     rects.push(child_rect)
+  }
+  rects
+}
+
+///|
+fn record_child_sides(
+  orientation : RecordOrientation,
+  sides : Int,
+  index : Int,
+  last : Int,
+) -> Int {
+  if sides == 0 {
+    return 0
+  }
+  let mask = match orientation {
+    RecordOrientation::Horizontal =>
+      if index == 0 {
+        if index == last {
+          @port_geometry.PORT_SIDE_TOP |
+          @port_geometry.PORT_SIDE_BOTTOM |
+          @port_geometry.PORT_SIDE_LEFT |
+          @port_geometry.PORT_SIDE_RIGHT
+        } else {
+          @port_geometry.PORT_SIDE_TOP |
+          @port_geometry.PORT_SIDE_BOTTOM |
+          @port_geometry.PORT_SIDE_LEFT
+        }
+      } else if index == last {
+        @port_geometry.PORT_SIDE_TOP |
+        @port_geometry.PORT_SIDE_BOTTOM |
+        @port_geometry.PORT_SIDE_RIGHT
+      } else {
+        @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM
+      }
+    RecordOrientation::Vertical =>
+      if index == 0 {
+        if index == last {
+          @port_geometry.PORT_SIDE_TOP |
+          @port_geometry.PORT_SIDE_BOTTOM |
+          @port_geometry.PORT_SIDE_LEFT |
+          @port_geometry.PORT_SIDE_RIGHT
+        } else {
+          @port_geometry.PORT_SIDE_TOP |
+          @port_geometry.PORT_SIDE_LEFT |
+          @port_geometry.PORT_SIDE_RIGHT
+        }
+      } else if index == last {
+        @port_geometry.PORT_SIDE_LEFT |
+        @port_geometry.PORT_SIDE_BOTTOM |
+        @port_geometry.PORT_SIDE_RIGHT
+      } else {
+        @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT
+      }
+  }
+  sides & mask
+}
+
+///|
+fn layout_record_tree(
+  nodes : Array[RecordNode],
+  rect : @geom.Rect,
+  orientation : RecordOrientation,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+  sides : Int,
+) -> Array[RecordLayoutNode] {
+  if nodes.length() == 0 {
+    return []
+  }
+  let child_rects = record_child_rects(
+    nodes, rect, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt,
+  )
+  let child_orientation = toggle_record_orientation(orientation)
+  let last = nodes.length() - 1
+  let laid_out : Array[RecordLayoutNode] = []
+  for i in 0..<nodes.length() {
+    let child_sides = record_child_sides(orientation, sides, i, last)
+    match nodes[i] {
+      RecordNode::Field(field) =>
+        laid_out.push({
+          rect: child_rects[i],
+          sides: child_sides,
+          field: Some(field),
+          children: [],
+        })
+      RecordNode::Group(children) =>
+        laid_out.push({
+          rect: child_rects[i],
+          sides: child_sides,
+          field: None,
+          children: layout_record_tree(
+            children,
+            child_rects[i],
+            child_orientation,
+            font_name,
+            font_size_pt,
+            pad_x_pt,
+            pad_y_pt,
+            child_sides,
+          ),
+        })
+    }
+  }
+  laid_out
+}
+
+///|
+fn collect_record_rects(
+  nodes : Array[RecordLayoutNode],
+  rects : Array[@geom.Rect],
+) -> Unit {
+  for node in nodes {
+    match node.field {
+      Some(_) => rects.push(node.rect)
+      None => collect_record_rects(node.children, rects)
+    }
+  }
+}
+
+///|
+fn collect_record_ports(
+  nodes : Array[RecordLayoutNode],
+  ports : Map[String, RecordPort],
+) -> Unit {
+  for node in nodes {
+    match node.field {
+      Some(field) =>
+        match field.name {
+          Some(name) => {
+            let center = @geom.Point::{
+              x: (node.rect.llx + node.rect.urx) / 2.0,
+              y: (node.rect.lly + node.rect.ury) / 2.0,
+            }
+            let field_size = @node_primitives.node_size_from_points(
+              node.rect.urx - node.rect.llx,
+              node.rect.ury - node.rect.lly,
+            )
+            ports[name] = { center, size: field_size, sides: node.sides }
+          }
+          None => ()
+        }
+      None => collect_record_ports(node.children, ports)
+    }
+  }
+}
+
+///|
+pub fn record_rects(
+  node : @cgraph.Node,
+  pos : @geom.Point,
+  size : NodeSize,
+  orientation : RecordOrientation,
+) -> Array[@geom.Rect] {
+  let label = @label_attrs.label_text(node)
+  let nodes = record_nodes(label)
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let padding = @label_attrs.node_padding(node)
+  let rect : @geom.Rect = {
+    llx: pos.x - size.width_pt / 2.0,
+    lly: pos.y - size.height_pt / 2.0,
+    urx: pos.x + size.width_pt / 2.0,
+    ury: pos.y + size.height_pt / 2.0,
+  }
+  let inner_rect : @geom.Rect = {
+    llx: rect.llx,
+    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
+    urx: rect.urx,
+    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
+  }
+  let layout_nodes = layout_record_tree(
+    nodes,
+    inner_rect,
+    orientation,
+    font,
+    font_size_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
+  let rects : Array[@geom.Rect] = []
+  collect_record_rects(layout_nodes, rects)
+  rects
+}
+
+///|
+pub fn record_ports(
+  node : @cgraph.Node,
+  pos : @geom.Point,
+  size : NodeSize,
+  orientation : RecordOrientation,
+) -> Map[String, RecordPort] {
+  let is_origin = pos.x == 0.0 && pos.y == 0.0
+  if is_origin {
+    let name = node.name()
+    match record_ports_cache.val.get(name) {
+      Some(cached) => return cached
+      None => ()
+    }
+  }
+  let label = @label_attrs.label_text(node)
+  let nodes = record_nodes(label)
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let padding = @label_attrs.node_padding(node)
+  let rect : @geom.Rect = {
+    llx: pos.x - size.width_pt / 2.0,
+    lly: pos.y - size.height_pt / 2.0,
+    urx: pos.x + size.width_pt / 2.0,
+    ury: pos.y + size.height_pt / 2.0,
+  }
+  let inner_rect : @geom.Rect = {
+    llx: rect.llx,
+    lly: rect.lly + @record_geometry.RECORD_BORDER_PT,
+    urx: rect.urx,
+    ury: rect.ury - @record_geometry.RECORD_BORDER_PT,
+  }
+  let layout_nodes = layout_record_tree(
+    nodes,
+    inner_rect,
+    orientation,
+    font,
+    font_size_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
+  let ports : Map[String, RecordPort] = Map::new()
+  collect_record_ports(layout_nodes, ports)
+  if is_origin {
+    record_ports_cache.val[node.name()] = ports
+  }
+  ports
+}
+
+///|
+/// Graphviz parity: record_path field selection aligned to refs/graphviz/lib/common/shapes.c.
+/// Do not change behavior without updating fixtures/tests.
+fn record_top_level_rects(
+  nodes : Array[RecordNode],
+  rect : @geom.Rect,
+  orientation : RecordOrientation,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> Array[@geom.Rect] {
+  let layout_nodes = layout_record_tree(
+    nodes,
+    rect,
+    orientation,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
+  let rects : Array[@geom.Rect] = []
+  for node in layout_nodes {
+    rects.push(node.rect)
   }
   rects
 }
@@ -657,24 +707,21 @@ pub fn record_port_path_box(
     urx: node_rect.urx,
     ury: node_rect.ury - @record_geometry.RECORD_BORDER_PT,
   }
-  let top_rects =
-    record_top_level_rects(
-      nodes,
-      inner_rect,
-      orientation,
-      font,
-      font_size_pt,
-      padding.pad_x_pt,
-      padding.pad_y_pt,
-    )
+  let top_rects = record_top_level_rects(
+    nodes,
+    inner_rect,
+    orientation,
+    font,
+    font_size_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
+  )
   let port_x = port_info.center.x
   let mut chosen : @geom.Rect? = None
   for rect in top_rects {
     let hit = match orientation {
-      RecordOrientation::Horizontal =>
-        port_x >= rect.llx && port_x <= rect.urx
-      RecordOrientation::Vertical =>
-        port_x >= rect.lly && port_x <= rect.ury
+      RecordOrientation::Horizontal => port_x >= rect.llx && port_x <= rect.urx
+      RecordOrientation::Vertical => port_x >= rect.lly && port_x <= rect.ury
     }
     if hit {
       chosen = Some(rect)
@@ -686,18 +733,20 @@ pub fn record_port_path_box(
     None => return None
   }
   let path_rect_local : @geom.Rect = match orientation {
-    RecordOrientation::Horizontal => {
-      llx: field_rect.llx,
-      lly: node_rect.lly,
-      urx: field_rect.urx,
-      ury: node_rect.ury,
-    }
-    RecordOrientation::Vertical => {
-      llx: node_rect.llx,
-      lly: field_rect.lly,
-      urx: node_rect.urx,
-      ury: field_rect.ury,
-    }
+    RecordOrientation::Horizontal =>
+      {
+        llx: field_rect.llx,
+        lly: node_rect.lly,
+        urx: field_rect.urx,
+        ury: node_rect.ury,
+      }
+    RecordOrientation::Vertical =>
+      {
+        llx: node_rect.llx,
+        lly: field_rect.lly,
+        urx: node_rect.urx,
+        ury: field_rect.ury,
+      }
   }
   let corners : Array[@geom.Point] = [
     @edge_spline.point(path_rect_local.llx, path_rect_local.lly),
@@ -712,13 +761,22 @@ pub fn record_port_path_box(
   for corner in corners {
     let offset = @port_geometry.layout_port_offset(corner, rankdir)
     let abs = @edge_spline.point(pos.x + offset.x, pos.y + offset.y)
-    if abs.x < minx { minx = abs.x }
-    if abs.x > maxx { maxx = abs.x }
-    if abs.y < miny { miny = abs.y }
-    if abs.y > maxy { maxy = abs.y }
+    if abs.x < minx {
+      minx = abs.x
+    }
+    if abs.x > maxx {
+      maxx = abs.x
+    }
+    if abs.y < miny {
+      miny = abs.y
+    }
+    if abs.y > maxy {
+      maxy = abs.y
+    }
   }
   Some({ llx: minx, lly: miny, urx: maxx, ury: maxy })
 }
+
 ///|
 /// Graphviz parity: record label-port padding reserves extra half-heights for
 /// explicit record ports near node borders.
@@ -742,12 +800,10 @@ pub fn record_port_padding_y(
                     match positions.get(node_name) {
                       Some(node_pos) => {
                         let dy = port_info.center.y - node_pos.y
-                        let half_height =
-                          port_info.size.height_pt / 2.0 -
+                        let half_height = port_info.size.height_pt / 2.0 -
                           @record_geometry.RECORD_BORDER_PT / 2.0 -
                           0.01
-                        let adjusted =
-                          if half_height < 0.0 {
+                        let adjusted = if half_height < 0.0 {
                           0.0
                         } else {
                           half_height * 0.5

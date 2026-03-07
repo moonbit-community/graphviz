@@ -23,6 +23,9 @@
       "path": "moonbit-community/graphviz/dot",
       "alias": "dot_parser"
     },
-    "moonbit-community/graphviz/layout/dot/node_geometry"
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ]
 }

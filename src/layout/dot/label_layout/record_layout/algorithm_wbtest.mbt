@@ -60,13 +60,70 @@ test "record_nodes parses nested braces" {
 }
 
 ///|
+test "layout_record_tree assigns group orientation and side masks" {
+  let nodes = record_nodes("<left>a|{<top>b|<bottom>c}|<right>d")
+  let rect : @geom.Rect = { llx: -120.0, lly: -40.0, urx: 120.0, ury: 40.0 }
+  let layout = layout_record_tree(
+    nodes,
+    rect,
+    RecordOrientation::Horizontal,
+    "Times-Roman",
+    14.0,
+    8.0,
+    4.0,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
+
+  assert_eq(layout.length(), 3)
+  assert_eq(
+    layout[0].sides,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT,
+  )
+  assert_eq(
+    layout[1].sides,
+    @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM,
+  )
+  assert_eq(
+    layout[2].sides,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
+
+  let group = layout[1]
+  match group.field {
+    Some(_) => fail("expected nested group")
+    None => ()
+  }
+  assert_eq(group.children.length(), 2)
+  assert_true(group.children[0].rect.ury > group.children[1].rect.ury)
+  assert_eq(group.children[0].sides, @port_geometry.PORT_SIDE_TOP)
+  assert_eq(group.children[1].sides, @port_geometry.PORT_SIDE_BOTTOM)
+
+  match group.children[0].field {
+    Some(field) => assert_eq(field.name, Some("top"))
+    None => fail("expected top child field")
+  }
+  match group.children[1].field {
+    Some(field) => assert_eq(field.name, Some("bottom"))
+    None => fail("expected bottom child field")
+  }
+}
+
+///|
 test "record_ports include nested port names" {
   reset_record_layout_caches()
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=record]; nested_record [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
-  let record_orientation =
-    @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let record_orientation = @shared.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
   let node = graph.node("nested_record")
   let size = @node_geometry.node_size(node, record_orientation)
   let ports = record_ports(
@@ -92,8 +149,9 @@ test "record_ports honor rankdir LR field order" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=LR; node [shape=record]; ordered_record [label=\"<left>   |<mid> b |   \"]; }",
   )
-  let record_orientation =
-    @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let record_orientation = @shared.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
   let node = graph.node("ordered_record")
   let size = @node_geometry.node_size(node, record_orientation)
   let ports = record_ports(
@@ -103,9 +161,7 @@ test "record_ports honor rankdir LR field order" {
     record_orientation,
   )
   match ports.get("left") {
-    Some(port) => {
-      assert_true(port.center.y > 0.0)
-    }
+    Some(port) => assert_true(port.center.y > 0.0)
     None => fail("missing left port")
   }
 }
@@ -130,19 +186,37 @@ test "record_port_path_box expands an explicit field port to the full field lane
     None => fail("missing right port")
   }
   let edges = graph.edges()
-  let left_box = match record_port_path_box(node, edges[0].tail_port(), { x: 0.0, y: 0.0 }, size, rankdir) {
+  let left_box = match
+    record_port_path_box(
+      node,
+      edges[0].tail_port(),
+      { x: 0.0, y: 0.0 },
+      size,
+      rankdir,
+    ) {
     Some(value) => value
     None => fail("expected left port path box")
   }
-  let right_box = match record_port_path_box(node, edges[1].tail_port(), { x: 0.0, y: 0.0 }, size, rankdir) {
+  let right_box = match
+    record_port_path_box(
+      node,
+      edges[1].tail_port(),
+      { x: 0.0, y: 0.0 },
+      size,
+      rankdir,
+    ) {
     Some(value) => value
     None => fail("expected right port path box")
   }
 
   assert_close(left_box.lly, -size.height_pt / 2.0, 0.0001)
   assert_close(left_box.ury, size.height_pt / 2.0, 0.0001)
-  assert_true(left_port.center.x >= left_box.llx && left_port.center.x <= left_box.urx)
-  assert_true(right_port.center.x >= right_box.llx && right_port.center.x <= right_box.urx)
+  assert_true(
+    left_port.center.x >= left_box.llx && left_port.center.x <= left_box.urx,
+  )
+  assert_true(
+    right_port.center.x >= right_box.llx && right_port.center.x <= right_box.urx,
+  )
   assert_true(left_box.urx < 0.0)
   assert_true(right_box.llx > 0.0)
 }
@@ -153,7 +227,9 @@ test "record_port_padding_y tracks explicit top and bottom label ports" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=LR; node [shape=record]; padding_record [label=\"<top>t|<mid>m|<bot>b\"]; up; down; up -> padding_record:top; padding_record:bot -> down; }",
   )
-  let orientation = @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let orientation = @shared.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
   let node = graph.node("padding_record")
   let size = @node_geometry.node_size(node, orientation)
   let ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
