@@ -129,3 +129,50 @@ pub fn build_head_port_metrics_from_geometry(
     },
   )
 }
+
+///|
+/// Dot-specific head-port metric assembly for routing precompute.
+type RecordOrientation = @dot_shared.RecordOrientation
+type RecordPort = @record_geometry.RecordPort
+
+///|
+/// Graphviz parity: dot head-port metrics keep record/html port geometry and
+/// record-shape distance sampling aligned with Stage E complex-tuning rules.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_dot_head_port_metrics(
+  edges : Array[@cgraph.Edge],
+  enable_complex_tuning : Bool,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, @node_primitives.NodeSize],
+  record_orientation : RecordOrientation,
+  label_ports_map : Map[String, Map[String, RecordPort]],
+) -> HeadPortMetrics {
+  build_head_port_metrics_from_geometry(
+    {
+      edges,
+      enable_complex_tuning,
+      positions,
+      sizes,
+    },
+    {
+      is_record_shape: @record_geometry.is_record_shape,
+      node_size_for_missing: node => @node_geometry.node_size(node, record_orientation),
+      port_geometry_for:
+        (node_name, port, node_pos, node_size) => {
+          let geometry =
+            @port_geometry.port_geometry(
+              node_name,
+              port,
+              label_ports_map,
+              node_pos,
+              node_size,
+            )
+          {
+            center: geometry.center,
+            size: geometry.size,
+          }
+        },
+    },
+  )
+}
+

@@ -197,44 +197,6 @@ fn routing_port_padding_for_stage(
 }
 
 ///|
-fn build_head_port_metrics_for_stage(
-  edges : Array[@cgraph.Edge],
-  enable_complex_tuning : Bool,
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-) -> @precompute.HeadPortMetrics {
-  @precompute.build_head_port_metrics_from_geometry(
-    {
-      edges,
-      enable_complex_tuning,
-      positions,
-      sizes,
-    },
-    {
-      is_record_shape: @record_geometry.is_record_shape,
-      node_size_for_missing: node => @node_geometry.node_size(node, record_orientation),
-      port_geometry_for:
-        (node_name, port, node_pos, node_size) => {
-          let geometry =
-            @port_geometry.port_geometry(
-              node_name,
-              port,
-              label_ports_map,
-              node_pos,
-              node_size,
-            )
-          {
-            center: geometry.center,
-            size: geometry.size,
-          }
-        },
-    },
-  )
-}
-
-///|
 /// Graphviz parity: default dot routing deps keep routing-stage geometry,
 /// callback bridges, and cluster-bbox tree recursion inside subpackages so the
 /// root package no longer needs a Stage E-specific bridge file.
@@ -246,7 +208,7 @@ pub fn build_dot_routing_stage_deps() -> RoutingStageDeps {
     compute_routing_bbox: compute_routing_bbox_for_stage,
     edge_has_mid_label: edge => @edge_label_metrics.edge_mid_label_text(edge) is Some(_),
     record_port_padding: routing_port_padding_for_stage,
-    build_head_port_metrics: build_head_port_metrics_for_stage,
+    build_head_port_metrics: @precompute.build_dot_head_port_metrics,
     apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
     build_route_base_deps: @routing.build_dot_route_base_deps,
     build_routing_callbacks: @dot_callbacks.build_dot_routing_callbacks,

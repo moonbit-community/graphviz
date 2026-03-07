@@ -1,5 +1,12 @@
 {
   "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/dot/shared",
+      "alias": "dot_shared"
+    },
+    "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     {
       "path": "moonbit-community/graphviz/layout/dot/routing/routesplines",
