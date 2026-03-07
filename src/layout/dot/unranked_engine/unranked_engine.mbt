@@ -236,6 +236,66 @@ pub fn active_graph_for_prune(
 }
 
 ///|
+/// Graphviz parity: unranked neato output assembly keeps force-directed solve,
+/// scaling, edge projection, and final layout-tree postprocess in one package
+/// entry so the root API boundary stays thin.
+pub fn build_neato_layout_tree(
+  graph : @cgraph.Graph,
+  scale : Double,
+  nodesep_pt : Double,
+) -> LayoutTree {
+  let geometry = build_engine_geometry_context(graph, scale)
+  let nodes = graph.nodes()
+  let node_count = nodes.length()
+  let sizing = build_neato_node_sizing(nodes, geometry.record_orientation)
+  let base_spacing = sizing.max_half * 2.0 + nodesep_pt
+  let spacing = if base_spacing <= 1.0 { 1.0 } else { base_spacing }
+  let node_state = build_neato_initial_node_state(nodes, spacing)
+  let positions = node_state.positions
+  let pinned = node_state.pinned
+  let edges = build_neato_edges(
+    graph,
+    sizing.indices,
+    sizing.radii,
+    nodesep_pt,
+  )
+  if node_count > 1 {
+    relax_positions(
+      positions,
+      pinned,
+      sizing.radii,
+      edges,
+      spacing,
+      nodesep_pt,
+      100,
+    )
+  }
+  let node_data =
+    project_scaled_nodes_with_sizes(
+      nodes,
+      positions,
+      geometry.scale_factor,
+      sizing.sizes,
+      geometry.record_orientation,
+    )
+  let node_size_for = (node : @cgraph.Node) =>
+    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
+  let edges_out =
+    build_edges_from_positions(
+      graph,
+      node_data.projection.positions,
+      node_size_for,
+      straight_line_edge_splines,
+    )
+  finalize_unranked_layout_tree(
+    graph,
+    geometry.rankdir,
+    node_data.projection.nodes_out,
+    edges_out,
+  )
+}
+
+///|
 /// Shared point parsing/scaling and straight-line spline helpers used by
 /// noop/neato layout entry paths.
 

@@ -9,7 +9,6 @@
     "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/layout/dot/unranked_engine",
     "moonbit-community/graphviz/layout/dot/finalization",
-    "moonbit-community/graphviz/layout/dot/bbox",
     {
       "path": "moonbit-community/graphviz/layout/dot/shared",
       "alias": "dot_shared"
@@ -17,7 +16,6 @@
     "moonbit-community/graphviz/layout/dot/ordering_stage",
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/position_stage",
-    "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/routing_stage",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
@@ -48,6 +46,7 @@
       "alias": "edge_spline"
     },
     "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/routing",

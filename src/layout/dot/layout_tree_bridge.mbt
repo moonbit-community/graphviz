@@ -20,13 +20,3 @@ fn dot_layout_graph_from_layout_tree(layout : LayoutTree) -> DotLayoutGraph {
   }
 }
 
-///|
-fn dot_layout_graphs_from_layout_trees(
-  layouts : Array[LayoutTree],
-) -> Array[DotLayoutGraph] {
-  let result : Array[DotLayoutGraph] = []
-  for layout in layouts {
-    result.push(dot_layout_graph_from_layout_tree(layout))
-  }
-  result
-}
