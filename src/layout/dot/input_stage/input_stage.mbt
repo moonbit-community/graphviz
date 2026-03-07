@@ -186,7 +186,7 @@ fn build_record_port_order_map(
 ) -> Map[String, Map[String, Double]] {
   let record_port_order : Map[String, Map[String, Double]] = Map::new()
   for node in input.nodes {
-    let label = @label_layout.label_text(node)
+    let label = @label_attrs.label_text(node)
     let has_html = @html_label.is_html_label_text(label)
     if has_html || @shared.is_record_shape(node) {
       let name = node.name()

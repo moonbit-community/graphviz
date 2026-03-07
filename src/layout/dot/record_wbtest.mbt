@@ -1,36 +1,36 @@
 ///|
 test "record_nodes parses nested braces" {
-  let nodes = @label_layout.record_nodes("{a|{b|<here>c|d}|e}")
+  let nodes = @record_layout.record_nodes("{a|{b|<here>c|d}|e}")
   guard nodes.length() == 1 else { fail("expected single top-level group") }
   match nodes[0] {
-    @label_layout.RecordNode::Group(top) => {
+    @record_layout.RecordNode::Group(top) => {
       guard top.length() == 3 else { fail("expected 3 top-level fields") }
       match top[0] {
-        @label_layout.RecordNode::Field(field_a) => {
+        @record_layout.RecordNode::Field(field_a) => {
           assert_eq(field_a.name, None)
           assert_eq(field_a.text, "a")
         }
         _ => fail("expected first field")
       }
       match top[1] {
-        @label_layout.RecordNode::Group(children) => {
+        @record_layout.RecordNode::Group(children) => {
           guard children.length() == 3 else { fail("expected 3 nested fields") }
           match children[0] {
-            @label_layout.RecordNode::Field(field_b) => {
+            @record_layout.RecordNode::Field(field_b) => {
               assert_eq(field_b.name, None)
               assert_eq(field_b.text, "b")
             }
             _ => fail("expected nested field b")
           }
           match children[1] {
-            @label_layout.RecordNode::Field(field_c) => {
+            @record_layout.RecordNode::Field(field_c) => {
               assert_eq(field_c.name, Some("here"))
               assert_eq(field_c.text, "c")
             }
             _ => fail("expected nested field c")
           }
           match children[2] {
-            @label_layout.RecordNode::Field(field_d) => {
+            @record_layout.RecordNode::Field(field_d) => {
               assert_eq(field_d.name, None)
               assert_eq(field_d.text, "d")
             }
@@ -40,7 +40,7 @@ test "record_nodes parses nested braces" {
         _ => fail("expected nested group")
       }
       match top[2] {
-        @label_layout.RecordNode::Field(field_e) => {
+        @record_layout.RecordNode::Field(field_e) => {
           assert_eq(field_e.name, None)
           assert_eq(field_e.text, "e")
         }
@@ -60,7 +60,7 @@ test "record_ports include nested port names" {
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
   let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @label_layout.record_ports(
+  let ports = @record_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
     size,
@@ -86,7 +86,7 @@ test "html_ports include td port names" {
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("a")
   let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @html_layout.html_ports(node, @label_layout.label_text(node), @geom.Point::{ x: 0.0, y: 0.0 }, size)
+  let ports = @html_layout.html_ports(node, @label_attrs.label_text(node), @geom.Point::{ x: 0.0, y: 0.0 }, size)
   match ports.get("p1") {
     Some(port) => {
       let half_w = size.width_pt / 2.0
@@ -107,7 +107,7 @@ test "record_ports honor rankdir LR field order" {
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
   let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @label_layout.record_ports(
+  let ports = @record_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
     size,
@@ -130,7 +130,7 @@ test "record_ports rotate into layout coords for rankdir LR" {
     @dot_shared.record_layout_orientation(@dot_shared.graph_rankdir(graph))
   let node = graph.node("b")
   let size = @node_geometry.node_size(node, record_orientation)
-  let ports = @label_layout.record_ports(
+  let ports = @record_layout.record_ports(
     node,
     @geom.Point::{ x: 0.0, y: 0.0 },
     size,

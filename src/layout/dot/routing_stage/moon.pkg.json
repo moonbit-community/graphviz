@@ -15,6 +15,8 @@
     "moonbit-community/graphviz/layout/dot/routing/edge_label",
     "moonbit-community/graphviz/layout/dot/bbox",
     "moonbit-community/graphviz/layout/dot/label_layout",
+    "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/label_metrics",
     "moonbit-community/graphviz/layout/dot/node_geometry",

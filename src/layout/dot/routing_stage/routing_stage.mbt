@@ -223,7 +223,7 @@ fn routing_port_padding_for_stage(
   label_ports_map : Map[String, Map[String, RecordPort]],
 ) -> RoutingPortPadding {
   let padding =
-    @label_layout.record_port_padding_y(
+    @record_layout.record_port_padding_y(
       edges,
       positions,
       label_ports_map,
@@ -356,7 +356,7 @@ fn build_route_base_deps_for_dot(
   {
     node_size_for_missing: (node) => @node_geometry.node_size(node, record_orientation),
     edge_mid_label_metrics: route_mid_label_metrics,
-    record_port_path_box: @label_layout.record_port_path_box,
+    record_port_path_box: @record_layout.record_port_path_box,
     port_geometry: route_port_geometry,
     port_rect_from_geometry: @port_geometry.port_rect_from_geometry,
     port_is_label_port:
@@ -366,7 +366,7 @@ fn build_route_base_deps_for_dot(
     record_border_adjust:
       (node) =>
         if @shared.is_record_shape(node) &&
-          !@html_label.is_html_label_text(@label_layout.label_text(node)) {
+          !@html_label.is_html_label_text(@label_attrs.label_text(node)) {
           @shared.RECORD_BORDER_PT
         } else {
           0.0

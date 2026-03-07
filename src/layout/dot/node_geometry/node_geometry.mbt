@@ -532,7 +532,7 @@ pub fn node_size(
   }
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
-  let padding = @label_layout.node_padding(node)
+  let padding = @label_attrs.node_padding(node)
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
   if shape == "point" || shape == "dot" {
@@ -546,7 +546,7 @@ pub fn node_size(
     }
     return @dot_shared.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
   }
-  let label = @label_layout.label_text(node)
+  let label = @label_attrs.label_text(node)
   if @html_label.is_html_label_text(label) {
     match @html_layout.parse_html_label_cached(label) {
       Some(html_label) => {
@@ -594,8 +594,8 @@ pub fn node_size(
     }
   }
   if @dot_shared.is_record_shape(node) {
-    let nodes = @label_layout.record_nodes(label)
-    let record_size = @label_layout.record_group_size(
+    let nodes = @record_layout.record_nodes(label)
+    let record_size = @record_layout.record_group_size(
       nodes,
       record_orientation,
       font,

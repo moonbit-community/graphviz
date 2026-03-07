@@ -81,7 +81,7 @@ pub fn edge_port_offset(
         compass_port_point_for_layout,
         node =>
           @shared.is_record_shape(node) ||
-          @html_label.is_html_label_text(@label_layout.label_text(node)),
+          @html_label.is_html_label_text(@label_attrs.label_text(node)),
         @port_geometry.layout_port_offset,
       ),
   )
