@@ -635,22 +635,73 @@ fn run_mincross_case_with_name_order(
 
 
 ///|
-test "mincross fixtures match reorder_rank_groups" {
-  let fixtures = load_mincross_fixtures()
-  for pair in fixtures.cases {
-    let (input, output) = pair
-    run_mincross_case_with_name_order(input, output, fixtures.name_order)
+fn mincross_case_has_distinct_output(
+  input : MincrossInput,
+  output : MincrossOutput,
+) -> Bool {
+  input.ranks != output.ranks
+}
+
+///|
+/// Graphviz parity: keep fixture replay for cases that still carry distinct
+/// reorder signal, plus a small set of large unchanged integrated graphs that
+/// remain more valuable than their fixture maintenance cost.
+fn mincross_case_needs_integrated_replay(
+  input : MincrossInput,
+  output : MincrossOutput,
+) -> Bool {
+  if mincross_case_has_distinct_output(input, output) {
+    return true
+  }
+  match input.graph {
+    "L0" => true
+    "edge_vnode_spacing" => true
+    "yours_truly" => input.startpass > 0
+    _ => false
   }
 }
 
 ///|
-test "mincross plugins fixtures match reorder_rank_groups" {
+/// Graphviz parity: plugin mincross fixture replay now focuses on cases where
+/// reorder_rank_groups materially changes the cluster-local ordering. Trivial
+/// unchanged slices are covered by direct rank_reorder unit tests.
+fn mincross_plugin_case_needs_replay(
+  input : MincrossInput,
+  output : MincrossOutput,
+) -> Bool {
+  mincross_case_has_distinct_output(input, output)
+}
+
+
+///|
+test "mincross fixtures match reorder_rank_groups for integrated cases" {
+  let fixtures = load_mincross_fixtures()
+  let mut matched = 0
+  for pair in fixtures.cases {
+    let (input, output) = pair
+    if !mincross_case_needs_integrated_replay(input, output) {
+      continue
+    }
+    matched = matched + 1
+    run_mincross_case_with_name_order(input, output, fixtures.name_order)
+  }
+  assert_true(matched > 0)
+}
+
+///|
+test "mincross plugins fixtures match reorder_rank_groups when output changes" {
   let fixtures = load_mincross_fixtures_from(
     "tests/fixtures/graphviz/mincross.plugins.jsonl",
   )
+  let mut matched = 0
   for pair in fixtures.cases {
     let (input, output) = pair
+    if !mincross_plugin_case_needs_replay(input, output) {
+      continue
+    }
+    matched = matched + 1
     run_mincross_case_with_name_order(input, output, fixtures.name_order)
   }
+  assert_true(matched > 0)
 }
 

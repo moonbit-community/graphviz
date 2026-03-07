@@ -528,3 +528,241 @@ test "rank_reorder recovers nlist tie order from reversed seed" {
 
   run_fixed_rank_reorder_case(input, output)
 }
+///|
+test "rank_reorder keeps flip-enabled single chains stable" {
+  let input : MincrossInput = {
+    case_id: 1003,
+    graph: "xlabels_lr_direct",
+    startpass: 0,
+    flip: true,
+    minrank: 0,
+    maxrank: 1,
+    nodes: [
+      {
+        id: 0,
+        name: Some("a"),
+        rank: 0,
+        order: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [1],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+      {
+        id: 1,
+        name: Some("b"),
+        rank: 1,
+        order: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+    ],
+    edges: [
+      {
+        tail: 0,
+        head: 1,
+        xpenalty: 1,
+        seq: 1,
+        order: 0,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+    ],
+    flat_edges: [],
+    ranks: [[0], [1]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1003,
+    ranks: [[0], [1]],
+  }
+
+  run_mincross_case_with_name_order(input, output, Map::new())
+}
+
+///|
+test "rank_reorder keeps total flat-label constraints in source order" {
+  let input : MincrossInput = {
+    case_id: 1004,
+    graph: "flat_label_direct",
+    startpass: 0,
+    flip: false,
+    minrank: 0,
+    maxrank: 0,
+    nodes: [
+      {
+        id: 0,
+        name: Some("a"),
+        rank: 0,
+        order: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+      {
+        id: 1,
+        name: Some("b"),
+        rank: 0,
+        order: 1,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+      {
+        id: 2,
+        name: Some("c"),
+        rank: 0,
+        order: 2,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+    ],
+    edges: [],
+    flat_edges: [
+      { tail: 0, head: 1 },
+      { tail: 0, head: 2 },
+      { tail: 1, head: 2 },
+    ],
+    ranks: [[0, 1, 2]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1004,
+    ranks: [[0, 1, 2]],
+  }
+
+  run_mincross_case_with_name_order(input, output, Map::new())
+}
+
+///|
+test "rank_reorder keeps clustered startpass-two fan-in order stable" {
+  let input : MincrossInput = {
+    case_id: 1005,
+    graph: "xlabels_tb_direct",
+    startpass: 2,
+    flip: false,
+    minrank: 0,
+    maxrank: 1,
+    nodes: [
+      {
+        id: 0,
+        name: Some("b"),
+        rank: 0,
+        order: 1,
+        cluster: Some("cluster_0"),
+        cluster_skeleton: false,
+        out_neighbors: [2],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+      {
+        id: 1,
+        name: Some("a"),
+        rank: 0,
+        order: 0,
+        cluster: Some("cluster_0"),
+        cluster_skeleton: false,
+        out_neighbors: [2],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+      {
+        id: 2,
+        name: Some("c"),
+        rank: 1,
+        order: 0,
+        cluster: Some("xlabels_tb"),
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0, 1],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+    ],
+    edges: [
+      {
+        tail: 0,
+        head: 2,
+        xpenalty: 1,
+        seq: 2,
+        order: 0,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 1,
+        head: 2,
+        xpenalty: 1,
+        seq: 1,
+        order: 1,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+    ],
+    flat_edges: [],
+    ranks: [[1, 0], [2]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1005,
+    ranks: [[1, 0], [2]],
+  }
+
+  run_mincross_case_with_name_order(input, output, Map::new())
+}
+
+///|
+test "rank_reorder leaves single-node cluster slices unchanged" {
+  let input : MincrossInput = {
+    case_id: 1006,
+    graph: "single_node_cluster_slice",
+    startpass: 2,
+    flip: false,
+    minrank: 0,
+    maxrank: 0,
+    nodes: [
+      {
+        id: 0,
+        name: Some("solo"),
+        rank: 0,
+        order: 0,
+        cluster: Some("cluster_gtk"),
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      },
+    ],
+    edges: [],
+    flat_edges: [],
+    ranks: [[0]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1006,
+    ranks: [[0]],
+  }
+
+  run_mincross_case_with_name_order(input, output, Map::new())
+}
