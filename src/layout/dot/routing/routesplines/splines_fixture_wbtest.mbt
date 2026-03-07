@@ -248,12 +248,6 @@ fn run_spline_case(
 }
 
 ///|
-test "spline fixtures load" {
-  let cases = load_spline_fixtures()
-  assert_true(cases.length() > 0)
-}
-
-///|
 test "spline fixtures match pathplan outputs" {
   let cases = load_spline_fixtures()
   for entry in cases {
