@@ -5,7 +5,7 @@
 ///|
 fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
-    Some(value) => @dot_shared.parse_double_or(value, default_nodesep_in())
+    Some(value) => @numeric.parse_double_or(value, default_nodesep_in())
     None => default_nodesep_in()
   }
   nodesep_in * 72.0
@@ -20,7 +20,7 @@ fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Unit raise DotLayoutErr
           "edge \{edge.tail().name()} -> \{edge.head().name()}",
           "len",
           value,
-          @dot_shared.parse_first_double(value, 0.0),
+          @numeric.parse_first_double(value, 0.0),
         )
       None => ()
     }

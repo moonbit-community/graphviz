@@ -53,19 +53,19 @@ fn fixedshape_clip_size(
     (@node_primitives.default_node_width_in(), @node_primitives.default_node_height_in())
   }
   let mut width_in = match node.get_attr("width") {
-    Some(value) => @dot_shared.parse_double_or(value, fallback_width)
+    Some(value) => @numeric.parse_double_or(value, fallback_width)
     None => fallback_width
   }
   let mut height_in = match node.get_attr("height") {
-    Some(value) => @dot_shared.parse_double_or(value, fallback_height)
+    Some(value) => @numeric.parse_double_or(value, fallback_height)
     None => fallback_height
   }
   if shape == "point" || shape == "dot" {
     let point_size_in = match node.get_attr("width") {
-      Some(value) => @dot_shared.parse_double_or(value, fallback_width)
+      Some(value) => @numeric.parse_double_or(value, fallback_width)
       None =>
         match node.get_attr("height") {
-          Some(value) => @dot_shared.parse_double_or(value, fallback_height)
+          Some(value) => @numeric.parse_double_or(value, fallback_height)
           None => fallback_width
         }
     }
@@ -964,11 +964,11 @@ fn arrow_length_for_attr(
   default_flags : Array[Int],
 ) -> Double {
   let arrowsize_raw = match edge.get_attr("arrowsize") {
-    Some(value) => @dot_shared.parse_double_or(value, 1.0)
+    Some(value) => @numeric.parse_double_or(value, 1.0)
     None => 1.0
   }
   let penwidth_raw = match edge.get_attr("penwidth") {
-    Some(value) => @dot_shared.parse_double_or(value, 1.0)
+    Some(value) => @numeric.parse_double_or(value, 1.0)
     None => 1.0
   }
   let arrowsize = if arrowsize_raw < 0.0 { 0.0 } else { arrowsize_raw }
@@ -1091,7 +1091,7 @@ priv enum ClipShape {
 ///|
 fn node_penwidth_pt(node : @cgraph.Node) -> Double {
   match node.get_attr("penwidth") {
-    Some(value) => @dot_shared.parse_double_or(value, 1.0)
+    Some(value) => @numeric.parse_double_or(value, 1.0)
     None => 1.0
   }
 }
@@ -1199,22 +1199,22 @@ fn polygon_clip_params(node : @cgraph.Node) -> PolygonClipParams {
   // Graphviz parity (poly_init): explicit sides=0 keeps ellipse mode unless
   // skew/distortion force high-sided polygon fallback.
   let mut sides = match node.get_attr("sides") {
-    Some(value) => @dot_shared.parse_double_or(value, 4.0).round().to_int()
+    Some(value) => @numeric.parse_double_or(value, 4.0).round().to_int()
     None => 4
   }
   if sides < 0 {
     sides = 0
   }
   let orientation = match node.get_attr("orientation") {
-    Some(value) => @dot_shared.parse_double_or(value, 0.0)
+    Some(value) => @numeric.parse_double_or(value, 0.0)
     None => 0.0
   }
   let distortion = match node.get_attr("distortion") {
-    Some(value) => @dot_shared.parse_double_or(value, 0.0)
+    Some(value) => @numeric.parse_double_or(value, 0.0)
     None => 0.0
   }
   let skew = match node.get_attr("skew") {
-    Some(value) => @dot_shared.parse_double_or(value, 0.0)
+    Some(value) => @numeric.parse_double_or(value, 0.0)
     None => 0.0
   }
   if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
@@ -1226,7 +1226,7 @@ fn polygon_clip_params(node : @cgraph.Node) -> PolygonClipParams {
 ///|
 fn polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
   let mut peripheries = match node.get_attr("peripheries") {
-    Some(value) => @dot_shared.parse_double_or(value, default.to_double()).round().to_int()
+    Some(value) => @numeric.parse_double_or(value, default.to_double()).round().to_int()
     None => default
   }
   if peripheries < 0 {
@@ -1251,15 +1251,15 @@ fn builtin_polygon_clip_params(
     _ => return None
   }
   let orientation = match node.get_attr("orientation") {
-    Some(value) => @dot_shared.parse_double_or(value, default_orientation)
+    Some(value) => @numeric.parse_double_or(value, default_orientation)
     None => default_orientation
   }
   let distortion = match node.get_attr("distortion") {
-    Some(value) => @dot_shared.parse_double_or(value, default_distortion)
+    Some(value) => @numeric.parse_double_or(value, default_distortion)
     None => default_distortion
   }
   let skew = match node.get_attr("skew") {
-    Some(value) => @dot_shared.parse_double_or(value, default_skew)
+    Some(value) => @numeric.parse_double_or(value, default_skew)
     None => default_skew
   }
   Some({ sides, orientation, distortion, skew })

@@ -1,6 +1,6 @@
 {
   "import": [
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/layout/dot/numeric"
+    "moonbitlang/core/strconv"
   ]
 }

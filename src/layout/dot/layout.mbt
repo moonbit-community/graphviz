@@ -56,7 +56,7 @@ fn validate_graph_spacing(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
         "graph",
         "nodesep",
         value,
-        @dot_shared.parse_first_double(value, 0.0),
+        @numeric.parse_first_double(value, 0.0),
       )
     None => ()
   }
@@ -66,7 +66,7 @@ fn validate_graph_spacing(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
         "graph",
         "ranksep",
         value,
-        @dot_shared.parse_first_double(value, 0.0),
+        @numeric.parse_first_double(value, 0.0),
       )
     None => ()
   }
@@ -81,7 +81,7 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           "node \{node.name()}",
           "width",
           value,
-          @dot_shared.parse_first_double(value, 0.0),
+          @numeric.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -91,7 +91,7 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           "node \{node.name()}",
           "height",
           value,
-          @dot_shared.parse_first_double(value, 0.0),
+          @numeric.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -110,7 +110,7 @@ fn validate_edge_attributes(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           owner,
           "minlen",
           value,
-          @dot_shared.parse_first_double(value, 0.0),
+          @numeric.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -120,7 +120,7 @@ fn validate_edge_attributes(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
           owner,
           "weight",
           value,
-          @dot_shared.parse_first_double(value, 0.0),
+          @numeric.parse_first_double(value, 0.0),
         )
       None => ()
     }
@@ -213,7 +213,7 @@ fn resolve_spacing_scalar(
     Some(value) => value
     None =>
       match graph.get_attr(attr_name) {
-        Some(value) => @dot_shared.parse_first_double(value, default_value)
+        Some(value) => @numeric.parse_first_double(value, default_value)
         None => default_value
       }
   }

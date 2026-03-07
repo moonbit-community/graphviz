@@ -649,7 +649,7 @@ fn maximal_bbox_for_name(
     }
     None => ()
   }
-  let mut llx = @dot_shared.round_int(b).to_double()
+  let mut llx = @numeric.round_int(b).to_double()
   if left_neighbor is None {
     llx = min_double(llx, left_bound)
   }
@@ -697,7 +697,7 @@ fn maximal_bbox_for_name(
     }
     None => ()
   }
-  let mut urx = @dot_shared.round_int(br).to_double()
+  let mut urx = @numeric.round_int(br).to_double()
   if right_neighbor is None {
     urx = max_double(urx, right_bound)
   }
@@ -1760,7 +1760,7 @@ pub fn edge_pathplan_polyline(
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
   let mval_route_sizes = merge_sizes(mval_sizes, vnode_mval_sizes)
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
-  let splinesep_pt = (@dot_shared.round_int(nodesep_pt) / 4).to_double()
+  let splinesep_pt = (@numeric.round_int(nodesep_pt) / 4).to_double()
   let straight_eps = 0.01
   let label_threshold = if has_edge_label { 5 } else { 3 }
   let straight_len_from = (names : Array[String], start_idx : Int) => {

@@ -14,18 +14,18 @@ priv struct RootBoundaryTargetEdgesInput {
 fn add_root_boundary_target_edges(
   input : RootBoundaryTargetEdgesInput,
 ) -> Unit {
-  let base_minlen = @shared.round_int(input.root_margin)
+  let base_minlen = @numeric.round_int(input.root_margin)
   for name in input.target_names {
     match input.index.get(name) {
       Some(idx) => {
         let minlen =
           if input.compress_mode {
             if input.is_left_boundary {
-              @shared.round_int(
+              @numeric.round_int(
                 @node_primitives.node_left_pt(name, input.sizes) + input.root_margin,
               )
             } else {
-              @shared.round_int(
+              @numeric.round_int(
                 @node_primitives.node_right_pt(name, input.sizes) + input.root_margin,
               )
             }

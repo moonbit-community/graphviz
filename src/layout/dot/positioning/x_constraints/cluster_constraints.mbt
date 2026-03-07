@@ -221,11 +221,11 @@ pub fn build_cluster_constraints(
         }
         extra_nodes.push({
           name: ln_name,
-          rank: @shared.trunc_int(left - margin - left_border),
+          rank: @numeric.trunc_int(left - margin - left_border),
         })
         extra_nodes.push({
           name: rn_name,
-          rank: @shared.trunc_int(right + margin + right_border),
+          rank: @numeric.trunc_int(right + margin + right_border),
         })
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
@@ -258,7 +258,7 @@ pub fn build_cluster_constraints(
         Some(cluster_graph) =>
           match (deps.cluster_label_width_with_pad_for)(cluster_graph) {
             Some(label_width) => {
-              let minlen = @shared.round_int(label_width)
+              let minlen = @numeric.round_int(label_width)
               if minlen > 0 {
                 label_minlen = Some(minlen)
               }
@@ -326,7 +326,7 @@ pub fn build_cluster_constraints(
           }
           let left_name = names[left_idx]
           let right_name = names[right_idx]
-          let left_minlen = @shared.round_int(
+          let left_minlen = @numeric.round_int(
             @node_primitives.node_left_pt(left_name, sizes) + margin + left_border,
           )
           extra_edges.push({
@@ -337,7 +337,7 @@ pub fn build_cluster_constraints(
             tail_port: None,
             head_port: None,
           })
-          let right_minlen = @shared.round_int(
+          let right_minlen = @numeric.round_int(
             @node_primitives.node_right_pt(right_name, sizes) + margin + right_border,
           )
           extra_edges.push({
@@ -354,7 +354,7 @@ pub fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = @shared.round_int(
+              let minlen = @numeric.round_int(
                 @node_primitives.node_right_pt(outside, sizes) + margin,
               )
               extra_edges.push({
@@ -375,7 +375,7 @@ pub fn build_cluster_constraints(
             if related.get(outside) is None {
               // Graphviz parity (keepout_othernodes): outside-node separation
               // from cluster ln/rn uses only cluster margin, not label border.
-              let minlen = @shared.round_int(
+              let minlen = @numeric.round_int(
                 @node_primitives.node_left_pt(outside, sizes) + margin,
               )
               extra_edges.push({
@@ -417,10 +417,10 @@ pub fn build_cluster_constraints(
                   Some(value) => value
                   None => 0.0
                 }
-                let left_minlen = @shared.round_int(
+                let left_minlen = @numeric.round_int(
                   margin + parent_left_border,
                 )
-                let right_minlen = @shared.round_int(
+                let right_minlen = @numeric.round_int(
                   margin + parent_right_border,
                 )
                 extra_edges.push({
@@ -578,7 +578,7 @@ pub fn build_cluster_constraints(
                                           Some(right_pair) => {
                                             let left_rn = left_pair.right_node
                                             let right_ln = right_pair.left_node
-                                            let minlen = @shared.round_int(margin)
+                                            let minlen = @numeric.round_int(margin)
                                             extra_edges.push({
                                               tail: left_rn,
                                               head: right_ln,

@@ -143,7 +143,7 @@ fn load_flat_label_node_fixtures(
 ///|
 fn graph_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
-    Some(value) => @dot_shared.parse_first_double(value, default_nodesep_in())
+    Some(value) => @numeric.parse_first_double(value, default_nodesep_in())
     None => default_nodesep_in()
   }
   nodesep_in * 72.0
@@ -638,10 +638,10 @@ test "flat label node sizes match Graphviz fixtures" {
     },
   )
   let ranksep_in = match graph.get_attr("ranksep") {
-    Some(value) => @dot_shared.parse_first_double(value, default_ranksep_in())
+    Some(value) => @numeric.parse_first_double(value, default_ranksep_in())
     None => default_ranksep_in()
   }
-  let mut ranksep_pt_int = @dot_shared.round_int(ranksep_in * 72.0)
+  let mut ranksep_pt_int = @numeric.round_int(ranksep_in * 72.0)
   if has_edge_labels {
     ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }

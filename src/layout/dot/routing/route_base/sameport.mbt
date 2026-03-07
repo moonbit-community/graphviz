@@ -91,7 +91,7 @@ fn assign_sameport_group_size(
 fn sameport_node_penwidth_pt(node : @cgraph.Node) -> Double {
   match node.get_attr("penwidth") {
     Some(value) => {
-      let penwidth = @dot_shared.parse_double_or(value, 1.0)
+      let penwidth = @numeric.parse_double_or(value, 1.0)
       if penwidth < 0.0 {
         0.0
       } else {

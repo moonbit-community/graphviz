@@ -6,7 +6,7 @@ type RankDir = @shared.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
-type SizePt = @shared.GraphSizePt
+type SizePt = @numeric.GraphSizePt
 
 pub(all) struct RecordField {
   name : String?

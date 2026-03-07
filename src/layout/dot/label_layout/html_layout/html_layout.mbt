@@ -4,7 +4,7 @@
 
 type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
-type SizePt = @shared.GraphSizePt
+type SizePt = @numeric.GraphSizePt
 
 ///|
 let html_label_cache : Ref[Map[String, @html_label.HtmlLabel]] =

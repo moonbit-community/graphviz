@@ -112,7 +112,7 @@ fn same_rank_constraint_minlen(
   if is_invis && has_ordering {
     minlen_value = minlen_value + nodesep_pt
   }
-  @shared.trunc_int(minlen_value)
+  @numeric.trunc_int(minlen_value)
 }
 
 ///|

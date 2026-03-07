@@ -13,6 +13,7 @@
     "moonbitlang/core/math",
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/edge_identity",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+    "moonbit-community/graphviz/layout/dot/numeric"
   ]
 }

@@ -21,6 +21,7 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+    "moonbit-community/graphviz/layout/dot/numeric"
   ]
 }

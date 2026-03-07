@@ -22,7 +22,7 @@ pub fn port_label_params(
       if value == "" {
         default_angle_deg
       } else {
-        @dot_shared.parse_attr_double(
+        @numeric.parse_attr_double(
           value,
           default_angle_deg,
           min_angle_deg,
@@ -35,7 +35,7 @@ pub fn port_label_params(
       if value == "" {
         1.0
       } else {
-        @dot_shared.parse_attr_double(value, 1.0, 0.0)
+        @numeric.parse_attr_double(value, 1.0, 0.0)
       }
     None => 1.0
   }

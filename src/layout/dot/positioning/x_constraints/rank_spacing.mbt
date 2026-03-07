@@ -30,7 +30,7 @@ pub fn compress_width_minlen_pt(
   if !graph_ratio_is_compress(graph) {
     return None
   }
-  let size = match @shared.parse_graph_size_pt_attr(graph) {
+  let size = match @numeric.parse_graph_size_pt_attr(graph) {
     Some(value) => value
     None => return None
   }
@@ -42,7 +42,7 @@ pub fn compress_width_minlen_pt(
     return None
   }
   let clamped = if width_pt > 65535.0 { 65535.0 } else { width_pt }
-  Some(@shared.round_int(clamped))
+  Some(@numeric.round_int(clamped))
 }
 
 ///|
@@ -99,7 +99,7 @@ pub fn compute_rank_positions(
       let tail_right = size_right_pt(prev, sizes)
       let head_left = size_left_pt(name, sizes)
       let width = tail_right + head_left + rank_nodesep
-      current = @shared.trunc_int(current.to_double() + width)
+      current = @numeric.trunc_int(current.to_double() + width)
       positions[name] = current.to_double()
       prev = name
       i = i + 1

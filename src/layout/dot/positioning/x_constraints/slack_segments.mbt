@@ -42,8 +42,8 @@ pub fn segment_slack_minlen(
   let tail_offset = edge_port_offset(segment.tail, segment.tail_port)
   let head_offset = edge_port_offset(segment.head, segment.head_port)
   let delta = head_offset - tail_offset
-  let m0 = if delta > 0.0 { @shared.trunc_int(delta) } else { 0 }
-  let m1 = if delta < 0.0 { @shared.trunc_int(-delta) } else { 0 }
+  let m0 = if delta > 0.0 { @numeric.trunc_int(delta) } else { 0 }
+  let m1 = if delta < 0.0 { @numeric.trunc_int(-delta) } else { 0 }
   (m0, m1)
 }
 

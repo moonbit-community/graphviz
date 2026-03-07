@@ -21,27 +21,27 @@ fn edge_at(graph : @cgraph.Graph, index : Int) -> @cgraph.Edge raise {
 
 ///|
 test "base parse helpers extract and clamp doubles" {
-  assert_double_close(@dot_shared.parse_double_or("12.5", 0.0), 12.5, 0.000001)
-  assert_double_close(@dot_shared.parse_double_or("oops", 3.5), 3.5, 0.000001)
+  assert_double_close(@numeric.parse_double_or("12.5", 0.0), 12.5, 0.000001)
+  assert_double_close(@numeric.parse_double_or("oops", 3.5), 3.5, 0.000001)
 
   assert_double_close(
-    @dot_shared.parse_first_double("ranksep=1.75 equally", 0.0),
+    @numeric.parse_first_double("ranksep=1.75 equally", 0.0),
     1.75,
     0.000001,
   )
   assert_double_close(
-    @dot_shared.parse_first_double("equally", 2.25),
+    @numeric.parse_first_double("equally", 2.25),
     2.25,
     0.000001,
   )
 
-  assert_eq(@dot_shared.parse_first_double_optional(" +2.5 equally"), Some(2.5))
-  assert_eq(@dot_shared.parse_first_double_optional("equally"), None)
+  assert_eq(@numeric.parse_first_double_optional(" +2.5 equally"), Some(2.5))
+  assert_eq(@numeric.parse_first_double_optional("equally"), None)
 
-  assert_double_close(@dot_shared.parse_attr_double("-0.5", 1.0, 0.02), 0.02, 0.000001)
-  assert_double_close(@dot_shared.parse_attr_double("2.0", 1.0, 0.02), 2.0, 0.000001)
+  assert_double_close(@numeric.parse_attr_double("-0.5", 1.0, 0.02), 0.02, 0.000001)
+  assert_double_close(@numeric.parse_attr_double("2.0", 1.0, 0.02), 2.0, 0.000001)
   assert_double_close(
-    @dot_shared.parse_attr_double("equally", 1.0, 0.02),
+    @numeric.parse_attr_double("equally", 1.0, 0.02),
     1.0,
     0.000001,
   )

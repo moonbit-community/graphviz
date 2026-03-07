@@ -89,7 +89,7 @@ fn add_ordered_constraint_nodes(
         let idx = @network_simplex.add_node(graph, node.name())
         index[name] = idx
         let pos = base_positions.get(name).unwrap_or_default()
-        @network_simplex.set_node_rank(graph, idx, @shared.trunc_int(pos))
+        @network_simplex.set_node_rank(graph, idx, @numeric.trunc_int(pos))
       }
       None =>
         match extra_rank.get(name) {
@@ -97,7 +97,7 @@ fn add_ordered_constraint_nodes(
             let idx = @network_simplex.add_node(graph, name, kind=constraint_node_kind(name))
             index[name] = idx
             let pos = base_positions.get(name).unwrap_or(rank.to_double())
-            @network_simplex.set_node_rank(graph, idx, @shared.trunc_int(pos))
+            @network_simplex.set_node_rank(graph, idx, @numeric.trunc_int(pos))
           }
           None => ()
         }
