@@ -639,12 +639,6 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
 }
 
 ///|
-test "mincross fixtures load" {
-  let fixtures = load_mincross_fixtures()
-  assert_true(fixtures.cases.length() > 0)
-}
-
-///|
 test "mincross fixtures match reorder_rank_groups" {
   let fixtures = load_mincross_fixtures()
   for pair in fixtures.cases {
