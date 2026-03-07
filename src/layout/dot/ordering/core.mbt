@@ -267,6 +267,49 @@ pub fn build_dot_cluster_metadata(
 }
 
 ///|
+/// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
+/// extraction, and reorder-setup snapshots grouped so owner-side dispatch can
+/// reuse the same Stage C setup artifacts.
+pub(all) struct OrderingPipelineContext {
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
+}
+
+///|
+/// Graphviz parity: ordering pipeline source bundle keeps stage-side graph/rank
+/// snapshots grouped so owner code assembles runtime, class2, and reorder setup
+/// in one boundary.
+pub(all) struct BuildOrderingPipelineContextSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  nodesep_pt : Double
+  rankdir : @rankdir.RankDir
+  cluster_meta : DotClusterMetadata
+}
+
+///|
+/// Graphviz parity: ordering pipeline dep bundle keeps label-metric and
+/// edge-port sampling bridges explicit while owner code assembles the pipeline
+/// context.
+pub(all) struct BuildOrderingPipelineContextDeps {
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
+  build_port_sample_bundle : (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+  ) -> EdgePortSampleBundle
+}
+
+///|
 /// Graphviz parity: ordering stage result keeps reordered rank groups, vnode
 /// metadata, and derived edge-order snapshots grouped for downstream stages.
 pub(all) struct OrderingResult {
@@ -282,6 +325,88 @@ pub(all) struct OrderingResult {
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   vnode_creation_order : Array[String]
+}
+
+///|
+/// Graphviz parity: ordering pipeline context assembles runtime expansion,
+/// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_pipeline_context_from_sources(
+  sources : BuildOrderingPipelineContextSources,
+  deps : BuildOrderingPipelineContextDeps,
+) -> OrderingPipelineContext {
+  let runtime_context =
+    build_ordering_runtime_context_from_sources(
+      {
+        graph: sources.graph,
+        nodes: sources.nodes,
+        edges: sources.edges,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+        edge_out_order: sources.edge_out_order,
+        ranks: sources.ranks,
+        node_order: sources.node_order,
+        nodesep_pt: sources.nodesep_pt,
+        rankdir: sources.rankdir,
+        cluster_meta: sources.cluster_meta,
+      },
+      {
+        edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
+      },
+    )
+  let edge_port_data =
+    build_ordering_edge_port_data_from_sources(
+      {
+        edges: sources.edges,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+      },
+      { build_port_sample_bundle: deps.build_port_sample_bundle },
+    )
+  let reorder_setup =
+    build_ordering_reorder_setup_from_sources(
+      {
+        nodes: sources.nodes,
+        edges: sources.edges,
+        edge_tail: sources.edge_tail,
+        edge_head: sources.edge_head,
+        edge_reversed: sources.edge_reversed,
+        edge_out_order: sources.edge_out_order,
+        ranks: sources.ranks,
+        groups: sources.groups,
+        node_order: sources.node_order,
+        runtime_context,
+        cluster_meta: sources.cluster_meta,
+        rankdir: sources.rankdir,
+        edge_port_data,
+      },
+    )
+  { runtime_context, edge_port_data, reorder_setup }
+}
+
+///|
+/// Graphviz parity: ordering result assembly forwards dispatch and pipeline
+/// snapshots in Graphviz-aligned field composition order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_result_from_pipeline_context(
+  pipeline_context : OrderingPipelineContext,
+  ordered_groups : Map[Int, Array[String]],
+  ordered_groups_with_vnodes : Map[Int, Array[String]],
+) -> OrderingResult {
+  {
+    ordered_groups,
+    ordered_groups_with_vnodes,
+    vnode_info: pipeline_context.runtime_context.vnode_info,
+    vnode_count: pipeline_context.runtime_context.vnode_info.vnode_ranks.length(),
+    order_edges: pipeline_context.edge_port_data.order_edges,
+    order_edge_tail: pipeline_context.edge_port_data.order_edge_tail,
+    order_edge_head: pipeline_context.edge_port_data.order_edge_head,
+    edge_order: pipeline_context.edge_port_data.edge_order,
+    edge_cluster_keys: pipeline_context.runtime_context.edge_cluster_keys,
+    nlist_order: pipeline_context.reorder_setup.class2_data.nlist_order,
+    gdnlist_order: pipeline_context.reorder_setup.gdnlist_order,
+    vnode_creation_order: pipeline_context.reorder_setup.class2_data.vnode_creation_order,
+  }
 }
 
 ///|

@@ -81,6 +81,9 @@ priv struct OrderingDispatchOutput {
 type OrderingRuntimeContext = @ordering.OrderingRuntimeContext
 
 ///|
+type OrderingPipelineContext = @ordering.OrderingPipelineContext
+
+///|
 type OrderingResult = @ordering.OrderingResult
 
 ///|
@@ -90,103 +93,6 @@ type OrderingResult = @ordering.OrderingResult
 pub(all) struct OrderingStageOutput {
   cluster_meta : ClusterMetadata
   ordering : OrderingResult
-}
-
-///|
-/// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
-/// extraction, and reorder-setup snapshots together for C0 dispatch/replay.
-priv struct OrderingPipelineContext {
-  runtime_context : OrderingRuntimeContext
-  edge_port_data : @ordering.OrderingEdgePortData
-  reorder_setup : @ordering.OrderingReorderSetup
-}
-
-///|
-/// Graphviz parity: ordering pipeline context assembles runtime expansion,
-/// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
-fn build_ordering_pipeline_context(
-  input : OrderingStageInput,
-  cluster_meta : ClusterMetadata,
-  deps : OrderingStageDeps,
-) -> OrderingPipelineContext {
-  let runtime_context =
-    @ordering.build_ordering_runtime_context_from_sources(
-      {
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        edge_out_order: input.edge_out_order,
-        ranks: input.ranks,
-        node_order: input.node_order,
-        nodesep_pt: input.nodesep_pt,
-        rankdir: input.rankdir,
-        cluster_meta,
-      },
-      { edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for },
-    )
-  let build_port_sample_bundle =
-    (edges, edge_tail, edge_head) =>
-      (deps.build_edge_port_sample_bundle)(
-        input.nodes,
-        edges,
-        edge_tail,
-        edge_head,
-        input.order_sizes,
-      )
-  let edge_port_data =
-    @ordering.build_ordering_edge_port_data_from_sources(
-      {
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-      },
-      { build_port_sample_bundle: build_port_sample_bundle },
-    )
-  let reorder_setup =
-    @ordering.build_ordering_reorder_setup_from_sources(
-      {
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        edge_reversed: input.edge_reversed,
-        edge_out_order: input.edge_out_order,
-        ranks: input.ranks,
-        groups: input.groups,
-        node_order: input.node_order,
-        runtime_context,
-        cluster_meta,
-        rankdir: input.rankdir,
-        edge_port_data,
-      },
-    )
-  { runtime_context, edge_port_data, reorder_setup }
-}
-
-/// Graphviz parity: ordering result assembly forwards dispatch and pipeline
-/// snapshots in Graphviz-aligned field composition order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_result(
-  pipeline_context : OrderingPipelineContext,
-  dispatch_output : OrderingDispatchOutput,
-) -> OrderingResult {
-  {
-    ordered_groups: dispatch_output.ordered_groups,
-    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
-    vnode_info: pipeline_context.runtime_context.vnode_info,
-    vnode_count: pipeline_context.runtime_context.vnode_info.vnode_ranks.length(),
-    order_edges: pipeline_context.edge_port_data.order_edges,
-    order_edge_tail: pipeline_context.edge_port_data.order_edge_tail,
-    order_edge_head: pipeline_context.edge_port_data.order_edge_head,
-    edge_order: pipeline_context.edge_port_data.edge_order,
-    edge_cluster_keys: pipeline_context.runtime_context.edge_cluster_keys,
-    nlist_order: pipeline_context.reorder_setup.class2_data.nlist_order,
-    gdnlist_order: pipeline_context.reorder_setup.gdnlist_order,
-    vnode_creation_order:
-      pipeline_context.reorder_setup.class2_data.vnode_creation_order,
-  }
 }
 
 ///|
@@ -496,14 +402,48 @@ pub fn compute_ordering_stage(
         rankdir: input.rankdir,
       },
     )
+  let build_port_sample_bundle =
+    (edges, edge_tail, edge_head) =>
+      (deps.build_edge_port_sample_bundle)(
+        input.nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        input.order_sizes,
+      )
   let pipeline_context =
-    build_ordering_pipeline_context(input, cluster_meta, deps)
+    @ordering.build_ordering_pipeline_context_from_sources(
+      {
+        graph: input.graph,
+        nodes: input.nodes,
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        edge_reversed: input.edge_reversed,
+        edge_out_order: input.edge_out_order,
+        ranks: input.ranks,
+        groups: input.groups,
+        node_order: input.node_order,
+        nodesep_pt: input.nodesep_pt,
+        rankdir: input.rankdir,
+        cluster_meta,
+      },
+      {
+        edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
+        build_port_sample_bundle: build_port_sample_bundle,
+      },
+    )
   let dispatch_context =
     build_clustered_dispatch_context(input, cluster_meta, pipeline_context)
   let dispatch_output =
     run_ordering_dispatch(dispatch_context)
   {
     cluster_meta,
-    ordering: build_ordering_result(pipeline_context, dispatch_output),
+    ordering:
+      @ordering.build_ordering_result_from_pipeline_context(
+        pipeline_context,
+        dispatch_output.ordered_groups,
+        dispatch_output.ordered_with_vnodes,
+      ),
   }
 }
