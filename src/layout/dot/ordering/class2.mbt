@@ -651,17 +651,6 @@ pub(all) struct OrderingEdgePortDataSources {
   edge_head : Array[String]
 }
 
-///|
-/// Graphviz parity: edge-port sampling dep bundle keeps one callback for
-/// full-edge and dedup-order-edge endpoint sampling, avoiding stage-local
-/// class2 assembly drift.
-pub(all) struct OrderingEdgePortDataDeps {
-  build_port_sample_bundle : (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-  ) -> EdgePortSampleBundle
-}
 
 ///|
 /// Graphviz parity: ordering edge-port data keeps dedup ordering-edge
@@ -670,10 +659,14 @@ pub(all) struct OrderingEdgePortDataDeps {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_edge_port_data_from_sources(
   sources : OrderingEdgePortDataSources,
-  deps : OrderingEdgePortDataDeps,
+  build_port_sample_bundle : (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+  ) -> EdgePortSampleBundle,
 ) -> OrderingEdgePortData {
   let edge_port_samples =
-    (deps.build_port_sample_bundle)(
+    build_port_sample_bundle(
       sources.edges,
       sources.edge_tail,
       sources.edge_head,
@@ -685,7 +678,7 @@ pub fn build_ordering_edge_port_data_from_sources(
       sources.edge_head,
     )
   let order_edge_port_samples =
-    (deps.build_port_sample_bundle)(
+    build_port_sample_bundle(
       dedup_order_edges.order_edges,
       dedup_order_edges.order_edge_tail,
       dedup_order_edges.order_edge_head,

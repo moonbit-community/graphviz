@@ -56,12 +56,6 @@ pub(all) struct BuildOrderingRuntimeContextSources {
   cluster_meta : DotClusterMetadata
 }
 
-///|
-/// Graphviz parity: runtime-context dep bundle keeps label-metric vnode wiring
-/// explicit while ordering owner code assembles the remaining runtime input.
-pub(all) struct BuildOrderingRuntimeContextDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-}
 
 ///|
 /// Graphviz parity: ordering runtime prep keeps vnode build and cluster-key
@@ -69,7 +63,6 @@ pub(all) struct BuildOrderingRuntimeContextDeps {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_runtime_context_from_sources(
   sources : BuildOrderingRuntimeContextSources,
-  deps : BuildOrderingRuntimeContextDeps,
 ) -> OrderingRuntimeContext {
   build_ordering_runtime_context(
     {
@@ -85,7 +78,6 @@ pub fn build_ordering_runtime_context_from_sources(
       rankdir: sources.rankdir,
       intercluster_keys: sources.cluster_meta.intercluster_keys,
       cluster_parents: sources.cluster_meta.cluster_parents,
-      edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
     },
   )
 }
@@ -106,7 +98,6 @@ pub(all) struct BuildOrderingRuntimeContextInput {
   rankdir : @rankdir.RankDir
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
 }
 
 ///|
@@ -176,9 +167,6 @@ pub fn build_ordering_runtime_context(
       runtime_core.existing_names,
       runtime_core.edge_cluster_keys,
       input.cluster_parents,
-      {
-        edge_mid_label_metrics_for: input.edge_mid_label_metrics_for,
-      },
     )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()

@@ -1,8 +1,4 @@
 
-///|
-pub(all) struct EdgeVnodeBuildDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-}
 
 ///|
 /// Graphviz parity: class2 virtual node creation order + sizing.
@@ -19,7 +15,6 @@ pub fn build_edge_vnodes(
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
-  deps : EdgeVnodeBuildDeps,
 ) -> @routing.EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
@@ -142,12 +137,12 @@ pub fn build_edge_vnodes(
       continue
     }
     let (label_width, label_height) =
-      match (deps.edge_mid_label_metrics_for)(edge) {
-      Some((width, height)) =>
+      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      Some(value) =>
         if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
-          (height, width)
+          (value.height, value.width)
         } else {
-          (width, height)
+          (value.width, value.height)
         }
       None => (0.0, 0.0)
     }

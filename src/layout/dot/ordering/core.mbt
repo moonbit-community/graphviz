@@ -296,18 +296,6 @@ pub(all) struct BuildOrderingPipelineContextSources {
   cluster_meta : DotClusterMetadata
 }
 
-///|
-/// Graphviz parity: ordering pipeline dep bundle keeps label-metric and
-/// edge-port sampling bridges explicit while owner code assembles the pipeline
-/// context.
-pub(all) struct BuildOrderingPipelineContextDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-  build_port_sample_bundle : (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-  ) -> EdgePortSampleBundle
-}
 
 ///|
 /// Graphviz parity: ordering stage result keeps reordered rank groups, vnode
@@ -333,27 +321,26 @@ pub(all) struct OrderingResult {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_pipeline_context_from_sources(
   sources : BuildOrderingPipelineContextSources,
-  deps : BuildOrderingPipelineContextDeps,
+  build_port_sample_bundle : (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+  ) -> EdgePortSampleBundle,
 ) -> OrderingPipelineContext {
   let runtime_context =
-    build_ordering_runtime_context_from_sources(
-      {
-        graph: sources.graph,
-        nodes: sources.nodes,
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-        edge_out_order: sources.edge_out_order,
-        ranks: sources.ranks,
-        node_order: sources.node_order,
-        nodesep_pt: sources.nodesep_pt,
-        rankdir: sources.rankdir,
-        cluster_meta: sources.cluster_meta,
-      },
-      {
-        edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
-      },
-    )
+    build_ordering_runtime_context_from_sources({
+      graph: sources.graph,
+      nodes: sources.nodes,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      edge_out_order: sources.edge_out_order,
+      ranks: sources.ranks,
+      node_order: sources.node_order,
+      nodesep_pt: sources.nodesep_pt,
+      rankdir: sources.rankdir,
+      cluster_meta: sources.cluster_meta,
+    })
   let edge_port_data =
     build_ordering_edge_port_data_from_sources(
       {
@@ -361,7 +348,7 @@ pub fn build_ordering_pipeline_context_from_sources(
         edge_tail: sources.edge_tail,
         edge_head: sources.edge_head,
       },
-      { build_port_sample_bundle: deps.build_port_sample_bundle },
+      build_port_sample_bundle,
     )
   let reorder_setup =
     build_ordering_reorder_setup_from_sources(

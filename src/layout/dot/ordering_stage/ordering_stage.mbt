@@ -390,15 +390,7 @@ pub fn compute_ordering_stage(
         rankdir: input.rankdir,
         cluster_meta,
       },
-      {
-        edge_mid_label_metrics_for:
-          edge =>
-            match @edge_label_metrics.edge_mid_label_metrics(edge) {
-              Some(value) => Some((value.width, value.height))
-              None => None
-            },
-        build_port_sample_bundle: build_port_sample_bundle,
-      },
+      build_port_sample_bundle,
     )
   let dispatch_context =
     build_clustered_dispatch_context(input, cluster_meta, pipeline_context)

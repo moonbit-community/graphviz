@@ -219,14 +219,6 @@ fn collect_label_vnode_actuals(
     existing_names,
     edge_cluster_keys,
     cluster_parents,
-    {
-      edge_mid_label_metrics_for:
-        edge =>
-          match @edge_label_metrics.edge_mid_label_metrics(edge) {
-            Some(value) => Some((value.width, value.height))
-            None => None
-          },
-    },
   )
   let actuals : Array[LabelVnodeActual] = []
   for edge in edges {
