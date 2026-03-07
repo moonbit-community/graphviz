@@ -76,8 +76,8 @@ fn run_nonclustered_ordering_dispatch(
   let input = dispatch_context.input
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
-  let noncluster_inputs =
-    @ordering.build_noncluster_reorder_inputs_from_sources(
+  let ordered_groups =
+    @ordering.run_noncluster_reorder_pass(
       {
         nodes: input.nodes,
         edges: input.edges,
@@ -101,8 +101,6 @@ fn run_nonclustered_ordering_dispatch(
         edge_port_data: pipeline_context.edge_port_data,
       },
     )
-  let ordered_groups =
-    @ordering.run_noncluster_reorder_pass(noncluster_inputs)
   {
     ordered_groups,
     ordered_with_vnodes: Map::new(),

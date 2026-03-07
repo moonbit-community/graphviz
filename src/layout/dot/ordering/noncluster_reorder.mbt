@@ -13,7 +13,7 @@ priv struct GraphvizNeighborMaps {
 /// materialization, rank groups, node-order seed sources, and graph metadata
 /// unchanged before reorder_rank_groups dispatch.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct NonclusterReorderInputs {
+priv struct NonclusterReorderInputs {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_head : Array[String]
@@ -72,42 +72,45 @@ pub(all) struct NonclusterReorderInputsBuildSources {
 }
 
 ///|
-/// Graphviz parity: non-cluster reorder call payload is assembled from one
-/// dispatch snapshot plus reorder-setup and edge-port materialization outputs.
+/// Graphviz parity: non-cluster reorder source bundle is consumed as one
+/// package entry, assembling the reorder payload before the single ND_order
+/// pass runs.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_noncluster_reorder_inputs_from_sources(
+pub fn run_noncluster_reorder_pass(
   sources : NonclusterReorderInputsBuildSources,
-) -> NonclusterReorderInputs {
-  {
-    nodes: sources.nodes,
-    edges: sources.edges,
-    edge_head: sources.edge_head,
-    edge_out_order: sources.edge_out_order,
-    ranks: sources.ranks,
-    rank_keys: sources.rank_keys,
-    groups: sources.groups,
-    nlist_order: sources.reorder_setup.class2_data.nlist_order,
-    node_order: sources.node_order,
-    order_edges: sources.edge_port_data.order_edges,
-    order_edge_tail: sources.edge_port_data.order_edge_tail,
-    order_edge_head: sources.edge_port_data.order_edge_head,
-    order_edge_tail_port_x: sources.edge_port_data.order_edge_tail_port_x,
-    order_edge_head_port_x: sources.edge_port_data.order_edge_head_port_x,
-    order_edge_tail_port_order: sources.edge_port_data.order_edge_tail_port_order,
-    order_edge_head_port_order: sources.edge_port_data.order_edge_head_port_order,
-    cluster_keys: sources.cluster_keys,
-    cluster_skeleton: sources.cluster_skeleton,
-    rank_same_groups: sources.rank_same_groups,
-    rank_same_order: sources.rank_same_order,
-    edge_order: sources.edge_port_data.edge_order,
-    order_sizes: sources.order_sizes,
-    nodesep_pt: sources.nodesep_pt,
-    has_edge_labels: sources.has_edge_labels,
-    port_order_positions: sources.port_order_positions,
-    port_order_contrib: sources.port_order_contrib,
-    flat_constraints: sources.flat_constraints,
-    graphviz_flip: sources.reorder_setup.graphviz_flip,
-  }
+) -> Map[Int, Array[String]] {
+  run_noncluster_reorder_pass_with_inputs(
+    {
+      nodes: sources.nodes,
+      edges: sources.edges,
+      edge_head: sources.edge_head,
+      edge_out_order: sources.edge_out_order,
+      ranks: sources.ranks,
+      rank_keys: sources.rank_keys,
+      groups: sources.groups,
+      nlist_order: sources.reorder_setup.class2_data.nlist_order,
+      node_order: sources.node_order,
+      order_edges: sources.edge_port_data.order_edges,
+      order_edge_tail: sources.edge_port_data.order_edge_tail,
+      order_edge_head: sources.edge_port_data.order_edge_head,
+      order_edge_tail_port_x: sources.edge_port_data.order_edge_tail_port_x,
+      order_edge_head_port_x: sources.edge_port_data.order_edge_head_port_x,
+      order_edge_tail_port_order: sources.edge_port_data.order_edge_tail_port_order,
+      order_edge_head_port_order: sources.edge_port_data.order_edge_head_port_order,
+      cluster_keys: sources.cluster_keys,
+      cluster_skeleton: sources.cluster_skeleton,
+      rank_same_groups: sources.rank_same_groups,
+      rank_same_order: sources.rank_same_order,
+      edge_order: sources.edge_port_data.edge_order,
+      order_sizes: sources.order_sizes,
+      nodesep_pt: sources.nodesep_pt,
+      has_edge_labels: sources.has_edge_labels,
+      port_order_positions: sources.port_order_positions,
+      port_order_contrib: sources.port_order_contrib,
+      flat_constraints: sources.flat_constraints,
+      graphviz_flip: sources.reorder_setup.graphviz_flip,
+    },
+  )
 }
 
 ///|
@@ -217,7 +220,7 @@ fn build_noncluster_graphviz_neighbors(
 /// builds Graphviz-style ND_out/ND_in neighbor order, and delegates one
 /// reorder_rank_groups call with unchanged argument wiring.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_noncluster_reorder_pass(
+fn run_noncluster_reorder_pass_with_inputs(
   inputs : NonclusterReorderInputs,
 ) -> Map[Int, Array[String]] {
   let order_node_order =
