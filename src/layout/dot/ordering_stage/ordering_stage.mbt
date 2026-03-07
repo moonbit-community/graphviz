@@ -2,51 +2,14 @@
 type RankDir = @rankdir.RankDir
 type NodeSize = @node_primitives.NodeSize
 type ClusterMetadata = @ordering.DotClusterMetadata
-type EdgePortSampleBundle = @ordering.EdgePortSampleBundle
 
 ///|
 /// Stage C ordering stage file: contracts, runtime pipeline context, and
 /// clustered/non-clustered dispatch orchestration.
 
 ///|
-/// Graphviz parity: Stage C dependency payload keeps root-owned geometry and
-/// label-metric bridges explicit while the subpackage owns ordering dispatch.
-pub(all) struct OrderingStageDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-  build_edge_port_sample_bundle : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-    Map[String, NodeSize],
-  ) -> EdgePortSampleBundle
-}
-
-///|
-/// Graphviz parity: Stage C default deps live with the owning stage package so
-/// Stage B only wires cross-stage inputs while label/port bridge behavior stays
-/// centralized here.
-fn build_ordering_stage_deps() -> OrderingStageDeps {
-  {
-    edge_mid_label_metrics_for: edge =>
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(value) => Some((value.width, value.height))
-        None => None
-      },
-    build_edge_port_sample_bundle:
-      (nodes, edges, edge_tail, edge_head, order_sizes) =>
-        @positioning.build_edge_port_sample_bundle(
-          nodes,
-          edges,
-          edge_tail,
-          edge_head,
-          order_sizes,
-          @port_bridge.port_offsets_for_nodes,
-          @port_bridge.edge_port_offset,
-          @port_bridge.edge_port_order,
-        ),
-  }
-}
+/// Stage C ordering owner calls stay local to the stage package; root dot only
+/// passes cross-stage input payloads.
 
 ///|
 /// Graphviz parity: ordering stage payload keeps rank and order-context maps
@@ -386,7 +349,6 @@ fn run_ordering_dispatch(
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_ordering_stage(
   input : OrderingStageInput,
-  deps? : OrderingStageDeps = build_ordering_stage_deps(),
 ) -> OrderingStageOutput {
   let cluster_meta =
     @ordering.build_dot_cluster_metadata_from_sources(
@@ -404,12 +366,15 @@ pub fn compute_ordering_stage(
     )
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      (deps.build_edge_port_sample_bundle)(
+      @positioning.build_edge_port_sample_bundle(
         input.nodes,
         edges,
         edge_tail,
         edge_head,
         input.order_sizes,
+        @port_bridge.port_offsets_for_nodes,
+        @port_bridge.edge_port_offset,
+        @port_bridge.edge_port_order,
       )
   let pipeline_context =
     @ordering.build_ordering_pipeline_context_from_sources(
@@ -429,7 +394,12 @@ pub fn compute_ordering_stage(
         cluster_meta,
       },
       {
-        edge_mid_label_metrics_for: deps.edge_mid_label_metrics_for,
+        edge_mid_label_metrics_for:
+          edge =>
+            match @edge_label_metrics.edge_mid_label_metrics(edge) {
+              Some(value) => Some((value.width, value.height))
+              None => None
+            },
         build_port_sample_bundle: build_port_sample_bundle,
       },
     )
