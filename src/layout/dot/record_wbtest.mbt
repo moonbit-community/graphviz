@@ -136,7 +136,7 @@ test "record_ports rotate into layout coords for rankdir LR" {
     size,
     record_orientation,
   )
-  let rotated = @label_layout.layout_ports_from_final(ports, @geom.Point::{ x: 0.0, y: 0.0 }, RankDir::LR)
+  let rotated = @port_geometry.layout_ports_from_final(ports, @geom.Point::{ x: 0.0, y: 0.0 }, RankDir::LR)
   match rotated.get("left") {
     Some(port) => {
       assert_true(port.center.x > 0.0)

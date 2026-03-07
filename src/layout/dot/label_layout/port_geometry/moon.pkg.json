@@ -1,0 +1,11 @@
+{
+  "import": [
+    "moonbit-community/graphviz/layout/dot/shared",
+    {
+      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
+      "alias": "edge_spline"
+    },
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom"
+  ]
+}

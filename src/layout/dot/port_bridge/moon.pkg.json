@@ -6,6 +6,7 @@
     },
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/label_layout",
+    "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/label_metrics",
     "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/layout/dot/positioning",

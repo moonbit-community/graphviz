@@ -26,7 +26,7 @@ pub fn port_offsets_for_nodes(
       let record_orientation = @shared.record_layout_orientation(rankdir)
       @label_layout.raw_label_ports_for_node(node, origin, base_size, record_orientation)
     },
-    @label_layout.layout_port_offset,
+    @port_geometry.layout_port_offset,
     @shared.swap_node_size,
   )
 }
@@ -54,7 +54,7 @@ fn compass_port_point_for_layout(
         shape_compass,
         shape_rankdir,
       ),
-    @label_layout.layout_port_offset,
+    @port_geometry.layout_port_offset,
   )
 }
 
@@ -82,7 +82,7 @@ pub fn edge_port_offset(
         node =>
           @shared.is_record_shape(node) ||
           @html_label.is_html_label_text(@label_layout.label_text(node)),
-        @label_layout.layout_port_offset,
+        @port_geometry.layout_port_offset,
       ),
   )
 }
@@ -146,7 +146,7 @@ fn port_side_mask_for_self_edge(
     None => 0
     Some(value) =>
       match value.compass {
-        Some(compass) => @label_layout.compass_side_mask(compass)
+        Some(compass) => @port_geometry.compass_side_mask(compass)
         None =>
           match value.name {
             Some(port_name) =>

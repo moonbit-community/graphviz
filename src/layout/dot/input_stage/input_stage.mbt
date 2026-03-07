@@ -171,7 +171,7 @@ fn build_node_port_order(
     )
   let order_map : Map[String, Double] = Map::new()
   for port_name, port in raw_ports {
-    let offset = @label_layout.layout_port_offset(port.center, rankdir)
+    let offset = @port_geometry.layout_port_offset(port.center, rankdir)
     order_map[port_name] = offset.x
   }
   order_map

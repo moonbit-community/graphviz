@@ -187,7 +187,7 @@ fn build_port_layout_maps_for_routing_stage(
       if raw_ports.length() > 0 {
         label_ports_raw[name] = raw_ports
         let ports =
-          @label_layout.layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+          @port_geometry.layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
         label_ports_map[name] = ports
       }
     }
@@ -253,7 +253,7 @@ fn build_head_port_metrics_for_stage(
       port_geometry_for:
         (node_name, port, node_pos, node_size) => {
           let geometry =
-            @label_layout.port_geometry(
+            @port_geometry.port_geometry(
               node_name,
               port,
               label_ports_map,
@@ -306,7 +306,7 @@ fn build_route_base_deps_for_dot(
       node_size : NodeSize,
     ) => {
       let geometry =
-        @label_layout.port_geometry(
+        @port_geometry.port_geometry(
           node_name,
           port,
           routing_label_ports_map,
@@ -337,7 +337,7 @@ fn build_route_base_deps_for_dot(
       record_border_adjust : Double,
     ) => {
       let anchor =
-        @label_layout.dynamic_port_anchor_for_edge(
+        @port_geometry.dynamic_port_anchor_for_edge(
           port,
           node_name,
           routing_label_ports_raw,
@@ -358,10 +358,10 @@ fn build_route_base_deps_for_dot(
     edge_mid_label_metrics: route_mid_label_metrics,
     record_port_path_box: @label_layout.record_port_path_box,
     port_geometry: route_port_geometry,
-    port_rect_from_geometry: @label_layout.port_rect_from_geometry,
+    port_rect_from_geometry: @port_geometry.port_rect_from_geometry,
     port_is_label_port:
       (node_name, port) =>
-        @label_layout.port_is_label_port(node_name, port, routing_label_ports_raw),
+        @port_geometry.port_is_label_port(node_name, port, routing_label_ports_raw),
     is_record_shape: @shared.is_record_shape,
     record_border_adjust:
       (node) =>
@@ -372,11 +372,11 @@ fn build_route_base_deps_for_dot(
           0.0
         },
     dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
-    port_side_mask_from_anchor: @label_layout.port_side_mask_from_anchor,
+    port_side_mask_from_anchor: @port_geometry.port_side_mask_from_anchor,
     port_side_for_edge:
       (port, port_rect, node_pos, node_size) =>
-        @label_layout.port_side_for_edge(port, port_rect, node_pos, node_size, None),
-    layout_port_offset: @label_layout.layout_port_offset,
+        @port_geometry.port_side_for_edge(port, port_rect, node_pos, node_size, None),
+    layout_port_offset: @port_geometry.layout_port_offset,
     node_cluster_key: @clustering.node_cluster_key,
     node_local_cluster_key: @clustering.node_local_cluster_key,
   }
