@@ -366,15 +366,12 @@ pub fn compute_ordering_stage(
     )
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      @positioning.build_edge_port_sample_bundle(
+      @port_bridge.build_edge_port_sample_bundle(
         input.nodes,
         edges,
         edge_tail,
         edge_head,
         input.order_sizes,
-        @port_bridge.port_offsets_for_nodes,
-        @port_bridge.edge_port_offset,
-        @port_bridge.edge_port_order,
       )
   let pipeline_context =
     @ordering.build_ordering_pipeline_context_from_sources(

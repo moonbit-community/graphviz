@@ -12,6 +12,7 @@
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/routing/self_edge",
     {
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",

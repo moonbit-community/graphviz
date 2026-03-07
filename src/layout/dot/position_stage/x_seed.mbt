@@ -35,15 +35,12 @@ fn build_x_seed_port_samples(
 ) -> @positioning.XSeedPortSamples {
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      @positioning.build_edge_port_sample_bundle(
+      @port_bridge.build_edge_port_sample_bundle(
         pipeline.prep.nodes,
         edges,
         edge_tail,
         edge_head,
         x_order_sizes,
-        @port_bridge.port_offsets_for_nodes,
-        @port_bridge.edge_port_offset,
-        @port_bridge.edge_port_order,
       )
   let x_port_samples =
     build_port_sample_bundle(

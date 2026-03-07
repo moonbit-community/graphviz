@@ -112,6 +112,30 @@ pub fn edge_port_order(
 }
 
 ///|
+/// Graphviz parity: dot edge-port sample bundle keeps the shared port-offset,
+/// port-order, and rankdir-aware bridge policy centralized for ordering/xpos
+/// preprocessing.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_edge_port_sample_bundle(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> @ordering.EdgePortSampleBundle {
+  @positioning.build_edge_port_sample_bundle(
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    sizes,
+    port_offsets_for_nodes,
+    edge_port_offset,
+    edge_port_order,
+  )
+}
+
+///|
 fn build_port_maps_for_nodes(
   nodes : Array[@cgraph.Node],
   sizes : Map[String, NodeSize],
