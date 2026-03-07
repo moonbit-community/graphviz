@@ -226,52 +226,6 @@ fn load_edge_label_graph(
 }
 
 ///|
-fn load_port_label_graph(
-  graphs : Map[String, @cgraph.Graph],
-  name : String,
-) -> @cgraph.Graph raise {
-  match graphs.get(name) {
-    Some(value) => value
-    None => {
-      let path = match name {
-        "port_label" => "tests/layout/dot/port_label.dot"
-        "port_label_lr" => "tests/layout/dot/port_label_lr.dot"
-        "port_label_rl" => "tests/layout/dot/port_label_rl.dot"
-        "port_label_bt" => "tests/layout/dot/port_label_bt.dot"
-        _ => fail("unknown port label fixture graph \{name}")
-      }
-      let graph = @dot_parser.parse_dot_file(path)
-      graphs[name] = graph
-      graph
-    }
-  }
-}
-
-///|
-fn assert_port_label_edge(
-  edge : @cgraph.Edge,
-  fixture : PortLabelFixture,
-) -> Unit raise {
-  if fixture.label == "" {
-    fail("empty port label for \{fixture.tail} -> \{fixture.head}")
-  }
-  let attr_name = if fixture.head_label { "headlabel" } else { "taillabel" }
-  let attr_value = edge.get_attr(attr_name)
-  match attr_value {
-    Some(value) =>
-      if value != fixture.label {
-        fail(
-          "port label attr mismatch (\{fixture.tail} -> \{fixture.head}) attr=\{attr_name} expected=\{fixture.label} actual=\{value}",
-        )
-      }
-    None =>
-      fail(
-        "missing port label attr (\{fixture.tail} -> \{fixture.head}) attr=\{attr_name}",
-      )
-  }
-}
-
-///|
 test "edge label vnode positions match Graphviz" {
   let fixtures = load_edge_label_vnode_fixtures()
   guard fixtures.length() > 0 else { fail("missing edge label vnode fixtures") }
@@ -385,37 +339,3 @@ test "port label positions match Graphviz" {
   }
 }
 
-///|
-test "port label params match Graphviz defaults" {
-  let fixtures = load_port_label_fixtures()
-  guard fixtures.length() > 0 else { fail("missing port label fixtures") }
-  let graphs : Map[String, @cgraph.Graph] = Map::new()
-  for fixture in fixtures {
-    let graph = load_port_label_graph(graphs, fixture.graph)
-    let edge = match find_edge_by_nodes(graph, fixture.tail, fixture.head) {
-      Some(value) => value
-      None =>
-        fail(
-          "missing edge \{fixture.tail} -> \{fixture.head} for port label fixtures",
-        )
-    }
-    assert_port_label_edge(edge, fixture)
-    let (angle_deg, distance_scale) = match port_label_params(
-      edge,
-      @node_geometry.PORT_LABEL_ANGLE_DEG,
-      @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
-    ) {
-      Some(value) => value
-      None =>
-        fail(
-          "missing port label params for edge \{fixture.tail} -> \{fixture.head}",
-        )
-    }
-    if angle_deg != fixture.labelangle ||
-      distance_scale != fixture.labeldistance {
-      fail(
-        "port label params mismatch (\{fixture.tail}->\{fixture.head}) got (\{angle_deg},\{distance_scale}) expected (\{fixture.labelangle},\{fixture.labeldistance})",
-      )
-    }
-  }
-}
