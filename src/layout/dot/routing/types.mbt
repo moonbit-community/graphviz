@@ -1,7 +1,4 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
-
-///|
 type RoutePortGeometry = @precompute.RoutePortGeometry
 
 ///|

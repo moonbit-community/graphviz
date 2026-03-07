@@ -36,7 +36,7 @@ pub fn route_edges_pipeline(
   deps : RouteEdgesPipelineDeps,
 ) -> Array[DotLayoutEdge] {
   let base_cache =
-    @routing.build_route_base_cache(
+    @route_base.build_route_base_cache(
       input,
       deps.route_base_deps,
     )
