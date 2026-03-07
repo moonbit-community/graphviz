@@ -1,10 +1,13 @@
 ///|
-/// Edge-label collision adjustment and bbox expansion helpers for cluster and
-/// sibling-overlap postprocessing.
+/// Edge-label collision adjustment and bbox expansion helpers for layout-tree
+/// cluster and sibling-overlap postprocessing.
+
+type LayoutTree = @dot_shared.LayoutTree
+
 
 ///|
 fn collect_cluster_label_rects(
-  graphs : Array[DotLayoutGraph],
+  graphs : Array[LayoutTree],
   pad : Double,
 ) -> Array[@geom.Rect] {
   let rects : Array[@geom.Rect] = []
@@ -35,12 +38,12 @@ fn collect_cluster_label_rects(
 
 ///|
 fn apply_edge_label_updates(
-  graphs : Array[DotLayoutGraph],
+  graphs : Array[LayoutTree],
   updates : Map[String, @geom.Point],
-) -> Array[DotLayoutGraph] {
-  let updated : Array[DotLayoutGraph] = []
+) -> Array[LayoutTree] {
+  let updated : Array[LayoutTree] = []
   for graph in graphs {
-    let edges = @routing.apply_label_updates_to_edges(graph.edges, updates)
+    let edges = apply_label_updates_to_edges(graph.edges, updates)
     let subgraphs = apply_edge_label_updates(graph.subgraphs, updates)
     updated.push({
       graph: graph.graph,
@@ -56,10 +59,10 @@ fn apply_edge_label_updates(
 
 ///|
 fn map_layout_subgraphs(
-  subgraphs : Array[DotLayoutGraph],
-  mapper : (DotLayoutGraph) -> DotLayoutGraph,
-) -> Array[DotLayoutGraph] {
-  let mapped : Array[DotLayoutGraph] = []
+  subgraphs : Array[LayoutTree],
+  mapper : (LayoutTree) -> LayoutTree,
+) -> Array[LayoutTree] {
+  let mapped : Array[LayoutTree] = []
   for subgraph in subgraphs {
     mapped.push(mapper(subgraph))
   }
@@ -68,10 +71,10 @@ fn map_layout_subgraphs(
 
 ///|
 fn rebuild_layout_edges_subgraphs(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   edges : Array[DotLayoutEdge],
-  subgraphs : Array[DotLayoutGraph],
-) -> DotLayoutGraph {
+  subgraphs : Array[LayoutTree],
+) -> LayoutTree {
   {
     graph: layout.graph,
     bbox: layout.bbox,
@@ -84,9 +87,9 @@ fn rebuild_layout_edges_subgraphs(
 
 ///|
 fn adjust_labels_for_clusters(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   nodesep_pt : Double,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let pad = if nodesep_pt * 0.2 < 2.0 { 2.0 } else { nodesep_pt * 0.2 }
   let label_rects : Array[@geom.Rect] = []
   match layout.label_pos {
@@ -113,7 +116,7 @@ fn adjust_labels_for_clusters(
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
     let adjusted_labels =
-      @routing.adjust_edge_label_positions(
+      adjust_edge_label_positions(
         layout.edges,
         label_rects,
         pad,
@@ -136,12 +139,12 @@ fn adjust_labels_for_clusters(
 
 ///|
 fn adjust_labels_for_overlaps(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   nodesep_pt : Double,
   rankdir : RankDir,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let adjusted =
-    @routing.adjust_edge_label_overlaps(
+    adjust_edge_label_overlaps(
       layout.edges,
       nodesep_pt,
       rankdir,
@@ -150,7 +153,7 @@ fn adjust_labels_for_overlaps(
           Some(metrics) => Some({ width: metrics.width, height: metrics.height })
           None => None
         },
-      @routing.edge_tail_point_for_layout,
+      edge_tail_point_for_layout,
     )
   if adjusted.updates.length() == 0 {
     let subgraphs =
@@ -176,26 +179,6 @@ fn edge_label_adjust_enabled() -> Bool {
   @dot_shared.env_flag_enabled_nonempty(@sys.get_env_var("DOT_ADJUST_EDGE_LABELS"))
 }
 
-///|
-/// Graphviz parity: label placement aligned to refs/graphviz/lib/common/labels.c (fixtures).
-/// Xlabel placement lives in xlabel_layout.mbt (refs/graphviz/lib/label/xlabels.c).
-/// Do not change behavior without updating fixtures/tests.
-///|
-fn rect_from_center(
-  center : @geom.Point,
-  width : Double,
-  height : Double,
-  pad : Double,
-) -> @geom.Rect {
-  let half_w = width / 2.0 + pad
-  let half_h = height / 2.0 + pad
-  {
-    llx: center.x - half_w,
-    lly: center.y - half_h,
-    urx: center.x + half_w,
-    ury: center.y + half_h,
-  }
-}
 
 ///|
 /// Edge-label bbox expansion helpers used in final postprocess.
@@ -204,23 +187,22 @@ fn rect_from_center(
 /// Graphviz parity: edge label bbox expansion aligned to refs/graphviz/lib/common/utils.c
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
-fn expand_bbox_for_edge_labels(
-  graph : @cgraph.Graph,
-  layout : DotLayoutGraph,
+pub fn expand_layout_tree_bbox_for_edge_labels(
+  layout : LayoutTree,
   ranks : Map[String, Int],
   flat_label_edge_vnodes : Map[String, String],
-) -> DotLayoutGraph {
-  if !graph.is_root() {
+) -> LayoutTree {
+  if !layout.graph.is_root() {
     return layout
   }
   let bbox =
-    @routing.expand_bbox_for_edge_labels(
+    expand_bbox_for_edge_labels(
       {
         bbox: layout.bbox,
         edges: layout.edges,
         ranks,
         flat_label_edge_vnodes,
-        rankdir: @dot_shared.graph_rankdir(graph),
+        rankdir: @dot_shared.graph_rankdir(layout.graph),
       },
       {
         edge_mid_label_metrics_for:
@@ -258,11 +240,11 @@ fn expand_bbox_for_edge_labels(
 
 ///|
 /// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
-fn adjust_edge_labels_if_enabled(
-  layout : DotLayoutGraph,
+pub fn adjust_edge_labels_if_enabled(
+  layout : LayoutTree,
   nodesep_pt : Double,
   rankdir : RankDir,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   if edge_label_adjust_enabled() {
     let adjusted_for_clusters =
       adjust_labels_for_clusters(layout, nodesep_pt)

@@ -33,8 +33,7 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbitlang/core/ref",
-    "moonbitlang/core/strconv",
-    "moonbitlang/x/sys"
+    "moonbitlang/core/strconv"
   ],
   "test-import": [
     {
@@ -42,7 +41,8 @@
       "alias": "dot_parser"
     },
     "moonbitlang/x/fs",
-    "moonbitlang/core/strconv"
+    "moonbitlang/core/strconv",
+    "moonbitlang/x/sys"
   ],
   "wbtest-import": [
     {
@@ -56,6 +56,7 @@
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/attrs",
     "moonbitlang/core/json",
-    "moonbitlang/x/fs"
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ]
 }

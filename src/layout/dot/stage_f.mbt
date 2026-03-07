@@ -229,13 +229,19 @@ fn apply_pre_rotation_layout_postprocess(
         root_padded.ratio_bbox,
       ),
     )
-  let adjusted = adjust_edge_labels_if_enabled(layout, input.nodesep_pt, rankdir)
+  let adjusted_tree =
+    @routing.adjust_edge_labels_if_enabled(
+      layout_tree_from_dot_layout_graph(layout),
+      input.nodesep_pt,
+      rankdir,
+    )
   let labeled =
-    expand_bbox_for_edge_labels(
-      graph,
-      adjusted,
-      input.ranks,
-      input.flat_label_edge_vnodes,
+    dot_layout_graph_from_layout_tree(
+      @routing.expand_layout_tree_bbox_for_edge_labels(
+        adjusted_tree,
+        input.ranks,
+        input.flat_label_edge_vnodes,
+      ),
     )
   let with_xlabels = apply_xlabels(graph, labeled, input.splines)
   let root_label_bbox =
