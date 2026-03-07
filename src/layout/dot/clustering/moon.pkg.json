@@ -10,5 +10,16 @@
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot",
+      "alias": "dot_layout"
+    },
+    "moonbit-community/graphviz/layout/dot/edge_label_metrics"
   ]
 }

@@ -27,16 +27,5 @@
     "moonbitlang/core/strconv",
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/edge_identity"
-  ],
-  "wbtest-import": [
-    {
-      "path": "moonbit-community/graphviz/dot",
-      "alias": "dot_parser"
-    },
-    "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/edge_label_metrics",
-    "moonbit-community/graphviz/layout/dot/edge_semantics",
-    "moonbit-community/graphviz/layout/dot/label_metrics",
-    "moonbit-community/graphviz/layout/dot/numeric"
   ]
 }

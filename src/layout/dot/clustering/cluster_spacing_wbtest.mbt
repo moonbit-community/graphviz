@@ -1,10 +1,6 @@
 ///|
 fn spacing_parse_double(text : String, fallback : Double) -> Double {
-  try @strconv.parse_double(text) catch {
-    _ => fallback
-  } noraise {
-    value => value
-  }
+  @numeric.parse_double_or(text, fallback)
 }
 
 ///|
@@ -124,7 +120,7 @@ test "cluster bbox includes margin and label padding" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
   )
-  let layout = layout_dot(graph)
+  let layout = @dot_layout.layout_dot(graph)
   layout.apply()
   let cluster = spacing_cluster(graph)
   let bb_text = match cluster.get_attr("bb") {
@@ -134,7 +130,7 @@ test "cluster bbox includes margin and label padding" {
   let bbox = spacing_parse_rect(bb_text)
   let pos = spacing_node_pos(graph, "a")
   let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
-  let margin = @clustering.cluster_margin_pt(cluster)
+  let margin = cluster_margin_pt(cluster)
   let label_height = match @label_metrics.graph_label_metrics(cluster) {
     Some(metrics) => metrics.height_pt
     None => 0.0
@@ -146,7 +142,7 @@ test "cluster bbox includes margin and label padding" {
     height_pt / 2.0 +
     margin +
     label_height +
-    @clustering.CLUSTER_LABEL_PAD_PT
+    CLUSTER_LABEL_PAD_PT
   guard bbox.llx <= expected_left + 0.1 else {
     fail("cluster llx too large: \{bbox.llx} expected <= \{expected_left}")
   }
@@ -166,7 +162,7 @@ test "nested clusters include parent margin" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_outer { label=\"Outer\"; subgraph cluster_inner { label=\"Inner\"; a; } } }",
   )
-  let layout = layout_dot(graph)
+  let layout = @dot_layout.layout_dot(graph)
   layout.apply()
   let outer = spacing_find_subgraph(graph, "cluster_outer")
   let inner = spacing_find_subgraph(outer, "cluster_inner")
@@ -178,7 +174,7 @@ test "nested clusters include parent margin" {
     Some(value) => spacing_parse_rect(value)
     None => fail("missing inner cluster bb")
   }
-  let margin = @clustering.cluster_margin_pt(outer)
+  let margin = cluster_margin_pt(outer)
   guard outer_bb.llx <= inner_bb.llx - margin + 0.1 else {
     fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - margin}")
   }
@@ -198,7 +194,7 @@ test "empty clusters do not receive layout bbox attrs" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
   )
-  let layout = layout_dot(graph)
+  let layout = @dot_layout.layout_dot(graph)
   layout.apply()
   let empty = spacing_find_subgraph(graph, "cluster_empty")
   let full = spacing_find_subgraph(graph, "cluster_full")
@@ -215,7 +211,7 @@ test "edge labels expand rank spacing" {
   let with_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",
   )
-  let layout_label = layout_dot(with_label)
+  let layout_label = @dot_layout.layout_dot(with_label)
   layout_label.apply()
   let pos_a = spacing_node_pos(with_label, "a")
   let pos_b = spacing_node_pos(with_label, "b")
@@ -227,7 +223,7 @@ test "edge labels expand rank spacing" {
   let without_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
   )
-  let layout_plain = layout_dot(without_label)
+  let layout_plain = @dot_layout.layout_dot(without_label)
   layout_plain.apply()
   let pos_plain_a = spacing_node_pos(without_label, "a")
   let pos_plain_b = spacing_node_pos(without_label, "b")

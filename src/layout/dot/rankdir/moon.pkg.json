@@ -1,5 +1,11 @@
 {
   "import": [
     "moonbit-community/graphviz/cgraph"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    }
   ]
 }
