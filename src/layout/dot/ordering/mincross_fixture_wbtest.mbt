@@ -662,14 +662,15 @@ fn mincross_case_needs_integrated_replay(
 }
 
 ///|
-/// Graphviz parity: plugin mincross fixture replay now focuses on cases where
-/// reorder_rank_groups materially changes the cluster-local ordering. Trivial
-/// unchanged slices are covered by direct rank_reorder unit tests.
+/// Graphviz parity: direct rank_reorder tests now cover the small plugin
+/// anchor-order slices that only depend on startpass=2 neighbor hints and
+/// fixture name_order fallback. Keep fixture replay for larger changed plugin
+/// graphs where ordering still emerges from denser integrated structure.
 fn mincross_plugin_case_needs_replay(
   input : MincrossInput,
   output : MincrossOutput,
 ) -> Bool {
-  mincross_case_has_distinct_output(input, output)
+  mincross_case_has_distinct_output(input, output) && input.nodes.length() >= 10
 }
 
 
