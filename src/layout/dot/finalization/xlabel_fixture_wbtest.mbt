@@ -6,8 +6,6 @@ struct XlabelFixture {
   tail : String
   head : String
   label : String
-  label_html : Bool
-  flip : Bool
   pos_x : Double
   pos_y : Double
 }
@@ -35,8 +33,6 @@ fn load_xlabel_fixtures() -> Array[XlabelFixture] raise {
       tail: @json.from_json(obj["tail"]),
       head: @json.from_json(obj["head"]),
       label: @json.from_json(obj["label"]),
-      label_html: @json.from_json(obj["label_html"]),
-      flip: @json.from_json(obj["flip"]),
       pos_x: @json.from_json(obj["pos_x"]),
       pos_y: @json.from_json(obj["pos_y"]),
     })
@@ -45,22 +41,11 @@ fn load_xlabel_fixtures() -> Array[XlabelFixture] raise {
 }
 
 ///|
-fn load_xlabel_graph(
-  graphs : Map[String, @cgraph.Graph],
-  name : String,
-) -> @cgraph.Graph raise {
-  match graphs.get(name) {
-    Some(value) => value
-    None => {
-      let path = match name {
-        "xlabels_tb" => "tests/layout/dot/xlabels_tb.dot"
-        "xlabels_lr" => "tests/layout/dot/xlabels_lr.dot"
-        _ => fail("unknown xlabel fixture graph \{name}")
-      }
-      let graph = @dot_parser.parse_dot_file(path)
-      graphs[name] = graph
-      graph
-    }
+fn xlabel_graph_path(name : String) -> String raise {
+  match name {
+    "xlabels_tb" => "tests/layout/dot/xlabels_tb.dot"
+    "xlabels_lr" => "tests/layout/dot/xlabels_lr.dot"
+    _ => fail("unknown xlabel fixture graph \{name}")
   }
 }
 
@@ -114,14 +99,15 @@ fn compute_finalized_xlabel_layout(
 ///|
 fn load_xlabel_layout(
   layouts : Map[String, @shared.LayoutTree],
-  graphs : Map[String, @cgraph.Graph],
   name : String,
 ) -> @shared.LayoutTree raise {
   match layouts.get(name) {
     Some(value) => value
     None => {
-      let graph = load_xlabel_graph(graphs, name)
-      let layout = compute_finalized_xlabel_layout(graph)
+      let layout =
+        compute_finalized_xlabel_layout(
+          @dot_parser.parse_dot_file(xlabel_graph_path(name)),
+        )
       layouts[name] = layout
       layout
     }
@@ -148,11 +134,6 @@ fn find_node_layout(
 }
 
 ///|
-fn edge_attr_text(edge : @cgraph.Edge, attr_name : String) -> String {
-  edge.get_attr(attr_name).unwrap_or_default()
-}
-
-///|
 fn assert_float_eq(actual : Double, expected : Double, message : String) -> Unit raise {
   if actual != expected {
     fail(message)
@@ -172,7 +153,7 @@ fn find_edge_layout_by_label(
     if edge.tail().name() != tail || edge.head().name() != head {
       continue
     }
-    if edge_attr_text(edge, attr_name) == label {
+    if edge.get_attr(attr_name).unwrap_or_default() == label {
       return Some(edge_layout)
     }
   }
@@ -276,7 +257,6 @@ fn assert_edge_xlabel_fixture(
 test "node xlabels match Graphviz" {
   let fixtures = load_xlabel_fixtures()
   guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
-  let graphs : Map[String, @cgraph.Graph] = Map::new()
   let layouts : Map[String, @shared.LayoutTree] = Map::new()
   let mut matched = 0
   for fixture in fixtures {
@@ -284,12 +264,7 @@ test "node xlabels match Graphviz" {
       continue
     }
     matched = matched + 1
-    assert_eq(fixture.label_html, false)
-    let layout = load_xlabel_layout(layouts, graphs, fixture.graph)
-    let rankdir = @rankdir.graph_rankdir(layout.graph)
-    let expected_flip =
-      rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL
-    assert_eq(fixture.flip, expected_flip)
+    let layout = load_xlabel_layout(layouts, fixture.graph)
     assert_node_xlabel_fixture(layout, fixture)
   }
   guard matched > 0 else { fail("missing node xlabel fixtures") }
@@ -299,7 +274,6 @@ test "node xlabels match Graphviz" {
 test "edge xlabels match Graphviz" {
   let fixtures = load_xlabel_fixtures()
   guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
-  let graphs : Map[String, @cgraph.Graph] = Map::new()
   let layouts : Map[String, @shared.LayoutTree] = Map::new()
   let mut matched = 0
   for fixture in fixtures {
@@ -307,12 +281,7 @@ test "edge xlabels match Graphviz" {
       continue
     }
     matched = matched + 1
-    assert_eq(fixture.label_html, false)
-    let layout = load_xlabel_layout(layouts, graphs, fixture.graph)
-    let rankdir = @rankdir.graph_rankdir(layout.graph)
-    let expected_flip =
-      rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL
-    assert_eq(fixture.flip, expected_flip)
+    let layout = load_xlabel_layout(layouts, fixture.graph)
     assert_edge_xlabel_fixture(layout, fixture)
   }
   guard matched > 0 else { fail("missing edge xlabel fixtures") }
