@@ -191,7 +191,7 @@ fn build_route_prepass_state(
     input.x_groups,
   )
   let ordered_edges =
-    @routing.sorted_edges_for_routing(input.edges, input.base_cache, input.path_order_index)
+    sorted_edges_for_routing(input.edges, input.base_cache, input.path_order_index)
   let regular_recover_plan =
     build_regular_recover_routing_plan(ordered_edges, input.base_cache)
   {
