@@ -1,7 +1,6 @@
 ///|
 type DotLayoutEdge = @routing.DotLayoutEdge
 type EdgeVnodeInfo = @routing.EdgeVnodeInfo
-type EdgePortLabelPosFn = @routing.EdgePortLabelPosFn
 type EdgePortLabelPosInput = @routing.EdgePortLabelPosInput
 type EdgeRouteBase = @routing.EdgeRouteBase
 type EdgeSplineResult = @routing.EdgeSplineResult

@@ -5,32 +5,6 @@ priv struct EdgeLabelMetrics {
 }
 
 ///|
-type EdgeLabelRankForRoutingFn = (@cgraph.Edge, Map[String, Int], Double) -> (Int, Int)?
-
-///|
-type EdgeLabelRankYFn = (@cgraph.Edge, Map[String, Int], Map[Int, Double]) -> Double?
-
-///|
-type EdgeLabelRankXFn = (
-  @cgraph.Edge,
-  Int,
-  EdgeVnodeInfo,
-  Map[String, @geom.Point],
-) -> Double?
-
-///|
-type EdgeLabelPosFromVnodeFn = (@geom.Point, Double, Double, @rankdir.RankDir) -> @geom.Point
-
-///|
-type FlatEdgeLabelPosSimpleFn = (
-  @geom.Point,
-  @geom.Point,
-  Double,
-  Double,
-  Double,
-) -> @geom.Point
-
-///|
 pub(all) struct EdgeLabelPosInput {
   edge : @cgraph.Edge
   spline : @geom.Spline
@@ -44,26 +18,27 @@ pub(all) struct EdgeLabelPosInput {
   label_pad_boost : Double
 }
 
-///|
-type EdgeLabelPosFn = (EdgeLabelPosInput) -> @geom.Point?
-
-///|
-pub(all) struct EdgeLayoutDeps {
-  edge_label_rank_for_routing_fn : EdgeLabelRankForRoutingFn
-  edge_label_rank_y_fn : EdgeLabelRankYFn
-  edge_label_rank_x_fn : EdgeLabelRankXFn
-  edge_label_pos_from_vnode_fn : EdgeLabelPosFromVnodeFn
-  flat_edge_label_pos_simple_fn : FlatEdgeLabelPosSimpleFn
-  edge_label_pos_fn : EdgeLabelPosFn
-  edge_port_label_pos_fn : EdgePortLabelPosFn
-}
-
 priv struct EdgePortLabelPosForAttrInput {
   edge : @cgraph.Edge
   spline : @geom.Spline
   attr_name : String
   is_head : Bool
-  edge_port_label_pos_fn : EdgePortLabelPosFn
+}
+
+///|
+/// Graphviz parity: dot edge port-label placement keeps the Graphviz angle and
+/// distance constants centralized in the routing edge-label owner.
+/// Do not change behavior without updating fixtures/tests.
+fn edge_port_label_pos_for_dot(
+  input : EdgePortLabelPosInput,
+) -> @geom.Point? {
+  edge_port_label_pos(
+    input,
+    @node_geometry.PORT_LABEL_ANGLE_DEG,
+    @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
+    @node_geometry.PORT_LABEL_DISTANCE_PT,
+    @node_geometry.GRAPHVIZ_PI,
+  )
 }
 
 ///|
@@ -72,7 +47,7 @@ fn edge_port_label_pos_for_attr(
 ) -> @geom.Point? {
   let edge = input.edge
   if @edge_semantics.edge_attr_non_empty(edge, input.attr_name) {
-    (input.edge_port_label_pos_fn)(
+    edge_port_label_pos_for_dot(
       {
         edge,
         spline: input.spline,
@@ -92,7 +67,6 @@ pub(all) struct EdgeLayoutBuildInput {
   spline : @geom.Spline
   spline_result : EdgeSplineResult
   edge_layout_input : EdgeLayoutInput
-  deps : EdgeLayoutDeps
 }
 
 ///|
@@ -103,19 +77,23 @@ pub fn build_edge_layout(
   let spline = input.spline
   let spline_result = input.spline_result
   let edge_layout_input = input.edge_layout_input
-  let deps = input.deps
   let edge = base.edge
   let label_rank_info =
-    (deps.edge_label_rank_for_routing_fn)(
-      edge,
-      edge_layout_input.ranks,
-      base.mid_label_width_pt,
-    )
+    match edge_label_rank_info(edge, edge_layout_input.ranks, base.mid_label_width_pt) {
+      Some(info) =>
+        if base.mid_label_width_pt > 0.0 {
+          Some((info.label_rank, info.span))
+        } else {
+          None
+        }
+      None => None
+    }
   let label_rank_y =
-    (deps.edge_label_rank_y_fn)(
+    edge_label_rank_y(
       edge,
       edge_layout_input.ranks,
       edge_layout_input.rank_y,
+      @edge_label_metrics.edge_mid_label_width_pt(edge),
     )
   let mid_label_metrics : EdgeLabelMetrics? =
     if base.mid_label_width_pt > 0.0 {
@@ -127,7 +105,7 @@ pub fn build_edge_layout(
     match label_rank_info {
       Some((label_rank, span)) =>
         if span > 1 {
-          (deps.edge_label_rank_x_fn)(
+          edge_label_rank_x(
             edge,
             label_rank,
             edge_layout_input.vnode_info,
@@ -141,7 +119,7 @@ pub fn build_edge_layout(
   let apply_label_pad = edge_layout_input.has_clusters
   let default_label_pos =
     () =>
-      (deps.edge_label_pos_fn)(
+      edge_label_pos_from_input(
         {
           edge,
           spline,
@@ -154,18 +132,25 @@ pub fn build_edge_layout(
           nodesep_pt: edge_layout_input.nodesep_pt,
           label_pad_boost: spline_result.label_pad_boost,
         },
+        edge =>
+          match @edge_label_metrics.edge_mid_label_metrics(edge) {
+            Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+            None => None
+          },
+        @node_geometry.EDGE_LABEL_PAD_WIDTH_PT,
       )
   let flat_simple_or_default =
     () =>
       match mid_label_metrics {
         Some(metrics) =>
           Some(
-            (deps.flat_edge_label_pos_simple_fn)(
+            flat_edge_label_pos_simple(
               base.out_tail_pos,
               base.out_head_pos,
               base.out_tail_size.right_pt,
               base.out_head_size.left_pt,
               metrics.height,
+              @node_geometry.EDGE_LABEL_FLAT_SPACE_PT,
             ),
           )
         None => default_label_pos()
@@ -178,7 +163,7 @@ pub fn build_edge_layout(
         match (label_rank_x, label_rank_y, mid_label_metrics) {
           (Some(rank_x), Some(rank_y), Some(metrics)) => {
             Some(
-              (deps.edge_label_pos_from_vnode_fn)(
+              edge_label_pos_from_vnode(
                 @edge_spline.point(rank_x, rank_y),
                 metrics.width,
                 metrics.height,
@@ -210,7 +195,6 @@ pub fn build_edge_layout(
         spline,
         attr_name: "headlabel",
         is_head: true,
-        edge_port_label_pos_fn: deps.edge_port_label_pos_fn,
       },
     )
   let tail_label_pos =
@@ -220,7 +204,6 @@ pub fn build_edge_layout(
         spline,
         attr_name: "taillabel",
         is_head: false,
-        edge_port_label_pos_fn: deps.edge_port_label_pos_fn,
       },
     )
   {

@@ -17,14 +17,6 @@ pub(all) struct ExpandEdgeLabelBboxInput {
   rankdir : @rankdir.RankDir
 }
 
-///|
-/// Graphviz parity: edge-label bbox callbacks keep label/node metric adapters
-/// explicit and stage-owned while routing owns updateBB traversal logic.
-pub(all) struct ExpandEdgeLabelBboxDeps {
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> LabelExtent?
-  edge_label_metrics_for_attr : (@cgraph.Edge, String) -> LabelExtent?
-  node_half_height_pt_for : (@cgraph.Node, @rankdir.RankDir) -> Double
-}
 
 ///|
 priv struct FlatEdgeLabelFlags {
@@ -105,7 +97,6 @@ fn expand_bbox_for_edge_mid_label(
   edge_layout : DotLayoutEdge,
   flags : FlatEdgeLabelFlags,
   flip : Bool,
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> LabelExtent?,
 ) -> @geom.Rect {
   expand_bbox_for_label_pos(
     bbox,
@@ -114,7 +105,10 @@ fn expand_bbox_for_edge_mid_label(
       None
     } else {
       edge_label_extent_for_rankdir(
-        (edge_mid_label_metrics_for)(edge_layout.edge),
+        match @edge_label_metrics.edge_mid_label_metrics(edge_layout.edge) {
+          Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+          None => None
+        },
         flip,
       )
     },
@@ -128,7 +122,6 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
   flags : FlatEdgeLabelFlags,
   rankdir : @rankdir.RankDir,
   flip : Bool,
-  node_half_height_pt_for : (@cgraph.Node, @rankdir.RankDir) -> Double,
 ) -> @geom.Rect {
   let edge = edge_layout.edge
   let tail = edge.tail().name()
@@ -138,8 +131,9 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
   }
   match edge_layout.label_pos {
     Some(center) => {
-      let tail_half = (node_half_height_pt_for)(edge.tail(), rankdir)
-      let head_half = (node_half_height_pt_for)(edge.head(), rankdir)
+      let orientation = @shared.record_layout_orientation(rankdir)
+      let tail_half = @node_geometry.node_size(edge.tail(), orientation).height_pt / 2.0
+      let head_half = @node_geometry.node_size(edge.head(), orientation).height_pt / 2.0
       let half_height = if tail_half > head_half { tail_half } else { head_half }
       let top = center.y + half_height
       if top > bbox.ury {
@@ -159,13 +153,15 @@ fn expand_bbox_for_edge_endpoint_label(
   label_pos : @geom.Point?,
   label_attr : String,
   flip : Bool,
-  edge_label_metrics_for_attr : (@cgraph.Edge, String) -> LabelExtent?,
 ) -> @geom.Rect {
   expand_bbox_for_label_pos(
     bbox,
     label_pos,
     edge_label_extent_for_rankdir(
-      (edge_label_metrics_for_attr)(edge_layout.edge, label_attr),
+      match @edge_label_metrics.edge_label_metrics_for_attr(edge_layout.edge, label_attr, true) {
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        None => None
+      },
       flip,
     ),
   )
@@ -177,7 +173,6 @@ fn expand_bbox_for_edge_endpoint_label(
 /// Do not change behavior without updating fixtures/tests.
 pub fn expand_bbox_for_edge_labels(
   input : ExpandEdgeLabelBboxInput,
-  deps : ExpandEdgeLabelBboxDeps,
 ) -> @geom.Rect {
   // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
   // dimensions in pre-rotation space to match compute_bb.
@@ -198,7 +193,6 @@ pub fn expand_bbox_for_edge_labels(
         edge_layout,
         flags,
         flip,
-        deps.edge_mid_label_metrics_for,
       )
     bbox =
       maybe_raise_flat_edge_vnode_bbox_top(
@@ -207,7 +201,7 @@ pub fn expand_bbox_for_edge_labels(
         flags,
         input.rankdir,
         flip,
-        deps.node_half_height_pt_for,
+
       )
     bbox =
       expand_bbox_for_edge_endpoint_label(
@@ -216,7 +210,6 @@ pub fn expand_bbox_for_edge_labels(
         edge_layout.head_label_pos,
         "headlabel",
         flip,
-        deps.edge_label_metrics_for_attr,
       )
     bbox =
       expand_bbox_for_edge_endpoint_label(
@@ -225,7 +218,6 @@ pub fn expand_bbox_for_edge_labels(
         edge_layout.tail_label_pos,
         "taillabel",
         flip,
-        deps.edge_label_metrics_for_attr,
       )
   }
   bbox

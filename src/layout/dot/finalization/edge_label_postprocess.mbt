@@ -219,25 +219,6 @@ pub fn expand_layout_tree_bbox_for_edge_labels(
         flat_label_edge_vnodes,
         rankdir: @rankdir.graph_rankdir(layout.graph),
       },
-      {
-        edge_mid_label_metrics_for:
-          edge =>
-            match @edge_label_metrics.edge_mid_label_metrics(edge) {
-              Some(metrics) => Some({ width: metrics.width, height: metrics.height })
-              None => None
-            },
-        edge_label_metrics_for_attr:
-          (edge, label_attr) =>
-            match @edge_label_metrics.edge_label_metrics_for_attr(edge, label_attr, true) {
-              Some(metrics) => Some({ width: metrics.width, height: metrics.height })
-              None => None
-            },
-        node_half_height_pt_for:
-          (node, rankdir) => {
-            let orientation = @shared.record_layout_orientation(rankdir)
-            @node_geometry.node_size(node, orientation).height_pt / 2.0
-          },
-      },
     )
   if bbox == layout.bbox {
     layout
