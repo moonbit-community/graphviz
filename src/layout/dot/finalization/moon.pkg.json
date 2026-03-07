@@ -18,6 +18,14 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/x/sys",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+    "moonbit-community/graphviz/layout/dot/edge_semantics",
+    "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+    {
+      "path": "moonbit-community/graphviz/layout/html",
+      "alias": "html_label"
+    }
   ]
 }

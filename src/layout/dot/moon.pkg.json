@@ -1,16 +1,8 @@
 {
   "import": [
-    {
-      "path": "moonbit-community/graphviz/layout/html",
-      "alias": "html_label"
-    },
-    "moonbit-community/graphviz/layout/dot/label_metrics",
     "moonbit-community/graphviz/layout/dot/label_layout",
-    "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",
-    "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
     "moonbit-community/graphviz/layout/dot/unranked_engine",
     "moonbit-community/graphviz/layout/dot/finalization",
-    "moonbit-community/graphviz/layout/dot/edge_semantics",
     {
       "path": "moonbit-community/graphviz/layout/dot/shared",
       "alias": "dot_shared"
@@ -24,8 +16,6 @@
     "moonbitlang/core/math",
     "moonbitlang/core/ref",
     "moonbitlang/core/strconv",
-    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric"
   ],
   "test-import": [
@@ -67,6 +57,7 @@
     "moonbit-community/graphviz/layout/dot/routing/edge_label",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
+    "moonbit-community/graphviz/layout/dot/label_metrics",
     "moonbit-community/graphviz/attrs",
     "moonbitlang/core/json",
     "moonbitlang/x/fs",
