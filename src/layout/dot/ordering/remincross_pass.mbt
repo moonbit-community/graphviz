@@ -303,13 +303,11 @@ pub fn build_clustered_finalize_inputs_from_root_phase_sources(
 ) -> ClusteredFinalizeInputs {
   let cluster_rank_order =
     build_cluster_rank_order_from_root_phase(
-      {
-        phase_base: sources.phase_base,
-        root_cluster_stage: sources.root_cluster_stage,
-        order_cluster_keys: sources.order_cluster_keys,
-        order_cluster_skeleton: sources.order_cluster_skeleton,
-        real_nodes: sources.real_nodes,
-      },
+      sources.phase_base,
+      sources.root_cluster_stage,
+      sources.order_cluster_keys,
+      sources.order_cluster_skeleton,
+      sources.real_nodes,
     )
   build_clustered_finalize_inputs_from_sources(
     {

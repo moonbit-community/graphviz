@@ -1129,19 +1129,25 @@ pub fn run_clustered_root_phase_stage_from_sources(
       root_rank_order_phase_base,
       sources.order_groups_for_root_phase,
     )
-  let root_phase_overrides =
-    build_clustered_root_phase_overrides(
-      sources.root_and_cluster_stage_sources.order_with_clusters,
-      root_reorder_output,
-      root_rank_order_phase_output,
-    )
+  let root_groups_override_for_root_pass =
+    if !sources.root_and_cluster_stage_sources.order_with_clusters {
+      None
+    } else {
+      Some(clone_rank_groups(root_rank_order_phase_output.ordered_root))
+    }
+  let root_tail_order_override =
+    if !sources.root_and_cluster_stage_sources.order_with_clusters {
+      None
+    } else {
+      Some(build_root_tail_order_override(root_reorder_output))
+    }
   let root_cluster_stage =
     run_root_and_cluster_ranks_stage_from_sources(
       {
         call_input_sources:
           with_root_groups_override_in_call_input_sources(
             sources.root_and_cluster_stage_sources.call_input_sources,
-            root_phase_overrides.root_groups_override_for_root_pass,
+            root_groups_override_for_root_pass,
           ),
         order_with_clusters:
           sources.root_and_cluster_stage_sources.order_with_clusters,
@@ -1161,7 +1167,7 @@ pub fn run_clustered_root_phase_stage_from_sources(
     )
   {
     root_cluster_stage,
-    root_tail_order_override: root_phase_overrides.root_tail_order_override,
+    root_tail_order_override: root_tail_order_override,
     root_rank_order_phase_base,
   }
 }

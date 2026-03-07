@@ -1055,48 +1055,31 @@ fn run_root_reorder_and_rank_order_from_base(
 }
 
 ///|
-/// Graphviz parity: cluster rank-order map is built from root-only reorder
-/// replay before local cluster bucket reordering in final real-node groups.
-/// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterRankOrderFromRootPhaseInputs {
-  phase_base : RootRankOrderPhaseBase
-  root_cluster_stage : RootAndClusterRanksOutput
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  real_nodes : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: cluster-phase rank-order map is derived from root pass
 /// outputs and root-only replay inputs without mutating source snapshots.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_rank_order_from_root_phase(
-  inputs : ClusterRankOrderFromRootPhaseInputs,
+  phase_base : RootRankOrderPhaseBase,
+  root_cluster_stage : RootAndClusterRanksOutput,
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  real_nodes : Map[String, Bool],
 ) -> Map[Int, Map[String, Int]] {
-  if !inputs.phase_base.order_with_clusters {
+  if !phase_base.order_with_clusters {
     return Map::new()
   }
   let (_root_reorder_output, root_rank_order_phase_output) =
     run_root_reorder_and_rank_order_from_base(
-      inputs.phase_base,
-      inputs.root_cluster_stage.order_groups_for_mincross,
+      phase_base,
+      root_cluster_stage.order_groups_for_mincross,
     )
   build_cluster_order_from_root(
     root_rank_order_phase_output.root_rank_keys,
     root_rank_order_phase_output.ordered_root,
-    inputs.order_cluster_keys,
-    inputs.order_cluster_skeleton,
-    inputs.real_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    real_nodes,
   )
-}
-
-///|
-/// Graphviz parity: clustered root phase derives tail-order replay and
-/// root-group override snapshots from root reorder outputs only in cluster mode.
-/// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusteredRootPhaseOverrides {
-  root_tail_order_override : Array[String]?
-  root_groups_override_for_root_pass : Map[Int, Array[String]]?
 }
 
 ///|
@@ -1113,27 +1096,3 @@ fn build_root_tail_order_override(
   root_tail_order_override
 }
 
-///|
-/// Graphviz parity: clustered root phase sets both tail-order and group
-/// overrides only in cluster mode; otherwise both override channels are empty.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_root_phase_overrides(
-  order_with_clusters : Bool,
-  root_reorder_output : RootClusterReorderInputs,
-  root_rank_order_phase_output : RootRankOrderPhaseOutput,
-) -> ClusteredRootPhaseOverrides {
-  if !order_with_clusters {
-    return {
-      root_tail_order_override: None,
-      root_groups_override_for_root_pass: None,
-    }
-  }
-  {
-    root_tail_order_override: Some(
-      build_root_tail_order_override(root_reorder_output),
-    ),
-    root_groups_override_for_root_pass: Some(
-      clone_rank_groups(root_rank_order_phase_output.ordered_root),
-    ),
-  }
-}
