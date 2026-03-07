@@ -2,81 +2,7 @@
 /// Unranked engine entry paths: root-only final layout assembly plus public
 /// noop/neato API boundaries.
 
-///|
-fn build_edges_from_positions(
-  graph : @cgraph.Graph,
-  positions : Map[String, @geom.Point],
-  node_size_for : (@cgraph.Node) -> NodeSize,
-  edge_splines_for :
-    (@cgraph.Edge, @geom.Point, @geom.Point, NodeSize, NodeSize) -> Array[@geom.Spline],
-) -> Array[DotLayoutEdge] {
-  let edges_out : Array[DotLayoutEdge] = []
-  for edge in graph.edges() {
-    let tail = edge.tail()
-    let head = edge.head()
-    let tail_pos = match positions.get(tail.name()) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let head_pos = match positions.get(head.name()) {
-      Some(value) => value
-      None => { x: 0.0, y: 0.0 }
-    }
-    let tail_size = node_size_for(tail)
-    let head_size = node_size_for(head)
-    edges_out.push({
-      edge,
-      splines: edge_splines_for(edge, tail_pos, head_pos, tail_size, head_size),
-      label_pos: None,
-      head_label_pos: None,
-      tail_label_pos: None,
-      xlabel_pos: None,
-    })
-  }
-  edges_out
-}
-
-///|
-priv struct EngineNodeProjection {
-  positions : Map[String, @geom.Point]
-  nodes_out : Array[DotLayoutNode]
-}
-
-///|
-priv struct EngineNodeProjectionWithSizes {
-  projection : EngineNodeProjection
-  sizes : Map[String, NodeSize]
-}
-
-///|
-fn project_neato_nodes_with_sizes(
-  nodes : Array[@cgraph.Node],
-  positions : Array[@geom.Point],
-  scale_factor : Double,
-  sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
-) -> EngineNodeProjectionWithSizes {
-  let positions_map : Map[String, @geom.Point] = Map::new()
-  let nodes_out : Array[DotLayoutNode] = []
-  for i in 0..<nodes.length() {
-    let node = nodes[i]
-    let scaled = @unranked_engine.scale_point(positions[i], scale_factor)
-    positions_map[node.name()] = scaled
-    let size = @unranked_engine.node_size_with_fallback(sizes, node, record_orientation)
-    nodes_out.push({
-      node,
-      pos: scaled,
-      width_in: size.width_in,
-      height_in: size.height_in,
-      label_pos: None,
-      xlabel_pos: None,
-    })
-  }
-  {
-    projection: { positions: positions_map, nodes_out },
-    sizes,
-  }
-}
+type EngineNodeProjectionWithSizes = @unranked_engine.EngineNodeProjectionWithSizes
 
 ///|
 fn collect_noop_nodes_with_sizes(
@@ -84,23 +10,21 @@ fn collect_noop_nodes_with_sizes(
   scale_factor : Double,
   record_orientation : RecordOrientation,
 ) -> EngineNodeProjectionWithSizes raise DotLayoutError {
+  let nodes = graph.nodes()
   let positions : Map[String, @geom.Point] = Map::new()
-  let nodes_out : Array[DotLayoutNode] = []
   let sizes : Map[String, NodeSize] = Map::new()
-  for node in graph.nodes() {
+  for node in nodes {
     let pos = parse_required_noop_node_pos(node, scale_factor)
     positions[node.name()] = pos
-    let size = @node_geometry.node_size(node, record_orientation)
-    sizes[node.name()] = size
-    nodes_out.push({
-      node,
-      pos,
-      width_in: size.width_in,
-      height_in: size.height_in,
-      label_pos: None,
-      xlabel_pos: None,
-    })
+    sizes[node.name()] = @node_geometry.node_size(node, record_orientation)
   }
+  let nodes_out =
+    @unranked_engine.build_projected_nodes_from_positions(
+      nodes,
+      positions,
+      node =>
+        @unranked_engine.node_size_with_fallback(sizes, node, record_orientation),
+    )
   {
     projection: { positions, nodes_out },
     sizes,
@@ -243,7 +167,7 @@ pub fn layout_neato(
     )
   }
   let node_data =
-    project_neato_nodes_with_sizes(
+    @unranked_engine.project_scaled_nodes_with_sizes(
       nodes,
       positions,
       geometry.scale_factor,
@@ -253,7 +177,7 @@ pub fn layout_neato(
   let node_size_for = (node : @cgraph.Node) =>
     @unranked_engine.node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
   let edges_out =
-    build_edges_from_positions(
+    @unranked_engine.build_edges_from_positions(
       active_graph,
       node_data.projection.positions,
       node_size_for,
@@ -308,7 +232,7 @@ pub fn layout_neato_noop(
   let node_size_for = (node : @cgraph.Node) =>
     @unranked_engine.node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
   let edges_out =
-    build_edges_from_positions(
+    @unranked_engine.build_edges_from_positions(
       active_graph,
       node_data.projection.positions,
       node_size_for,
