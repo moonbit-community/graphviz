@@ -673,7 +673,7 @@ struct RootRankOrderPhaseBase {
 /// Graphviz parity: root rank-order phase source bundle keeps pre-root
 /// materialization and clustered metadata snapshots paired before base assembly.
 /// Do not change behavior without updating fixtures/tests.
-struct RootRankOrderPhaseBaseBuildSources {
+priv struct RootRankOrderPhaseBaseBuildSources {
   reorder_setup : OrderingReorderSetup
   class2_data : OrderingClass2Data
   order_rank_keys : Array[Int]

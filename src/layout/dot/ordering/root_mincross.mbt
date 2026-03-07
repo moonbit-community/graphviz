@@ -912,7 +912,7 @@ pub struct ClusteredRootPhaseStageOutput {
 /// rank-order base sources, pre-root materialization/runtime snapshots, and
 /// local-replay inputs grouped for one deterministic stage run.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusteredRootPhaseStageSources {
+priv struct ClusteredRootPhaseStageSources {
   root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
   order_groups_for_root_phase : Map[Int, Array[String]]
   reorder_context : OrderReorderContext
@@ -963,7 +963,7 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
 /// base sources and root+cluster stage sources paired from one pre-root
 /// snapshot without positional argument drift.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_root_phase_stage_sources(
+fn build_clustered_root_phase_stage_sources(
   sources : ClusteredRootPhaseStageBuildSources,
 ) -> ClusteredRootPhaseStageSources {
   {
@@ -1010,10 +1010,11 @@ pub fn build_clustered_root_phase_stage_sources(
 /// root-only reorder pass/override derivation, and root+cluster stage replay in
 /// fixed order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_clustered_root_phase_stage_from_sources(
-  sources : ClusteredRootPhaseStageSources,
+pub fn run_clustered_root_phase_stage(
+  build_sources : ClusteredRootPhaseStageBuildSources,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> ClusteredRootPhaseStageOutput {
+  let sources = build_clustered_root_phase_stage_sources(build_sources)
   let root_rank_order_phase_base =
     build_root_rank_order_phase_base_from_sources(
       sources.root_rank_order_phase_base_sources,

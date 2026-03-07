@@ -165,36 +165,32 @@ fn run_clustered_root_phase(
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
-  let root_phase_sources =
-    @ordering.build_clustered_root_phase_stage_sources(
-      {
-        reorder_setup: pipeline_context.reorder_setup,
-        pre_root_stage,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        cluster_keys: cluster_meta.cluster_keys,
-        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-        ranks: input.ranks,
-        rank_same_groups: cluster_meta.rank_same_groups,
-        rank_same_order: cluster_meta.rank_same_order,
-        nodesep_pt: input.nodesep_pt,
-        has_edge_labels: input.has_edge_labels,
-        port_order_positions: input.port_order_positions,
-        port_order_contrib: input.port_order_contrib,
-        graph: input.graph,
-        cluster_order: cluster_meta.cluster_order,
-        cluster_parents: cluster_meta.cluster_parents,
-        intercluster_keys: cluster_meta.intercluster_keys,
-        flat_constraints: cluster_meta.flat_constraints,
-        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-      },
-    )
-  @ordering.run_clustered_root_phase_stage_from_sources(
-    root_phase_sources,
+  @ordering.run_clustered_root_phase_stage(
+    {
+      reorder_setup: pipeline_context.reorder_setup,
+      pre_root_stage,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      cluster_keys: cluster_meta.cluster_keys,
+      edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+      ranks: input.ranks,
+      rank_same_groups: cluster_meta.rank_same_groups,
+      rank_same_order: cluster_meta.rank_same_order,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      port_order_positions: input.port_order_positions,
+      port_order_contrib: input.port_order_contrib,
+      graph: input.graph,
+      cluster_order: cluster_meta.cluster_order,
+      cluster_parents: cluster_meta.cluster_parents,
+      intercluster_keys: cluster_meta.intercluster_keys,
+      flat_constraints: cluster_meta.flat_constraints,
+      vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+      vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+      vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+    },
     @ordering.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
   )
 }
@@ -213,8 +209,8 @@ fn run_clustered_finalize_phase(
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
   let edge_port_data = pipeline_context.edge_port_data
-  let finalize_sources =
-    @ordering.build_clustered_finalize_stage_from_sources(
+  let finalize_output =
+    @ordering.run_clustered_finalize_stage(
       {
         phase_base: root_phase_output.root_rank_order_phase_base,
         root_cluster_stage: root_phase_output.root_cluster_stage,
@@ -254,10 +250,6 @@ fn run_clustered_finalize_phase(
         port_order_positions: input.port_order_positions,
         port_order_contrib: input.port_order_contrib,
       },
-    )
-  let finalize_output =
-    @ordering.run_clustered_finalize_stage_from_root_phase_sources(
-      finalize_sources,
       @ordering.build_remincross_snapshot_capture_callback(
         @edge_semantics.edge_xpenalty,
       ),

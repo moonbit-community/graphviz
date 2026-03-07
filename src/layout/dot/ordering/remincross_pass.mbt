@@ -59,7 +59,7 @@ pub(all) struct ReMincrossPassOutput {
 /// Graphviz parity: Stage C finalize payload keeps root-cleanup sources,
 /// cluster-rank replay maps, and ReMincross context snapshots unchanged.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusteredFinalizeInputs {
+priv struct ClusteredFinalizeInputs {
   order_with_clusters : Bool
   order_rank_keys : Array[Int]
   ordered : Map[Int, Array[String]]
@@ -72,7 +72,7 @@ pub(all) struct ClusteredFinalizeInputs {
 /// cleanup snapshots and the assembled ReMincross context together for
 /// one finalize stage run.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusteredFinalizeStageRootSources {
+priv struct ClusteredFinalizeStageRootSources {
   phase_base : RootRankOrderPhaseBase
   root_cluster_stage : RootAndClusterRanksOutput
   order_cluster_keys : Map[String, String]
@@ -183,7 +183,7 @@ fn build_remincross_pass_context_from_finalize_stage_sources(
 /// one root/pre-root snapshot while storing the fully-derived startpass=2
 /// ReMincross context for deterministic finalize replay.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_finalize_stage_from_sources(
+fn build_clustered_finalize_stage_from_sources(
   sources : ClusteredFinalizeStageBuildSources,
 ) -> ClusteredFinalizeStageRootSources {
   {
@@ -229,11 +229,12 @@ fn build_clustered_finalize_inputs_from_root_phase_stage_sources(
 /// reuses the preassembled ReMincross context, then runs finalize group cleanup
 /// + startpass=2 reorder in fixed order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_clustered_finalize_stage_from_root_phase_sources(
-  sources : ClusteredFinalizeStageRootSources,
+pub fn run_clustered_finalize_stage(
+  build_sources : ClusteredFinalizeStageBuildSources,
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
+  let sources = build_clustered_finalize_stage_from_sources(build_sources)
   let finalize_inputs =
     build_clustered_finalize_inputs_from_root_phase_stage_sources(sources)
   run_clustered_finalize_order_groups(
@@ -291,7 +292,7 @@ pub fn build_remincross_groups(
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_clustered_finalize_order_groups(
+fn run_clustered_finalize_order_groups(
   inputs : ClusteredFinalizeInputs,
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
