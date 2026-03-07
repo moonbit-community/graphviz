@@ -19,6 +19,7 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 10. If a dot-root stage is left with only thin cross-stage boundary wiring, merge that boundary logic into `layout.mbt` instead of preserving a wrapper-heavy `stage_x.mbt` file.
 11. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
 12. If a dot-root stage still owns several orchestration-only phase files before extraction, merge them into one focused stage file (for example `stage_c.mbt`, `stage_d.mbt`) until the package boundary is ready.
+13. Finish test-ownership moves before broader test redesign; once tests live with their owners, prune outdated tests and add focused unit coverage for algorithm functions inside those owner packages. Do not add unit tests for thin orchestration or wiring-only logic.
 
 ## Preserve behavior and parity
 
@@ -28,9 +29,10 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 4. Prefer file-by-file migration for large moves; validate each moved file (or small batch) before continuing.
 5. Before any commit, run `scripts/run_local_guard.sh` and require full pass, unless the repository explicitly documents a different mandatory guard workflow.
 6. Commit and push immediately after a no-regression milestone.
-7. When repository policy allows post-commit guard execution, you may pipeline long validations by committing a locally verified slice before the full guard finishes and preparing the next slice while it runs; if the guard fails, stash or shelve later WIP, return to the committed slice, fix it, rerun the guard, then resume. Repository-specific guard rules still take precedence.
-8. When repository policy and local tooling allow parallel development, you may use temporary git worktrees to isolate independent refactor slices or let one worktree validate while another continues implementation. Keep write scopes disjoint, avoid overlapping edits across live worktrees, and remove temporary worktrees after merge or abandonment.
-9. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
+7. When repository policy allows checkpoint commits before the full guard finishes, you may commit a locally verified slice, start `scripts/run_local_guard.sh`, and use the waiting time only for next-slice analysis (reading code, reviewing diffs, deciding ownership, drafting the next cut).
+8. While a full guard is running for the previous checkpoint, do not edit code, stage files, or start the next implementation slice. Wait for the guard result first; if it fails, fix that checkpoint from a clean workspace before continuing.
+9. Prefer the normal single-worktree flow for refactors. Do not introduce extra git worktrees just to overlap implementation with guard execution; analysis-only waiting makes that complexity unnecessary. If an exceptional case still requires a temporary worktree, keep scopes disjoint and remove it afterward.
+10. If parity/alignment regresses after a move, review the refactor diff first to identify root cause before writing fixes.
 
 ## Keep naming and structure consistent
 
