@@ -6,7 +6,7 @@
 /// Graphviz parity: edge endpoint projection caches tail/head names and ports
 /// in edge traversal order shared by both x-offset and port-order passes.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct EdgeEndpointPortProjection {
+priv struct EdgeEndpointPortProjection {
   tail_names : Array[String]
   head_names : Array[String]
   tail_ports : Array[@cgraph.Port?]
@@ -16,7 +16,7 @@ pub(all) struct EdgeEndpointPortProjection {
 ///|
 /// Graphviz parity: edge endpoint samples keep tail/head arrays aligned by edge
 /// traversal order for both x-offset and port-order passes.
-pub(all) struct EdgeEndpointPortSamples {
+priv struct EdgeEndpointPortSamples {
   tail_values : Array[Double]
   head_values : Array[Double]
 }
@@ -35,7 +35,7 @@ pub(all) struct EdgePortSampleBundle {
 /// Graphviz parity: edge endpoint projection caches tail/head names and ports
 /// in edge traversal order shared by both x-offset and port-order passes.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_edge_endpoint_port_projection(
+fn build_edge_endpoint_port_projection(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -68,7 +68,7 @@ pub fn build_edge_endpoint_port_projection(
 ///|
 /// Graphviz parity: tail/head samples are emitted in edge sequence order from
 /// the precomputed endpoint-name/port projection.
-pub fn sample_edge_endpoint_ports(
+fn sample_edge_endpoint_ports(
   projection : EdgeEndpointPortProjection,
   sample_fn : (String, @cgraph.Port?) -> Double,
 ) -> EdgeEndpointPortSamples {
