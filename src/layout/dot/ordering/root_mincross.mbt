@@ -74,7 +74,7 @@ pub fn normalize_synthetic_ports(
 }
 
 ///|
-pub(all) struct MincrossOrderEdgesOutput {
+priv struct MincrossOrderEdgesOutput {
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
   order_edge_head_out_mincross : Array[String]
@@ -88,7 +88,7 @@ pub(all) struct MincrossOrderEdgesOutput {
 /// Graphviz parity: root mincross edge set keeps only edges whose endpoints are
 /// both in the filtered node set, preserving edge and port-order sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_mincross_order_edges(
+fn collect_mincross_order_edges(
   mincross_nodes : Map[String, Bool],
   order_edges_out : Array[@cgraph.Edge],
   order_edge_tail_out : Array[String],
@@ -244,7 +244,7 @@ pub(all) struct RootMincrossEdgeBundle {
 /// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
 /// before building parent/child + edge-order indices.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_mincross_edge_bundle(
+fn build_root_mincross_edge_bundle(
   mincross_nodes : Map[String, Bool],
   order_nodes_for_mincross : Array[String],
   order_edges_out : Array[@cgraph.Edge],
@@ -299,7 +299,7 @@ pub fn build_root_mincross_edge_bundle(
 /// Graphviz parity: vnode preferred-position hints are forwarded only for edge
 /// vnodes when vnode ordering is enabled in root ReMincross.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_vnode_preferred_positions(
+fn build_root_vnode_preferred_positions(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> Map[String, Double] {
@@ -324,7 +324,7 @@ pub(all) struct RootRankReorderCallData {
 }
 
 ///|
-pub(all) struct RootReorderPassResult {
+priv struct RootReorderPassResult {
   ordered_mincross : Map[Int, Array[String]]
   reorder_call_data : RootRankReorderCallData
 }
@@ -371,7 +371,7 @@ pub(all) struct RootMincrossReorderInputs {
 /// Graphviz parity: root ReMincross reorder input context keeps pre-root
 /// materialized ordering snapshots unchanged before seeded group attachment.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootMincrossReorderBuildContext {
+priv struct RootMincrossReorderBuildContext {
   order_with_clusters : Bool
   order_with_vnodes : Bool
   order_rank_keys : Array[Int]
@@ -405,7 +405,7 @@ pub(all) struct RootMincrossReorderBuildContext {
 /// build_ranks snapshots plus pre-root materialized ordering data unchanged
 /// before root-only reorder input assembly.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootMincrossReorderInputsBuildSources {
+priv struct RootMincrossReorderInputsBuildSources {
   reorder_setup : OrderingReorderSetup
   reorder_context : OrderReorderContext
   materialized : OrderMaterializationData
@@ -487,7 +487,7 @@ fn build_root_mincross_reorder_inputs_from_sources(
 /// Graphviz parity: root ReMincross reorder input payload is assembled from the
 /// same seeded groups + pre-root materialized snapshots before root pass call.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_mincross_reorder_inputs(
+fn build_root_mincross_reorder_inputs(
   seeded_groups : Map[Int, Array[String]],
   context : RootMincrossReorderBuildContext,
 ) -> RootMincrossReorderInputs {
@@ -526,7 +526,7 @@ pub fn build_root_mincross_reorder_inputs(
 /// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_root_rank_reorder_call_data(
+fn build_root_rank_reorder_call_data(
   order_groups_for_mincross : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
   order_edge_tail_out : Array[String],
@@ -628,7 +628,7 @@ pub fn build_root_rank_reorder_call_data(
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_reorder_for_groups(
+fn run_root_reorder_for_groups(
   reorder_inputs : RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> RootReorderPassResult {
@@ -674,7 +674,7 @@ pub fn run_root_reorder_for_groups(
 /// Graphviz parity: root ReMincross input groups are cluster-filtered when
 /// cluster ordering is enabled, then optionally overridden for fixture replay.
 /// Do not change behavior without updating fixtures/tests.
-pub fn resolve_root_mincross_input_groups(
+fn resolve_root_mincross_input_groups(
   order_with_clusters : Bool,
   seeded_groups : Map[Int, Array[String]],
   order_cluster_keys : Map[String, String],
@@ -704,7 +704,7 @@ pub fn resolve_root_mincross_input_groups(
 /// Graphviz parity: root ReMincross output merges reordered root/skeleton names
 /// back to seeded groups only in cluster-order mode.
 /// Do not change behavior without updating fixtures/tests.
-pub fn finalize_root_mincross_ordered_groups(
+fn finalize_root_mincross_ordered_groups(
   order_with_clusters : Bool,
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
@@ -730,7 +730,7 @@ pub fn finalize_root_mincross_ordered_groups(
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_mincross_reorder(
+fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
   order_groups_override : Map[Int, Array[String]]?,
 ) -> RootMincrossReorderResult {
@@ -768,7 +768,7 @@ pub fn run_root_mincross_reorder(
 /// Graphviz parity: pass0 flat-seed capture wraps the root mincross call,
 /// then records the same stage snapshot before resetting capture state.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_mincross_reorder_with_pass0_capture(
+fn run_root_mincross_reorder_with_pass0_capture(
   inputs : RootMincrossReorderInputs,
   order_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
@@ -867,7 +867,7 @@ fn build_root_and_cluster_ranks_call_inputs_from_sources(
 /// Graphviz parity: root+cluster stage run keeps root mincross capture/replay
 /// ordering unchanged, then applies root-override merge before local replay.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
+fn run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
   call_inputs : RootAndClusterRanksCallInputs,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
@@ -907,7 +907,7 @@ pub(all) struct RootAndClusterRanksStageSources {
 /// capture/replay ordering, then applies local cluster replay using unmapped
 /// order-graph snapshots from the same pre-root source payload.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_and_cluster_ranks_stage_from_sources(
+fn run_root_and_cluster_ranks_stage_from_sources(
   sources : RootAndClusterRanksStageSources,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
@@ -1204,7 +1204,7 @@ fn resolve_root_phase_ordered_groups(
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks handoff payload generation for clustered/local replay.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_root_and_cluster_ranks(
+fn run_root_and_cluster_ranks(
   inputs : RootAndClusterRanksInputs,
   root_reorder_result : RootMincrossReorderResult,
 ) -> RootAndClusterRanksOutput {
@@ -1514,7 +1514,7 @@ fn build_root_override_rank_names(
 /// Graphviz parity: root phase can apply a rank-order override from root
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_root_groups_override(
+fn apply_root_groups_override(
   groups : Map[Int, Array[String]],
   override_groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
