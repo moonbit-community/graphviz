@@ -13,6 +13,7 @@
       "alias": "edge_spline"
     },
     "moonbit-community/graphviz/layout/dot/routing",
+    "moonbit-community/graphviz/layout/dot/routing/emit",
     "moonbit-community/graphviz/layout/dot/routing/curve_mode",
     "moonbit-community/graphviz/layout/dot/routing/route_base",
     "moonbit-community/graphviz/layout/dot/routing/self_edge",

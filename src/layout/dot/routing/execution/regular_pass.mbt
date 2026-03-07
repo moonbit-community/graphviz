@@ -168,9 +168,9 @@ fn build_regular_spline_layout(
     },
   )
   let layout_spline_result =
-    @routing.rebuild_spline_for_render(layout_input.base, spline_result)
+    @emit.rebuild_spline_for_render(layout_input.base, spline_result)
   let spline =
-    @routing.finalize_edge_spline(layout_input.base, layout_spline_result)
+    @emit.finalize_edge_spline(layout_input.base, layout_spline_result)
   recover_pathplan_slack(
     {
       edge: layout_input.edge,
@@ -257,7 +257,7 @@ fn apply_regular_parallel_reuse_layouts(
       None => continue
     }
     let group_layout =
-      @routing.build_regular_bezier_layout(
+      @emit.build_regular_bezier_layout(
         group_base,
         reuse_input.regular_layout.spline_result,
         reuse_input.callbacks.build_edge_layout_fn,

@@ -1,4 +1,3 @@
-///|
 pub fn edge_spline_result_for_bezier(
   spline : @geom.Spline,
   raw_bezier : Array[@geom.Point],

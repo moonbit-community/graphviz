@@ -23,7 +23,7 @@ fn maybe_build_flat_adjacent_layout(
   match input.input.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
       let edge_layout =
-        @routing.build_flat_adjacent_layout(
+        @emit.build_flat_adjacent_layout(
           input.base,
           bezier,
           input.callbacks.build_edge_layout_fn,
@@ -56,7 +56,7 @@ fn maybe_build_self_edge_layout(
   match route {
     Some(route) => {
       let edge_layout =
-        @routing.build_self_edge_layout(
+        @emit.build_self_edge_layout(
           input.base,
           route,
           input.callbacks.build_edge_layout_fn,

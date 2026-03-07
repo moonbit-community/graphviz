@@ -14,6 +14,7 @@
     },
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/routing/precompute",
+    "moonbit-community/graphviz/layout/dot/routing/emit",
     "moonbit-community/graphviz/layout/dot/routing/edge_ops",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom"
