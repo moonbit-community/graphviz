@@ -15,7 +15,7 @@ pub(all) struct OrderingNodeNameSets {
 /// Graphviz parity: ordering pre-pass derives real-node/existing-name sets
 /// from the node array before vnode creation and class2 preparation.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_node_name_sets(
+fn build_ordering_node_name_sets(
   nodes : Array[@cgraph.Node],
 ) -> OrderingNodeNameSets {
   let real_nodes : Map[String, Bool] = Map::new()
@@ -32,7 +32,7 @@ pub fn build_ordering_node_name_sets(
 /// Graphviz parity: explicit-port endpoints are tracked before class2 to keep
 /// port-order constraints available during ordering setup.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_port_edge_nodes_for_ordering(
+fn build_port_edge_nodes_for_ordering(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
