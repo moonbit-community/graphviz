@@ -255,17 +255,25 @@ fn rotate_and_mirror_final_layout(
   let rotated = if rankdir == RankDir::TB {
     pre_rotation.layout
   } else {
-    rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
+    dot_layout_graph_from_layout_tree(
+      @coordinate_transform.rotate_layout_graph(
+        layout_tree_from_dot_layout_graph(pre_rotation.layout),
+        pre_rotation.layout.bbox,
+        rankdir,
+      ),
+    )
   }
-  apply_cluster_lr_mirror_after_rotation(
-    {
-      graph,
-      rankdir,
-      rotated,
-      pre_rotation_bbox: pre_rotation.layout.bbox,
-      rank_bbox: pre_rotation.rank_bbox,
-      subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
-    },
+  dot_layout_graph_from_layout_tree(
+    @coordinate_transform.apply_cluster_lr_mirror_after_rotation(
+      {
+        graph,
+        rankdir,
+        rotated: layout_tree_from_dot_layout_graph(rotated),
+        pre_rotation_bbox: pre_rotation.layout.bbox,
+        rank_bbox: pre_rotation.rank_bbox,
+        subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
+      },
+    ),
   )
 }
 

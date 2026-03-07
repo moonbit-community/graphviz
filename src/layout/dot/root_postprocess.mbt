@@ -13,7 +13,13 @@ fn shift_layout_to_origin(
     let dx = -layout.bbox.llx
     let dy = -layout.bbox.lly
     if dx != 0.0 || dy != 0.0 {
-      shift_layout_graph(layout, dx, dy)
+      dot_layout_graph_from_layout_tree(
+        @coordinate_transform.shift_layout_graph(
+          layout_tree_from_dot_layout_graph(layout),
+          dx,
+          dy,
+        ),
+      )
     } else {
       layout
     }
@@ -42,7 +48,13 @@ fn apply_root_cluster_padding(
   if input.graph.is_root() &&
     (input.root_cluster_pad_top > 0.0 || input.root_cluster_pad_bottom > 0.0) {
     let padded =
-      shift_layout_graph(input.layout, 0.0, input.root_cluster_pad_bottom)
+      dot_layout_graph_from_layout_tree(
+        @coordinate_transform.shift_layout_graph(
+          layout_tree_from_dot_layout_graph(input.layout),
+          0.0,
+          input.root_cluster_pad_bottom,
+        ),
+      )
     let padded_bbox : @geom.Rect = {
       llx: input.layout.bbox.llx,
       lly: input.layout.bbox.lly,

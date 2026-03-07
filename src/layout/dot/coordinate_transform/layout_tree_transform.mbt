@@ -1,11 +1,16 @@
 ///|
-/// Cluster-oriented mirror/label refresh helpers used by final postprocess.
+/// Cluster-oriented mirror/label refresh helpers on internal layout trees used
+/// by final postprocess.
+
+type LayoutTree = @shared.LayoutTree
+type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutEdge = @shared.DotLayoutEdge
 
 ///|
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
-    if @dot_shared.is_cluster_graph(subgraph) {
+    if @shared.is_cluster_graph(subgraph) {
       count = count + 1
     }
     count = count + count_cluster_subgraphs(subgraph)
@@ -15,23 +20,23 @@ fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
 
 ///|
 fn mirror_layout_points(
-  layout : DotLayoutGraph,
+  layout : LayoutTree,
   point_bbox : @geom.Rect,
   bbox_bbox : @geom.Rect,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
     nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.transform_point(node_layout.pos, point_bbox, RankDir::BT),
+      pos: transform_point(node_layout.pos, point_bbox, RankDir::BT),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         node_layout.label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         node_layout.xlabel_pos,
         point_bbox,
         RankDir::BT,
@@ -42,41 +47,41 @@ fn mirror_layout_points(
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.transform_spline(spline, point_bbox, RankDir::BT))
+      splines.push(transform_spline(spline, point_bbox, RankDir::BT))
     }
     edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         edge_layout.label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      head_label_pos: @coordinate_transform.transform_optional_point(
+      head_label_pos: transform_optional_point(
         edge_layout.head_label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      tail_label_pos: @coordinate_transform.transform_optional_point(
+      tail_label_pos: transform_optional_point(
         edge_layout.tail_label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         edge_layout.xlabel_pos,
         point_bbox,
         RankDir::BT,
       ),
     })
   }
-  let subgraphs : Array[DotLayoutGraph] = []
+  let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(
       mirror_layout_points(subgraph, point_bbox, bbox_bbox),
     )
   }
   let mirrored_bbox =
-    @coordinate_transform.transform_bbox_with_root(layout.bbox, bbox_bbox, RankDir::BT)
+    transform_bbox_with_root(layout.bbox, bbox_bbox, RankDir::BT)
   {
     graph: layout.graph,
     bbox: mirrored_bbox,
@@ -89,24 +94,24 @@ fn mirror_layout_points(
 
 ///|
 fn refresh_cluster_labels(
-  layout : DotLayoutGraph,
-) -> DotLayoutGraph {
-  let subgraphs : Array[DotLayoutGraph] = []
+  layout : LayoutTree,
+) -> LayoutTree {
+  let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(refresh_cluster_labels(subgraph))
   }
   let label_pos =
-    if @dot_shared.is_cluster_graph(layout.graph) {
+    if @shared.is_cluster_graph(layout.graph) {
       match @label_metrics.graph_label_metrics(layout.graph) {
         Some(metrics) => {
           let pad = @clustering.CLUSTER_LABEL_PAD_PT
           Some(
-            @dot_shared.graph_label_pos(
+            @shared.graph_label_pos(
               layout.bbox,
               metrics.width_pt + pad * 2.0,
               metrics.height_pt + pad,
-              @dot_shared.graph_label_loc(layout.graph),
-              @dot_shared.graph_label_just(layout.graph),
+              @shared.graph_label_loc(layout.graph),
+              @shared.graph_label_just(layout.graph),
             ),
           )
         }
@@ -128,10 +133,10 @@ fn refresh_cluster_labels(
 ///|
 /// Graphviz parity: cluster LR/RL mirror input keeps pre/post-rotation bbox
 /// snapshots grouped so mirror-path gating remains explicit and stable.
-priv struct ClusterLRMirrorInput {
+pub(all) struct ClusterLRMirrorInput {
   graph : @cgraph.Graph
   rankdir : RankDir
-  rotated : DotLayoutGraph
+  rotated : LayoutTree
   pre_rotation_bbox : @geom.Rect
   rank_bbox : @geom.Rect
   subgraph_base_bbox : @geom.Rect
@@ -141,22 +146,22 @@ priv struct ClusterLRMirrorInput {
 /// Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
 /// rotation (dotgen cluster decompose + postproc map_point ordering).
 /// Do not change behavior without updating fixtures/tests.
-fn apply_cluster_lr_mirror_after_rotation(
+pub fn apply_cluster_lr_mirror_after_rotation(
   input : ClusterLRMirrorInput,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let use_cluster_point_mirror =
     input.subgraph_base_bbox.urx > input.rank_bbox.urx &&
     (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(input.graph)
+    @shared.graph_has_cluster(input.graph)
   let use_lr_multi_cluster_creation_order_mode =
     (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
     count_cluster_subgraphs(input.graph) > 1
   if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(input.graph) &&
+    @shared.graph_has_cluster(input.graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       let cluster_mirror_bbox =
-        @coordinate_transform.transform_bbox_with_root(input.rank_bbox, input.pre_rotation_bbox, input.rankdir)
+        transform_bbox_with_root(input.rank_bbox, input.pre_rotation_bbox, input.rankdir)
       refresh_cluster_labels(
         mirror_layout_points(
           input.rotated,
@@ -179,38 +184,38 @@ fn apply_cluster_lr_mirror_after_rotation(
 /// Graphviz parity: layout translation aligned to refs/graphviz/lib/common/postproc.c
 /// (translate_drawing/translate_bb).
 /// Do not change behavior without updating fixtures/tests.
-fn shift_layout_graph(
-  layout : DotLayoutGraph,
+pub fn shift_layout_graph(
+  layout : LayoutTree,
   dx : Double,
   dy : Double,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   let shifted_nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
     shifted_nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.shift_point(node_layout.pos, dx, dy),
+      pos: shift_point(node_layout.pos, dx, dy),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.shift_optional_point(node_layout.label_pos, dx, dy),
-      xlabel_pos: @coordinate_transform.shift_optional_point(node_layout.xlabel_pos, dx, dy),
+      label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(node_layout.xlabel_pos, dx, dy),
     })
   }
   let shifted_edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.shift_spline(spline, dx, dy))
+      splines.push(shift_spline(spline, dx, dy))
     }
     shifted_edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.shift_optional_point(edge_layout.label_pos, dx, dy),
-      head_label_pos: @coordinate_transform.shift_optional_point(edge_layout.head_label_pos, dx, dy),
-      tail_label_pos: @coordinate_transform.shift_optional_point(edge_layout.tail_label_pos, dx, dy),
-      xlabel_pos: @coordinate_transform.shift_optional_point(edge_layout.xlabel_pos, dx, dy),
+      label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
+      head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
+      tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(edge_layout.xlabel_pos, dx, dy),
     })
   }
-  let shifted_subgraphs : Array[DotLayoutGraph] = []
+  let shifted_subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     shifted_subgraphs.push(shift_layout_graph(subgraph, dx, dy))
   }
@@ -223,7 +228,7 @@ fn shift_layout_graph(
   {
     graph: layout.graph,
     bbox: shifted_bbox,
-    label_pos: @coordinate_transform.shift_optional_point(layout.label_pos, dx, dy),
+    label_pos: shift_optional_point(layout.label_pos, dx, dy),
     nodes: shifted_nodes,
     edges: shifted_edges,
     subgraphs: shifted_subgraphs,
@@ -234,11 +239,11 @@ fn shift_layout_graph(
 /// Graphviz parity: rankdir rotation aligned to refs/graphviz/lib/common/postproc.c
 /// (translate_drawing/map_point).
 /// Do not change behavior without updating fixtures/tests.
-fn rotate_layout_graph(
-  layout : DotLayoutGraph,
+pub fn rotate_layout_graph(
+  layout : LayoutTree,
   root_bbox : @geom.Rect,
   rankdir : RankDir,
-) -> DotLayoutGraph {
+) -> LayoutTree {
   if rankdir == RankDir::TB {
     return layout
   }
@@ -246,15 +251,15 @@ fn rotate_layout_graph(
   for node_layout in layout.nodes {
     nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.transform_point(node_layout.pos, root_bbox, rankdir),
+      pos: transform_point(node_layout.pos, root_bbox, rankdir),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         node_layout.label_pos,
         root_bbox,
         rankdir,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         node_layout.xlabel_pos,
         root_bbox,
         rankdir,
@@ -265,41 +270,41 @@ fn rotate_layout_graph(
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.transform_spline(spline, root_bbox, rankdir))
+      splines.push(transform_spline(spline, root_bbox, rankdir))
     }
     edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         edge_layout.label_pos,
         root_bbox,
         rankdir,
       ),
-      head_label_pos: @coordinate_transform.transform_optional_point(
+      head_label_pos: transform_optional_point(
         edge_layout.head_label_pos,
         root_bbox,
         rankdir,
       ),
-      tail_label_pos: @coordinate_transform.transform_optional_point(
+      tail_label_pos: transform_optional_point(
         edge_layout.tail_label_pos,
         root_bbox,
         rankdir,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         edge_layout.xlabel_pos,
         root_bbox,
         rankdir,
       ),
     })
   }
-  let subgraphs : Array[DotLayoutGraph] = []
+  let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(rotate_layout_graph(subgraph, root_bbox, rankdir))
   }
   {
     graph: layout.graph,
-    bbox: @coordinate_transform.transform_bbox_with_root(layout.bbox, root_bbox, rankdir),
-    label_pos: @coordinate_transform.transform_optional_point(layout.label_pos, root_bbox, rankdir),
+    bbox: transform_bbox_with_root(layout.bbox, root_bbox, rankdir),
+    label_pos: transform_optional_point(layout.label_pos, root_bbox, rankdir),
     nodes,
     edges,
     subgraphs,
