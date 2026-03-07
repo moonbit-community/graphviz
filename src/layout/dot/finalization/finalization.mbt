@@ -233,7 +233,7 @@ fn build_root_padded_layout_data(
       input.port_pad_above,
     )
   let layout_with_root_pad =
-    @coordinate_transform.apply_root_cluster_padding(
+    apply_root_cluster_padding(
       {
         layout: {
           graph,
@@ -277,7 +277,7 @@ fn apply_pre_rotation_layout_postprocess(
     subgraphs: layout_with_root_pad.subgraphs,
   }
   let layout =
-    @coordinate_transform.apply_ratio_fill_scale(
+    apply_ratio_fill_scale(
       layout,
       rankdir,
       root_padded.ratio_bbox,
@@ -370,13 +370,13 @@ fn rotate_and_mirror_final_layout(
   let rotated = if rankdir == RankDir::TB {
     pre_rotation.layout
   } else {
-    @coordinate_transform.rotate_layout_graph(
+    rotate_layout_graph(
       pre_rotation.layout,
       pre_rotation.layout.bbox,
       rankdir,
     )
   }
-  @coordinate_transform.apply_cluster_lr_mirror_after_rotation(
+  apply_cluster_lr_mirror_after_rotation(
     {
       graph,
       rankdir,
@@ -402,5 +402,5 @@ pub fn finalize_layout_from_sources(
       input.rankdir,
       build_pre_rotation_layout_data(input),
     )
-  @coordinate_transform.finalize_root_coordinates(rotated)
+  finalize_root_coordinates(rotated)
 }
