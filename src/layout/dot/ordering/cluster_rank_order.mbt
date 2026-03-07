@@ -308,7 +308,7 @@ pub fn collect_real_only_rank_groups(
 /// Graphviz parity: within each outer-cluster rank bucket, local subclusters
 /// are ordered by local-cluster rank order with stable in-rank tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
-pub fn reorder_groups_by_local_cluster(
+fn reorder_groups_by_local_cluster(
   groups : Map[Int, Array[String]],
   outer_cluster_keys : Map[String, String],
   local_cluster_keys : Map[String, String],
@@ -578,7 +578,7 @@ fn reorder_rank_group_by_cluster_order(
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
-pub fn reorder_groups_by_cluster(
+fn reorder_groups_by_cluster(
   final_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
@@ -599,7 +599,7 @@ pub fn reorder_groups_by_cluster(
 /// Graphviz parity: cluster-rank reorder is skipped when root reorder exposes
 /// a single-cluster single-anchor shape (one cluster bucket globally and at
 /// most one clustered node per rank).
-pub fn should_skip_cluster_rank_bucket_reorder(
+fn should_skip_cluster_rank_bucket_reorder(
   cluster_rank_order : Map[Int, Map[String, Int]],
   cleaned_groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
