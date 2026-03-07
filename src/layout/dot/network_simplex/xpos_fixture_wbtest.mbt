@@ -1,4 +1,49 @@
 ///|
+fn fixture_require_object(json : Json) -> Map[String, Json] raise {
+  match json {
+    Json::Object(obj) => obj
+    _ => fail("expected JSON object")
+  }
+}
+
+///|
+fn fixture_json_string_option(value : Json) -> String? raise {
+  if value == Json::null() {
+    None
+  } else {
+    Some(@json.from_json(value))
+  }
+}
+
+///|
+fn fixture_build_rank_order_map(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
+  let map : Map[Int, Int] = Map::new()
+  let mut rank_idx = 0
+  for rank_nodes in ranks {
+    let mut order = 0
+    for id in rank_nodes {
+      if map.get(id) is Some(_) {
+        fail("duplicate node id \{id} in rank list \{rank_idx}")
+      }
+      map[id] = order
+      order = order + 1
+    }
+    rank_idx = rank_idx + 1
+  }
+  map
+}
+
+///|
+fn fixture_node_kind(kind : String) -> NodeKind raise {
+  match kind {
+    "normal" => NodeKind::Normal
+    "virtual" => NodeKind::Virtual
+    "slack" => NodeKind::Slack
+    _ => fail("unknown fixture node kind: \{kind}")
+  }
+}
+
+///|
 struct XposNode {
   id : Int
   name : String?
@@ -245,15 +290,15 @@ fn assert_positions(
 ///|
 fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
   let _ = assert_xpos_input(input)
-  let graph = @network_simplex.new_graph()
+  let graph = new_graph()
   for node in input.nodes {
-    let idx = @network_simplex.add_node(graph, "", kind=fixture_node_kind(node.kind))
+    let idx = add_node(graph, "", kind=fixture_node_kind(node.kind))
     if idx != node.id {
       fail(
         "case \{input.case_id} graph=\{input.graph} node id mismatch expected=\{node.id} actual=\{idx}",
       )
     }
-    @network_simplex.set_node_rank(graph, idx, node.rank)
+    set_node_rank(graph, idx, node.rank)
   }
   for edge in input.edges {
     if edge.weight < 0 {
@@ -261,12 +306,12 @@ fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
         "case \{input.case_id} graph=\{input.graph} negative weight \{edge.weight}",
       )
     }
-    let _ = @network_simplex.add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
   }
-  @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let actual : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual.push(@network_simplex.node_rank(graph, i))
+    actual.push(node_rank(graph, i))
   }
   assert_positions(input.case_id, input.graph, actual, output.positions)
 }
