@@ -58,8 +58,8 @@ pub fn edge_parallel_key(
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
 ) -> String {
-  let tail_port_key = @dot_shared.port_key(tail_port)
-  let head_port_key = @dot_shared.port_key(head_port)
+  let tail_port_key = @edge_identity.port_key(tail_port)
+  let head_port_key = @edge_identity.port_key(head_port)
   let a = "\{tail}|\{tail_port_key}"
   let b = "\{head}|\{head_port_key}"
   if a <= b {

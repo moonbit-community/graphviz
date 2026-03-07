@@ -174,7 +174,7 @@ fn collect_root_vnodes(
     let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
-      let vnodes = edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+      let vnodes = edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
       for vnode in vnodes {
         root_vnodes[vnode] = true
       }
@@ -232,7 +232,7 @@ fn should_keep_root_reorder_name(
   if !is_skeleton && cluster != "" {
     return false
   }
-  if @shared.is_edge_vnode_name(name) && root_vnodes.get(name) != Some(true) {
+  if @edge_identity.is_edge_vnode_name(name) && root_vnodes.get(name) != Some(true) {
     return false
   }
   true

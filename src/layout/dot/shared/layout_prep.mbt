@@ -75,8 +75,8 @@ pub fn scan_edge_flags(edges : Array[@cgraph.Edge]) -> EdgeFlags {
       None => ()
     }
     if !has_port_edges {
-      let tail_port = port_is_explicit(edge.tail_port())
-      let head_port = port_is_explicit(edge.head_port())
+      let tail_port = @edge_identity.port_is_explicit(edge.tail_port())
+      let head_port = @edge_identity.port_is_explicit(edge.head_port())
       if tail_port || head_port {
         has_port_edges = true
       }

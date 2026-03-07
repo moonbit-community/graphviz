@@ -497,7 +497,7 @@ fn append_clustered_input_edges(
     let head_port_order =
       edge_port_value_or_default(input.edge_head_port_order, edge_idx, 0.5)
     let vnodes =
-      input.edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+      input.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
     append_xpos_edge_with_vnodes(
       order_graph,
       order_node_map,

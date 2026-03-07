@@ -12,6 +12,7 @@
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbitlang/core/math"
+    "moonbitlang/core/math",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

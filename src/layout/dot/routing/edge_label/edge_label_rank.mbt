@@ -53,7 +53,7 @@ pub fn edge_label_rank_x(
   vnode_info : EdgeVnodeInfo,
   vnode_positions : Map[String, @geom.Point],
 ) -> Double? {
-  match vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+  match vnode_info.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(vnodes) =>
       for name in vnodes {
         match vnode_info.vnode_ranks.get(name) {

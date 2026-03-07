@@ -156,7 +156,7 @@ pub fn edge_port_order(
   offsets : Map[String, Map[String, @shared.RecordPort]],
   compass_point_for : (@cgraph.Compass) -> @geom.Point,
 ) -> Double {
-  if !@shared.port_is_explicit(port) {
+  if !@edge_identity.port_is_explicit(port) {
     return 0.0
   }
   match port {

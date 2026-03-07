@@ -34,11 +34,11 @@ fn needs_record_port_detour(
   let record_port_edge =
     (
       @dot_shared.is_record_shape(input.tail_node) &&
-      @dot_shared.port_is_explicit(input.tail_port)
+      @edge_identity.port_is_explicit(input.tail_port)
     ) ||
     (
       @dot_shared.is_record_shape(input.head_node) &&
-      @dot_shared.port_is_explicit(input.head_port)
+      @edge_identity.port_is_explicit(input.head_port)
     )
   !input.using_pathplan &&
   !input.is_flat_edge &&
@@ -103,7 +103,7 @@ fn edge_port_slope_or_zero(
   port : @cgraph.Port?,
   slope : @geom.Point,
 ) -> @geom.Point {
-  if @dot_shared.port_is_explicit(port) { slope } else { @edge_spline.point(0.0, 0.0) }
+  if @edge_identity.port_is_explicit(port) { slope } else { @edge_spline.point(0.0, 0.0) }
 }
 
 ///|

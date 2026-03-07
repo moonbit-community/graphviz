@@ -40,8 +40,8 @@ pub fn build_port_edge_nodes_for_ordering(
   let port_edge_nodes : Map[String, Bool] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let ported = @shared.port_is_explicit(edge.tail_port()) ||
-      @shared.port_is_explicit(edge.head_port())
+    let ported = @edge_identity.port_is_explicit(edge.tail_port()) ||
+      @edge_identity.port_is_explicit(edge.head_port())
     if ported {
       port_edge_nodes[edge_tail[edge_idx]] = true
       port_edge_nodes[edge_head[edge_idx]] = true

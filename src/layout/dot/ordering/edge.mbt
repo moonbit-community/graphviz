@@ -697,7 +697,7 @@ pub fn build_order_edges_by_tail(
         }
       let vnodes =
         if order_with_vnodes {
-        match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+        match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
           Some(list) => list
           None => []
         }
@@ -823,7 +823,7 @@ pub fn build_edge_index_with_vnodes(
       continue
     }
     let (low, high) = if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
-    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edges[edge_idx])) {
+    let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edges[edge_idx])) {
       Some(list) => list
       None => []
     }

@@ -338,7 +338,7 @@ pub fn collect_intercluster_bonus(
         }
       let vnodes =
         if order_with_vnodes {
-          match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+          match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
             Some(list) => list
             None => []
           }
@@ -359,7 +359,7 @@ pub fn collect_intercluster_bonus(
       while i + 1 < chain.length() {
         let t = chain[i]
         let h = chain[i + 1]
-        if t != h && @shared.is_edge_vnode_name(t) {
+        if t != h && @edge_identity.is_edge_vnode_name(t) {
           let seg_tail_order =
             if t == tail && chain_tail == tail {
               tail_port_order

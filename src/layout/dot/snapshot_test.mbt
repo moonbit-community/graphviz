@@ -129,11 +129,11 @@ fn compare_edges(
   assert_eq(expected_edges.length(), actual_edges.length())
   let expected_map : Map[String, @cgraph.Edge] = Map::new()
   for edge in expected_edges {
-    expected_map[@dot_shared.edge_key(edge)] = edge
+    expected_map[@edge_identity.edge_key(edge)] = edge
   }
   let actual_map : Map[String, @cgraph.Edge] = Map::new()
   for edge in actual_edges {
-    actual_map[@dot_shared.edge_key(edge)] = edge
+    actual_map[@edge_identity.edge_key(edge)] = edge
   }
   for key, expected_edge in expected_map {
     match actual_map.get(key) {

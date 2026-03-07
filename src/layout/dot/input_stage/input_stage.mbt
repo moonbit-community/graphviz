@@ -260,11 +260,11 @@ fn accumulate_port_order_contrib(
   for edge in input.edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
-    if @shared.port_is_explicit(edge.tail_port()) &&
+    if @edge_identity.port_is_explicit(edge.tail_port()) &&
       @shared.is_record_shape(edge.tail()) {
       update_order(head_name, tail_name, edge.tail_port())
     }
-    if @shared.port_is_explicit(edge.head_port()) &&
+    if @edge_identity.port_is_explicit(edge.head_port()) &&
       @shared.is_record_shape(edge.head()) {
       update_order(tail_name, head_name, edge.head_port())
     }

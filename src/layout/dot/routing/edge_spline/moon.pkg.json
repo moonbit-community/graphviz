@@ -7,14 +7,20 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
-    "moonbitlang/core/bigint"
+    "moonbitlang/core/bigint",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ],
   "wbtest-import": [
     "moonbitlang/core/json",
     "moonbitlang/x/fs"
   ],
   "targets": {
-    "libm_native.mbt": ["native"],
-    "libm_non_native.mbt": ["not", "native"]
+    "libm_native.mbt": [
+      "native"
+    ],
+    "libm_non_native.mbt": [
+      "not",
+      "native"
+    ]
   }
 }

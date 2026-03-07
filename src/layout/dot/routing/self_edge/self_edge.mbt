@@ -43,8 +43,8 @@ fn self_edge_right_space_for(
 ) -> Double {
   let tail_port = edge.tail_port()
   let head_port = edge.head_port()
-  let tail_explicit = @dot_shared.port_is_explicit(tail_port)
-  let head_explicit = @dot_shared.port_is_explicit(head_port)
+  let tail_explicit = @edge_identity.port_is_explicit(tail_port)
+  let head_explicit = @edge_identity.port_is_explicit(head_port)
   let label_width =
     (input.self_edge_label_width_for)(edge, input.rankdir)
   if !tail_explicit && !head_explicit {
@@ -533,8 +533,8 @@ fn build_self_edge_routes(
       base0.head_port,
       all_sides,
     )
-  let tail_defined = @dot_shared.port_is_explicit(base0.tail_port)
-  let head_defined = @dot_shared.port_is_explicit(base0.head_port)
+  let tail_defined = @edge_identity.port_is_explicit(base0.tail_port)
+  let head_defined = @edge_identity.port_is_explicit(base0.head_port)
   let bounds = rank_bounds(rank_y)
   let sizey =
     self_edge_rank_spacing(

@@ -26,8 +26,8 @@ fn collect_flat_adjacent_beziers(
     if @edge_semantics.edge_has_label(edge) {
       continue
     }
-    if @dot_shared.port_is_explicit(edge.tail_port()) ||
-      @dot_shared.port_is_explicit(edge.head_port()) {
+    if @edge_identity.port_is_explicit(edge.tail_port()) ||
+      @edge_identity.port_is_explicit(edge.head_port()) {
       continue
     }
     if @edge_ops.edge_has_sameport_mark(edge) {
@@ -65,7 +65,7 @@ fn collect_flat_adjacent_beziers(
       continue
     }
     let key =
-      "\{edge.tail().name()}|\{@dot_shared.port_key(edge.tail_port())}|\{edge.head().name()}|\{@dot_shared.port_key(edge.head_port())}"
+      "\{edge.tail().name()}|\{@edge_identity.port_key(edge.tail_port())}|\{edge.head().name()}|\{@edge_identity.port_key(edge.head_port())}"
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]

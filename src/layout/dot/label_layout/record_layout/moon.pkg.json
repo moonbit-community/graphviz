@@ -11,6 +11,7 @@
     "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbitlang/core/ref"
+    "moonbitlang/core/ref",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

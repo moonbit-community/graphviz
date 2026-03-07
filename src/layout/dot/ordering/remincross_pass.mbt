@@ -856,7 +856,7 @@ fn try_build_special_seed_order(
     }
   }
   if filtered.length() == 4 &&
-    @shared.is_edge_vnode_name(filtered[0]) &&
+    @edge_identity.is_edge_vnode_name(filtered[0]) &&
     root_real_count == 1 &&
     cluster_real_count >= 2 &&
     synthetic_count == 1 &&
@@ -1241,7 +1241,7 @@ pub fn build_vnode_order_keys(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let vnodes = edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+    let vnodes = edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
     if vnodes.length() == 0 {
       continue
     }
@@ -1379,7 +1379,7 @@ fn collect_remincross_trailing(
       continue
     }
     let vnodes =
-      edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+      edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
     for vnode in vnodes {
       intercluster_vnodes[vnode] = true
     }

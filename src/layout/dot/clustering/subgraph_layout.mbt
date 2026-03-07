@@ -63,7 +63,7 @@ pub fn layout_subgraphs(
     }
     let edge_set : Map[String, Bool] = Map::new()
     for edge in subgraph.edges() {
-      edge_set[@shared.edge_key(edge)] = true
+      edge_set[@edge_identity.edge_key(edge)] = true
     }
     let sub_nodes : Array[DotLayoutNode] = []
     for node_layout in nodes_out {
@@ -73,7 +73,7 @@ pub fn layout_subgraphs(
     }
     let sub_edges : Array[DotLayoutEdge] = []
     for edge_layout in edges_out {
-      if edge_set.get(@shared.edge_key(edge_layout.edge)) is Some(_) {
+      if edge_set.get(@edge_identity.edge_key(edge_layout.edge)) is Some(_) {
         let tail_name = edge_layout.edge.tail().name()
         let head_name = edge_layout.edge.head().name()
         if node_set.get(tail_name) is Some(_) &&

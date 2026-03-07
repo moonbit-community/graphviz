@@ -205,7 +205,7 @@ fn collect_parallel_reuse_siblings(
   if raw_bezier.length() == 0 {
     return []
   }
-  let regular_key = @dot_shared.edge_vnode_key(edge)
+  let regular_key = @edge_identity.edge_vnode_key(edge)
   let group_edges = match regular_parallel_groups.get(regular_key) {
     Some(value) => value
     None => return []

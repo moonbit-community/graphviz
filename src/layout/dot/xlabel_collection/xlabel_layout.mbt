@@ -253,7 +253,7 @@ fn apply_xlabel_updates(
   }
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
-    let key = @shared.edge_key(edge_layout.edge)
+    let key = @edge_identity.edge_key(edge_layout.edge)
     let label_pos =
       update_or_fallback(
         updates.edge_mid_updates,

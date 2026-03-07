@@ -19,7 +19,7 @@ fn add_sameport_group_edge(
 ///|
 fn sameport_merge_key(edge : @cgraph.Edge) -> String {
   let label = @edge_semantics.edge_attr_or_empty(edge, "label")
-  "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{@dot_shared.port_key(edge.tail_port())}|\{@dot_shared.port_key(edge.head_port())}"
+  "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{@edge_identity.port_key(edge.tail_port())}|\{@edge_identity.port_key(edge.head_port())}"
 }
 
 ///|

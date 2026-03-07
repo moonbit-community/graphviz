@@ -4,7 +4,7 @@
 fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
   if @edge_semantics.edge_has_label(edge) || !undirected {
-    "vnode|\{@dot_shared.edge_vnode_key(edge)}"
+    "vnode|\{@edge_identity.edge_vnode_key(edge)}"
   } else {
     "parallel|\{@edge_ops.edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
   }
@@ -73,7 +73,7 @@ fn collect_parallel_groups(
     if base.is_flat_edge {
       continue
     }
-    let key = @dot_shared.edge_vnode_key(edge)
+    let key = @edge_identity.edge_vnode_key(edge)
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]

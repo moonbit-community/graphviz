@@ -141,7 +141,7 @@ fn vnode_positions_from_edges(
 ) -> Map[String, @geom.Point] {
   let positions : Map[String, @geom.Point] = Map::new()
   for edge in edges {
-    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }

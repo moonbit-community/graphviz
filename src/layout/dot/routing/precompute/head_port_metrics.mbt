@@ -43,7 +43,7 @@ fn head_metric_key_for_edge(
   is_record_shape : (@cgraph.Node) -> Bool,
 ) -> String {
   let head_name = edge.head().name()
-  let head_port = @dot_shared.port_key(edge.head_port())
+  let head_port = @edge_identity.port_key(edge.head_port())
   if head_port == "" {
     if (is_record_shape)(edge.head()) { head_name } else { "" }
   } else {

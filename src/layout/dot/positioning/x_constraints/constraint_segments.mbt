@@ -209,7 +209,7 @@ pub fn build_constraint_segment_pass(
               }
             } else {
               let vnodes =
-                input.edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+                input.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
               let ordered_vnodes = ordered_vnodes_for_ranks(vnodes, tail_rank, head_rank)
               let chain : Array[String] = []
               chain.push(tail_name)
@@ -227,7 +227,7 @@ pub fn build_constraint_segment_pass(
                 let seg_head = chain[chain_idx + 1]
                 chain_idx = chain_idx + 1
                 let seg_base_weight =
-                  if @shared.is_edge_vnode_name(seg_tail) || @shared.is_edge_vnode_name(seg_head) {
+                  if @edge_identity.is_edge_vnode_name(seg_tail) || @edge_identity.is_edge_vnode_name(seg_head) {
                     scaled_segment_edge_weight(
                       base_weight,
                       seg_tail,
@@ -252,11 +252,11 @@ pub fn build_constraint_segment_pass(
                   )
                 if tail_rank == head_rank &&
                   has_mid_label &&
-                  !@shared.port_is_explicit(edge.tail_port()) &&
-                  !@shared.port_is_explicit(edge.head_port()) &&
+                  !@edge_identity.port_is_explicit(edge.tail_port()) &&
+                  !@edge_identity.port_is_explicit(edge.head_port()) &&
                   has_ordering &&
                   seg_tail == orig_tail &&
-                  @shared.is_edge_vnode_name(seg_head) {
+                  @edge_identity.is_edge_vnode_name(seg_head) {
                   let forward =
                     match (
                       input.order_in_rank.get(seg_tail),

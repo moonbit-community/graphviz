@@ -143,7 +143,7 @@ pub fn adjust_edge_label_positions(
       None => ()
     }
     match label_pos {
-      Some(pos) => updates[@dot_shared.edge_key(edge_layout.edge)] = pos
+      Some(pos) => updates[@edge_identity.edge_key(edge_layout.edge)] = pos
       None => ()
     }
     adjusted.push({
@@ -165,7 +165,7 @@ pub fn apply_label_updates_to_edges(
 ) -> Array[DotLayoutEdge] {
   let adjusted : Array[DotLayoutEdge] = []
   for edge_layout in edges {
-    let label_pos = match updates.get(@dot_shared.edge_key(edge_layout.edge)) {
+    let label_pos = match updates.get(@edge_identity.edge_key(edge_layout.edge)) {
       Some(pos) => Some(pos)
       None => edge_layout.label_pos
     }
@@ -213,7 +213,7 @@ pub fn adjust_edge_label_overlaps(
             let half_axis =
               if axis_is_x { metrics.width / 2.0 } else { metrics.height / 2.0 }
             let entry = {
-              key: @dot_shared.edge_key(edge_layout.edge),
+              key: @edge_identity.edge_key(edge_layout.edge),
               pos,
               base_axis,
               half_axis,

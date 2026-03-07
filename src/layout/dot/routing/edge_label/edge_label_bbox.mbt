@@ -88,7 +88,7 @@ fn classify_flat_edge_label(
       _ => false
     }
   let has_flat_label_vnode =
-    match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+    match flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
       Some(_) => true
       None => false
     }

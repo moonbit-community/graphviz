@@ -188,7 +188,7 @@ pub fn build_edge_layout(
           }
           _ =>
             if base.is_flat_edge {
-              match edge_layout_input.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+              match edge_layout_input.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
                 Some(vnode_name) =>
                   match edge_layout_input.vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)

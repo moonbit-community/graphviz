@@ -266,7 +266,7 @@ pub fn collect_edge_xlabel_candidates(
   objects : Array[XObject],
 ) -> Unit {
   let edge = edge_layout.edge
-  let edge_key = @shared.edge_key(edge)
+  let edge_key = @edge_identity.edge_key(edge)
   let anchors = collect_edge_label_anchors(edge_layout, splines)
   collect_edge_label_candidate(
     XLabelTarget::EdgeMid(edge_key),

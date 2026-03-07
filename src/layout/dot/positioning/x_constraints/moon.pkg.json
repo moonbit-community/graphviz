@@ -7,6 +7,7 @@
     "moonbit-community/graphviz/layout/dot/network_simplex",
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/cgraph",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

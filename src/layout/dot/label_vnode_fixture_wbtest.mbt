@@ -247,7 +247,7 @@ fn collect_label_vnode_actuals(
     }
     let label_rank = label_rank_info.label_rank
     let mut found = false
-    let vnodes = match vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+    let vnodes = match vnode_info.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -415,7 +415,7 @@ test "label vnodes match Graphviz fixtures" {
     let edge_reversed = acyclic_directions.reversed
     let edge_reversed_by_key : Map[String, Bool] = Map::new()
     for i in 0..<edges.length() {
-      edge_reversed_by_key[@dot_shared.edge_key(edges[i])] = edge_reversed[i]
+      edge_reversed_by_key[@edge_identity.edge_key(edges[i])] = edge_reversed[i]
     }
     let rankdir = @dot_shared.graph_rankdir(graph)
     let expected_flip =
@@ -444,7 +444,7 @@ test "label vnodes match Graphviz fixtures" {
             "missing edge \{entry.tail} -> \{entry.head} for label vnode fixtures",
           )
       }
-      let reversed = match edge_reversed_by_key.get(@dot_shared.edge_key(edge)) {
+      let reversed = match edge_reversed_by_key.get(@edge_identity.edge_key(edge)) {
         Some(value) => value
         None => false
       }

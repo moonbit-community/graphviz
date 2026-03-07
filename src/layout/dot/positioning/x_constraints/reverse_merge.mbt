@@ -5,7 +5,7 @@ fn directed_edge_merge_key(
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
 ) -> String {
-  "\{tail_name}|\{head_name}|\{@shared.port_key(tail_port)}|\{@shared.port_key(head_port)}"
+  "\{tail_name}|\{head_name}|\{@edge_identity.port_key(tail_port)}|\{@edge_identity.port_key(head_port)}"
 }
 
 ///|

@@ -5,6 +5,7 @@
       "alias": "dot_shared"
     },
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

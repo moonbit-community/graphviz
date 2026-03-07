@@ -84,7 +84,7 @@ pub fn build_path_adjacency(
   let in_edges : Map[String, Array[String]] = Map::new()
   let mut edge_idx = 0
   for edge in edges {
-    let key = @dot_shared.edge_vnode_key(edge)
+    let key = @edge_identity.edge_vnode_key(edge)
     let vnodes = match edge_vnodes.get(key) {
       Some(list) => list
       None => []
@@ -1728,7 +1728,7 @@ pub fn edge_pathplan_polyline(
   right_bound : Double,
   has_edge_label : Bool,
 ) -> PathplanResult? {
-  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list.copy()
     None => []
   }

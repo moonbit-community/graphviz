@@ -304,7 +304,7 @@ fn sort_by_positions_fast(
       None => 0
     }
     let ported = port_edge_nodes.get(name) is Some(_)
-    let is_vnode = @shared.is_edge_vnode_name(name)
+    let is_vnode = @edge_identity.is_edge_vnode_name(name)
     let order_value = match node_order.get(name) {
       Some(value) => value
       None => i
@@ -394,7 +394,7 @@ fn sort_by_positions_large(
       None => 0
     }
     let ported = port_edge_nodes.get(name) is Some(_)
-    let is_vnode = @shared.is_edge_vnode_name(name)
+    let is_vnode = @edge_identity.is_edge_vnode_name(name)
     let order_value = match node_order.get(name) {
       Some(value) => value
       None => i
@@ -633,8 +633,8 @@ pub fn sort_by_positions(
             }
           None => ()
         }
-        let prev_vnode = @shared.is_edge_vnode_name(prev)
-        let current_vnode = @shared.is_edge_vnode_name(current)
+        let prev_vnode = @edge_identity.is_edge_vnode_name(prev)
+        let current_vnode = @edge_identity.is_edge_vnode_name(current)
         if prev_vnode != current_vnode {
           if prev_vnode {
             break

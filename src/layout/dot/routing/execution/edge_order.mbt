@@ -14,8 +14,8 @@ const ROUTE_GRAPH_AUX : Int = 128
 ///|
 fn edge_route_type(base : EdgeRouteBase) -> Int {
   if base.orig_tail_name == base.orig_head_name {
-    if @dot_shared.port_is_explicit(base.tail_port) ||
-      @dot_shared.port_is_explicit(base.head_port) {
+    if @edge_identity.port_is_explicit(base.tail_port) ||
+      @edge_identity.port_is_explicit(base.head_port) {
       ROUTE_EDGE_SELF_PORT
     } else {
       ROUTE_EDGE_SELF_NOPORT
@@ -102,12 +102,12 @@ fn edge_port_cmp_info(
   let tail_pos = if base.swap_ends { base.head_pos } else { base.tail_pos }
   let head_pos = if base.swap_ends { base.tail_pos } else { base.head_pos }
   let tail_defined =
-    if base.swap_ends { @dot_shared.port_is_explicit(base.head_port) } else {
-      @dot_shared.port_is_explicit(base.tail_port)
+    if base.swap_ends { @edge_identity.port_is_explicit(base.head_port) } else {
+      @edge_identity.port_is_explicit(base.tail_port)
     }
   let head_defined =
-    if base.swap_ends { @dot_shared.port_is_explicit(base.tail_port) } else {
-      @dot_shared.port_is_explicit(base.head_port)
+    if base.swap_ends { @edge_identity.port_is_explicit(base.tail_port) } else {
+      @edge_identity.port_is_explicit(base.head_port)
     }
   let tail_rel =
     @edge_spline.point(tail_anchor.x - tail_pos.x, tail_anchor.y - tail_pos.y)

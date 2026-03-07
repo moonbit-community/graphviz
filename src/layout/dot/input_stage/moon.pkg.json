@@ -11,6 +11,7 @@
       "alias": "html_label"
     },
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

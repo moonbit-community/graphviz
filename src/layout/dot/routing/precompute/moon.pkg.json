@@ -13,6 +13,7 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

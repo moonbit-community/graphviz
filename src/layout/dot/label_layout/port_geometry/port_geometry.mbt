@@ -401,7 +401,7 @@ pub fn port_rect_from_geometry(
   size : NodeSize,
   node_size : NodeSize,
 ) -> @geom.Rect? {
-  if !@shared.port_is_explicit(port) {
+  if !@edge_identity.port_is_explicit(port) {
     return None
   }
   let eps = if @shared.RECORD_BORDER_PT > 0.01 {

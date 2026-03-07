@@ -683,7 +683,7 @@ fn discover_components(
     if cluster_skeleton.get(name) == Some(true) {
       continue
     }
-    if @shared.is_edge_vnode_name(name) {
+    if @edge_identity.is_edge_vnode_name(name) {
       continue
     }
     start_nodes.push(name)

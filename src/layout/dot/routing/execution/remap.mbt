@@ -9,7 +9,7 @@ fn parallel_remap_direction_key(
     } else {
       "plain"
     }
-  "\{tail}|\{@dot_shared.port_key(edge.tail_port())}|\{head}|\{@dot_shared.port_key(edge.head_port())}|\{@edge_ops.edge_dir_attr_key(edge)}|\{sameport_tag}"
+  "\{tail}|\{@edge_identity.port_key(edge.tail_port())}|\{head}|\{@edge_identity.port_key(edge.head_port())}|\{@edge_ops.edge_dir_attr_key(edge)}|\{sameport_tag}"
 }
 
 ///|

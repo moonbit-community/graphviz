@@ -351,8 +351,8 @@ fn should_apply_flat_bottom_dirboth_x_nudge(
       input.head_dynamic_anchor.anchor is None &&
       input.compass_tail_on_non_record &&
       input.compass_head_on_non_record &&
-      @dot_shared.port_is_explicit(input.tail_port) &&
-      @dot_shared.port_is_explicit(input.head_port) &&
+      @edge_identity.port_is_explicit(input.tail_port) &&
+      @edge_identity.port_is_explicit(input.head_port) &&
       (input.tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
       (input.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
       (input.tail_port_side & PORT_SIDE_TOP) == 0 &&
@@ -549,7 +549,7 @@ fn build_edge_route_base(
       false
     }
   let has_cluster = tail_cluster_name != "" || head_cluster_name != ""
-  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }
@@ -562,8 +562,8 @@ fn build_edge_route_base(
   let allow_offset =
     !is_flat_edge &&
     !has_cluster &&
-    !@dot_shared.port_is_explicit(tail_port) &&
-    !@dot_shared.port_is_explicit(head_port) &&
+    !@edge_identity.port_is_explicit(tail_port) &&
+    !@edge_identity.port_is_explicit(head_port) &&
     !use_pathplan
   let (tail_offset, head_offset) = if allow_offset {
     (
@@ -734,7 +734,7 @@ fn build_edge_route_base(
   let tail_clip_target =
     if tail_sameport_anchor is Some(_) {
       tail_anchor0
-    } else if @dot_shared.port_is_explicit(tail_port) &&
+    } else if @edge_identity.port_is_explicit(tail_port) &&
       (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
       @edge_spline.point_add(tail_clip_center, tail_slope)
     } else {
@@ -743,7 +743,7 @@ fn build_edge_route_base(
   let head_clip_target =
     if head_sameport_anchor is Some(_) {
       head_anchor0
-    } else if @dot_shared.port_is_explicit(head_port) &&
+    } else if @edge_identity.port_is_explicit(head_port) &&
       (head_slope.x != 0.0 || head_slope.y != 0.0) {
       @edge_spline.point_sub(head_clip_center, head_slope)
     } else {

@@ -67,7 +67,7 @@ pub fn build_edge_vnodes(
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
     let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
-    let key = @shared.edge_vnode_key(edge)
+    let key = @edge_identity.edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
         for name in list {
@@ -93,7 +93,7 @@ pub fn build_edge_vnodes(
       // Graphviz parity: reverse-direction duplicate edges reuse the
       // existing virtual chain and only widen shared virtual nodes.
       let reverse_key =
-        "\{edge.head().name()}|\{edge.tail().name()}|\{@shared.port_key(edge.head_port())}|\{@shared.port_key(edge.tail_port())}"
+        "\{edge.head().name()}|\{edge.tail().name()}|\{@edge_identity.port_key(edge.head_port())}|\{@edge_identity.port_key(edge.tail_port())}"
       match edge_vnodes.get(reverse_key) {
         Some(list) => {
           for name in list {
@@ -119,7 +119,7 @@ pub fn build_edge_vnodes(
       if tail_cluster != "" || head_cluster != "" {
         @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(@shared.edge_key(edge)) {
+        match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -156,8 +156,8 @@ pub fn build_edge_vnodes(
     let mut rank = min_rank + 1
     while rank < max_rank {
       let is_label_rank = rank == label_rank && label_width > 0.0
-      let name = @shared.unique_virtual_node_name(
-        @shared.EDGE_VNODE_PREFIX,
+      let name = @edge_identity.unique_virtual_node_name(
+        @edge_identity.EDGE_VNODE_PREFIX,
         idx,
         rank,
         existing_names,

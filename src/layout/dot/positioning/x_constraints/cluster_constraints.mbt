@@ -100,7 +100,7 @@ pub fn build_cluster_constraints(
   let flip = rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL
   if edge_vnodes.length() > 0 {
     for edge in edges {
-      let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+      let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }

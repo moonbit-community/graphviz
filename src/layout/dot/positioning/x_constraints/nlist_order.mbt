@@ -60,7 +60,7 @@ pub fn build_xpos_nlist_order(
       while name_idx > 0 {
         name_idx = name_idx - 1
         let name = names[name_idx]
-        if !@shared.is_edge_vnode_name(name) {
+        if !@edge_identity.is_edge_vnode_name(name) {
           continue
         }
         let name_cluster = input.cluster_keys.get(name).unwrap_or_default()
@@ -73,7 +73,7 @@ pub fn build_xpos_nlist_order(
       while name_idx > 0 {
         name_idx = name_idx - 1
         let name = names[name_idx]
-        if @shared.is_edge_vnode_name(name) {
+        if @edge_identity.is_edge_vnode_name(name) {
           continue
         }
         let name_cluster = input.cluster_keys.get(name).unwrap_or_default()

@@ -68,7 +68,7 @@ fn collect_vnode_out_heads(
         edge_head,
       )
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -101,7 +101,7 @@ fn collect_vnode_out_heads(
     while i + 1 < path.length() {
       let from = path[i]
       let to = path[i + 1]
-      if @shared.is_edge_vnode_name(from) {
+      if @edge_identity.is_edge_vnode_name(from) {
         match out_heads.get(from) {
           Some(list) => list.push(to)
           None => out_heads[from] = [to]
@@ -141,7 +141,7 @@ fn flat_limits(
   let bounds : Array[Int] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
   let setbounds = (name : String) => {
     let is_flat = flat_label_nodes.get(name) is Some(_)
-    if !is_flat && !@shared.is_edge_vnode_name(name) {
+    if !is_flat && !@edge_identity.is_edge_vnode_name(name) {
       return ()
     }
     let ord = match order_index.get(name) {
@@ -356,8 +356,8 @@ fn add_flat_label_vnodes(
     }
     let place =
       flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
-    let name = @shared.unique_virtual_node_name(
-      @shared.EDGE_VNODE_PREFIX,
+    let name = @edge_identity.unique_virtual_node_name(
+      @edge_identity.EDGE_VNODE_PREFIX,
       current_idx,
       label_rank,
       existing_names,
@@ -372,7 +372,7 @@ fn add_flat_label_vnodes(
       if tail_cluster != "" || head_cluster != "" {
         @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(@shared.edge_key(edge)) {
+        match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -390,8 +390,8 @@ fn add_flat_label_vnodes(
       head,
       rank: label_rank,
     }
-    flat_label_edges[@shared.edge_key(edge)] = name
-    let vnode_edge_key = @shared.edge_vnode_key(edge)
+    flat_label_edges[@edge_identity.edge_key(edge)] = name
+    let vnode_edge_key = @edge_identity.edge_vnode_key(edge)
     match vnode_info.edge_vnodes.get(vnode_edge_key) {
       Some(list) => list.push(name)
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]

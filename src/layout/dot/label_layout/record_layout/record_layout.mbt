@@ -624,7 +624,7 @@ pub fn record_port_path_box(
   size : NodeSize,
   rankdir : RankDir,
 ) -> @geom.Rect? {
-  if !@shared.port_is_explicit(port) {
+  if !@edge_identity.port_is_explicit(port) {
     return None
   }
   if !@shared.is_record_shape(node) {
@@ -770,11 +770,11 @@ pub fn record_port_padding_y(
     }
   }
   for edge in edges {
-    if @shared.port_is_explicit(edge.tail_port()) &&
+    if @edge_identity.port_is_explicit(edge.tail_port()) &&
       @shared.is_record_shape(edge.tail()) {
       update_padding(edge.tail().name(), edge.tail_port())
     }
-    if @shared.port_is_explicit(edge.head_port()) &&
+    if @edge_identity.port_is_explicit(edge.head_port()) &&
       @shared.is_record_shape(edge.head()) {
       update_padding(edge.head().name(), edge.head_port())
     }

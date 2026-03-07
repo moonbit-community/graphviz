@@ -63,7 +63,7 @@ fn build_path_vnode_clusters(
 ) -> Map[String, String] {
   let vnode_clusters : Map[String, String] = Map::new()
   for edge in input.edges {
-    let key = @dot_shared.edge_vnode_key(edge)
+    let key = @edge_identity.edge_vnode_key(edge)
     let vnodes = input.edge_vnodes.get(key).unwrap_or_default()
     if vnodes.length() == 0 {
       continue

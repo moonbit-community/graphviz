@@ -32,7 +32,8 @@
     },
     "moonbitlang/x/fs",
     "moonbitlang/core/strconv",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ],
   "wbtest-import": [
     {
@@ -66,6 +67,7 @@
     "moonbit-community/graphviz/attrs",
     "moonbitlang/core/json",
     "moonbitlang/x/fs",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbit-community/graphviz/layout/dot/edge_identity"
   ]
 }

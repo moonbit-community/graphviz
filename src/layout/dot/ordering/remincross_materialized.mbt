@@ -361,7 +361,7 @@ fn assign_remincross_clusters(
 ) -> Unit {
   for edge_idx, edge in edges {
     let vnodes =
-      edge_vnodes.get(@shared.edge_vnode_key(edge)).unwrap_or_default()
+      edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
     if vnodes.length() == 0 {
       continue
     }

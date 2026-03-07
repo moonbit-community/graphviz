@@ -309,7 +309,7 @@ fn edge_polyline_points(
   let same_local_cluster = input.same_local_cluster
   let default_vnode_weight = input.default_vnode_weight
   let points : Array[@geom.Point] = [tail_anchor]
-  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }
@@ -381,7 +381,7 @@ fn edge_polyline_points(
           }
           let is_dotted = style_value.contains("dotted")
           let has_explicit_port =
-            @dot_shared.port_is_explicit(tail_port) || @dot_shared.port_is_explicit(head_port)
+            @edge_identity.port_is_explicit(tail_port) || @edge_identity.port_is_explicit(head_port)
           let base_vnode_weight =
             if use_cluster_tuning {
               if is_dotted {
@@ -509,8 +509,8 @@ fn prepare_edge_curve_mode_route(
       None
     }
   let has_explicit_port =
-    @dot_shared.port_is_explicit(input.base.tail_port) ||
-    @dot_shared.port_is_explicit(input.base.head_port)
+    @edge_identity.port_is_explicit(input.base.tail_port) ||
+    @edge_identity.port_is_explicit(input.base.head_port)
   let abs_dx = Double::abs(head_anchor.x - tail_anchor.x)
   let split_label = input.enable_complex_tuning &&
     label_width_pt > 0.0 &&
@@ -1167,7 +1167,7 @@ fn compute_curve_offset(
   let mut curve_offset = 0.0
   let mut curve_skew = 1.0
   if enable_complex_tuning {
-    let head_port_key = @dot_shared.port_key(edge.head_port())
+    let head_port_key = @edge_identity.port_key(edge.head_port())
     let key =
       if head_port_key == "" {
       if @dot_shared.is_record_shape(edge.head()) { base.orig_head_name } else { "" }

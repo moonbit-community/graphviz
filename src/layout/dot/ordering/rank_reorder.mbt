@@ -589,7 +589,7 @@ pub fn has_single_rank_incidents(
       continue
     }
     let other = if tail_in { head } else { tail }
-    if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+    if !@edge_identity.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
       return true
     }
   }
@@ -602,7 +602,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+      if !@edge_identity.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -614,7 +614,7 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !@shared.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
+      if !@edge_identity.is_edge_vnode_name(other) && !@clustering.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -1316,8 +1316,8 @@ pub fn reorder_rank_groups(
   let port_edge_nodes : Map[String, Bool] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let ported = @shared.port_is_explicit(edge.tail_port()) ||
-      @shared.port_is_explicit(edge.head_port())
+    let ported = @edge_identity.port_is_explicit(edge.tail_port()) ||
+      @edge_identity.port_is_explicit(edge.head_port())
     if ported {
       port_edge_nodes[edge_tail[edge_idx]] = true
       port_edge_nodes[edge_head[edge_idx]] = true
@@ -1392,7 +1392,7 @@ pub fn reorder_rank_groups(
   for name, _ in preferred_positions {
     // Graphviz parity: vnode ordering hints should not disable
     // mincross graphviz-style passes.
-    if !@shared.is_edge_vnode_name(name) {
+    if !@edge_identity.is_edge_vnode_name(name) {
       has_preferred = true
       break
     }

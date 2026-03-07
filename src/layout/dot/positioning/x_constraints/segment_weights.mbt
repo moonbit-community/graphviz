@@ -10,7 +10,7 @@ fn endpoint_class(
   name : String,
   node_degrees : Map[String, Int],
 ) -> EndpointClass {
-  if @shared.is_edge_vnode_name(name) {
+  if @edge_identity.is_edge_vnode_name(name) {
     EndpointClass::Virtual
   } else {
     let degree = node_degrees.get(name).unwrap_or_default()
