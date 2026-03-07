@@ -122,7 +122,7 @@ pub fn build_y_positions_with_flip(
   )
   let graphviz_flip =
     input.rankdir == @shared.RankDir::LR || input.rankdir == @shared.RankDir::RL
-  if graphviz_flip && @shared.graph_has_cluster(input.graph) {
+  if graphviz_flip && @cluster_graph.graph_has_cluster(input.graph) {
     let min_root_rank =
       if input.y_all_ranks.length() > 0 {
         input.y_all_ranks[0]

@@ -191,7 +191,7 @@ fn collect_label_vnode_actuals(
   )
   let edge_cluster_keys : Map[String, String] = Map::new()
   @clustering.collect_edge_cluster_keys(graph, edge_cluster_keys)
-  let cluster_maps = @dot_shared.collect_cluster_graph_maps(graph)
+  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_parents = cluster_maps.cluster_parents
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {

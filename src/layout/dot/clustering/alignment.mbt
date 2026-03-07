@@ -117,7 +117,7 @@ fn shift_graph_positions(
   dy : Double,
 ) -> Unit {
   let members : Map[String, Bool] = Map::new()
-  @shared.collect_graph_nodes(graph, members)
+  @cluster_graph.collect_graph_nodes(graph, members)
   for name, _ in members {
     match positions.get(name) {
       Some(pos) => positions[name] = shift_point(pos, dx, dy)
@@ -125,7 +125,7 @@ fn shift_graph_positions(
     }
   }
   let clusters : Map[String, Bool] = Map::new()
-  @shared.collect_cluster_names(graph, clusters)
+  @cluster_graph.collect_cluster_names(graph, clusters)
   for vnode, key in vnode_clusters {
     if clusters.get(key) is Some(_) {
       match vnode_positions.get(vnode) {
@@ -169,7 +169,7 @@ pub fn adjust_cluster_positions(
     Some(value) => value
     None => return None
   }
-  if @shared.is_cluster_graph(input.graph) {
+  if @cluster_graph.is_cluster_graph(input.graph) {
     let pad = (input.cluster_margin_pt_for)(input.graph)
     current = {
       llx: current.llx - pad,

@@ -43,7 +43,7 @@ pub fn build_cluster_constraints(
   edge_vnodes : Map[String, Array[String]],
   deps : ClusterConstraintLabelDeps,
 ) -> ClusterConstraintBuild {
-  let cluster_maps = @shared.collect_cluster_graph_maps(graph)
+  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_graphs = cluster_maps.cluster_graphs
   let cluster_parents = cluster_maps.cluster_parents
   if cluster_graphs.length() == 0 {

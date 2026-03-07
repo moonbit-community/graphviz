@@ -53,6 +53,7 @@
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/label_layout/html_layout",
     "moonbit-community/graphviz/layout/dot/clustering",
+    "moonbit-community/graphviz/layout/dot/cluster_graph",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/positioning/x_flat_labels",

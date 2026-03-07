@@ -335,7 +335,7 @@ pub fn build_position_output_maps_from_sources(
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_names : Map[String, Bool] = Map::new()
   if sources.has_clusters {
-    @shared.collect_cluster_names(sources.graph, cluster_names)
+    @cluster_graph.collect_cluster_names(sources.graph, cluster_names)
   }
   let cluster_boundary_x =
     build_cluster_boundary_x(

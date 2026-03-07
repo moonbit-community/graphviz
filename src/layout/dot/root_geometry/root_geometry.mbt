@@ -26,7 +26,7 @@ pub fn compute_root_cluster_padding(
   all_ranks : Array[Int],
   ranks : Map[String, Int],
 ) -> RootClusterPadding {
-  if graph.is_root() && @shared.graph_has_cluster(graph) && all_ranks.length() > 0 {
+  if graph.is_root() && @cluster_graph.graph_has_cluster(graph) && all_ranks.length() > 0 {
     let min_rank = all_ranks[0]
     let max_rank = all_ranks[all_ranks.length() - 1]
     let mut cluster_at_min = false
@@ -276,7 +276,7 @@ pub fn apply_root_margin_x(
   bbox : @geom.Rect,
 ) -> @geom.Rect {
   if graph.is_root() {
-    let margin_x = if @shared.graph_has_cluster(graph) {
+    let margin_x = if @cluster_graph.graph_has_cluster(graph) {
       @label_attrs.graph_margin_x_pt(graph)
     } else {
       0.0

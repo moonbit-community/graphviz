@@ -5,7 +5,7 @@ pub fn collect_cluster_members(
   let members : Map[String, Map[String, Bool]] = Map::new()
   for name, cluster_graph in cluster_graphs {
     let set : Map[String, Bool] = Map::new()
-    @shared.collect_graph_nodes(cluster_graph, set)
+    @cluster_graph.collect_graph_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
     }
@@ -23,11 +23,11 @@ pub struct TopClustersCollected {
 pub fn collect_top_clusters(
   source : @cgraph.Graph,
 ) -> TopClustersCollected {
-  let cluster_maps = @shared.collect_cluster_graph_maps(source)
+  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(source)
   let cluster_graphs = cluster_maps.cluster_graphs
   let cluster_parents = cluster_maps.cluster_parents
   let root_cluster_name =
-    if @shared.is_cluster_graph(source) {
+    if @cluster_graph.is_cluster_graph(source) {
     match source.name() {
       Some(value) => value
       None => ""

@@ -101,10 +101,10 @@ pub fn layout_subgraphs(
           rank_ht2,
         },
       )
-    if @shared.is_cluster_graph(subgraph) {
+    if @cluster_graph.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
       let cluster_nodes : Map[String, Bool] = Map::new()
-      @shared.collect_graph_nodes(subgraph, cluster_nodes)
+      @cluster_graph.collect_graph_nodes(subgraph, cluster_nodes)
       if cluster_nodes.length() == 0 {
         continue
       }
@@ -112,7 +112,7 @@ pub fn layout_subgraphs(
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
-    if @shared.is_cluster_graph(subgraph) {
+    if @cluster_graph.is_cluster_graph(subgraph) {
       let pad = cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
@@ -122,7 +122,7 @@ pub fn layout_subgraphs(
       let mut min_rank : Int? = None
       let mut max_rank : Int? = None
       let cluster_nodes : Map[String, Bool] = Map::new()
-      @shared.collect_graph_nodes(subgraph, cluster_nodes)
+      @cluster_graph.collect_graph_nodes(subgraph, cluster_nodes)
       for name, _ in cluster_nodes {
         match ranks.get(name) {
           Some(rank) => {
@@ -318,7 +318,7 @@ pub fn expand_bbox_with_clusters(
 ) -> @geom.Rect {
   let mut result = bbox
   for subgraph in subgraphs {
-    if @shared.is_cluster_graph(subgraph.graph) {
+    if @cluster_graph.is_cluster_graph(subgraph.graph) {
       // Graphviz parity: dot_compute_bb expands root bbox by CL_OFFSET for
       // cluster subgraphs in x direction.
       let padded : @geom.Rect = {
@@ -342,7 +342,7 @@ fn collect_cluster_route_bboxes(
   out : Map[String, @geom.Rect],
 ) -> Unit {
   for layout in subgraphs {
-    if @shared.is_cluster_graph(layout.graph) {
+    if @cluster_graph.is_cluster_graph(layout.graph) {
       match layout.graph.name() {
         Some(name) => out[name] = layout.bbox
         None => ()
@@ -370,7 +370,7 @@ pub fn compute_cluster_route_bboxes(
   rank_ht2 : Map[Int, Double],
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
-  if @shared.graph_has_cluster(graph) {
+  if @cluster_graph.graph_has_cluster(graph) {
     let cluster_layouts =
       layout_subgraphs(
         {

@@ -163,7 +163,7 @@ pub fn adjust_flip_rank_heights(
       changed = true
     }
   }
-  if !@shared.is_cluster_graph(input.graph) {
+  if !@cluster_graph.is_cluster_graph(input.graph) {
     return changed
   }
   let label_width = match (input.cluster_label_width_pt_for)(input.graph) {
@@ -171,7 +171,7 @@ pub fn adjust_flip_rank_heights(
     None => return changed
   }
   let cluster_nodes : Map[String, Bool] = Map::new()
-  @shared.collect_graph_nodes(input.graph, cluster_nodes)
+  @cluster_graph.collect_graph_nodes(input.graph, cluster_nodes)
   let mut min_rank : Int? = None
   let mut max_rank : Int? = None
   for name, _ in cluster_nodes {
@@ -343,7 +343,7 @@ fn collect_cluster_rank_heights(
 fn collect_cluster_bbox_heights(
   input : ClusterBBoxHeightsCollectInput,
 ) -> ClusterHeights? {
-  let is_cluster = @shared.is_cluster_graph(input.graph)
+  let is_cluster = @cluster_graph.is_cluster_graph(input.graph)
   let children = input.graph.subgraphs()
   if !is_cluster {
     for child in children {
@@ -504,7 +504,7 @@ pub fn compute_cluster_bbox_heights(
 fn apply_cluster_rank_heights_inner(
   input : ClusterRankHeightsApplyInput,
 ) -> ClusterHeights? {
-  let is_cluster = @shared.is_cluster_graph(input.graph)
+  let is_cluster = @cluster_graph.is_cluster_graph(input.graph)
   let children = input.graph.subgraphs()
   if !is_cluster {
     for child in children {

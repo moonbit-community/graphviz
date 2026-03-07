@@ -7,7 +7,7 @@
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
-    if @shared.is_cluster_graph(subgraph) {
+    if @cluster_graph.is_cluster_graph(subgraph) {
       count = count + 1
     }
     count = count + count_cluster_subgraphs(subgraph)
@@ -98,7 +98,7 @@ fn refresh_cluster_labels(
     subgraphs.push(refresh_cluster_labels(subgraph))
   }
   let label_pos =
-    if @shared.is_cluster_graph(layout.graph) {
+    if @cluster_graph.is_cluster_graph(layout.graph) {
       match @label_metrics.graph_label_metrics(layout.graph) {
         Some(metrics) => {
           let pad = @clustering.CLUSTER_LABEL_PAD_PT
@@ -149,12 +149,12 @@ pub fn apply_cluster_lr_mirror_after_rotation(
   let use_cluster_point_mirror =
     input.subgraph_base_bbox.urx > input.rank_bbox.urx &&
     (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    @shared.graph_has_cluster(input.graph)
+    @cluster_graph.graph_has_cluster(input.graph)
   let use_lr_multi_cluster_creation_order_mode =
     (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
     count_cluster_subgraphs(input.graph) > 1
   if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
-    @shared.graph_has_cluster(input.graph) &&
+    @cluster_graph.graph_has_cluster(input.graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       let cluster_mirror_bbox =

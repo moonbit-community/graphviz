@@ -11,7 +11,7 @@ pub fn compute_ranks_directed(
   edge_head : Array[String],
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  if @shared.graph_has_cluster(source) {
+  if @cluster_graph.graph_has_cluster(source) {
     return compute_clustered_ranks(
       source,
       nodes,

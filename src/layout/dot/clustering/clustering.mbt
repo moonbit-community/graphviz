@@ -103,7 +103,7 @@ fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   while true {
     match current {
       Some(value) => {
-        if @shared.is_cluster_graph(value) {
+        if @cluster_graph.is_cluster_graph(value) {
           match value.name() {
             Some(name) => return name
             None => return ""
@@ -147,7 +147,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
     if !graph_contains_node(current, node) {
       continue
     }
-    if @shared.is_cluster_graph(current) {
+    if @cluster_graph.is_cluster_graph(current) {
       let name = match current.name() {
         Some(value) => value
         None => ""
@@ -385,7 +385,7 @@ pub fn build_cluster_core_metadata_for_ordering(
   graphviz_flip : Bool,
   cluster_order_base_enabled : Bool,
 ) -> ClusterCoreOrderingMetadata {
-  let has_clusters = @shared.graph_has_cluster(graph)
+  let has_clusters = @cluster_graph.graph_has_cluster(graph)
   let cluster_membership = build_cluster_membership_maps(nodes)
   let cluster_keys = cluster_membership.cluster_keys
   let intercluster_keys = cluster_membership.intercluster_keys
@@ -424,7 +424,7 @@ pub fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
   while !current.is_root() {
-    if @shared.is_cluster_graph(current) {
+    if @cluster_graph.is_cluster_graph(current) {
       match current.name() {
         Some(name) => key = name
         None => key = ""
@@ -446,7 +446,7 @@ pub fn collect_edge_cluster_keys(
   for child in graph.subgraphs() {
     collect_edge_cluster_keys(child, edge_cluster_keys)
   }
-  if !@shared.is_cluster_graph(graph) {
+  if !@cluster_graph.is_cluster_graph(graph) {
     return ()
   }
   let cluster_key = graph_cluster_key(graph)
@@ -712,7 +712,7 @@ pub fn collect_cluster_names_order(
   out : Array[String],
 ) -> Unit {
   for subgraph in graph.subgraphs() {
-    if @shared.is_cluster_graph(subgraph) {
+    if @cluster_graph.is_cluster_graph(subgraph) {
       match subgraph.name() {
         Some(name) => out.push(name)
         None => ()
@@ -738,7 +738,7 @@ pub fn collect_cluster_traversal_metadata(
 ) -> ClusterTraversalMetadata {
   let cluster_order : Array[String] = []
   collect_cluster_names_order(graph, cluster_order)
-  let cluster_maps = @shared.collect_cluster_graph_maps(graph)
+  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   {
     cluster_order,
     cluster_parents: cluster_maps.cluster_parents,
