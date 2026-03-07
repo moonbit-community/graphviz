@@ -1,4 +1,10 @@
 ///|
+struct CanonicalOrderingInput {
+  rank_rows : Array[Array[String]]
+  edges : Array[OrderingEdgeSnapshotEntry]
+}
+
+///|
 fn find_mincross_input_case(path : String, case_id : Int) -> MincrossInput raise {
   let fixtures = load_mincross_fixtures_from(path)
   for pair in fixtures.cases {
@@ -55,10 +61,7 @@ fn canonical_snapshot_name(
 fn build_rank_lookup(rank_keys : Array[Int], groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let rank_lookup : Map[String, Int] = Map::new()
   for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(value) => value
-      None => []
-    }
+    let names = groups.get(rank).unwrap_or_default()
     for name in names {
       rank_lookup[name] = rank
     }
@@ -67,15 +70,9 @@ fn build_rank_lookup(rank_keys : Array[Int], groups : Map[Int, Array[String]]) -
 }
 
 ///|
-fn edge_snapshot_line(idx : Int, edge : OrderingEdgeSnapshotEntry) -> String {
-  "edge \{idx}: \{edge.tail} -> \{edge.head} pen=\{edge.xpenalty} tpx=\{edge.tail_port_x} hpx=\{edge.head_port_x} tpo=\{edge.tail_port_order} hpo=\{edge.head_port_order}"
-}
-
-///|
-fn expected_input_dump(input : MincrossInput) -> String raise {
+fn canonical_fixture_ordering_input(input : MincrossInput) -> CanonicalOrderingInput raise {
   let node_by_id = build_fixture_node_index(input)
-  let lines : Array[String] = []
-  let mut rank = input.minrank
+  let rank_rows : Array[Array[String]] = []
   for rank_nodes in input.ranks {
     let names : Array[String] = []
     for node_id in rank_nodes {
@@ -85,11 +82,9 @@ fn expected_input_dump(input : MincrossInput) -> String raise {
       }
       names.push(canonical_fixture_node_name(node))
     }
-    let rank_names = names.join(" ")
-    lines.push("rank \{rank}: \{rank_names}")
-    rank = rank + 1
+    rank_rows.push(names)
   }
-  let mut edge_idx = 0
+  let edges : Array[OrderingEdgeSnapshotEntry] = []
   for edge in input.edges {
     let tail_node = match node_by_id.get(edge.tail) {
       Some(value) => value
@@ -99,30 +94,28 @@ fn expected_input_dump(input : MincrossInput) -> String raise {
       Some(value) => value
       None => fail("missing fixture head id \{edge.head}")
     }
-    let snapshot : OrderingEdgeSnapshotEntry = {
-      tail: canonical_fixture_node_name(tail_node),
-      head: canonical_fixture_node_name(head_node),
-      xpenalty: edge.xpenalty,
-      tail_port_x: edge.tail_port_x,
-      head_port_x: edge.head_port_x,
-      tail_port_order: edge.tail_port_order,
-      head_port_order: edge.head_port_order,
-    }
-    lines.push(edge_snapshot_line(edge_idx, snapshot))
-    edge_idx = edge_idx + 1
+    edges.push(
+      {
+        tail: canonical_fixture_node_name(tail_node),
+        head: canonical_fixture_node_name(head_node),
+        xpenalty: edge.xpenalty,
+        tail_port_x: edge.tail_port_x,
+        head_port_x: edge.head_port_x,
+        tail_port_order: edge.tail_port_order,
+        head_port_order: edge.head_port_order,
+      },
+    )
   }
-  lines.join("\n")
+  { rank_rows, edges }
 }
 
 ///|
-fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
-  let lines : Array[String] = []
-  let rank_lookup = build_rank_lookup(snapshot.rank_keys, snapshot.groups)
+fn canonical_root_snapshot_input(
+  snapshot : RootMincrossInputSnapshot,
+) -> CanonicalOrderingInput raise {
+  let rank_rows : Array[Array[String]] = []
   for rank in snapshot.rank_keys {
-    let names = match snapshot.groups.get(rank) {
-      Some(value) => value
-      None => []
-    }
+    let names = snapshot.groups.get(rank).unwrap_or_default()
     let canonical : Array[String] = []
     for name in names {
       canonical.push(
@@ -134,10 +127,11 @@ fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
         ),
       )
     }
-    let rank_names = canonical.join(" ")
-    lines.push("rank \{rank}: \{rank_names}")
+    rank_rows.push(canonical)
   }
-  let mut edge_idx = 0
+
+  let rank_lookup = build_rank_lookup(snapshot.rank_keys, snapshot.groups)
+  let edges : Array[OrderingEdgeSnapshotEntry] = []
   for edge in snapshot.edges {
     let tail_rank = match rank_lookup.get(edge.tail) {
       Some(value) => value
@@ -147,75 +141,87 @@ fn root_snapshot_dump(snapshot : RootMincrossInputSnapshot) -> String raise {
       Some(value) => value
       None => fail("missing root rank for head \{edge.head}")
     }
-    let canonical_edge : OrderingEdgeSnapshotEntry = {
-      tail: canonical_snapshot_name(
-        edge.tail,
-        tail_rank,
-        snapshot.cluster_keys,
-        snapshot.cluster_skeleton,
-      ),
-      head: canonical_snapshot_name(
-        edge.head,
-        head_rank,
-        snapshot.cluster_keys,
-        snapshot.cluster_skeleton,
-      ),
-      xpenalty: edge.xpenalty,
-      tail_port_x: edge.tail_port_x,
-      head_port_x: edge.head_port_x,
-      tail_port_order: edge.tail_port_order,
-      head_port_order: edge.head_port_order,
-    }
-    lines.push(edge_snapshot_line(edge_idx, canonical_edge))
-    edge_idx = edge_idx + 1
+    edges.push(
+      {
+        tail:
+          canonical_snapshot_name(
+            edge.tail,
+            tail_rank,
+            snapshot.cluster_keys,
+            snapshot.cluster_skeleton,
+          ),
+        head:
+          canonical_snapshot_name(
+            edge.head,
+            head_rank,
+            snapshot.cluster_keys,
+            snapshot.cluster_skeleton,
+          ),
+        xpenalty: edge.xpenalty,
+        tail_port_x: edge.tail_port_x,
+        head_port_x: edge.head_port_x,
+        tail_port_order: edge.tail_port_order,
+        head_port_order: edge.head_port_order,
+      },
+    )
   }
-  lines.join("\n")
+  { rank_rows, edges }
 }
 
 ///|
-fn remincross_snapshot_dump(snapshot : RemincrossInputSnapshot) -> String {
-  let lines : Array[String] = []
+fn canonical_remincross_snapshot_input(
+  snapshot : RemincrossInputSnapshot,
+) -> CanonicalOrderingInput {
+  let rank_rows : Array[Array[String]] = []
   for rank in snapshot.rank_keys {
-    let names = match snapshot.groups.get(rank) {
-      Some(value) => value
-      None => []
-    }
-    let rank_names = names.join(" ")
-    lines.push("rank \{rank}: \{rank_names}")
+    rank_rows.push(snapshot.groups.get(rank).unwrap_or_default().copy())
   }
-  let mut edge_idx = 0
-  for edge in snapshot.edges {
-    lines.push(edge_snapshot_line(edge_idx, edge))
-    edge_idx = edge_idx + 1
-  }
-  lines.join("\n")
+  { rank_rows, edges: snapshot.edges.copy() }
 }
 
 ///|
-fn split_lines_for_diff(text : String) -> Array[String] {
-  let lines : Array[String] = []
-  for line in text.split("\n") {
-    lines.push(line.to_string())
-  }
-  lines
+fn edge_snapshot_summary(edge : OrderingEdgeSnapshotEntry) -> String {
+  "\{edge.tail}->\{edge.head} pen=\{edge.xpenalty} tpx=\{edge.tail_port_x} hpx=\{edge.head_port_x} tpo=\{edge.tail_port_order} hpo=\{edge.head_port_order}"
 }
 
 ///|
-fn first_mismatch_detail(expected : String, actual : String) -> String {
-  let expected_lines = split_lines_for_diff(expected)
-  let actual_lines = split_lines_for_diff(actual)
-  let shared =
-    if expected_lines.length() < actual_lines.length() {
-      expected_lines.length()
-    } else {
-      actual_lines.length()
-    }
-  for idx in 0..<shared {
-    if expected_lines[idx] != actual_lines[idx] {
-      return "line \{idx}: expected=\"\{expected_lines[idx]}\" actual=\"\{actual_lines[idx]}\""
+fn assert_canonical_ordering_input_eq(
+  label : String,
+  actual : CanonicalOrderingInput,
+  expected : CanonicalOrderingInput,
+) -> Unit raise {
+  if actual.rank_rows.length() != expected.rank_rows.length() {
+    fail(
+      "\{label} rank row count mismatch expected=\{expected.rank_rows.length()} actual=\{actual.rank_rows.length()}",
+    )
+  }
+  for i in 0..<expected.rank_rows.length() {
+    if actual.rank_rows[i] != expected.rank_rows[i] {
+      fail(
+        "\{label} rank row[\{i}] mismatch expected=\{expected.rank_rows[i]} actual=\{actual.rank_rows[i]}",
+      )
     }
   }
-  "line-count expected=\{expected_lines.length()} actual=\{actual_lines.length()}"
+  if actual.edges.length() != expected.edges.length() {
+    fail(
+      "\{label} edge count mismatch expected=\{expected.edges.length()} actual=\{actual.edges.length()}",
+    )
+  }
+  for i in 0..<expected.edges.length() {
+    let actual_edge = actual.edges[i]
+    let expected_edge = expected.edges[i]
+    if actual_edge.tail != expected_edge.tail ||
+      actual_edge.head != expected_edge.head ||
+      actual_edge.xpenalty != expected_edge.xpenalty ||
+      actual_edge.tail_port_x != expected_edge.tail_port_x ||
+      actual_edge.head_port_x != expected_edge.head_port_x ||
+      actual_edge.tail_port_order != expected_edge.tail_port_order ||
+      actual_edge.head_port_order != expected_edge.head_port_order {
+      fail(
+        "\{label} edge[\{i}] mismatch expected=\{edge_snapshot_summary(expected_edge)} actual=\{edge_snapshot_summary(actual_edge)}",
+      )
+    }
+  }
 }
 
 ///|
@@ -250,30 +256,16 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
     None => fail("missing captured remincross input snapshot")
   }
 
-  let root_expected_dump = expected_input_dump(root_expected)
-  let root_actual_dump = root_snapshot_dump(root_actual)
-  @fs.write_string_to_file("/tmp/mbt-plugins-root-expected.txt", root_expected_dump)
-  @fs.write_string_to_file("/tmp/mbt-plugins-root-actual.txt", root_actual_dump)
-  if root_actual_dump != root_expected_dump {
-    let detail = first_mismatch_detail(root_expected_dump, root_actual_dump)
-    fail("root mincross input mismatch for plugins: \{detail}")
-  }
-
-  let remincross_expected_dump = expected_input_dump(remincross_expected)
-  let remincross_actual_dump = remincross_snapshot_dump(remincross_actual)
-  @fs.write_string_to_file(
-    "/tmp/mbt-plugins-remincross-expected.txt",
-    remincross_expected_dump,
+  assert_canonical_ordering_input_eq(
+    "plugins root mincross input",
+    canonical_root_snapshot_input(root_actual),
+    canonical_fixture_ordering_input(root_expected),
   )
-  @fs.write_string_to_file(
-    "/tmp/mbt-plugins-remincross-actual.txt",
-    remincross_actual_dump,
+  assert_canonical_ordering_input_eq(
+    "plugins remincross input",
+    canonical_remincross_snapshot_input(remincross_actual),
+    canonical_fixture_ordering_input(remincross_expected),
   )
-  if remincross_actual_dump != remincross_expected_dump {
-    let detail =
-      first_mismatch_detail(remincross_expected_dump, remincross_actual_dump)
-    fail("remincross input mismatch for plugins: \{detail}")
-  }
 
   root_mincross_input_snapshot.val = None
   remincross_input_snapshot.val = None
