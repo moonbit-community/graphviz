@@ -227,7 +227,7 @@ fn filter_root_mincross_seeded_groups_for_clusters(
 }
 
 ///|
-pub(all) struct RootMincrossEdgeBundle {
+priv struct RootMincrossEdgeBundle {
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
   order_edge_head_out_mincross : Array[String]
@@ -319,7 +319,13 @@ fn build_root_vnode_preferred_positions(
 pub(all) struct RootRankReorderCallData {
   order_rank_keys_for_mincross : Array[Int]
   mincross_nodes : Map[String, Bool]
-  mincross_edge_data : RootMincrossEdgeBundle
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
   root_rank_reorder_inputs : RootRankReorderInputs
 }
 
@@ -619,7 +625,17 @@ fn build_root_rank_reorder_call_data(
   {
     order_rank_keys_for_mincross,
     mincross_nodes,
-    mincross_edge_data,
+    order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
+    order_edge_tail_out_mincross: mincross_edge_data.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: mincross_edge_data.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross:
+      mincross_edge_data.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross:
+      mincross_edge_data.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross:
+      mincross_edge_data.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross:
+      mincross_edge_data.order_edge_head_port_order_mincross,
     root_rank_reorder_inputs,
   }
 }

@@ -287,15 +287,15 @@ pub fn build_root_snapshot_capture_callback(
         {
           rank_keys: reorder_call_data.order_rank_keys_for_mincross,
           groups: result.order_groups_for_mincross,
-          edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-          edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-          edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-          edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-          edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+          edges_out: reorder_call_data.order_edges_out_mincross,
+          edge_tail_out: reorder_call_data.order_edge_tail_out_mincross,
+          edge_head_out: reorder_call_data.order_edge_head_out_mincross,
+          edge_tail_port_x: reorder_call_data.order_edge_tail_port_x_mincross,
+          edge_head_port_x: reorder_call_data.order_edge_head_port_x_mincross,
           edge_tail_port_order:
-            reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+            reorder_call_data.order_edge_tail_port_order_mincross,
           edge_head_port_order:
-            reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+            reorder_call_data.order_edge_head_port_order_mincross,
           cluster_keys: inputs.order_cluster_keys,
           cluster_skeleton: inputs.order_cluster_skeleton,
           edge_xpenalty_for,
