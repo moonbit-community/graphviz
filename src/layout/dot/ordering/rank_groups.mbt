@@ -574,7 +574,7 @@ fn build_flat_neighbors(
     if !value {
       continue
     }
-    match @shared.parse_flat_constraint_key(key) {
+    match @rank_constraints.parse_flat_constraint_key(key) {
       Some((tail, head)) => {
         if tail == "" || head == "" {
           continue

@@ -1,6 +1,7 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rank_constraints",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/cluster_graph",
     "moonbit-community/graphviz/layout/dot/ordering",

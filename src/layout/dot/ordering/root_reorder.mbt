@@ -134,7 +134,7 @@ fn build_root_nlist_order(
       root_edge_creation_order,
     )
   let root_nlist_full =
-    @shared.build_graphviz_nlist_order_from_edges(
+    @rank_constraints.build_graphviz_nlist_order_from_edges(
       root_tail_order,
       root_nodes,
       root_edge_creation_order,

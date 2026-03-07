@@ -244,7 +244,7 @@ pub fn acyclic_edge_directions_with_order(
     node_index[name] = i
     node_names.push(name)
   }
-  let rank_same_reps = @shared.build_rank_same_reps(graph, nodes)
+  let rank_same_reps = @rank_constraints.build_rank_same_reps(graph, nodes)
   let rep_names : Array[String] = []
   let rep_seen : Map[String, Bool] = Map::new()
   for name in node_names {
@@ -415,7 +415,7 @@ pub fn acyclic_edge_directions_with_order(
     let head_rep = fast_edge_head[edge_idx]
     edge_creation.push((tail_rep, head_rep))
   }
-  let acyclic_order = @shared.build_graphviz_nlist_order_from_edges(
+  let acyclic_order = @rank_constraints.build_graphviz_nlist_order_from_edges(
     rep_names,
     rep_names,
     edge_creation,

@@ -841,7 +841,7 @@ pub fn apply_flat_mvals(
     if !enabled {
       continue
     }
-    match @shared.parse_flat_constraint_key(key) {
+    match @rank_constraints.parse_flat_constraint_key(key) {
       Some((tail, head)) => {
         if tail == "" || head == "" {
           continue
@@ -977,7 +977,7 @@ pub fn flat_reorder_rank_groups(
     if !value {
       continue
     }
-    match @shared.parse_flat_constraint_key(key) {
+    match @rank_constraints.parse_flat_constraint_key(key) {
       Some((tail, head)) => {
         if tail == "" || head == "" {
           continue

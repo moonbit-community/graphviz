@@ -255,7 +255,7 @@ fn filter_cluster_flat_constraints(
     if !value {
       continue
     }
-    match @shared.parse_flat_constraint_key(key) {
+    match @rank_constraints.parse_flat_constraint_key(key) {
       Some((tail, head)) => {
         if cluster_node_set.get(tail) is Some(_) &&
           cluster_node_set.get(head) is Some(_) {

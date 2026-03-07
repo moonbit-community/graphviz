@@ -128,7 +128,7 @@ pub fn compute_ranks_directed_base(
   }
   // Graphviz parity: decompose ordering uses DFS over flat/in/out neighbors
   // driven by agfstnode/agfstout ordering.
-  let rank_node_names = @shared.build_graphviz_nlist_order_from_edges(
+  let rank_node_names = @rank_constraints.build_graphviz_nlist_order_from_edges(
     tail_order,
     tail_order,
     edge_creation,
@@ -154,7 +154,7 @@ pub fn compute_ranks_directed_base(
       }
     }
   }
-  let rank_same_reps = @shared.build_rank_same_reps(source, nodes)
+  let rank_same_reps = @rank_constraints.build_rank_same_reps(source, nodes)
   let rep_index : Map[String, Int] = Map::new()
   let rep_order : Array[String] = []
   let index : Map[String, Int] = Map::new()

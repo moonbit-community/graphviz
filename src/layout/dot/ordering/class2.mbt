@@ -518,7 +518,7 @@ pub fn build_ordering_class2_data(
       order_creation
     }
   let nlist_order_raw =
-    @shared.build_graphviz_nlist_order_from_edges(
+    @rank_constraints.build_graphviz_nlist_order_from_edges(
       nlist_tail_order,
       order_creation,
       edge_creation_order,
