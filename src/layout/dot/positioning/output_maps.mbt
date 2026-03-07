@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
-pub fn intercluster_alignment_enabled() -> Bool {
+fn intercluster_alignment_enabled() -> Bool {
   @runtime_flags.env_flag_enabled(@sys.get_env_var("DOT_INTERCLUSTER_ALIGN"), false)
 }
 
@@ -187,7 +187,7 @@ fn vnode_positions_from_edges(
 ///|
 /// Graphviz parity: final node position projection maps x/y by graph node list
 /// order and defaults missing coordinates to 0.0 exactly as before.
-pub fn build_node_positions_map(
+fn build_node_positions_map(
   nodes : Array[@cgraph.Node],
   x_positions : Map[String, Double],
   y_positions : Map[String, Double],
@@ -217,7 +217,7 @@ pub(all) struct VnodePositionsInput {
 ///|
 /// Graphviz parity: vnode output positions keep direct-vnode projection and
 /// fallback projection branch order aligned with Graphviz.
-pub fn build_vnode_positions(
+fn build_vnode_positions(
   input : VnodePositionsInput,
 ) -> Map[String, @geom.Point] {
   if input.use_vnodes_for_xpos {
@@ -253,7 +253,7 @@ pub(all) struct ClusterBoundaryXInput {
 ///|
 /// Graphviz parity: cluster boundary projection keeps boundary-node filtering
 /// and key mapping stable before writing ln/rn x maps.
-pub fn build_cluster_boundary_x(
+fn build_cluster_boundary_x(
   input : ClusterBoundaryXInput,
 ) -> ClusterBoundaryXOutput {
   let cluster_ln_x : Map[String, Double] = Map::new()
