@@ -14,7 +14,7 @@ pub(all) struct ExpandEdgeLabelBboxInput {
   edges : Array[DotLayoutEdge]
   ranks : Map[String, Int]
   flat_label_edge_vnodes : Map[String, String]
-  rankdir : @dot_shared.RankDir
+  rankdir : @rankdir.RankDir
 }
 
 ///|
@@ -23,7 +23,7 @@ pub(all) struct ExpandEdgeLabelBboxInput {
 pub(all) struct ExpandEdgeLabelBboxDeps {
   edge_mid_label_metrics_for : (@cgraph.Edge) -> LabelExtent?
   edge_label_metrics_for_attr : (@cgraph.Edge, String) -> LabelExtent?
-  node_half_height_pt_for : (@cgraph.Node, @dot_shared.RankDir) -> Double
+  node_half_height_pt_for : (@cgraph.Node, @rankdir.RankDir) -> Double
 }
 
 ///|
@@ -126,9 +126,9 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
   bbox : @geom.Rect,
   edge_layout : DotLayoutEdge,
   flags : FlatEdgeLabelFlags,
-  rankdir : @dot_shared.RankDir,
+  rankdir : @rankdir.RankDir,
   flip : Bool,
-  node_half_height_pt_for : (@cgraph.Node, @dot_shared.RankDir) -> Double,
+  node_half_height_pt_for : (@cgraph.Node, @rankdir.RankDir) -> Double,
 ) -> @geom.Rect {
   let edge = edge_layout.edge
   let tail = edge.tail().name()
@@ -182,8 +182,8 @@ pub fn expand_bbox_for_edge_labels(
   // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
   // dimensions in pre-rotation space to match compute_bb.
   let flip =
-    input.rankdir == @dot_shared.RankDir::LR ||
-    input.rankdir == @dot_shared.RankDir::RL
+    input.rankdir == @rankdir.RankDir::LR ||
+    input.rankdir == @rankdir.RankDir::RL
   let mut bbox = input.bbox
   for edge_layout in input.edges {
     let flags =

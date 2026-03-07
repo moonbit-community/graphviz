@@ -1,5 +1,5 @@
 ///|
-type RankDir = @dot_shared.RankDir
+type RankDir = @rankdir.RankDir
 
 ///|
 type EdgeRouteBase = @routing.EdgeRouteBase

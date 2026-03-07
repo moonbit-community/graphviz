@@ -1,5 +1,5 @@
 ///|
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type SplinesMode = @shared.SplinesMode
 type RecordOrientation = @shared.RecordOrientation
 type LayoutPrep = @shared.LayoutPrep
@@ -228,7 +228,7 @@ fn resolve_rankdir(
     None =>
       match graph.get_attr("rankdir") {
         Some(value) =>
-          match @shared.parse_rankdir(value) {
+          match @rankdir.parse_rankdir(value) {
             Some(parsed) => parsed
             None => RankDir::TB
           }

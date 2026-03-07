@@ -3,7 +3,7 @@
 /// vnode-first ordering, and LR/RL source-order fast path aligned with
 /// position.c/create_aux_edges.
 pub(all) struct XposNlistOrderInput {
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   cluster_keys : Map[String, String]
@@ -33,7 +33,7 @@ pub fn build_xpos_nlist_order(
   let cluster_order : Array[String] = []
   let cluster_seen : Map[String, Bool] = Map::new()
   let prefer_source_for_lr =
-    input.rankdir == @shared.RankDir::LR || input.rankdir == @shared.RankDir::RL
+    input.rankdir == @rankdir.RankDir::LR || input.rankdir == @rankdir.RankDir::RL
   for name in nlist_reversed {
     let cluster = input.cluster_keys.get(name).unwrap_or_default()
     if cluster != "" && cluster_seen.get(cluster) is None {

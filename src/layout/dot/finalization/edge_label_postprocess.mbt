@@ -217,7 +217,7 @@ pub fn expand_layout_tree_bbox_for_edge_labels(
         edges: layout.edges,
         ranks,
         flat_label_edge_vnodes,
-        rankdir: @shared.graph_rankdir(layout.graph),
+        rankdir: @rankdir.graph_rankdir(layout.graph),
       },
       {
         edge_mid_label_metrics_for:

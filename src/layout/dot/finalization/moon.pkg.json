@@ -1,6 +1,7 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/layout/dot/cluster_graph",
     "moonbit-community/graphviz/layout/dot/bbox",
     "moonbit-community/graphviz/layout/dot/clustering",

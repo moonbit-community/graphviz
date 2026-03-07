@@ -5,6 +5,7 @@
       "alias": "html_label"
     },
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/rank_assignment",

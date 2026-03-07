@@ -50,7 +50,7 @@ pub fn prepare_xpos_constraint_inputs(
   for edge in flat_label_edges {
     all_extra_edges.push(edge)
   }
-  let rankdir = @shared.graph_rankdir(graph)
+  let rankdir = @rankdir.graph_rankdir(graph)
   let compress_width_minlen = compress_width_minlen_pt(graph, rankdir)
   let all_root_ln_targets = cluster_constraints.root_ln_targets.copy()
   let all_root_rn_targets = cluster_constraints.root_rn_targets.copy()

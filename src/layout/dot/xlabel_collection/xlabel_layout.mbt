@@ -4,7 +4,7 @@
 /// Do not change behavior without updating fixtures/tests.
 
 type LayoutTree = @shared.LayoutTree
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 
 
 priv struct XLabelUpdateMaps {
@@ -113,7 +113,7 @@ pub fn apply_xlabels(
   layout : LayoutTree,
   splines : SplinesMode,
 ) -> LayoutTree {
-  let rankdir = @shared.graph_rankdir(layout.graph)
+  let rankdir = @rankdir.graph_rankdir(layout.graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []

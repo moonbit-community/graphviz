@@ -1,7 +1,7 @@
 ///|
 /// Cluster-label geometry helpers shared by rank-height, x-position, and final
 /// cluster bbox adjustment paths.
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 
 ///|
 pub const CLUSTER_LABEL_PAD_PT : Double = 8.0

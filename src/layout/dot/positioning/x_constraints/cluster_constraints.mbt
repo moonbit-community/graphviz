@@ -13,7 +13,7 @@ pub(all) struct ClusterConstraintBuild {
 pub(all) struct ClusterConstraintLabelDeps {
   cluster_label_borders_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> (Double, Double)
   cluster_label_width_with_pad_for : (@cgraph.Graph) -> Double?
   cluster_compact_weight : Int
@@ -96,8 +96,8 @@ pub fn build_cluster_constraints(
   }
   // Graphviz parity: in LR/RL, cluster label height becomes horizontal border
   // slack in x-constraints (post-flip label geometry).
-  let rankdir = @shared.graph_rankdir(graph)
-  let flip = rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL
+  let rankdir = @rankdir.graph_rankdir(graph)
+  let flip = rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL
   if edge_vnodes.length() > 0 {
     for edge in edges {
       let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {

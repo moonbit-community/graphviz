@@ -4,7 +4,7 @@
 
 type LayoutTree = @shared.LayoutTree
 type LayoutPrep = @shared.LayoutPrep
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type SplinesMode = @shared.SplinesMode
 type NodeSize = @node_primitives.NodeSize
 type DotLayoutNode = @shared.DotLayoutNode

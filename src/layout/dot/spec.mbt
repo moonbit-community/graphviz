@@ -1,6 +1,6 @@
 ///|
 /// Rank direction for dot layout.
-pub type RankDir = @dot_shared.RankDir
+pub type RankDir = @rankdir.RankDir
 
 ///|
 /// Edge routing mode for dot layouts.

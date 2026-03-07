@@ -161,7 +161,7 @@ test "edge label vnode positions match Graphviz" {
       fail("missing edge label vnode fixture fields")
     }
     let graph = load_edge_label_graph(graphs, fixture.graph)
-    let rankdir = @dot_shared.graph_rankdir(graph)
+    let rankdir = @rankdir.graph_rankdir(graph)
     let expected_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
     assert_eq(fixture.flip, expected_flip)
     match find_edge_by_nodes_with_label(

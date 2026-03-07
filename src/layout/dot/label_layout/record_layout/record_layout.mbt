@@ -2,7 +2,7 @@
 /// Record-label parsing, sizing, layout, and port helpers for dot record
 /// shapes and record-port routing behavior.
 
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort

@@ -231,7 +231,7 @@ fn add_flat_label_vnodes(
   ranks : Map[String, Int],
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   sizes : Map[String, @node_primitives.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
@@ -305,7 +305,7 @@ fn add_flat_label_vnodes(
       None => continue
     }
     let (label_width, label_height) =
-      if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
+      if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
       (metric_height, metric_width)
     } else {
       (metric_width, metric_height)
@@ -333,7 +333,7 @@ fn add_flat_label_vnodes(
       let minlen_base =
         if base_minlen > label_minlen { base_minlen } else { label_minlen }
       let minlen_adjusted =
-        if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
+        if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
         minlen_base + 1.0
       } else {
         minlen_base
@@ -451,7 +451,7 @@ pub fn build_flat_label_vnodes_for_positioning(
   ranks : Map[String, Int],
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   x_base_sizes : Map[String, @node_primitives.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],

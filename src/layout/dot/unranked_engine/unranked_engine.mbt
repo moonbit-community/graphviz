@@ -5,7 +5,7 @@
 
 type NodeSize = @node_primitives.NodeSize
 type RecordOrientation = @shared.RecordOrientation
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 
 fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
   let nodes = graph.nodes()
@@ -464,7 +464,7 @@ pub fn build_engine_geometry_context(
 ) -> EngineGeometryContext {
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
-  let rankdir = @shared.graph_rankdir(graph)
+  let rankdir = @rankdir.graph_rankdir(graph)
   let record_orientation = @shared.record_layout_orientation(rankdir)
   { scale_factor, rankdir, record_orientation }
 }

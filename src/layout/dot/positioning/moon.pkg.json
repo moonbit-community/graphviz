@@ -7,6 +7,7 @@
     "moonbit-community/graphviz/layout/dot/routing/edge_spline",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",

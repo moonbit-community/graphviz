@@ -6,7 +6,7 @@
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/positioning/x_reorder",
-    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",

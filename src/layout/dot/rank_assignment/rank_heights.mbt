@@ -27,7 +27,7 @@ pub struct RankHeightsInput {
   all_ranks : Array[Int]
   sizes : Map[String, NodeSize]
   self_edge_labels : Map[String, Double]
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   nodesep_in : Double
   ranksep_in : Double
   has_edge_labels : Bool
@@ -35,7 +35,7 @@ pub struct RankHeightsInput {
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> @clustering.ClusterLabelPadding
 }
 
@@ -49,7 +49,7 @@ pub fn make_rank_heights_input(
   all_ranks : Array[Int],
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   nodesep_in : Double,
   ranksep_in : Double,
   has_edge_labels : Bool,
@@ -57,7 +57,7 @@ pub fn make_rank_heights_input(
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> @clustering.ClusterLabelPadding,
 ) -> RankHeightsInput {
   {
@@ -96,7 +96,7 @@ fn update_rank_pht_for_label(
   edge : @cgraph.Edge,
   ranks : Map[String, Int],
   rank_pht : Map[Int, Double],
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
 ) -> Unit {
   if !@edge_semantics.edge_has_label(edge) {
@@ -112,7 +112,7 @@ fn update_rank_pht_for_label(
   let label_rank = (span.min_rank + span.max_rank) / 2
   let half_height = match (edge_mid_label_metrics_for)(edge) {
     Some(metrics) =>
-      if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
+      if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
         metrics.width / 2.0
       } else {
         metrics.height / 2.0
@@ -176,7 +176,7 @@ fn apply_edge_label_rank_half_heights(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   rank_pht : Map[Int, Double],
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
 ) -> Unit {
   for edge in edges {

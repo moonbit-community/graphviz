@@ -70,8 +70,8 @@ pub(all) struct EdgeRouteBase {
   out_head_pos : @geom.Point
   out_tail_size : @node_primitives.NodeSize
   out_head_size : @node_primitives.NodeSize
-  rankdir : @dot_shared.RankDir
-  layout_rankdir : @dot_shared.RankDir
+  rankdir : @rankdir.RankDir
+  layout_rankdir : @rankdir.RankDir
   has_side_anchor : Bool
 }
 
@@ -97,7 +97,7 @@ pub(all) struct RouteBaseDeps {
     @cgraph.Port?,
     @geom.Point,
     @node_primitives.NodeSize,
-    @dot_shared.RankDir,
+    @rankdir.RankDir,
   ) -> @geom.Rect?
   port_geometry : (
     String,
@@ -119,7 +119,7 @@ pub(all) struct RouteBaseDeps {
     String,
     @geom.Point,
     @geom.Point,
-    @dot_shared.RankDir,
+    @rankdir.RankDir,
     Double,
   ) -> RouteDynamicPortAnchor
   port_side_mask_from_anchor : (@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
@@ -129,7 +129,7 @@ pub(all) struct RouteBaseDeps {
     @geom.Point,
     @node_primitives.NodeSize,
   ) -> Int
-  layout_port_offset : (@geom.Point, @dot_shared.RankDir) -> @geom.Point
+  layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point
   node_cluster_key : (@cgraph.Node) -> String
   node_local_cluster_key : (@cgraph.Node) -> String
 }
@@ -204,7 +204,7 @@ pub(all) struct EdgeLayoutBuildCallbackInput {
 pub type EdgeLayoutBuilderFn = (EdgeLayoutBuildCallbackInput) -> DotLayoutEdge
 
 ///|
-pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @dot_shared.RankDir) -> Double
+pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @rankdir.RankDir) -> Double
 
 ///|
 pub(all) struct EdgePortLabelPosInput {
@@ -293,8 +293,8 @@ pub(all) struct RouteEdgesInput {
 ///|
 pub(all) struct RouteEdgesPipelineInput {
   graph_kind : @cgraph.GraphKind
-  rankdir : @dot_shared.RankDir
-  layout_rankdir : @dot_shared.RankDir
+  rankdir : @rankdir.RankDir
+  layout_rankdir : @rankdir.RankDir
   edges : Array[@cgraph.Edge]
   ranks : Map[String, Int]
   sizes : Map[String, @node_primitives.NodeSize]

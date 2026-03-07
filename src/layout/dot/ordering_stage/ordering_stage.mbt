@@ -1,5 +1,5 @@
 ///|
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type NodeSize = @node_primitives.NodeSize
 type ClusterMetadata = @ordering.DotClusterMetadata
 type EdgePortSampleBundle = @ordering.EdgePortSampleBundle

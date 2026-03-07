@@ -1,7 +1,7 @@
 ///|
 /// Edge-label metric helpers extracted from `label_metrics` so edge label
 /// sizing and detection can evolve independently from general text metrics.
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 
 ///|
 pub fn edge_mid_label_text(edge : @cgraph.Edge) -> String? {

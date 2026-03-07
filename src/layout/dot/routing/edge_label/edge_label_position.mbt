@@ -25,10 +25,10 @@ pub fn edge_label_pos_from_vnode(
   vnode_pos : @geom.Point,
   label_width_pt : Double,
   label_height_pt : Double,
-  rankdir : @dot_shared.RankDir,
+  rankdir : @rankdir.RankDir,
 ) -> @geom.Point {
   let width =
-    if rankdir == @dot_shared.RankDir::LR || rankdir == @dot_shared.RankDir::RL {
+    if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
       label_height_pt
     } else {
       label_width_pt
@@ -88,12 +88,12 @@ pub fn edge_label_pos_from_input(
     match (label_rank_x, label_rank_y) {
       (Some(x_axis), Some(y_axis)) =>
         match rankdir {
-          @dot_shared.RankDir::LR | @dot_shared.RankDir::RL => @edge_spline.point(y_axis, x_axis)
+          @rankdir.RankDir::LR | @rankdir.RankDir::RL => @edge_spline.point(y_axis, x_axis)
           _ => @edge_spline.point(x_axis, y_axis)
         }
       (Some(value), None) =>
         match rankdir {
-          @dot_shared.RankDir::LR | @dot_shared.RankDir::RL => @edge_spline.point(raw_pos.x, value)
+          @rankdir.RankDir::LR | @rankdir.RankDir::RL => @edge_spline.point(raw_pos.x, value)
           _ => @edge_spline.point(value, raw_pos.y)
         }
       _ => raw_pos
@@ -106,11 +106,11 @@ pub fn edge_label_pos_from_input(
       match (edge_mid_label_metrics_for)(edge) {
         Some(metrics) => {
           let half_extent = match rankdir {
-            @dot_shared.RankDir::LR | @dot_shared.RankDir::RL => metrics.height / 2.0
+            @rankdir.RankDir::LR | @rankdir.RankDir::RL => metrics.height / 2.0
             _ => metrics.width / 2.0
           }
           let sign = match rankdir {
-            @dot_shared.RankDir::RL => -1.0
+            @rankdir.RankDir::RL => -1.0
             _ => 1.0
           }
           let mut pad = label_pad_boost

@@ -2,7 +2,7 @@
 /// Port geometry, side-mask, and dynamic label-port anchor helpers for
 /// record/html endpoint handling in dot layout.
 
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 

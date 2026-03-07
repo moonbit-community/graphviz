@@ -19,7 +19,7 @@ type EdgeLabelRankXFn = (
 ) -> Double?
 
 ///|
-type EdgeLabelPosFromVnodeFn = (@geom.Point, Double, Double, @dot_shared.RankDir) -> @geom.Point
+type EdgeLabelPosFromVnodeFn = (@geom.Point, Double, Double, @rankdir.RankDir) -> @geom.Point
 
 ///|
 type FlatEdgeLabelPosSimpleFn = (
@@ -36,7 +36,7 @@ pub(all) struct EdgeLabelPosInput {
   spline : @geom.Spline
   tail_clip : @geom.Point
   head_clip : @geom.Point
-  rankdir : @dot_shared.RankDir
+  rankdir : @rankdir.RankDir
   label_rank_y : Double?
   label_rank_x : Double?
   apply_label_pad : Bool

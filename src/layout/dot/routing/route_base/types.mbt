@@ -2,7 +2,7 @@
 type NodeSize = @node_primitives.NodeSize
 
 ///|
-type RankDir = @dot_shared.RankDir
+type RankDir = @rankdir.RankDir
 
 ///|
 type RouteEdgesPipelineInput = @routing.RouteEdgesPipelineInput

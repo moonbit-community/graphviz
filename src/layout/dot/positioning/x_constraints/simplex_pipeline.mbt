@@ -35,7 +35,7 @@ pub fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
   let xpos_nlist_order =
     build_xpos_nlist_order(
       {
-        rankdir: @shared.graph_rankdir(input.graph_root),
+        rankdir: @rankdir.graph_rankdir(input.graph_root),
         nlist_order: input.nlist_order,
         gdnlist_order: input.gdnlist_order,
         cluster_keys: input.cluster_keys,

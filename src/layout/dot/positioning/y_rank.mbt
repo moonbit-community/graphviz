@@ -78,7 +78,7 @@ pub fn build_y_positions_from_rank_groups(
 /// cluster heights, and traversal bounds grouped for one fill+adjust pass.
 pub(all) struct YPositionsWithFlipInput {
   graph : @cgraph.Graph
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
   ranks : Map[String, Int]
@@ -121,7 +121,7 @@ pub fn build_y_positions_with_flip(
     },
   )
   let graphviz_flip =
-    input.rankdir == @shared.RankDir::LR || input.rankdir == @shared.RankDir::RL
+    input.rankdir == @rankdir.RankDir::LR || input.rankdir == @rankdir.RankDir::RL
   if graphviz_flip && @cluster_graph.graph_has_cluster(input.graph) {
     let min_root_rank =
       if input.y_all_ranks.length() > 0 {
@@ -160,7 +160,7 @@ pub fn build_y_positions_with_flip(
 pub(all) struct YPositionPipelineInput {
   has_clusters : Bool
   graph : @cgraph.Graph
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
   ranks : Map[String, Int]
@@ -175,7 +175,7 @@ pub(all) struct YPositionPipelineInput {
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> @clustering.ClusterLabelPadding
   node_half_height_pt_for : (
     String,

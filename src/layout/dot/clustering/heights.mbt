@@ -49,12 +49,12 @@ priv struct ClusterBBoxHeightsCollectInput {
   ranks : Map[String, Int]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   cluster_heights : Map[String, ClusterBboxHeightPair]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
@@ -72,11 +72,11 @@ pub(all) struct ClusterBBoxHeightsInput {
   ranks : Map[String, Int]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
@@ -114,11 +114,11 @@ pub(all) struct ClusterRankHeightsApplyInput {
   self_edge_labels : Map[String, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (
     @cgraph.Graph,
-    @shared.RankDir,
+    @rankdir.RankDir,
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,

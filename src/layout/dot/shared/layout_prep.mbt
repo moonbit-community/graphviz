@@ -1,3 +1,5 @@
+type RankDir = @rankdir.RankDir
+
 ///|
 /// Edge routing mode for dot layouts.
 pub(all) enum SplinesMode {

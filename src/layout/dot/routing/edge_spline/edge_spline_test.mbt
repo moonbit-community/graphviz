@@ -31,7 +31,7 @@ test "port side helpers and endpoint slope" {
     pos,
     size,
     point(10.0, 0.0),
-    @dot_shared.RankDir::TB,
+    @rankdir.RankDir::TB,
     true,
     None,
   )

@@ -2,7 +2,7 @@
 /// Shared port-geometry bridge logic used across ordering, positioning, and
 /// routing stage boundaries.
 
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort

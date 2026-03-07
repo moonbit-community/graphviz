@@ -16,7 +16,7 @@ pub(all) struct PositionModeFlagSources {
   vnode_count : Int
   max_xpos_vnodes : Int
   max_xpos_reorder_vnodes : Int
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
 }
 
 ///|
@@ -32,7 +32,7 @@ pub fn build_position_mode_flags(
   let allow_xpos_reorder =
     !use_vnodes_for_xpos || sources.vnode_count <= sources.max_xpos_reorder_vnodes
   let graphviz_flip =
-    sources.rankdir == @shared.RankDir::LR || sources.rankdir == @shared.RankDir::RL
+    sources.rankdir == @rankdir.RankDir::LR || sources.rankdir == @rankdir.RankDir::RL
   {
     use_vnodes_for_xpos,
     allow_xpos_reorder,

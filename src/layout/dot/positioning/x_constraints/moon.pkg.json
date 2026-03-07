@@ -5,7 +5,7 @@
     "moonbit-community/graphviz/layout/dot/cluster_graph",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/network_simplex",
-    "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/cgraph",
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/edge_identity",

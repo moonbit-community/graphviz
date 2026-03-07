@@ -25,7 +25,7 @@ fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
 /// refs/graphviz/lib/dotgen/position.c (MIN(size, USHRT_MAX)).
 pub fn compress_width_minlen_pt(
   graph : @cgraph.Graph,
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
 ) -> Int? {
   if !graph_ratio_is_compress(graph) {
     return None
@@ -35,7 +35,7 @@ pub fn compress_width_minlen_pt(
     None => return None
   }
   let width_pt = match rankdir {
-    @shared.RankDir::LR | @shared.RankDir::RL => size.height_pt
+    @rankdir.RankDir::LR | @rankdir.RankDir::RL => size.height_pt
     _ => size.width_pt
   }
   if width_pt <= 1.0 {

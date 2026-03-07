@@ -15,7 +15,7 @@ pub fn build_edge_vnodes(
   edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
   nodesep_pt : Double,
-  rankdir : @shared.RankDir,
+  rankdir : @rankdir.RankDir,
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
@@ -144,7 +144,7 @@ pub fn build_edge_vnodes(
     let (label_width, label_height) =
       match (deps.edge_mid_label_metrics_for)(edge) {
       Some((width, height)) =>
-        if rankdir == @shared.RankDir::LR || rankdir == @shared.RankDir::RL {
+        if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
           (height, width)
         } else {
           (width, height)

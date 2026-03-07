@@ -51,7 +51,7 @@ pub(all) struct BuildOrderingRuntimeContextInput {
   ranks : Map[String, Int]
   node_order : Map[String, Int]
   nodesep_pt : Double
-  rankdir : @shared.RankDir
+  rankdir : @rankdir.RankDir
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
   edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?

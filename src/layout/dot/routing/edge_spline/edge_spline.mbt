@@ -2,7 +2,7 @@
 type NodeSize = @node_primitives.NodeSize
 
 ///|
-type RankDir = @dot_shared.RankDir
+type RankDir = @rankdir.RankDir
 
 ///|
 const RECORD_BORDER_PT : Double = @record_geometry.RECORD_BORDER_PT

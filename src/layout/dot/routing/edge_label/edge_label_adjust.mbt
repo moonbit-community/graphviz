@@ -187,13 +187,13 @@ pub fn apply_label_updates_to_edges(
 pub fn adjust_edge_label_overlaps(
   edges : Array[DotLayoutEdge],
   nodesep_pt : Double,
-  rankdir : @dot_shared.RankDir,
+  rankdir : @rankdir.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> LabelExtent?,
   edge_tail_point_for_layout : (DotLayoutEdge) -> @geom.Point?,
 ) -> AdjustedEdgeLabels {
   let axis_is_x = match rankdir {
-    @dot_shared.RankDir::TB | @dot_shared.RankDir::BT => true
-    @dot_shared.RankDir::LR | @dot_shared.RankDir::RL => false
+    @rankdir.RankDir::TB | @rankdir.RankDir::BT => true
+    @rankdir.RankDir::LR | @rankdir.RankDir::RL => false
   }
   let tail_pad = if 2.0 > nodesep_pt * 0.3 { 2.0 } else { nodesep_pt * 0.3 }
   let gap = if 4.0 > nodesep_pt * 0.8 { 4.0 } else { nodesep_pt * 0.8 }

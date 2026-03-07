@@ -215,7 +215,7 @@ fn collect_label_vnode_actuals(
     edge_out_order,
     ranks,
     graph_nodesep_pt(graph),
-    @dot_shared.graph_rankdir(graph),
+    @rankdir.graph_rankdir(graph),
     existing_names,
     edge_cluster_keys,
     cluster_parents,
@@ -293,7 +293,7 @@ fn collect_flat_label_node_actuals(
     edges,
     has_edge_labels,
   )
-  let rankdir = @dot_shared.graph_rankdir(graph)
+  let rankdir = @rankdir.graph_rankdir(graph)
   let actuals : Array[FlatLabelNodeActual] = []
   for edge in edges {
     let label = match edge.get_attr("label") {
@@ -417,7 +417,7 @@ test "label vnodes match Graphviz fixtures" {
     for i in 0..<edges.length() {
       edge_reversed_by_key[@edge_identity.edge_key(edges[i])] = edge_reversed[i]
     }
-    let rankdir = @dot_shared.graph_rankdir(graph)
+    let rankdir = @rankdir.graph_rankdir(graph)
     let expected_flip =
       rankdir == RankDir::LR || rankdir == RankDir::RL
     let expected_nodesep = graph_nodesep_pt(graph)
@@ -529,7 +529,7 @@ test "flat label node sizes match Graphviz fixtures" {
     edges,
     has_edge_labels,
   )
-  let rankdir = @dot_shared.graph_rankdir(graph)
+  let rankdir = @rankdir.graph_rankdir(graph)
   let expected_flip =
     rankdir == RankDir::LR || rankdir == RankDir::RL
   let record_orientation = @dot_shared.record_layout_orientation(rankdir)

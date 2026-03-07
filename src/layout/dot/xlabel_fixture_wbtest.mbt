@@ -136,7 +136,7 @@ test "xlabel positions match Graphviz" {
   for fixture in fixtures {
     assert_eq(fixture.label_html, false)
     let layout = load_xlabel_layout(layouts, graphs, fixture.graph)
-    let rankdir = @dot_shared.graph_rankdir(layout.graph)
+    let rankdir = @rankdir.graph_rankdir(layout.graph)
     let expected_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
     assert_eq(fixture.flip, expected_flip)
     match fixture.kind {

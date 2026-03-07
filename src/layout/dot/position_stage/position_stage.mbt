@@ -1,6 +1,6 @@
 ///|
 type LayoutPrep = @shared.LayoutPrep
-type RankDir = @shared.RankDir
+type RankDir = @rankdir.RankDir
 type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @node_primitives.NodeSize
 type RankData = @rank_assignment.RankData
@@ -208,7 +208,7 @@ fn resolve_x_simplex_root_context(
   if nodes.length() > 0 {
     let root_graph = nodes[0].graph()
     (
-      @shared.graph_rankdir(root_graph),
+      @rankdir.graph_rankdir(root_graph),
       @clustering.cluster_margin_pt(root_graph),
     )
   } else {
