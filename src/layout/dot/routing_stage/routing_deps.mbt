@@ -9,12 +9,6 @@ pub(all) struct RoutingPortLayoutMaps {
 }
 
 ///|
-pub(all) struct RoutingPortPadding {
-  below : Double
-  above : Double
-}
-
-///|
 /// Graphviz parity: routing stage dependency payload groups root-boundary
 /// geometry and bbox bridges so the subpackage owns stage-internal orchestration
 /// without importing the root dot package.
@@ -44,20 +38,13 @@ pub(all) struct RoutingStageDeps {
     Map[Int, Double],
     Map[Int, Double],
   ) -> Map[String, @geom.Rect]
-  compute_routing_bbox : (
-    Array[DotLayoutNode],
-    Array[Int],
-    Map[String, NodeSize],
-    Map[Int, Double],
-    Map[Int, Double],
-    Map[Int, Double],
-  ) -> @geom.Rect
+  compute_routing_bbox : (@bbox.DotBBoxInput) -> @geom.Rect
   edge_has_mid_label : (@cgraph.Edge) -> Bool
   record_port_padding : (
     Array[@cgraph.Edge],
     Map[String, @geom.Point],
     Map[String, Map[String, RecordPort]],
-  ) -> RoutingPortPadding
+  ) -> (Double, Double)
   build_head_port_metrics : (
     Array[@cgraph.Edge],
     Bool,
@@ -161,42 +148,6 @@ fn build_port_layout_maps_for_routing_stage(
 }
 
 ///|
-fn compute_routing_bbox_for_stage(
-  nodes_out : Array[DotLayoutNode],
-  all_ranks : Array[Int],
-  sizes : Map[String, NodeSize],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-) -> @geom.Rect {
-  @bbox.compute_dot_bbox(
-    {
-      nodes_out,
-      all_ranks,
-      sizes,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-    },
-  )
-}
-
-///|
-fn routing_port_padding_for_stage(
-  edges : Array[@cgraph.Edge],
-  positions : Map[String, @geom.Point],
-  label_ports_map : Map[String, Map[String, RecordPort]],
-) -> RoutingPortPadding {
-  let padding =
-    @record_layout.record_port_padding_y(
-      edges,
-      positions,
-      label_ports_map,
-    )
-  { below: padding.below, above: padding.above }
-}
-
-///|
 /// Graphviz parity: default dot routing deps keep routing-stage geometry,
 /// callback bridges, and cluster-bbox tree recursion inside subpackages so the
 /// root package no longer needs a Stage E-specific bridge file.
@@ -205,9 +156,18 @@ pub fn build_dot_routing_stage_deps() -> RoutingStageDeps {
     build_layout_nodes: build_layout_nodes_for_routing_stage,
     build_port_layout_maps: build_port_layout_maps_for_routing_stage,
     compute_cluster_route_bboxes: @clustering.compute_cluster_route_bboxes,
-    compute_routing_bbox: compute_routing_bbox_for_stage,
+    compute_routing_bbox: @bbox.compute_dot_bbox,
     edge_has_mid_label: edge => @edge_label_metrics.edge_mid_label_text(edge) is Some(_),
-    record_port_padding: routing_port_padding_for_stage,
+    record_port_padding:
+      (edges, positions, label_ports_map) => {
+        let padding =
+          @record_layout.record_port_padding_y(
+            edges,
+            positions,
+            label_ports_map,
+          )
+        (padding.below, padding.above)
+      },
     build_head_port_metrics: @precompute.build_dot_head_port_metrics,
     apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
     build_route_base_deps: @routing.build_dot_route_base_deps,

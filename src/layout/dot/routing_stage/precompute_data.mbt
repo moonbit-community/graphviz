@@ -32,15 +32,12 @@ fn build_routing_precompute_data(
     @precompute.resolve_routing_port_padding(
       input.cluster_meta.has_clusters,
       prep.has_port_edges,
-      () => {
-        let padding =
-          (deps.record_port_padding)(
-            prep.edges,
-            input.positions_state.positions,
-            input.label_ports_map,
-          )
-        (padding.below, padding.above)
-      },
+      () =>
+        (deps.record_port_padding)(
+          prep.edges,
+          input.positions_state.positions,
+          input.label_ports_map,
+        ),
     )
   let port_pad_below = port_padding.0
   let port_pad_above = port_padding.1
