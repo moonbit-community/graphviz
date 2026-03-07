@@ -106,3 +106,19 @@ pub fn edge_port_label_pos(
     ),
   )
 }
+
+///|
+/// Graphviz parity: dot port-label placement keeps the Graphviz angle and
+/// distance constants centralized for Stage E callback and edge-layout paths.
+/// Do not change behavior without updating fixtures/tests.
+pub fn edge_port_label_pos_for_dot(
+  input : EdgePortLabelPosInput,
+) -> @geom.Point? {
+  edge_port_label_pos(
+    input,
+    @node_geometry.PORT_LABEL_ANGLE_DEG,
+    @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
+    @node_geometry.PORT_LABEL_DISTANCE_PT,
+    @node_geometry.GRAPHVIZ_PI,
+  )
+}

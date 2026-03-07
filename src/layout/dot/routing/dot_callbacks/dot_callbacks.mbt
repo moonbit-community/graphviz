@@ -9,15 +9,6 @@
 pub fn build_dot_routing_callbacks(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
-  let edge_port_label_pos_for_dot =
-    (input : @routing.EdgePortLabelPosInput) =>
-      @edge_label.edge_port_label_pos(
-        input,
-        @node_geometry.PORT_LABEL_ANGLE_DEG,
-        @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
-        @node_geometry.PORT_LABEL_DISTANCE_PT,
-        @node_geometry.GRAPHVIZ_PI,
-      )
   {
     recover_slack_vnodes_fn:
       input =>
@@ -44,6 +35,6 @@ pub fn build_dot_routing_callbacks(
       ),
     self_edge_label_height_fn: @edge_label_metrics.self_edge_label_height_pt,
     self_edge_label_width_fn: @edge_label_metrics.self_edge_label_width_pt,
-    edge_port_label_pos_fn: edge_port_label_pos_for_dot,
+    edge_port_label_pos_fn: @edge_label.edge_port_label_pos_for_dot,
   }
 }
