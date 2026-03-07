@@ -176,7 +176,7 @@ test "edge label vnode positions match Graphviz" {
           "missing labeled edge \{fixture.tail} -> \{fixture.head} '\{fixture.label}' for edge label vnode fixtures",
         )
     }
-    let actual = @routing.edge_label_pos_from_vnode(
+    let actual = @edge_label.edge_label_pos_from_vnode(
       @edge_spline.point(fixture.vnode_x, fixture.vnode_y),
       fixture.dimen_x,
       fixture.dimen_y,
@@ -218,7 +218,7 @@ test "flat edge label positions match Graphviz" {
     }
     assert_eq(metrics.width, fixture.dimen_x)
     assert_eq(metrics.height, fixture.dimen_y)
-    let actual = @routing.flat_edge_label_pos_simple(
+    let actual = @edge_label.flat_edge_label_pos_simple(
       @edge_spline.point(fixture.tp_x, fixture.tp_y),
       @edge_spline.point(fixture.hp_x, fixture.hp_y),
       fixture.tail_rw,

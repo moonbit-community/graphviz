@@ -270,7 +270,7 @@ fn build_routing_callbacks_for_dot(
 ) -> @routing.RoutingCallbacks {
   let edge_port_label_pos_for_dot =
     (input : @routing.EdgePortLabelPosInput) =>
-      @routing.edge_port_label_pos(
+      @edge_label.edge_port_label_pos(
         input,
         @node_geometry.PORT_LABEL_ANGLE_DEG,
         @node_geometry.PORT_LABEL_ANGLE_MIN_DEG,
@@ -283,10 +283,10 @@ fn build_routing_callbacks_for_dot(
         Some(metrics) => Some({ width: metrics.width, height: metrics.height })
         None => None
       }
-  let edge_layout_deps : @routing.EdgeLayoutDeps = {
+  let edge_layout_deps : @edge_label.EdgeLayoutDeps = {
     edge_label_rank_for_routing_fn:
       (edge, ranks, mid_label_width_pt) =>
-        match @routing.edge_label_rank_info(edge, ranks, mid_label_width_pt) {
+        match @edge_label.edge_label_rank_info(edge, ranks, mid_label_width_pt) {
           Some(info) =>
             if mid_label_width_pt > 0.0 {
               Some((info.label_rank, info.span))
@@ -297,17 +297,17 @@ fn build_routing_callbacks_for_dot(
         },
     edge_label_rank_y_fn:
       (edge, ranks, rank_y) =>
-        @routing.edge_label_rank_y(
+        @edge_label.edge_label_rank_y(
           edge,
           ranks,
           rank_y,
           @label_metrics.edge_mid_label_width_pt(edge),
         ),
-    edge_label_rank_x_fn: @routing.edge_label_rank_x,
-    edge_label_pos_from_vnode_fn: @routing.edge_label_pos_from_vnode,
+    edge_label_rank_x_fn: @edge_label.edge_label_rank_x,
+    edge_label_pos_from_vnode_fn: @edge_label.edge_label_pos_from_vnode,
     flat_edge_label_pos_simple_fn:
       (tail_port, head_port, tail_right_pt, head_left_pt, label_height_pt) =>
-        @routing.flat_edge_label_pos_simple(
+        @edge_label.flat_edge_label_pos_simple(
           tail_port,
           head_port,
           tail_right_pt,
@@ -317,7 +317,7 @@ fn build_routing_callbacks_for_dot(
         ),
     edge_label_pos_fn:
       input =>
-        @routing.edge_label_pos_from_input(
+        @edge_label.edge_label_pos_from_input(
           input,
           route_mid_label_metrics,
           @node_geometry.EDGE_LABEL_PAD_WIDTH_PT,
@@ -330,7 +330,7 @@ fn build_routing_callbacks_for_dot(
         @routing.recover_slack_vnodes(
           input,
           (edge, ranks) =>
-            match @routing.edge_label_rank_info(
+            match @edge_label.edge_label_rank_info(
               edge,
               ranks,
               @label_metrics.edge_mid_label_width_pt(edge),
@@ -340,7 +340,7 @@ fn build_routing_callbacks_for_dot(
             },
         ),
     build_edge_layout_fn: (input) =>
-      @routing.build_edge_layout(
+      @edge_label.build_edge_layout(
         {
           base: input.base,
           spline: input.spline,

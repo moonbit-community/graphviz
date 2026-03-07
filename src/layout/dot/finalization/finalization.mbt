@@ -283,13 +283,13 @@ fn apply_pre_rotation_layout_postprocess(
       root_padded.ratio_bbox,
     )
   let adjusted =
-    @routing.adjust_edge_labels_if_enabled(
+    @edge_label.adjust_edge_labels_if_enabled(
       layout,
       input.nodesep_pt,
       rankdir,
     )
   let labeled =
-    @routing.expand_layout_tree_bbox_for_edge_labels(
+    @edge_label.expand_layout_tree_bbox_for_edge_labels(
       adjusted,
       input.ranks,
       input.flat_label_edge_vnodes,

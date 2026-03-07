@@ -251,9 +251,9 @@ fn collect_edge_label_anchors(
     splines == SplinesMode::Spline || splines == SplinesMode::Curved
   {
     has_geometry,
-    mid_anchor: @routing.edge_midpoint_for_layout(edge_layout, use_spline_midpoint),
-    tail_anchor: @routing.edge_tail_point_for_layout(edge_layout),
-    head_anchor: @routing.edge_head_point_for_layout(edge_layout),
+    mid_anchor: @edge_label.edge_midpoint_for_layout(edge_layout, use_spline_midpoint),
+    tail_anchor: @edge_label.edge_tail_point_for_layout(edge_layout),
+    head_anchor: @edge_label.edge_head_point_for_layout(edge_layout),
   }
 }
 

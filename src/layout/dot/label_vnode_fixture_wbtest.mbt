@@ -237,7 +237,7 @@ fn collect_label_vnode_actuals(
     if label == "" {
       continue
     }
-    let label_rank_info = match @routing.edge_label_rank_info(
+    let label_rank_info = match @edge_label.edge_label_rank_info(
       edge,
       ranks,
       @label_metrics.edge_mid_label_width_pt(edge),
@@ -460,7 +460,7 @@ test "label vnodes match Graphviz fixtures" {
           "head rank mismatch for \{graph_name} \{entry.tail} -> \{entry.head} \{entry.label}: got \{actual_head_rank} expected \{entry.head_rank}",
         )
       }
-      let label_rank_info = match @routing.edge_label_rank_info(
+      let label_rank_info = match @edge_label.edge_label_rank_info(
         edge,
         ranks,
         @label_metrics.edge_mid_label_width_pt(edge),

@@ -58,7 +58,7 @@ fn expand_bbox_for_existing_xlabel(
           let dims =
             maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
           expanded =
-            @routing.expand_bbox_for_label_pos(
+            @edge_label.expand_bbox_for_label_pos(
               expanded,
               Some(value),
               Some({ width: dims.width, height: dims.height }),
@@ -144,7 +144,7 @@ fn finalize_xlabels(
       continue
     }
     let center = @xlabel_solver.xlabel_center(label)
-    bbox = @routing.expand_bbox_for_label_pos(
+    bbox = @edge_label.expand_bbox_for_label_pos(
       bbox,
       Some(center),
       Some({ width: label.width, height: label.height }),

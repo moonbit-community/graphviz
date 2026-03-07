@@ -5,14 +5,12 @@
       "alias": "dot_shared"
     },
     {
-      "path": "moonbit-community/graphviz/layout/dot/routing/routesplines",
-      "alias": "routesplines"
-    },
-    {
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
       "alias": "edge_spline"
     },
-    "moonbit-community/graphviz/layout/dot/routing/edge_ops",
+    "moonbit-community/graphviz/layout/dot/routing",
+    "moonbit-community/graphviz/layout/dot/label_metrics",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
