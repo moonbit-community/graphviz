@@ -810,15 +810,15 @@ pub fn build_edge_spline(
   input : EdgeSplineBuildInput,
 ) -> EdgeSplineResult {
   if input.spline_mode == 0 {
-    edge_spline_result_for_bezier(
-      edge_polyline_mode_spline(input.base, false),
+    @routing.edge_spline_result_for_bezier(
+      @routing.edge_polyline_mode_spline(input.base, false),
       [],
       0.0,
       false,
     )
   } else if input.spline_mode == 1 {
-    edge_spline_result_for_bezier(
-      edge_polyline_mode_spline(input.base, true),
+    @routing.edge_spline_result_for_bezier(
+      @routing.edge_polyline_mode_spline(input.base, true),
       [],
       0.0,
       false,
@@ -1494,7 +1494,7 @@ fn build_multi_point_routed_spline(
     }
   if segmented_raw.length() > 0 {
     let spline =
-      build_bezier_points_spline(
+      @routing.build_bezier_points_spline(
         {
           base,
           bezier_points: segmented_raw,

@@ -144,7 +144,7 @@ priv struct RegularSplineLayoutBuildInput {
 fn build_regular_spline_layout(
   layout_input : RegularSplineLayoutBuildInput,
 ) -> RegularSplineLayoutResult {
-  let spline_result = @routing.build_edge_spline(
+  let spline_result = @curve_mode.build_edge_spline(
     {
       base: layout_input.base,
       spline_mode: layout_input.input.spline_mode,

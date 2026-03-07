@@ -51,7 +51,7 @@ pub(all) struct PointsSplineBuildInput {
 }
 
 ///|
-pub fn build_points_spline(
+fn build_points_spline(
   input : PointsSplineBuildInput,
 ) -> PointsSplineResult {
   let raw_bezier =

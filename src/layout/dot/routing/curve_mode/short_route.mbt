@@ -99,7 +99,7 @@ fn flat_detour_candidate_flags(
 }
 
 ///|
-pub fn edge_port_slope_or_zero(
+fn edge_port_slope_or_zero(
   port : @cgraph.Port?,
   slope : @geom.Point,
 ) -> @geom.Point {
@@ -315,7 +315,7 @@ fn build_short_route_fallback_spline(
 }
 
 ///|
-pub fn short_route_build_context(
+fn short_route_build_context(
   input : ShortRouteBuildContextInput,
 ) -> ShortRouteBuildContext {
   let style_value = match input.base.edge.get_attr("style") {
@@ -369,7 +369,7 @@ pub fn short_route_build_context(
 }
 
 ///|
-pub fn short_route_spec_for_adjusted_points(
+fn short_route_spec_for_adjusted_points(
   adjusted : Array[@geom.Point],
 ) -> ShortRouteBuildSpec {
   {
@@ -395,7 +395,7 @@ pub(all) struct ShortRouteSpecFromAnchorInput {
 }
 
 ///|
-pub fn short_route_spec_for_anchor_or_pathplan_points(
+fn short_route_spec_for_anchor_or_pathplan_points(
   input : ShortRouteSpecFromAnchorInput,
 ) -> ShortRouteBuildSpec {
   let points = input.points
@@ -429,7 +429,7 @@ pub fn short_route_spec_for_anchor_or_pathplan_points(
 }
 
 ///|
-pub fn build_short_route_spline_with_detour(
+fn build_short_route_spline_with_detour(
   base : EdgeRouteBase,
   short_route_context : ShortRouteBuildContext,
   short_route_spec : ShortRouteBuildSpec,
