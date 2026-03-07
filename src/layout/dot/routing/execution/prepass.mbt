@@ -169,7 +169,7 @@ pub(all) struct RoutePrepassInput {
 /// Graphviz parity: routing prepass order/group/bounds setup runs before the
 /// edge routing loop and follows dot/pathplan sequencing.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_route_prepass_state(
+fn build_route_prepass_state(
   input : RoutePrepassInput,
 ) -> RoutePrepassState {
   let flat_adjacent_simple_beziers =
@@ -191,7 +191,7 @@ pub fn build_route_prepass_state(
     input.x_groups,
   )
   let ordered_edges =
-    sorted_edges_for_routing(input.edges, input.base_cache, input.path_order_index)
+    @routing.sorted_edges_for_routing(input.edges, input.base_cache, input.path_order_index)
   let regular_recover_plan =
     build_regular_recover_routing_plan(ordered_edges, input.base_cache)
   {

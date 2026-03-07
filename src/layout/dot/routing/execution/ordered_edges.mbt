@@ -23,7 +23,7 @@ fn maybe_build_flat_adjacent_layout(
   match input.input.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
       let edge_layout =
-        build_flat_adjacent_layout(
+        @routing.build_flat_adjacent_layout(
           input.base,
           bezier,
           input.callbacks.build_edge_layout_fn,
@@ -41,7 +41,7 @@ fn maybe_build_self_edge_layout(
 ) -> Bool {
   let edge = input.edge
   let edge_id = input.edge_id
-  let route = self_edge_route_for_edge(
+  let route = @routing.self_edge_route_for_edge(
     {
       edge,
       self_edge_groups: input.input.self_edge_groups,
@@ -56,7 +56,7 @@ fn maybe_build_self_edge_layout(
   match route {
     Some(route) => {
       let edge_layout =
-        build_self_edge_layout(
+        @routing.build_self_edge_layout(
           input.base,
           route,
           input.callbacks.build_edge_layout_fn,
@@ -123,7 +123,7 @@ fn route_ordered_edge(
 /// Graphviz parity: ordered-edge routing loop keeps mutable self-edge and
 /// recover-slack state shared across edges in pass order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn route_ordered_edges(
+fn route_ordered_edges(
   input : OrderedRoutingInput,
   edges_out_by_id : Map[Int, DotLayoutEdge],
   callbacks : RoutingCallbacks,

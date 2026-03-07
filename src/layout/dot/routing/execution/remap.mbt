@@ -313,7 +313,7 @@ pub(all) struct FinalizeRoutedEdgesInput {
 }
 
 ///|
-pub fn finalize_routed_edges(
+fn finalize_routed_edges(
   input : FinalizeRoutedEdgesInput,
 ) -> Array[DotLayoutEdge] {
   let edges = input.edges

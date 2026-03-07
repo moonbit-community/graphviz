@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: recover_slack class keys collapse reverse-direction
 /// unlabeled edges that share a class2 vnode chain.
-pub fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
+fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
   if @dot_shared.edge_has_label(edge) || !undirected {
     "vnode|\{@dot_shared.edge_vnode_key(edge)}"
@@ -91,7 +91,7 @@ pub(all) struct RegularRecoverRoutingPlan {
 ///|
 /// Graphviz parity: recover_slack candidate selection runs before edge routing
 /// and keeps regular classes aligned to ordered-edge grouping.
-pub fn build_regular_recover_routing_plan(
+fn build_regular_recover_routing_plan(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> RegularRecoverRoutingPlan {

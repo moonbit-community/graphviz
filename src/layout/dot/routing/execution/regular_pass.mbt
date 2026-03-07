@@ -144,7 +144,7 @@ priv struct RegularSplineLayoutBuildInput {
 fn build_regular_spline_layout(
   layout_input : RegularSplineLayoutBuildInput,
 ) -> RegularSplineLayoutResult {
-  let spline_result = build_edge_spline(
+  let spline_result = @routing.build_edge_spline(
     {
       base: layout_input.base,
       spline_mode: layout_input.input.spline_mode,
@@ -168,9 +168,9 @@ fn build_regular_spline_layout(
     },
   )
   let layout_spline_result =
-    rebuild_spline_for_render(layout_input.base, spline_result)
+    @routing.rebuild_spline_for_render(layout_input.base, spline_result)
   let spline =
-    finalize_edge_spline(layout_input.base, layout_spline_result)
+    @routing.finalize_edge_spline(layout_input.base, layout_spline_result)
   recover_pathplan_slack(
     {
       edge: layout_input.edge,
@@ -257,7 +257,7 @@ fn apply_regular_parallel_reuse_layouts(
       None => continue
     }
     let group_layout =
-      build_regular_bezier_layout(
+      @routing.build_regular_bezier_layout(
         group_base,
         reuse_input.regular_layout.spline_result,
         reuse_input.callbacks.build_edge_layout_fn,
@@ -288,7 +288,7 @@ pub(all) struct RegularLayoutsForEdgeInput {
 /// Graphviz parity: regular-edge routing keeps edge solve + parallel-reuse
 /// expansion together after flat/self branches are skipped.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_regular_layouts_for_edge(
+fn build_regular_layouts_for_edge(
   regular_input : RegularLayoutsForEdgeInput,
 ) -> Unit {
   let regular_layout = build_regular_spline_layout(

@@ -71,7 +71,7 @@ fn route_edges_for_dot(
         _ => 2
       },
   }
-  @routing.route_edges_pipeline(
+  @execution.route_edges_pipeline(
     pipeline_input,
     deps,
   )

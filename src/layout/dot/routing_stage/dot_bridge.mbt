@@ -327,7 +327,7 @@ fn build_routing_callbacks_for_dot(
   {
     recover_slack_vnodes_fn:
       input =>
-        @routing.recover_slack_vnodes(
+        @execution.recover_slack_vnodes(
           input,
           (edge, ranks) =>
             match @edge_label.edge_label_rank_info(

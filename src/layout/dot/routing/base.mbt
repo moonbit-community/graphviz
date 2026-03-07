@@ -362,6 +362,41 @@ fn should_apply_flat_bottom_dirboth_x_nudge(
   }
 }
 ///|
+/// Graphviz parity: route-base cache assembly keeps sameport override
+/// collection and edge endpoint setup grouped before routing execution.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_route_base_cache(
+  input : RouteEdgesPipelineInput,
+  route_base_deps : RouteBaseDeps,
+) -> Map[Int, EdgeRouteBase] {
+  let sameport_overrides =
+    collect_sameport_overrides(
+      {
+        edges: input.edges,
+        positions: input.positions,
+        sizes: input.sizes,
+        node_size_for_missing: route_base_deps.node_size_for_missing,
+        layout_rankdir: input.layout_rankdir,
+        ranksep_pt: input.ranksep_pt,
+      },
+    )
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  for edge in input.edges {
+    let edge_id = edge.id()
+    if base_cache.get(edge_id) is None {
+      base_cache[edge_id] =
+        build_edge_route_base(
+          input,
+          edge,
+          route_base_deps,
+          sameport_overrides,
+        )
+    }
+  }
+  base_cache
+}
+
+///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_route_base(

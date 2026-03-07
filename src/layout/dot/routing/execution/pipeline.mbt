@@ -1,26 +1,4 @@
 ///|
-fn build_route_base_cache(
-  input : RouteEdgesPipelineInput,
-  route_base_deps : RouteBaseDeps,
-  sameport_overrides : SameportOverrides,
-) -> Map[Int, EdgeRouteBase] {
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
-  for edge in input.edges {
-    let edge_id = edge.id()
-    if base_cache.get(edge_id) is None {
-      base_cache[edge_id] =
-        build_edge_route_base(
-          input,
-          edge,
-          route_base_deps,
-          sameport_overrides,
-        )
-    }
-  }
-  base_cache
-}
-
-///|
 fn build_route_edges_input(
   input : RouteEdgesPipelineInput,
   base_cache : Map[Int, EdgeRouteBase],
@@ -57,22 +35,10 @@ pub fn route_edges_pipeline(
   input : RouteEdgesPipelineInput,
   deps : RouteEdgesPipelineDeps,
 ) -> Array[DotLayoutEdge] {
-  let sameport_overrides =
-    collect_sameport_overrides(
-      {
-        edges: input.edges,
-        positions: input.positions,
-        sizes: input.sizes,
-        node_size_for_missing: deps.route_base_deps.node_size_for_missing,
-        layout_rankdir: input.layout_rankdir,
-        ranksep_pt: input.ranksep_pt,
-      },
-    )
   let base_cache =
-    build_route_base_cache(
+    @routing.build_route_base_cache(
       input,
       deps.route_base_deps,
-      sameport_overrides,
     )
   let route_input = build_route_edges_input(input, base_cache)
   route_edges(
