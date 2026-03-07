@@ -222,8 +222,8 @@ fn clone_pruned_graph(
   cloned
 }
 
-///| 
-pub fn active_graph_for_prune(
+///|
+fn active_graph_for_prune(
   graph : @cgraph.Graph,
   prune : Bool,
 ) -> @cgraph.Graph {
@@ -236,10 +236,56 @@ pub fn active_graph_for_prune(
 }
 
 ///|
+fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
+  let nodesep_in = match graph.get_attr("nodesep") {
+    Some(value) => @numeric.parse_double_or(value, @input_stage.DEFAULT_NODESEP_IN)
+    None => @input_stage.DEFAULT_NODESEP_IN
+  }
+  nodesep_in * 72.0
+}
+
+///|
+fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Result[Unit, String] {
+  for edge in graph.edges() {
+    match edge.get_attr("len") {
+      Some(value) =>
+        if @numeric.parse_first_double(value, 0.0) < 0.0 {
+          return Err(
+            "edge \{edge.tail().name()} -> \{edge.head().name()} has negative len: \{value}",
+          )
+        }
+      None => ()
+    }
+  }
+  Ok(())
+}
+
+///|
+/// Graphviz parity: unranked neato entry prep keeps prune, shared graph
+/// validation, len validation, and default nodesep resolution with the owning
+/// unranked engine package so the root API boundary stays thin.
+pub fn prepare_neato_layout_tree(
+  graph : @cgraph.Graph,
+  scale : Double,
+  prune : Bool,
+) -> Result[LayoutTree, String] {
+  let active_graph = active_graph_for_prune(graph, prune)
+  match @input_stage.validate_layout_graph(active_graph) {
+    Ok(_) => ()
+    Err(message) => return Err(message)
+  }
+  match validate_neato_edge_lengths(active_graph) {
+    Ok(_) => ()
+    Err(message) => return Err(message)
+  }
+  Ok(build_neato_layout_tree(active_graph, scale, neato_nodesep_pt(active_graph)))
+}
+
+///|
 /// Graphviz parity: unranked neato output assembly keeps force-directed solve,
 /// scaling, edge projection, and final layout-tree postprocess in one package
 /// entry so the root API boundary stays thin.
-pub fn build_neato_layout_tree(
+fn build_neato_layout_tree(
   graph : @cgraph.Graph,
   scale : Double,
   nodesep_pt : Double,
@@ -1115,10 +1161,23 @@ fn collect_noop_nodes_with_sizes(
 }
 
 ///|
+/// Graphviz parity: noop entry prep keeps prune handling with the owning
+/// unranked engine package before fixed-position layout-tree assembly.
+pub fn prepare_noop_layout_tree(
+  graph : @cgraph.Graph,
+  no_op_level : Int,
+  scale : Double,
+  prune : Bool,
+) -> Result[LayoutTree, String] {
+  let active_graph = active_graph_for_prune(graph, prune)
+  build_noop_layout_tree(active_graph, no_op_level, scale)
+}
+
+///|
 /// Graphviz parity: noop output assembly keeps fixed-position node parsing,
 /// optional edge-pos reuse, and final layout-tree writeback together inside the
 /// unranked_engine package so the root API boundary stays thin.
-pub fn build_noop_layout_tree(
+fn build_noop_layout_tree(
   graph : @cgraph.Graph,
   no_op_level : Int,
   scale : Double,

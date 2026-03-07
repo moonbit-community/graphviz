@@ -15,8 +15,7 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbitlang/core/ref",
-    "moonbitlang/core/strconv",
-    "moonbit-community/graphviz/layout/dot/numeric"
+    "moonbitlang/core/strconv"
   ],
   "test-import": [
     {
