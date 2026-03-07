@@ -119,7 +119,7 @@ fn reorder_nonclustered_x_groups(
 /// Graphviz parity: non-cluster xpos reorder build path keeps port-hint
 /// derivation and reorder apply wiring in the same sequence as Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_nonclustered_xpos_groups(
+fn build_nonclustered_xpos_groups(
   input : NonclusteredXposGroupBuildInput,
   x_groups : Map[Int, Array[String]],
   port_samples : XposPortSamples,

@@ -31,7 +31,7 @@ pub struct ClusteredXposReorderInput {
 /// Graphviz parity: clustered xpos reorder runs seed build, order-edge
 /// materialization, and reorder_rank_groups in Graphviz-equivalent sequence.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_xpos_groups(
+fn build_clustered_xpos_groups(
   input : ClusteredXposReorderInput,
 ) -> Map[Int, Array[String]] {
   let reorder_seed_data =

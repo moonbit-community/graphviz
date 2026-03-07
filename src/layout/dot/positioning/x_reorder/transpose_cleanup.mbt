@@ -16,7 +16,7 @@ pub struct XposTransposeCleanupInput {
 /// Graphviz parity: transpose cleanup performs two limited passes in fixed
 /// order (forward then reverse), matching Graphviz fixture behavior.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_xpos_transpose_cleanup(
+fn apply_xpos_transpose_cleanup(
   x_groups : Map[Int, Array[String]],
   input : XposTransposeCleanupInput,
   max_passes : Int,
