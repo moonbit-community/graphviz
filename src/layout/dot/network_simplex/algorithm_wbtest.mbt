@@ -199,3 +199,133 @@ test "network_simplex LR preserves layered port-label ladder spacing" {
   assert_eq(ranks[5] - ranks[1], 1)
   assert_eq(ranks[7] - ranks[0], 1)
 }
+
+///|
+struct LrChainCase {
+  graph : NsGraph
+  ab : Int
+  bc : Int
+}
+
+///|
+fn build_lr_chain_case(ac_minlen : Int) -> LrChainCase {
+  let graph = new_graph()
+  let a = add_node(graph, "a")
+  let b = add_node(graph, "b")
+  let c = add_node(graph, "c")
+  let ab = add_edge(graph, a, b, 1, 1)
+  let bc = add_edge(graph, b, c, 1, 1)
+  ignore(add_edge(graph, a, c, ac_minlen, 1))
+  { graph, ab, bc }
+}
+
+///|
+struct LrOddSlackDiamondCase {
+  graph : NsGraph
+  ac : Int
+  cd : Int
+}
+
+///|
+fn build_lr_odd_slack_diamond_case() -> LrOddSlackDiamondCase {
+  let graph = new_graph()
+  let a = add_node(graph, "a")
+  let b = add_node(graph, "b")
+  let c = add_node(graph, "c")
+  let d = add_node(graph, "d")
+  ignore(add_edge(graph, a, b, 1, 1))
+  let ac = add_edge(graph, a, c, 1, 1)
+  ignore(add_edge(graph, b, d, 4, 1))
+  let cd = add_edge(graph, c, d, 1, 1)
+  { graph, ac, cd }
+}
+
+///|
+struct LrFanInCase {
+  graph : NsGraph
+  ac : Int
+  cb : Int
+}
+
+///|
+fn build_lr_fanin_case() -> LrFanInCase {
+  let graph = new_graph()
+  let a = add_node(graph, "a")
+  let b = add_node(graph, "b")
+  let c = add_node(graph, "c")
+  ignore(add_edge(graph, a, b, 4, 1))
+  let ac = add_edge(graph, a, c, 1, 1)
+  let cb = add_edge(graph, c, b, 1, 1)
+  { graph, ac, cb }
+}
+
+///|
+fn require_pre_balance(graph : NsGraph, label : String) -> Unit raise {
+  if !network_simplex_pre_balance(graph, 0x7fffffff) {
+    fail("\{label}: expected network_simplex_pre_balance to succeed")
+  }
+}
+
+///|
+test "network_simplex LR skips zero-cut tree edges whose entering slack is one" {
+  let pre = build_lr_chain_case(3)
+  require_pre_balance(pre.graph, "slack-1")
+
+  assert_eq(collect_node_ranks(pre.graph), [0, 1, 3])
+  assert_true(is_tree_edge(pre.graph, pre.ab))
+  assert_eq(pre.graph.edges[pre.ab].cutvalue, 0)
+  assert_eq(enter_edge(pre.graph, pre.ab), Some(pre.bc))
+  assert_eq(edge_slack(pre.graph, pre.bc), 1)
+
+  let balanced = build_lr_chain_case(3)
+  network_simplex(balanced.graph, 0x7fffffff, BalanceMode::LR)
+  assert_eq(collect_node_ranks(balanced.graph), [0, 1, 3])
+}
+
+///|
+test "network_simplex LR moves a node halfway when the entering slack is even" {
+  let pre = build_lr_chain_case(4)
+  require_pre_balance(pre.graph, "even-slack")
+
+  assert_eq(collect_node_ranks(pre.graph), [0, 1, 4])
+  assert_true(is_tree_edge(pre.graph, pre.ab))
+  assert_eq(pre.graph.edges[pre.ab].cutvalue, 0)
+  assert_eq(enter_edge(pre.graph, pre.ab), Some(pre.bc))
+  assert_eq(edge_slack(pre.graph, pre.bc), 2)
+
+  let balanced = build_lr_chain_case(4)
+  network_simplex(balanced.graph, 0x7fffffff, BalanceMode::LR)
+  assert_eq(collect_node_ranks(balanced.graph), [0, 2, 4])
+}
+
+///|
+test "network_simplex LR uses floor division for odd entering slack" {
+  let pre = build_lr_odd_slack_diamond_case()
+  require_pre_balance(pre.graph, "odd-slack")
+
+  assert_eq(collect_node_ranks(pre.graph), [0, 1, 1, 5])
+  assert_true(is_tree_edge(pre.graph, pre.ac))
+  assert_eq(pre.graph.edges[pre.ac].cutvalue, 0)
+  assert_eq(enter_edge(pre.graph, pre.ac), Some(pre.cd))
+  assert_eq(edge_slack(pre.graph, pre.cd), 3)
+
+  let balanced = build_lr_odd_slack_diamond_case()
+  network_simplex(balanced.graph, 0x7fffffff, BalanceMode::LR)
+  assert_eq(collect_node_ranks(balanced.graph), [0, 1, 2, 5])
+}
+
+///|
+test "network_simplex LR can move the predecessor side in a fan-in shape" {
+  let pre = build_lr_fanin_case()
+  require_pre_balance(pre.graph, "fan-in")
+
+  assert_eq(collect_node_ranks(pre.graph), [0, 4, 1])
+  assert_true(is_tree_edge(pre.graph, pre.ac))
+  assert_eq(pre.graph.edges[pre.ac].cutvalue, 0)
+  assert_eq(enter_edge(pre.graph, pre.ac), Some(pre.cb))
+  assert_eq(edge_slack(pre.graph, pre.cb), 2)
+
+  let balanced = build_lr_fanin_case()
+  network_simplex(balanced.graph, 0x7fffffff, BalanceMode::LR)
+  assert_eq(collect_node_ranks(balanced.graph), [0, 4, 2])
+}
