@@ -85,6 +85,12 @@ priv struct PortOrderMetadataInput {
   record_orientation : RecordOrientation
 }
 
+
+priv struct EdgeFlags {
+  has_dotted_edges : Bool
+  has_port_edges : Bool
+}
+
 ///|
 fn validate_nonnegative_attr(
   owner : String,
@@ -344,6 +350,32 @@ pub fn prepare_layout_prep(
 }
 
 ///|
+/// Graphviz parity: Stage A edge-flag scan preserves edge creation order while
+/// capturing dotted-style and explicit-port presence for downstream setup.
+/// Do not change behavior without updating fixtures/tests.
+fn scan_edge_flags(edges : Array[@cgraph.Edge]) -> EdgeFlags {
+  let mut has_dotted_edges = false
+  let mut has_port_edges = false
+  for edge in edges {
+    match edge.get_attr("style") {
+      Some(value) =>
+        if value.to_lower().contains("dotted") {
+          has_dotted_edges = true
+        }
+      None => ()
+    }
+    if !has_port_edges {
+      let tail_port = @edge_identity.port_is_explicit(edge.tail_port())
+      let head_port = @edge_identity.port_is_explicit(edge.head_port())
+      if tail_port || head_port {
+        has_port_edges = true
+      }
+    }
+  }
+  { has_dotted_edges, has_port_edges }
+}
+
+///|
 /// Graphviz parity: Stage A input snapshot assembly keeps node/edge capture,
 /// size-map derivation, and port-order metadata collection in the same order as
 /// the original root-stage pipeline.
@@ -354,7 +386,7 @@ fn prepare_layout_inputs(
   let graph = input.graph
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let edge_flags = @shared.scan_edge_flags(edges)
+  let edge_flags = scan_edge_flags(edges)
   let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, input.rankdir)
   let record_orientation = @shared.record_layout_orientation(input.rankdir)

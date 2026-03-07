@@ -47,7 +47,7 @@ pub(all) struct PositionStageDeps {
     RecordOrientation,
   ) -> Map[String, NodeSize]
   edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-  compute_x_positions : (@x_constraints.XPositionSolveInput) -> Map[String, Double]
+  compute_x_positions : (@x_constraints.XPositionSolveInput, Bool) -> Map[String, Double]
   cluster_label_padding_for : (@cgraph.Graph, RankDir) -> ClusterLabelPadding
   cluster_label_width_with_pad_for : (@cgraph.Graph) -> Double?
   expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
@@ -110,7 +110,7 @@ fn compute_layout_x_positions(
         flat_label_edges: x_data.flat_label_edges,
       },
     )
-  (deps.compute_x_positions)(solve_input)
+  (deps.compute_x_positions)(solve_input, pipeline.prep.has_port_edges)
 }
 
 ///|
@@ -221,9 +221,10 @@ fn resolve_x_simplex_root_context(
 /// Do not change behavior without updating fixtures/tests.
 fn compute_x_positions_for_stage(
   input : @x_constraints.XPositionSolveInput,
+  has_port_edges : Bool,
 ) -> Map[String, Double] {
   let port_offsets =
-    if @shared.scan_edge_flags(input.edges).has_port_edges {
+    if has_port_edges {
       @port_bridge.port_offsets_for_nodes(input.nodes, input.output_sizes)
     } else {
       Map::new()
