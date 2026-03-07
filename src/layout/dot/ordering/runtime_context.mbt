@@ -25,20 +25,6 @@ pub(all) struct OrderingRuntimeContext {
 }
 
 ///|
-/// Graphviz parity: runtime-core input keeps node/edge/rank snapshots and the
-/// edge-cluster collection context grouped in one setup boundary.
-priv struct BuildOrderingRuntimeCoreInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  intercluster_keys : Map[String, String]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: runtime-context source bundle keeps stage-side graph/rank
 /// snapshots plus cluster metadata grouped so ordering owner code owns the
 /// cluster-key/parent unpacking.
@@ -58,72 +44,29 @@ pub(all) struct BuildOrderingRuntimeContextSources {
 
 
 ///|
-/// Graphviz parity: ordering runtime prep keeps vnode build and cluster-key
-/// wiring derived from grouped sources before Stage C dispatch.
-/// Do not change behavior without updating fixtures/tests.
-pub fn build_ordering_runtime_context_from_sources(
-  sources : BuildOrderingRuntimeContextSources,
-) -> OrderingRuntimeContext {
-  build_ordering_runtime_context(
-    {
-      graph: sources.graph,
-      nodes: sources.nodes,
-      edges: sources.edges,
-      edge_tail: sources.edge_tail,
-      edge_head: sources.edge_head,
-      edge_out_order: sources.edge_out_order,
-      ranks: sources.ranks,
-      node_order: sources.node_order,
-      nodesep_pt: sources.nodesep_pt,
-      rankdir: sources.rankdir,
-      intercluster_keys: sources.cluster_meta.intercluster_keys,
-      cluster_parents: sources.cluster_meta.cluster_parents,
-    },
-  )
-}
-
-///|
-/// Graphviz parity: runtime-context input keeps runtime-core, vnode build, and
-/// tail-constraint probe dependencies grouped before Stage C dispatch.
-priv struct BuildOrderingRuntimeContextInput {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
-  nodesep_pt : Double
-  rankdir : @rankdir.RankDir
-  intercluster_keys : Map[String, String]
-  cluster_parents : Map[String, String?]
-}
-
-///|
 /// Graphviz parity: ordering runtime-core setup keeps name-set build,
 /// edge-cluster collection, and order/port map derivation in fixed sequence.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_core(
-  input : BuildOrderingRuntimeCoreInput,
+fn build_ordering_runtime_core_from_sources(
+  sources : BuildOrderingRuntimeContextSources,
 ) -> OrderingRuntimeCore {
-  let node_name_sets = build_ordering_node_name_sets(input.nodes)
+  let node_name_sets = build_ordering_node_name_sets(sources.nodes)
   let real_nodes = node_name_sets.real_nodes
   let existing_names = node_name_sets.existing_names
   let edge_cluster_keys : Map[String, String] = Map::new()
-  @clustering.collect_edge_cluster_keys(input.graph, edge_cluster_keys)
+  @clustering.collect_edge_cluster_keys(sources.graph, edge_cluster_keys)
   let port_edge_nodes =
     build_port_edge_nodes_for_ordering(
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
     )
   let local_cluster_order =
     build_local_cluster_order(
-      input.nodes,
-      input.intercluster_keys,
-      input.ranks,
-      input.node_order,
+      sources.nodes,
+      sources.cluster_meta.intercluster_keys,
+      sources.ranks,
+      sources.node_order,
     )
   {
     real_nodes,
@@ -135,38 +78,28 @@ fn build_ordering_runtime_core(
 }
 
 ///|
-/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint probe in
-/// the same setup position as Graphviz ordering pipeline.
+/// Graphviz parity: ordering runtime prep keeps vnode build and tail-
+/// constraint probing in the same setup position as Graphviz ordering
+/// pipeline, using the owner-side source payload directly.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context(
-  input : BuildOrderingRuntimeContextInput,
+pub fn build_ordering_runtime_context_from_sources(
+  sources : BuildOrderingRuntimeContextSources,
 ) -> OrderingRuntimeContext {
   let runtime_core =
-    build_ordering_runtime_core(
-      {
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        intercluster_keys: input.intercluster_keys,
-        ranks: input.ranks,
-        node_order: input.node_order,
-      },
-    )
+    build_ordering_runtime_core_from_sources(sources)
   let vnode_info =
     build_edge_vnodes(
-      input.nodes,
-      input.edges,
-      input.edge_tail,
-      input.edge_head,
-      input.edge_out_order,
-      input.ranks,
-      input.nodesep_pt,
-      input.rankdir,
+      sources.nodes,
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+      sources.edge_out_order,
+      sources.ranks,
+      sources.nodesep_pt,
+      sources.rankdir,
       runtime_core.existing_names,
       runtime_core.edge_cluster_keys,
-      input.cluster_parents,
+      sources.cluster_meta.cluster_parents,
     )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()
@@ -185,7 +118,7 @@ fn build_ordering_runtime_context(
     if runtime_context.vnode_info.vnode_ranks.length() > 0 {
       build_vnode_tail_constraints(
         runtime_context.vnode_info.vnodes_by_rank,
-        input.edge_tail,
+        sources.edge_tail,
       )
     } else {
       Map::new()
