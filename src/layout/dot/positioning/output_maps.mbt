@@ -120,7 +120,7 @@ fn adjust_intercluster_alignment(
       Some(value) => value
       None => continue
     }
-    let shift = rank_nodesep_pt(rank, input.nodesep_pt, input.has_edge_labels)
+    let shift = @x_constraints.rank_nodesep_pt(rank, input.nodesep_pt, input.has_edge_labels)
     for name in names {
       match input.x_positions.get(name) {
         Some(value) => input.x_positions[name] = value - shift

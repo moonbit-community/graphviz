@@ -53,7 +53,7 @@ fn resolve_x_simplex_root_context(
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/position.c + cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_x_positions_for_stage(
-  input : @positioning.XPositionSolveInput,
+  input : @x_constraints.XPositionSolveInput,
 ) -> Map[String, Double] {
   let port_offsets =
     if @shared.scan_edge_flags(input.edges).has_port_edges {
@@ -63,7 +63,7 @@ fn compute_x_positions_for_stage(
     }
   let (rankdir, root_margin) =
     resolve_x_simplex_root_context(input.nodes)
-  @positioning.compute_x_positions_with_prepared_constraints(
+  @x_constraints.compute_x_positions_with_prepared_constraints(
     input,
     {
       cluster_label_borders_for: @clustering.cluster_label_borders_for_xpos_constraints,
@@ -73,7 +73,7 @@ fn compute_x_positions_for_stage(
     root_margin,
     ROOT_COMPRESS_WEIGHT,
     (segment, real_by_name) =>
-      @positioning.segment_slack_minlen(
+      @x_constraints.segment_slack_minlen(
         segment,
         (node_name, port) =>
           @port_bridge.edge_port_offset(
@@ -92,7 +92,7 @@ fn compute_x_positions_for_stage(
       } else {
         1
       },
-    @positioning.should_capture_xpos_snapshot(input.graph),
+    @x_constraints.should_capture_xpos_snapshot(input.graph),
   )
 }
 

@@ -9,7 +9,7 @@ type ClusterMetadata = @ordering.DotClusterMetadata
 type OrderingResult = @ordering.OrderingResult
 type EdgePortSampleBundle = @ordering.EdgePortSampleBundle
 type PositionResult = @positioning.PositionResult
-type ConstraintEdge = @positioning.ConstraintEdge
+type ConstraintEdge = @x_constraints.ConstraintEdge
 type ClusterLabelPadding = @clustering.ClusterLabelPadding
 
 ///|
@@ -47,7 +47,7 @@ pub(all) struct PositionStageDeps {
     RecordOrientation,
   ) -> Map[String, NodeSize]
   edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-  compute_x_positions : (@positioning.XPositionSolveInput) -> Map[String, Double]
+  compute_x_positions : (@x_constraints.XPositionSolveInput) -> Map[String, Double]
   cluster_label_padding_for : (@cgraph.Graph, RankDir) -> ClusterLabelPadding
   cluster_label_width_with_pad_for : (@cgraph.Graph) -> Double?
   expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
@@ -86,7 +86,7 @@ fn compute_layout_x_positions(
   deps : PositionStageDeps,
 ) -> Map[String, Double] {
   let solve_input =
-    @positioning.build_x_position_solve_input(
+    @x_constraints.build_x_position_solve_input(
       {
         use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
         x_base_sizes: x_data.x_base_sizes,

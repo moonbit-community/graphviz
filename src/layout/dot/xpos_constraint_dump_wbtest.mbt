@@ -18,11 +18,11 @@ test "dump xpos constraints" {
     Some(value) => value
   }
   let graph = @dot_parser.parse_dot_file(input)
-  @positioning.xpos_constraint_snapshot.val = None
+  @x_constraints.xpos_constraint_snapshot.val = None
   @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", "1")
   let _ = layout_dot(graph)
   @sys.unset_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS")
-  let snapshot = match @positioning.xpos_constraint_snapshot.val {
+  let snapshot = match @x_constraints.xpos_constraint_snapshot.val {
     Some(value) => value
     None => fail("missing xpos constraint snapshot")
   }

@@ -181,7 +181,7 @@ fn fixture_node_key(
 
 ///|
 fn snapshot_node_key(
-  node : @positioning.XposConstraintNodeSnapshot,
+  node : @x_constraints.XposConstraintNodeSnapshot,
   real_nodes : Map[String, Bool],
 ) -> String {
   match node.name {
@@ -220,10 +220,10 @@ fn fixture_named_nodes(
 
 ///|
 fn snapshot_named_nodes(
-  snapshot : @positioning.XposConstraintSnapshot,
+  snapshot : @x_constraints.XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
-) -> Map[String, @positioning.XposConstraintNodeSnapshot] {
-  let map : Map[String, @positioning.XposConstraintNodeSnapshot] = Map::new()
+) -> Map[String, @x_constraints.XposConstraintNodeSnapshot] {
+  let map : Map[String, @x_constraints.XposConstraintNodeSnapshot] = Map::new()
   for node in snapshot.nodes {
     match node.name {
       Some(value) =>
@@ -274,7 +274,7 @@ fn fixture_edge_counts(fixture : XposConstraintFixture) -> Map[String, Int] {
 
 ///|
 fn snapshot_node_counts(
-  snapshot : @positioning.XposConstraintSnapshot,
+  snapshot : @x_constraints.XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
 ) -> Map[String, Int] {
   let counts : Map[String, Int] = Map::new()
@@ -286,7 +286,7 @@ fn snapshot_node_counts(
 
 ///|
 fn snapshot_edge_counts(
-  snapshot : @positioning.XposConstraintSnapshot,
+  snapshot : @x_constraints.XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
 ) -> Map[String, Int] {
   let counts : Map[String, Int] = Map::new()
@@ -429,15 +429,15 @@ test "xpos constraint graph matches Graphviz for complex" {
   }
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let names = real_node_names(graph)
-  @positioning.xpos_constraint_snapshot.val = None
+  @x_constraints.xpos_constraint_snapshot.val = None
   @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", fixture.graph)
   let _ = layout_dot(graph)
   @sys.unset_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS")
-  let snapshot = match @positioning.xpos_constraint_snapshot.val {
+  let snapshot = match @x_constraints.xpos_constraint_snapshot.val {
     Some(value) => value
     None => fail("missing xpos constraint snapshot")
   }
-  @positioning.xpos_constraint_snapshot.val = None
+  @x_constraints.xpos_constraint_snapshot.val = None
   let expected_nodes = fixture_node_counts(fixture)
   let actual_nodes = snapshot_node_counts(snapshot, names)
   assert_multiset_eq("nodes", actual_nodes, expected_nodes)

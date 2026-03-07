@@ -245,7 +245,7 @@ fn add_flat_label_vnodes(
     collect_vnode_out_heads(edges, edge_tail, edge_head, ranks, vnode_info.edge_vnodes)
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
   let flat_label_edges : Map[String, String] = Map::new()
-  let extra_edges : Array[ConstraintEdge] = []
+  let extra_edges : Array[@x_constraints.ConstraintEdge] = []
   let mut edge_idx = 0
   let insert_at = (names : Array[String], pos : Int, value : String) => {
     let result : Array[String] = []
@@ -440,7 +440,7 @@ priv struct FlatLabelVnodeResult {
   x_groups : Map[Int, Array[String]]
   flat_label_nodes : Map[String, FlatLabelNodeInfo]
   flat_label_edge_vnodes : Map[String, String]
-  flat_label_edges : Array[ConstraintEdge]
+  flat_label_edges : Array[@x_constraints.ConstraintEdge]
 }
 
 ///|
