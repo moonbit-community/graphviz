@@ -99,11 +99,73 @@ fn build_x_with_flat_labels(
         rankdir: pipeline.prep.rankdir,
       },
     )
+  let build_x_base_sizes : () -> Map[String, NodeSize] =
+    () =>
+      @port_bridge.apply_self_edge_right_space(
+        pipeline.prep.nodes,
+        pipeline.prep.edges,
+        pipeline.prep.sizes,
+        pipeline.prep.rankdir,
+        pipeline.prep.record_orientation,
+      )
+  let build_x_port_samples : (Map[String, NodeSize]) -> @positioning.XSeedPortSamples =
+    (x_order_sizes : Map[String, NodeSize]) => {
+      let build_port_sample_bundle =
+        (edges, edge_tail, edge_head) =>
+          @port_bridge.build_edge_port_sample_bundle(
+            pipeline.prep.nodes,
+            edges,
+            edge_tail,
+            edge_head,
+            x_order_sizes,
+          )
+      let x_port_samples =
+        build_port_sample_bundle(
+          pipeline.prep.edges,
+          pipeline.rank_data.edge_tail,
+          pipeline.rank_data.edge_head,
+        )
+      let order_edge_port_samples =
+        build_port_sample_bundle(
+          pipeline.ordering.order_edges,
+          pipeline.ordering.order_edge_tail,
+          pipeline.ordering.order_edge_head,
+        )
+      {
+        x_edge_tail_port_x: x_port_samples.tail_port_x,
+        x_edge_head_port_x: x_port_samples.head_port_x,
+        x_edge_tail_port_order: x_port_samples.tail_port_order,
+        x_edge_head_port_order: x_port_samples.head_port_order,
+        order_edge_tail_port_x: order_edge_port_samples.tail_port_x,
+        order_edge_head_port_x: order_edge_port_samples.head_port_x,
+        order_edge_tail_port_order: order_edge_port_samples.tail_port_order,
+        order_edge_head_port_order: order_edge_port_samples.head_port_order,
+      }
+    }
   let x_seed =
-    build_x_seed_data({
-      use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-      pipeline,
-    })
+    @positioning.build_x_seed_data(
+      {
+        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+        ordered_groups: pipeline.ordering.ordered_groups,
+        ordered_groups_with_vnodes: pipeline.ordering.ordered_groups_with_vnodes,
+        edges: pipeline.prep.edges,
+        edge_tail: pipeline.rank_data.edge_tail,
+        edge_head: pipeline.rank_data.edge_head,
+        edge_reversed: pipeline.rank_data.edge_reversed,
+        ranks: pipeline.rank_data.ranks,
+        intercluster_keys: pipeline.cluster_meta.intercluster_keys,
+        cluster_parents: pipeline.cluster_meta.cluster_parents,
+        edge_vnodes: pipeline.ordering.vnode_info.edge_vnodes,
+        vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
+        vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
+        has_clusters: pipeline.cluster_meta.has_clusters,
+        cluster_keys: pipeline.cluster_meta.cluster_keys,
+        vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
+        vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
+      },
+      build_x_base_sizes,
+      build_x_port_samples,
+    )
   let flat_label_augmentation =
     build_x_flat_labels({
       xpos_reorder_enabled: false,
