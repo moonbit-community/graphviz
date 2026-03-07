@@ -1,8 +1,6 @@
-/// Stage E routing-context precompute and edge metric helpers.
-
 ///|
-/// Graphviz parity: routing precompute payload keeps context snapshots grouped
-/// so port metrics and path-context wiring stay explicit and stable.
+/// Graphviz parity: routing precompute payload keeps owner-side routing metric
+/// inputs grouped so Stage E stays explicit without a wrapper-heavy deps layer.
 priv struct RoutingPrecomputeInput {
   prep : LayoutPrep
   rank_data : RankData
@@ -25,24 +23,26 @@ type RoutingPrecomputeData = @precompute.RoutingPrecomputePipelineOutput
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
-  deps : RoutingStageDeps,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
   let port_padding =
     @precompute.resolve_routing_port_padding(
       input.cluster_meta.has_clusters,
       prep.has_port_edges,
-      () =>
-        (deps.record_port_padding)(
-          prep.edges,
-          input.positions_state.positions,
-          input.label_ports_map,
-        ),
+      () => {
+        let padding =
+          @record_layout.record_port_padding_y(
+            prep.edges,
+            input.positions_state.positions,
+            input.label_ports_map,
+          )
+        (padding.below, padding.above)
+      },
     )
   let port_pad_below = port_padding.0
   let port_pad_above = port_padding.1
   let head_port_metrics =
-    (deps.build_head_port_metrics)(
+    @precompute.build_dot_head_port_metrics(
       prep.edges,
       input.enable_complex_tuning,
       input.positions_state.positions,
@@ -51,7 +51,7 @@ fn build_routing_precompute_data(
       input.label_ports_map,
     )
   let pathplan_sizes =
-    (deps.apply_self_edge_right_space)(
+    @port_bridge.apply_self_edge_right_space(
       prep.nodes,
       prep.edges,
       input.sizes,

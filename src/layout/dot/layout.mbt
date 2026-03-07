@@ -57,7 +57,6 @@ pub fn layout_dot(
         ordering,
         positions_state,
       },
-      @routing_stage.build_dot_routing_stage_deps(),
     )
   dot_layout_graph_from_layout_tree(
     @finalization.finalize_layout_from_sources(

@@ -29,7 +29,6 @@ priv struct RoutingRatioAdjustedData {
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_ratio_adjusted_data(
   input : RoutingRatioAdjustInput,
-  deps : RoutingStageDeps,
 ) -> RoutingRatioAdjustedData {
   let graph = input.graph
   let prep = input.prep
@@ -37,16 +36,14 @@ fn build_routing_ratio_adjusted_data(
   let nodes_out = input.nodes_out
   let positions_state = input.positions_state
   let routing_bbox =
-    (deps.compute_routing_bbox)(
-      {
-        nodes_out,
-        all_ranks: rank_data.all_ranks,
-        sizes: prep.sizes,
-        rank_y: positions_state.rank_y,
-        rank_ht1: positions_state.rank_ht1,
-        rank_ht2: positions_state.rank_ht2,
-      },
-    )
+    @bbox.compute_dot_bbox({
+      nodes_out,
+      all_ranks: rank_data.all_ranks,
+      sizes: prep.sizes,
+      rank_y: positions_state.rank_y,
+      rank_ht1: positions_state.rank_ht1,
+      rank_ht2: positions_state.rank_ht2,
+    })
   let (ratio_sx, ratio_sy) =
     match @shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
       Some(scale_factors) =>

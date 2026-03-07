@@ -22,7 +22,6 @@ priv struct RouteEdgesForDotInput {
 ///|
 fn route_edges_for_dot(
   input : RouteEdgesForDotInput,
-  deps : RoutingStageDeps,
 ) -> Array[DotLayoutEdge] {
   let edge_layout_input : @routing.EdgeLayoutInput = {
     ranks: input.rank_data.ranks,
@@ -33,14 +32,14 @@ fn route_edges_for_dot(
     nodesep_pt: input.rank_heights.nodesep_pt,
     flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
   }
-  let deps : @routing.RouteEdgesPipelineDeps = {
+  let pipeline_deps : @routing.RouteEdgesPipelineDeps = {
     route_base_deps:
-      (deps.build_route_base_deps)(
+      @routing.build_dot_route_base_deps(
         input.prep.record_orientation,
         input.routing_label_ports_map,
         input.routing_label_ports_raw,
       ),
-    callbacks: (deps.build_routing_callbacks)(edge_layout_input),
+    callbacks: @dot_callbacks.build_dot_routing_callbacks(edge_layout_input),
   }
   let pipeline_input : @routing.RouteEdgesPipelineInput = {
     graph_kind: input.graph.kind(),
@@ -73,6 +72,6 @@ fn route_edges_for_dot(
   }
   @execution.route_edges_pipeline(
     pipeline_input,
-    deps,
+    pipeline_deps,
   )
 }
