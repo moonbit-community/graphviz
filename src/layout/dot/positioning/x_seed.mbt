@@ -5,7 +5,7 @@
 ///|
 /// Graphviz parity: vnode-order probe input keeps order-index plus x-seed
 /// contexts grouped before Graphviz-compatible vnode-order derivation.
-pub(all) struct XposVNodeOrderInput {
+priv struct XposVNodeOrderInput {
   use_vnodes_for_xpos : Bool
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   edges : Array[@cgraph.Edge]
@@ -23,7 +23,7 @@ pub(all) struct XposVNodeOrderInput {
 ///|
 /// Graphviz parity: vnode order-key output keeps derived keys and presence gate
 /// grouped for downstream x-group assembly.
-pub struct XposVNodeOrderState {
+priv struct XposVNodeOrderState {
   vnode_order_keys : Map[String, Double]
   has_vnode_order : Bool
 }
@@ -33,7 +33,7 @@ pub struct XposVNodeOrderState {
 /// ordered_groups_with_vnodes means vnode order is present; otherwise build
 /// keys from edge-vnode chains and mark presence by non-empty key map.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_vnode_order_state(
+fn build_vnode_order_state(
   input : XposVNodeOrderInput,
 ) -> XposVNodeOrderState {
   let mut vnode_order_keys : Map[String, Double] = Map::new()
@@ -65,7 +65,7 @@ pub fn build_vnode_order_state(
 ///|
 /// Graphviz parity: initial x-group assembly inputs keep vnode-aware ordering
 /// seeds and cluster-skeleton filtering gates grouped for one build pass.
-pub(all) struct XInitialGroupsInput {
+priv struct XInitialGroupsInput {
   use_vnodes_for_xpos : Bool
   ordered_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
@@ -79,7 +79,7 @@ pub(all) struct XInitialGroupsInput {
 /// Graphviz parity: initial x-groups preserve vnode-aware ordering and strip
 /// cluster skeleton placeholders before xpos constraints run.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_initial_x_groups(
+fn build_initial_x_groups(
   input : XInitialGroupsInput,
 ) -> Map[Int, Array[String]] {
   let mut x_groups =
@@ -119,7 +119,7 @@ pub fn build_initial_x_groups(
 /// Graphviz parity: x-stage cluster-key seed starts from graph cluster keys and
 /// overlays vnode cluster keys only when vnode xpos mode is enabled.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_x_cluster_keys(
+fn build_x_cluster_keys(
   cluster_keys : Map[String, String],
   use_vnodes_for_xpos : Bool,
   vnode_clusters : Map[String, String],
