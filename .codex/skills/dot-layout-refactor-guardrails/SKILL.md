@@ -20,6 +20,7 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 11. Avoid package aliasing unless required by conflict; keep imports and call paths straightforward.
 12. If a dot-root stage still owns several orchestration-only phase files before extraction, merge them into one focused stage file (for example `stage_c.mbt`, `stage_d.mbt`) until the package boundary is ready.
 13. Finish test-ownership moves before broader test redesign; once tests live with their owners, prune outdated tests and add focused unit coverage for algorithm functions inside those owner packages. Do not add unit tests for thin orchestration or wiring-only logic.
+14. Once algorithm-level unit tests provide enough coverage and confidence, remove redundant fixture tests that no longer add distinct signal. Keep fixture/parity-style tests only where they still protect behavior that the unit tests do not cover.
 
 ## Preserve behavior and parity
 
