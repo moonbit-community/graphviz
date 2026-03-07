@@ -34,7 +34,7 @@ pub fn append_creation_name(
 /// Graphviz parity: when GD_flip is true, decompose nlist reverses node order
 /// inside each cluster while preserving cluster membership positions.
 /// Do not change behavior without updating fixtures/tests.
-pub fn adjust_nlist_order_for_flip(
+fn adjust_nlist_order_for_flip(
   nlist_order_raw : Array[String],
   graphviz_flip : Bool,
   has_clusters : Bool,
@@ -270,7 +270,7 @@ pub fn edge_head_port_for_name(
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_intercluster_bonus(
+fn collect_intercluster_bonus(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -407,7 +407,7 @@ pub fn collect_intercluster_bonus(
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_sizes_for_order_graph(
+fn build_sizes_for_order_graph(
   order_sizes : Map[String, NodeSize],
   order_with_vnodes : Bool,
   vnode_sizes : Map[String, NodeSize],
@@ -428,7 +428,7 @@ pub fn build_sizes_for_order_graph(
 /// Graphviz parity: clustered pre-root seed payload keeps grouped nodes,
 /// order-graph sizes, and cluster metadata maps bundled for root/cluster
 /// ordering preparation.
-pub(all) struct OrderSeedGroupsOutput {
+priv struct OrderSeedGroupsOutput {
   order_groups : Map[Int, Array[String]]
   order_sizes_out : Map[String, NodeSize]
   order_cluster_keys : Map[String, String]
@@ -438,7 +438,7 @@ pub(all) struct OrderSeedGroupsOutput {
 ///|
 /// Graphviz parity: order-stage seed input keeps vnode and cluster metadata
 /// snapshots unchanged before grouped seed expansion.
-pub(all) struct OrderSeedGroupsInputs {
+priv struct OrderSeedGroupsInputs {
   ordering_groups_base : Map[Int, Array[String]]
   base_order_index : Map[String, Int]
   order_with_vnodes : Bool
@@ -459,7 +459,7 @@ pub(all) struct OrderSeedGroupsInputs {
 /// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
 /// vnodes, and install cluster skeleton nodes with virtual-node defaults.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_order_seed_groups(
+fn build_order_seed_groups(
   inputs : OrderSeedGroupsInputs,
 ) -> OrderSeedGroupsOutput {
   let order_groups =
@@ -596,7 +596,7 @@ fn build_clustered_order_seed_stage_from_sources(
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn append_cluster_skeleton_range(
+fn append_cluster_skeleton_range(
   cluster : String,
   min_rank : Int,
   max_rank : Int,
@@ -656,7 +656,7 @@ pub(all) struct OrderReorderContext {
 ///|
 /// Graphviz parity: reorder-context seed input keeps GD_nlist/nlist snapshots,
 /// rank=same metadata, and base order maps unchanged before order-graph build.
-pub(all) struct OrderReorderContextInputs {
+priv struct OrderReorderContextInputs {
   order_groups : Map[Int, Array[String]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
@@ -673,7 +673,7 @@ pub(all) struct OrderReorderContextInputs {
 /// Graphviz parity: order-graph rebuild uses GD_nlist-derived creation order
 /// and build_ranks seed order before mapped/unmapped edge materialization.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_order_reorder_context(
+fn build_order_reorder_context(
   inputs : OrderReorderContextInputs,
 ) -> OrderReorderContext {
   let order_rank_keys = collect_rank_keys(inputs.order_groups)
@@ -880,7 +880,7 @@ pub(all) struct OrderMaterializationData {
 ///|
 /// Graphviz parity: mapped/unmapped materialization input keeps nlist/AGSEQ
 /// snapshots and flat constraints unchanged before edge-array build.
-pub(all) struct OrderMaterializationInputs {
+priv struct OrderMaterializationInputs {
   nlist_order : Array[String]
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
   order_graph : @cgraph.Graph
@@ -944,7 +944,7 @@ fn build_materialized_graphviz_neighbors(
 /// Graphviz parity: mapped/unmapped order-edge materialization and ND_out/ND_in
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_order_materialization_data(
+fn build_order_materialization_data(
   inputs : OrderMaterializationInputs,
 ) -> OrderMaterializationData {
   // Graphviz parity: mapped/unmapped order-edge arrays are materialized from
@@ -999,7 +999,7 @@ pub fn build_order_materialization_data(
 /// incoming-only local-cluster nodes reversed to match fast_node head-insert
 /// behavior before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_unconstrained_order_overrides(
+fn apply_unconstrained_order_overrides(
   gdnlist_order : Array[String],
   real_nodes : Map[String, Bool],
   order_nodes : Array[String],
