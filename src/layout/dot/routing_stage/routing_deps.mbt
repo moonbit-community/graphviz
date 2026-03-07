@@ -235,119 +235,6 @@ fn build_head_port_metrics_for_stage(
 }
 
 ///|
-fn edge_has_mid_label_for_routing_stage(edge : @cgraph.Edge) -> Bool {
-  @edge_label_metrics.edge_mid_label_text(edge) is Some(_)
-}
-
-///|
-fn build_route_base_deps_for_dot(
-  record_orientation : RecordOrientation,
-  routing_label_ports_map : Map[String, Map[String, RecordPort]],
-  routing_label_ports_raw : Map[String, Map[String, RecordPort]],
-) -> @routing.RouteBaseDeps {
-  let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
-    (edge : @cgraph.Edge) =>
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(metrics) => {
-          let route_metrics : @routing.RouteLabelMetrics = {
-            width: metrics.width,
-            height: metrics.height,
-          }
-          Some(route_metrics)
-        }
-        None => None
-      }
-  let route_port_geometry :
-    (
-      String,
-      @cgraph.Port?,
-      @geom.Point,
-      NodeSize,
-    ) -> @precompute.RoutePortGeometry =
-    (
-      node_name : String,
-      port : @cgraph.Port?,
-      node_pos : @geom.Point,
-      node_size : NodeSize,
-    ) => {
-      let geometry =
-        @port_geometry.port_geometry(
-          node_name,
-          port,
-          routing_label_ports_map,
-          node_pos,
-          node_size,
-        )
-      let route_geometry : @precompute.RoutePortGeometry = {
-        center: geometry.center,
-        size: geometry.size,
-      }
-      route_geometry
-    }
-  let route_dynamic_port_anchor :
-    (
-      @cgraph.Port?,
-      String,
-      @geom.Point,
-      @geom.Point,
-      RankDir,
-      Double,
-    ) -> @routing.RouteDynamicPortAnchor =
-    (
-      port : @cgraph.Port?,
-      node_name : String,
-      node_pos : @geom.Point,
-      other_pos : @geom.Point,
-      rankdir : RankDir,
-      record_border_adjust : Double,
-    ) => {
-      let anchor =
-        @port_geometry.dynamic_port_anchor_for_edge(
-          port,
-          node_name,
-          routing_label_ports_raw,
-          node_pos,
-          other_pos,
-          rankdir,
-          record_border_adjust,
-        )
-      let route_anchor : @routing.RouteDynamicPortAnchor = {
-        anchor: anchor.anchor,
-        side: anchor.side,
-        is_dynamic: anchor.is_dynamic,
-      }
-      route_anchor
-    }
-  {
-    node_size_for_missing: (node) => @node_geometry.node_size(node, record_orientation),
-    edge_mid_label_metrics: route_mid_label_metrics,
-    record_port_path_box: @record_layout.record_port_path_box,
-    port_geometry: route_port_geometry,
-    port_rect_from_geometry: @port_geometry.port_rect_from_geometry,
-    port_is_label_port:
-      (node_name, port) =>
-        @port_geometry.port_is_label_port(node_name, port, routing_label_ports_raw),
-    is_record_shape: @record_geometry.is_record_shape,
-    record_border_adjust:
-      (node) =>
-        if @record_geometry.is_record_shape(node) &&
-          !@html_label.is_html_label_text(@label_attrs.label_text(node)) {
-          @record_geometry.RECORD_BORDER_PT
-        } else {
-          0.0
-        },
-    dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
-    port_side_mask_from_anchor: @port_geometry.port_side_mask_from_anchor,
-    port_side_for_edge:
-      (port, port_rect, node_pos, node_size) =>
-        @port_geometry.port_side_for_edge(port, port_rect, node_pos, node_size, None),
-    layout_port_offset: @port_geometry.layout_port_offset,
-    node_cluster_key: @clustering.node_cluster_key,
-    node_local_cluster_key: @clustering.node_local_cluster_key,
-  }
-}
-
-///|
 fn build_routing_callbacks_for_dot(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
@@ -448,11 +335,11 @@ pub fn build_dot_routing_stage_deps() -> RoutingStageDeps {
     build_port_layout_maps: build_port_layout_maps_for_routing_stage,
     compute_cluster_route_bboxes: @clustering.compute_cluster_route_bboxes,
     compute_routing_bbox: compute_routing_bbox_for_stage,
-    edge_has_mid_label: edge_has_mid_label_for_routing_stage,
+    edge_has_mid_label: edge => @edge_label_metrics.edge_mid_label_text(edge) is Some(_),
     record_port_padding: routing_port_padding_for_stage,
     build_head_port_metrics: build_head_port_metrics_for_stage,
     apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
-    build_route_base_deps: build_route_base_deps_for_dot,
+    build_route_base_deps: @routing.build_dot_route_base_deps,
     build_routing_callbacks: build_routing_callbacks_for_dot,
   }
 }
