@@ -12,7 +12,7 @@ pub struct XposComputationInput {
 ///|
 /// Graphviz parity: xpos source bundle keeps x-stage payload and vnode replay
 /// metadata grouped so Stage D call-sites avoid positional drift.
-pub(all) struct XposComputationInputSources {
+priv struct XposComputationInputSources {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, @node_primitives.NodeSize]
   x_groups : Map[Int, Array[String]]
@@ -26,7 +26,7 @@ pub(all) struct XposComputationInputSources {
 /// Graphviz parity: xpos solver inputs preserve vnode-size merge,
 /// rank-map/key derivation, and vnode-edge/slack toggles.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_xpos_computation_input_from_sources(
+fn build_xpos_computation_input_from_sources(
   sources : XposComputationInputSources,
 ) -> XposComputationInput {
   let x_sizes =

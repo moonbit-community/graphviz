@@ -292,7 +292,7 @@ pub struct PositionOutputMaps {
 /// Graphviz parity: final output map source bundle keeps dotted-edge
 /// alignment, cluster-boundary capture, vnode projection, and cluster-rounding
 /// prerequisites grouped before one deterministic assembly pass.
-pub(all) struct PositionOutputBuildSources {
+priv struct PositionOutputBuildSources {
   has_clusters : Bool
   has_dotted_edges : Bool
   graph : @cgraph.Graph
@@ -315,7 +315,7 @@ pub(all) struct PositionOutputBuildSources {
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, and vnode projection order unchanged.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_position_output_maps_from_sources(
+fn build_position_output_maps_from_sources(
   sources : PositionOutputBuildSources,
 ) -> PositionOutputMaps {
   if sources.has_clusters && sources.has_dotted_edges && intercluster_alignment_enabled() {
