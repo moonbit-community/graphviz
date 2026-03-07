@@ -23,7 +23,6 @@ struct SplineInput {
   case_id : Int
   graph : String
   polyline : Bool
-  flip : Bool
   tail : String
   head : String
   start : FixtureEndpoint
@@ -56,7 +55,6 @@ fn parse_spline_input(obj : Map[String, Json]) -> SplineInput raise {
     case_id: @json.from_json(obj["case"]),
     graph,
     polyline: @json.from_json(obj["polyline"]),
-    flip: @json.from_json(obj["flip"]),
     tail: @json.from_json(obj["tail"]),
     head: @json.from_json(obj["head"]),
     start: @json.from_json(obj["start"]),
@@ -75,10 +73,9 @@ fn parse_spline_points(obj : Map[String, Json]) -> SplinePoints raise {
 }
 
 ///|
-fn load_spline_fixtures(
-) -> Array[(SplineInput, Array[FixturePoint], Array[FixturePoint])] raise {
+fn load_spline_fixtures() -> Array[(SplineInput, Array[FixturePoint])] raise {
   let data = @fs.read_file_to_string("tests/fixtures/graphviz/splines.jsonl")
-  let cases : Array[(SplineInput, Array[FixturePoint], Array[FixturePoint])] = []
+  let cases : Array[(SplineInput, Array[FixturePoint])] = []
   let mut pending_input : SplineInput? = None
   let mut pending_shortest : Array[FixturePoint]? = None
   for line in data.split("\n") {
@@ -121,7 +118,7 @@ fn load_spline_fixtures(
                     "spline output case mismatch input=\{input.case_id} output=\{parsed.case_id}",
                   )
                 }
-                cases.push((input, shortest, parsed.points))
+                cases.push((input, shortest))
                 pending_input = None
                 pending_shortest = None
               }
@@ -195,15 +192,9 @@ fn assert_points_exact(
 }
 
 ///|
-fn compute_flip(boxes : Array[@geom.Rect]) -> Bool {
-  boxes.length() > 1 && boxes[0].lly > boxes[1].lly
-}
-
-///|
 fn run_spline_case(
   input : SplineInput,
   shortest_expected : Array[FixturePoint],
-  _output_expected : Array[FixturePoint],
 ) -> Unit raise {
   let boxes = to_boxes(input.boxes)
   let polygon_expected = to_points(input.polygon)
@@ -211,12 +202,6 @@ fn run_spline_case(
   let _ = input.start.constrained
   let _ = input.end.theta
   let _ = input.end.constrained
-  let flip_actual = compute_flip(boxes)
-  if flip_actual != input.flip {
-    fail(
-      "case \{input.case_id} graph=\{input.graph} flip mismatch actual=\{flip_actual} expected=\{input.flip}",
-    )
-  }
   if input.polyline {
     fail(
       "case \{input.case_id} graph=\{input.graph} tail=\{input.tail} head=\{input.head} unexpected polyline input",
@@ -234,8 +219,9 @@ fn run_spline_case(
   )
   let start : @geom.Point = { x: input.start.x, y: input.start.y }
   let end : @geom.Point = { x: input.end.x, y: input.end.y }
-  let shortest_actual =
-    @pathplan.shortest_path_in_poly(polygon_expected, start, end)
+  let shortest_actual = @pathplan.shortest_path_in_poly(
+    polygon_expected, start, end,
+  )
   assert_points_exact(
     input.case_id,
     input.graph,
@@ -251,7 +237,7 @@ fn run_spline_case(
 test "spline fixtures match pathplan outputs" {
   let cases = load_spline_fixtures()
   for entry in cases {
-    let (input, shortest, output) = entry
-    run_spline_case(input, shortest, output)
+    let (input, shortest) = entry
+    run_spline_case(input, shortest)
   }
 }

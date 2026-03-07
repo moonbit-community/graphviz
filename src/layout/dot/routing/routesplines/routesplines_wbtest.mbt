@@ -1,4 +1,75 @@
 ///|
+fn assert_points_eq(
+  actual : Array[@geom.Point],
+  expected : Array[@geom.Point],
+) -> Unit raise {
+  if actual.length() != expected.length() {
+    fail("expected point count \{expected.length()} got \{actual.length()}")
+  }
+  for i in 0..<expected.length() {
+    assert_eq(actual[i], expected[i])
+  }
+}
+
+///|
+test "boxes_to_polygon_points filters degenerate boxes before polygon build" {
+  let polygon = boxes_to_polygon_points([
+    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 2.0 },
+    { llx: 1.0, lly: 2.0, urx: 5.0, ury: 6.0 },
+    { llx: 2.0, lly: 6.0, urx: 4.0, ury: 6.0 },
+  ])
+
+  assert_points_eq(polygon, [
+    { x: 1.0, y: 6.0 },
+    { x: 1.0, y: 2.0 },
+    { x: 5.0, y: 2.0 },
+    { x: 5.0, y: 6.0 },
+  ])
+}
+
+///|
+test "boxes_to_polygon_points preserves descending corridors after flip normalization" {
+  let polygon = boxes_to_polygon_points([
+    { llx: 0.0, lly: 10.0, urx: 4.0, ury: 14.0 },
+    { llx: 0.0, lly: 6.0, urx: 8.0, ury: 10.0 },
+    { llx: 2.0, lly: 2.0, urx: 8.0, ury: 6.0 },
+  ])
+
+  assert_points_eq(polygon, [
+    { x: 4.0, y: 14.0 },
+    { x: 4.0, y: 10.0 },
+    { x: 8.0, y: 10.0 },
+    { x: 8.0, y: 6.0 },
+    { x: 8.0, y: 6.0 },
+    { x: 8.0, y: 2.0 },
+    { x: 2.0, y: 2.0 },
+    { x: 2.0, y: 6.0 },
+    { x: 0.0, y: 6.0 },
+    { x: 0.0, y: 10.0 },
+    { x: 0.0, y: 10.0 },
+    { x: 0.0, y: 14.0 },
+  ])
+}
+
+///|
+test "route_pathplan_from_boxes clamps endpoints into first and last boxes" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: 0.0, lly: 4.0, urx: 4.0, ury: 8.0 },
+    { llx: 0.0, lly: 0.0, urx: 4.0, ury: 4.0 },
+  ]
+
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: -2.0, y: 10.0 }, { x: 10.0, y: -2.0 }) {
+    Some(value) => value
+    None => fail("expected pathplan route")
+  }
+
+  assert_eq(route.points[0], { x: 0.0, y: 8.0 })
+  assert_eq(route.points[route.points.length() - 1], { x: 4.0, y: 0.0 })
+  assert_true(route.polygon.length() >= 4)
+}
+
+///|
 test "dedupe_polyline_points removes consecutive duplicates" {
   let points : Array[@geom.Point] = [
     { x: 0.0, y: 0.0 },
@@ -135,14 +206,22 @@ test "pathplan_bounds merges vnode positions and expands each rank by route widt
   x_groups[0] = ["a", "b"]
   x_groups[1] = ["v"]
 
-  let bounds = pathplan_bounds(positions, vnode_positions, sizes, vnode_sizes, x_groups)
+  let bounds = pathplan_bounds(
+    positions, vnode_positions, sizes, vnode_sizes, x_groups,
+  )
   assert_eq(bounds.left, -39.0)
   assert_eq(bounds.right, 73.0)
 }
 
 ///|
 test "pathplan_bounds returns zero bounds for empty rank groups" {
-  let bounds = pathplan_bounds(Map::new(), Map::new(), Map::new(), Map::new(), Map::new())
+  let bounds = pathplan_bounds(
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    Map::new(),
+  )
   assert_eq(bounds.left, 0.0)
   assert_eq(bounds.right, 0.0)
 }
@@ -183,8 +262,7 @@ test "limit_boxes_for_spline falls back to polyline when spline sampling misses 
     { x: 10.0, y: 5.0 },
   ]
 
-  let limited =
-    limit_boxes_for_spline(boxes, spline_points, fallback_polyline=fallback_polyline)
+  let limited = limit_boxes_for_spline(boxes, spline_points, fallback_polyline~)
 
   assert_eq(limited.length(), 2)
   for box in limited {
