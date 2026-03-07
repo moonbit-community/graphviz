@@ -3,8 +3,6 @@
 /// package, while snapshot/geometry assembly lives in the input_stage
 /// subpackage.
 
-type InputStageDeps = @input_stage.InputStageDeps
-
 ///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
@@ -24,7 +22,6 @@ fn prepare_layout_inputs(
       ranksep_in: spacing.ranksep_in,
       splines,
     },
-    build_input_stage_deps(),
   )
 }
 
@@ -133,17 +130,3 @@ fn resolve_splines(
   }
 }
 
-///|
-/// Graphviz parity: Stage A root deps keep node geometry and label-port
-/// bridges explicit while the input_stage subpackage owns snapshot assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_input_stage_deps() -> InputStageDeps {
-  {
-    graph_has_edge_labels: @label_metrics.graph_has_edge_labels,
-    node_size_for: @node_geometry.node_size,
-    swap_node_size: @dot_shared.swap_node_size,
-    raw_label_ports_for_node: @label_layout.raw_label_ports_for_node,
-    layout_port_offset: @label_layout.layout_port_offset,
-    label_text_for: @label_layout.label_text,
-  }
-}

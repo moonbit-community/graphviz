@@ -4,7 +4,6 @@ type SplinesMode = @shared.SplinesMode
 type RecordOrientation = @shared.RecordOrientation
 type LayoutPrep = @shared.LayoutPrep
 type NodeSize = @shared.NodeSize
-type RecordPort = @shared.RecordPort
 
 ///|
 /// Graphviz parity: Stage A input payload keeps resolved graph options grouped
@@ -16,23 +15,6 @@ pub(all) struct InputStageInput {
   nodesep_in : Double
   ranksep_in : Double
   splines : SplinesMode
-}
-
-///|
-/// Graphviz parity: Stage A deps keep root-owned node geometry and label-port
-/// bridges explicit while the subpackage owns input snapshot assembly.
-pub(all) struct InputStageDeps {
-  graph_has_edge_labels : (Array[@cgraph.Edge]) -> Bool
-  node_size_for : (@cgraph.Node, RecordOrientation) -> NodeSize
-  swap_node_size : (NodeSize) -> NodeSize
-  raw_label_ports_for_node : (
-    @cgraph.Node,
-    @geom.Point,
-    NodeSize,
-    RecordOrientation,
-  ) -> Map[String, RecordPort]
-  layout_port_offset : (@geom.Point, RankDir) -> @geom.Point
-  label_text_for : (@cgraph.Node) -> String
 }
 
 priv struct SizeMaps {
@@ -80,17 +62,16 @@ priv struct PortOrderMetadataInput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn prepare_layout_inputs(
   input : InputStageInput,
-  deps : InputStageDeps,
 ) -> LayoutPrep {
   let graph = input.graph
   let nodes = graph.nodes()
   let edges = graph.edges()
   let edge_flags = @shared.scan_edge_flags(edges)
-  let has_edge_labels = (deps.graph_has_edge_labels)(edges)
+  let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, input.rankdir)
   let record_orientation = @shared.record_layout_orientation(input.rankdir)
   let size_maps =
-    build_size_maps(nodes, input.rankdir, record_orientation, deps)
+    build_size_maps(nodes, input.rankdir, record_orientation)
   let port_order_metadata =
     build_port_order_metadata(
       {
@@ -101,7 +82,6 @@ pub fn prepare_layout_inputs(
         output_sizes: size_maps.output_sizes,
         record_orientation,
       },
-      deps,
     )
   {
     rankdir: input.rankdir,
@@ -155,18 +135,17 @@ fn build_size_maps(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
-  deps : InputStageDeps,
 ) -> SizeMaps {
   let output_sizes : Map[String, NodeSize] = Map::new()
   let order_sizes : Map[String, NodeSize] = Map::new()
   let sizes : Map[String, NodeSize] = Map::new()
   for node in nodes {
-    let size = (deps.node_size_for)(node, record_orientation)
+    let size = @node_geometry.node_size(node, record_orientation)
     output_sizes[node.name()] = size
     order_sizes[node.name()] = size
     sizes[node.name()] =
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        (deps.swap_node_size)(size)
+        @shared.swap_node_size(size)
       } else {
         size
       }
@@ -182,10 +161,9 @@ fn build_node_port_order(
   size : NodeSize,
   rankdir : RankDir,
   record_orientation : RecordOrientation,
-  deps : InputStageDeps,
 ) -> Map[String, Double] {
   let raw_ports =
-    (deps.raw_label_ports_for_node)(
+    @label_layout.raw_label_ports_for_node(
       node,
       { x: 0.0, y: 0.0 },
       size,
@@ -193,7 +171,7 @@ fn build_node_port_order(
     )
   let order_map : Map[String, Double] = Map::new()
   for port_name, port in raw_ports {
-    let offset = (deps.layout_port_offset)(port.center, rankdir)
+    let offset = @label_layout.layout_port_offset(port.center, rankdir)
     order_map[port_name] = offset.x
   }
   order_map
@@ -205,11 +183,10 @@ fn build_node_port_order(
 /// Do not change behavior without updating fixtures/tests.
 fn build_record_port_order_map(
   input : RecordPortOrderInput,
-  deps : InputStageDeps,
 ) -> Map[String, Map[String, Double]] {
   let record_port_order : Map[String, Map[String, Double]] = Map::new()
   for node in input.nodes {
-    let label = (deps.label_text_for)(node)
+    let label = @label_layout.label_text(node)
     let has_html = @html_label.is_html_label_text(label)
     if has_html || @shared.is_record_shape(node) {
       let name = node.name()
@@ -218,7 +195,7 @@ fn build_record_port_order_map(
           input.output_sizes,
           node,
           input.record_orientation,
-          deps.node_size_for,
+          @node_geometry.node_size,
         )
       let order_map =
         build_node_port_order(
@@ -226,7 +203,6 @@ fn build_record_port_order_map(
           size,
           input.rankdir,
           input.record_orientation,
-          deps,
         )
       record_port_order[name] = order_map
     }
@@ -303,7 +279,6 @@ fn accumulate_port_order_contrib(
 fn compute_port_order_positions(
   input : PortOrderMetadataInput,
   port_order_contrib : Map[String, Array[(String, Double)]],
-  deps : InputStageDeps,
 ) -> Map[String, Double] {
   let record_port_order =
     build_record_port_order_map(
@@ -313,7 +288,6 @@ fn compute_port_order_positions(
         rankdir: input.rankdir,
         record_orientation: input.record_orientation,
       },
-      deps,
     )
   let order_sum =
     accumulate_port_order_contrib(
@@ -338,13 +312,12 @@ fn compute_port_order_positions(
 /// Do not change behavior without updating fixtures/tests.
 fn build_port_order_metadata(
   input : PortOrderMetadataInput,
-  deps : InputStageDeps,
 ) -> PortOrderMetadata {
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   let port_order_positions =
     if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
       input.has_port_edges {
-      compute_port_order_positions(input, port_order_contrib, deps)
+      compute_port_order_positions(input, port_order_contrib)
     } else {
       Map::new()
     }
