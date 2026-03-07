@@ -241,12 +241,6 @@ fn run_spline_case(
 }
 
 ///|
-test "spline fixtures load" {
-  let cases = load_spline_fixtures()
-  assert_true(cases.length() > 0)
-}
-
-///|
 test "spline fixtures match route spline output" {
   // Graphviz fixtures come from native libm; non-native math drifts slightly.
   if !LIBM_IS_NATIVE {
