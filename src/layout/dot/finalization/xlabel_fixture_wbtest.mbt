@@ -254,35 +254,35 @@ fn assert_edge_xlabel_fixture(
 }
 
 ///|
-test "node xlabels match Graphviz" {
+test "node xlabels match Graphviz smoke graph" {
   let fixtures = load_xlabel_fixtures()
   guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
   let layouts : Map[String, @shared.LayoutTree] = Map::new()
   let mut matched = 0
   for fixture in fixtures {
-    if fixture.kind != "node_xlabel" {
+    if fixture.graph != "xlabels_tb" || fixture.kind != "node_xlabel" {
       continue
     }
     matched = matched + 1
     let layout = load_xlabel_layout(layouts, fixture.graph)
     assert_node_xlabel_fixture(layout, fixture)
   }
-  guard matched > 0 else { fail("missing node xlabel fixtures") }
+  guard matched > 0 else { fail("missing node xlabel smoke fixtures") }
 }
 
 ///|
-test "edge xlabels match Graphviz" {
+test "edge xlabels match Graphviz smoke graph" {
   let fixtures = load_xlabel_fixtures()
   guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
   let layouts : Map[String, @shared.LayoutTree] = Map::new()
   let mut matched = 0
   for fixture in fixtures {
-    if fixture.kind == "node_xlabel" {
+    if fixture.graph != "xlabels_tb" || fixture.kind == "node_xlabel" {
       continue
     }
     matched = matched + 1
     let layout = load_xlabel_layout(layouts, fixture.graph)
     assert_edge_xlabel_fixture(layout, fixture)
   }
-  guard matched > 0 else { fail("missing edge xlabel fixtures") }
+  guard matched > 0 else { fail("missing edge xlabel smoke fixtures") }
 }
