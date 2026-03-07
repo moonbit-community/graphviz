@@ -14,7 +14,7 @@ fn parse_ordering_mode(value : String) -> OrderingMode? {
 }
 
 ///|
-pub fn edge_tail_at(
+fn edge_tail_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],
@@ -25,7 +25,7 @@ pub fn edge_tail_at(
 }
 
 ///|
-pub fn edge_head_at(
+fn edge_head_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_head : Array[String],
@@ -55,7 +55,7 @@ pub(all) struct DedupOrderingEdgesOutput {
 }
 
 ///|
-pub fn dedup_ordering_edges(
+fn dedup_ordering_edges(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -91,7 +91,7 @@ pub(all) struct FlatConstraintsOutput {
 }
 
 ///|
-pub fn build_flat_constraints(
+fn build_flat_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -233,7 +233,7 @@ pub fn build_flat_constraints(
 /// Graphviz parity: same-rank constrained edges are promoted to flat ordering
 /// constraints before clustered reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
-pub fn add_same_rank_constraint_edges_to_flat_constraints(
+fn add_same_rank_constraint_edges_to_flat_constraints(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -263,7 +263,7 @@ pub fn add_same_rank_constraint_edges_to_flat_constraints(
 /// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
 /// plus same-rank constrained edges before clustered reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_flat_constraints(
+fn build_cluster_flat_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
