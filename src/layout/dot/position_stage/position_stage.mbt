@@ -252,7 +252,7 @@ fn compute_x_positions_for_stage(
             real_by_name,
           ),
       ),
-    edge => @label_metrics.edge_mid_label_metrics(edge) is Some(_),
+    edge => @edge_label_metrics.edge_mid_label_metrics(edge) is Some(_),
     edge =>
       if @shared.edge_dir_for(edge, edge.tail().graph().kind()) is @shared.EdgeDir::Both {
         2
@@ -272,7 +272,7 @@ fn build_position_stage_deps() -> PositionStageDeps {
     build_x_seed_port_samples: build_x_seed_port_samples_for_stage,
     apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
     edge_mid_label_metrics_for: edge =>
-      match @label_metrics.edge_mid_label_metrics(edge) {
+      match @edge_label_metrics.edge_mid_label_metrics(edge) {
         Some(value) => Some((value.width, value.height))
         None => None
       },

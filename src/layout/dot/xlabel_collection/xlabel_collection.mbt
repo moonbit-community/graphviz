@@ -40,7 +40,7 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
 }
 
 pub fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match @label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
+  match @edge_label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }
@@ -78,7 +78,7 @@ pub fn build_edges_by_tail(
 }
 
 fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match @label_metrics.edge_mid_label_metrics(edge) {
+  match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }
@@ -88,7 +88,7 @@ fn edge_attr_metrics_for_xlabel(
   edge : @cgraph.Edge,
   key : String,
 ) -> XLabelMetrics? {
-  match @label_metrics.edge_label_metrics_for_attr(edge, key, true) {
+  match @edge_label_metrics.edge_label_metrics_for_attr(edge, key, true) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }

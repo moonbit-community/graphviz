@@ -182,7 +182,7 @@ fn collect_label_vnode_actuals(
 ) -> Array[LabelVnodeActual] raise {
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
+  let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
@@ -222,7 +222,7 @@ fn collect_label_vnode_actuals(
     {
       edge_mid_label_metrics_for:
         edge =>
-          match @label_metrics.edge_mid_label_metrics(edge) {
+          match @edge_label_metrics.edge_mid_label_metrics(edge) {
             Some(value) => Some((value.width, value.height))
             None => None
           },
@@ -240,7 +240,7 @@ fn collect_label_vnode_actuals(
     let label_rank_info = match @edge_label.edge_label_rank_info(
       edge,
       ranks,
-      @label_metrics.edge_mid_label_width_pt(edge),
+      @edge_label_metrics.edge_mid_label_width_pt(edge),
     ) {
       Some(value) => value
       None => continue
@@ -286,7 +286,7 @@ fn collect_flat_label_node_actuals(
 ) -> Array[FlatLabelNodeActual] {
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
+  let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
@@ -314,7 +314,7 @@ fn collect_flat_label_node_actuals(
     if tail_rank != head_rank {
       continue
     }
-    let metrics = match @label_metrics.edge_mid_label_metrics(edge) {
+    let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
       Some(value) => value
       None => continue
     }
@@ -403,7 +403,7 @@ test "label vnodes match Graphviz fixtures" {
     let graph = @dot_parser.parse_dot_file(path)
     let nodes = graph.nodes()
     let edges = graph.edges()
-    let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
+    let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
     let ranks = compute_ranks_directed_with_clusters_for_tests(
       graph,
       nodes,
@@ -463,14 +463,14 @@ test "label vnodes match Graphviz fixtures" {
       let label_rank_info = match @edge_label.edge_label_rank_info(
         edge,
         ranks,
-        @label_metrics.edge_mid_label_width_pt(edge),
+        @edge_label_metrics.edge_mid_label_width_pt(edge),
       ) {
         Some(value) => value
         None => fail("missing label rank info for \{entry.tail} -> \{entry.head}")
       }
       let label_rank = label_rank_info.label_rank
       assert_eq(label_rank, entry.label_rank)
-      let metrics = match @label_metrics.edge_mid_label_metrics(edge) {
+      let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
         Some(value) => value
         None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
       }
@@ -522,7 +522,7 @@ test "flat label node sizes match Graphviz fixtures" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/flat_edge_label.dot")
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
+  let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
@@ -561,7 +561,7 @@ test "flat label node sizes match Graphviz fixtures" {
   let self_edge_labels =
     @positioning.self_edge_label_half_heights(
       edges,
-      edge => @label_metrics.edge_label_height_pt(edge),
+      edge => @edge_label_metrics.edge_label_height_pt(edge),
     )
   let rank_pht : Map[Int, Double] = Map::new()
   for rank in all_ranks {
@@ -603,7 +603,7 @@ test "flat label node sizes match Graphviz fixtures" {
         continue
       }
       let label_rank = (min_rank + max_rank) / 2
-      let half_height = @label_metrics.edge_label_height_pt(edge) / 2.0
+      let half_height = @edge_label_metrics.edge_label_height_pt(edge) / 2.0
       let current = match rank_pht.get(label_rank) {
         Some(value) => value
         None => 0.0
@@ -671,7 +671,7 @@ test "flat label node sizes match Graphviz fixtures" {
     }
     assert_eq(tail_rank, head_rank)
     assert_eq(entry.rank, tail_rank - 1)
-    let metrics = match @label_metrics.edge_mid_label_metrics(edge) {
+    let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
       Some(value) => value
       None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
     }

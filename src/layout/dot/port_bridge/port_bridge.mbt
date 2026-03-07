@@ -182,7 +182,7 @@ pub fn apply_self_edge_right_space(
       sizes,
       rankdir,
       self_edge_size_pt: @node_geometry.SELF_EDGE_SIZE_PT,
-      self_edge_label_width_for: @label_metrics.self_edge_label_width_pt,
+      self_edge_label_width_for: @edge_label_metrics.self_edge_label_width_pt,
       port_side_mask_for:
         (node, port) => port_side_mask_for_self_edge(node, port, port_maps),
     },

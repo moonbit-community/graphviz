@@ -29,7 +29,7 @@ pub(all) struct OrderingStageDeps {
 fn build_ordering_stage_deps() -> OrderingStageDeps {
   {
     edge_mid_label_metrics_for: edge =>
-      match @label_metrics.edge_mid_label_metrics(edge) {
+      match @edge_label_metrics.edge_mid_label_metrics(edge) {
         Some(value) => Some((value.width, value.height))
         None => None
       },
@@ -619,7 +619,7 @@ pub(all) struct RankStageOutput {
 fn edge_mid_label_metrics_for_rank_heights(
   edge : @cgraph.Edge,
 ) -> @rank_assignment.EdgeMidLabelMetrics? {
-  match @label_metrics.edge_mid_label_metrics(edge) {
+  match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) =>
       Some(@rank_assignment.make_edge_mid_label_metrics(metrics.width, metrics.height))
     None => None
@@ -643,7 +643,7 @@ pub fn compute_dot_rank_stage(
         prep.edges,
         prep.has_edge_labels,
         @shared.CL_BACK,
-        @label_metrics.edge_label_height_pt,
+        @edge_label_metrics.edge_label_height_pt,
       ),
     )
   let rank_heights =

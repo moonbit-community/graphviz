@@ -67,7 +67,7 @@ pub fn prepare_layout_inputs(
   let nodes = graph.nodes()
   let edges = graph.edges()
   let edge_flags = @shared.scan_edge_flags(edges)
-  let has_edge_labels = @label_metrics.graph_has_edge_labels(edges)
+  let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, input.rankdir)
   let record_orientation = @shared.record_layout_orientation(input.rankdir)
   let size_maps =

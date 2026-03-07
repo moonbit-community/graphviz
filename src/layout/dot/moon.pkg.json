@@ -59,6 +59,7 @@
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/routing/edge_label",
+    "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/attrs",
     "moonbitlang/core/json",
     "moonbitlang/x/fs",
