@@ -77,6 +77,66 @@ pub fn build_gdnlist_order(
 }
 
 ///|
+/// Graphviz parity: reorder-setup source bundle keeps Stage C runtime and
+/// cluster snapshots grouped so dot-stage assembly does not manually unpack
+/// class2 inputs.
+pub(all) struct OrderingReorderSetupSources {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  runtime_context : OrderingRuntimeContext
+  cluster_meta : DotClusterMetadata
+  rankdir : @rankdir.RankDir
+  edge_port_data : OrderingEdgePortData
+}
+
+///|
+/// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
+/// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence from
+/// grouped runtime + cluster sources.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_reorder_setup_from_sources(
+  sources : OrderingReorderSetupSources,
+) -> OrderingReorderSetup {
+  let graphviz_flip =
+    sources.rankdir == @rankdir.RankDir::RL || sources.rankdir == @rankdir.RankDir::LR
+  build_ordering_reorder_setup(
+    {
+      nodes: sources.nodes,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      edge_reversed: sources.edge_reversed,
+      edge_out_order: sources.edge_out_order,
+      ranks: sources.ranks,
+      groups: sources.groups,
+      node_order: sources.node_order,
+      port_edge_nodes: sources.runtime_context.port_edge_nodes,
+      vnode_count: sources.runtime_context.vnode_info.vnode_ranks.length(),
+      graphviz_flip,
+      has_clusters: sources.cluster_meta.has_clusters,
+      cluster_min_rank: sources.cluster_meta.cluster_min_rank,
+      cluster_max_rank: sources.cluster_meta.cluster_max_rank,
+      cluster_keys: sources.cluster_meta.cluster_keys,
+      cluster_order: sources.cluster_meta.cluster_order,
+      rank_same_groups: sources.cluster_meta.rank_same_groups,
+      rank_same_order: sources.cluster_meta.rank_same_order,
+      vnode_edge_vnodes: sources.runtime_context.vnode_info.edge_vnodes,
+      vnodes_by_rank: sources.runtime_context.vnode_info.vnodes_by_rank,
+      vnode_ranks: sources.runtime_context.vnode_info.vnode_ranks,
+      cluster_parents: sources.cluster_meta.cluster_parents,
+      edge_port_data: sources.edge_port_data,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -580,6 +640,72 @@ pub(all) struct OrderingEdgePortDataInput {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
+}
+
+///|
+/// Graphviz parity: edge-port sampling source bundle keeps full-edge and
+/// endpoint-name snapshots grouped before dedup/order-edge replay.
+pub(all) struct OrderingEdgePortDataSources {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+}
+
+///|
+/// Graphviz parity: edge-port sampling dep bundle keeps one callback for
+/// full-edge and dedup-order-edge endpoint sampling, avoiding stage-local
+/// class2 assembly drift.
+pub(all) struct OrderingEdgePortDataDeps {
+  build_port_sample_bundle : (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+  ) -> EdgePortSampleBundle
+}
+
+///|
+/// Graphviz parity: ordering edge-port data keeps dedup ordering-edge
+/// extraction and endpoint port samples in Graphviz-compatible construction
+/// order from grouped sources.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_edge_port_data_from_sources(
+  sources : OrderingEdgePortDataSources,
+  deps : OrderingEdgePortDataDeps,
+) -> OrderingEdgePortData {
+  let edge_port_samples =
+    (deps.build_port_sample_bundle)(
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+    )
+  let dedup_order_edges =
+    dedup_ordering_edges(
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+    )
+  let order_edge_port_samples =
+    (deps.build_port_sample_bundle)(
+      dedup_order_edges.order_edges,
+      dedup_order_edges.order_edge_tail,
+      dedup_order_edges.order_edge_head,
+    )
+  build_ordering_edge_port_data(
+    {
+      edges: sources.edges,
+      edge_tail_port_x: edge_port_samples.tail_port_x,
+      edge_head_port_x: edge_port_samples.head_port_x,
+      edge_tail_port_order: edge_port_samples.tail_port_order,
+      edge_head_port_order: edge_port_samples.head_port_order,
+      order_edges: dedup_order_edges.order_edges,
+      order_edge_tail: dedup_order_edges.order_edge_tail,
+      order_edge_head: dedup_order_edges.order_edge_head,
+      order_edge_tail_port_x: order_edge_port_samples.tail_port_x,
+      order_edge_head_port_x: order_edge_port_samples.head_port_x,
+      order_edge_tail_port_order: order_edge_port_samples.tail_port_order,
+      order_edge_head_port_order: order_edge_port_samples.head_port_order,
+    },
+  )
 }
 
 ///|
