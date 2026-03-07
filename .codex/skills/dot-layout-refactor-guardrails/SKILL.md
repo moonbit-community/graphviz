@@ -38,7 +38,8 @@ description: Refactor the `layout/dot` code with maintainability-first guardrail
 4. Avoid duplicate implementations across packages; if dependency direction blocks reuse, pass explicit callbacks and plan a later shared extraction.
 5. When a tree-heavy refactor is blocked because a root public type owns public methods (for example `DotLayoutGraph::apply`), do not force a foreign-type alias move; keep the public root type stable and plan a separate internal/shared tree-type extraction before moving the tree algorithms.
 6. Keep same-responsibility items together; avoid over-splitting into scattered micro-files.
-7. When encountering legacy trace/debug scaffolding during refactor, clean it opportunistically but keep refactor scope as the primary goal.
+7. When tree-heavy root algorithms are blocked on recursive `DotLayoutGraph`, introduce an internal shared layout-tree type plus root bridge conversions, then migrate one tree-heavy file at a time into the owning subpackage; validate the pilot move before expanding the pattern.
+8. When encountering legacy trace/debug scaffolding during refactor, clean it opportunistically but keep refactor scope as the primary goal.
 
 ## Follow-up checklist per refactor slice
 
