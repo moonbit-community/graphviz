@@ -41,7 +41,7 @@ fn maybe_build_self_edge_layout(
 ) -> Bool {
   let edge = input.edge
   let edge_id = input.edge_id
-  let route = @routing.self_edge_route_for_edge(
+  let route = @self_edge.self_edge_route_for_edge(
     {
       edge,
       self_edge_groups: input.input.self_edge_groups,

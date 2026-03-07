@@ -176,7 +176,7 @@ pub fn apply_self_edge_right_space(
   record_orientation : RecordOrientation,
 ) -> Map[String, NodeSize] {
   let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
-  @routing.apply_self_edge_right_space(
+  @self_edge.apply_self_edge_right_space(
     {
       edges,
       sizes,

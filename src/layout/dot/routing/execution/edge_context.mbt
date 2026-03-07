@@ -42,7 +42,7 @@ fn build_ordered_routing_input(
         x_groups: input.x_groups,
       },
     )
-  let self_edge_groups = @routing.collect_self_edge_groups(input.edges)
+  let self_edge_groups = @self_edge.collect_self_edge_groups(input.edges)
   {
     ordered_edges: prepass.ordered_edges,
     flat_adjacent_simple_beziers: prepass.flat_adjacent_simple_beziers,

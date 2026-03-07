@@ -2,6 +2,12 @@
 type RankDir = @dot_shared.RankDir
 
 ///|
+type EdgeRouteBase = @routing.EdgeRouteBase
+
+///|
+type SelfEdgeRoute = @routing.SelfEdgeRoute
+
+///|
 fn min_double(a : Double, b : Double) -> Double {
   if a < b { a } else { b }
 }
