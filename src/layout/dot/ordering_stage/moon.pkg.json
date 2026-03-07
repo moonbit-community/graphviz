@@ -8,6 +8,7 @@
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/cgraph"
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }

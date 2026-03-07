@@ -379,9 +379,9 @@ fn run_mincross_case_with_name_order(
   let ambiguous_local_names : Map[String, Bool] = Map::new()
   let sizes : Map[String, NodeSize] = Map::new()
   let nodes : Array[@cgraph.Node] = []
-  let default_size = @dot_shared.node_size_from_points(
-    @dot_shared.default_node_width_in() * 72.0,
-    @dot_shared.default_node_height_in() * 72.0,
+  let default_size = @node_primitives.node_size_from_points(
+    @node_primitives.default_node_width_in() * 72.0,
+    @node_primitives.default_node_height_in() * 72.0,
   )
   for i, node in input.nodes {
     let name = node_key(node.id)

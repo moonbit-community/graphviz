@@ -6,7 +6,7 @@
 /// Record/html label port geometry in layout coordinates.
 pub(all) struct RecordPort {
   center : @geom.Point
-  size : @shared.NodeSize
+  size : @node_primitives.NodeSize
   sides : Int
 }
 

@@ -232,7 +232,7 @@ fn add_flat_label_vnodes(
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
   rankdir : @shared.RankDir,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
@@ -321,8 +321,8 @@ fn add_flat_label_vnodes(
         _ => tail
       }
     let right = if left == tail { head } else { tail }
-    let left_right = @shared.node_right_pt(left, sizes)
-    let right_left = @shared.node_left_pt(right, sizes)
+    let left_right = @node_primitives.node_right_pt(left, sizes)
+    let right_left = @node_primitives.node_left_pt(right, sizes)
     let width = left_right + right_left
     let base_minlen =
       Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt + width
@@ -365,7 +365,7 @@ fn add_flat_label_vnodes(
     let half_width = label_width / 2.0
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
-      @shared.vnode_size_from_widths_with_h(half_width, half_width, label_height)
+      @node_primitives.vnode_size_from_widths_with_h(half_width, half_width, label_height)
     let tail_cluster = @clustering.node_cluster_key(edge.tail())
     let head_cluster = @clustering.node_cluster_key(edge.head())
     let vnode_cluster =
@@ -452,7 +452,7 @@ pub fn build_flat_label_vnodes_for_positioning(
   ordered_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
   rankdir : @shared.RankDir,
-  x_base_sizes : Map[String, @shared.NodeSize],
+  x_base_sizes : Map[String, @node_primitives.NodeSize],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],

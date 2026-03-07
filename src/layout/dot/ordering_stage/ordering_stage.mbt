@@ -1,6 +1,6 @@
 ///|
 type RankDir = @shared.RankDir
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type ClusterMetadata = @ordering.DotClusterMetadata
 type EdgePortSampleBundle = @ordering.EdgePortSampleBundle
 
@@ -373,7 +373,7 @@ fn build_clustered_pre_root(
       order_sizes: dispatch_context.order_sizes,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
       // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-      skeleton_size: @shared.vnode_size_from_widths(1.0, 1.0),
+      skeleton_size: @node_primitives.vnode_size_from_widths(1.0, 1.0),
       node_order: dispatch_context.node_order,
       real_nodes: runtime_context.real_nodes,
       has_clusters: dispatch_context.cluster_meta.has_clusters,
@@ -661,7 +661,7 @@ pub fn compute_dot_rank_stage(
         prep.nodesep_in,
         prep.ranksep_in,
         prep.has_edge_labels,
-        @shared.VNODE_HEIGHT_PT,
+        @node_primitives.VNODE_HEIGHT_PT,
         edge_mid_label_metrics_for_rank_heights,
         @clustering.cluster_label_padding_for_layout,
       ),

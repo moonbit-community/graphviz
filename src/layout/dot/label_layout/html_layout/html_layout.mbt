@@ -2,7 +2,7 @@
 /// HTML label parsing, sizing, and port extraction helpers shared by node
 /// geometry and raw label-port preparation.
 
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 type SizePt = @shared.GraphSizePt
 
@@ -164,7 +164,7 @@ fn collect_html_ports(
           x: (cell_layout.rect.llx + cell_layout.rect.urx) / 2.0,
           y: (cell_layout.rect.lly + cell_layout.rect.ury) / 2.0,
         }
-        let size = @shared.node_size_from_points(
+        let size = @node_primitives.node_size_from_points(
           cell_layout.rect.urx - cell_layout.rect.llx,
           cell_layout.rect.ury - cell_layout.rect.lly,
         )

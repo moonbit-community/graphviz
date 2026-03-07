@@ -11,18 +11,18 @@ fn round_int_for_seed(value : Double) -> Int {
 fn nodesep_minlen_for_seed(
   tail_name : String,
   head_name : String,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
 ) -> Int {
   let tail_size = sizes.get(tail_name)
   let head_size = sizes.get(head_name)
   let tail_right = match tail_size {
     Some(value) => value.right_pt
-    None => @shared.default_node_width_in() * 72.0 / 2.0
+    None => @node_primitives.default_node_width_in() * 72.0 / 2.0
   }
   let head_left = match head_size {
     Some(value) => value.left_pt
-    None => @shared.default_node_width_in() * 72.0 / 2.0
+    None => @node_primitives.default_node_width_in() * 72.0 / 2.0
   }
   let minlen = tail_right + head_left + nodesep_pt
   if minlen <= 0.0 {
@@ -47,7 +47,7 @@ pub(all) struct RankConstraintSeed {
 pub fn build_rank_constraint_seed(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> RankConstraintSeed {

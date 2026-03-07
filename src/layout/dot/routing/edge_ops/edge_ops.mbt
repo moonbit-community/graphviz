@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {

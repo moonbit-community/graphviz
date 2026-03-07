@@ -2,7 +2,7 @@
 /// Node-size and shape-geometry kernels shared across dot stages, routing,
 /// engines, and dot layout postprocess.
 type RecordOrientation = @dot_shared.RecordOrientation
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 priv struct SizePt {
   width_pt : Double
   height_pt : Double
@@ -515,12 +515,12 @@ pub fn node_size(
     _ => true
   }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
-    (@dot_shared.default_point_size_in(), @dot_shared.default_point_size_in())
+    (@node_primitives.default_point_size_in(), @node_primitives.default_point_size_in())
   } else if regular_shape {
-    let height = @dot_shared.default_node_height_in()
+    let height = @node_primitives.default_node_height_in()
     (height, height)
   } else {
-    (@dot_shared.default_node_width_in(), @dot_shared.default_node_height_in())
+    (@node_primitives.default_node_width_in(), @node_primitives.default_node_height_in())
   }
   let base_width_in = match node.get_attr("width") {
     Some(value) => @dot_shared.parse_double_or(value, fallback_width)
@@ -544,7 +544,7 @@ pub fn node_size(
           None => fallback_width
         }
     }
-    return @dot_shared.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
+    return @node_primitives.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
   }
   let label = @label_attrs.label_text(node)
   if @html_label.is_html_label_text(label) {
@@ -588,7 +588,7 @@ pub fn node_size(
             },
           )
         }
-        return @dot_shared.node_size_from_points(width_pt, height_pt)
+        return @node_primitives.node_size_from_points(width_pt, height_pt)
       }
       None => ()
     }
@@ -631,7 +631,7 @@ pub fn node_size(
       )
     }
     let bordered_height = height_pt + @record_geometry.RECORD_BORDER_PT * 2.0
-    return @dot_shared.node_size_from_points(width_pt, bordered_height)
+    return @node_primitives.node_size_from_points(width_pt, bordered_height)
   }
   let (text_width_pt, text_height_pt) = @label_metrics.label_text_dimensions(
     label, font, font_size_pt,

@@ -156,7 +156,7 @@ fn sameport_anchor_for_group(
   let base_clip_size =
     match layout_rankdir {
       RankDir::LR | RankDir::RL =>
-        @dot_shared.node_size_from_points(node_size.height_pt, node_size.width_pt)
+        @node_primitives.node_size_from_points(node_size.height_pt, node_size.width_pt)
       RankDir::TB | RankDir::BT => node_size
     }
   let clip_size =
@@ -167,7 +167,7 @@ fn sameport_anchor_for_group(
         if sameport_shape_has_outline(node) {
           let penwidth = sameport_node_penwidth_pt(node)
           if penwidth > 0.0 {
-            @dot_shared.node_size_from_points(
+            @node_primitives.node_size_from_points(
               base_clip_size.width_pt + penwidth / 2.0,
               base_clip_size.height_pt + penwidth / 2.0,
             )
@@ -178,7 +178,7 @@ fn sameport_anchor_for_group(
           base_clip_size
         }
       if group_edges.length() > 2 {
-        @dot_shared.node_size_from_points(
+        @node_primitives.node_size_from_points(
           clip_size.width_pt + 2.0,
           clip_size.height_pt + 2.0,
         )

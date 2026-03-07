@@ -699,7 +699,7 @@ pub(all) struct RootRankOrderPhaseContext {
   order_cluster_skeleton : Map[String, Bool]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -731,7 +731,7 @@ pub(all) struct RootRankOrderPhaseBaseInputs {
   order_cluster_skeleton : Map[String, Bool]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -760,7 +760,7 @@ pub(all) struct RootRankOrderPhaseBaseBuildSources {
   ranks : Map[String, Int]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -863,7 +863,7 @@ pub(all) struct RootRankOrderCallInputs {
   rank_same_order : Map[String, Int]
   root_edge_order : Map[String, Int]
   root_node_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]

@@ -17,6 +17,7 @@
     "moonbit-community/graphviz/layout/dot/xlabel_collection",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }

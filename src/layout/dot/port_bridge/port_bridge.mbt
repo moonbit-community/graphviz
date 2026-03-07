@@ -4,7 +4,7 @@
 
 type RankDir = @shared.RankDir
 type RecordOrientation = @shared.RecordOrientation
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 
 ///|
@@ -27,7 +27,7 @@ pub fn port_offsets_for_nodes(
       @label_layout.raw_label_ports_for_node(node, origin, base_size, record_orientation)
     },
     @port_geometry.layout_port_offset,
-    @shared.swap_node_size,
+    @node_primitives.swap_node_size,
   )
 }
 

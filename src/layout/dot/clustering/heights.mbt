@@ -47,7 +47,7 @@ pub(all) struct FlipRankHeightsAdjustInput {
 priv struct ClusterBBoxHeightsCollectInput {
   graph : @cgraph.Graph
   ranks : Map[String, Int]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @shared.RankDir
   cluster_heights : Map[String, ClusterBboxHeightPair]
@@ -58,7 +58,7 @@ priv struct ClusterBBoxHeightsCollectInput {
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
-    Map[String, @shared.NodeSize],
+    Map[String, @node_primitives.NodeSize],
     Map[String, Double],
   ) -> Double
 }
@@ -70,7 +70,7 @@ priv struct ClusterBBoxHeightsCollectInput {
 pub(all) struct ClusterBBoxHeightsInput {
   graph : @cgraph.Graph
   ranks : Map[String, Int]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @shared.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
@@ -80,7 +80,7 @@ pub(all) struct ClusterBBoxHeightsInput {
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
-    Map[String, @shared.NodeSize],
+    Map[String, @node_primitives.NodeSize],
     Map[String, Double],
   ) -> Double
 }
@@ -91,7 +91,7 @@ pub(all) struct ClusterBBoxHeightsInput {
 priv struct ClusterRankHeightsCollectInput {
   graph : @cgraph.Graph
   ranks : Map[String, Int]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   seen : Map[String, Bool]
   rank_heights : Map[Int, Double]
@@ -99,7 +99,7 @@ priv struct ClusterRankHeightsCollectInput {
   max_rank : Int?
   node_half_height_pt_for : (
     String,
-    Map[String, @shared.NodeSize],
+    Map[String, @node_primitives.NodeSize],
     Map[String, Double],
   ) -> Double
 }
@@ -110,7 +110,7 @@ priv struct ClusterRankHeightsCollectInput {
 pub(all) struct ClusterRankHeightsApplyInput {
   graph : @cgraph.Graph
   ranks : Map[String, Int]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
@@ -122,7 +122,7 @@ pub(all) struct ClusterRankHeightsApplyInput {
   ) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
-    Map[String, @shared.NodeSize],
+    Map[String, @node_primitives.NodeSize],
     Map[String, Double],
   ) -> Double
 }

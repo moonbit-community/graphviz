@@ -3,7 +3,7 @@ type RankDir = @shared.RankDir
 type SplinesMode = @shared.SplinesMode
 type RecordOrientation = @shared.RecordOrientation
 type LayoutPrep = @shared.LayoutPrep
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 /// Graphviz parity: Stage A input payload keeps resolved graph options grouped
@@ -145,7 +145,7 @@ fn build_size_maps(
     order_sizes[node.name()] = size
     sizes[node.name()] =
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        @shared.swap_node_size(size)
+        @node_primitives.swap_node_size(size)
       } else {
         size
       }

@@ -111,9 +111,9 @@ pub(all) struct RoutingPrecomputePipelineInput {
   ranks : Map[String, Int]
   nodesep_pt : Double
   edge_vnodes : Map[String, Array[String]]
-  pathplan_sizes : Map[String, @dot_shared.NodeSize]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
   path_cluster_keys : Map[String, String]
-  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
 }

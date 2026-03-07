@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 type RankDir = @dot_shared.RankDir
@@ -305,10 +305,10 @@ fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
 }
 
 ///|
-///| Graphviz parity: label vnodes are virtual nodes with label height (> @dot_shared.VNODE_HEIGHT_PT).
+///| Graphviz parity: label vnodes are virtual nodes with label height (> @node_primitives.VNODE_HEIGHT_PT).
 fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   match vnode_sizes.get(name) {
-    Some(size) => size.height_pt > @dot_shared.VNODE_HEIGHT_PT
+    Some(size) => size.height_pt > @node_primitives.VNODE_HEIGHT_PT
     None => false
   }
 }
@@ -509,9 +509,9 @@ fn size_for_name(name : String, sizes : Map[String, NodeSize]) -> NodeSize {
   match sizes.get(name) {
     Some(value) => value
     None =>
-      @dot_shared.node_size_from_points(
-        @dot_shared.default_node_width_in() * 72.0,
-        @dot_shared.default_node_height_in() * 72.0,
+      @node_primitives.node_size_from_points(
+        @node_primitives.default_node_width_in() * 72.0,
+        @node_primitives.default_node_height_in() * 72.0,
       )
   }
 }

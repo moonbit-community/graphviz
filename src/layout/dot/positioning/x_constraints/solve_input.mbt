@@ -2,7 +2,7 @@
 /// Graphviz parity: x-position solve input keeps reordered rank metadata,
 /// vnode extra-node toggles, and size overlays grouped for one xpos call.
 pub struct XposComputationInput {
-  x_sizes : Map[String, @shared.NodeSize]
+  x_sizes : Map[String, @node_primitives.NodeSize]
   x_rank_keys : Array[Int]
   x_ranks : Map[String, Int]
   x_extra_nodes : Array[@ordering.ExtraConstraintNode]
@@ -14,9 +14,9 @@ pub struct XposComputationInput {
 /// metadata grouped so Stage D call-sites avoid positional drift.
 pub(all) struct XposComputationInputSources {
   use_vnodes_for_xpos : Bool
-  x_base_sizes : Map[String, @shared.NodeSize]
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
   x_groups : Map[Int, Array[String]]
-  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_creation_order : Array[String]
   vnode_ranks : Map[String, Int]
   edge_vnodes : Map[String, Array[String]]
@@ -74,8 +74,8 @@ pub(all) struct XPositionSolveInput {
   ranks : Map[String, Int]
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
-  sizes : Map[String, @shared.NodeSize]
-  output_sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
+  output_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -89,9 +89,9 @@ pub(all) struct XPositionSolveInput {
 /// snapshots and one compute_x_positions callback payload at one boundary.
 pub(all) struct XPositionPipelineInput {
   use_vnodes_for_xpos : Bool
-  x_base_sizes : Map[String, @shared.NodeSize]
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
   x_groups : Map[Int, Array[String]]
-  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_creation_order : Array[String]
   vnode_ranks : Map[String, Int]
   edge_vnodes : Map[String, Array[String]]
@@ -106,7 +106,7 @@ pub(all) struct XPositionPipelineInput {
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
-  output_sizes : Map[String, @shared.NodeSize]
+  output_sizes : Map[String, @node_primitives.NodeSize]
   flat_label_edges : Array[ConstraintEdge]
 }
 

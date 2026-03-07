@@ -538,7 +538,7 @@ test "flat label node sizes match Graphviz fixtures" {
     let size = @node_geometry.node_size(node, record_orientation)
     sizes[node.name()] =
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-      @dot_shared.swap_node_size(size)
+      @node_primitives.swap_node_size(size)
     } else {
       size
     }

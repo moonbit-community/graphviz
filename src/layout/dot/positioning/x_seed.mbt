@@ -141,8 +141,8 @@ pub fn build_x_cluster_keys(
 /// reorder/flat-label stages.
 pub struct XPositionSeedData {
   has_vnode_order : Bool
-  x_base_sizes : Map[String, @shared.NodeSize]
-  x_order_sizes : Map[String, @shared.NodeSize]
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_edge_tail_port_x : Array[Double]
   x_edge_head_port_x : Array[Double]
   x_edge_tail_port_order : Array[Double]
@@ -185,8 +185,8 @@ pub(all) struct XSeedBuildSources {
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
   vnode_ranks : Map[String, Int]
-  x_base_sizes : Map[String, @shared.NodeSize]
-  x_order_sizes : Map[String, @shared.NodeSize]
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
   port_samples : XSeedPortSamples
   vnodes_by_rank : Map[Int, Array[String]]
   has_clusters : Bool

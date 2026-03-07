@@ -1,4 +1,4 @@
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 pub struct XposPortSamples {

@@ -1,5 +1,5 @@
 ///|
-type SnapshotNodeSize = @shared.NodeSize
+type SnapshotNodeSize = @node_primitives.NodeSize
 
 ///|
 pub(all) struct XposConstraintNodeSnapshot {

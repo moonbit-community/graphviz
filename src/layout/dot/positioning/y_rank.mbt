@@ -164,14 +164,14 @@ pub(all) struct YPositionPipelineInput {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
   ranks : Map[String, Int]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rank_pht : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
   ranksep_pt : Double
   flat_label_ranks : Map[String, Int]
-  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (
     @cgraph.Graph,
@@ -179,7 +179,7 @@ pub(all) struct YPositionPipelineInput {
   ) -> @clustering.ClusterLabelPadding
   node_half_height_pt_for : (
     String,
-    Map[String, @shared.NodeSize],
+    Map[String, @node_primitives.NodeSize],
     Map[String, Double],
   ) -> Double
   cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
@@ -195,7 +195,7 @@ pub(all) struct YPositionPipelineOutput {
 ///|
 fn apply_flat_label_rank_heights(
   flat_label_ranks : Map[String, Int],
-  vnode_sizes : Map[String, @shared.NodeSize],
+  vnode_sizes : Map[String, @node_primitives.NodeSize],
   rank_pht : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],

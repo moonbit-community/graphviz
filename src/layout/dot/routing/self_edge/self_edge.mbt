@@ -29,7 +29,7 @@ const PORT_SIDE_LEFT : Int = 8
 ///|
 pub(all) struct SelfEdgeRightSpaceInput {
   edges : Array[@cgraph.Edge]
-  sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   rankdir : RankDir
   self_edge_size_pt : Double
   self_edge_label_width_for : (@cgraph.Edge, RankDir) -> Double
@@ -70,7 +70,7 @@ fn self_edge_right_space_for(
 /// Do not change behavior without updating fixtures/tests.
 pub fn apply_self_edge_right_space(
   input : SelfEdgeRightSpaceInput,
-) -> Map[String, @dot_shared.NodeSize] {
+) -> Map[String, @node_primitives.NodeSize] {
   let extra_right : Map[String, Double] = Map::new()
   for edge in input.edges {
     if !@edge_semantics.edge_is_self(edge) {
@@ -90,12 +90,12 @@ pub fn apply_self_edge_right_space(
   if extra_right.length() == 0 {
     return input.sizes
   }
-  let adjusted : Map[String, @dot_shared.NodeSize] = Map::new()
+  let adjusted : Map[String, @node_primitives.NodeSize] = Map::new()
   for name, size in input.sizes {
     match extra_right.get(name) {
       Some(extra) =>
         adjusted[name] =
-          @dot_shared.vnode_size_from_widths_with_h(
+          @node_primitives.vnode_size_from_widths_with_h(
             size.left_pt,
             size.right_pt + extra,
             size.height_pt,

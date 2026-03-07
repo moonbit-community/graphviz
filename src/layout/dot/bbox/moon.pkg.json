@@ -1,6 +1,7 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }

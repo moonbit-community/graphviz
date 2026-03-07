@@ -405,7 +405,7 @@ pub(all) struct PositionOutputPipelineInput {
   edge_vnodes : Map[String, Array[String]]
   cluster_rounding_enabled : Bool
   vnode_clusters : Map[String, String]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
 }

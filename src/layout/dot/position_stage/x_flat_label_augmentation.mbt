@@ -96,7 +96,7 @@ fn build_x_flat_label_reorder_sources(
     cluster_min_rank: pipeline.cluster_meta.cluster_min_rank,
     cluster_max_rank: pipeline.cluster_meta.cluster_max_rank,
     node_order: pipeline.prep.node_order,
-    cluster_skeleton_size: @shared.vnode_size_from_widths(1.0, 1.0),
+    cluster_skeleton_size: @node_primitives.vnode_size_from_widths(1.0, 1.0),
     edges: pipeline.prep.edges,
     edge_tail: pipeline.rank_data.edge_tail,
     edge_head: pipeline.rank_data.edge_head,

@@ -22,8 +22,8 @@ pub(all) struct EdgeRouteBase {
   head_node : @cgraph.Node
   tail_pos : @geom.Point
   head_pos : @geom.Point
-  tail_size : @dot_shared.NodeSize
-  head_size : @dot_shared.NodeSize
+  tail_size : @node_primitives.NodeSize
+  head_size : @node_primitives.NodeSize
   mid_label_width_pt : Double
   mid_label_height_pt : Double
   tail_record_path_box : @geom.Rect?
@@ -36,9 +36,9 @@ pub(all) struct EdgeRouteBase {
   tail_sameport_group_size : Int
   head_sameport_group_size : Int
   tail_clip_center : @geom.Point
-  tail_clip_size : @dot_shared.NodeSize
+  tail_clip_size : @node_primitives.NodeSize
   head_clip_center : @geom.Point
-  head_clip_size : @dot_shared.NodeSize
+  head_clip_size : @node_primitives.NodeSize
   tail_clip_enabled : Bool
   head_clip_enabled : Bool
   tail_clip : @geom.Point
@@ -68,8 +68,8 @@ pub(all) struct EdgeRouteBase {
   out_head_clip : @geom.Point
   out_tail_pos : @geom.Point
   out_head_pos : @geom.Point
-  out_tail_size : @dot_shared.NodeSize
-  out_head_size : @dot_shared.NodeSize
+  out_tail_size : @node_primitives.NodeSize
+  out_head_size : @node_primitives.NodeSize
   rankdir : @dot_shared.RankDir
   layout_rankdir : @dot_shared.RankDir
   has_side_anchor : Bool
@@ -90,26 +90,26 @@ pub(all) struct RouteDynamicPortAnchor {
 
 ///|
 pub(all) struct RouteBaseDeps {
-  node_size_for_missing : (@cgraph.Node) -> @dot_shared.NodeSize
+  node_size_for_missing : (@cgraph.Node) -> @node_primitives.NodeSize
   edge_mid_label_metrics : (@cgraph.Edge) -> RouteLabelMetrics?
   record_port_path_box : (
     @cgraph.Node,
     @cgraph.Port?,
     @geom.Point,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
     @dot_shared.RankDir,
   ) -> @geom.Rect?
   port_geometry : (
     String,
     @cgraph.Port?,
     @geom.Point,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
   ) -> RoutePortGeometry
   port_rect_from_geometry : (
     @cgraph.Port?,
     @geom.Point,
-    @dot_shared.NodeSize,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
+    @node_primitives.NodeSize,
   ) -> @geom.Rect?
   port_is_label_port : (String, @cgraph.Port?) -> Bool
   is_record_shape : (@cgraph.Node) -> Bool
@@ -122,12 +122,12 @@ pub(all) struct RouteBaseDeps {
     @dot_shared.RankDir,
     Double,
   ) -> RouteDynamicPortAnchor
-  port_side_mask_from_anchor : (@geom.Point, @geom.Point, @dot_shared.NodeSize) -> Int
+  port_side_mask_from_anchor : (@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
   port_side_for_edge : (
     @cgraph.Port?,
     @geom.Rect?,
     @geom.Point,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
   ) -> Int
   layout_port_offset : (@geom.Point, @dot_shared.RankDir) -> @geom.Point
   node_cluster_key : (@cgraph.Node) -> String
@@ -158,7 +158,7 @@ pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
 ///|
 pub(all) struct EdgeVnodeInfo {
   vnode_ranks : Map[String, Int]
-  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnodes_by_rank : Map[Int, Array[String]]
   edge_vnodes : Map[String, Array[String]]
   vnode_clusters : Map[String, String]
@@ -184,7 +184,7 @@ pub(all) struct RecoverSlackVnodesInput {
   vnode_ranks : Map[String, Int]
   rank_y : Map[Int, Double]
   vnode_positions : Map[String, @geom.Point]
-  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   adjacency : @routesplines.PathAdjacency
 }
 
@@ -235,7 +235,7 @@ pub(all) struct RouteEdgesPipelineDeps {
 pub(all) struct RegularPassInput {
   spline_mode : Int
   ranks : Map[String, Int]
-  sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo
@@ -270,7 +270,7 @@ pub(all) struct OrderedRoutingInput {
 pub(all) struct RouteEdgesInput {
   edges : Array[@cgraph.Edge]
   ranks : Map[String, Int]
-  sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo
@@ -297,7 +297,7 @@ pub(all) struct RouteEdgesPipelineInput {
   layout_rankdir : @dot_shared.RankDir
   edges : Array[@cgraph.Edge]
   ranks : Map[String, Int]
-  sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo

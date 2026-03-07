@@ -3,7 +3,7 @@
 /// record/html endpoint handling in dot layout.
 
 type RankDir = @shared.RankDir
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 
 ///|
@@ -30,7 +30,7 @@ pub fn layout_ports_from_final(
       y: layout_pos.y + offset.y,
     }
     let size = match rankdir {
-      RankDir::LR | RankDir::RL => @shared.swap_node_size(port.size)
+      RankDir::LR | RankDir::RL => @node_primitives.swap_node_size(port.size)
       _ => port.size
     }
     rotated[name] = { center, size, sides: port.sides }

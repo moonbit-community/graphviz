@@ -4,7 +4,7 @@
 
 type RankDir = @shared.RankDir
 type RecordOrientation = @shared.RecordOrientation
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 type SizePt = @shared.GraphSizePt
 
@@ -405,7 +405,7 @@ fn record_layout_nodes(
               x: (child_rect.llx + child_rect.urx) / 2.0,
               y: (child_rect.lly + child_rect.ury) / 2.0,
             }
-            let field_size = @shared.node_size_from_points(
+            let field_size = @node_primitives.node_size_from_points(
               child_rect.urx - child_rect.llx,
               child_rect.ury - child_rect.lly,
             )

@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 type RankDir = @dot_shared.RankDir

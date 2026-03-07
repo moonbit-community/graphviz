@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 pub(all) struct RoutingContext {

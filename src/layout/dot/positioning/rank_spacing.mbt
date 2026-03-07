@@ -8,7 +8,7 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 ///|
 pub fn node_half_height_pt(
   name : String,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   self_edge_labels : Map[String, Double],
 ) -> Double {
   let base_height = match sizes.get(name) {

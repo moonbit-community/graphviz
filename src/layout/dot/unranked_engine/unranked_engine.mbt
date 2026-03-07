@@ -3,7 +3,7 @@
 /// parsing/scaling, straight-line splines, force-directed neato solve, and
 /// noop edge-pos parsing.
 
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordOrientation = @shared.RecordOrientation
 type RankDir = @shared.RankDir
 
@@ -383,8 +383,8 @@ fn line_spline(
   tail_size : NodeSize,
   head_size : NodeSize,
 ) -> @geom.Spline {
-  let start = @shared.clip_to_rect(tail_pos, tail_size, head_pos)
-  let end = @shared.clip_to_rect(head_pos, head_size, tail_pos)
+  let start = @node_primitives.clip_to_rect(tail_pos, tail_size, head_pos)
+  let end = @node_primitives.clip_to_rect(head_pos, head_size, tail_pos)
   {
     start: Some(start),
     end: Some(end),

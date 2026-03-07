@@ -46,7 +46,7 @@ pub fn compress_width_minlen_pt(
 }
 
 ///|
-fn size_left_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double {
+fn size_left_pt(name : String, sizes : Map[String, @node_primitives.NodeSize]) -> Double {
   match sizes.get(name) {
     Some(size) => size.left_pt
     None => 1.0
@@ -54,7 +54,7 @@ fn size_left_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double 
 }
 
 ///|
-fn size_right_pt(name : String, sizes : Map[String, @shared.NodeSize]) -> Double {
+fn size_right_pt(name : String, sizes : Map[String, @node_primitives.NodeSize]) -> Double {
   match sizes.get(name) {
     Some(size) => size.right_pt
     None => 1.0
@@ -78,7 +78,7 @@ pub fn rank_nodesep_pt(
 pub fn compute_rank_positions(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> Map[String, Double] {

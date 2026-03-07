@@ -22,7 +22,7 @@ pub fn build_edge_vnodes(
   deps : EdgeVnodeBuildDeps,
 ) -> @routing.EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
-  let vnode_sizes : Map[String, @shared.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
@@ -76,7 +76,7 @@ pub fn build_edge_vnodes(
               let left = size.left_pt + delta
               let right = size.right_pt + delta
               vnode_sizes[name] =
-                @shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
+                @node_primitives.vnode_size_from_widths_with_h(left, right, size.height_pt)
             }
             None => ()
           }
@@ -102,7 +102,7 @@ pub fn build_edge_vnodes(
                 let left = size.left_pt + delta
                 let right = size.right_pt + delta
                 vnode_sizes[name] =
-                  @shared.vnode_size_from_widths_with_h(left, right, size.height_pt)
+                  @node_primitives.vnode_size_from_widths_with_h(left, right, size.height_pt)
               }
               None => ()
             }
@@ -165,13 +165,13 @@ pub fn build_edge_vnodes(
       vnode_ranks[name] = rank
       vnode_sizes[name] =
         if is_label_rank {
-        @shared.vnode_size_from_widths_with_h(
+        @node_primitives.vnode_size_from_widths_with_h(
           nodesep_pt,
           label_width,
           label_height,
         )
       } else {
-        @shared.vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
+        @node_primitives.vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
       }
       vnode_clusters[name] = vnode_cluster
       match vnodes_by_rank.get(rank) {

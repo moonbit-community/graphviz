@@ -160,8 +160,8 @@ pub(all) struct RoutePrepassInput {
   path_order_index : Map[String, Int]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
-  sizes : Map[String, @dot_shared.NodeSize]
-  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   x_groups : Map[Int, Array[String]]
 }
 

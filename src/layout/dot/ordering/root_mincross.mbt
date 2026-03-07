@@ -356,7 +356,7 @@ pub(all) struct RootMincrossReorderInputs {
   rank_same_order : Map[String, Int]
   vnode_order_keys_for_ordering : Map[String, Double]
   order_node_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -389,7 +389,7 @@ pub(all) struct RootMincrossReorderBuildContext {
   rank_same_order : Map[String, Int]
   vnode_order_keys_for_ordering : Map[String, Double]
   order_node_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -412,7 +412,7 @@ pub(all) struct RootMincrossReorderInputsBuildSources {
   order_groups : Map[Int, Array[String]]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
   nodesep_pt : Double
@@ -540,7 +540,7 @@ pub fn build_root_rank_reorder_call_data(
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
   order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, @shared.NodeSize],
+  order_sizes_out : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
   port_order_positions : Map[String, Double],
@@ -815,7 +815,7 @@ pub(all) struct RootAndClusterRanksCallInputSources {
   order_groups : Map[Int, Array[String]]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
   nodesep_pt : Double
@@ -899,7 +899,7 @@ pub(all) struct RootAndClusterRanksStageSources {
   ranks : Map[String, Int]
   vnode_ranks : Map[String, Int]
   vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
 
 ///|
@@ -1013,7 +1013,7 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
   flat_constraints : Map[String, Bool]
   vnode_ranks : Map[String, Int]
   vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, @shared.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
 
 ///|
@@ -1941,7 +1941,7 @@ pub(all) struct RootRankReorderInputs {
   rank_same_order : Map[String, Int]
   edge_order : Map[String, Int]
   order_node_order : Map[String, Int]
-  order_sizes_out : Map[String, @shared.NodeSize]
+  order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]

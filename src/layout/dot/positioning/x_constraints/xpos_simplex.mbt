@@ -9,7 +9,7 @@ pub(all) struct XposSimplexSolveInput {
   ranks : Map[String, Int]
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool

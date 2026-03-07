@@ -43,9 +43,9 @@ pub(all) struct LayoutPrep {
   has_edge_labels : Bool
   node_order : Map[String, Int]
   record_orientation : RecordOrientation
-  output_sizes : Map[String, NodeSize]
-  order_sizes : Map[String, NodeSize]
-  sizes : Map[String, NodeSize]
+  output_sizes : Map[String, @node_primitives.NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
 }
@@ -89,11 +89,11 @@ pub fn scan_edge_flags(edges : Array[@cgraph.Edge]) -> EdgeFlags {
 /// Graphviz parity: output-size lookup prefers precomputed output sizes and
 /// falls back to node geometry calculation when a node is not present.
 pub fn resolve_node_output_size(
-  output_sizes : Map[String, NodeSize],
+  output_sizes : Map[String, @node_primitives.NodeSize],
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
-  node_size_for_missing : (@cgraph.Node, RecordOrientation) -> NodeSize,
-) -> NodeSize {
+  node_size_for_missing : (@cgraph.Node, RecordOrientation) -> @node_primitives.NodeSize,
+) -> @node_primitives.NodeSize {
   let name = node.name()
   match output_sizes.get(name) {
     Some(value) => value

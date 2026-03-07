@@ -3,7 +3,7 @@
 /// across record and HTML implementations.
 
 type RecordOrientation = @shared.RecordOrientation
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 
 ///|

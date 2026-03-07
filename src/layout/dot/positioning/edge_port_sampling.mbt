@@ -8,11 +8,11 @@
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
-  output_sizes : Map[String, @shared.NodeSize],
-  node_size_for_missing : (@cgraph.Node, @shared.RankDir) -> @shared.NodeSize,
-  ports_for_node : (@cgraph.Node, @geom.Point, @shared.NodeSize, @shared.RankDir) -> Map[String, @record_geometry.RecordPort],
+  output_sizes : Map[String, @node_primitives.NodeSize],
+  node_size_for_missing : (@cgraph.Node, @shared.RankDir) -> @node_primitives.NodeSize,
+  ports_for_node : (@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @shared.RankDir) -> Map[String, @record_geometry.RecordPort],
   layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
-  swap_node_size : (@shared.NodeSize) -> @shared.NodeSize,
+  swap_node_size : (@node_primitives.NodeSize) -> @node_primitives.NodeSize,
 ) -> Map[String, Map[String, @record_geometry.RecordPort]] {
   let offsets : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
   let rankdir =
@@ -199,10 +199,10 @@ pub fn build_edge_port_sample_bundle(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  sizes : Map[String, @shared.NodeSize],
-  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @shared.NodeSize]) -> Map[String, Map[String, @record_geometry.RecordPort]],
-  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
-  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @shared.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+  sizes : Map[String, @node_primitives.NodeSize],
+  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @node_primitives.NodeSize]) -> Map[String, Map[String, @record_geometry.RecordPort]],
+  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
+  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @shared.RankDir, Map[String, @cgraph.Node]) -> Double,
 ) -> @ordering.EdgePortSampleBundle {
   let rankdir =
     if nodes.length() > 0 {
@@ -241,9 +241,9 @@ pub fn build_edge_port_sample_bundle(
 }
 
 ///|
-fn fallback_compass_size() -> @shared.NodeSize {
-  let width_pt = @shared.default_node_width_in() * 72.0
-  let height_pt = @shared.default_node_height_in() * 72.0
+fn fallback_compass_size() -> @node_primitives.NodeSize {
+  let width_pt = @node_primitives.default_node_width_in() * 72.0
+  let height_pt = @node_primitives.default_node_height_in() * 72.0
   let half = width_pt / 2.0
   {
     width_in: width_pt / 72.0,
@@ -258,8 +258,8 @@ fn fallback_compass_size() -> @shared.NodeSize {
 ///|
 fn node_size_for_compass(
   node_name : String,
-  sizes : Map[String, @shared.NodeSize],
-) -> @shared.NodeSize {
+  sizes : Map[String, @node_primitives.NodeSize],
+) -> @node_primitives.NodeSize {
   match sizes.get(node_name) {
     Some(value) => value
     None => fallback_compass_size()
@@ -273,10 +273,10 @@ pub fn compass_port_point(
   node_name : String,
   node : @cgraph.Node?,
   compass : @cgraph.Compass,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   rankdir : @shared.RankDir,
   uses_shape_clipping : (@cgraph.Node) -> Bool,
-  shape_clipped_point_on_node : (@cgraph.Node, @shared.NodeSize, @cgraph.Compass, @shared.RankDir) -> @geom.Point,
+  shape_clipped_point_on_node : (@cgraph.Node, @node_primitives.NodeSize, @cgraph.Compass, @shared.RankDir) -> @geom.Point,
   layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
 ) -> @geom.Point {
   let base_size = node_size_for_compass(node_name, sizes)
@@ -329,10 +329,10 @@ pub fn compass_port_point(
 pub fn compass_port_offset(
   compass : @cgraph.Compass,
   node_name : String,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   rankdir : @shared.RankDir,
   node : @cgraph.Node?,
-  compass_port_point : (String, @cgraph.Node?, @cgraph.Compass, Map[String, @shared.NodeSize], @shared.RankDir) -> @geom.Point,
+  compass_port_point : (String, @cgraph.Node?, @cgraph.Compass, Map[String, @node_primitives.NodeSize], @shared.RankDir) -> @geom.Point,
   use_unrotated_x_for_node : (@cgraph.Node) -> Bool,
   layout_port_offset : (@geom.Point, @shared.RankDir) -> @geom.Point,
 ) -> Double {

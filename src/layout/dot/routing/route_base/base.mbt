@@ -90,7 +90,7 @@ fn adjusted_self_edge_compass_clip_size(
                     )
                   _ => size.width_pt
                 }
-              @dot_shared.node_size_from_points(
+              @node_primitives.node_size_from_points(
                 width_pt,
                 size.height_pt + pad * 2.0,
               )

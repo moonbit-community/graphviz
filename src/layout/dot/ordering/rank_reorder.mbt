@@ -2442,7 +2442,7 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
   rank_same_order : Map[String, Int]
   edge_order : Map[String, Int]
   cluster_node_order : Map[String, Int]
-  cluster_sizes : Map[String, @shared.NodeSize]
+  cluster_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]

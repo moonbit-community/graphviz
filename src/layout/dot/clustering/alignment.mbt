@@ -6,7 +6,7 @@ pub(all) struct ClusterAlignmentInput {
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_clusters : Map[String, String]
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
 }
@@ -15,7 +15,7 @@ pub(all) struct ClusterAlignmentInput {
 fn compute_nodes_bbox(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
 ) -> @geom.Rect? {
   let mut bbox_set = false
   let mut min_x = 0.0

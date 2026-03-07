@@ -17,12 +17,12 @@ pub(all) struct XposReorderPipelineSources {
   ordering_set : Bool
   has_clusters : Bool
   x_groups : Map[Int, Array[String]]
-  x_order_sizes : Map[String, @shared.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_size : @shared.NodeSize
+  cluster_skeleton_size : @node_primitives.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]

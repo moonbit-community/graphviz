@@ -1,9 +1,5 @@
 {
   "import": [
-    {
-      "path": "moonbit-community/graphviz/layout/dot/shared",
-      "alias": "dot_shared"
-    },
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     {
       "path": "moonbit-community/graphviz/layout/dot/routing/routesplines",
@@ -21,6 +17,7 @@
     "moonbit-community/graphviz/layout/dot/routing/edge_ops",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbit-community/graphviz/layout/dot/edge_identity"
+    "moonbit-community/graphviz/layout/dot/edge_identity",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }

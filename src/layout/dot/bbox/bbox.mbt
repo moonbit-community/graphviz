@@ -6,7 +6,7 @@ type DotLayoutNode = @shared.DotLayoutNode
 
 type DotLayoutEdge = @shared.DotLayoutEdge
 
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 priv struct BBoxAccumulator {
   set : Bool
@@ -359,8 +359,8 @@ pub fn compute_dot_bbox(
   let mut first = true
   for node_layout in input.nodes_out {
     let name = node_layout.node.name()
-    let left = @shared.node_left_pt(name, input.sizes)
-    let right = @shared.node_right_pt(name, input.sizes)
+    let left = @node_primitives.node_left_pt(name, input.sizes)
+    let right = @node_primitives.node_right_pt(name, input.sizes)
     let llx = node_layout.pos.x - left
     let urx = node_layout.pos.x + right
     if first {

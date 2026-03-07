@@ -288,7 +288,7 @@ fn clip_to_polygon_shape(
       },
     )
   if vertices.length() < 3 {
-    return @dot_shared.clip_to_rect(center, size, target)
+    return @node_primitives.clip_to_rect(center, size, target)
   }
   let dx = target.x - center.x
   let dy = target.y - center.y
@@ -322,7 +322,7 @@ fn clip_to_polygon_shape(
   if found {
     @edge_spline.point(center.x + dx * best_t, center.y + dy * best_t)
   } else {
-    @dot_shared.clip_to_rect(center, size, target)
+    @node_primitives.clip_to_rect(center, size, target)
   }
 }
 
@@ -356,7 +356,7 @@ fn clip_to_node_shape(
               skew: params.skew,
             },
           )
-        None => @dot_shared.clip_to_rect(center, size, target)
+        None => @node_primitives.clip_to_rect(center, size, target)
       }
   }
 }

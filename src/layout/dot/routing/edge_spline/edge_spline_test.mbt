@@ -12,7 +12,7 @@ test "point helpers compute expected values" {
 
 ///|
 test "port side helpers and endpoint slope" {
-  let size = @dot_shared.node_size_from_points(100.0, 50.0)
+  let size = @node_primitives.node_size_from_points(100.0, 50.0)
   let pos = point(10.0, 20.0)
   let rect = port_side_rect(pos, size)
   assert_eq(rect, { llx: -40.0, lly: -5.0, urx: 60.0, ury: 45.0 })

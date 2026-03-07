@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @dot_shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 type RankDir = @dot_shared.RankDir
@@ -44,13 +44,13 @@ fn fixedshape_clip_size(
     shape == "circle" ||
     shape == "doublecircle"
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
-    let point = @dot_shared.default_node_width_in()
+    let point = @node_primitives.default_node_width_in()
     (point, point)
   } else if regular_shape {
-    let height = @dot_shared.default_node_height_in()
+    let height = @node_primitives.default_node_height_in()
     (height, height)
   } else {
-    (@dot_shared.default_node_width_in(), @dot_shared.default_node_height_in())
+    (@node_primitives.default_node_width_in(), @node_primitives.default_node_height_in())
   }
   let mut width_in = match node.get_attr("width") {
     Some(value) => @dot_shared.parse_double_or(value, fallback_width)
@@ -69,7 +69,7 @@ fn fixedshape_clip_size(
           None => fallback_width
         }
     }
-    return @dot_shared.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
+    return @node_primitives.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
   }
   if regular_shape {
     let size_in = if width_in > height_in { width_in } else { height_in }
@@ -81,7 +81,7 @@ fn fixedshape_clip_size(
     width_in = width_in + gap_in
     height_in = height_in + gap_in
   }
-  @dot_shared.node_size_from_points(width_in * 72.0, height_in * 72.0)
+  @node_primitives.node_size_from_points(width_in * 72.0, height_in * 72.0)
 }
 
 ///|
@@ -1596,7 +1596,7 @@ fn polygon_outline_vertices_for_shape(
     if inner_w <= 0.0 || inner_h <= 0.0 {
       break
     }
-    let inner_size = @dot_shared.node_size_from_points(inner_w, inner_h)
+    let inner_size = @node_primitives.node_size_from_points(inner_w, inner_h)
     let base =
       polygon_vertices_for_shape(
         inner_size,
@@ -1625,7 +1625,7 @@ fn polygon_outline_vertices_for_shape(
     inner_w = inner_w * (target_w / (max_x * 2.0))
     inner_h = inner_h * (target_h / (max_y * 2.0))
   }
-  let final_size = @dot_shared.node_size_from_points(inner_w, inner_h)
+  let final_size = @node_primitives.node_size_from_points(inner_w, inner_h)
   let final_base =
     polygon_vertices_for_shape(
       final_size,
@@ -1684,7 +1684,7 @@ fn point_inside_polygon(
       let polygon_size =
         if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
           // Graphviz parity: poly_inside tests in unflipped shape space.
-          @dot_shared.node_size_from_points(size.height_pt, size.width_pt)
+          @node_primitives.node_size_from_points(size.height_pt, size.width_pt)
         } else {
           size
         }

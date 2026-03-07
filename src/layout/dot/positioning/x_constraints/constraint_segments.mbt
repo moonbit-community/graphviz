@@ -10,7 +10,7 @@ pub(all) struct ConstraintSegmentPassInput {
   edge_vnodes : Map[String, Array[String]]
   order_in_rank : Map[String, Int]
   nodesep_pt : Double
-  sizes : Map[String, @shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
   skip_intercluster : Bool
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
@@ -84,12 +84,12 @@ fn build_node_degrees(
 ///|
 fn node_side_pt(
   name : String,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   use_left : Bool,
 ) -> Double {
   match sizes.get(name) {
     Some(value) => if use_left { value.left_pt } else { value.right_pt }
-    None => @shared.default_node_width_in() * 72.0 / 2.0
+    None => @node_primitives.default_node_width_in() * 72.0 / 2.0
   }
 }
 
@@ -99,7 +99,7 @@ fn same_rank_constraint_minlen(
   left : String,
   right : String,
   nodesep_pt : Double,
-  sizes : Map[String, @shared.NodeSize],
+  sizes : Map[String, @node_primitives.NodeSize],
   has_ordering : Bool,
 ) -> Int {
   let width = node_side_pt(left, sizes, false) + node_side_pt(right, sizes, true)

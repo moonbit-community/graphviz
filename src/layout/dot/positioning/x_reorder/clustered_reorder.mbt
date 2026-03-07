@@ -4,12 +4,12 @@
 /// single clustered xpos pass.
 pub struct ClusteredXposReorderInput {
   x_groups : Map[Int, Array[String]]
-  x_order_sizes : Map[String, @shared.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_size : @shared.NodeSize
+  cluster_skeleton_size : @node_primitives.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -111,7 +111,7 @@ priv struct ClusteredXposReorderApplyInput {
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
   order_node_order : Map[String, Int]
-  order_sizes : Map[String, @shared.NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   order_cluster_skeleton : Map[String, Bool]
@@ -175,12 +175,12 @@ fn apply_clustered_xpos_reorder(
 /// injection and rank/order materialization.
 priv struct ClusteredXposSeedInput {
   x_groups : Map[Int, Array[String]]
-  x_order_sizes : Map[String, @shared.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   node_order : Map[String, Int]
-  cluster_skeleton_size : @shared.NodeSize
+  cluster_skeleton_size : @node_primitives.NodeSize
 }
 
 ///|
@@ -189,7 +189,7 @@ priv struct ClusteredXposSeedInput {
 /// reorder_rank_groups.
 priv struct ClusteredXposSeedOutput {
   order_groups : Map[Int, Array[String]]
-  order_sizes : Map[String, @shared.NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   order_node_order : Map[String, Int]
@@ -202,7 +202,7 @@ priv struct ClusteredXposSeedOutput {
 fn append_skeleton_nodes(
   input : ClusteredXposSeedInput,
   order_groups : Map[Int, Array[String]],
-  order_sizes : Map[String, @shared.NodeSize],
+  order_sizes : Map[String, @node_primitives.NodeSize],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
 ) -> Unit {
@@ -232,7 +232,7 @@ fn build_clustered_xpos_seed(
   for rank, names in input.x_groups {
     order_groups[rank] = names.copy()
   }
-  let order_sizes : Map[String, @shared.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   for name, size in input.x_order_sizes {
     order_sizes[name] = size
   }

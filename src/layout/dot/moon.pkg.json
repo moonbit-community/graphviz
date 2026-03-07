@@ -24,7 +24,8 @@
     "moonbitlang/core/math",
     "moonbitlang/core/ref",
     "moonbitlang/core/strconv",
-    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ],
   "test-import": [
     {
@@ -70,6 +71,7 @@
     "moonbitlang/x/fs",
     "moonbitlang/x/sys",
     "moonbit-community/graphviz/layout/dot/edge_identity",
-    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
+    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }

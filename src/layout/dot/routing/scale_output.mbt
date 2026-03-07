@@ -66,11 +66,11 @@ pub fn scale_point_map_rounded(
 
 ///|
 fn scale_node_size_value(
-  size : @dot_shared.NodeSize,
+  size : @node_primitives.NodeSize,
   sx : Double,
   sy : Double,
-) -> @dot_shared.NodeSize {
-  @dot_shared.node_size_from_points(size.width_pt * sx, size.height_pt * sy)
+) -> @node_primitives.NodeSize {
+  @node_primitives.node_size_from_points(size.width_pt * sx, size.height_pt * sy)
 }
 
 ///|

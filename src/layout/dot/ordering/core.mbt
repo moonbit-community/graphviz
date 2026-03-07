@@ -1,5 +1,5 @@
 ///|
-type NodeSize = @shared.NodeSize
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 const LARGE_SORT_THRESHOLD : Int = 128

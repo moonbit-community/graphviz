@@ -1,7 +1,7 @@
 ///|
 pub(all) struct RoutePortGeometry {
   center : @geom.Point
-  size : @dot_shared.NodeSize
+  size : @node_primitives.NodeSize
 }
 
 ///|
@@ -18,7 +18,7 @@ pub(all) struct HeadPortMetricBuildInput {
   edges : Array[@cgraph.Edge]
   enable_complex_tuning : Bool
   positions : Map[String, @geom.Point]
-  sizes : Map[String, @dot_shared.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
 }
 
 ///|
@@ -26,12 +26,12 @@ pub(all) struct HeadPortMetricBuildInput {
 /// endpoint-geometry projection explicit for dotsplines-equivalent distance.
 pub(all) struct HeadPortMetricBuildDeps {
   is_record_shape : (@cgraph.Node) -> Bool
-  node_size_for_missing : (@cgraph.Node) -> @dot_shared.NodeSize
+  node_size_for_missing : (@cgraph.Node) -> @node_primitives.NodeSize
   port_geometry_for : (
     String,
     @cgraph.Port?,
     @geom.Point,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
   ) -> RoutePortGeometry
 }
 
@@ -57,13 +57,13 @@ fn head_metric_key_for_edge(
 fn head_metric_distance_for_edge(
   edge : @cgraph.Edge,
   positions : Map[String, @geom.Point],
-  sizes : Map[String, @dot_shared.NodeSize],
-  node_size_for_missing : (@cgraph.Node) -> @dot_shared.NodeSize,
+  sizes : Map[String, @node_primitives.NodeSize],
+  node_size_for_missing : (@cgraph.Node) -> @node_primitives.NodeSize,
   port_geometry_for : (
     String,
     @cgraph.Port?,
     @geom.Point,
-    @dot_shared.NodeSize,
+    @node_primitives.NodeSize,
   ) -> RoutePortGeometry,
 ) -> Double {
   let tail_name = edge.tail().name()

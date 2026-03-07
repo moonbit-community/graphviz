@@ -6,6 +6,7 @@
     "moonbit-community/graphviz/layout/dot/bbox",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbit-community/graphviz/layout/dot/edge_identity"
+    "moonbit-community/graphviz/layout/dot/edge_identity",
+    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }
