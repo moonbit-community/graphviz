@@ -839,56 +839,43 @@ fn run_root_and_cluster_ranks_with_pass0_capture(
 }
 
 ///|
-/// Graphviz parity: root+cluster stage source bundle keeps root-mincross call
-/// inputs and post-root local-replay snapshots grouped for one stage run.
-/// Do not change behavior without updating fixtures/tests.
-pub(all) struct RootAndClusterRanksStageSources {
-  call_input_sources : RootAndClusterRanksCallInputSources
-  order_with_clusters : Bool
-  graph : @cgraph.Graph
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-  intercluster_keys : Map[String, String]
-  flat_constraints : Map[String, Bool]
-  node_order : Map[String, Int]
-  ranks : Map[String, Int]
-  vnode_ranks : Map[String, Int]
-  vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, @node_primitives.NodeSize]
-}
-
-///|
 /// Graphviz parity: root+cluster stage run preserves root mincross
 /// capture/replay ordering, then applies local cluster replay using unmapped
-/// order-graph snapshots from the same pre-root source payload.
+/// order-graph snapshots from the same clustered root-phase source payload.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_and_cluster_ranks_stage_from_sources(
-  sources : RootAndClusterRanksStageSources,
+  sources : ClusteredRootPhaseStageSources,
+  root_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
+  let call_input_sources =
+    with_root_groups_override_in_call_input_sources(
+      sources.call_input_sources,
+      root_groups_override,
+    )
   let root_mincross_reorder_inputs =
     build_root_mincross_reorder_inputs_from_sources(
       {
-        reorder_setup: sources.call_input_sources.reorder_setup,
-        reorder_context: sources.call_input_sources.reorder_context,
-        materialized: sources.call_input_sources.materialized,
-        order_groups: sources.call_input_sources.order_groups,
-        order_cluster_keys: sources.call_input_sources.order_cluster_keys,
-        order_cluster_skeleton: sources.call_input_sources.order_cluster_skeleton,
-        order_sizes_out: sources.call_input_sources.order_sizes_out,
-        rank_same_groups: sources.call_input_sources.rank_same_groups,
-        rank_same_order: sources.call_input_sources.rank_same_order,
-        nodesep_pt: sources.call_input_sources.nodesep_pt,
-        has_edge_labels: sources.call_input_sources.has_edge_labels,
-        port_order_positions: sources.call_input_sources.port_order_positions,
-        port_order_contrib: sources.call_input_sources.port_order_contrib,
+        reorder_setup: call_input_sources.reorder_setup,
+        reorder_context: call_input_sources.reorder_context,
+        materialized: call_input_sources.materialized,
+        order_groups: call_input_sources.order_groups,
+        order_cluster_keys: call_input_sources.order_cluster_keys,
+        order_cluster_skeleton: call_input_sources.order_cluster_skeleton,
+        order_sizes_out: call_input_sources.order_sizes_out,
+        rank_same_groups: call_input_sources.rank_same_groups,
+        rank_same_order: call_input_sources.rank_same_order,
+        nodesep_pt: call_input_sources.nodesep_pt,
+        has_edge_labels: call_input_sources.has_edge_labels,
+        port_order_positions: call_input_sources.port_order_positions,
+        port_order_contrib: call_input_sources.port_order_contrib,
       },
     )
   let root_and_cluster_inputs : RootAndClusterRanksInputs = {
-    order_with_vnodes: sources.call_input_sources.reorder_setup.order_with_vnodes,
-    graphviz_flip: sources.call_input_sources.reorder_setup.graphviz_flip,
-    cluster_keys: sources.call_input_sources.cluster_keys,
-    root_groups_override: sources.call_input_sources.root_groups_override,
+    order_with_vnodes: call_input_sources.reorder_setup.order_with_vnodes,
+    graphviz_flip: call_input_sources.reorder_setup.graphviz_flip,
+    cluster_keys: call_input_sources.cluster_keys,
+    root_groups_override: call_input_sources.root_groups_override,
   }
   let root_cluster_stage =
     run_root_and_cluster_ranks_with_pass0_capture(
@@ -903,38 +890,38 @@ fn run_root_and_cluster_ranks_stage_from_sources(
       graph: sources.graph,
       cluster_order: sources.cluster_order,
       cluster_parents: sources.cluster_parents,
-      rank_same_groups: sources.call_input_sources.rank_same_groups,
-      rank_same_order: sources.call_input_sources.rank_same_order,
+      rank_same_groups: call_input_sources.rank_same_groups,
+      rank_same_order: call_input_sources.rank_same_order,
       intercluster_keys: sources.intercluster_keys,
       flat_constraints: sources.flat_constraints,
       node_order: sources.node_order,
-      order_edges: sources.call_input_sources.materialized.order_edges_out_unmapped,
+      order_edges: call_input_sources.materialized.order_edges_out_unmapped,
       order_edge_tail:
-        sources.call_input_sources.materialized.order_edge_tail_out_unmapped,
+        call_input_sources.materialized.order_edge_tail_out_unmapped,
       order_edge_head:
-        sources.call_input_sources.materialized.order_edge_head_out_unmapped,
+        call_input_sources.materialized.order_edge_head_out_unmapped,
       order_edge_tail_port_x:
-        sources.call_input_sources.materialized.order_edge_tail_port_x_unmapped,
+        call_input_sources.materialized.order_edge_tail_port_x_unmapped,
       order_edge_head_port_x:
-        sources.call_input_sources.materialized.order_edge_head_port_x_unmapped,
+        call_input_sources.materialized.order_edge_head_port_x_unmapped,
       order_edge_tail_port_order:
-        sources.call_input_sources.materialized.order_edge_tail_port_order_unmapped,
+        call_input_sources.materialized.order_edge_tail_port_order_unmapped,
       order_edge_head_port_order:
-        sources.call_input_sources.materialized.order_edge_head_port_order_unmapped,
+        call_input_sources.materialized.order_edge_head_port_order_unmapped,
       graphviz_out_neighbors:
-        sources.call_input_sources.materialized.graphviz_out_neighbors,
+        call_input_sources.materialized.graphviz_out_neighbors,
       graphviz_in_neighbors:
-        sources.call_input_sources.materialized.graphviz_in_neighbors,
+        call_input_sources.materialized.graphviz_in_neighbors,
       ranks: sources.ranks,
-      order_sizes: sources.call_input_sources.order_sizes_out,
-      nodesep_pt: sources.call_input_sources.nodesep_pt,
-      has_edge_labels: sources.call_input_sources.has_edge_labels,
-      port_order_positions: sources.call_input_sources.port_order_positions,
-      port_order_contrib: sources.call_input_sources.port_order_contrib,
+      order_sizes: call_input_sources.order_sizes_out,
+      nodesep_pt: call_input_sources.nodesep_pt,
+      has_edge_labels: call_input_sources.has_edge_labels,
+      port_order_positions: call_input_sources.port_order_positions,
+      port_order_contrib: call_input_sources.port_order_contrib,
       vnode_ranks: sources.vnode_ranks,
       vnode_clusters: sources.vnode_clusters,
       vnode_sizes: sources.vnode_sizes,
-      order_with_vnodes: sources.call_input_sources.reorder_setup.order_with_vnodes,
+      order_with_vnodes: call_input_sources.reorder_setup.order_with_vnodes,
     },
   )
   root_cluster_stage
@@ -953,13 +940,24 @@ pub struct ClusteredRootPhaseStageOutput {
 
 ///|
 /// Graphviz parity: clustered root-phase stage source bundle keeps root
-/// rank-order base sources, root-pass input groups, and root+cluster stage
-/// sources grouped for one deterministic stage run.
+/// rank-order base sources, root-pass input groups, root+cluster call-input
+/// sources, and local-replay snapshots grouped for one deterministic stage run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredRootPhaseStageSources {
   root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
   order_groups_for_root_phase : Map[Int, Array[String]]
-  root_and_cluster_stage_sources : RootAndClusterRanksStageSources
+  call_input_sources : RootAndClusterRanksCallInputSources
+  order_with_clusters : Bool
+  graph : @cgraph.Graph
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  node_order : Map[String, Int]
+  ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
 
 ///|
@@ -1025,38 +1023,35 @@ pub fn build_clustered_root_phase_stage_sources(
         order_flat_constraints: sources.flat_constraints,
       },
     order_groups_for_root_phase: sources.pre_root_stage.order_groups,
-    root_and_cluster_stage_sources:
+    call_input_sources:
       {
-        call_input_sources:
-          {
-            reorder_setup: sources.reorder_setup,
-            reorder_context: sources.pre_root_stage.reorder_context,
-            materialized: sources.pre_root_stage.materialized,
-            order_groups: sources.pre_root_stage.order_groups,
-            order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
-            order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
-            order_sizes_out: sources.pre_root_stage.order_sizes_out,
-            rank_same_groups: sources.rank_same_groups,
-            rank_same_order: sources.rank_same_order,
-            nodesep_pt: sources.nodesep_pt,
-            has_edge_labels: sources.has_edge_labels,
-            port_order_positions: sources.port_order_positions,
-            port_order_contrib: sources.port_order_contrib,
-            cluster_keys: sources.cluster_keys,
-            root_groups_override: None,
-          },
-        order_with_clusters: sources.reorder_setup.order_with_clusters,
-        graph: sources.graph,
-        cluster_order: sources.cluster_order,
-        cluster_parents: sources.cluster_parents,
-        intercluster_keys: sources.intercluster_keys,
-        flat_constraints: sources.flat_constraints,
-        node_order: sources.pre_root_stage.reorder_context.order_node_order,
-        ranks: sources.ranks,
-        vnode_ranks: sources.vnode_ranks,
-        vnode_clusters: sources.vnode_clusters,
-        vnode_sizes: sources.vnode_sizes,
+        reorder_setup: sources.reorder_setup,
+        reorder_context: sources.pre_root_stage.reorder_context,
+        materialized: sources.pre_root_stage.materialized,
+        order_groups: sources.pre_root_stage.order_groups,
+        order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
+        order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
+        order_sizes_out: sources.pre_root_stage.order_sizes_out,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        nodesep_pt: sources.nodesep_pt,
+        has_edge_labels: sources.has_edge_labels,
+        port_order_positions: sources.port_order_positions,
+        port_order_contrib: sources.port_order_contrib,
+        cluster_keys: sources.cluster_keys,
+        root_groups_override: None,
       },
+    order_with_clusters: sources.reorder_setup.order_with_clusters,
+    graph: sources.graph,
+    cluster_order: sources.cluster_order,
+    cluster_parents: sources.cluster_parents,
+    intercluster_keys: sources.intercluster_keys,
+    flat_constraints: sources.flat_constraints,
+    node_order: sources.pre_root_stage.reorder_context.order_node_order,
+    ranks: sources.ranks,
+    vnode_ranks: sources.vnode_ranks,
+    vnode_clusters: sources.vnode_clusters,
+    vnode_sizes: sources.vnode_sizes,
   }
 }
 
@@ -1106,39 +1101,21 @@ pub fn run_clustered_root_phase_stage_from_sources(
       sources.order_groups_for_root_phase,
     )
   let root_groups_override_for_root_pass =
-    if !sources.root_and_cluster_stage_sources.order_with_clusters {
+    if !sources.order_with_clusters {
       None
     } else {
       Some(clone_rank_groups(root_rank_order_phase_output.ordered_root))
     }
   let root_tail_order_override =
-    if !sources.root_and_cluster_stage_sources.order_with_clusters {
+    if !sources.order_with_clusters {
       None
     } else {
       Some(build_root_tail_order_override(root_reorder_output))
     }
   let root_cluster_stage =
     run_root_and_cluster_ranks_stage_from_sources(
-      {
-        call_input_sources:
-          with_root_groups_override_in_call_input_sources(
-            sources.root_and_cluster_stage_sources.call_input_sources,
-            root_groups_override_for_root_pass,
-          ),
-        order_with_clusters:
-          sources.root_and_cluster_stage_sources.order_with_clusters,
-        graph: sources.root_and_cluster_stage_sources.graph,
-        cluster_order: sources.root_and_cluster_stage_sources.cluster_order,
-        cluster_parents: sources.root_and_cluster_stage_sources.cluster_parents,
-        intercluster_keys:
-          sources.root_and_cluster_stage_sources.intercluster_keys,
-        flat_constraints: sources.root_and_cluster_stage_sources.flat_constraints,
-        node_order: sources.root_and_cluster_stage_sources.node_order,
-        ranks: sources.root_and_cluster_stage_sources.ranks,
-        vnode_ranks: sources.root_and_cluster_stage_sources.vnode_ranks,
-        vnode_clusters: sources.root_and_cluster_stage_sources.vnode_clusters,
-        vnode_sizes: sources.root_and_cluster_stage_sources.vnode_sizes,
-      },
+      sources,
+      root_groups_override_for_root_pass,
       capture_call,
     )
   {
