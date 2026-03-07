@@ -130,7 +130,7 @@ fn refresh_cluster_labels(
 ///|
 /// Graphviz parity: cluster LR/RL mirror input keeps pre/post-rotation bbox
 /// snapshots grouped so mirror-path gating remains explicit and stable.
-pub(all) struct ClusterLRMirrorInput {
+priv struct ClusterLRMirrorInput {
   graph : @cgraph.Graph
   rankdir : RankDir
   rotated : LayoutTree
@@ -143,7 +143,7 @@ pub(all) struct ClusterLRMirrorInput {
 /// Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
 /// rotation (dotgen cluster decompose + postproc map_point ordering).
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_cluster_lr_mirror_after_rotation(
+fn apply_cluster_lr_mirror_after_rotation(
   input : ClusterLRMirrorInput,
 ) -> LayoutTree {
   let use_cluster_point_mirror =
@@ -181,7 +181,7 @@ pub fn apply_cluster_lr_mirror_after_rotation(
 /// Graphviz parity: layout translation aligned to refs/graphviz/lib/common/postproc.c
 /// (translate_drawing/translate_bb).
 /// Do not change behavior without updating fixtures/tests.
-pub fn shift_layout_graph(
+fn shift_layout_graph(
   layout : LayoutTree,
   dx : Double,
   dy : Double,
@@ -236,7 +236,7 @@ pub fn shift_layout_graph(
 /// Graphviz parity: rankdir rotation aligned to refs/graphviz/lib/common/postproc.c
 /// (translate_drawing/map_point).
 /// Do not change behavior without updating fixtures/tests.
-pub fn rotate_layout_graph(
+fn rotate_layout_graph(
   layout : LayoutTree,
   root_bbox : @geom.Rect,
   rankdir : RankDir,
@@ -358,7 +358,7 @@ fn scale_layout_tree(
 ///|
 /// Graphviz parity: root-cluster padding input keeps the pre-padding layout and
 /// top/bottom pad deltas grouped for one shift + bbox rebuild boundary.
-pub(all) struct RootClusterPaddingApplyInput {
+priv struct RootClusterPaddingApplyInput {
   layout : LayoutTree
   root_cluster_pad_top : Double
   root_cluster_pad_bottom : Double
@@ -409,7 +409,7 @@ fn refresh_root_label_position(
 /// Graphviz parity: root cluster padding aligned to refs/graphviz/lib/dotgen/position.c
 /// (clust_ht/adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_root_cluster_padding(
+fn apply_root_cluster_padding(
   input : RootClusterPaddingApplyInput,
 ) -> LayoutTree {
   let layout = input.layout
@@ -446,7 +446,7 @@ pub fn apply_root_cluster_padding(
 ///|
 /// Graphviz parity: root ratio=fill scaling aligned to refs/graphviz/lib/dotgen/position.c
 /// (set_aspect R_FILL branch + ND_coord rounding).
-pub fn apply_ratio_fill_scale(
+fn apply_ratio_fill_scale(
   layout : LayoutTree,
   rankdir : RankDir,
   ratio_bbox : @geom.Rect,
@@ -471,7 +471,7 @@ pub fn apply_ratio_fill_scale(
 /// Graphviz parity: final root-coordinate frame applies margin, then origin
 /// translation, then root label refresh.
 /// Do not change behavior without updating fixtures/tests.
-pub fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
+fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
   let with_margin : LayoutTree = {
     graph: layout.graph,
     bbox: @root_geometry.apply_root_margin_x(layout.graph, layout.bbox),

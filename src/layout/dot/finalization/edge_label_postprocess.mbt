@@ -202,7 +202,7 @@ fn edge_label_adjust_enabled() -> Bool {
 /// Graphviz parity: edge label bbox expansion aligned to refs/graphviz/lib/common/utils.c
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
-pub fn expand_layout_tree_bbox_for_edge_labels(
+fn expand_layout_tree_bbox_for_edge_labels(
   layout : LayoutTree,
   ranks : Map[String, Int],
   flat_label_edge_vnodes : Map[String, String],
@@ -236,7 +236,7 @@ pub fn expand_layout_tree_bbox_for_edge_labels(
 
 ///|
 /// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
-pub fn adjust_edge_labels_if_enabled(
+fn adjust_edge_labels_if_enabled(
   layout : LayoutTree,
   nodesep_pt : Double,
   rankdir : RankDir,
