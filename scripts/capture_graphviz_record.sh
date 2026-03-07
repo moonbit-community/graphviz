@@ -8,6 +8,7 @@ BUILD_DIR="$GRAPHVIZ_DIR/build"
 OUT_DIR="$ROOT/tests/fixtures/graphviz"
 OUT_FILE="$OUT_DIR/record.jsonl"
 TMP_FILE="$OUT_DIR/record.jsonl.tmp"
+KEEP_PATTERN='"node":"(machsrv_xprot_gen|zzz|zzz_worker)"'
 
 if [[ ! -d "$GRAPHVIZ_DIR" ]]; then
   echo "refs/graphviz is missing; place Graphviz source at $GRAPHVIZ_DIR" >&2
@@ -76,6 +77,9 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_RECORD="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only high-signal record fixture cases. Exact leaf and wrapping geometry is
+# covered directly in owner-local wbtests; the fixture stays as an integration smoke set.
+grep -E "$KEEP_PATTERN" "$TMP_FILE" > "$OUT_FILE"
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"

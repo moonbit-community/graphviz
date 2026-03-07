@@ -7,6 +7,61 @@ fn assert_close(actual : Double, expected : Double, tol : Double) -> Unit raise 
 }
 
 ///|
+const ALL_PORT_SIDES : Int =
+  @port_geometry.PORT_SIDE_TOP |
+  @port_geometry.PORT_SIDE_BOTTOM |
+  @port_geometry.PORT_SIDE_LEFT |
+  @port_geometry.PORT_SIDE_RIGHT
+
+///|
+fn assert_rect_close(
+  actual : @geom.Rect,
+  llx : Double,
+  lly : Double,
+  urx : Double,
+  ury : Double,
+) -> Unit raise {
+  assert_close(actual.llx, llx, 0.0001)
+  assert_close(actual.lly, lly, 0.0001)
+  assert_close(actual.urx, urx, 0.0001)
+  assert_close(actual.ury, ury, 0.0001)
+}
+
+///|
+fn record_layout_for_node(
+  source : String,
+  node_name : String,
+) -> (@geom.Rect, Array[RecordLayoutNode]) raise {
+  reset_record_layout_caches()
+  let graph = @dot_parser.parse_dot(source)
+  let orientation = @shared.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
+  let node = graph.node(node_name)
+  let size = @node_geometry.node_size(node, orientation)
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let padding = @label_attrs.node_padding(node)
+  let inner_rect : @geom.Rect = {
+    llx: -size.width_pt / 2.0,
+    lly: -size.height_pt / 2.0 + @record_geometry.RECORD_BORDER_PT,
+    urx: size.width_pt / 2.0,
+    ury: size.height_pt / 2.0 - @record_geometry.RECORD_BORDER_PT,
+  }
+  let layout = layout_record_tree(
+    record_nodes(@label_attrs.label_text(node)),
+    inner_rect,
+    orientation,
+    font,
+    font_size_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
+    ALL_PORT_SIDES,
+  )
+  (inner_rect, layout)
+}
+
+///|
 test "record_nodes parses nested braces" {
   let nodes = record_nodes("{a|{b|<here>c|d}|e}")
   guard nodes.length() == 1 else { fail("expected single top-level group") }
@@ -112,6 +167,88 @@ test "layout_record_tree assigns group orientation and side masks" {
   match group.children[1].field {
     Some(field) => assert_eq(field.name, Some("bottom"))
     None => fail("expected bottom child field")
+  }
+}
+
+///|
+test "layout_record_tree preserves exact geometry for quoted leaf record" {
+  let source =
+    "digraph { node [shape=Mrecord]; other_xprot [label=\"XPROT \\\"crystalizer\\\"\"]; }"
+  let (inner_rect, layout) = record_layout_for_node(source, "other_xprot")
+
+  assert_rect_close(inner_rect, -65.75, -18.0, 65.75, 18.0)
+  guard layout.length() == 1 else { fail("expected single field") }
+  let leaf = layout[0]
+  assert_eq(leaf.sides, ALL_PORT_SIDES)
+  assert_eq(leaf.children.length(), 0)
+  assert_rect_close(leaf.rect, -65.75, -18.0, 65.75, 18.0)
+  match leaf.field {
+    Some(field) => {
+      assert_eq(field.name, None)
+      assert_eq(field.text, "XPROT \"crystalizer\"")
+    }
+    None => fail("expected leaf field")
+  }
+}
+
+///|
+test "layout_record_tree preserves exact geometry for split record fields" {
+  let source =
+    "digraph { node [shape=Mrecord]; machsrv_xprot_gen [label=\"<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter\"]; }"
+  let (inner_rect, layout) = record_layout_for_node(source, "machsrv_xprot_gen")
+
+  assert_rect_close(inner_rect, -140.875, -18.0, 140.875, 18.0)
+  guard layout.length() == 2 else { fail("expected split fields") }
+  let left = layout[0]
+  let right = layout[1]
+  assert_eq(left.children.length(), 0)
+  assert_eq(right.children.length(), 0)
+  assert_eq(left.sides, @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_LEFT)
+  assert_eq(right.sides, @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_RIGHT)
+  assert_rect_close(left.rect, -140.875, -18.0, -46.875, 18.0)
+  assert_rect_close(right.rect, -46.875, -18.0, 140.875, 18.0)
+  match left.field {
+    Some(field) => {
+      assert_eq(field.name, Some("f0"))
+      assert_eq(field.text, "Machsrv Core")
+    }
+    None => fail("expected left field")
+  }
+  match right.field {
+    Some(field) => {
+      assert_eq(field.name, Some("f1"))
+      assert_eq(field.text, "PROT_A-to-XPROT Converter")
+    }
+    None => fail("expected right field")
+  }
+}
+
+///|
+test "layout_record_tree preserves exact geometry for wrapped single-field record" {
+  let source =
+    "digraph { node [shape=Mrecord]; foo_agent [label=\"{Foo Agent}\"]; }"
+  let (inner_rect, layout) = record_layout_for_node(source, "foo_agent")
+
+  assert_rect_close(inner_rect, -36.5, -18.0, 36.5, 18.0)
+  guard layout.length() == 1 else { fail("expected wrapped top-level group") }
+  let group = layout[0]
+  assert_eq(group.sides, ALL_PORT_SIDES)
+  assert_rect_close(group.rect, -36.5, -18.0, 36.5, 18.0)
+  match group.field {
+    Some(_) => fail("expected group node")
+    None => ()
+  }
+  guard group.children.length() == 1 else { fail("expected nested leaf") }
+  let leaf = group.children[0]
+  assert_eq(leaf.sides, ALL_PORT_SIDES)
+  assert_eq(leaf.children.length(), 0)
+  assert_rect_close(leaf.rect, -36.5, -17.5, 36.5, 18.0)
+  match leaf.field {
+    Some(field) => {
+      assert_eq(field.name, None)
+      assert_eq(field.text, "Foo Agent")
+    }
+    None => fail("expected wrapped leaf field")
   }
 }
 
