@@ -1,4 +1,12 @@
 ///|
+fn fixture_require_object(json : Json) -> Map[String, Json] raise {
+  match json {
+    Json::Object(obj) => obj
+    _ => fail("expected JSON object")
+  }
+}
+
+///|
 struct MincrossNode {
   id : Int
   name : String?
@@ -96,7 +104,7 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
   let items : Array[Json] = @json.from_json(value)
   let nodes : Array[MincrossNode] = []
   for item in items {
-    let obj = require_object(item)
+    let obj = fixture_require_object(item)
     let id : Int = @json.from_json(obj["id"])
     let name =
       match obj.get("name") {
@@ -180,7 +188,7 @@ fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
   let items : Array[Json] = @json.from_json(value)
   let edges : Array[MincrossEdge] = []
   for idx, item in items {
-    let obj = require_object(item)
+    let obj = fixture_require_object(item)
     let tail : Int = @json.from_json(obj["tail"])
     let head : Int = @json.from_json(obj["head"])
     let xpenalty : Int = @json.from_json(obj["xpenalty"])
@@ -232,7 +240,7 @@ fn parse_mincross_flat_edges(value : Json) -> Array[MincrossFlatEdge] raise {
   let items : Array[Json] = @json.from_json(value)
   let edges : Array[MincrossFlatEdge] = []
   for item in items {
-    let obj = require_object(item)
+    let obj = fixture_require_object(item)
     let tail : Int = @json.from_json(obj["tail"])
     let head : Int = @json.from_json(obj["head"])
     edges.push({ tail, head })
@@ -262,7 +270,7 @@ fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
       continue
     }
     let json = @json.parse(line)
-    let obj = require_object(json)
+    let obj = fixture_require_object(json)
     let event : String = @json.from_json(obj["event"])
     match event {
       "mincross_input" => {
@@ -543,10 +551,10 @@ fn run_mincross_case_with_name_order(
     rank = rank + 1
   }
   let edge_index_data =
-    @ordering.build_edge_index_for_order(nodes, edges, edge_tail, edge_head, name_to_rank)
+    build_edge_index_for_order(nodes, edges, edge_tail, edge_head, name_to_rank)
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = @ordering.collect_edge_order(edges)
+  let edge_order = collect_edge_order(edges)
   let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
   let cluster_keys : Map[String, String] = Map::new()
   let cluster_skeleton : Map[String, Bool] = Map::new()
@@ -575,38 +583,7 @@ fn run_mincross_case_with_name_order(
     }
     flat_constraints["\{tail_name}|\{head_name}"] = true
   }
-  if @sys.get_env_var("TRACE_MINCROSS_SEED") == Some(input.graph) {
-    let seeded = @ordering.build_neighbor_rank_groups(
-      rank_keys,
-      groups,
-      edge_tail,
-      edge_head,
-      name_to_rank,
-      name_to_order,
-      cluster_keys,
-      cluster_skeleton,
-      0,
-      graphviz_out_neighbors=graphviz_out_neighbors,
-      graphviz_in_neighbors=graphviz_in_neighbors,
-    )
-    let mut idx = 0
-    while idx < rank_keys.length() {
-      let key = rank_keys[idx]
-      let expected_names = match groups.get(key) {
-        Some(list) => list
-        None => []
-      }
-      let seeded_names = match seeded.get(key) {
-        Some(list) => list
-        None => []
-      }
-      println(
-        "trace mincross seed \{input.graph} rank[\{idx}] expected=\{expected_names} seeded=\{seeded_names}",
-      )
-      idx = idx + 1
-    }
-  }
-  let ordered = @ordering.reorder_rank_groups(
+  let ordered = reorder_rank_groups(
     rank_keys,
     groups,
     edges,
@@ -652,15 +629,6 @@ fn run_mincross_case_with_name_order(
       ids.push(id)
     }
     actual.push(ids)
-  }
-  if @sys.get_env_var("TRACE_MINCROSS") == Some(input.graph) {
-    let mut idx = 0
-    while idx < actual.length() {
-      println(
-        "trace mincross \{input.graph} rank[\{idx}] actual=\{actual[idx]} expected=\{output.ranks[idx]}",
-      )
-      idx = idx + 1
-    }
   }
   assert_rank_groups(input.case_id, input.graph, actual, output.ranks)
 }

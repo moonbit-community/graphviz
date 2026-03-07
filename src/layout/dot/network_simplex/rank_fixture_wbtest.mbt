@@ -93,11 +93,11 @@ fn parse_simplex_pre_balance(obj : Map[String, Json]) -> SimplexPreBalance raise
 }
 
 ///|
-fn fixture_node_kind(kind : String) -> @network_simplex.NodeKind raise {
+fn simplex_fixture_node_kind(kind : String) -> NodeKind raise {
   match kind {
-    "normal" => @network_simplex.NodeKind::Normal
-    "virtual" => @network_simplex.NodeKind::Virtual
-    "slack" => @network_simplex.NodeKind::Slack
+    "normal" => NodeKind::Normal
+    "virtual" => NodeKind::Virtual
+    "slack" => NodeKind::Slack
     _ => fail("unknown fixture node kind: \{kind}")
   }
 }
@@ -249,29 +249,29 @@ fn assert_ranks(
 }
 
 ///|
-fn build_fixture_graph(input : SimplexInput) -> @network_simplex.NsGraph raise {
-  let graph = @network_simplex.new_graph()
+fn build_fixture_graph(input : SimplexInput) -> NsGraph raise {
+  let graph = new_graph()
   for node in input.nodes {
     let name = match node.name {
       Json::Null => ""
       Json::String(value) => value
       _ => fail("unexpected node name payload")
     }
-    let kind = fixture_node_kind(node.kind)
-    let idx = @network_simplex.add_node(graph, name, kind=kind)
+    let kind = simplex_fixture_node_kind(node.kind)
+    let idx = add_node(graph, name, kind=kind)
     if idx != node.id {
       fail(
         "case \{input.case_id} node id mismatch expected=\{node.id} actual=\{idx}",
       )
     }
-    @network_simplex.set_node_rank(graph, idx, node.rank)
+    set_node_rank(graph, idx, node.rank)
   }
   let in_positions : Array[Int] = []
   for edge in input.edges {
     if edge.seq < 0 {
       fail("case \{input.case_id} negative edge seq \{edge.seq}")
     }
-    let _ = @network_simplex.add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
     in_positions.push(edge.in_pos)
   }
   for i in 0..<graph.nodes.length() {
@@ -299,17 +299,17 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
   let graph = build_fixture_graph(input)
   match input.balance {
     0 => {
-      if !@network_simplex.network_simplex_pre_balance(graph, 0x7fffffff) {
+      if !network_simplex_pre_balance(graph, 0x7fffffff) {
         fail("case \{input.case_id} network_simplex_pre_balance failed")
       }
-      let _ = @network_simplex.normalize_ranks_for_test(graph)
+      let _ = normalize_ranks_for_test(graph)
     }
-    2 => @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
-    _ => @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::TB)
+    2 => network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+    _ => network_simplex(graph, 0x7fffffff, BalanceMode::TB)
   }
   let actual_ranks : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual_ranks.push(@network_simplex.node_rank(graph, i))
+    actual_ranks.push(node_rank(graph, i))
   }
   assert_ranks(input.case_id, actual_ranks, output.ranks)
 }
@@ -334,7 +334,7 @@ fn assert_tree_edges(
 fn run_feasible_tree_case(case_info : SimplexCase) -> Unit raise {
   let input = case_info.input
   let graph = build_fixture_graph(input)
-  if !@network_simplex.build_feasible_tree(graph) {
+  if !build_feasible_tree(graph) {
     fail("case \{input.case_id} feasible_tree failed")
   }
   assert_tree_edges(input.case_id, graph.tree_edges, case_info.tree_edges)
@@ -344,12 +344,12 @@ fn run_feasible_tree_case(case_info : SimplexCase) -> Unit raise {
 fn run_pre_balance_case(case_info : SimplexCase) -> Unit raise {
   let input = case_info.input
   let graph = build_fixture_graph(input)
-  if !@network_simplex.network_simplex_pre_balance(graph, 0x7fffffff) {
+  if !network_simplex_pre_balance(graph, 0x7fffffff) {
     fail("case \{input.case_id} network_simplex_pre_balance failed")
   }
   let actual_ranks : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual_ranks.push(@network_simplex.node_rank(graph, i))
+    actual_ranks.push(node_rank(graph, i))
   }
   assert_ranks(input.case_id, actual_ranks, case_info.pre_balance)
 }

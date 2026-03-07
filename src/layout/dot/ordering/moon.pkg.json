@@ -13,5 +13,16 @@
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    "moonbit-community/graphviz/layout/dot/input_stage",
+    "moonbit-community/graphviz/layout/dot/ordering_stage",
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ]
 }
