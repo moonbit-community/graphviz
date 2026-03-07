@@ -1,16 +1,13 @@
 ///|
 type LayoutPrep = @shared.LayoutPrep
 type RankDir = @rankdir.RankDir
-type RecordOrientation = @shared.RecordOrientation
 type NodeSize = @node_primitives.NodeSize
 type RankData = @rank_assignment.RankData
 type RankHeights = @rank_assignment.RankHeights
 type ClusterMetadata = @ordering.DotClusterMetadata
 type OrderingResult = @ordering.OrderingResult
-type EdgePortSampleBundle = @ordering.EdgePortSampleBundle
 type PositionResult = @positioning.PositionResult
 type ConstraintEdge = @x_constraints.ConstraintEdge
-type ClusterLabelPadding = @clustering.ClusterLabelPadding
 
 ///|
 /// Graphviz parity: position stage payload keeps stage B/C outputs grouped so
@@ -22,35 +19,6 @@ pub(all) struct PositionStageInput {
   rank_heights : RankHeights
   cluster_meta : ClusterMetadata
   ordering : OrderingResult
-}
-
-///|
-/// Graphviz parity: Stage D dependency payload groups root-boundary geometry
-/// and cluster-label bridges so the subpackage owns stage-internal
-/// orchestration without importing the root dot package.
-pub(all) struct PositionStageDeps {
-  max_xpos_vnodes : Int
-  max_xpos_reorder_vnodes : Int
-  cluster_skeleton_penalty : Int
-  build_x_seed_port_samples : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-    Map[String, NodeSize],
-  ) -> EdgePortSampleBundle
-  apply_self_edge_right_space : (
-    Array[@cgraph.Node],
-    Array[@cgraph.Edge],
-    Map[String, NodeSize],
-    RankDir,
-    RecordOrientation,
-  ) -> Map[String, NodeSize]
-  edge_mid_label_metrics_for : (@cgraph.Edge) -> (Double, Double)?
-  compute_x_positions : (@x_constraints.XPositionSolveInput, Bool) -> Map[String, Double]
-  cluster_label_padding_for : (@cgraph.Graph, RankDir) -> ClusterLabelPadding
-  cluster_label_width_with_pad_for : (@cgraph.Graph) -> Double?
-  expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
 }
 
 ///|
@@ -83,7 +51,6 @@ priv struct XWithFlatLabelData {
 fn compute_layout_x_positions(
   pipeline : PositionPipelineContext,
   x_data : XWithFlatLabelData,
-  deps : PositionStageDeps,
 ) -> Map[String, Double] {
   let solve_input =
     @x_constraints.build_x_position_solve_input(
@@ -110,7 +77,7 @@ fn compute_layout_x_positions(
         flat_label_edges: x_data.flat_label_edges,
       },
     )
-  (deps.compute_x_positions)(solve_input, pipeline.prep.has_port_edges)
+  compute_x_positions_for_stage(solve_input, pipeline.prep.has_port_edges)
 }
 
 ///|
@@ -120,7 +87,6 @@ fn compute_layout_x_positions(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_with_flat_labels(
   pipeline : PositionPipelineContext,
-  deps : PositionStageDeps,
 ) -> XWithFlatLabelData {
   let mode_flags =
     @positioning.build_position_mode_flags(
@@ -128,31 +94,25 @@ fn build_x_with_flat_labels(
         has_edge_labels: pipeline.prep.has_edge_labels,
         has_port_edges: pipeline.prep.has_port_edges,
         vnode_count: pipeline.ordering.vnode_count,
-        max_xpos_vnodes: deps.max_xpos_vnodes,
-        max_xpos_reorder_vnodes: deps.max_xpos_reorder_vnodes,
+        max_xpos_vnodes: MAX_XPOS_VNODES,
+        max_xpos_reorder_vnodes: MAX_XPOS_REORDER_VNODES,
         rankdir: pipeline.prep.rankdir,
       },
     )
   let x_seed =
-    build_x_seed_data(
-      {
-        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-        pipeline,
-      },
-      deps,
-    )
+    build_x_seed_data({
+      use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+      pipeline,
+    })
   let flat_label_augmentation =
-    build_x_flat_labels(
-      {
-        xpos_reorder_enabled: false,
-        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-        allow_xpos_reorder: mode_flags.allow_xpos_reorder,
-        graphviz_flip: mode_flags.graphviz_flip,
-        pipeline,
-        x_seed,
-      },
-      deps,
-    )
+    build_x_flat_labels({
+      xpos_reorder_enabled: false,
+      use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+      allow_xpos_reorder: mode_flags.allow_xpos_reorder,
+      graphviz_flip: mode_flags.graphviz_flip,
+      pipeline,
+      x_seed,
+    })
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
     x_base_sizes: x_seed.x_base_sizes,
@@ -164,11 +124,9 @@ fn build_x_with_flat_labels(
   }
 }
 
-
 ///|
-/// Dot-owned bridge logic for position_stage default dependencies: x-seed port
-/// sampling, x-constraint solving, and stage-default dependency assembly.
-
+/// Stage D constants and x-constraint helpers stay with the position stage so
+/// the owner package keeps algorithm-specific thresholds and solve wiring.
 const CL_CROSS : Int = 1000
 
 const MAX_XPOS_VNODES : Int = 100000
@@ -180,26 +138,6 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 const ROOT_COMPRESS_WEIGHT : Int = 1000
-
-///|
-fn build_x_seed_port_samples_for_stage(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  x_order_sizes : Map[String, NodeSize],
-) -> @ordering.EdgePortSampleBundle {
-  @positioning.build_edge_port_sample_bundle(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    x_order_sizes,
-    @port_bridge.port_offsets_for_nodes,
-    @port_bridge.edge_port_offset,
-    @port_bridge.edge_port_order,
-  )
-}
 
 ///|
 fn resolve_x_simplex_root_context(
@@ -265,31 +203,10 @@ fn compute_x_positions_for_stage(
 }
 
 ///|
-fn build_position_stage_deps() -> PositionStageDeps {
-  {
-    max_xpos_vnodes: MAX_XPOS_VNODES,
-    max_xpos_reorder_vnodes: MAX_XPOS_REORDER_VNODES,
-    cluster_skeleton_penalty: CL_CROSS,
-    build_x_seed_port_samples: build_x_seed_port_samples_for_stage,
-    apply_self_edge_right_space: @port_bridge.apply_self_edge_right_space,
-    edge_mid_label_metrics_for: edge =>
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(value) => Some((value.width, value.height))
-        None => None
-      },
-    compute_x_positions: compute_x_positions_for_stage,
-    cluster_label_padding_for: @clustering.cluster_label_padding_for_layout,
-    cluster_label_width_with_pad_for: @clustering.cluster_label_width_with_pad_for_layout,
-    expand_cluster_label_bbox: @clustering.expand_cluster_label_bbox_for_position_stage,
-  }
-}
-
-///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_positions(
   input : PositionStageInput,
-  deps? : PositionStageDeps = build_position_stage_deps(),
 ) -> PositionResult {
   let pipeline : PositionPipelineContext = {
     graph: input.graph,
@@ -300,12 +217,9 @@ pub fn compute_positions(
     ordering: input.ordering,
   }
   let x_data =
-    build_x_with_flat_labels(pipeline, deps)
-  build_projection_result(
-    {
-      pipeline,
-      x_data,
-    },
-    deps,
-  )
+    build_x_with_flat_labels(pipeline)
+  build_projection_result({
+    pipeline,
+    x_data,
+  })
 }

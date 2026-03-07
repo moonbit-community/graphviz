@@ -32,16 +32,18 @@ fn build_x_order_sizes(
 fn build_x_seed_port_samples(
   pipeline : PositionPipelineContext,
   x_order_sizes : Map[String, NodeSize],
-  deps : PositionStageDeps,
 ) -> @positioning.XSeedPortSamples {
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      (deps.build_x_seed_port_samples)(
+      @positioning.build_edge_port_sample_bundle(
         pipeline.prep.nodes,
         edges,
         edge_tail,
         edge_head,
         x_order_sizes,
+        @port_bridge.port_offsets_for_nodes,
+        @port_bridge.edge_port_offset,
+        @port_bridge.edge_port_order,
       )
   let x_port_samples =
     build_port_sample_bundle(
@@ -73,11 +75,10 @@ fn build_x_seed_port_samples(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_seed_data(
   input : XSeedBuildInput,
-  deps : PositionStageDeps,
 ) -> @positioning.XPositionSeedData {
   let pipeline = input.pipeline
   let x_base_sizes =
-    (deps.apply_self_edge_right_space)(
+    @port_bridge.apply_self_edge_right_space(
       pipeline.prep.nodes,
       pipeline.prep.edges,
       pipeline.prep.sizes,
@@ -91,7 +92,7 @@ fn build_x_seed_data(
       pipeline.ordering.vnode_info.vnode_sizes,
     )
   let port_samples =
-    build_x_seed_port_samples(pipeline, x_order_sizes, deps)
+    build_x_seed_port_samples(pipeline, x_order_sizes)
   @positioning.build_x_seed_data_from_sources(
     {
       use_vnodes_for_xpos: input.use_vnodes_for_xpos,

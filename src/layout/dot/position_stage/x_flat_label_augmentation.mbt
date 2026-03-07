@@ -38,7 +38,6 @@ type XposFlatLabelAugmentation = @x_flat_labels.XFlatLabelAugmentationOutput
 /// Do not change behavior without updating fixtures/tests.
 fn build_flat_label_augmentation(
   input : FlatLabelAugmentationBuildInput,
-  deps : PositionStageDeps,
 ) -> XposFlatLabelAugmentation {
   let pipeline = input.pipeline
   @x_flat_labels.build_x_flat_label_augmentation(
@@ -66,7 +65,12 @@ fn build_flat_label_augmentation(
             pipeline.ordering.vnode_info,
             x_groups,
             {
-              edge_mid_label_metrics_for: (edge) => (deps.edge_mid_label_metrics_for)(edge),
+              edge_mid_label_metrics_for:
+                edge =>
+                  match @edge_label_metrics.edge_mid_label_metrics(edge) {
+                    Some(value) => Some((value.width, value.height))
+                    None => None
+                  },
             },
           )
         },
@@ -80,7 +84,6 @@ fn build_flat_label_augmentation(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_flat_label_reorder_sources(
   input : XFlatLabelBuildInput,
-  deps : PositionStageDeps,
 ) -> @x_reorder.XposReorderPipelineSources {
   let pipeline = input.pipeline
   {
@@ -107,7 +110,7 @@ fn build_x_flat_label_reorder_sources(
     edge_head_port_x: input.x_seed.x_edge_head_port_x,
     edge_tail_port_order: input.x_seed.x_edge_tail_port_order,
     edge_head_port_order: input.x_seed.x_edge_head_port_order,
-    cluster_skeleton_penalty: deps.cluster_skeleton_penalty,
+    cluster_skeleton_penalty: CL_CROSS,
     rank_same_groups: pipeline.cluster_meta.rank_same_groups,
     rank_same_order: pipeline.cluster_meta.rank_same_order,
     nodesep_pt: pipeline.rank_heights.nodesep_pt,
@@ -136,25 +139,21 @@ fn build_x_flat_label_reorder_sources(
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
-  deps : PositionStageDeps,
 ) -> XposFlatLabelAugmentation {
   let reorder_sources =
-    build_x_flat_label_reorder_sources(input, deps)
+    build_x_flat_label_reorder_sources(input)
   @x_flat_labels.build_x_flat_label_pipeline(
     {
       reorder_sources,
       augment_from_groups_fn:
         (x_groups) =>
-          build_flat_label_augmentation(
-            {
-              pipeline: input.pipeline,
-              use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-              x_base_sizes: input.x_seed.x_base_sizes,
-              x_groups,
-              x_cluster_keys: input.x_seed.x_cluster_keys,
-            },
-            deps,
-          ),
+          build_flat_label_augmentation({
+            pipeline: input.pipeline,
+            use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+            x_base_sizes: input.x_seed.x_base_sizes,
+            x_groups,
+            x_cluster_keys: input.x_seed.x_cluster_keys,
+          }),
     },
   )
 }

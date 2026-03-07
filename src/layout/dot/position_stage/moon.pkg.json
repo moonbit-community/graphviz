@@ -13,7 +13,6 @@
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/port_bridge",
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]
 }
