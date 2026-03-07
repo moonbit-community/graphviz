@@ -98,7 +98,7 @@ pub(all) struct RoutingStageDeps {
     Map[String, NodeSize],
     RecordOrientation,
     Map[String, Map[String, RecordPort]],
-  ) -> @routing.HeadPortMetrics
+  ) -> @precompute.HeadPortMetrics
   apply_self_edge_right_space : (
     Array[@cgraph.Node],
     Array[@cgraph.Edge],
@@ -160,11 +160,11 @@ pub fn compute_dot_routing_stage(
   let routing_cluster_bboxes = ratio_adjusted_data.cluster_bboxes
   let routing_positions_state = ratio_adjusted_data.positions_state
   let label_edge_counts =
-    @routing.build_label_edge_counts(
+    @precompute.build_label_edge_counts(
       prep.edges,
       deps.edge_has_mid_label,
     )
-  let enable_complex_tuning = @routing.complex_tuning_enabled()
+  let enable_complex_tuning = @precompute.complex_tuning_enabled()
   let precompute_data =
     build_routing_precompute_data(
       {

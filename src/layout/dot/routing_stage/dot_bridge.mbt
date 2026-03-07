@@ -121,8 +121,8 @@ fn build_head_port_metrics_for_stage(
   sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
   label_ports_map : Map[String, Map[String, RecordPort]],
-) -> @routing.HeadPortMetrics {
-  @routing.build_head_port_metrics_from_geometry(
+) -> @precompute.HeadPortMetrics {
+  @precompute.build_head_port_metrics_from_geometry(
     {
       edges,
       enable_complex_tuning,
@@ -180,7 +180,7 @@ fn build_route_base_deps_for_dot(
       @cgraph.Port?,
       @geom.Point,
       NodeSize,
-    ) -> @routing.RoutePortGeometry =
+    ) -> @precompute.RoutePortGeometry =
     (
       node_name : String,
       port : @cgraph.Port?,
@@ -195,7 +195,7 @@ fn build_route_base_deps_for_dot(
           node_pos,
           node_size,
         )
-      let route_geometry : @routing.RoutePortGeometry = {
+      let route_geometry : @precompute.RoutePortGeometry = {
         center: geometry.center,
         size: geometry.size,
       }

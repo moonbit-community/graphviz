@@ -13,9 +13,9 @@ priv struct RouteEdgesForDotInput {
   routing_label_ports_raw : Map[String, Map[String, RecordPort]]
   routing_sizes : Map[String, NodeSize]
   path_groups : Map[Int, Array[String]]
-  routing_context : @routing.RoutingContext
+  routing_context : @precompute.RoutingContext
   label_edge_counts : Map[String, Int]
-  head_port_metrics : @routing.HeadPortMetrics
+  head_port_metrics : @precompute.HeadPortMetrics
   enable_complex_tuning : Bool
 }
 

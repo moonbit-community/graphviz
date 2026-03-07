@@ -82,6 +82,14 @@ pub fn edge_has_sameport_mark(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+pub fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
+  match edge.get_attr("dir") {
+    Some(value) => value.to_lower()
+    None => "forward"
+  }
+}
+
+///|
 /// Graphviz parity: remap pass keeps sameport-tagged edges separate from plain
 /// parallels while preserving class2 endpoint/port grouping.
 /// Do not change behavior without updating fixtures/tests.

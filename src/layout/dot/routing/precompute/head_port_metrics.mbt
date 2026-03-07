@@ -1,4 +1,17 @@
 ///|
+pub(all) struct RoutePortGeometry {
+  center : @geom.Point
+  size : @dot_shared.NodeSize
+}
+
+///|
+pub(all) struct HeadPortMetrics {
+  head_port_counts : Map[String, Int]
+  head_port_min_dist : Map[String, Double]
+  head_port_max_dist : Map[String, Double]
+}
+
+///|
 /// Graphviz parity: head-port metric input keeps edge geometry snapshots and
 /// complex-tuning gate grouped before count/min/max aggregation.
 pub(all) struct HeadPortMetricBuildInput {

@@ -1,4 +1,16 @@
 ///|
+type NodeSize = @dot_shared.NodeSize
+
+///|
+type RoutePortGeometry = @precompute.RoutePortGeometry
+
+///|
+type HeadPortMetrics = @precompute.HeadPortMetrics
+
+///|
+type RoutingContext = @precompute.RoutingContext
+
+///|
 pub(all) struct EdgeRouteBase {
   edge : @cgraph.Edge
   parallel_offset : Double
@@ -70,12 +82,6 @@ pub(all) struct EdgeRouteBase {
 pub(all) struct RouteLabelMetrics {
   width : Double
   height : Double
-}
-
-///|
-pub(all) struct RoutePortGeometry {
-  center : @geom.Point
-  size : @dot_shared.NodeSize
 }
 
 ///|
@@ -159,13 +165,6 @@ pub(all) struct EdgeVnodeInfo {
   vnodes_by_rank : Map[Int, Array[String]]
   edge_vnodes : Map[String, Array[String]]
   vnode_clusters : Map[String, String]
-}
-
-///|
-pub(all) struct HeadPortMetrics {
-  head_port_counts : Map[String, Int]
-  head_port_min_dist : Map[String, Double]
-  head_port_max_dist : Map[String, Double]
 }
 
 ///|

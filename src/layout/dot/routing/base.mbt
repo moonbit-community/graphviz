@@ -10,14 +10,6 @@ fn point_for_name_or_origin(
 }
 
 ///|
-fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
-  match edge.get_attr("dir") {
-    Some(value) => value.to_lower()
-    None => "forward"
-  }
-}
-
-///|
 fn size_for_name_or_node(
   sizes : Map[String, NodeSize],
   name : String,

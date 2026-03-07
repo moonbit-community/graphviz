@@ -124,7 +124,7 @@ pub fn build_edge_parallel_offsets(
         edge.tail_port(),
         edge.head_port(),
       )
-    let dir_attr = edge_dir_attr_key(edge)
+    let dir_attr = @edge_ops.edge_dir_attr_key(edge)
     let mark = @edge_ops.edge_has_sameport_mark(edge)
     sameport_marked[edge.id()] = mark
     match groups.get(key) {

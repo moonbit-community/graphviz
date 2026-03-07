@@ -8,11 +8,6 @@
       "path": "moonbit-community/graphviz/layout/dot/routing/routesplines",
       "alias": "routesplines"
     },
-    {
-      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
-      "alias": "edge_spline"
-    },
-    "moonbit-community/graphviz/layout/dot/routing/precompute",
     "moonbit-community/graphviz/layout/dot/routing/edge_ops",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",

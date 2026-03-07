@@ -17,7 +17,7 @@ priv struct RoutingPrecomputeInput {
 }
 
 ///|
-type RoutingPrecomputeData = @routing.RoutingPrecomputePipelineOutput
+type RoutingPrecomputeData = @precompute.RoutingPrecomputePipelineOutput
 
 ///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
@@ -29,7 +29,7 @@ fn build_routing_precompute_data(
 ) -> RoutingPrecomputeData {
   let prep = input.prep
   let port_padding =
-    @routing.resolve_routing_port_padding(
+    @precompute.resolve_routing_port_padding(
       input.cluster_meta.has_clusters,
       prep.has_port_edges,
       () => {
@@ -61,7 +61,7 @@ fn build_routing_precompute_data(
       prep.rankdir,
       prep.record_orientation,
     )
-  @routing.build_routing_precompute_pipeline(
+  @precompute.build_routing_precompute_pipeline(
     {
       edges: prep.edges,
       x_groups: input.positions_state.x_groups,
