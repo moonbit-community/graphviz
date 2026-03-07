@@ -191,7 +191,7 @@ pub(all) struct ClusterLocalReorderDispatchContext {
 }
 
 ///|
-pub fn count_edge_vnodes(names : Array[String]) -> Int {
+fn count_edge_vnodes(names : Array[String]) -> Int {
   let mut vnode_count = 0
   for name in names {
     if @edge_identity.is_edge_vnode_name(name) {
@@ -205,7 +205,7 @@ pub fn count_edge_vnodes(names : Array[String]) -> Int {
 /// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
 /// and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
-pub fn should_include_external_crossing_edges(
+fn should_include_external_crossing_edges(
   cluster_rank_keys : Array[Int],
   cluster_graph_edge_count : Int,
   vnode_count : Int,
@@ -272,7 +272,7 @@ fn filter_cluster_flat_constraints(
 /// Graphviz parity: cluster-local reorder run-input payload keeps edge arrays
 /// and metadata maps grouped for dispatch into reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterLocalReorderRunInputsOutput {
+priv struct ClusterLocalReorderRunInputsOutput {
   cluster_edges : Array[@cgraph.Edge]
   cluster_edge_tail : Array[String]
   cluster_edge_head : Array[String]
@@ -294,7 +294,7 @@ pub(all) struct ClusterLocalReorderRunInputsOutput {
 /// Graphviz parity: cluster-local reorder input build context keeps the
 /// per-cluster node subset together with shared edge/neighbor snapshots.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterLocalReorderInputBuildContext {
+priv struct ClusterLocalReorderInputBuildContext {
   cluster_name : String
   include_external_crossing : Bool
   expanded_clusters : Map[String, Bool]
@@ -450,7 +450,7 @@ fn build_cluster_local_reorder_metadata(
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_local_reorder_inputs(
+fn build_local_reorder_inputs(
   input_context : ClusterLocalReorderInputBuildContext,
 ) -> ClusterLocalReorderRunInputsOutput {
   let edge_bundle =
@@ -480,7 +480,7 @@ pub fn build_local_reorder_inputs(
 /// Graphviz parity: cluster-local reorder writes only cluster members back to
 /// existing rank slots, preserving non-cluster node positions.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_cluster_rank_reorder_output(
+fn apply_cluster_rank_reorder_output(
   groups : Map[Int, Array[String]],
   cluster_rank_keys : Array[Int],
   ordered_cluster : Map[Int, Array[String]],
@@ -515,7 +515,7 @@ pub fn apply_cluster_rank_reorder_output(
 /// Graphviz parity: cluster-local reorder context keeps filtered cluster nodes,
 /// seeded local rank groups, and fixed-slot exclusions in one bundle.
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterLocalReorderContext {
+priv struct ClusterLocalReorderContext {
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
   cluster_node_order : Map[String, Int]
@@ -615,7 +615,7 @@ fn build_cluster_fixed_positions(
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct ClusterLocalReorderContextBuildInputs {
+priv struct ClusterLocalReorderContextBuildInputs {
   cluster : String
   cluster_graph : @cgraph.Graph
   groups : Map[Int, Array[String]]
@@ -630,7 +630,7 @@ pub(all) struct ClusterLocalReorderContextBuildInputs {
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
-pub fn build_cluster_local_reorder_context(
+fn build_cluster_local_reorder_context(
   inputs : ClusterLocalReorderContextBuildInputs,
 ) -> ClusterLocalReorderContext? {
   let cluster_node_set =
@@ -807,7 +807,7 @@ fn build_cluster_group_order_index(
 /// Graphviz parity: cluster-local ND_order seeds vnode positions by
 /// interpolating between current tail/head orders inside the cluster.
 /// Do not change behavior without updating fixtures/tests.
-pub fn seed_local_groups_by_vnode(
+fn seed_local_groups_by_vnode(
   cluster_rank_keys : Array[Int],
   cluster_groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
@@ -854,7 +854,7 @@ pub fn seed_local_groups_by_vnode(
 /// Graphviz parity: cluster-local mincross seeds ND_order by vnode
 /// interpolation, then applies same-rank flat constraints before startpass=2.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_rank_seeded_groups(
+fn build_cluster_rank_seeded_groups(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   fixed_ranks : Map[String, Int],
@@ -963,7 +963,7 @@ fn cluster_order_index_or_end(
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-pub(all) struct LocalClusterGraphOrderOutput {
+priv struct LocalClusterGraphOrderOutput {
   cluster_graphs : Map[String, @cgraph.Graph]
   cluster_names : Array[String]
 }
@@ -972,7 +972,7 @@ pub(all) struct LocalClusterGraphOrderOutput {
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_cluster_graph_order(
+fn build_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
@@ -1024,7 +1024,7 @@ pub fn build_cluster_graph_order(
 ///|
 /// Graphviz parity: local-cluster stable sorts compare seed order first and
 /// break ties by node name to keep deterministic fixture ordering.
-pub fn compare_by_order_then_name(
+fn compare_by_order_then_name(
   order_map : Map[String, Int],
   a : String,
   b : String,
@@ -1229,7 +1229,7 @@ pub(all) struct ClusterLocalNeighborSources {
 /// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
-pub(all) struct ClusterLocalNeighborMaps {
+priv struct ClusterLocalNeighborMaps {
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
 }
@@ -1478,7 +1478,7 @@ fn build_local_neighbor_lists_for_name(
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_local_neighbor_maps(
+fn build_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_nodes : Array[String],
