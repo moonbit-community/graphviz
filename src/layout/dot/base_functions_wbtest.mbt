@@ -55,12 +55,12 @@ test "base rankdir and splines parsers accept graphviz aliases" {
   assert_eq(@dot_shared.parse_rankdir("rl"), Some(RankDir::RL))
   assert_eq(@dot_shared.parse_rankdir("diag"), None)
 
-  assert_eq(parse_splines("true"), Some(SplinesMode::Spline))
-  assert_eq(parse_splines("line"), Some(SplinesMode::Polyline))
-  assert_eq(parse_splines(""), Some(SplinesMode::None))
-  assert_eq(parse_splines("ortho"), Some(SplinesMode::Ortho))
-  assert_eq(parse_splines("curved"), Some(SplinesMode::Curved))
-  assert_eq(parse_splines("bogus"), None)
+  assert_eq(@input_stage.parse_splines("true"), Some(SplinesMode::Spline))
+  assert_eq(@input_stage.parse_splines("line"), Some(SplinesMode::Polyline))
+  assert_eq(@input_stage.parse_splines(""), Some(SplinesMode::None))
+  assert_eq(@input_stage.parse_splines("ortho"), Some(SplinesMode::Ortho))
+  assert_eq(@input_stage.parse_splines("curved"), Some(SplinesMode::Curved))
+  assert_eq(@input_stage.parse_splines("bogus"), None)
 }
 
 ///|

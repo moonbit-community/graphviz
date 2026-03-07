@@ -547,7 +547,7 @@ fn run_mincross_case_with_name_order(
   let parents = edge_index_data.parents
   let children = edge_index_data.children
   let edge_order = @ordering.collect_edge_order(edges)
-  let nodesep_pt = default_nodesep_in() * 72.0
+  let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
   let cluster_keys : Map[String, String] = Map::new()
   let cluster_skeleton : Map[String, Bool] = Map::new()
   for node in input.nodes {

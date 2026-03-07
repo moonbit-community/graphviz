@@ -1,12 +1,12 @@
 ///|
-/// Unranked engine entry paths: public noop/neato APIs plus root-owned input
-/// validation and error mapping.
+/// Unranked engine entry paths: public noop/neato APIs plus root-owned
+/// error mapping and unranked-engine orchestration.
 
 ///|
 fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
-    Some(value) => @numeric.parse_double_or(value, default_nodesep_in())
-    None => default_nodesep_in()
+    Some(value) => @numeric.parse_double_or(value, @input_stage.DEFAULT_NODESEP_IN)
+    None => @input_stage.DEFAULT_NODESEP_IN
   }
   nodesep_in * 72.0
 }
@@ -16,12 +16,11 @@ fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Unit raise DotLayoutErr
   for edge in graph.edges() {
     match edge.get_attr("len") {
       Some(value) =>
-        validate_nonnegative_attr(
-          "edge \{edge.tail().name()} -> \{edge.head().name()}",
-          "len",
-          value,
-          @numeric.parse_first_double(value, 0.0),
-        )
+        if @numeric.parse_first_double(value, 0.0) < 0.0 {
+          raise DotLayoutError::InvalidGraph(
+            message="edge \{edge.tail().name()} -> \{edge.head().name()} has negative len: \{value}",
+          )
+        }
       None => ()
     }
   }
@@ -34,7 +33,10 @@ pub fn layout_neato(
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   let active_graph = @unranked_engine.active_graph_for_prune(graph, prune)
-  validate_layout_graph(active_graph)
+  match @input_stage.validate_layout_graph(active_graph) {
+    Ok(_) => ()
+    Err(message) => raise DotLayoutError::InvalidGraph(message~)
+  }
   @label_layout.reset_label_caches()
   validate_neato_edge_lengths(active_graph)
   dot_layout_graph_from_layout_tree(
