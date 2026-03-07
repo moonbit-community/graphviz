@@ -1,7 +1,4 @@
 ///|
-type RankDir = @rankdir.RankDir
-
-///|
 fn require_object_local(json : Json) -> Map[String, Json] raise {
   match json {
     Json::Object(obj) => obj
@@ -21,33 +18,11 @@ struct LabelVnodeFixture {
 }
 
 ///|
-struct FlatLabelNodeFixture {
-  tail : String
-  head : String
-  label : String
-  rank : Int
-  lw : Double
-  rw : Double
-  ht : Double
-}
-
-///|
 struct LabelVnodeActual {
   tail : String
   head : String
   label : String
   label_rank : Int
-  lw : Double
-  rw : Double
-  ht : Double
-}
-
-///|
-struct FlatLabelNodeActual {
-  tail : String
-  head : String
-  label : String
-  rank : Int
   lw : Double
   rw : Double
   ht : Double
@@ -86,38 +61,6 @@ fn load_label_vnode_fixtures(
 }
 
 ///|
-fn load_flat_label_node_fixtures(
-  graph_name : String,
-) -> Array[FlatLabelNodeFixture] raise {
-  let data = @fs.read_file_to_string("tests/fixtures/graphviz/label_vnode.jsonl")
-  let fixtures : Array[FlatLabelNodeFixture] = []
-  for line in data.split("\n") {
-    if line.length() == 0 {
-      continue
-    }
-    let obj = require_object_local(@json.parse(line))
-    let event : String = @json.from_json(obj["event"])
-    if event != "flat_label_node" {
-      continue
-    }
-    let graph : String = @json.from_json(obj["graph"])
-    if graph != graph_name {
-      continue
-    }
-    fixtures.push({
-      tail: @json.from_json(obj["tail"]),
-      head: @json.from_json(obj["head"]),
-      label: @json.from_json(obj["label"]),
-      rank: @json.from_json(obj["rank"]),
-      lw: @json.from_json(obj["lw"]),
-      rw: @json.from_json(obj["rw"]),
-      ht: @json.from_json(obj["ht"]),
-    })
-  }
-  fixtures
-}
-
-///|
 fn graph_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
     Some(value) => @numeric.parse_first_double(value, @input_stage.DEFAULT_NODESEP_IN)
@@ -134,16 +77,6 @@ fn label_vnode_key(
   label_rank : Int,
 ) -> String {
   "\{tail}|\{head}|\{label}|\{label_rank}"
-}
-
-///|
-fn flat_label_node_key(
-  tail : String,
-  head : String,
-  label : String,
-  rank : Int,
-) -> String {
-  "\{tail}|\{head}|\{label}|\{rank}"
 }
 
 ///|
@@ -259,63 +192,6 @@ fn collect_label_vnode_actuals(
 }
 
 ///|
-fn collect_flat_label_node_actuals(
-  graph : @cgraph.Graph,
-) -> Array[FlatLabelNodeActual] {
-  let nodes = graph.nodes()
-  let edges = graph.edges()
-  let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
-  let ranks = compute_ranks_directed_with_clusters_for_tests(
-    graph,
-    nodes,
-    edges,
-    has_edge_labels,
-  )
-  let rankdir = @rankdir.graph_rankdir(graph)
-  let actuals : Array[FlatLabelNodeActual] = []
-  for edge in edges {
-    let label = match edge.get_attr("label") {
-      Some(value) => value
-      None => continue
-    }
-    if label == "" {
-      continue
-    }
-    let tail_rank = match ranks.get(edge.tail().name()) {
-      Some(value) => value
-      None => continue
-    }
-    let head_rank = match ranks.get(edge.head().name()) {
-      Some(value) => value
-      None => continue
-    }
-    if tail_rank != head_rank {
-      continue
-    }
-    let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
-      Some(value) => value
-      None => continue
-    }
-    let (width, height) =
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
-      (metrics.height, metrics.width)
-    } else {
-      (metrics.width, metrics.height)
-    }
-    actuals.push({
-      tail: edge.tail().name(),
-      head: edge.head().name(),
-      label,
-      rank: tail_rank - 1,
-      lw: width / 2.0,
-      rw: width / 2.0,
-      ht: height,
-    })
-  }
-  actuals
-}
-
-///|
 fn sort_label_actuals(entries : Array[LabelVnodeActual]) -> Array[LabelVnodeActual] {
   let sorted = entries.copy()
   sorted.sort_by((a, b) => {
@@ -343,64 +219,6 @@ fn sort_label_fixtures(entries : Array[LabelVnodeFixture]) -> Array[LabelVnodeFi
   let sorted = entries.copy()
   sorted.sort_by((a, b) => {
     if a.lw < b.lw {
-      -1
-    } else if a.lw > b.lw {
-      1
-    } else if a.rw < b.rw {
-      -1
-    } else if a.rw > b.rw {
-      1
-    } else if a.ht < b.ht {
-      -1
-    } else if a.ht > b.ht {
-      1
-    } else {
-      0
-    }
-  })
-  sorted
-}
-
-///|
-fn sort_flat_label_actuals(
-  entries : Array[FlatLabelNodeActual],
-) -> Array[FlatLabelNodeActual] {
-  let sorted = entries.copy()
-  sorted.sort_by((a, b) => {
-    if a.rank < b.rank {
-      -1
-    } else if a.rank > b.rank {
-      1
-    } else if a.lw < b.lw {
-      -1
-    } else if a.lw > b.lw {
-      1
-    } else if a.rw < b.rw {
-      -1
-    } else if a.rw > b.rw {
-      1
-    } else if a.ht < b.ht {
-      -1
-    } else if a.ht > b.ht {
-      1
-    } else {
-      0
-    }
-  })
-  sorted
-}
-
-///|
-fn sort_flat_label_fixtures(
-  entries : Array[FlatLabelNodeFixture],
-) -> Array[FlatLabelNodeFixture] {
-  let sorted = entries.copy()
-  sorted.sort_by((a, b) => {
-    if a.rank < b.rank {
-      -1
-    } else if a.rank > b.rank {
-      1
-    } else if a.lw < b.lw {
       -1
     } else if a.lw > b.lw {
       1
@@ -477,52 +295,3 @@ test "label vnodes match Graphviz fixtures" {
   }
 }
 
-///|
-test "flat label node sizes match Graphviz fixtures" {
-  let graph_name = "flat_label"
-  let fixtures = load_flat_label_node_fixtures(graph_name)
-  guard fixtures.length() > 0 else { fail("missing fixtures for \{graph_name}") }
-
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/flat_edge_label.dot")
-  let actuals = collect_flat_label_node_actuals(graph)
-
-  let fixture_map : Map[String, Array[FlatLabelNodeFixture]] = Map::new()
-  for entry in fixtures {
-    let key = flat_label_node_key(entry.tail, entry.head, entry.label, entry.rank)
-    match fixture_map.get(key) {
-      Some(list) => list.push(entry)
-      None => fixture_map[key] = [entry]
-    }
-  }
-
-  let actual_map : Map[String, Array[FlatLabelNodeActual]] = Map::new()
-  for entry in actuals {
-    let key = flat_label_node_key(entry.tail, entry.head, entry.label, entry.rank)
-    match actual_map.get(key) {
-      Some(list) => list.push(entry)
-      None => actual_map[key] = [entry]
-    }
-  }
-
-  for key, expected in fixture_map {
-    let actual = match actual_map.get(key) {
-      Some(list) => list
-      None => fail("missing flat label node actuals for \{key}")
-    }
-    assert_eq(actual.length(), expected.length())
-    let sorted_actual = sort_flat_label_actuals(actual)
-    let sorted_expected = sort_flat_label_fixtures(expected)
-    for i in 0..<sorted_expected.length() {
-      assert_eq(sorted_actual[i].rank, sorted_expected[i].rank)
-      assert_eq(sorted_actual[i].lw, sorted_expected[i].lw)
-      assert_eq(sorted_actual[i].rw, sorted_expected[i].rw)
-      assert_eq(sorted_actual[i].ht, sorted_expected[i].ht)
-    }
-  }
-
-  for key, _ in actual_map {
-    if fixture_map.get(key) is None {
-      fail("unexpected flat label node actuals for \{key}")
-    }
-  }
-}

@@ -212,6 +212,61 @@ test "non-adjacent flat edge injects a label vnode and splits constraints" {
 }
 
 ///|
+test "non-adjacent LR flat edge swaps label width and height for vnode sizing" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let c = graph.node("c")
+  let b = graph.node("b")
+  ignore(c)
+  let edge = graph.edge(a, b)
+  edge.set_attr("label", "lr-non-adjacent")
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 0
+  ranks["b"] = 0
+  ranks["c"] = 0
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "c", "b"]
+  let x_groups : Map[Int, Array[String]] = Map::new()
+  x_groups[0] = ["a", "c", "b"]
+  let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
+  let vnode_info = empty_vnode_info()
+  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+    Some(value) => value
+    None => fail("expected edge label metrics")
+  }
+
+  let result = build_flat_label_vnodes_for_positioning(
+    [edge],
+    ["a"],
+    ["b"],
+    ranks,
+    ordered_groups,
+    20.0,
+    @rankdir.RankDir::LR,
+    sizes,
+    Map::new(),
+    Map::new(),
+    make_existing_names(["a", "b", "c"]),
+    vnode_info,
+    x_groups,
+  )
+
+  let label_vnode = match result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+    Some(value) => value
+    None => fail("expected flat label vnode mapping")
+  }
+  let size = match vnode_info.vnode_sizes.get(label_vnode) {
+    Some(value) => value
+    None => fail("expected vnode size")
+  }
+
+  assert_eq(size.left_pt, metrics.height / 2.0)
+  assert_eq(size.right_pt, metrics.height / 2.0)
+  assert_eq(size.height_pt, metrics.width)
+}
+
+///|
 test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
   let order_index : Map[String, Int] = Map::new()
   order_index["x"] = 0
