@@ -439,7 +439,7 @@ priv struct FlatLabelVnodeResult {
 }
 
 ///|
-pub fn build_flat_label_vnodes_for_positioning(
+fn build_flat_label_vnodes_for_positioning(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],

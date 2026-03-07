@@ -12,5 +12,23 @@
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/shared",
+      "alias": "dot_shared"
+    },
+    "moonbit-community/graphviz/layout/dot/input_stage",
+    "moonbit-community/graphviz/layout/dot/cluster_graph",
+    "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/rank_assignment",
+    "moonbit-community/graphviz/layout/dot/routing/edge_label",
+    "moonbit-community/graphviz/layout/dot/node_geometry",
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs"
   ]
 }

@@ -167,14 +167,57 @@ fn build_x_with_flat_labels(
       build_x_port_samples,
     )
   let flat_label_augmentation =
-    build_x_flat_labels({
-      xpos_reorder_enabled: false,
-      use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-      allow_xpos_reorder: mode_flags.allow_xpos_reorder,
-      graphviz_flip: mode_flags.graphviz_flip,
-      pipeline,
-      x_seed,
-    })
+    @x_flat_labels.build_positioning_x_flat_label_pipeline(
+      {
+        xpos_reorder_enabled: false,
+        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+        allow_xpos_reorder: mode_flags.allow_xpos_reorder,
+        graphviz_flip: mode_flags.graphviz_flip,
+        has_vnode_order: x_seed.has_vnode_order,
+        ordering_set: pipeline.cluster_meta.ordering_set,
+        has_clusters: pipeline.cluster_meta.has_clusters,
+        x_groups: x_seed.x_groups,
+        x_base_sizes: x_seed.x_base_sizes,
+        x_order_sizes: x_seed.x_order_sizes,
+        x_cluster_keys: x_seed.x_cluster_keys,
+        cluster_min_rank: pipeline.cluster_meta.cluster_min_rank,
+        cluster_max_rank: pipeline.cluster_meta.cluster_max_rank,
+        node_order: pipeline.prep.node_order,
+        edges: pipeline.prep.edges,
+        edge_tail: pipeline.rank_data.edge_tail,
+        edge_head: pipeline.rank_data.edge_head,
+        ranks: pipeline.rank_data.ranks,
+        edge_vnodes: pipeline.ordering.vnode_info.edge_vnodes,
+        vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
+        edge_tail_port_x: x_seed.x_edge_tail_port_x,
+        edge_head_port_x: x_seed.x_edge_head_port_x,
+        edge_tail_port_order: x_seed.x_edge_tail_port_order,
+        edge_head_port_order: x_seed.x_edge_head_port_order,
+        rank_same_groups: pipeline.cluster_meta.rank_same_groups,
+        rank_same_order: pipeline.cluster_meta.rank_same_order,
+        nodesep_pt: pipeline.rank_heights.nodesep_pt,
+        has_edge_labels: pipeline.prep.has_edge_labels,
+        flat_constraints: pipeline.cluster_meta.flat_constraints,
+        nodes: pipeline.prep.nodes,
+        order_edges: pipeline.ordering.order_edges,
+        order_edge_tail: pipeline.ordering.order_edge_tail,
+        order_edge_head: pipeline.ordering.order_edge_head,
+        order_edge_tail_port_x: x_seed.order_edge_tail_port_x,
+        order_edge_head_port_x: x_seed.order_edge_head_port_x,
+        order_edge_tail_port_order: x_seed.order_edge_tail_port_order,
+        order_edge_head_port_order: x_seed.order_edge_head_port_order,
+        edge_order: pipeline.ordering.edge_order,
+        port_order_positions: pipeline.prep.port_order_positions,
+        port_order_contrib: pipeline.prep.port_order_contrib,
+        cluster_skeleton: pipeline.cluster_meta.cluster_skeleton,
+        vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
+        ordered_groups: pipeline.ordering.ordered_groups,
+        rankdir: pipeline.prep.rankdir,
+        edge_cluster_keys: pipeline.ordering.edge_cluster_keys,
+        cluster_parents: pipeline.cluster_meta.cluster_parents,
+        vnode_info: pipeline.ordering.vnode_info,
+      },
+    )
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
     x_base_sizes: x_seed.x_base_sizes,
@@ -189,8 +232,6 @@ fn build_x_with_flat_labels(
 ///|
 /// Stage D constants and x-constraint helpers stay with the position stage so
 /// the owner package keeps algorithm-specific thresholds and solve wiring.
-const CL_CROSS : Int = 1000
-
 const MAX_XPOS_VNODES : Int = 100000
 
 const MAX_XPOS_REORDER_VNODES : Int = 5000

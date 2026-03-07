@@ -1,4 +1,30 @@
 ///|
+type RankDir = @rankdir.RankDir
+type NodeSize = @node_primitives.NodeSize
+
+///|
+fn require_object_local(json : Json) -> Map[String, Json] raise {
+  match json {
+    Json::Object(obj) => obj
+    _ => fail("expected JSON object")
+  }
+}
+
+///|
+fn find_edge_by_nodes(
+  graph : @cgraph.Graph,
+  tail : String,
+  head : String,
+) -> @cgraph.Edge? {
+  for edge in graph.edges() {
+    if edge.tail().name() == tail && edge.head().name() == head {
+      return Some(edge)
+    }
+  }
+  None
+}
+
+///|
 struct LabelVnodeFixture {
   graph : String
   tail : String
@@ -670,7 +696,7 @@ test "flat label node sizes match Graphviz fixtures" {
     assert_eq(metrics.width, entry.dimen_x)
     assert_eq(metrics.height, entry.dimen_y)
     assert_eq(
-      @x_flat_labels.flat_label_adjacent(
+      flat_label_adjacent(
         tail_rank,
         entry.tail,
         entry.head,
