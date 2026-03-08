@@ -846,6 +846,110 @@ test "rank_reorder preserves opposing edge-vnode ladders when ordering is alread
 }
 
 ///|
+/// Graphviz parity: this is the stable wide normal tree behind the L0
+/// integrated fixture. Keep exact owner-local coverage so the fixture replay
+/// can focus on denser integrated reorder cases.
+fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
+  let input_ranks : Array[Array[Int]] = [[3],[0,4,5,39,40],[1,6,16,17,41],[2,7,8,15,18,19,38,42],[9,20,26,27],[10,12,13,21,23,24,28],[11,14,22,25,29,30,37],[31],[32,34,35],[33,36]]
+  let output_ranks : Array[Array[Int]] = [[3],[0,4,5,39,40],[1,6,16,17,41],[2,7,8,15,18,19,38,42],[9,20,26,27],[10,12,13,21,23,24,28],[11,14,22,25,29,30,37],[31],[32,34,35],[33,36]]
+  let edges : Array[MincrossEdge] = [
+    { tail: 0, head: 1, xpenalty: 1, seq: 6, order: 0, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 1, head: 2, xpenalty: 1, seq: 7, order: 1, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 0, xpenalty: 1, seq: 1, order: 2, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 4, xpenalty: 1, seq: 2, order: 3, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 5, xpenalty: 1, seq: 3, order: 4, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 39, xpenalty: 1, seq: 4, order: 5, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 40, xpenalty: 1, seq: 5, order: 6, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 5, head: 6, xpenalty: 1, seq: 8, order: 7, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 5, head: 16, xpenalty: 1, seq: 9, order: 8, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 5, head: 17, xpenalty: 1, seq: 10, order: 9, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 6, head: 7, xpenalty: 1, seq: 11, order: 10, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 6, head: 8, xpenalty: 1, seq: 12, order: 11, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 6, head: 15, xpenalty: 1, seq: 13, order: 12, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 8, head: 9, xpenalty: 1, seq: 14, order: 13, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 9, head: 10, xpenalty: 1, seq: 15, order: 14, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 9, head: 12, xpenalty: 1, seq: 16, order: 15, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 9, head: 13, xpenalty: 1, seq: 17, order: 16, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 10, head: 11, xpenalty: 1, seq: 18, order: 17, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 13, head: 14, xpenalty: 1, seq: 19, order: 18, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 17, head: 18, xpenalty: 1, seq: 20, order: 19, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 17, head: 19, xpenalty: 1, seq: 21, order: 20, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 17, head: 38, xpenalty: 1, seq: 22, order: 21, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 19, head: 20, xpenalty: 1, seq: 23, order: 22, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 19, head: 26, xpenalty: 1, seq: 24, order: 23, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 19, head: 27, xpenalty: 1, seq: 25, order: 24, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 20, head: 21, xpenalty: 1, seq: 26, order: 25, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 20, head: 23, xpenalty: 1, seq: 27, order: 26, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 20, head: 24, xpenalty: 1, seq: 28, order: 27, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 21, head: 22, xpenalty: 1, seq: 29, order: 28, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 24, head: 25, xpenalty: 1, seq: 30, order: 29, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 27, head: 28, xpenalty: 1, seq: 31, order: 30, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 28, head: 29, xpenalty: 1, seq: 32, order: 31, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 28, head: 30, xpenalty: 1, seq: 33, order: 32, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 28, head: 37, xpenalty: 1, seq: 34, order: 33, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 30, head: 31, xpenalty: 1, seq: 35, order: 34, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 31, head: 32, xpenalty: 1, seq: 36, order: 35, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 31, head: 34, xpenalty: 1, seq: 37, order: 36, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 31, head: 35, xpenalty: 1, seq: 38, order: 37, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 32, head: 33, xpenalty: 1, seq: 39, order: 38, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 35, head: 36, xpenalty: 1, seq: 40, order: 39, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 40, head: 41, xpenalty: 1, seq: 41, order: 40, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 41, head: 42, xpenalty: 1, seq: 42, order: 41, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+  ]
+  let out_neighbors : Map[Int, Array[Int]] = Map::new()
+  let in_neighbors : Map[Int, Array[Int]] = Map::new()
+  for rank_nodes in input_ranks {
+    for id in rank_nodes {
+      out_neighbors[id] = []
+      in_neighbors[id] = []
+    }
+  }
+  for edge in edges {
+    out_neighbors[edge.tail].push(edge.head)
+    in_neighbors[edge.head].push(edge.tail)
+  }
+  let nodes : Array[MincrossNode] = []
+  for rank, rank_nodes in input_ranks {
+    for order, id in rank_nodes {
+      nodes.push({
+        id,
+        name: None,
+        rank,
+        order,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: out_neighbors.get(id).unwrap_or_default(),
+        in_neighbors: in_neighbors.get(id).unwrap_or_default(),
+        out_all_neighbors: [],
+        in_all_neighbors: [],
+      })
+    }
+  }
+  let input : MincrossInput = {
+    case_id: 1011,
+    graph: "wide_normal_tree_stable",
+    startpass: 0,
+    flip: false,
+    minrank: 0,
+    maxrank: 9,
+    nodes,
+    edges,
+    flat_edges: [],
+    ranks: input_ranks,
+  }
+  let output : MincrossOutput = {
+    case_id: 1011,
+    ranks: output_ranks,
+  }
+  (input, output)
+}
+
+///|
+test "rank_reorder preserves wide normal tree order when layering is already stable" {
+  let (input, output) = wide_normal_tree_rank_reorder_case()
+  run_fixed_rank_reorder_case(input, output)
+}
+
 test "rank_reorder uses external anchor order for plugin-style single-rank slices" {
   let input : MincrossInput = {
     case_id: 1007,
