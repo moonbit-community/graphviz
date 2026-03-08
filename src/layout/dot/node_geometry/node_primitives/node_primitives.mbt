@@ -32,10 +32,7 @@ pub fn default_point_size_in() -> Double {
 }
 
 ///|
-pub fn node_size_from_points(
-  width_pt : Double,
-  height_pt : Double,
-) -> NodeSize {
+pub fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
   let half = width_pt / 2.0
@@ -58,14 +55,7 @@ pub fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
   let width_in = width_pt / 72.0
   let height_pt = VNODE_HEIGHT_PT
   let height_in = height_pt / 72.0
-  {
-    width_in,
-    height_in,
-    width_pt,
-    height_pt,
-    left_pt,
-    right_pt,
-  }
+  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
 }
 
 ///|
