@@ -1,117 +1,50 @@
 ///|
-struct XlabelFixture {
-  graph : String
-  kind : String
-  node : String
-  tail : String
-  head : String
-  label : String
-  pos_x : Double
-  pos_y : Double
-}
-
-///|
-fn load_xlabel_fixtures() -> Array[XlabelFixture] raise {
-  let data = @fs.read_file_to_string("tests/fixtures/graphviz/xlabels.jsonl")
-  let fixtures : Array[XlabelFixture] = []
-  for line in data.split("\n") {
-    if line.length() == 0 {
-      continue
-    }
-    let obj = match @json.parse(line) {
-      Json::Object(value) => value
-      _ => fail("expected JSON object")
-    }
-    let event : String = @json.from_json(obj["event"])
-    if event != "xlabel" {
-      continue
-    }
-    fixtures.push({
-      graph: @json.from_json(obj["graph"]),
-      kind: @json.from_json(obj["kind"]),
-      node: @json.from_json(obj["node"]),
-      tail: @json.from_json(obj["tail"]),
-      head: @json.from_json(obj["head"]),
-      label: @json.from_json(obj["label"]),
-      pos_x: @json.from_json(obj["pos_x"]),
-      pos_y: @json.from_json(obj["pos_y"]),
-    })
-  }
-  fixtures
-}
-
-///|
-fn xlabel_graph_path(name : String) -> String raise {
-  match name {
-    "xlabels_tb" => "tests/layout/dot/xlabels_tb.dot"
-    "xlabels_lr" => "tests/layout/dot/xlabels_lr.dot"
-    _ => fail("unknown xlabel fixture graph \{name}")
-  }
-}
-
-///|
 fn compute_finalized_xlabel_layout(
   graph : @cgraph.Graph,
 ) -> @shared.LayoutTree raise {
-  let prep = match @input_stage.prepare_layout_prep(
-    graph,
-    { rankdir: None, nodesep: None, ranksep: None, splines: None },
-  ) {
+  let prep = match
+    @input_stage.prepare_layout_prep(graph, {
+      rankdir: None,
+      nodesep: None,
+      ranksep: None,
+      splines: None,
+    }) {
     Ok(value) => value
     Err(message) => fail(message)
   }
   let rank_stage = @rank_stage.compute_dot_rank_stage({ graph, prep })
-  let positions_state =
-    @positioning.compute_positions(
-      {
-        graph,
-        prep,
-        rank_data: rank_stage.rank_data,
-        rank_heights: rank_stage.rank_heights,
-        cluster_meta: rank_stage.cluster_meta,
-        ordering: rank_stage.ordering,
-      },
-    )
-  let routing_stage_output =
-    @integration.compute_dot_routing_stage(
-      {
-        graph,
-        prep,
-        rank_data: rank_stage.rank_data,
-        rank_heights: rank_stage.rank_heights,
-        cluster_meta: rank_stage.cluster_meta,
-        ordering: rank_stage.ordering,
-        positions_state,
-      },
-    )
-  finalize_layout_from_sources(
-    {
-      graph,
-      prep,
-      rank_data: rank_stage.rank_data,
-      rank_heights: rank_stage.rank_heights,
-      positions_state,
-      routing_stage_output,
-    },
-  )
+  let positions_state = @positioning.compute_positions({
+    graph,
+    prep,
+    rank_data: rank_stage.rank_data,
+    rank_heights: rank_stage.rank_heights,
+    cluster_meta: rank_stage.cluster_meta,
+    ordering: rank_stage.ordering,
+  })
+  let routing_stage_output = @integration.compute_dot_routing_stage({
+    graph,
+    prep,
+    rank_data: rank_stage.rank_data,
+    rank_heights: rank_stage.rank_heights,
+    cluster_meta: rank_stage.cluster_meta,
+    ordering: rank_stage.ordering,
+    positions_state,
+  })
+  finalize_layout_from_sources({
+    graph,
+    prep,
+    rank_data: rank_stage.rank_data,
+    rank_heights: rank_stage.rank_heights,
+    positions_state,
+    routing_stage_output,
+  })
 }
 
 ///|
-fn load_xlabel_layout(
-  layouts : Map[String, @shared.LayoutTree],
-  name : String,
-) -> @shared.LayoutTree raise {
-  match layouts.get(name) {
-    Some(value) => value
-    None => {
-      let layout =
-        compute_finalized_xlabel_layout(
-          @dot_parser.parse_dot_file(xlabel_graph_path(name)),
-        )
-      layouts[name] = layout
-      layout
-    }
-  }
+fn load_tb_xlabel_layout() -> @shared.LayoutTree raise {
+  compute_finalized_xlabel_layout(
+    @dot_parser.parse_dot_file("tests/layout/dot/xlabels_tb.dot"),
+  )
 }
 
 ///|
@@ -131,13 +64,6 @@ fn find_node_layout(
     }
   }
   None
-}
-
-///|
-fn assert_float_eq(actual : Double, expected : Double, message : String) -> Unit raise {
-  if actual != expected {
-    fail(message)
-  }
 }
 
 ///|
@@ -167,122 +93,120 @@ fn find_edge_layout_by_label(
 }
 
 ///|
-fn assert_node_xlabel_fixture(
-  layout : @shared.LayoutTree,
-  fixture : XlabelFixture,
+fn assert_float_eq(
+  actual : Double,
+  expected : Double,
+  message : String,
 ) -> Unit raise {
-  guard fixture.node != "" else {
-    fail("missing node name for node xlabel fixture")
+  if actual != expected {
+    fail(message)
   }
-  let node_layout = match find_node_layout(layout, fixture.node) {
+}
+
+///|
+fn assert_node_xlabel(
+  layout : @shared.LayoutTree,
+  node_name : String,
+  label : String,
+  pos_x : Double,
+  pos_y : Double,
+) -> Unit raise {
+  let node_layout = match find_node_layout(layout, node_name) {
     Some(value) => value
-    None => fail("missing node \{fixture.node} in xlabel fixture graph")
+    None => fail("missing node \{node_name} in xlabel smoke graph")
   }
-  let expected_label = node_layout.node.get_attr("xlabel").unwrap_or_default()
-  if expected_label != fixture.label {
+  let actual_label = node_layout.node.get_attr("xlabel").unwrap_or_default()
+  if actual_label != label {
     fail(
-      "node xlabel mismatch for \{fixture.node} expected '\{fixture.label}' got '\{expected_label}'",
+      "node xlabel mismatch for \{node_name} expected '\{label}' got '\{actual_label}'",
     )
   }
   let pos = match node_layout.xlabel_pos {
     Some(value) => value
-    None => fail("missing node xlabel position for \{fixture.node}")
+    None => fail("missing node xlabel position for \{node_name}")
   }
   assert_float_eq(
     pos.x,
-    fixture.pos_x,
-    "node xlabel pos x mismatch \{fixture.graph} \{fixture.node} got (\{pos.x}) expected (\{fixture.pos_x})",
+    pos_x,
+    "node xlabel pos x mismatch \{node_name} got (\{pos.x}) expected (\{pos_x})",
   )
   assert_float_eq(
     pos.y,
-    fixture.pos_y,
-    "node xlabel pos y mismatch \{fixture.graph} \{fixture.node} got (\{pos.y}) expected (\{fixture.pos_y})",
+    pos_y,
+    "node xlabel pos y mismatch \{node_name} got (\{pos.y}) expected (\{pos_y})",
   )
 }
 
 ///|
-fn assert_edge_xlabel_fixture(
+fn assert_edge_label_position(
   layout : @shared.LayoutTree,
-  fixture : XlabelFixture,
+  tail : String,
+  head : String,
+  attr_name : String,
+  label : String,
+  pos_x : Double,
+  pos_y : Double,
 ) -> Unit raise {
-  guard fixture.tail != "" && fixture.head != "" else {
-    fail("missing edge endpoints for xlabel fixture")
-  }
-  let attr_name = match fixture.kind {
-    "edge_xlabel" => "xlabel"
-    "headlabel" => "headlabel"
-    "taillabel" => "taillabel"
-    _ => fail("unknown edge xlabel fixture kind \{fixture.kind}")
-  }
-  let edge_layout = match find_edge_layout_by_label(
-    layout,
-    fixture.tail,
-    fixture.head,
-    attr_name,
-    fixture.label,
-  ) {
+  let edge_layout = match
+    find_edge_layout_by_label(layout, tail, head, attr_name, label) {
     Some(value) => value
     None =>
       fail(
-        "missing labeled edge \{fixture.tail}->\{fixture.head} '\{fixture.label}' for kind \{fixture.kind}",
+        "missing labeled edge \{tail}->\{head} '\{label}' for attr \{attr_name}",
       )
   }
-  let pos = match fixture.kind {
-    "edge_xlabel" => edge_layout.xlabel_pos
+  let pos = match attr_name {
+    "xlabel" => edge_layout.xlabel_pos
     "headlabel" => edge_layout.head_label_pos
     "taillabel" => edge_layout.tail_label_pos
-    _ => None
+    _ => fail("unknown edge xlabel attr \{attr_name}")
   }
   match pos {
     Some(value) => {
       assert_float_eq(
         value.x,
-        fixture.pos_x,
-        "edge xlabel pos x mismatch \{fixture.graph} \{fixture.kind} \{fixture.tail}->\{fixture.head} got (\{value.x}) expected (\{fixture.pos_x})",
+        pos_x,
+        "edge xlabel pos x mismatch \{attr_name} \{tail}->\{head} got (\{value.x}) expected (\{pos_x})",
       )
       assert_float_eq(
         value.y,
-        fixture.pos_y,
-        "edge xlabel pos y mismatch \{fixture.graph} \{fixture.kind} \{fixture.tail}->\{fixture.head} got (\{value.y}) expected (\{fixture.pos_y})",
+        pos_y,
+        "edge xlabel pos y mismatch \{attr_name} \{tail}->\{head} got (\{value.y}) expected (\{pos_y})",
       )
     }
-    None =>
-      fail(
-        "missing edge label position \{fixture.graph} \{fixture.kind} \{fixture.tail}->\{fixture.head}",
-      )
+    None => fail("missing edge label position \{attr_name} \{tail}->\{head}")
   }
 }
 
 ///|
-test "node xlabels match Graphviz smoke graph" {
-  let fixtures = load_xlabel_fixtures()
-  guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
-  let layouts : Map[String, @shared.LayoutTree] = Map::new()
-  let mut matched = 0
-  for fixture in fixtures {
-    if fixture.graph != "xlabels_tb" || fixture.kind != "node_xlabel" {
-      continue
-    }
-    matched = matched + 1
-    let layout = load_xlabel_layout(layouts, fixture.graph)
-    assert_node_xlabel_fixture(layout, fixture)
-  }
-  guard matched > 0 else { fail("missing node xlabel smoke fixtures") }
+test "node xlabels match finalized xlabels_tb smoke graph" {
+  let layout = load_tb_xlabel_layout()
+
+  assert_node_xlabel(layout, "a", "XA", 9.75, 116.25)
+  assert_node_xlabel(layout, "b", "XB", 100.875, 116.25)
+  assert_node_xlabel(layout, "c", "XC", 46.125, 8.25)
 }
 
 ///|
-test "edge xlabels match Graphviz smoke graph" {
-  let fixtures = load_xlabel_fixtures()
-  guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
-  let layouts : Map[String, @shared.LayoutTree] = Map::new()
-  let mut matched = 0
-  for fixture in fixtures {
-    if fixture.graph != "xlabels_tb" || fixture.kind == "node_xlabel" {
-      continue
-    }
-    matched = matched + 1
-    let layout = load_xlabel_layout(layouts, fixture.graph)
-    assert_edge_xlabel_fixture(layout, fixture)
-  }
-  guard matched > 0 else { fail("missing edge xlabel smoke fixtures") }
+test "edge xlabels match finalized xlabels_tb smoke graph" {
+  let layout = load_tb_xlabel_layout()
+
+  assert_edge_label_position(
+    layout, "a", "c", "taillabel", "TAC", 41.898878574371338, 63.446624994277954,
+  )
+  assert_edge_label_position(
+    layout, "a", "c", "headlabel", "HAC", 59.453485534624861, 44.354333682673882,
+  )
+  assert_edge_label_position(
+    layout, "a", "c", "xlabel", "XAC", 78.806170404878173, 62.14077976829244,
+  )
+  assert_edge_label_position(
+    layout, "b", "c", "taillabel", "TBC", 122.72612142562866, 63.446624994277954,
+  )
+  assert_edge_label_position(
+    layout, "b", "c", "headlabel", "HBC", 105.17151446537514, 44.354333682673882,
+  )
+  assert_edge_label_position(
+    layout, "b", "c", "xlabel", "XBC", 86.568829595121827, 45.64077976829244,
+  )
 }

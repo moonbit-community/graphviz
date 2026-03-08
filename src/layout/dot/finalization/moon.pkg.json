@@ -36,8 +36,6 @@
     },
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/ordering/rank_stage",
-    "moonbit-community/graphviz/layout/dot/positioning",
-    "moonbitlang/core/json",
-    "moonbitlang/x/fs"
+    "moonbit-community/graphviz/layout/dot/positioning"
   ]
 }
