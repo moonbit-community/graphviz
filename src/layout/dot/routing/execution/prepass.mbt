@@ -1,3 +1,4 @@
+///|
 fn cmp_edge_id(a : Int, b : Int) -> Int {
   if a < b {
     -1
@@ -60,12 +61,13 @@ fn collect_flat_adjacent_beziers(
       Some(value) => value
       None => continue
     }
-    if base.has_side_anchor || base.has_vnodes ||
-      !base.tail_clip_enabled || !base.head_clip_enabled {
+    if base.has_side_anchor ||
+      base.has_vnodes ||
+      !base.tail_clip_enabled ||
+      !base.head_clip_enabled {
       continue
     }
-    let key =
-      "\{edge.tail().name()}|\{@edge_identity.port_key(edge.tail_port())}|\{edge.head().name()}|\{@edge_identity.port_key(edge.head_port())}"
+    let key = "\{edge.tail().name()}|\{@edge_identity.port_key(edge.tail_port())}|\{edge.head().name()}|\{@edge_identity.port_key(edge.head_port())}"
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]
@@ -94,12 +96,11 @@ fn collect_flat_adjacent_beziers(
     let dir_y = vy / vlen
     let perp_x = -dir_y
     let perp_y = dir_x
-    let base_span =
-      if Double::abs(perp_x) >= Double::abs(perp_y) {
-        rep.tail_size.width_pt
-      } else {
-        rep.tail_size.height_pt
-      }
+    let base_span = if Double::abs(perp_x) >= Double::abs(perp_y) {
+      rep.tail_size.width_pt
+    } else {
+      rep.tail_size.height_pt
+    }
     let span = base_span
     if span <= 0.0 {
       continue
@@ -114,8 +115,7 @@ fn collect_flat_adjacent_beziers(
       tx + (hx - tx) * 2.0 / 3.0,
       ty + (hy - ty) * 2.0 / 3.0,
     )
-    let denom =
-      if count > 1 { Double::from_int(count - 1) } else { 1.0 }
+    let denom = if count > 1 { Double::from_int(count - 1) } else { 1.0 }
     for i in 0..<count {
       let frac = Double::from_int(i) / denom
       let offset = -span / 2.0 + span * frac
@@ -127,12 +127,7 @@ fn collect_flat_adjacent_beziers(
       }
       let c1 = @edge_spline.point_add(base_one_third, shift)
       let c2 = @edge_spline.point_add(base_two_third, shift)
-      out[edge.id()] = [
-        edge_base.tail_anchor,
-        c1,
-        c2,
-        edge_base.head_anchor,
-      ]
+      out[edge.id()] = [edge_base.tail_anchor, c1, c2, edge_base.head_anchor]
     }
   }
   out
@@ -169,20 +164,17 @@ pub(all) struct RoutePrepassInput {
 /// Graphviz parity: routing prepass order/group/bounds setup runs before the
 /// edge routing loop and follows dot/pathplan sequencing.
 /// Do not change behavior without updating fixtures/tests.
-fn build_route_prepass_state(
-  input : RoutePrepassInput,
-) -> RoutePrepassState {
-  let flat_adjacent_simple_beziers =
-    if input.build_flat_adjacent_beziers {
-      collect_flat_adjacent_beziers(
-        input.edges,
-        input.base_cache,
-        input.ranks,
-        input.order_index,
-      )
-    } else {
-      Map::new()
-    }
+fn build_route_prepass_state(input : RoutePrepassInput) -> RoutePrepassState {
+  let flat_adjacent_simple_beziers = if input.build_flat_adjacent_beziers {
+    collect_flat_adjacent_beziers(
+      input.edges,
+      input.base_cache,
+      input.ranks,
+      input.order_index,
+    )
+  } else {
+    Map::new()
+  }
   let path_bounds = @routesplines.pathplan_bounds(
     input.positions,
     input.vnode_positions,
@@ -190,10 +182,15 @@ fn build_route_prepass_state(
     input.vnode_sizes,
     input.x_groups,
   )
-  let ordered_edges =
-    sorted_edges_for_routing(input.edges, input.base_cache, input.path_order_index)
-  let regular_recover_plan =
-    build_regular_recover_routing_plan(ordered_edges, input.base_cache)
+  let ordered_edges = sorted_edges_for_routing(
+    input.edges,
+    input.base_cache,
+    input.path_order_index,
+  )
+  let regular_recover_plan = build_regular_recover_routing_plan(
+    ordered_edges,
+    input.base_cache,
+  )
   {
     flat_adjacent_simple_beziers,
     ordered_edges,

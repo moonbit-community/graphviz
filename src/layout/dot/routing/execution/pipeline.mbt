@@ -35,14 +35,10 @@ pub fn route_edges_pipeline(
   input : RouteEdgesPipelineInput,
   deps : RouteEdgesPipelineDeps,
 ) -> Array[DotLayoutEdge] {
-  let base_cache =
-    @route_base.build_route_base_cache(
-      input,
-      deps.route_base_deps,
-    )
-  let route_input = build_route_edges_input(input, base_cache)
-  route_edges(
-    route_input,
-    deps.callbacks,
+  let base_cache = @route_base.build_route_base_cache(
+    input,
+    deps.route_base_deps,
   )
+  let route_input = build_route_edges_input(input, base_cache)
+  route_edges(route_input, deps.callbacks)
 }

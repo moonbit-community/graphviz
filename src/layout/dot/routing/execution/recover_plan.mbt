@@ -95,10 +95,12 @@ fn build_regular_recover_routing_plan(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> RegularRecoverRoutingPlan {
-  let recover_edge_id_by_key =
-    recover_regular_selection(ordered_edges, base_cache)
-  let regular_parallel_groups =
-    collect_parallel_groups(ordered_edges, base_cache)
+  let recover_edge_id_by_key = recover_regular_selection(
+    ordered_edges, base_cache,
+  )
+  let regular_parallel_groups = collect_parallel_groups(
+    ordered_edges, base_cache,
+  )
   let recover_edge_id_for_routing : Map[String, Int] = Map::new()
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id

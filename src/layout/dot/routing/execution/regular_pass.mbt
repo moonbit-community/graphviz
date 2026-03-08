@@ -1,3 +1,4 @@
+///|
 priv struct RegularSplineLayoutResult {
   edge_layout : DotLayoutEdge
   spline_result : EdgeSplineResult
@@ -47,9 +48,7 @@ priv struct PathplanSlackRecoverInput {
 ///|
 /// Graphviz parity: pathplan recover_slack runs with limitBoxes before vnode updates.
 /// Do not change behavior without updating fixtures/tests.
-fn recover_pathplan_slack(
-  recover_input : PathplanSlackRecoverInput,
-) -> Unit {
+fn recover_pathplan_slack(recover_input : PathplanSlackRecoverInput) -> Unit {
   if !recover_input.spline_result.using_pathplan {
     return ()
   }
@@ -71,25 +70,22 @@ fn recover_pathplan_slack(
       if segment.vnodes.length() == 0 || segment.boxes.length() == 0 {
         continue
       }
-      let ordered_vnodes =
-        ordered_vnodes_for_rank_direction(
-          segment.vnodes,
-          recover_input.base.tail_rank,
-          recover_input.base.head_rank,
-        )
-      (recover_input.callbacks.recover_slack_vnodes_fn)(
-        {
-          edge: recover_input.edge,
-          ordered_vnodes,
-          boxes: segment.boxes,
-          ranks: recover_input.input.ranks,
-          vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
-          rank_y: recover_input.input.rank_y,
-          vnode_positions: recover_input.input.vnode_positions,
-          vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
-          adjacency: recover_input.input.routing_context.path_adjacency,
-        },
+      let ordered_vnodes = ordered_vnodes_for_rank_direction(
+        segment.vnodes,
+        recover_input.base.tail_rank,
+        recover_input.base.head_rank,
       )
+      (recover_input.callbacks.recover_slack_vnodes_fn)({
+        edge: recover_input.edge,
+        ordered_vnodes,
+        boxes: segment.boxes,
+        ranks: recover_input.input.ranks,
+        vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
+        rank_y: recover_input.input.rank_y,
+        vnode_positions: recover_input.input.vnode_positions,
+        vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+        adjacency: recover_input.input.routing_context.path_adjacency,
+      })
       did_recover = true
     }
     if did_recover {
@@ -101,26 +97,23 @@ fn recover_pathplan_slack(
     recover_input.spline_result.raw_bezier.length() < 4 {
     return ()
   }
-  let limited_boxes =
-    @routesplines.limit_boxes_for_spline(
-      recover_input.spline_result.pathplan_boxes,
-      recover_input.spline_result.raw_bezier,
-      fallback_polyline=recover_input.spline_result.pathplan_points,
-    )
-  let ordered_vnodes = ordered_vnodes_for_edge(recover_input.base)
-  (recover_input.callbacks.recover_slack_vnodes_fn)(
-    {
-      edge: recover_input.edge,
-      ordered_vnodes,
-      boxes: limited_boxes,
-      ranks: recover_input.input.ranks,
-      vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
-      rank_y: recover_input.input.rank_y,
-      vnode_positions: recover_input.input.vnode_positions,
-      vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
-      adjacency: recover_input.input.routing_context.path_adjacency,
-    },
+  let limited_boxes = @routesplines.limit_boxes_for_spline(
+    recover_input.spline_result.pathplan_boxes,
+    recover_input.spline_result.raw_bezier,
+    fallback_polyline=recover_input.spline_result.pathplan_points,
   )
+  let ordered_vnodes = ordered_vnodes_for_edge(recover_input.base)
+  (recover_input.callbacks.recover_slack_vnodes_fn)({
+    edge: recover_input.edge,
+    ordered_vnodes,
+    boxes: limited_boxes,
+    ranks: recover_input.input.ranks,
+    vnode_ranks: recover_input.input.vnode_info.vnode_ranks,
+    rank_y: recover_input.input.rank_y,
+    vnode_positions: recover_input.input.vnode_positions,
+    vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+    adjacency: recover_input.input.routing_context.path_adjacency,
+  })
   recover_input.recovered_slack_keys[recover_key] = true
 }
 
@@ -144,52 +137,49 @@ priv struct RegularSplineLayoutBuildInput {
 fn build_regular_spline_layout(
   layout_input : RegularSplineLayoutBuildInput,
 ) -> RegularSplineLayoutResult {
-  let spline_result = @curve_mode.build_edge_spline(
-    {
-      base: layout_input.base,
-      spline_mode: layout_input.input.spline_mode,
-      ranks: layout_input.input.ranks,
-      sizes: layout_input.input.sizes,
-      positions: layout_input.input.positions,
-      vnode_positions: layout_input.input.vnode_positions,
-      vnode_info: layout_input.input.vnode_info,
-      rank_y: layout_input.input.rank_y,
-      rank_ht1: layout_input.input.rank_ht1,
-      rank_ht2: layout_input.input.rank_ht2,
-      x_groups: layout_input.input.x_groups,
-      nodesep_pt: layout_input.input.nodesep_pt,
-      path_left_bound: layout_input.path_left_bound,
-      path_right_bound: layout_input.path_right_bound,
-      ranksep_pt: layout_input.input.ranksep_pt,
-      label_edge_counts: layout_input.input.label_edge_counts,
-      head_port_metrics: layout_input.input.head_port_metrics,
-      routing_context: layout_input.input.routing_context,
-      enable_complex_tuning: layout_input.input.enable_complex_tuning,
-    },
+  let spline_result = @curve_mode.build_edge_spline({
+    base: layout_input.base,
+    spline_mode: layout_input.input.spline_mode,
+    ranks: layout_input.input.ranks,
+    sizes: layout_input.input.sizes,
+    positions: layout_input.input.positions,
+    vnode_positions: layout_input.input.vnode_positions,
+    vnode_info: layout_input.input.vnode_info,
+    rank_y: layout_input.input.rank_y,
+    rank_ht1: layout_input.input.rank_ht1,
+    rank_ht2: layout_input.input.rank_ht2,
+    x_groups: layout_input.input.x_groups,
+    nodesep_pt: layout_input.input.nodesep_pt,
+    path_left_bound: layout_input.path_left_bound,
+    path_right_bound: layout_input.path_right_bound,
+    ranksep_pt: layout_input.input.ranksep_pt,
+    label_edge_counts: layout_input.input.label_edge_counts,
+    head_port_metrics: layout_input.input.head_port_metrics,
+    routing_context: layout_input.input.routing_context,
+    enable_complex_tuning: layout_input.input.enable_complex_tuning,
+  })
+  let layout_spline_result = @emit.rebuild_spline_for_render(
+    layout_input.base,
+    spline_result,
   )
-  let layout_spline_result =
-    @emit.rebuild_spline_for_render(layout_input.base, spline_result)
-  let spline =
-    @emit.finalize_edge_spline(layout_input.base, layout_spline_result)
-  recover_pathplan_slack(
-    {
-      edge: layout_input.edge,
-      base: layout_input.base,
-      spline_result,
-      input: layout_input.input,
-      recover_edge_id_by_key: layout_input.recover_edge_id_by_key,
-      recovered_slack_keys: layout_input.recovered_slack_keys,
-      callbacks: layout_input.callbacks,
-    },
+  let spline = @emit.finalize_edge_spline(
+    layout_input.base,
+    layout_spline_result,
   )
-  let layout =
-    (layout_input.callbacks.build_edge_layout_fn)(
-      {
-        base: layout_input.base,
-        spline,
-        spline_result: layout_spline_result,
-      },
-    )
+  recover_pathplan_slack({
+    edge: layout_input.edge,
+    base: layout_input.base,
+    spline_result,
+    input: layout_input.input,
+    recover_edge_id_by_key: layout_input.recover_edge_id_by_key,
+    recovered_slack_keys: layout_input.recovered_slack_keys,
+    callbacks: layout_input.callbacks,
+  })
+  let layout = (layout_input.callbacks.build_edge_layout_fn)({
+    base: layout_input.base,
+    spline,
+    spline_result: layout_spline_result,
+  })
   { edge_layout: layout, spline_result }
 }
 
@@ -241,12 +231,11 @@ priv struct RegularParallelReuseLayoutsInput {
 fn apply_regular_parallel_reuse_layouts(
   reuse_input : RegularParallelReuseLayoutsInput,
 ) -> Unit {
-  let sibling_edges =
-    collect_parallel_reuse_siblings(
-      reuse_input.edge,
-      reuse_input.regular_layout.spline_result.raw_bezier,
-      reuse_input.regular_parallel_groups,
-    )
+  let sibling_edges = collect_parallel_reuse_siblings(
+    reuse_input.edge,
+    reuse_input.regular_layout.spline_result.raw_bezier,
+    reuse_input.regular_parallel_groups,
+  )
   if sibling_edges.length() == 0 {
     return ()
   }
@@ -256,12 +245,11 @@ fn apply_regular_parallel_reuse_layouts(
       Some(value) => value
       None => continue
     }
-    let group_layout =
-      @emit.build_regular_bezier_layout(
-        group_base,
-        reuse_input.regular_layout.spline_result,
-        reuse_input.callbacks.build_edge_layout_fn,
-      )
+    let group_layout = @emit.build_regular_bezier_layout(
+      group_base,
+      reuse_input.regular_layout.spline_result,
+      reuse_input.callbacks.build_edge_layout_fn,
+    )
     reuse_input.edges_out_by_id[group_edge_id] = group_layout
   }
 }
@@ -291,27 +279,23 @@ pub(all) struct RegularLayoutsForEdgeInput {
 fn build_regular_layouts_for_edge(
   regular_input : RegularLayoutsForEdgeInput,
 ) -> Unit {
-  let regular_layout = build_regular_spline_layout(
-    {
-      edge: regular_input.edge,
-      base: regular_input.base,
-      input: regular_input.input,
-      path_left_bound: regular_input.path_left_bound,
-      path_right_bound: regular_input.path_right_bound,
-      recover_edge_id_by_key: regular_input.recover_edge_id_by_key,
-      recovered_slack_keys: regular_input.recovered_slack_keys,
-      callbacks: regular_input.callbacks,
-    },
-  )
+  let regular_layout = build_regular_spline_layout({
+    edge: regular_input.edge,
+    base: regular_input.base,
+    input: regular_input.input,
+    path_left_bound: regular_input.path_left_bound,
+    path_right_bound: regular_input.path_right_bound,
+    recover_edge_id_by_key: regular_input.recover_edge_id_by_key,
+    recovered_slack_keys: regular_input.recovered_slack_keys,
+    callbacks: regular_input.callbacks,
+  })
   regular_input.edges_out_by_id[regular_input.edge_id] = regular_layout.edge_layout
-  apply_regular_parallel_reuse_layouts(
-    {
-      edge: regular_input.edge,
-      regular_layout,
-      regular_parallel_groups: regular_input.regular_parallel_groups,
-      base_cache: regular_input.base_cache,
-      edges_out_by_id: regular_input.edges_out_by_id,
-      callbacks: regular_input.callbacks,
-    },
-  )
+  apply_regular_parallel_reuse_layouts({
+    edge: regular_input.edge,
+    regular_layout,
+    regular_parallel_groups: regular_input.regular_parallel_groups,
+    base_cache: regular_input.base_cache,
+    edges_out_by_id: regular_input.edges_out_by_id,
+    callbacks: regular_input.callbacks,
+  })
 }

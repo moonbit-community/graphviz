@@ -1,0 +1,337 @@
+///|
+fn assert_close(
+  actual : Double,
+  expected : Double,
+  eps? : Double = 0.000001,
+) -> Unit raise {
+  if Double::abs(actual - expected) > eps {
+    fail("expected=\{expected} actual=\{actual} eps=\{eps}")
+  }
+}
+
+///|
+fn assert_point_close(
+  actual : @geom.Point,
+  expected : @geom.Point,
+  eps? : Double = 0.000001,
+) -> Unit raise {
+  assert_close(actual.x, expected.x, eps~)
+  assert_close(actual.y, expected.y, eps~)
+}
+
+///|
+fn build_route_base(
+  edge : @cgraph.Edge,
+  is_flat_edge? : Bool = false,
+  parallel_offset? : Double = 0.0,
+  tail_rank? : Int = 0,
+  head_rank? : Int = 1,
+  tail_pos? : @geom.Point = @edge_spline.point(0.0, 0.0),
+  head_pos? : @geom.Point = @edge_spline.point(30.0, 0.0),
+  tail_anchor? : @geom.Point = @edge_spline.point(5.0, 0.0),
+  head_anchor? : @geom.Point = @edge_spline.point(25.0, 0.0),
+  tail_port? : @cgraph.Port? = None,
+  head_port? : @cgraph.Port? = None,
+  orig_tail_name? : String = edge.tail().name(),
+  orig_head_name? : String = edge.head().name(),
+) -> EdgeRouteBase {
+  let zero = @edge_spline.point(0.0, 0.0)
+  let size = @node_primitives.node_size_from_points(10.0, 10.0)
+  {
+    edge,
+    parallel_offset,
+    swap_ends: false,
+    orig_tail_name,
+    orig_head_name,
+    tail_name: edge.tail().name(),
+    head_name: edge.head().name(),
+    tail_port,
+    head_port,
+    tail_node: edge.tail(),
+    head_node: edge.head(),
+    tail_pos,
+    head_pos,
+    tail_size: size,
+    head_size: size,
+    mid_label_width_pt: 0.0,
+    mid_label_height_pt: 0.0,
+    tail_record_path_box: None,
+    head_record_path_box: None,
+    tail_anchor,
+    head_anchor,
+    head_port_rect: None,
+    tail_port_side: 0,
+    head_port_side: 0,
+    tail_sameport_group_size: 0,
+    head_sameport_group_size: 0,
+    tail_clip_center: tail_pos,
+    tail_clip_size: size,
+    head_clip_center: head_pos,
+    head_clip_size: size,
+    tail_clip_enabled: false,
+    head_clip_enabled: false,
+    tail_clip: tail_anchor,
+    head_clip: head_anchor,
+    tail_slope: zero,
+    head_slope: zero,
+    force_segmented: false,
+    tail_cluster_bbox: None,
+    head_cluster_bbox: None,
+    tail_rank,
+    head_rank,
+    is_flat_edge,
+    is_flat_adjacent: false,
+    vnodes: [],
+    has_vnodes: false,
+    use_pathplan: false,
+    route_include_tail: false,
+    route_include_head: false,
+    arrow_len_override: None,
+    is_dotted: false,
+    same_outer_cluster: true,
+    diff_local_cluster: false,
+    same_local_cluster: true,
+    out_tail_anchor: tail_anchor,
+    out_head_anchor: head_anchor,
+    out_tail_clip: tail_anchor,
+    out_head_clip: head_anchor,
+    out_tail_pos: tail_pos,
+    out_head_pos: head_pos,
+    out_tail_size: size,
+    out_head_size: size,
+    rankdir: @rankdir.RankDir::TB,
+    layout_rankdir: @rankdir.RankDir::TB,
+    has_side_anchor: false,
+  }
+}
+
+///|
+test "edge route type classifies regular flat and self edges" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
+  let self_edge = graph.edge(graph.node("n"), graph.node("n"))
+  let explicit_port = Some(@cgraph.Port::{ name: Some("p"), compass: None })
+
+  let regular = build_route_base(regular_edge)
+  let flat = build_route_base(regular_edge, is_flat_edge=true)
+  let self_noport = build_route_base(
+    self_edge,
+    orig_tail_name="n",
+    orig_head_name="n",
+  )
+  let self_port = build_route_base(
+    self_edge,
+    tail_port=explicit_port,
+    orig_tail_name="n",
+    orig_head_name="n",
+  )
+
+  assert_eq(edge_route_type(regular), ROUTE_EDGE_REGULAR)
+  assert_eq(edge_route_type(flat), ROUTE_EDGE_FLAT)
+  assert_eq(edge_route_type(self_noport), ROUTE_EDGE_SELF_NOPORT)
+  assert_eq(edge_route_type(self_port), ROUTE_EDGE_SELF_PORT)
+  assert_eq(edge_route_graph_type(ROUTE_EDGE_REGULAR), ROUTE_GRAPH_MAIN)
+  assert_eq(edge_route_graph_type(ROUTE_EDGE_FLAT), ROUTE_GRAPH_AUX)
+}
+
+///|
+test "edge_port_cmp_info flips flat edge ports when node order is reversed" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let explicit_tail = Some(@cgraph.Port::{ name: Some("tail"), compass: None })
+  let explicit_head = Some(@cgraph.Port::{ name: Some("head"), compass: None })
+  let order_index : Map[String, Int] = { "a": 2, "b": 0 }
+  let base = build_route_base(
+    edge,
+    is_flat_edge=true,
+    tail_pos=@edge_spline.point(0.0, 0.0),
+    head_pos=@edge_spline.point(10.0, 0.0),
+    tail_anchor=@edge_spline.point(1.0, 2.0),
+    head_anchor=@edge_spline.point(13.0, 4.0),
+    tail_port=explicit_tail,
+    head_port=explicit_head,
+  )
+
+  let info = edge_port_cmp_info(base, ROUTE_EDGE_FLAT, order_index)
+
+  assert_true(info.tail_defined)
+  assert_true(info.head_defined)
+  assert_point_close(info.tail_pos, @edge_spline.point(3.0, 4.0))
+  assert_point_close(info.head_pos, @edge_spline.point(1.0, 2.0))
+}
+
+///|
+test "sorted_edges_for_routing prioritizes self edges then flat edges then regular edges" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
+  let flat_edge = graph.edge(graph.node("c"), graph.node("d"))
+  let self_edge = graph.edge(graph.node("s"), graph.node("s"))
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  base_cache[regular_edge.id()] = build_route_base(
+    regular_edge,
+    tail_rank=0,
+    head_rank=3,
+  )
+  base_cache[flat_edge.id()] = build_route_base(
+    flat_edge,
+    is_flat_edge=true,
+    tail_rank=0,
+    head_rank=0,
+  )
+  base_cache[self_edge.id()] = build_route_base(
+    self_edge,
+    orig_tail_name="s",
+    orig_head_name="s",
+  )
+
+  let ordered = sorted_edges_for_routing(
+    [regular_edge, self_edge, flat_edge],
+    base_cache,
+    Map::new(),
+  )
+
+  assert_eq(ordered.map(fn(edge) { edge.id() }), [
+    self_edge.id(),
+    flat_edge.id(),
+    regular_edge.id(),
+  ])
+}
+
+///|
+test "recover_slack_key_for_edge uses parallel keys only for unlabeled undirected edges" {
+  let undir = @cgraph.Graph::new(@cgraph.GraphKind::Undirected, strict=false)
+  let undir_edge = undir.edge(undir.node("a"), undir.node("b"))
+
+  let directed = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let labeled_edge = directed.edge(directed.node("a"), directed.node("b"))
+  labeled_edge.set_attr("label", "mid")
+
+  let expected_parallel_key = "parallel|" +
+    @edge_ops.edge_parallel_key("a", "b", None, None)
+  let expected_vnode_key = "vnode|" +
+    @edge_identity.edge_vnode_key(labeled_edge)
+
+  assert_eq(recover_slack_key_for_edge(undir_edge), expected_parallel_key)
+  assert_eq(recover_slack_key_for_edge(labeled_edge), expected_vnode_key)
+}
+
+///|
+test "recover plan picks center-most edge but routing plan pins multi-edge groups to first ordered edge" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_a = graph.edge(a, b)
+  let edge_b = graph.edge(a, b)
+  let edge_c = graph.edge(a, b)
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  base_cache[edge_a.id()] = build_route_base(edge_a, parallel_offset=2.0)
+  base_cache[edge_b.id()] = build_route_base(edge_b, parallel_offset=-1.0)
+  base_cache[edge_c.id()] = build_route_base(edge_c, parallel_offset=1.0)
+
+  let selected = recover_regular_selection([edge_a, edge_b, edge_c], base_cache)
+  let recover_key = recover_slack_key_for_edge(edge_a)
+  let group_key = @edge_identity.edge_vnode_key(edge_a)
+  assert_eq(selected.get(recover_key), Some(edge_c.id()))
+
+  let plan = build_regular_recover_routing_plan(
+    [edge_a, edge_b, edge_c],
+    base_cache,
+  )
+  assert_eq(
+    plan.regular_parallel_groups
+    .get(group_key)
+    .map(fn(edges) { edges.map(fn(edge) { edge.id() }) }),
+    Some([edge_a.id(), edge_b.id(), edge_c.id()]),
+  )
+  assert_eq(
+    plan.recover_edge_id_for_routing.get(recover_key),
+    Some(edge_a.id()),
+  )
+}
+
+///|
+test "vnode_is_merged stays false for duplicate parallel neighbors but true for distinct neighbors" {
+  let duplicate_graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    strict=false,
+  )
+  let duplicate_a = duplicate_graph.node("a")
+  let duplicate_b = duplicate_graph.node("b")
+  let duplicate_1 = duplicate_graph.edge(duplicate_a, duplicate_b)
+  let duplicate_2 = duplicate_graph.edge(duplicate_a, duplicate_b)
+  let duplicate_vnodes : Map[String, Array[String]] = Map::new()
+  duplicate_vnodes[@edge_identity.edge_vnode_key(duplicate_1)] = ["v"]
+  duplicate_vnodes[@edge_identity.edge_vnode_key(duplicate_2)] = ["v"]
+  let duplicate_adjacency = @routesplines.build_path_adjacency(
+    [duplicate_1, duplicate_2],
+    duplicate_vnodes,
+    [],
+    [],
+  )
+
+  let merged_graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    strict=false,
+  )
+  let merged_a = merged_graph.node("a")
+  let merged_b = merged_graph.node("b")
+  let merged_c = merged_graph.node("c")
+  let merged_d = merged_graph.node("d")
+  let merged_1 = merged_graph.edge(merged_a, merged_b)
+  let merged_2 = merged_graph.edge(merged_c, merged_d)
+  let merged_vnodes : Map[String, Array[String]] = Map::new()
+  merged_vnodes[@edge_identity.edge_vnode_key(merged_1)] = ["v"]
+  merged_vnodes[@edge_identity.edge_vnode_key(merged_2)] = ["v"]
+  let merged_adjacency = @routesplines.build_path_adjacency(
+    [merged_1, merged_2],
+    merged_vnodes,
+    [],
+    [],
+  )
+
+  assert_false(vnode_is_merged("v", duplicate_adjacency))
+  assert_true(vnode_is_merged("v", merged_adjacency))
+}
+
+///|
+test "recover_slack_vnodes centers normal vnodes and right-aligns the label rank" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = {
+    "v1": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 4.0),
+    "v2": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 4.0),
+  }
+  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let empty_edge_vnodes : Map[String, Array[String]] = Map::new()
+  let adjacency = @routesplines.build_path_adjacency(
+    [],
+    empty_edge_vnodes,
+    [],
+    [],
+  )
+
+  recover_slack_vnodes(
+    {
+      edge,
+      ordered_vnodes: ["v1", "v2"],
+      boxes: [
+        { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
+        { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
+      ],
+      ranks: { "a": 0, "b": 3 },
+      vnode_ranks: { "v1": 1, "v2": 2 },
+      rank_y: { 1: 5.0, 2: 1.0 },
+      vnode_positions,
+      vnode_sizes,
+      adjacency,
+    },
+    (_edge, _ranks) => Some(2),
+  )
+
+  assert_eq(vnode_positions.get("v1"), Some(@edge_spline.point(5.0, 5.0)))
+  assert_eq(vnode_positions.get("v2"), Some(@edge_spline.point(8.0, 1.0)))
+  assert_eq(vnode_sizes.get("v1").map(fn(size) { size.left_pt }), Some(5.0))
+  assert_eq(vnode_sizes.get("v1").map(fn(size) { size.right_pt }), Some(5.0))
+  assert_eq(vnode_sizes.get("v2").map(fn(size) { size.left_pt }), Some(6.0))
+  assert_eq(vnode_sizes.get("v2").map(fn(size) { size.right_pt }), Some(1.0))
+}

@@ -1,7 +1,5 @@
 ///|
-fn build_regular_pass_input(
-  input : RouteEdgesInput,
-) -> RegularPassInput {
+fn build_regular_pass_input(input : RouteEdgesInput) -> RegularPassInput {
   {
     spline_mode: input.spline_mode,
     ranks: input.ranks,
@@ -23,25 +21,20 @@ fn build_regular_pass_input(
 }
 
 ///|
-fn build_ordered_routing_input(
-  input : RouteEdgesInput,
-) -> OrderedRoutingInput {
-  let prepass =
-    build_route_prepass_state(
-      {
-        edges: input.edges,
-        base_cache: input.base_cache,
-        build_flat_adjacent_beziers: input.use_spline_prepass,
-        ranks: input.ranks,
-        order_index: input.routing_context.order_index,
-        path_order_index: input.routing_context.path_order_index,
-        positions: input.positions,
-        vnode_positions: input.vnode_positions,
-        sizes: input.sizes,
-        vnode_sizes: input.vnode_info.vnode_sizes,
-        x_groups: input.x_groups,
-      },
-    )
+fn build_ordered_routing_input(input : RouteEdgesInput) -> OrderedRoutingInput {
+  let prepass = build_route_prepass_state({
+    edges: input.edges,
+    base_cache: input.base_cache,
+    build_flat_adjacent_beziers: input.use_spline_prepass,
+    ranks: input.ranks,
+    order_index: input.routing_context.order_index,
+    path_order_index: input.routing_context.path_order_index,
+    positions: input.positions,
+    vnode_positions: input.vnode_positions,
+    sizes: input.sizes,
+    vnode_sizes: input.vnode_info.vnode_sizes,
+    x_groups: input.x_groups,
+  })
   let self_edge_groups = @self_edge.collect_self_edge_groups(input.edges)
   {
     ordered_edges: prepass.ordered_edges,
@@ -68,17 +61,11 @@ fn route_edges(
 ) -> Array[DotLayoutEdge] {
   let ordered_routing_input = build_ordered_routing_input(input)
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
-  route_ordered_edges(
-    ordered_routing_input,
+  route_ordered_edges(ordered_routing_input, edges_out_by_id, callbacks)
+  finalize_routed_edges({
+    edges: input.edges,
+    ranks: input.ranks,
     edges_out_by_id,
-    callbacks,
-  )
-  finalize_routed_edges(
-    {
-      edges: input.edges,
-      ranks: input.ranks,
-      edges_out_by_id,
-      edge_port_label_pos_fn: callbacks.edge_port_label_pos_fn,
-    },
-  )
+    edge_port_label_pos_fn: callbacks.edge_port_label_pos_fn,
+  })
 }

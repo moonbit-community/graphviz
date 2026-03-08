@@ -1,14 +1,14 @@
+///|
 fn parallel_remap_direction_key(
   edge : @cgraph.Edge,
   tail : String,
   head : String,
 ) -> String {
-  let sameport_tag =
-    if @edge_ops.edge_has_sameport_mark(edge) {
-      "sameport"
-    } else {
-      "plain"
-    }
+  let sameport_tag = if @edge_ops.edge_has_sameport_mark(edge) {
+    "sameport"
+  } else {
+    "plain"
+  }
   "\{tail}|\{@edge_identity.port_key(edge.tail_port())}|\{head}|\{@edge_identity.port_key(edge.head_port())}|\{@edge_ops.edge_dir_attr_key(edge)}|\{sameport_tag}"
 }
 
@@ -23,9 +23,7 @@ priv struct PortLabelPosRemapInput {
 }
 
 ///|
-fn remap_port_label_pos(
-  input : PortLabelPosRemapInput,
-) -> @geom.Point? {
+fn remap_port_label_pos(input : PortLabelPosRemapInput) -> @geom.Point? {
   let edge = input.edge
   let splines = input.splines
   let label_attr = input.label_attr
@@ -38,12 +36,7 @@ fn remap_port_label_pos(
   if splines.length() == 0 {
     return fallback
   }
-  let spline =
-    if is_head {
-      splines[splines.length() - 1]
-    } else {
-      splines[0]
-    }
+  let spline = if is_head { splines[splines.length() - 1] } else { splines[0] }
   match edge_port_label_pos_fn({ edge, spline, is_head }) {
     Some(pos) => Some(pos)
     None => fallback
@@ -73,38 +66,32 @@ fn remap_edge_layout_edge(
   layout : DotLayoutEdge,
   edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> DotLayoutEdge {
-  let label_pos =
-    if @edge_semantics.edge_attr_non_empty(edge, "label") {
-      layout.label_pos
-    } else {
-      None
-    }
-  let head_label_pos = remap_port_label_pos(
-    {
-      edge,
-      splines: layout.splines,
-      label_attr: "headlabel",
-      is_head: true,
-      fallback: layout.head_label_pos,
-      edge_port_label_pos_fn,
-    },
-  )
-  let tail_label_pos = remap_port_label_pos(
-    {
-      edge,
-      splines: layout.splines,
-      label_attr: "taillabel",
-      is_head: false,
-      fallback: layout.tail_label_pos,
-      edge_port_label_pos_fn,
-    },
-  )
-  let xlabel_pos =
-    if @edge_semantics.edge_attr_non_empty(edge, "xlabel") {
-      layout.xlabel_pos
-    } else {
-      None
-    }
+  let label_pos = if @edge_semantics.edge_attr_non_empty(edge, "label") {
+    layout.label_pos
+  } else {
+    None
+  }
+  let head_label_pos = remap_port_label_pos({
+    edge,
+    splines: layout.splines,
+    label_attr: "headlabel",
+    is_head: true,
+    fallback: layout.head_label_pos,
+    edge_port_label_pos_fn,
+  })
+  let tail_label_pos = remap_port_label_pos({
+    edge,
+    splines: layout.splines,
+    label_attr: "taillabel",
+    is_head: false,
+    fallback: layout.tail_label_pos,
+    edge_port_label_pos_fn,
+  })
+  let xlabel_pos = if @edge_semantics.edge_attr_non_empty(edge, "xlabel") {
+    layout.xlabel_pos
+  } else {
+    None
+  }
   {
     edge,
     splines: layout.splines,
@@ -226,13 +213,12 @@ fn build_parallel_remap_assignments(
   input : ParallelRemapAssignmentsBuildInput,
 ) -> Array[ParallelRemapAssignment] {
   let assignments : Array[ParallelRemapAssignment] = []
-  for ids in collect_complete_parallel_remap_groups(
-    {
+  for
+    ids in collect_complete_parallel_remap_groups({
       edges: input.edges,
       ranks: input.ranks,
       has_layout: input.has_layout,
-    },
-  ) {
+    }) {
     let mut out_idx = 0
     let mut src_idx = ids.length()
     while out_idx < ids.length() {
@@ -259,20 +245,15 @@ priv struct ParallelEdgeLayoutsRemapInput {
 }
 
 ///|
-fn remap_parallel_edge_layouts(
-  input : ParallelEdgeLayoutsRemapInput,
-) -> Unit {
+fn remap_parallel_edge_layouts(input : ParallelEdgeLayoutsRemapInput) -> Unit {
   let edges = input.edges
   let ranks = input.ranks
   let edges_out_by_id = input.edges_out_by_id
-  let assignments =
-    build_parallel_remap_assignments(
-      {
-        edges,
-        ranks,
-        has_layout: (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
-      },
-    )
+  let assignments = build_parallel_remap_assignments({
+    edges,
+    ranks,
+    has_layout: edge_id => edges_out_by_id.get(edge_id) is Some(_),
+  })
   let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
   for assignment in assignments {
     match edges_out_by_id.get(assignment.target_edge_id) {
@@ -293,12 +274,11 @@ fn remap_parallel_edge_layouts(
       Some(value) => value
       None => continue
     }
-    edges_out_by_id[assignment.target_edge_id] =
-      remap_edge_layout_edge(
-        target_layout.edge,
-        source_layout,
-        input.edge_port_label_pos_fn,
-      )
+    edges_out_by_id[assignment.target_edge_id] = remap_edge_layout_edge(
+      target_layout.edge,
+      source_layout,
+      input.edge_port_label_pos_fn,
+    )
   }
 }
 
@@ -319,19 +299,15 @@ fn finalize_routed_edges(
   let edges = input.edges
   let ranks = input.ranks
   let edges_out_by_id = input.edges_out_by_id
-  remap_parallel_edge_layouts(
-    {
-      edges,
-      ranks,
-      edges_out_by_id,
-      edge_port_label_pos_fn: input.edge_port_label_pos_fn,
-    },
-  )
-  let ordered_output_edge_ids =
-    collect_input_order_edge_ids(
-      edges,
-      (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
-    )
+  remap_parallel_edge_layouts({
+    edges,
+    ranks,
+    edges_out_by_id,
+    edge_port_label_pos_fn: input.edge_port_label_pos_fn,
+  })
+  let ordered_output_edge_ids = collect_input_order_edge_ids(edges, edge_id => {
+    edges_out_by_id.get(edge_id) is Some(_)
+  })
   let edges_out : Array[DotLayoutEdge] = []
   for edge_id in ordered_output_edge_ids {
     match edges_out_by_id.get(edge_id) {
@@ -341,4 +317,5 @@ fn finalize_routed_edges(
   }
   edges_out
 }
+
 ///|
