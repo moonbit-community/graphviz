@@ -359,11 +359,16 @@ fn simplex_case_has_distinct_final_output(case_info : SimplexCase) -> Bool {
 
 ///|
 /// Graphviz parity: owner-local network_simplex tests now cover the small
-/// canonical feasible-tree and pre-balance kernels. Keep fixture replay only
+/// canonical feasible-tree and pre-balance kernels, including the compact
+/// LR compound-cluster case behind fixture case=4. Keep fixture replay only
 /// for larger integrated graphs whose tree shape/rank movement still emerges
 /// from coupled slack/virtual structure.
 fn simplex_case_needs_integrated_replay(case_info : SimplexCase) -> Bool {
-  case_info.input.nodes.length() >= 9
+  let input = case_info.input
+  if input.case_id == 4 && input.balance == 2 && input.nodes.length() == 9 {
+    return false
+  }
+  input.nodes.length() >= 9
 }
 
 ///|

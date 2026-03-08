@@ -645,6 +645,76 @@ test "network_simplex LR preserves non-adjacent flat-label spacing" {
 }
 
 ///|
+fn build_lr_compound_clusters_fixture_graph() -> NsGraph {
+  let graph = new_graph()
+  let s0 = add_node(graph, "", kind=NodeKind::Slack)
+  let s1 = add_node(graph, "", kind=NodeKind::Slack)
+  let s2 = add_node(graph, "", kind=NodeKind::Slack)
+  let s3 = add_node(graph, "", kind=NodeKind::Slack)
+  let s4 = add_node(graph, "", kind=NodeKind::Slack)
+  let s5 = add_node(graph, "", kind=NodeKind::Slack)
+  let s6 = add_node(graph, "", kind=NodeKind::Slack)
+  let c2n1 = add_node(graph, "C2N1")
+  let c1n1 = add_node(graph, "C1N1")
+  set_node_rank(graph, s0, 0)
+  set_node_rank(graph, s1, 0)
+  set_node_rank(graph, s2, 0)
+  set_node_rank(graph, s3, 0)
+  set_node_rank(graph, s4, 0)
+  set_node_rank(graph, s5, 0)
+  set_node_rank(graph, s6, -1)
+  set_node_rank(graph, c2n1, 0)
+  set_node_rank(graph, c1n1, 0)
+  let in_positions : Array[Int] = []
+  let edge_specs : Array[(Int, Int, Int, Int, Int)] = [
+    (s1, s5, 8, 0, 0),
+    (s1, s3, 8, 0, 0),
+    (s2, s0, 8, 0, 1),
+    (s3, s2, 67, 128, 0),
+    (s3, c2n1, 39, 0, 1),
+    (s4, s0, 8, 0, 0),
+    (s5, s4, 67, 128, 0),
+    (s5, c1n1, 39, 0, 1),
+    (s6, c1n1, 1, 1, 0),
+    (s6, c2n1, 1, 1, 0),
+    (c2n1, s2, 39, 0, 1),
+    (c1n1, s4, 39, 0, 1),
+  ]
+  for spec in edge_specs {
+    let (tail, head, minlen, weight, in_pos) = spec
+    ignore(add_edge(graph, tail, head, minlen, weight))
+    in_positions.push(in_pos)
+  }
+  for i in 0..<graph.nodes.length() {
+    graph.nodes[i].in_edges.sort_by((a, b) => {
+      let a_pos = in_positions[a]
+      let b_pos = in_positions[b]
+      if a_pos < b_pos {
+        -1
+      } else if a_pos > b_pos {
+        1
+      } else if a < b {
+        -1
+      } else if a > b {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  graph
+}
+
+///|
+test "build_feasible_tree and pre_balance preserve compact LR compound cluster spacing" {
+  let tree_graph = build_lr_compound_clusters_fixture_graph()
+  assert_eq(feasible_tree_edges_for_test(tree_graph), [5, 11, 7, 0, 1, 4, 10, 8])
+
+  let balance_graph = build_lr_compound_clusters_fixture_graph()
+  assert_eq(pre_balance_ranks_for_test(balance_graph), [94, 0, 86, 8, 86, 8, 46, 47, 47])
+}
+
+///|
 test "network_simplex LR preserves compound cluster spacing" {
   let graph = build_lr_compound_clusters_graph()
 
