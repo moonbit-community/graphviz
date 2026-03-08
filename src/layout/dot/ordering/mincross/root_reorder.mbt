@@ -14,13 +14,13 @@ fn build_root_tail_order_seed(
   let tail_order_root : Array[String] = []
   let tail_root_seen : Map[String, Bool] = Map::new()
   for name in nlist_order {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" {
-      let rank = flat_constraint_rank_or_zero(ranks, name)
+      let rank = @ordering.flat_constraint_rank_or_zero(ranks, name)
       let skel = @cluster_identity.cluster_skeleton_name(cluster, rank)
-      append_creation_name(tail_order_root, tail_root_seen, skel)
+      @ordering.append_creation_name(tail_order_root, tail_root_seen, skel)
     } else {
-      append_creation_name(tail_order_root, tail_root_seen, name)
+      @ordering.append_creation_name(tail_order_root, tail_root_seen, name)
     }
   }
   tail_order_root
@@ -49,11 +49,11 @@ fn build_root_source_first_tail_order(
   let root_tail_seen : Map[String, Bool] = Map::new()
   for name in tail_order_root {
     if root_has_in.get(name) == Some(false) {
-      append_creation_name(root_tail_order, root_tail_seen, name)
+      @ordering.append_creation_name(root_tail_order, root_tail_seen, name)
     }
   }
   for name in tail_order_root {
-    append_creation_name(root_tail_order, root_tail_seen, name)
+    @ordering.append_creation_name(root_tail_order, root_tail_seen, name)
   }
   root_tail_order
 }
@@ -103,7 +103,7 @@ fn build_root_nlist_order(
   let tail_order_root = build_root_tail_order_seed(
     nlist_order, cluster_keys, ranks,
   )
-  let root_edge_creation_order = merge_edge_creation_sequences(
+  let root_edge_creation_order = @ordering.merge_edge_creation_sequences(
     skeleton_edge_creation, root_edge_creation,
   )
   let root_tail_order = build_root_source_first_tail_order(
@@ -132,9 +132,9 @@ fn collect_root_vnodes(
   }
   let mut edge_idx = 0
   for edge in edges {
-    let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-    let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
-    let head_cluster = cluster_key_or_empty(cluster_keys, head)
+    let (tail, head) = @ordering.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let tail_cluster = @ordering.cluster_key_or_empty(cluster_keys, tail)
+    let head_cluster = @ordering.cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
       let vnodes = edge_vnodes
         .get(@edge_identity.edge_vnode_key(edge))
@@ -191,7 +191,7 @@ fn should_keep_root_reorder_name(
   order_cluster_skeleton : Map[String, Bool],
   root_vnodes : Map[String, Bool],
 ) -> Bool {
-  let cluster = cluster_key_or_empty(order_cluster_keys, name)
+  let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
   let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
   if !is_skeleton && cluster != "" {
     return false
@@ -242,12 +242,12 @@ fn build_root_reorder_groups(
       root_groups_base[rank] = root_names
     }
   }
-  let root_order_index = build_order_index(root_groups_base)
+  let root_order_index = @ordering.build_order_index(root_groups_base)
   let (root_vnodes_by_rank, root_vnode_order_keys) = build_root_vnode_inputs(
     order_with_vnodes, root_vnodes, vnodes_by_rank, vnode_order_keys_for_ordering,
   )
   if order_with_vnodes {
-    build_x_groups_with_vnodes(
+    @ordering.build_x_groups_with_vnodes(
       root_groups_base, root_order_index, root_vnodes_by_rank, root_vnode_order_keys,
     )
   } else {
@@ -359,7 +359,7 @@ fn build_root_reorder_node_order(
       root_node_idx = root_node_idx + 1
     }
   }
-  let root_order_index = build_order_index(root_groups)
+  let root_order_index = @ordering.build_order_index(root_groups)
   for name, idx in root_order_index {
     if root_node_order.get(name) is None {
       root_node_order[name] = idx
@@ -446,7 +446,7 @@ fn build_root_reorder_edge_data(
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
   ],
 ) -> RootReorderEdgeData {
-  let root_materialized = collect_order_edges_for_tails(
+  let root_materialized = @ordering.collect_order_edges_for_tails(
     root_context.root_nlist_order,
     order_edges_by_tail_root,
     root_context.root_graph,
@@ -460,7 +460,7 @@ fn build_root_reorder_edge_data(
     root_materialized.order_edge_tail_port_order,
     root_materialized.order_edge_head_port_order,
   )
-  let root_edge_indices = build_edge_indices_and_order(
+  let root_edge_indices = @ordering.build_edge_indices_and_order(
     root_context.root_nodes,
     root_materialized.order_edge_tail_out,
     root_materialized.order_edge_head_out,
@@ -501,10 +501,10 @@ fn build_root_reorder_context(
     sources.vnodes_by_rank,
     sources.vnode_order_keys_for_ordering,
   )
-  let root_rank_keys = collect_rank_keys(root_groups)
-  let root_ranks = build_node_ranks(root_groups)
-  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let root_graph_output = build_order_graph_and_nodes("order_root", root_nodes)
+  let root_rank_keys = @ordering.collect_rank_keys(root_groups)
+  let root_ranks = @ordering.build_node_ranks(root_groups)
+  let root_nodes = @ordering.build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let root_graph_output = @ordering.build_order_graph_and_nodes("order_root", root_nodes)
   let root_graph = root_graph_output.order_graph
   let root_node_map = root_graph_output.order_node_map
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
@@ -613,8 +613,8 @@ struct RootRankOrderPhaseBase {
 /// materialization and clustered metadata snapshots paired before base assembly.
 /// Do not change behavior without updating fixtures/tests.
 priv struct RootRankOrderPhaseBaseBuildSources {
-  reorder_setup : OrderingReorderSetup
-  class2_data : OrderingClass2Data
+  reorder_setup : @ordering.OrderingReorderSetup
+  class2_data : @ordering.OrderingClass2Data
   order_rank_keys : Array[Int]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
@@ -785,7 +785,7 @@ pub fn run_root_rank_order_reorder(
   call_inputs : RootRankOrderCallInputs,
   root_graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     call_inputs.root_rank_keys,
     call_inputs.root_groups,
     call_inputs.root_edges_out,
@@ -825,7 +825,7 @@ fn build_graphviz_flip_merged_root_groups(
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let ordered_root_nodes = build_order_nodes_from_groups(
+  let ordered_root_nodes = @ordering.build_order_nodes_from_groups(
     ordered_root, root_rank_keys,
   )
   let ordered_root_mincross_nodes = build_node_membership_set(
@@ -948,7 +948,7 @@ fn build_root_tail_order_override(
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
   for tail in root_reorder_output.root_edge_tail_out {
-    append_creation_name(root_tail_order_override, seen_root_tail, tail)
+    @ordering.append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
   root_tail_order_override
 }

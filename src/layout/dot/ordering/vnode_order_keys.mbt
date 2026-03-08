@@ -37,7 +37,7 @@ fn cluster_contains(
 ///|
 /// Graphviz parity: edge is internal to a cluster when tail/head clusters are
 /// equal or ancestor/descendant related.
-fn edge_internal_to_cluster(
+pub fn edge_internal_to_cluster(
   tail_cluster : String,
   head_cluster : String,
   cluster_parents : Map[String, String?],

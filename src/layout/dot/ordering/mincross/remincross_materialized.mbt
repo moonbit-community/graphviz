@@ -41,7 +41,7 @@ fn apply_intercluster_bonus(
         tail_port_order,
         head_port_order,
       ) = entry
-      let key = order_edge_merge_key(
+      let key = @ordering.order_edge_merge_key(
         tail, head, constraint, tail_port_order, head_port_order,
       )
       let mut adjusted_penalty = penalty
@@ -90,7 +90,7 @@ fn collect_intercluster_bonus(
     }
     for idx in indices {
       let edge = edges[idx]
-      let (tail, head) = edge_endpoints_at(edge, idx, edge_tail, edge_head)
+      let (tail, head) = @ordering.edge_endpoints_at(edge, idx, edge_tail, edge_head)
       let tail_rank = match ranks.get(tail) {
         Some(value) => value
         None => 0
@@ -103,12 +103,12 @@ fn collect_intercluster_bonus(
         continue
       }
       let tail_cluster = if order_with_clusters {
-        cluster_key_or_empty(cluster_keys, tail)
+        @ordering.cluster_key_or_empty(cluster_keys, tail)
       } else {
         ""
       }
       let head_cluster = if order_with_clusters {
-        cluster_key_or_empty(cluster_keys, head)
+        @ordering.cluster_key_or_empty(cluster_keys, head)
       } else {
         ""
       }
@@ -170,7 +170,7 @@ fn collect_intercluster_bonus(
           } else {
             0.0
           }
-          let key = order_edge_merge_key(
+          let key = @ordering.order_edge_merge_key(
             t, h, true, seg_tail_order, seg_head_order,
           )
           let prev = match count_by_key.get(key) {
@@ -203,10 +203,10 @@ fn build_remincross_order_creation(
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
-    append_creation_name(rem_order_creation, rem_seen, tail_name)
+    @ordering.append_creation_name(rem_order_creation, rem_seen, tail_name)
     let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
     for vnode in vnodes {
-      append_creation_name(rem_order_creation, rem_seen, vnode)
+      @ordering.append_creation_name(rem_order_creation, rem_seen, vnode)
     }
   }
   rem_order_creation
@@ -228,7 +228,7 @@ fn append_missing_creation_order_names(
     seen[name] = true
   }
   for name in rem_order_creation {
-    append_creation_name(rem_nlist_order, seen, name)
+    @ordering.append_creation_name(rem_nlist_order, seen, name)
   }
 }
 
@@ -302,7 +302,7 @@ fn build_remincross_materialized_edges(
   inputs : ReMincrossMaterializationInputs,
   cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedOrderEdges {
-  let rem_order_edges_output = build_order_edges_by_tail(
+  let rem_order_edges_output = @ordering.build_order_edges_by_tail(
     inputs.creation_order,
     inputs.edges,
     inputs.edge_tail,
@@ -323,7 +323,7 @@ fn build_remincross_materialized_edges(
   )
   let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
   let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
-  let rem_order_edges_by_tail_coalesced = coalesce_order_edges_by_tail(
+  let rem_order_edges_by_tail_coalesced = @ordering.coalesce_order_edges_by_tail(
     rem_order_edges_by_tail_raw,
   )
   let intercluster_bonus = collect_intercluster_bonus(
@@ -370,7 +370,7 @@ fn build_remincross_materialized_arrays(
   cluster_order_index : Map[String, Int],
   materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
-  let rem_ranks = build_node_ranks(inputs.rem_groups)
+  let rem_ranks = @ordering.build_node_ranks(inputs.rem_groups)
   let rem_nlist_order = build_remincross_nlist_order(
     inputs.creation_order,
     materialized_edges.vnode_creation,
@@ -380,8 +380,8 @@ fn build_remincross_materialized_arrays(
     cluster_order_index,
     inputs.root_tail_order_override,
   )
-  let rem_node_order = build_order_index(inputs.rem_groups)
-  let rem_materialized = collect_order_edges_for_tails(
+  let rem_node_order = @ordering.build_order_index(inputs.rem_groups)
+  let rem_materialized = @ordering.collect_order_edges_for_tails(
     rem_nlist_order,
     materialized_edges.order_edges_by_tail,
     rem_graph,
@@ -423,8 +423,8 @@ pub(all) struct ReMincrossMaterializationInputs {
   root_tail_order_override : Array[String]?
   root_cluster : String
   cluster_parents : Map[String, String?]
-  order_sizes : Map[String, NodeSize]
-  vnode_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   cluster_flat_constraints : Map[String, Bool]
   rank_same_constraints : Map[String, Bool]
 }
@@ -462,7 +462,7 @@ fn assign_remincross_clusters(
     if vnodes.length() == 0 {
       continue
     }
-    let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @ordering.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
     let head_cluster = intercluster_keys.get(head).unwrap_or_default()
     let vnode_cluster = @clustering.cluster_lca(
@@ -571,7 +571,7 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
   rem_edge_tail_port_order : Array[Double]
   rem_edge_head_port_order : Array[Double]
   rem_cluster_keys : Map[String, String]
-  rem_sizes : Map[String, NodeSize]
+  rem_sizes : Map[String, @node_primitives.NodeSize]
   rem_flat_constraints : Map[String, Bool]
 }
 
@@ -582,12 +582,12 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
 fn build_remincross_materialized_inputs(
   inputs : ReMincrossMaterializationInputs,
 ) -> ReMincrossCleanupMaterializedInputs {
-  let rem_ranks = build_node_ranks(inputs.rem_groups)
-  let rem_nodes = build_order_nodes_from_groups(
+  let rem_ranks = @ordering.build_node_ranks(inputs.rem_groups)
+  let rem_nodes = @ordering.build_order_nodes_from_groups(
     inputs.rem_groups,
     inputs.rem_rank_keys,
   )
-  let rem_graph_output = build_order_graph_and_nodes(
+  let rem_graph_output = @ordering.build_order_graph_and_nodes(
     "order_remincross", rem_nodes,
   )
   // Graphviz parity: ReMincross uses real intercluster edges
@@ -615,7 +615,7 @@ fn build_remincross_materialized_inputs(
     cluster_parents: inputs.cluster_parents,
     order_with_vnodes: inputs.order_with_vnodes,
   })
-  let rem_sizes = build_sizes_for_order_graph(
+  let rem_sizes = @ordering.build_sizes_for_order_graph(
     inputs.order_sizes,
     inputs.order_with_vnodes,
     inputs.vnode_sizes,

@@ -144,7 +144,7 @@ fn build_clustered_pre_root(
 }
 
 ///|
-type ClusteredRootPhaseOutput = @ordering.ClusteredRootPhaseStageOutput
+type ClusteredRootPhaseOutput = @mincross.ClusteredRootPhaseStageOutput
 
 ///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
@@ -158,7 +158,7 @@ fn run_clustered_root_phase(
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
-  @ordering.run_clustered_root_phase_stage(
+  @mincross.run_clustered_root_phase_stage(
     {
       reorder_setup: pipeline_context.reorder_setup,
       pre_root_stage,
@@ -184,7 +184,7 @@ fn run_clustered_root_phase(
       vnode_clusters: runtime_context.vnode_info.vnode_clusters,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     },
-    @ordering.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
+    @mincross.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
   )
 }
 
@@ -203,7 +203,7 @@ fn run_clustered_finalize_phase(
   let runtime_context = pipeline_context.runtime_context
   let edge_port_data = pipeline_context.edge_port_data
   let finalize_output =
-    @ordering.run_clustered_finalize_stage(
+    @mincross.run_clustered_finalize_stage(
       {
         phase_base: root_phase_output.root_rank_order_phase_base,
         root_cluster_stage: root_phase_output.root_cluster_stage,
@@ -243,10 +243,10 @@ fn run_clustered_finalize_phase(
         port_order_positions: input.port_order_positions,
         port_order_contrib: input.port_order_contrib,
       },
-      @ordering.build_remincross_snapshot_capture_callback(
+      @mincross.build_remincross_snapshot_capture_callback(
         @edge_semantics.edge_xpenalty,
       ),
-      @ordering.run_remincross_cleanup_reorder,
+      @mincross.run_remincross_cleanup_reorder,
     )
   {
     ordered_groups: finalize_output.ordered_groups,

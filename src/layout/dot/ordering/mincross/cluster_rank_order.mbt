@@ -3,6 +3,17 @@
 /// helpers shared by clustered Stage C root/finalize phases.
 
 ///|
+/// Graphviz parity: cluster traversal order index is seeded from Graphviz
+/// cluster_order for cluster tie-breaking in ordering passes.
+fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
+  let cluster_index : Map[String, Int] = Map::new()
+  for idx, name in cluster_order {
+    cluster_index[name] = idx
+  }
+  cluster_index
+}
+
+///|
 /// Graphviz parity: root-anchor transfer only applies on the single-left
 /// cluster hand-off shape from the previous rank map.
 fn select_root_left_anchor(
@@ -164,7 +175,7 @@ fn build_rank_cluster_bucket_order_map(
   let mut idx = 0
   for name in names {
     if order_cluster_skeleton.get(name) == Some(true) {
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
       if cluster != "" && order_map.get(cluster) is None {
         order_map[cluster] = idx
         idx = idx + 1
@@ -172,7 +183,7 @@ fn build_rank_cluster_bucket_order_map(
       continue
     }
     if real_nodes.get(name) is Some(_) {
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
       if cluster == "" && order_map.get("") is None {
         order_map[""] = idx
         idx = idx + 1
@@ -256,7 +267,7 @@ fn reorder_groups_by_local_cluster(
     let nodes_by_outer : Map[String, Array[String]] = Map::new()
     for i in 0..<names.length() {
       let name = names[i]
-      let outer = cluster_key_or_empty(outer_cluster_keys, name)
+      let outer = @ordering.cluster_key_or_empty(outer_cluster_keys, name)
       if outer == "" {
         continue
       }
@@ -279,7 +290,7 @@ fn reorder_groups_by_local_cluster(
       let local_order_in_rank : Array[String] = []
       let local_order_index : Map[String, Int] = Map::new()
       for name in outer_nodes {
-        let local_key = cluster_key_or_empty(local_cluster_keys, name)
+        let local_key = @ordering.cluster_key_or_empty(local_cluster_keys, name)
         if local_key == "" {
           continue
         }
@@ -353,7 +364,7 @@ fn find_cluster_block_bounds(
   let mut first_cluster = -1
   let mut last_cluster = -1
   for i in 0..<names.length() {
-    let cluster = cluster_key_or_empty(cluster_keys, names[i])
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, names[i])
     if cluster != "" {
       if first_cluster < 0 {
         first_cluster = i
@@ -375,7 +386,7 @@ fn has_root_node_in_range(
 ) -> Bool {
   let mut i = start_idx
   while i < end_idx {
-    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+    if @ordering.cluster_key_or_empty(cluster_keys, names[i]) == "" {
       return true
     }
     i = i + 1
@@ -433,7 +444,7 @@ fn order_rank_names_by_cluster_buckets(
   let cluster_nodes : Map[String, Array[String]] = Map::new()
   let cluster_seq : Array[String] = []
   for name in names {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     match cluster_nodes.get(cluster) {
       Some(list) => list.push(name)
       None => {
@@ -549,7 +560,7 @@ fn should_skip_cluster_rank_bucket_reorder(
   for _rank, names in cleaned_groups {
     let mut cluster_nodes = 0
     for name in names {
-      if cluster_key_or_empty(cluster_keys, name) != "" {
+      if @ordering.cluster_key_or_empty(cluster_keys, name) != "" {
         cluster_nodes = cluster_nodes + 1
         if cluster_nodes > 1 {
           return false

@@ -2,7 +2,6 @@ import {
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/rank_constraints",
   "moonbit-community/graphviz/layout/dot/edge_semantics",
-  "moonbit-community/graphviz/layout/dot/cluster_graph",
   "moonbit-community/graphviz/layout/dot/clustering",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/cgraph",
@@ -17,4 +16,5 @@ import {
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot/input_stage",
+  "moonbit-community/graphviz/layout/dot/cluster_graph",
 } for "wbtest"

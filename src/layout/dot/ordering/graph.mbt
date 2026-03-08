@@ -294,7 +294,7 @@ pub fn edge_head_port_for_name(
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
-fn build_sizes_for_order_graph(
+pub fn build_sizes_for_order_graph(
   order_sizes : Map[String, NodeSize],
   order_with_vnodes : Bool,
   vnode_sizes : Map[String, NodeSize],

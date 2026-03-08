@@ -239,7 +239,7 @@ fn build_root_mincross_edge_bundle(
     mincross_nodes, order_edges_out, order_edge_tail_out, order_edge_head_out, order_edge_tail_port_x,
     order_edge_head_port_x, order_edge_tail_port_order, order_edge_head_port_order,
   )
-  let edge_indices = build_edge_indices_and_order(
+  let edge_indices = @ordering.build_edge_indices_and_order(
     order_nodes_for_mincross,
     mincross_edges_output.order_edge_tail_out_mincross,
     mincross_edges_output.order_edge_head_out_mincross,
@@ -379,7 +379,7 @@ priv struct RootMincrossReorderBuildContext {
 fn build_root_mincross_reorder_inputs_from_stage_sources(
   sources : ClusteredRootPhaseStageSources,
 ) -> RootMincrossReorderInputs {
-  let seeded_context : SeededReorderBuildContext = {
+  let seeded_context : @ordering.SeededReorderBuildContext = {
     order_rank_keys: sources.reorder_context.order_rank_keys,
     order_groups: sources.order_groups_for_root_phase,
     order_edge_tail_out: sources.materialized.order_edge_tail_out,
@@ -397,7 +397,7 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
     flat_rank_constraints: sources.root_rank_order_phase_base_sources.reorder_setup.flat_rank_constraints,
   }
-  let seeded_groups = build_seeded_reorder_groups(seeded_context)
+  let seeded_groups = @ordering.build_seeded_reorder_groups(seeded_context)
   let root_reorder_context : RootMincrossReorderBuildContext = {
     order_with_clusters: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
     order_with_vnodes: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
@@ -499,10 +499,10 @@ fn build_root_rank_reorder_call_data(
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
 ) -> RootRankReorderCallData {
-  let order_rank_keys_for_mincross = collect_rank_keys(
+  let order_rank_keys_for_mincross = @ordering.collect_rank_keys(
     order_groups_for_mincross,
   )
-  let order_nodes_for_mincross = build_order_nodes_from_groups(
+  let order_nodes_for_mincross = @ordering.build_order_nodes_from_groups(
     order_groups_for_mincross, order_rank_keys_for_mincross,
   )
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
@@ -620,7 +620,7 @@ fn resolve_root_mincross_input_groups(
     )
   }
   match order_groups_override {
-    Some(override_groups) => clone_rank_groups(override_groups)
+    Some(override_groups) => @ordering.clone_rank_groups(override_groups)
     None => order_groups_for_mincross_base
   }
 }
@@ -690,7 +690,7 @@ fn run_root_mincross_reorder_with_pass0_capture(
   order_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootMincrossReorderResult {
-  let result = run_with_pass0_flat_seed_capture(() => {
+  let result = @ordering.run_with_pass0_flat_seed_capture(() => {
     run_root_mincross_reorder(inputs, order_groups_override)
   })
   capture_call(result, inputs)
@@ -800,8 +800,8 @@ pub struct ClusteredRootPhaseStageOutput {
 priv struct ClusteredRootPhaseStageSources {
   root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
   order_groups_for_root_phase : Map[Int, Array[String]]
-  reorder_context : OrderReorderContext
-  materialized : OrderMaterializationData
+  reorder_context : @ordering.OrderReorderContext
+  materialized : @ordering.OrderMaterializationData
   graph : @cgraph.Graph
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
@@ -818,8 +818,8 @@ priv struct ClusteredRootPhaseStageSources {
 /// snapshots and root-stage metadata grouped before deterministic stage run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredRootPhaseStageBuildSources {
-  reorder_setup : OrderingReorderSetup
-  pre_root_stage : ClusteredPreRootStageOutput
+  reorder_setup : @ordering.OrderingReorderSetup
+  pre_root_stage : @ordering.ClusteredPreRootStageOutput
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -909,7 +909,7 @@ pub fn run_clustered_root_phase_stage(
   let root_groups_override_for_root_pass = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
     None
   } else {
-    Some(clone_rank_groups(root_rank_order_phase_output.ordered_root))
+    Some(@ordering.clone_rank_groups(root_rank_order_phase_output.ordered_root))
   }
   let root_tail_order_override = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
     None
@@ -988,7 +988,7 @@ fn build_rank_attached_by_skeleton(
 ) -> Map[String, Array[String]] {
   let skeleton_for_cluster = build_skeleton_for_clusters(names, name => {
     if order_cluster_skeleton.get(name) == Some(true) {
-      cluster_key_or_empty(order_cluster_keys, name)
+      @ordering.cluster_key_or_empty(order_cluster_keys, name)
     } else {
       ""
     }
@@ -1079,7 +1079,7 @@ fn build_attached_by_skeleton(
     if should_skip(name) {
       continue
     }
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -1204,7 +1204,7 @@ fn rebuild_root_override_names(
       append_attached_by_skeleton(next_names, seen, attached_by_skeleton, name)
       continue
     }
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
       continue
     }
@@ -1247,7 +1247,7 @@ fn apply_root_groups_override(
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let reordered = clone_rank_groups(groups)
+  let reordered = @ordering.clone_rank_groups(groups)
   for rank, override_names in override_groups {
     match reordered.get(rank) {
       Some(names) =>
@@ -1503,7 +1503,7 @@ fn collect_noncluster_components(
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
 ) -> Array[Array[String]] {
-  let order_nodes = build_order_nodes_from_groups(groups, rank_keys)
+  let order_nodes = @ordering.build_order_nodes_from_groups(groups, rank_keys)
   if order_nodes.length() == 0 {
     return []
   }
@@ -1662,7 +1662,7 @@ pub fn run_root_rank_reorder_call(
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     reorder_inputs.order_rank_keys_for_mincross,
     reorder_inputs.order_groups_for_mincross,
     reorder_inputs.order_edges_out_mincross,

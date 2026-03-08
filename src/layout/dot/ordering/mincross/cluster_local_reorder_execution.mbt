@@ -40,7 +40,7 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
 pub fn run_cluster_local_rank_reorder_call(
   call_inputs : ClusterLocalRankReorderCallInputs,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     call_inputs.cluster_rank_keys,
     call_inputs.seeded_cluster_groups,
     call_inputs.cluster_edges,
@@ -218,7 +218,7 @@ fn reorder_cluster_rank_groups(
       dispatch_context,
     )
     expanded_clusters[cluster] = true
-    current_fixed_positions = order_positions_from_groups(groups)
+    current_fixed_positions = @ordering.order_positions_from_groups(groups)
   }
 }
 
@@ -240,7 +240,7 @@ pub(all) struct ClusterLocalReorderDispatchContext {
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
   neighbor_sources : ClusterLocalNeighborSources
-  order_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -250,7 +250,7 @@ pub(all) struct ClusterLocalReorderDispatchContext {
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
   vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   fixed_ranks : Map[String, Int]
   order_with_vnodes : Bool
 }
@@ -289,12 +289,12 @@ fn should_include_external_crossing_edges(
 ///|
 fn build_cluster_sizes_for_reorder(
   cluster_node_set : Map[String, Bool],
-  order_sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-) -> Map[String, NodeSize] {
+  order_sizes : Map[String, @node_primitives.NodeSize],
+  vnode_sizes : Map[String, @node_primitives.NodeSize],
+) -> Map[String, @node_primitives.NodeSize] {
   // Graphviz parity: cluster-local reorder metadata keeps node sizes scoped to
   // the filtered cluster node subset.
-  let cluster_sizes : Map[String, NodeSize] = Map::new()
+  let cluster_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   for name, _ in cluster_node_set {
     match order_sizes.get(name) {
       Some(size) => cluster_sizes[name] = size
@@ -349,7 +349,7 @@ priv struct ClusterLocalReorderRunInputsOutput {
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
   edge_order : Map[String, Int]
-  cluster_sizes : Map[String, NodeSize]
+  cluster_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   cluster_flat_constraints : Map[String, Bool]
 }
@@ -373,8 +373,8 @@ priv struct ClusterLocalReorderInputBuildContext {
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
   fixed_ranks : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
-  vnode_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
 }
@@ -429,7 +429,7 @@ fn build_local_reorder_edge_bundle(
       input_context.order_edge_head_port_order[i],
     )
   }
-  let edge_index_data = build_edge_index_for_names(
+  let edge_index_data = @ordering.build_edge_index_for_names(
     input_context.cluster_nodes,
     cluster_edge_tail,
     cluster_edge_head,
@@ -445,7 +445,7 @@ fn build_local_reorder_edge_bundle(
     cluster_edge_head_port_order,
     parents: edge_index_data.parents,
     children: edge_index_data.children,
-    edge_order: collect_edge_order(cluster_edges),
+    edge_order: @ordering.collect_edge_order(cluster_edges),
   }
 }
 
@@ -469,7 +469,7 @@ fn build_local_reorder_cluster_keys(
 /// Graphviz parity: cluster-local reorder metadata keeps node sizes, local
 /// cluster-key resets, flat constraints, and neighbor maps scoped together.
 priv struct ClusterLocalReorderMetadata {
-  cluster_sizes : Map[String, NodeSize]
+  cluster_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   cluster_flat_constraints : Map[String, Bool]
   graphviz_out_neighbors : Map[String, Array[String]]
@@ -721,7 +721,7 @@ fn build_cluster_local_reorder_context(
     cluster_node_order,
     inputs.source_out_neighbors,
   )
-  let cluster_rank_keys = collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
   let cluster_fixed_positions = build_cluster_fixed_positions(
     inputs.fixed_positions,
     cluster_node_set,
@@ -914,7 +914,7 @@ fn build_cluster_rank_seeded_groups(
     input_phase_output.children,
   )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
-  flat_reorder_rank_groups(
+  @ordering.flat_reorder_rank_groups(
     local_context.cluster_rank_keys,
     seeded_by_vnode_interp,
     fixed_ranks,
@@ -1230,7 +1230,7 @@ fn build_local_rank_groups(
   let out_heads_by_tail = build_cluster_out_heads_by_tail(
     cluster_node_set, source_graphviz_out_neighbors,
   )
-  let cluster_rank_keys = collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
       Some(value) => value
@@ -1357,7 +1357,7 @@ fn normalize_external_neighbor_name(
   intercluster_keys : Map[String, String],
   external_anchor_name : String,
 ) -> String {
-  let other_cluster = cluster_key_or_empty(intercluster_keys, other)
+  let other_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
   if other_cluster != "" &&
     other_cluster != cluster &&
     expanded_clusters.get(other_cluster) is None {
@@ -1421,7 +1421,7 @@ fn append_raw_neighbors_with_external_anchor(
       merge_context.external_anchor_name,
     )
     if normalized == merge_context.external_anchor_name {
-      let external_cluster = cluster_key_or_empty(
+      let external_cluster = @ordering.cluster_key_or_empty(
         merge_context.intercluster_keys,
         other,
       )

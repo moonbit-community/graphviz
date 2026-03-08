@@ -92,7 +92,7 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   phase_base : RootRankOrderPhaseBase
   root_cluster_stage : RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  pre_root_stage : ClusteredPreRootStageOutput
+  pre_root_stage : @ordering.ClusteredPreRootStageOutput
   real_nodes : Map[String, Bool]
   ratio : String
   edges : Array[@cgraph.Edge]
@@ -104,7 +104,7 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
   ranks : Map[String, Int]
-  reorder_setup : OrderingReorderSetup
+  reorder_setup : @ordering.OrderingReorderSetup
   local_cluster_order : Map[String, Int]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
@@ -355,7 +355,7 @@ pub fn run_remincross_pass(
       vnodes_by_rank: context.vnodes_by_rank,
     },
   })
-  let rem_rank_keys = collect_rank_keys(rem_groups)
+  let rem_rank_keys = @ordering.collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
       ordered_groups: base_groups,
@@ -451,7 +451,7 @@ pub(all) struct ReMincrossCleanupReorderInputs {
   rank_same_order : Map[String, Int]
   rem_edge_order : Map[String, Int]
   rem_node_order : Map[String, Int]
-  rem_sizes : Map[String, NodeSize]
+  rem_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -465,7 +465,7 @@ pub(all) struct ReMincrossCleanupReorderInputs {
 pub fn run_remincross_cleanup_reorder(
   reorder_inputs : ReMincrossCleanupReorderInputs,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     reorder_inputs.rem_rank_keys,
     reorder_inputs.rem_groups,
     reorder_inputs.rem_edges_out,
@@ -525,7 +525,7 @@ pub fn run_remincross_cleanup(
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let materialized_inputs = inputs.materialized_inputs
-  let rem_edge_indices = build_edge_indices_and_order(
+  let rem_edge_indices = @ordering.build_edge_indices_and_order(
     materialized_inputs.rem_nodes,
     materialized_inputs.rem_edge_tail_out,
     materialized_inputs.rem_edge_head_out,
@@ -632,7 +632,7 @@ fn try_build_special_seed_order(
   let mut root_real_name = ""
   let cluster_real_names : Array[String] = []
   for name in base_real {
-    if cluster_key_or_empty(cluster_keys, name) == "" {
+    if @ordering.cluster_key_or_empty(cluster_keys, name) == "" {
       root_real_count = root_real_count + 1
       root_real_name = name
     } else {
@@ -816,14 +816,14 @@ fn collect_remincross_trailing(
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
-    let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @ordering.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = remincross_cluster_keys.get(tail).unwrap_or_default()
     let head_cluster = remincross_cluster_keys.get(head).unwrap_or_default()
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
     let internal = tail_cluster != "" &&
       head_cluster != "" &&
-      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+      @ordering.edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
     if internal ||
       tail_cluster == head_cluster ||
       tail_cluster == "" ||
@@ -931,7 +931,7 @@ fn build_remincross_vnode_keys(
     inputs.cluster_min_rank,
     inputs.cluster_max_rank,
   )
-  let keys = build_vnode_order_keys(
+  let keys = @ordering.build_vnode_order_keys(
     inputs.edges,
     inputs.edge_tail,
     inputs.edge_head,
@@ -961,15 +961,15 @@ fn build_remincross_vnode_keys(
 pub fn build_remincross_vnode_groups(
   inputs : ReMincrossVnodeGroupInputs,
 ) -> Map[Int, Array[String]] {
-  let rem_base_groups = clone_rank_groups(inputs.final_groups)
-  let rem_base_order_index = build_order_index(rem_base_groups)
+  let rem_base_groups = @ordering.clone_rank_groups(inputs.final_groups)
+  let rem_base_order_index = @ordering.build_order_index(rem_base_groups)
   let rem_vnode_order_keys = if !inputs.order_with_vnodes {
     Map::new()
   } else {
     build_remincross_vnode_keys(inputs, rem_base_order_index)
   }
   if inputs.order_with_vnodes {
-    build_x_groups_with_vnodes(
+    @ordering.build_x_groups_with_vnodes(
       rem_base_groups,
       rem_base_order_index,
       inputs.vnodes_by_rank,

@@ -117,7 +117,7 @@ pub fn coalesce_ordering_edge_snapshot_entries(
       None => ()
     }
   }
-  let coalesced_by_tail = coalesce_order_edges_by_tail(entries_by_tail)
+  let coalesced_by_tail = @ordering.coalesce_order_edges_by_tail(entries_by_tail)
   let coalesced : Array[OrderingEdgeSnapshotEntry] = []
   for tail in tail_order {
     let tail_entries = coalesced_by_tail.get(tail).unwrap_or_default()
@@ -251,7 +251,7 @@ pub fn build_root_mincross_input_snapshot(
   )
   {
     rank_keys: input.rank_keys.copy(),
-    groups: clone_rank_groups(input.groups),
+    groups: @ordering.clone_rank_groups(input.groups),
     edges,
     cluster_keys: clone_string_map(input.cluster_keys),
     cluster_skeleton: clone_bool_map(input.cluster_skeleton),
@@ -267,7 +267,7 @@ pub fn build_remincross_input_snapshot(
 ) -> RemincrossInputSnapshot {
   {
     rank_keys: input.rank_keys.copy(),
-    groups: clone_rank_groups(input.groups),
+    groups: @ordering.clone_rank_groups(input.groups),
     edges: build_ordering_edge_snapshot_entries({
       edges_out: input.edges_out,
       edge_tail_out: input.edge_tail_out,

@@ -25,14 +25,14 @@ priv struct ClusterLocalRankReplayInput {
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
   ranks : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   vnode_ranks : Map[String, Int]
   vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_with_vnodes : Bool
 }
 
@@ -60,14 +60,14 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
   ranks : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   vnode_ranks : Map[String, Int]
   vnode_clusters : Map[String, String]
-  vnode_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_with_vnodes : Bool
 }
 
@@ -130,8 +130,8 @@ fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
   if cluster_graphs.length() == 0 {
     return ()
   }
-  let fixed_positions = order_positions_from_groups(input.groups)
-  let fixed_ranks = merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
+  let fixed_positions = @ordering.order_positions_from_groups(input.groups)
+  let fixed_ranks = @ordering.merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
   let neighbor_sources = build_cluster_local_neighbor_sources(
