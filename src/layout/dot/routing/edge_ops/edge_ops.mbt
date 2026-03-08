@@ -3,7 +3,11 @@ type NodeSize = @node_primitives.NodeSize
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {
-  if a > b { a } else { b }
+  if a > b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
@@ -94,13 +98,12 @@ pub fn edge_dir_attr_key(edge : @cgraph.Edge) -> String {
 /// parallels while preserving class2 endpoint/port grouping.
 /// Do not change behavior without updating fixtures/tests.
 pub fn edge_parallel_group_key(edge : @cgraph.Edge) -> String {
-  let base =
-    edge_parallel_key(
-      edge.tail().name(),
-      edge.head().name(),
-      edge.tail_port(),
-      edge.head_port(),
-    )
+  let base = edge_parallel_key(
+    edge.tail().name(),
+    edge.head().name(),
+    edge.tail_port(),
+    edge.head_port(),
+  )
   let sameport_mark = edge_has_sameport_mark(edge)
   if sameport_mark {
     "\{base}|sameport"
