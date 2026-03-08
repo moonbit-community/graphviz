@@ -745,120 +745,113 @@ test "network_simplex LR preserves compound cluster spacing" {
 }
 
 ///|
-struct LrXposNodeSpec {
-  kind : NodeKind
-  rank : Int
-}
-
-///|
-struct LrXposEdgeSpec {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
-}
-
-///|
 fn build_lr_edge_vnode_spacing_graph() -> NsGraph {
-  let graph = new_graph()
-  let node_specs : Array[LrXposNodeSpec] = [
-    { kind: NodeKind::Slack, rank: 49 },
-    { kind: NodeKind::Slack, rank: 49 },
-    { kind: NodeKind::Slack, rank: 109 },
-    { kind: NodeKind::Slack, rank: 109 },
-    { kind: NodeKind::Slack, rank: 49 },
-    { kind: NodeKind::Slack, rank: 49 },
-    { kind: NodeKind::Slack, rank: 24 },
-    { kind: NodeKind::Slack, rank: 24 },
-    { kind: NodeKind::Slack, rank: 32 },
-    { kind: NodeKind::Slack, rank: 32 },
-    { kind: NodeKind::Slack, rank: 24 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Slack, rank: -1 },
-    { kind: NodeKind::Normal, rank: 0 },
-    { kind: NodeKind::Virtual, rank: 0 },
-    { kind: NodeKind::Normal, rank: 0 },
-    { kind: NodeKind::Virtual, rank: 0 },
-    { kind: NodeKind::Normal, rank: 0 },
-    { kind: NodeKind::Virtual, rank: 0 },
-    { kind: NodeKind::Normal, rank: 0 },
-    { kind: NodeKind::Virtual, rank: 25 },
-    { kind: NodeKind::Virtual, rank: 55 },
-    { kind: NodeKind::Virtual, rank: 33 },
-    { kind: NodeKind::Virtual, rank: 55 },
-    { kind: NodeKind::Virtual, rank: 25 },
-    { kind: NodeKind::Normal, rank: 72 },
-    { kind: NodeKind::Virtual, rank: 50 },
-    { kind: NodeKind::Normal, rank: 110 },
-    { kind: NodeKind::Virtual, rank: 171 },
-    { kind: NodeKind::Normal, rank: 110 },
-    { kind: NodeKind::Virtual, rank: 50 },
-    { kind: NodeKind::Normal, rank: 72 },
-  ]
-  for idx, spec in node_specs {
-    let node = add_node(graph, "n\{idx}", kind=spec.kind)
-    set_node_rank(graph, node, spec.rank)
-  }
+  build_exact_rank_fixture_graph(
+    [
+      { name: "", kind: NodeKind::Slack, rank: 49 },
+      { name: "", kind: NodeKind::Slack, rank: 49 },
+      { name: "", kind: NodeKind::Slack, rank: 109 },
+      { name: "", kind: NodeKind::Slack, rank: 109 },
+      { name: "", kind: NodeKind::Slack, rank: 49 },
+      { name: "", kind: NodeKind::Slack, rank: 49 },
+      { name: "", kind: NodeKind::Slack, rank: 24 },
+      { name: "", kind: NodeKind::Slack, rank: 24 },
+      { name: "", kind: NodeKind::Slack, rank: 32 },
+      { name: "", kind: NodeKind::Slack, rank: 32 },
+      { name: "", kind: NodeKind::Slack, rank: 24 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "", kind: NodeKind::Slack, rank: -1 },
+      { name: "a", kind: NodeKind::Normal, rank: 0 },
+      { name: "", kind: NodeKind::Virtual, rank: 0 },
+      { name: "c", kind: NodeKind::Normal, rank: 0 },
+      { name: "", kind: NodeKind::Virtual, rank: 0 },
+      { name: "e", kind: NodeKind::Normal, rank: 0 },
+      { name: "", kind: NodeKind::Virtual, rank: 0 },
+      { name: "g", kind: NodeKind::Normal, rank: 0 },
+      { name: "", kind: NodeKind::Virtual, rank: 25 },
+      { name: "", kind: NodeKind::Virtual, rank: 55 },
+      { name: "", kind: NodeKind::Virtual, rank: 33 },
+      { name: "", kind: NodeKind::Virtual, rank: 55 },
+      { name: "", kind: NodeKind::Virtual, rank: 25 },
+      { name: "h", kind: NodeKind::Normal, rank: 72 },
+      { name: "", kind: NodeKind::Virtual, rank: 50 },
+      { name: "f", kind: NodeKind::Normal, rank: 110 },
+      { name: "", kind: NodeKind::Virtual, rank: 175 },
+      { name: "d", kind: NodeKind::Normal, rank: 110 },
+      { name: "", kind: NodeKind::Virtual, rank: 50 },
+      { name: "b", kind: NodeKind::Normal, rank: 72 },
+    ],
+    [
+      { tail: 0, head: 36, minlen: 1, weight: 2, in_pos: 1 },
+      { tail: 0, head: 35, minlen: 1, weight: 2, in_pos: 2 },
+      { tail: 1, head: 35, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 1, head: 34, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 2, head: 34, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 2, head: 33, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 3, head: 33, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 3, head: 32, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 4, head: 32, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 4, head: 31, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 5, head: 31, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 5, head: 30, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 6, head: 29, minlen: 1, weight: 1, in_pos: 2 },
+      { tail: 6, head: 30, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 7, head: 28, minlen: 1, weight: 4, in_pos: 2 },
+      { tail: 7, head: 29, minlen: 1, weight: 4, in_pos: 1 },
+      { tail: 8, head: 27, minlen: 1, weight: 4, in_pos: 2 },
+      { tail: 8, head: 28, minlen: 1, weight: 4, in_pos: 1 },
+      { tail: 9, head: 26, minlen: 1, weight: 4, in_pos: 2 },
+      { tail: 9, head: 27, minlen: 1, weight: 4, in_pos: 1 },
+      { tail: 10, head: 25, minlen: 1, weight: 4, in_pos: 2 },
+      { tail: 10, head: 26, minlen: 1, weight: 4, in_pos: 1 },
+      { tail: 11, head: 23, minlen: 1, weight: 2, in_pos: 1 },
+      { tail: 11, head: 24, minlen: 1, weight: 2, in_pos: 0 },
+      { tail: 12, head: 22, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 12, head: 23, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 13, head: 21, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 13, head: 22, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 14, head: 20, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 14, head: 21, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 15, head: 19, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 15, head: 20, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 16, head: 18, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 16, head: 25, minlen: 1, weight: 1, in_pos: 1 },
+      { tail: 17, head: 18, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 17, head: 19, minlen: 1, weight: 1, in_pos: 0 },
+      { tail: 18, head: 36, minlen: 72, weight: 0, in_pos: 0 },
+      { tail: 19, head: 25, minlen: 25, weight: 0, in_pos: 0 },
+      { tail: 20, head: 26, minlen: 55, weight: 0, in_pos: 0 },
+      { tail: 21, head: 27, minlen: 33, weight: 0, in_pos: 0 },
+      { tail: 22, head: 28, minlen: 55, weight: 0, in_pos: 0 },
+      { tail: 23, head: 29, minlen: 25, weight: 0, in_pos: 0 },
+      { tail: 24, head: 30, minlen: 72, weight: 0, in_pos: 0 },
+      { tail: 25, head: 35, minlen: 25, weight: 0, in_pos: 0 },
+      { tail: 26, head: 34, minlen: 55, weight: 0, in_pos: 0 },
+      { tail: 27, head: 33, minlen: 142, weight: 0, in_pos: 0 },
+      { tail: 28, head: 32, minlen: 55, weight: 0, in_pos: 0 },
+      { tail: 29, head: 31, minlen: 25, weight: 0, in_pos: 0 },
+    ],
+  )
+}
 
-  let edge_specs : Array[LrXposEdgeSpec] = [
-    { tail: 0, head: 36, minlen: 1, weight: 2 },
-    { tail: 0, head: 35, minlen: 1, weight: 2 },
-    { tail: 1, head: 35, minlen: 1, weight: 1 },
-    { tail: 1, head: 34, minlen: 1, weight: 1 },
-    { tail: 2, head: 34, minlen: 1, weight: 1 },
-    { tail: 2, head: 33, minlen: 1, weight: 1 },
-    { tail: 3, head: 33, minlen: 1, weight: 1 },
-    { tail: 3, head: 32, minlen: 1, weight: 1 },
-    { tail: 4, head: 32, minlen: 1, weight: 1 },
-    { tail: 4, head: 31, minlen: 1, weight: 1 },
-    { tail: 5, head: 31, minlen: 1, weight: 1 },
-    { tail: 5, head: 30, minlen: 1, weight: 1 },
-    { tail: 6, head: 29, minlen: 1, weight: 1 },
-    { tail: 6, head: 30, minlen: 1, weight: 1 },
-    { tail: 7, head: 28, minlen: 1, weight: 4 },
-    { tail: 7, head: 29, minlen: 1, weight: 4 },
-    { tail: 8, head: 27, minlen: 1, weight: 4 },
-    { tail: 8, head: 28, minlen: 1, weight: 4 },
-    { tail: 9, head: 26, minlen: 1, weight: 4 },
-    { tail: 9, head: 27, minlen: 1, weight: 4 },
-    { tail: 10, head: 25, minlen: 1, weight: 4 },
-    { tail: 10, head: 26, minlen: 1, weight: 4 },
-    { tail: 11, head: 23, minlen: 1, weight: 2 },
-    { tail: 11, head: 24, minlen: 1, weight: 2 },
-    { tail: 12, head: 22, minlen: 1, weight: 1 },
-    { tail: 12, head: 23, minlen: 1, weight: 1 },
-    { tail: 13, head: 21, minlen: 1, weight: 1 },
-    { tail: 13, head: 22, minlen: 1, weight: 1 },
-    { tail: 14, head: 20, minlen: 1, weight: 1 },
-    { tail: 14, head: 21, minlen: 1, weight: 1 },
-    { tail: 15, head: 19, minlen: 1, weight: 1 },
-    { tail: 15, head: 20, minlen: 1, weight: 1 },
-    { tail: 16, head: 18, minlen: 1, weight: 1 },
-    { tail: 16, head: 25, minlen: 1, weight: 1 },
-    { tail: 17, head: 18, minlen: 1, weight: 1 },
-    { tail: 17, head: 19, minlen: 1, weight: 1 },
-    { tail: 18, head: 36, minlen: 72, weight: 0 },
-    { tail: 19, head: 25, minlen: 25, weight: 0 },
-    { tail: 20, head: 26, minlen: 55, weight: 0 },
-    { tail: 21, head: 27, minlen: 33, weight: 0 },
-    { tail: 22, head: 28, minlen: 55, weight: 0 },
-    { tail: 23, head: 29, minlen: 25, weight: 0 },
-    { tail: 24, head: 30, minlen: 72, weight: 0 },
-    { tail: 25, head: 35, minlen: 25, weight: 0 },
-    { tail: 26, head: 34, minlen: 55, weight: 0 },
-    { tail: 27, head: 33, minlen: 139, weight: 0 },
-    { tail: 28, head: 32, minlen: 55, weight: 0 },
-    { tail: 29, head: 31, minlen: 25, weight: 0 },
-  ]
-  for spec in edge_specs {
-    ignore(add_edge(graph, spec.tail, spec.head, spec.minlen, spec.weight))
-  }
-  graph
+///|
+test "build_feasible_tree and pre_balance preserve integrated edge-vnode spacing ladder" {
+  let tree_graph = build_lr_edge_vnode_spacing_graph()
+  assert_eq(
+    feasible_tree_edges_for_test(tree_graph),
+    [1, 43, 37, 35, 34, 32, 36, 30, 31, 28, 29, 26, 27, 24, 25, 22, 23, 42, 41, 15, 12, 47, 10, 9, 40, 46, 7, 39, 19, 16, 45, 38, 44, 4, 20, 2],
+  )
+
+  let balance_graph = build_lr_edge_vnode_spacing_graph()
+  assert_eq(
+    pre_balance_ranks_for_test(balance_graph),
+    [49, 49, 49, -38, -68, -68, -93, -93, -93, -93, -93, -148, -148, -148, -148, -148, -93, -148, -92, -147, -147, -147, -147, -147, -147, -92, -92, -92, -92, -92, -67, -67, -37, 50, 50, 50, 50],
+  )
 }
 
 ///|
@@ -868,9 +861,9 @@ test "network_simplex LR preserves integrated edge-vnode spacing ladder" {
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
 
   assert_eq(collect_node_ranks(graph), [
-    50, 50, 50, 8, -28, -50, -89, -89, -89, -89, -89, -144, -144, -144, -144,
-    -144, -109, -129, -108, -128, -143, -143, -143, -143, -143, -88, -88, -88,
-    -88, -88, -49, -27, 9, 51, 51, 51, 51,
+    49, 49, 49, 5, -53, -64, -93, -93, -93, -93, -93, -148, -148, -148, -148,
+    -148, -113, -133, -112, -132, -147, -147, -147, -147, -147, -92, -92, -92,
+    -92, -92, -63, -52, 6, 50, 50, 50, 50,
   ])
 }
 
