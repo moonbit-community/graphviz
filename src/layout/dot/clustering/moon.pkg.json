@@ -19,7 +19,6 @@
     {
       "path": "moonbit-community/graphviz/layout/dot",
       "alias": "dot_layout"
-    },
-    "moonbit-community/graphviz/layout/dot/edge_label_metrics"
+    }
   ]
 }

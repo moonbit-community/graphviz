@@ -11,5 +11,16 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot",
+      "alias": "layout_dot"
+    },
+    "moonbit-community/graphviz/geom"
   ]
 }

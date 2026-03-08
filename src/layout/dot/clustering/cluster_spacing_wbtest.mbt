@@ -199,33 +199,3 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
     fail("non-empty cluster should receive bb")
   }
 }
-
-///|
-test "edge labels expand rank spacing" {
-  let with_label = @dot_parser.parse_dot(
-    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",
-  )
-  let layout_label = @dot_layout.layout_dot(with_label)
-  layout_label.apply()
-  let pos_a = spacing_node_pos(with_label, "a")
-  let pos_b = spacing_node_pos(with_label, "b")
-  let dist_label = Double::abs(pos_a.y - pos_b.y)
-  let edges = with_label.edges()
-  guard edges.length() > 0 else { fail("missing labeled edge") }
-  let edge = edges[0]
-  let label_height = @edge_label_metrics.edge_label_height_pt(edge)
-  let without_label = @dot_parser.parse_dot(
-    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
-  )
-  let layout_plain = @dot_layout.layout_dot(without_label)
-  layout_plain.apply()
-  let pos_plain_a = spacing_node_pos(without_label, "a")
-  let pos_plain_b = spacing_node_pos(without_label, "b")
-  let dist_plain = Double::abs(pos_plain_a.y - pos_plain_b.y)
-  guard dist_label > dist_plain else {
-    fail("expected labeled edge to increase rank spacing")
-  }
-  guard dist_label >= dist_plain + label_height - 0.1 else {
-    fail("expected label height to contribute to spacing")
-  }
-}

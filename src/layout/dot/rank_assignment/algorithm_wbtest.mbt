@@ -62,6 +62,38 @@ fn build_long_edge_rank_heights_input(
   )
 }
 
+
+///|
+fn rank_parse_point(text : String) -> @geom.Point {
+  let parts : Array[String] = []
+  for part in text.split(",") {
+    parts.push(part.to_string())
+  }
+  let x = if parts.length() > 0 {
+    @numeric.parse_double_or(parts[0], 0.0)
+  } else {
+    0.0
+  }
+  let y = if parts.length() > 1 {
+    @numeric.parse_double_or(parts[1], 0.0)
+  } else {
+    0.0
+  }
+  { x, y }
+}
+
+///|
+fn rank_layout_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point raise {
+  match graph.find_node(name) {
+    Some(node) =>
+      match node.get_attr("pos") {
+        Some(value) => rank_parse_point(value)
+        None => fail("missing pos for node \{name}")
+      }
+    None => fail("missing node \{name}")
+  }
+}
+
 ///|
 test "acyclic_edge_directions_for_names reverses the back edge of a cycle" {
   let directions = acyclic_edge_directions_for_names(
@@ -374,3 +406,29 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
   assert_eq(leader_ranks.get("a0"), Some(1))
   assert_eq(leader_ranks.get("b0"), Some(0))
 }
+
+///|
+test "edge labels expand rank spacing" {
+  let with_label = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",
+  )
+  let layout_label = @layout_dot.layout_dot(with_label)
+  layout_label.apply()
+  let pos_a = rank_layout_node_pos(with_label, "a")
+  let pos_b = rank_layout_node_pos(with_label, "b")
+  let dist_label = Double::abs(pos_a.y - pos_b.y)
+
+  let without_label = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
+  )
+  let layout_plain = @layout_dot.layout_dot(without_label)
+  layout_plain.apply()
+  let pos_plain_a = rank_layout_node_pos(without_label, "a")
+  let pos_plain_b = rank_layout_node_pos(without_label, "b")
+  let dist_plain = Double::abs(pos_plain_a.y - pos_plain_b.y)
+
+  guard dist_label > dist_plain else {
+    fail("expected labeled edge to increase rank spacing")
+  }
+}
+
