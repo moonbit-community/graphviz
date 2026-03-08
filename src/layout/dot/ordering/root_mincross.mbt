@@ -37,34 +37,32 @@ pub fn normalize_synthetic_ports(
   // unless a non-default port survives edge materialization.
   let tail_is_skeleton = @cluster_identity.is_cluster_skeleton_name(tail)
   let head_is_skeleton = @cluster_identity.is_cluster_skeleton_name(head)
-  let synthetic_endpoint =
-    @edge_identity.is_edge_vnode_name(tail) || @edge_identity.is_edge_vnode_name(head) ||
-    tail_is_skeleton || head_is_skeleton
-  let defaultish_x =
-    (tail_port_x_raw == 0.0 || tail_port_x_raw == 0.5) &&
+  let synthetic_endpoint = @edge_identity.is_edge_vnode_name(tail) ||
+    @edge_identity.is_edge_vnode_name(head) ||
+    tail_is_skeleton ||
+    head_is_skeleton
+  let defaultish_x = (tail_port_x_raw == 0.0 || tail_port_x_raw == 0.5) &&
     (head_port_x_raw == 0.0 || head_port_x_raw == 0.5)
-  let zero_synthetic_defaults =
-    synthetic_endpoint &&
+  let zero_synthetic_defaults = synthetic_endpoint &&
     (
       (tail_is_skeleton && head_is_skeleton) ||
       (defaultish_x && tail_port_order_raw == 0.0 && head_port_order_raw == 0.0)
     )
-  let normalized : SyntheticPortValues =
-    if !zero_synthetic_defaults {
-      {
-        tail_port_x: tail_port_x_raw,
-        head_port_x: head_port_x_raw,
-        tail_port_order: tail_port_order_raw,
-        head_port_order: head_port_order_raw,
-      }
-    } else {
-      {
-        tail_port_x: 0.0,
-        head_port_x: 0.0,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      }
+  let normalized : SyntheticPortValues = if !zero_synthetic_defaults {
+    {
+      tail_port_x: tail_port_x_raw,
+      head_port_x: head_port_x_raw,
+      tail_port_order: tail_port_order_raw,
+      head_port_order: head_port_order_raw,
     }
+  } else {
+    {
+      tail_port_x: 0.0,
+      head_port_x: 0.0,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    }
+  }
   (
     normalized.tail_port_x,
     normalized.head_port_x,
@@ -109,20 +107,15 @@ fn collect_mincross_order_edges(
   while edge_idx < order_edges_out.length() {
     let tail = order_edge_tail_out[edge_idx]
     let head = order_edge_head_out[edge_idx]
-    if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
+    if mincross_nodes.get(tail) is Some(_) &&
+      mincross_nodes.get(head) is Some(_) {
       let tail_port_x_raw = order_edge_tail_port_x[edge_idx]
       let head_port_x_raw = order_edge_head_port_x[edge_idx]
       let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
       let head_port_order_raw = order_edge_head_port_order[edge_idx]
-      let (tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        normalize_synthetic_ports(
-          tail,
-          head,
-          tail_port_x_raw,
-          head_port_x_raw,
-          tail_port_order_raw,
-          head_port_order_raw,
-        )
+      let (tail_port_x, head_port_x, tail_port_order, head_port_order) = normalize_synthetic_ports(
+        tail, head, tail_port_x_raw, head_port_x_raw, tail_port_order_raw, head_port_order_raw,
+      )
       order_edges_out_mincross.push(order_edges_out[edge_idx])
       order_edge_tail_out_mincross.push(tail)
       order_edge_head_out_mincross.push(head)
@@ -164,38 +157,24 @@ pub fn merge_root_mincross_groups(
       merged[rank] = names.copy()
       continue
     }
-    let attached_by_skeleton =
-      build_rank_attached_by_skeleton(
-        names,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        mincross_nodes,
-      )
+    let attached_by_skeleton = build_rank_attached_by_skeleton(
+      names, order_cluster_keys, order_cluster_skeleton, mincross_nodes,
+    )
     // Graphviz parity: when root mincross returns [root, skeleton] in a
     // single-root rank, keep the attached cluster node in front via positional
     // replacement (matches biological rank handoff in Graphviz).
-    let should_use_positional_merge =
-      should_merge_root_positions(
-        replacements,
-        order_cluster_skeleton,
-        attached_by_skeleton,
-      )
+    let should_use_positional_merge = should_merge_root_positions(
+      replacements, order_cluster_skeleton, attached_by_skeleton,
+    )
     if should_use_positional_merge {
-      merged[rank] =
-        merge_rank_with_positional_replacements(
-          names,
-          replacements,
-          mincross_nodes,
-        )
+      merged[rank] = merge_rank_with_positional_replacements(
+        names, replacements, mincross_nodes,
+      )
       continue
     }
-    merged[rank] =
-      merge_rank_with_attached_skeleton_replacements(
-        names,
-        replacements,
-        attached_by_skeleton,
-        order_cluster_skeleton,
-      )
+    merged[rank] = merge_rank_with_attached_skeleton_replacements(
+      names, replacements, attached_by_skeleton, order_cluster_skeleton,
+    )
   }
   merged
 }
@@ -256,39 +235,25 @@ fn build_root_mincross_edge_bundle(
   order_edge_head_port_order : Array[Double],
   order_ranks : Map[String, Int],
 ) -> RootMincrossEdgeBundle {
-  let mincross_edges_output =
-    collect_mincross_order_edges(
-      mincross_nodes,
-      order_edges_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-    )
-  let edge_indices =
-    build_edge_indices_and_order(
-      order_nodes_for_mincross,
-      mincross_edges_output.order_edge_tail_out_mincross,
-      mincross_edges_output.order_edge_head_out_mincross,
-      order_ranks,
-      mincross_edges_output.order_edges_out_mincross,
-    )
+  let mincross_edges_output = collect_mincross_order_edges(
+    mincross_nodes, order_edges_out, order_edge_tail_out, order_edge_head_out, order_edge_tail_port_x,
+    order_edge_head_port_x, order_edge_tail_port_order, order_edge_head_port_order,
+  )
+  let edge_indices = build_edge_indices_and_order(
+    order_nodes_for_mincross,
+    mincross_edges_output.order_edge_tail_out_mincross,
+    mincross_edges_output.order_edge_head_out_mincross,
+    order_ranks,
+    mincross_edges_output.order_edges_out_mincross,
+  )
   {
     order_edges_out_mincross: mincross_edges_output.order_edges_out_mincross,
-    order_edge_tail_out_mincross:
-      mincross_edges_output.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross:
-      mincross_edges_output.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross:
-      mincross_edges_output.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross:
-      mincross_edges_output.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      mincross_edges_output.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      mincross_edges_output.order_edge_head_port_order_mincross,
+    order_edge_tail_out_mincross: mincross_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: mincross_edges_output.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross: mincross_edges_output.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: mincross_edges_output.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross: mincross_edges_output.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: mincross_edges_output.order_edge_head_port_order_mincross,
     parents: edge_indices.parents,
     children: edge_indices.children,
     edge_order: edge_indices.edge_order,
@@ -421,10 +386,8 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
     order_edge_head_out: sources.materialized.order_edge_head_out,
     order_ranks: sources.reorder_context.order_ranks,
     order_node_order: sources.reorder_context.order_node_order,
-    order_cluster_keys:
-      sources.root_rank_order_phase_base_sources.order_cluster_keys,
-    order_cluster_skeleton:
-      sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
+    order_cluster_keys: sources.root_rank_order_phase_base_sources.order_cluster_keys,
+    order_cluster_skeleton: sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
     order_flat_constraints: sources.materialized.order_flat_constraints,
     graphviz_flip: sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
     graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
@@ -432,15 +395,12 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
     order_edges_out: sources.materialized.order_edges_out,
     order_edge_tail_port_x: sources.materialized.order_edge_tail_port_x,
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
-    flat_rank_constraints:
-      sources.root_rank_order_phase_base_sources.reorder_setup.flat_rank_constraints,
+    flat_rank_constraints: sources.root_rank_order_phase_base_sources.reorder_setup.flat_rank_constraints,
   }
   let seeded_groups = build_seeded_reorder_groups(seeded_context)
   let root_reorder_context : RootMincrossReorderBuildContext = {
-    order_with_clusters:
-      sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
-    order_with_vnodes:
-      sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
+    order_with_clusters: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
+    order_with_vnodes: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
     order_rank_keys: sources.reorder_context.order_rank_keys,
     order_ranks: sources.reorder_context.order_ranks,
     order_edges_out: sources.materialized.order_edges_out,
@@ -450,34 +410,23 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
     order_edge_tail_port_order: sources.materialized.order_edge_tail_port_order,
     order_edge_head_port_order: sources.materialized.order_edge_head_port_order,
-    order_cluster_keys:
-      sources.root_rank_order_phase_base_sources.order_cluster_keys,
-    order_cluster_skeleton:
-      sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
-    rank_same_groups:
-      sources.root_rank_order_phase_base_sources.rank_same_groups,
-    rank_same_order:
-      sources.root_rank_order_phase_base_sources.rank_same_order,
-    vnode_order_keys_for_ordering:
-      sources.root_rank_order_phase_base_sources.reorder_setup.vnode_order_keys_for_ordering,
+    order_cluster_keys: sources.root_rank_order_phase_base_sources.order_cluster_keys,
+    order_cluster_skeleton: sources.root_rank_order_phase_base_sources.order_cluster_skeleton,
+    rank_same_groups: sources.root_rank_order_phase_base_sources.rank_same_groups,
+    rank_same_order: sources.root_rank_order_phase_base_sources.rank_same_order,
+    vnode_order_keys_for_ordering: sources.root_rank_order_phase_base_sources.reorder_setup.vnode_order_keys_for_ordering,
     order_node_order: sources.reorder_context.order_node_order,
     order_sizes_out: sources.root_rank_order_phase_base_sources.order_sizes_out,
     nodesep_pt: sources.root_rank_order_phase_base_sources.nodesep_pt,
-    has_edge_labels:
-      sources.root_rank_order_phase_base_sources.has_edge_labels,
-    port_order_positions:
-      sources.root_rank_order_phase_base_sources.port_order_positions,
-    port_order_contrib:
-      sources.root_rank_order_phase_base_sources.port_order_contrib,
+    has_edge_labels: sources.root_rank_order_phase_base_sources.has_edge_labels,
+    port_order_positions: sources.root_rank_order_phase_base_sources.port_order_positions,
+    port_order_contrib: sources.root_rank_order_phase_base_sources.port_order_contrib,
     order_flat_constraints: sources.materialized.order_flat_constraints,
     graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
     graphviz_in_neighbors: sources.materialized.graphviz_in_neighbors,
     graphviz_flip: sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
   }
-  build_root_mincross_reorder_inputs(
-    seeded_groups,
-    root_reorder_context,
-  )
+  build_root_mincross_reorder_inputs(seeded_groups, root_reorder_context)
 }
 
 ///|
@@ -550,83 +499,60 @@ fn build_root_rank_reorder_call_data(
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
 ) -> RootRankReorderCallData {
-  let order_rank_keys_for_mincross =
-    collect_rank_keys(order_groups_for_mincross)
-  let order_nodes_for_mincross =
-    build_order_nodes_from_groups(
-      order_groups_for_mincross,
-      order_rank_keys_for_mincross,
-    )
-  let mincross_nodes =
-    build_node_membership_set(order_nodes_for_mincross)
-  let mincross_edge_data =
-    build_root_mincross_edge_bundle(
-      mincross_nodes,
-      order_nodes_for_mincross,
-      order_edges_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      order_ranks,
-    )
-  let preferred_positions =
-    build_root_vnode_preferred_positions(
-      order_with_vnodes,
-      preferred_positions_source,
-    )
-  let root_rank_reorder_inputs : RootRankReorderInputs =
-    {
-      order_rank_keys_for_mincross,
-      order_groups_for_mincross,
-      order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
-      order_edge_tail_out_mincross:
-        mincross_edge_data.order_edge_tail_out_mincross,
-      order_edge_head_out_mincross:
-        mincross_edge_data.order_edge_head_out_mincross,
-      order_edge_tail_port_x_mincross:
-        mincross_edge_data.order_edge_tail_port_x_mincross,
-      order_edge_head_port_x_mincross:
-        mincross_edge_data.order_edge_head_port_x_mincross,
-      order_edge_tail_port_order_mincross:
-        mincross_edge_data.order_edge_tail_port_order_mincross,
-      order_edge_head_port_order_mincross:
-        mincross_edge_data.order_edge_head_port_order_mincross,
-      parents: mincross_edge_data.parents,
-      children: mincross_edge_data.children,
-      order_cluster_keys,
-      rank_same_groups,
-      rank_same_order,
-      edge_order: mincross_edge_data.edge_order,
-      order_node_order,
-      order_sizes_out,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      preferred_positions,
-      order_cluster_skeleton,
-      order_flat_constraints,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      graphviz_flip,
-    }
+  let order_rank_keys_for_mincross = collect_rank_keys(
+    order_groups_for_mincross,
+  )
+  let order_nodes_for_mincross = build_order_nodes_from_groups(
+    order_groups_for_mincross, order_rank_keys_for_mincross,
+  )
+  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  let mincross_edge_data = build_root_mincross_edge_bundle(
+    mincross_nodes, order_nodes_for_mincross, order_edges_out, order_edge_tail_out,
+    order_edge_head_out, order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order,
+    order_edge_head_port_order, order_ranks,
+  )
+  let preferred_positions = build_root_vnode_preferred_positions(
+    order_with_vnodes, preferred_positions_source,
+  )
+  let root_rank_reorder_inputs : RootRankReorderInputs = {
+    order_rank_keys_for_mincross,
+    order_groups_for_mincross,
+    order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
+    order_edge_tail_out_mincross: mincross_edge_data.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: mincross_edge_data.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross: mincross_edge_data.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: mincross_edge_data.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross: mincross_edge_data.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: mincross_edge_data.order_edge_head_port_order_mincross,
+    parents: mincross_edge_data.parents,
+    children: mincross_edge_data.children,
+    order_cluster_keys,
+    rank_same_groups,
+    rank_same_order,
+    edge_order: mincross_edge_data.edge_order,
+    order_node_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    preferred_positions,
+    order_cluster_skeleton,
+    order_flat_constraints,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    graphviz_flip,
+  }
   {
     order_rank_keys_for_mincross,
     mincross_nodes,
     order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
     order_edge_tail_out_mincross: mincross_edge_data.order_edge_tail_out_mincross,
     order_edge_head_out_mincross: mincross_edge_data.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross:
-      mincross_edge_data.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross:
-      mincross_edge_data.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      mincross_edge_data.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      mincross_edge_data.order_edge_head_port_order_mincross,
+    order_edge_tail_port_x_mincross: mincross_edge_data.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: mincross_edge_data.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross: mincross_edge_data.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: mincross_edge_data.order_edge_head_port_order_mincross,
     root_rank_reorder_inputs,
   }
 }
@@ -639,42 +565,37 @@ fn run_root_reorder_for_groups(
   reorder_inputs : RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> RootReorderPassResult {
-  let reorder_call_data =
-    build_root_rank_reorder_call_data(
-      order_groups_for_mincross,
-      reorder_inputs.order_edges_out,
-      reorder_inputs.order_edge_tail_out,
-      reorder_inputs.order_edge_head_out,
-      reorder_inputs.order_edge_tail_port_x,
-      reorder_inputs.order_edge_head_port_x,
-      reorder_inputs.order_edge_tail_port_order,
-      reorder_inputs.order_edge_head_port_order,
-      reorder_inputs.order_ranks,
-      reorder_inputs.order_cluster_keys,
-      reorder_inputs.rank_same_groups,
-      reorder_inputs.rank_same_order,
-      reorder_inputs.order_node_order,
-      reorder_inputs.order_sizes_out,
-      reorder_inputs.nodesep_pt,
-      reorder_inputs.has_edge_labels,
-      reorder_inputs.port_order_positions,
-      reorder_inputs.port_order_contrib,
-      reorder_inputs.vnode_order_keys_for_ordering,
-      reorder_inputs.order_with_vnodes,
-      reorder_inputs.order_cluster_skeleton,
-      reorder_inputs.order_flat_constraints,
-      reorder_inputs.graphviz_out_neighbors,
-      reorder_inputs.graphviz_in_neighbors,
-      reorder_inputs.graphviz_flip,
-    )
-  let ordered_mincross =
-    run_root_rank_reorder(
-      reorder_call_data.root_rank_reorder_inputs,
-    )
-  {
-    ordered_mincross,
-    reorder_call_data,
-  }
+  let reorder_call_data = build_root_rank_reorder_call_data(
+    order_groups_for_mincross,
+    reorder_inputs.order_edges_out,
+    reorder_inputs.order_edge_tail_out,
+    reorder_inputs.order_edge_head_out,
+    reorder_inputs.order_edge_tail_port_x,
+    reorder_inputs.order_edge_head_port_x,
+    reorder_inputs.order_edge_tail_port_order,
+    reorder_inputs.order_edge_head_port_order,
+    reorder_inputs.order_ranks,
+    reorder_inputs.order_cluster_keys,
+    reorder_inputs.rank_same_groups,
+    reorder_inputs.rank_same_order,
+    reorder_inputs.order_node_order,
+    reorder_inputs.order_sizes_out,
+    reorder_inputs.nodesep_pt,
+    reorder_inputs.has_edge_labels,
+    reorder_inputs.port_order_positions,
+    reorder_inputs.port_order_contrib,
+    reorder_inputs.vnode_order_keys_for_ordering,
+    reorder_inputs.order_with_vnodes,
+    reorder_inputs.order_cluster_skeleton,
+    reorder_inputs.order_flat_constraints,
+    reorder_inputs.graphviz_out_neighbors,
+    reorder_inputs.graphviz_in_neighbors,
+    reorder_inputs.graphviz_flip,
+  )
+  let ordered_mincross = run_root_rank_reorder(
+    reorder_call_data.root_rank_reorder_inputs,
+  )
+  { ordered_mincross, reorder_call_data }
 }
 
 ///|
@@ -688,19 +609,16 @@ fn resolve_root_mincross_input_groups(
   order_cluster_skeleton : Map[String, Bool],
   order_groups_override : Map[Int, Array[String]]?,
 ) -> Map[Int, Array[String]] {
-  let order_groups_for_mincross_base =
-    if !order_with_clusters {
-      seeded_groups
-    } else {
-      // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
-      // nodes; cluster-internal ordering stays in cluster-local build_ranks
-      // passes.
-      filter_root_mincross_seeded_groups_for_clusters(
-        seeded_groups,
-        order_cluster_keys,
-        order_cluster_skeleton,
-      )
-    }
+  let order_groups_for_mincross_base = if !order_with_clusters {
+    seeded_groups
+  } else {
+    // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
+    // nodes; cluster-internal ordering stays in cluster-local build_ranks
+    // passes.
+    filter_root_mincross_seeded_groups_for_clusters(
+      seeded_groups, order_cluster_keys, order_cluster_skeleton,
+    )
+  }
   match order_groups_override {
     Some(override_groups) => clone_rank_groups(override_groups)
     None => order_groups_for_mincross_base
@@ -724,11 +642,7 @@ fn finalize_root_mincross_ordered_groups(
     return ordered_mincross
   }
   merge_root_mincross_groups(
-    order_rank_keys,
-    seeded_groups,
-    ordered_mincross,
-    mincross_nodes,
-    order_cluster_keys,
+    order_rank_keys, seeded_groups, ordered_mincross, mincross_nodes, order_cluster_keys,
     order_cluster_skeleton,
   )
 }
@@ -741,29 +655,25 @@ fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
   order_groups_override : Map[Int, Array[String]]?,
 ) -> RootMincrossReorderResult {
-  let order_groups_for_mincross =
-    resolve_root_mincross_input_groups(
-      inputs.order_with_clusters,
-      inputs.seeded_groups,
-      inputs.order_cluster_keys,
-      inputs.order_cluster_skeleton,
-      order_groups_override,
-    )
-  let pass_result =
-    run_root_reorder_for_groups(
-      inputs,
-      order_groups_for_mincross,
-    )
-  let ordered =
-    finalize_root_mincross_ordered_groups(
-      inputs.order_with_clusters,
-      inputs.order_rank_keys,
-      inputs.seeded_groups,
-      pass_result.ordered_mincross,
-      pass_result.reorder_call_data.mincross_nodes,
-      inputs.order_cluster_keys,
-      inputs.order_cluster_skeleton,
-    )
+  let order_groups_for_mincross = resolve_root_mincross_input_groups(
+    inputs.order_with_clusters,
+    inputs.seeded_groups,
+    inputs.order_cluster_keys,
+    inputs.order_cluster_skeleton,
+    order_groups_override,
+  )
+  let pass_result = run_root_reorder_for_groups(
+    inputs, order_groups_for_mincross,
+  )
+  let ordered = finalize_root_mincross_ordered_groups(
+    inputs.order_with_clusters,
+    inputs.order_rank_keys,
+    inputs.seeded_groups,
+    pass_result.ordered_mincross,
+    pass_result.reorder_call_data.mincross_nodes,
+    inputs.order_cluster_keys,
+    inputs.order_cluster_skeleton,
+  )
   {
     order_groups_for_mincross,
     ordered,
@@ -780,13 +690,9 @@ fn run_root_mincross_reorder_with_pass0_capture(
   order_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootMincrossReorderResult {
-  let result =
-    run_with_pass0_flat_seed_capture(() =>
-      run_root_mincross_reorder(
-        inputs,
-        order_groups_override,
-      )
-    )
+  let result = run_with_pass0_flat_seed_capture(() => {
+    run_root_mincross_reorder(inputs, order_groups_override)
+  })
   capture_call(result, inputs)
   result
 }
@@ -811,16 +717,12 @@ fn run_root_and_cluster_ranks_with_pass0_capture(
   root_and_cluster_inputs : RootAndClusterRanksInputs,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
-  let root_reorder_result =
-    run_root_mincross_reorder_with_pass0_capture(
-      root_mincross_reorder_inputs,
-      root_and_cluster_inputs.root_groups_override,
-      capture_call,
-    )
-  run_root_and_cluster_ranks(
-    root_and_cluster_inputs,
-    root_reorder_result,
+  let root_reorder_result = run_root_mincross_reorder_with_pass0_capture(
+    root_mincross_reorder_inputs,
+    root_and_cluster_inputs.root_groups_override,
+    capture_call,
   )
+  run_root_and_cluster_ranks(root_and_cluster_inputs, root_reorder_result)
 }
 
 ///|
@@ -833,66 +735,49 @@ fn run_root_and_cluster_ranks_stage_from_sources(
   root_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
-  let root_mincross_reorder_inputs =
-    build_root_mincross_reorder_inputs_from_stage_sources(sources)
+  let root_mincross_reorder_inputs = build_root_mincross_reorder_inputs_from_stage_sources(
+    sources,
+  )
   let root_and_cluster_inputs : RootAndClusterRanksInputs = {
-    order_with_vnodes:
-      sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
-    graphviz_flip:
-      sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
+    order_with_vnodes: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
+    graphviz_flip: sources.root_rank_order_phase_base_sources.reorder_setup.graphviz_flip,
     cluster_keys: sources.root_rank_order_phase_base_sources.cluster_keys,
     root_groups_override,
   }
-  let root_cluster_stage =
-    run_root_and_cluster_ranks_with_pass0_capture(
-      root_mincross_reorder_inputs,
-      root_and_cluster_inputs,
-      capture_call,
-    )
-  run_cluster_local_rank_replay_after_root_from_sources(
-    {
-      order_with_clusters:
-        sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
-      groups: root_cluster_stage.ordered,
-      graph: sources.graph,
-      cluster_order: sources.cluster_order,
-      cluster_parents: sources.cluster_parents,
-      rank_same_groups:
-        sources.root_rank_order_phase_base_sources.rank_same_groups,
-      rank_same_order:
-        sources.root_rank_order_phase_base_sources.rank_same_order,
-      intercluster_keys: sources.intercluster_keys,
-      flat_constraints: sources.flat_constraints,
-      node_order: sources.reorder_context.order_node_order,
-      order_edges: sources.materialized.order_edges_out_unmapped,
-      order_edge_tail: sources.materialized.order_edge_tail_out_unmapped,
-      order_edge_head: sources.materialized.order_edge_head_out_unmapped,
-      order_edge_tail_port_x:
-        sources.materialized.order_edge_tail_port_x_unmapped,
-      order_edge_head_port_x:
-        sources.materialized.order_edge_head_port_x_unmapped,
-      order_edge_tail_port_order:
-        sources.materialized.order_edge_tail_port_order_unmapped,
-      order_edge_head_port_order:
-        sources.materialized.order_edge_head_port_order_unmapped,
-      graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
-      graphviz_in_neighbors: sources.materialized.graphviz_in_neighbors,
-      ranks: sources.ranks,
-      order_sizes: sources.root_rank_order_phase_base_sources.order_sizes_out,
-      nodesep_pt: sources.root_rank_order_phase_base_sources.nodesep_pt,
-      has_edge_labels:
-        sources.root_rank_order_phase_base_sources.has_edge_labels,
-      port_order_positions:
-        sources.root_rank_order_phase_base_sources.port_order_positions,
-      port_order_contrib:
-        sources.root_rank_order_phase_base_sources.port_order_contrib,
-      vnode_ranks: sources.vnode_ranks,
-      vnode_clusters: sources.vnode_clusters,
-      vnode_sizes: sources.vnode_sizes,
-      order_with_vnodes:
-        sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
-    },
+  let root_cluster_stage = run_root_and_cluster_ranks_with_pass0_capture(
+    root_mincross_reorder_inputs, root_and_cluster_inputs, capture_call,
   )
+  run_cluster_local_rank_replay_after_root_from_sources({
+    order_with_clusters: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
+    groups: root_cluster_stage.ordered,
+    graph: sources.graph,
+    cluster_order: sources.cluster_order,
+    cluster_parents: sources.cluster_parents,
+    rank_same_groups: sources.root_rank_order_phase_base_sources.rank_same_groups,
+    rank_same_order: sources.root_rank_order_phase_base_sources.rank_same_order,
+    intercluster_keys: sources.intercluster_keys,
+    flat_constraints: sources.flat_constraints,
+    node_order: sources.reorder_context.order_node_order,
+    order_edges: sources.materialized.order_edges_out_unmapped,
+    order_edge_tail: sources.materialized.order_edge_tail_out_unmapped,
+    order_edge_head: sources.materialized.order_edge_head_out_unmapped,
+    order_edge_tail_port_x: sources.materialized.order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x: sources.materialized.order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order: sources.materialized.order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order: sources.materialized.order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors: sources.materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: sources.materialized.graphviz_in_neighbors,
+    ranks: sources.ranks,
+    order_sizes: sources.root_rank_order_phase_base_sources.order_sizes_out,
+    nodesep_pt: sources.root_rank_order_phase_base_sources.nodesep_pt,
+    has_edge_labels: sources.root_rank_order_phase_base_sources.has_edge_labels,
+    port_order_positions: sources.root_rank_order_phase_base_sources.port_order_positions,
+    port_order_contrib: sources.root_rank_order_phase_base_sources.port_order_contrib,
+    vnode_ranks: sources.vnode_ranks,
+    vnode_clusters: sources.vnode_clusters,
+    vnode_sizes: sources.vnode_sizes,
+    order_with_vnodes: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
+  })
   root_cluster_stage
 }
 
@@ -967,29 +852,28 @@ fn build_clustered_root_phase_stage_sources(
   sources : ClusteredRootPhaseStageBuildSources,
 ) -> ClusteredRootPhaseStageSources {
   {
-    root_rank_order_phase_base_sources:
-      {
-        reorder_setup: sources.reorder_setup,
-        class2_data: sources.reorder_setup.class2_data,
-        order_rank_keys: sources.pre_root_stage.reorder_context.order_rank_keys,
-        order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
-        order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-        cluster_keys: sources.cluster_keys,
-        edge_vnodes: sources.edge_vnodes,
-        vnodes_by_rank: sources.vnodes_by_rank,
-        ranks: sources.ranks,
-        rank_same_groups: sources.rank_same_groups,
-        rank_same_order: sources.rank_same_order,
-        order_sizes_out: sources.pre_root_stage.order_sizes_out,
-        nodesep_pt: sources.nodesep_pt,
-        has_edge_labels: sources.has_edge_labels,
-        port_order_positions: sources.port_order_positions,
-        port_order_contrib: sources.port_order_contrib,
-        order_flat_constraints: sources.flat_constraints,
-      },
+    root_rank_order_phase_base_sources: {
+      reorder_setup: sources.reorder_setup,
+      class2_data: sources.reorder_setup.class2_data,
+      order_rank_keys: sources.pre_root_stage.reorder_context.order_rank_keys,
+      order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      cluster_keys: sources.cluster_keys,
+      edge_vnodes: sources.edge_vnodes,
+      vnodes_by_rank: sources.vnodes_by_rank,
+      ranks: sources.ranks,
+      rank_same_groups: sources.rank_same_groups,
+      rank_same_order: sources.rank_same_order,
+      order_sizes_out: sources.pre_root_stage.order_sizes_out,
+      nodesep_pt: sources.nodesep_pt,
+      has_edge_labels: sources.has_edge_labels,
+      port_order_positions: sources.port_order_positions,
+      port_order_contrib: sources.port_order_contrib,
+      order_flat_constraints: sources.flat_constraints,
+    },
     order_groups_for_root_phase: sources.pre_root_stage.order_groups,
     reorder_context: sources.pre_root_stage.reorder_context,
     materialized: sources.pre_root_stage.materialized,
@@ -1015,38 +899,27 @@ pub fn run_clustered_root_phase_stage(
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> ClusteredRootPhaseStageOutput {
   let sources = build_clustered_root_phase_stage_sources(build_sources)
-  let root_rank_order_phase_base =
-    build_root_rank_order_phase_base_from_sources(
-      sources.root_rank_order_phase_base_sources,
-    )
-  let (root_reorder_output, root_rank_order_phase_output) =
-    run_root_reorder_and_rank_order_from_base(
-      root_rank_order_phase_base,
-      sources.order_groups_for_root_phase,
-    )
-  let root_groups_override_for_root_pass =
-    if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
-      None
-    } else {
-      Some(clone_rank_groups(root_rank_order_phase_output.ordered_root))
-    }
-  let root_tail_order_override =
-    if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
-      None
-    } else {
-      Some(build_root_tail_order_override(root_reorder_output))
-    }
-  let root_cluster_stage =
-    run_root_and_cluster_ranks_stage_from_sources(
-      sources,
-      root_groups_override_for_root_pass,
-      capture_call,
-    )
-  {
-    root_cluster_stage,
-    root_tail_order_override: root_tail_order_override,
+  let root_rank_order_phase_base = build_root_rank_order_phase_base_from_sources(
+    sources.root_rank_order_phase_base_sources,
+  )
+  let (root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_base(
     root_rank_order_phase_base,
+    sources.order_groups_for_root_phase,
+  )
+  let root_groups_override_for_root_pass = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
+    None
+  } else {
+    Some(clone_rank_groups(root_rank_order_phase_output.ordered_root))
   }
+  let root_tail_order_override = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
+    None
+  } else {
+    Some(build_root_tail_order_override(root_reorder_output))
+  }
+  let root_cluster_stage = run_root_and_cluster_ranks_stage_from_sources(
+    sources, root_groups_override_for_root_pass, capture_call,
+  )
+  { root_cluster_stage, root_tail_order_override, root_rank_order_phase_base }
 }
 
 ///|
@@ -1074,10 +947,7 @@ fn resolve_root_phase_ordered_groups(
   match root_groups_override {
     Some(override_groups) =>
       apply_root_groups_override(
-        root_ordered_groups,
-        override_groups,
-        cluster_keys,
-        graphviz_flip,
+        root_ordered_groups, override_groups, cluster_keys, graphviz_flip,
       )
     None => root_ordered_groups
   }
@@ -1093,24 +963,18 @@ fn run_root_and_cluster_ranks(
 ) -> RootAndClusterRanksOutput {
   let order_groups_for_mincross = root_reorder_result.order_groups_for_mincross
   let root_ordered_groups = root_reorder_result.ordered
-  let ordered =
-    resolve_root_phase_ordered_groups(
-      root_ordered_groups,
-      inputs.root_groups_override,
-      inputs.cluster_keys,
-      inputs.graphviz_flip,
-    )
-  let ordered_with_vnodes =
-    if !inputs.order_with_vnodes {
-      Map::new()
-    } else {
-      ordered
-    }
-  {
-    order_groups_for_mincross,
-    ordered,
-    ordered_with_vnodes,
+  let ordered = resolve_root_phase_ordered_groups(
+    root_ordered_groups,
+    inputs.root_groups_override,
+    inputs.cluster_keys,
+    inputs.graphviz_flip,
+  )
+  let ordered_with_vnodes = if !inputs.order_with_vnodes {
+    Map::new()
+  } else {
+    ordered
   }
+  { order_groups_for_mincross, ordered, ordered_with_vnodes }
 }
 
 ///|
@@ -1122,22 +986,16 @@ fn build_rank_attached_by_skeleton(
   order_cluster_skeleton : Map[String, Bool],
   mincross_nodes : Map[String, Bool],
 ) -> Map[String, Array[String]] {
-  let skeleton_for_cluster =
-    build_skeleton_for_clusters(
-      names,
-      (name) =>
-        if order_cluster_skeleton.get(name) == Some(true) {
-          cluster_key_or_empty(order_cluster_keys, name)
-        } else {
-          ""
-        },
-    )
-  build_attached_by_skeleton(
-    names,
-    order_cluster_keys,
-    skeleton_for_cluster,
-    (name) => mincross_nodes.get(name) is Some(_),
-  )
+  let skeleton_for_cluster = build_skeleton_for_clusters(names, name => {
+    if order_cluster_skeleton.get(name) == Some(true) {
+      cluster_key_or_empty(order_cluster_keys, name)
+    } else {
+      ""
+    }
+  })
+  build_attached_by_skeleton(names, order_cluster_keys, skeleton_for_cluster, name => {
+    mincross_nodes.get(name) is Some(_)
+  })
 }
 
 ///|
@@ -1177,10 +1035,7 @@ fn merge_rank_with_attached_skeleton_replacements(
     seen[replacement] = true
     if order_cluster_skeleton.get(replacement) == Some(true) {
       append_attached_by_skeleton(
-        next_names,
-        seen,
-        attached_by_skeleton,
-        replacement,
+        next_names, seen, attached_by_skeleton, replacement,
       )
     }
   }
@@ -1273,8 +1128,10 @@ fn should_merge_root_positions(
     order_cluster_skeleton.get(replacements[0]) == Some(true) {
     return false
   }
-  let attached_count =
-    attached_by_skeleton.get(replacements[1]).unwrap_or_default().length()
+  let attached_count = attached_by_skeleton
+    .get(replacements[1])
+    .unwrap_or_default()
+    .length()
   attached_count == 1
 }
 
@@ -1321,23 +1178,19 @@ fn rebuild_root_override_names(
 ) -> Array[String] {
   // Graphviz parity: root-override skeleton checks treat non-skeleton names as
   // empty cluster keys when rebuilding attached-cluster bundles.
-  let skeleton_cluster_or_empty = (name : String) =>
+  let skeleton_cluster_or_empty = (name : String) => {
     @cluster_identity.cluster_key_from_skeleton(name).unwrap_or_default()
+  }
   // Graphviz parity: any parsed skeleton cluster key is a skeleton marker.
-  let is_root_override_skeleton_name = (name : String) =>
+  let is_root_override_skeleton_name = (name : String) => {
     skeleton_cluster_or_empty(name) != ""
-  let skeleton_for_cluster =
-    build_skeleton_for_clusters(
-      rank_names,
-      skeleton_cluster_or_empty,
-    )
-  let attached_by_skeleton =
-    build_attached_by_skeleton(
-      rank_names,
-      cluster_keys,
-      skeleton_for_cluster,
-      is_root_override_skeleton_name,
-    )
+  }
+  let skeleton_for_cluster = build_skeleton_for_clusters(
+    rank_names, skeleton_cluster_or_empty,
+  )
+  let attached_by_skeleton = build_attached_by_skeleton(
+    rank_names, cluster_keys, skeleton_for_cluster, is_root_override_skeleton_name,
+  )
   let next_names : Array[String] = []
   let seen : Map[String, Bool] = Map::new()
   for name in rank_names {
@@ -1348,12 +1201,7 @@ fn rebuild_root_override_names(
     if is_skeleton {
       next_names.push(name)
       seen[name] = true
-      append_attached_by_skeleton(
-        next_names,
-        seen,
-        attached_by_skeleton,
-        name,
-      )
+      append_attached_by_skeleton(next_names, seen, attached_by_skeleton, name)
       continue
     }
     let cluster = cluster_key_or_empty(cluster_keys, name)
@@ -1382,11 +1230,7 @@ fn build_root_override_rank_names(
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
 ) -> Array[String] {
-  let rank_names =
-    reorder_names_by_override(
-      names,
-      override_names,
-    )
+  let rank_names = reorder_names_by_override(names, override_names)
   if !graphviz_flip {
     return rank_names
   }
@@ -1407,13 +1251,9 @@ fn apply_root_groups_override(
   for rank, override_names in override_groups {
     match reordered.get(rank) {
       Some(names) =>
-        reordered[rank] =
-          build_root_override_rank_names(
-            names,
-            override_names,
-            cluster_keys,
-            graphviz_flip,
-          )
+        reordered[rank] = build_root_override_rank_names(
+          names, override_names, cluster_keys, graphviz_flip,
+        )
       None => ()
     }
   }
@@ -1528,18 +1368,12 @@ fn build_component_traversal_starts(
   let start_nodes = order_nodes.copy()
   if start_nodes.length() > 1 {
     start_nodes.sort_by((a, b) => {
-      let a_idx =
-        resolve_root_component_order_index(
-          a,
-          order_node_order,
-          fallback_order,
-        )
-      let b_idx =
-        resolve_root_component_order_index(
-          b,
-          order_node_order,
-          fallback_order,
-        )
+      let a_idx = resolve_root_component_order_index(
+        a, order_node_order, fallback_order,
+      )
+      let b_idx = resolve_root_component_order_index(
+        b, order_node_order, fallback_order,
+      )
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -1555,8 +1389,11 @@ fn build_component_traversal_starts(
       preferred_start_nodes.push(name)
     }
   }
-  let traversal_starts =
-    if preferred_start_nodes.length() > 0 { preferred_start_nodes } else { start_nodes }
+  let traversal_starts = if preferred_start_nodes.length() > 0 {
+    preferred_start_nodes
+  } else {
+    start_nodes
+  }
   { start_nodes, traversal_starts }
 }
 
@@ -1571,24 +1408,15 @@ fn build_component_traversal_adjacency(
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
 ) -> ComponentTraversalAdjacency {
-  let out_neighbors =
-    filter_component_neighbor_map(
-      order_nodes,
-      node_set,
-      graphviz_out_neighbors,
-    )
-  let in_neighbors =
-    filter_component_neighbor_map(
-      order_nodes,
-      node_set,
-      graphviz_in_neighbors,
-    )
-  let flat_adjacency =
-    build_flat_constraint_adjacency(
-      order_nodes,
-      node_set,
-      flat_constraints,
-    )
+  let out_neighbors = filter_component_neighbor_map(
+    order_nodes, node_set, graphviz_out_neighbors,
+  )
+  let in_neighbors = filter_component_neighbor_map(
+    order_nodes, node_set, graphviz_in_neighbors,
+  )
+  let flat_adjacency = build_flat_constraint_adjacency(
+    order_nodes, node_set, flat_constraints,
+  )
   {
     out_neighbors,
     in_neighbors,
@@ -1680,24 +1508,14 @@ fn collect_noncluster_components(
     return []
   }
   let node_set = build_node_membership_set(order_nodes)
-  let traversal_starts =
-    build_component_traversal_starts(
-      order_nodes,
-      order_node_order,
-    )
-  let adjacency =
-    build_component_traversal_adjacency(
-      order_nodes,
-      node_set,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      flat_constraints,
-    )
+  let traversal_starts = build_component_traversal_starts(
+    order_nodes, order_node_order,
+  )
+  let adjacency = build_component_traversal_adjacency(
+    order_nodes, node_set, graphviz_out_neighbors, graphviz_in_neighbors, flat_constraints,
+  )
   collect_components_from_traversal(
-    order_nodes,
-    node_set,
-    traversal_starts,
-    adjacency,
+    order_nodes, node_set, traversal_starts, adjacency,
   )
 }
 
@@ -1743,8 +1561,7 @@ fn filter_component_port_order_contrib(
   component_set : Map[String, Bool],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Array[(String, Double)]] {
-  let component_port_order_contrib : Map[String, Array[(String, Double)]] =
-    Map::new()
+  let component_port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   for name, entries in port_order_contrib {
     if component_set.get(name) is None {
       continue
@@ -1776,7 +1593,8 @@ fn filter_component_flat_constraints(
         if tail == "" || head == "" {
           continue
         }
-        if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
+        if component_set.get(tail) is Some(_) &&
+          component_set.get(head) is Some(_) {
           component_flat_constraints[key] = true
         }
       }
@@ -1862,84 +1680,55 @@ fn build_root_component_projection(
   port_order_contrib : Map[String, Array[(String, Double)]],
   order_flat_constraints : Map[String, Bool],
 ) -> RootComponentProjection {
-  let component_groups =
-    filter_component_rank_groups(
-      order_rank_keys_for_mincross,
-      order_groups_for_mincross,
-      component_set,
-    )
-  let component_edges_output =
-    collect_mincross_order_edges(
-      component_set,
-      order_edges_out_mincross,
-      order_edge_tail_out_mincross,
-      order_edge_head_out_mincross,
-      order_edge_tail_port_x_mincross,
-      order_edge_head_port_x_mincross,
-      order_edge_tail_port_order_mincross,
-      order_edge_head_port_order_mincross,
-    )
+  let component_groups = filter_component_rank_groups(
+    order_rank_keys_for_mincross, order_groups_for_mincross, component_set,
+  )
+  let component_edges_output = collect_mincross_order_edges(
+    component_set, order_edges_out_mincross, order_edge_tail_out_mincross, order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross, order_edge_head_port_x_mincross, order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+  )
   // Graphviz parity: component-local parent/child + Graphviz traversal maps
   // are all filtered through one component-set projection.
-  let component_parents =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      parents,
-    )
-  let component_children =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      children,
-    )
-  let component_graphviz_out_neighbors =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      graphviz_out_neighbors,
-    )
-  let component_graphviz_in_neighbors =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      graphviz_in_neighbors,
-    )
+  let component_parents = filter_component_neighbor_map(
+    component_nodes, component_set, parents,
+  )
+  let component_children = filter_component_neighbor_map(
+    component_nodes, component_set, children,
+  )
+  let component_graphviz_out_neighbors = filter_component_neighbor_map(
+    component_nodes, component_set, graphviz_out_neighbors,
+  )
+  let component_graphviz_in_neighbors = filter_component_neighbor_map(
+    component_nodes, component_set, graphviz_in_neighbors,
+  )
   // Graphviz parity: component-local node-position hints are passed to
   // mincross only for nodes belonging to the active connected component.
-  let component_port_order_positions =
-    filter_component_positions(component_set, port_order_positions)
-  let component_preferred_positions =
-    filter_component_positions(component_set, preferred_positions)
+  let component_port_order_positions = filter_component_positions(
+    component_set, port_order_positions,
+  )
+  let component_preferred_positions = filter_component_positions(
+    component_set, preferred_positions,
+  )
   // Graphviz parity: component-local port-order contributor lists drop
   // endpoints outside the active connected component before mincross.
-  let component_port_order_contrib =
-    filter_component_port_order_contrib(
-      component_set,
-      port_order_contrib,
-    )
+  let component_port_order_contrib = filter_component_port_order_contrib(
+    component_set, port_order_contrib,
+  )
   // Graphviz parity: component-local flat constraints are forwarded to
   // mincross only when both endpoints belong to the active component.
-  let component_flat_constraints =
-    filter_component_flat_constraints(
-      component_set,
-      order_flat_constraints,
-    )
+  let component_flat_constraints = filter_component_flat_constraints(
+    component_set, order_flat_constraints,
+  )
   {
     order_groups_for_mincross: component_groups,
     order_edges_out_mincross: component_edges_output.order_edges_out_mincross,
-    order_edge_tail_out_mincross:
-      component_edges_output.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross:
-      component_edges_output.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross:
-      component_edges_output.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross:
-      component_edges_output.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      component_edges_output.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      component_edges_output.order_edge_head_port_order_mincross,
+    order_edge_tail_out_mincross: component_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: component_edges_output.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross: component_edges_output.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: component_edges_output.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross: component_edges_output.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: component_edges_output.order_edge_head_port_order_mincross,
     parents: component_parents,
     children: component_children,
     graphviz_out_neighbors: component_graphviz_out_neighbors,
@@ -1960,28 +1749,27 @@ fn build_root_component_reorder_inputs(
   component_set : Map[String, Bool],
   root_inputs : RootRankReorderInputs,
 ) -> RootRankReorderInputs {
-  let projection =
-    build_root_component_projection(
-      component_nodes,
-      component_set,
-      root_inputs.order_rank_keys_for_mincross,
-      root_inputs.order_groups_for_mincross,
-      root_inputs.order_edges_out_mincross,
-      root_inputs.order_edge_tail_out_mincross,
-      root_inputs.order_edge_head_out_mincross,
-      root_inputs.order_edge_tail_port_x_mincross,
-      root_inputs.order_edge_head_port_x_mincross,
-      root_inputs.order_edge_tail_port_order_mincross,
-      root_inputs.order_edge_head_port_order_mincross,
-      root_inputs.parents,
-      root_inputs.children,
-      root_inputs.graphviz_out_neighbors,
-      root_inputs.graphviz_in_neighbors,
-      root_inputs.port_order_positions,
-      root_inputs.preferred_positions,
-      root_inputs.port_order_contrib,
-      root_inputs.order_flat_constraints,
-    )
+  let projection = build_root_component_projection(
+    component_nodes,
+    component_set,
+    root_inputs.order_rank_keys_for_mincross,
+    root_inputs.order_groups_for_mincross,
+    root_inputs.order_edges_out_mincross,
+    root_inputs.order_edge_tail_out_mincross,
+    root_inputs.order_edge_head_out_mincross,
+    root_inputs.order_edge_tail_port_x_mincross,
+    root_inputs.order_edge_head_port_x_mincross,
+    root_inputs.order_edge_tail_port_order_mincross,
+    root_inputs.order_edge_head_port_order_mincross,
+    root_inputs.parents,
+    root_inputs.children,
+    root_inputs.graphviz_out_neighbors,
+    root_inputs.graphviz_in_neighbors,
+    root_inputs.port_order_positions,
+    root_inputs.preferred_positions,
+    root_inputs.port_order_contrib,
+    root_inputs.order_flat_constraints,
+  )
   {
     order_rank_keys_for_mincross: root_inputs.order_rank_keys_for_mincross,
     order_groups_for_mincross: projection.order_groups_for_mincross,
@@ -1990,10 +1778,8 @@ fn build_root_component_reorder_inputs(
     order_edge_head_out_mincross: projection.order_edge_head_out_mincross,
     order_edge_tail_port_x_mincross: projection.order_edge_tail_port_x_mincross,
     order_edge_head_port_x_mincross: projection.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      projection.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      projection.order_edge_head_port_order_mincross,
+    order_edge_tail_port_order_mincross: projection.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: projection.order_edge_head_port_order_mincross,
     parents: projection.parents,
     children: projection.children,
     order_cluster_keys: root_inputs.order_cluster_keys,
@@ -2015,6 +1801,7 @@ fn build_root_component_reorder_inputs(
   }
 }
 
+///|
 fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
   for _name, cluster in order_cluster_keys {
     if cluster != "" {
@@ -2084,22 +1871,14 @@ fn run_componentwise_root_rank_reorder(
   }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
-    let reorder_call_inputs =
-      build_root_component_reorder_inputs(
-        component_nodes,
-        component_set,
-        inputs,
-      )
-    let ordered_component =
-      run_root_rank_reorder_call(
-        reorder_call_inputs,
-        root_graphviz_flip,
-        coalesce_parallel,
-      )
+    let reorder_call_inputs = build_root_component_reorder_inputs(
+      component_nodes, component_set, inputs,
+    )
+    let ordered_component = run_root_rank_reorder_call(
+      reorder_call_inputs, root_graphviz_flip, coalesce_parallel,
+    )
     append_component_rank_groups(
-      order_rank_keys_for_mincross,
-      merged,
-      ordered_component,
+      order_rank_keys_for_mincross, merged, ordered_component,
     )
   }
   merged
@@ -2112,24 +1891,20 @@ fn run_componentwise_root_rank_reorder(
 fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
 ) -> Map[Int, Array[String]] {
-  let (components, root_graphviz_flip) =
-    build_root_component_runtime_plan(
-      inputs.order_cluster_keys,
-      inputs.graphviz_flip,
-      inputs.order_rank_keys_for_mincross,
-      inputs.order_groups_for_mincross,
-      inputs.order_node_order,
-      inputs.graphviz_out_neighbors,
-      inputs.graphviz_in_neighbors,
-      inputs.order_flat_constraints,
-    )
-  let coalesce_parallel =
-    @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
+  let (components, root_graphviz_flip) = build_root_component_runtime_plan(
+    inputs.order_cluster_keys,
+    inputs.graphviz_flip,
+    inputs.order_rank_keys_for_mincross,
+    inputs.order_groups_for_mincross,
+    inputs.order_node_order,
+    inputs.graphviz_out_neighbors,
+    inputs.graphviz_in_neighbors,
+    inputs.order_flat_constraints,
+  )
+  let coalesce_parallel = @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   if components.length() <= 1 {
     return run_root_rank_reorder_call(
-      inputs,
-      root_graphviz_flip,
-      coalesce_parallel,
+      inputs, root_graphviz_flip, coalesce_parallel,
     )
   }
   run_componentwise_root_rank_reorder(
@@ -2158,24 +1933,14 @@ fn build_root_component_runtime_plan(
   let has_cluster_keys = has_non_empty_cluster_keys(order_cluster_keys)
   // Graphviz parity: cluster-aware root mincross runs in internal TB
   // coordinates (like mincross_clust subgraph passes), so flip is off.
-  let components =
-    if has_cluster_keys {
-      []
-    } else {
-      collect_noncluster_components(
-        order_rank_keys_for_mincross,
-        order_groups_for_mincross,
-        order_node_order,
-        graphviz_out_neighbors,
-        graphviz_in_neighbors,
-        order_flat_constraints,
-      )
-    }
-  let root_graphviz_flip =
-    if has_cluster_keys {
-      false
-    } else {
-      graphviz_flip
-    }
+  let components = if has_cluster_keys {
+    []
+  } else {
+    collect_noncluster_components(
+      order_rank_keys_for_mincross, order_groups_for_mincross, order_node_order,
+      graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints,
+    )
+  }
+  let root_graphviz_flip = if has_cluster_keys { false } else { graphviz_flip }
   (components, root_graphviz_flip)
 }

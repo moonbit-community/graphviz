@@ -34,8 +34,12 @@ test "build_edge_index_for_names ignores same-rank edges" {
   ranks["b"] = 1
   ranks["c"] = 1
 
-  let edge_index =
-    build_edge_index_for_names(["a", "b", "c"], ["a", "b", "c"], ["b", "c", "a"], ranks)
+  let edge_index = build_edge_index_for_names(
+    ["a", "b", "c"],
+    ["a", "b", "c"],
+    ["b", "c", "a"],
+    ranks,
+  )
 
   assert_eq(edge_index.parents.get("a"), Some(["c"]))
   assert_eq(edge_index.parents.get("b"), Some(["a"]))
@@ -57,60 +61,18 @@ test "add_order_edge appends one directed order edge with metadata" {
   let edge_head_port_order : Array[Double] = []
 
   add_order_edge(
-    graph,
-    node_map,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    "a",
-    "a",
-    7,
-    true,
-    1.0,
-    2.0,
-    0.1,
+    graph, node_map, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+    edge_tail_port_order, edge_head_port_order, "a", "a", 7, true, 1.0, 2.0, 0.1,
     0.9,
   )
   add_order_edge(
-    graph,
-    node_map,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    "missing",
-    "b",
-    7,
-    true,
-    1.0,
-    2.0,
-    0.1,
-    0.9,
+    graph, node_map, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+    edge_tail_port_order, edge_head_port_order, "missing", "b", 7, true, 1.0, 2.0,
+    0.1, 0.9,
   )
   add_order_edge(
-    graph,
-    node_map,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    "a",
-    "b",
-    7,
-    false,
-    1.0,
-    2.0,
-    0.1,
+    graph, node_map, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+    edge_tail_port_order, edge_head_port_order, "a", "b", 7, false, 1.0, 2.0, 0.1,
     0.9,
   )
 

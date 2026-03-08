@@ -56,44 +56,37 @@ test "build_ordering_edge_snapshot_entries projects remapped endpoints and defau
   let ac = graph.edge(a, c)
   let penalties = make_snapshot_penalty_lookup([(ab, 7), (ac, 9)])
 
-  let entries =
-    build_ordering_edge_snapshot_entries(
-      {
-        edges_out: [ab, ac],
-        edge_tail_out: ["tail-ab", "tail-ac"],
-        edge_head_out: ["head-ab", "head-ac"],
-        edge_tail_port_x: [1.5],
-        edge_head_port_x: [2.5, 3.5],
-        edge_tail_port_order: [4.5],
-        edge_head_port_order: [],
-        edge_xpenalty_for: (edge) => penalties.get(edge.id()).unwrap_or_default(),
-      },
-    )
+  let entries = build_ordering_edge_snapshot_entries({
+    edges_out: [ab, ac],
+    edge_tail_out: ["tail-ab", "tail-ac"],
+    edge_head_out: ["head-ab", "head-ac"],
+    edge_tail_port_x: [1.5],
+    edge_head_port_x: [2.5, 3.5],
+    edge_tail_port_order: [4.5],
+    edge_head_port_order: [],
+    edge_xpenalty_for: edge => penalties.get(edge.id()).unwrap_or_default(),
+  })
 
-  assert_snapshot_entries_eq(
-    "projected entries",
-    entries,
-    [
-      {
-        tail: "tail-ab",
-        head: "head-ab",
-        xpenalty: 7,
-        tail_port_x: 1.5,
-        head_port_x: 2.5,
-        tail_port_order: 4.5,
-        head_port_order: 0.0,
-      },
-      {
-        tail: "tail-ac",
-        head: "head-ac",
-        xpenalty: 9,
-        tail_port_x: 0.0,
-        head_port_x: 3.5,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      },
-    ],
-  )
+  assert_snapshot_entries_eq("projected entries", entries, [
+    {
+      tail: "tail-ab",
+      head: "head-ab",
+      xpenalty: 7,
+      tail_port_x: 1.5,
+      head_port_x: 2.5,
+      tail_port_order: 4.5,
+      head_port_order: 0.0,
+    },
+    {
+      tail: "tail-ac",
+      head: "head-ac",
+      xpenalty: 9,
+      tail_port_x: 0.0,
+      head_port_x: 3.5,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    },
+  ])
 }
 
 ///|
@@ -148,48 +141,44 @@ test "coalesce_ordering_edge_snapshot_entries preserves first tail order and onl
 
   let coalesced = coalesce_ordering_edge_snapshot_entries(entries)
 
-  assert_snapshot_entries_eq(
-    "coalesced entries",
-    coalesced,
-    [
-      {
-        tail: "b",
-        head: "x",
-        xpenalty: 3,
-        tail_port_x: 0.0,
-        head_port_x: 0.0,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      },
-      {
-        tail: "b",
-        head: "x",
-        xpenalty: 0,
-        tail_port_x: 4.0,
-        head_port_x: 5.0,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      },
-      {
-        tail: "b",
-        head: "y",
-        xpenalty: 4,
-        tail_port_x: 0.0,
-        head_port_x: 0.0,
-        tail_port_order: 1.0,
-        head_port_order: 2.0,
-      },
-      {
-        tail: "a",
-        head: "z",
-        xpenalty: 5,
-        tail_port_x: 0.0,
-        head_port_x: 0.0,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      },
-    ],
-  )
+  assert_snapshot_entries_eq("coalesced entries", coalesced, [
+    {
+      tail: "b",
+      head: "x",
+      xpenalty: 3,
+      tail_port_x: 0.0,
+      head_port_x: 0.0,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    },
+    {
+      tail: "b",
+      head: "x",
+      xpenalty: 0,
+      tail_port_x: 4.0,
+      head_port_x: 5.0,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    },
+    {
+      tail: "b",
+      head: "y",
+      xpenalty: 4,
+      tail_port_x: 0.0,
+      head_port_x: 0.0,
+      tail_port_order: 1.0,
+      head_port_order: 2.0,
+    },
+    {
+      tail: "a",
+      head: "z",
+      xpenalty: 5,
+      tail_port_x: 0.0,
+      head_port_x: 0.0,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    },
+  ])
 }
 
 ///|
@@ -212,23 +201,20 @@ test "build_root_mincross_input_snapshot clones overlays and coalesces duplicate
   let cluster_skeleton : Map[String, Bool] = Map::new()
   cluster_skeleton["cluster_skel"] = true
 
-  let snapshot =
-    build_root_mincross_input_snapshot(
-      {
-        rank_keys,
-        groups,
-        edges_out: [ab1, ab2, ac],
-        edge_tail_out: ["a", "a", "a"],
-        edge_head_out: ["b", "b", "c"],
-        edge_tail_port_x: [0.0, 8.0, 1.0],
-        edge_head_port_x: [0.0, 9.0, 2.0],
-        edge_tail_port_order: [0.0, 0.0, 1.0],
-        edge_head_port_order: [0.0, 0.0, 2.0],
-        cluster_keys,
-        cluster_skeleton,
-        edge_xpenalty_for: (edge) => penalties.get(edge.id()).unwrap_or_default(),
-      },
-    )
+  let snapshot = build_root_mincross_input_snapshot({
+    rank_keys,
+    groups,
+    edges_out: [ab1, ab2, ac],
+    edge_tail_out: ["a", "a", "a"],
+    edge_head_out: ["b", "b", "c"],
+    edge_tail_port_x: [0.0, 8.0, 1.0],
+    edge_head_port_x: [0.0, 9.0, 2.0],
+    edge_tail_port_order: [0.0, 0.0, 1.0],
+    edge_head_port_order: [0.0, 0.0, 2.0],
+    cluster_keys,
+    cluster_skeleton,
+    edge_xpenalty_for: edge => penalties.get(edge.id()).unwrap_or_default(),
+  })
 
   rank_keys.push(99)
   match groups.get(0) {
@@ -242,30 +228,26 @@ test "build_root_mincross_input_snapshot clones overlays and coalesces duplicate
   assert_eq(snapshot.groups.get(0), Some(["a", "cluster_skel"]))
   assert_eq(snapshot.cluster_keys.get("cluster_skel"), Some("cluster_0"))
   assert_eq(snapshot.cluster_skeleton.get("cluster_skel"), Some(true))
-  assert_snapshot_entries_eq(
-    "root snapshot edges",
-    snapshot.edges,
-    [
-      {
-        tail: "a",
-        head: "b",
-        xpenalty: 5,
-        tail_port_x: 0.0,
-        head_port_x: 0.0,
-        tail_port_order: 0.0,
-        head_port_order: 0.0,
-      },
-      {
-        tail: "a",
-        head: "c",
-        xpenalty: 5,
-        tail_port_x: 1.0,
-        head_port_x: 2.0,
-        tail_port_order: 1.0,
-        head_port_order: 2.0,
-      },
-    ],
-  )
+  assert_snapshot_entries_eq("root snapshot edges", snapshot.edges, [
+    {
+      tail: "a",
+      head: "b",
+      xpenalty: 5,
+      tail_port_x: 0.0,
+      head_port_x: 0.0,
+      tail_port_order: 0.0,
+      head_port_order: 0.0,
+    },
+    {
+      tail: "a",
+      head: "c",
+      xpenalty: 5,
+      tail_port_x: 1.0,
+      head_port_x: 2.0,
+      tail_port_order: 1.0,
+      head_port_order: 2.0,
+    },
+  ])
 }
 
 ///|
@@ -283,22 +265,19 @@ test "build_remincross_input_snapshot preserves duplicate edges without coalesci
   let cluster_keys : Map[String, String] = Map::new()
   cluster_keys["a"] = "cluster_a"
 
-  let snapshot =
-    build_remincross_input_snapshot(
-      {
-        rank_keys,
-        groups,
-        edges_out: [ab1, ab2],
-        edge_tail_out: ["a", "a"],
-        edge_head_out: ["b", "b"],
-        edge_tail_port_x: [1.0, 2.0],
-        edge_head_port_x: [3.0, 4.0],
-        edge_tail_port_order: [5.0, 6.0],
-        edge_head_port_order: [7.0, 8.0],
-        cluster_keys,
-        edge_xpenalty_for: (edge) => penalties.get(edge.id()).unwrap_or_default(),
-      },
-    )
+  let snapshot = build_remincross_input_snapshot({
+    rank_keys,
+    groups,
+    edges_out: [ab1, ab2],
+    edge_tail_out: ["a", "a"],
+    edge_head_out: ["b", "b"],
+    edge_tail_port_x: [1.0, 2.0],
+    edge_head_port_x: [3.0, 4.0],
+    edge_tail_port_order: [5.0, 6.0],
+    edge_head_port_order: [7.0, 8.0],
+    cluster_keys,
+    edge_xpenalty_for: edge => penalties.get(edge.id()).unwrap_or_default(),
+  })
 
   rank_keys.push(2)
   match groups.get(1) {
@@ -310,28 +289,24 @@ test "build_remincross_input_snapshot preserves duplicate edges without coalesci
   assert_eq(snapshot.rank_keys, [1])
   assert_eq(snapshot.groups.get(1), Some(["a", "b"]))
   assert_eq(snapshot.cluster_keys.get("a"), Some("cluster_a"))
-  assert_snapshot_entries_eq(
-    "remincross snapshot edges",
-    snapshot.edges,
-    [
-      {
-        tail: "a",
-        head: "b",
-        xpenalty: 2,
-        tail_port_x: 1.0,
-        head_port_x: 3.0,
-        tail_port_order: 5.0,
-        head_port_order: 7.0,
-      },
-      {
-        tail: "a",
-        head: "b",
-        xpenalty: 3,
-        tail_port_x: 2.0,
-        head_port_x: 4.0,
-        tail_port_order: 6.0,
-        head_port_order: 8.0,
-      },
-    ],
-  )
+  assert_snapshot_entries_eq("remincross snapshot edges", snapshot.edges, [
+    {
+      tail: "a",
+      head: "b",
+      xpenalty: 2,
+      tail_port_x: 1.0,
+      head_port_x: 3.0,
+      tail_port_order: 5.0,
+      head_port_order: 7.0,
+    },
+    {
+      tail: "a",
+      head: "b",
+      xpenalty: 3,
+      tail_port_x: 2.0,
+      head_port_x: 4.0,
+      tail_port_order: 6.0,
+      head_port_order: 8.0,
+    },
+  ])
 }

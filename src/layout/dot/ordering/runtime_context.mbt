@@ -42,7 +42,6 @@ pub(all) struct BuildOrderingRuntimeContextSources {
   cluster_meta : DotClusterMetadata
 }
 
-
 ///|
 /// Graphviz parity: ordering runtime-core setup keeps name-set build,
 /// edge-cluster collection, and order/port map derivation in fixed sequence.
@@ -55,19 +54,17 @@ fn build_ordering_runtime_core_from_sources(
   let existing_names = node_name_sets.existing_names
   let edge_cluster_keys : Map[String, String] = Map::new()
   @clustering.collect_edge_cluster_keys(sources.graph, edge_cluster_keys)
-  let port_edge_nodes =
-    build_port_edge_nodes_for_ordering(
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-    )
-  let local_cluster_order =
-    build_local_cluster_order(
-      sources.nodes,
-      sources.cluster_meta.intercluster_keys,
-      sources.ranks,
-      sources.node_order,
-    )
+  let port_edge_nodes = build_port_edge_nodes_for_ordering(
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+  )
+  let local_cluster_order = build_local_cluster_order(
+    sources.nodes,
+    sources.cluster_meta.intercluster_keys,
+    sources.ranks,
+    sources.node_order,
+  )
   {
     real_nodes,
     existing_names,
@@ -85,44 +82,40 @@ fn build_ordering_runtime_core_from_sources(
 pub fn build_ordering_runtime_context_from_sources(
   sources : BuildOrderingRuntimeContextSources,
 ) -> OrderingRuntimeContext {
-  let runtime_core =
-    build_ordering_runtime_core_from_sources(sources)
-  let vnode_info =
-    build_edge_vnodes(
-      sources.nodes,
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-      sources.edge_out_order,
-      sources.ranks,
-      sources.nodesep_pt,
-      sources.rankdir,
-      runtime_core.existing_names,
-      runtime_core.edge_cluster_keys,
-      sources.cluster_meta.cluster_parents,
-    )
+  let runtime_core = build_ordering_runtime_core_from_sources(sources)
+  let vnode_info = build_edge_vnodes(
+    sources.nodes,
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+    sources.edge_out_order,
+    sources.ranks,
+    sources.nodesep_pt,
+    sources.rankdir,
+    runtime_core.existing_names,
+    runtime_core.edge_cluster_keys,
+    sources.cluster_meta.cluster_parents,
+  )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()
-  let runtime_context : OrderingRuntimeContext =
-    {
-      real_nodes: runtime_core.real_nodes,
-      edge_cluster_keys: runtime_core.edge_cluster_keys,
-      vnode_info,
-      port_edge_nodes: runtime_core.port_edge_nodes,
-      local_cluster_order: runtime_core.local_cluster_order,
-      rank_same_constraints,
-    }
+  let runtime_context : OrderingRuntimeContext = {
+    real_nodes: runtime_core.real_nodes,
+    edge_cluster_keys: runtime_core.edge_cluster_keys,
+    vnode_info,
+    port_edge_nodes: runtime_core.port_edge_nodes,
+    local_cluster_order: runtime_core.local_cluster_order,
+    rank_same_constraints,
+  }
   // Graphviz parity: setup probes vnode tail constraints in setup order even
   // when the probe output is only used for parity diagnostics.
-  let _ =
-    if runtime_context.vnode_info.vnode_ranks.length() > 0 {
-      build_vnode_tail_constraints(
-        runtime_context.vnode_info.vnodes_by_rank,
-        sources.edge_tail,
-      )
-    } else {
-      Map::new()
-    }
+  let _ = if runtime_context.vnode_info.vnode_ranks.length() > 0 {
+    build_vnode_tail_constraints(
+      runtime_context.vnode_info.vnodes_by_rank,
+      sources.edge_tail,
+    )
+  } else {
+    Map::new()
+  }
   runtime_context
 }
 
@@ -133,8 +126,10 @@ fn edge_vnode_edge_index(name : String) -> Int? {
   if !@edge_identity.is_edge_vnode_name(name) {
     return None
   }
-  let rest =
-    name.unsafe_substring(start=@edge_identity.EDGE_VNODE_PREFIX.length(), end=name.length())
+  let rest = name.unsafe_substring(
+    start=@edge_identity.EDGE_VNODE_PREFIX.length(),
+    end=name.length(),
+  )
   let mut acc = 0
   let mut seen = false
   for c in rest {

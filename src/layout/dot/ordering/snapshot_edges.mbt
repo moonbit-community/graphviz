@@ -48,22 +48,26 @@ pub fn build_ordering_edge_snapshot_entries(
   while idx < input.edges_out.length() {
     let tail = input.edge_tail_out[idx]
     let head = input.edge_head_out[idx]
-    let tail_port_x =
-      if idx < input.edge_tail_port_x.length() { input.edge_tail_port_x[idx] } else { 0.0 }
-    let head_port_x =
-      if idx < input.edge_head_port_x.length() { input.edge_head_port_x[idx] } else { 0.0 }
-    let tail_port_order =
-      if idx < input.edge_tail_port_order.length() {
-        input.edge_tail_port_order[idx]
-      } else {
-        0.0
-      }
-    let head_port_order =
-      if idx < input.edge_head_port_order.length() {
-        input.edge_head_port_order[idx]
-      } else {
-        0.0
-      }
+    let tail_port_x = if idx < input.edge_tail_port_x.length() {
+      input.edge_tail_port_x[idx]
+    } else {
+      0.0
+    }
+    let head_port_x = if idx < input.edge_head_port_x.length() {
+      input.edge_head_port_x[idx]
+    } else {
+      0.0
+    }
+    let tail_port_order = if idx < input.edge_tail_port_order.length() {
+      input.edge_tail_port_order[idx]
+    } else {
+      0.0
+    }
+    let head_port_order = if idx < input.edge_head_port_order.length() {
+      input.edge_head_port_order[idx]
+    } else {
+      0.0
+    }
     entries.push({
       tail,
       head,
@@ -85,8 +89,10 @@ pub fn build_ordering_edge_snapshot_entries(
 pub fn coalesce_ordering_edge_snapshot_entries(
   entries : Array[OrderingEdgeSnapshotEntry],
 ) -> Array[OrderingEdgeSnapshotEntry] {
-  let entries_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-    Map::new()
+  let entries_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ] = Map::new()
   let tail_order : Array[String] = []
   for entry in entries {
     let tail = entry.tail
@@ -116,8 +122,16 @@ pub fn coalesce_ordering_edge_snapshot_entries(
   for tail in tail_order {
     let tail_entries = coalesced_by_tail.get(tail).unwrap_or_default()
     for item in tail_entries {
-      let (tail_name, head_name, xpenalty, _constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        item
+      let (
+        tail_name,
+        head_name,
+        xpenalty,
+        _constraint,
+        tail_port_x,
+        head_port_x,
+        tail_port_order,
+        head_port_order,
+      ) = item
       coalesced.push({
         tail: tail_name,
         head: head_name,
@@ -154,10 +168,14 @@ pub(all) struct RemincrossInputSnapshot {
 }
 
 ///|
-pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
+pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(
+  None,
+)
 
 ///|
-pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
+pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(
+  None,
+)
 
 ///|
 /// Graphviz parity: root mincross snapshot input keeps order-rank groups,
@@ -219,21 +237,18 @@ fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
 pub fn build_root_mincross_input_snapshot(
   input : RootMincrossSnapshotBuildInput,
 ) -> RootMincrossInputSnapshot {
-  let edges =
-    coalesce_ordering_edge_snapshot_entries(
-      build_ordering_edge_snapshot_entries(
-        {
-          edges_out: input.edges_out,
-          edge_tail_out: input.edge_tail_out,
-          edge_head_out: input.edge_head_out,
-          edge_tail_port_x: input.edge_tail_port_x,
-          edge_head_port_x: input.edge_head_port_x,
-          edge_tail_port_order: input.edge_tail_port_order,
-          edge_head_port_order: input.edge_head_port_order,
-          edge_xpenalty_for: input.edge_xpenalty_for,
-        },
-      ),
-    )
+  let edges = coalesce_ordering_edge_snapshot_entries(
+    build_ordering_edge_snapshot_entries({
+      edges_out: input.edges_out,
+      edge_tail_out: input.edge_tail_out,
+      edge_head_out: input.edge_head_out,
+      edge_tail_port_x: input.edge_tail_port_x,
+      edge_head_port_x: input.edge_head_port_x,
+      edge_tail_port_order: input.edge_tail_port_order,
+      edge_head_port_order: input.edge_head_port_order,
+      edge_xpenalty_for: input.edge_xpenalty_for,
+    }),
+  )
   {
     rank_keys: input.rank_keys.copy(),
     groups: clone_rank_groups(input.groups),
@@ -253,19 +268,16 @@ pub fn build_remincross_input_snapshot(
   {
     rank_keys: input.rank_keys.copy(),
     groups: clone_rank_groups(input.groups),
-    edges:
-      build_ordering_edge_snapshot_entries(
-        {
-          edges_out: input.edges_out,
-          edge_tail_out: input.edge_tail_out,
-          edge_head_out: input.edge_head_out,
-          edge_tail_port_x: input.edge_tail_port_x,
-          edge_head_port_x: input.edge_head_port_x,
-          edge_tail_port_order: input.edge_tail_port_order,
-          edge_head_port_order: input.edge_head_port_order,
-          edge_xpenalty_for: input.edge_xpenalty_for,
-        },
-      ),
+    edges: build_ordering_edge_snapshot_entries({
+      edges_out: input.edges_out,
+      edge_tail_out: input.edge_tail_out,
+      edge_head_out: input.edge_head_out,
+      edge_tail_port_x: input.edge_tail_port_x,
+      edge_head_port_x: input.edge_head_port_x,
+      edge_tail_port_order: input.edge_tail_port_order,
+      edge_head_port_order: input.edge_head_port_order,
+      edge_xpenalty_for: input.edge_xpenalty_for,
+    }),
     cluster_keys: clone_string_map(input.cluster_keys),
   }
 }
@@ -282,25 +294,20 @@ pub fn build_root_snapshot_capture_callback(
       return
     }
     let reorder_call_data = result.reorder_call_data
-    let snapshot =
-      build_root_mincross_input_snapshot(
-        {
-          rank_keys: reorder_call_data.order_rank_keys_for_mincross,
-          groups: result.order_groups_for_mincross,
-          edges_out: reorder_call_data.order_edges_out_mincross,
-          edge_tail_out: reorder_call_data.order_edge_tail_out_mincross,
-          edge_head_out: reorder_call_data.order_edge_head_out_mincross,
-          edge_tail_port_x: reorder_call_data.order_edge_tail_port_x_mincross,
-          edge_head_port_x: reorder_call_data.order_edge_head_port_x_mincross,
-          edge_tail_port_order:
-            reorder_call_data.order_edge_tail_port_order_mincross,
-          edge_head_port_order:
-            reorder_call_data.order_edge_head_port_order_mincross,
-          cluster_keys: inputs.order_cluster_keys,
-          cluster_skeleton: inputs.order_cluster_skeleton,
-          edge_xpenalty_for,
-        },
-      )
+    let snapshot = build_root_mincross_input_snapshot({
+      rank_keys: reorder_call_data.order_rank_keys_for_mincross,
+      groups: result.order_groups_for_mincross,
+      edges_out: reorder_call_data.order_edges_out_mincross,
+      edge_tail_out: reorder_call_data.order_edge_tail_out_mincross,
+      edge_head_out: reorder_call_data.order_edge_head_out_mincross,
+      edge_tail_port_x: reorder_call_data.order_edge_tail_port_x_mincross,
+      edge_head_port_x: reorder_call_data.order_edge_head_port_x_mincross,
+      edge_tail_port_order: reorder_call_data.order_edge_tail_port_order_mincross,
+      edge_head_port_order: reorder_call_data.order_edge_head_port_order_mincross,
+      cluster_keys: inputs.order_cluster_keys,
+      cluster_skeleton: inputs.order_cluster_skeleton,
+      edge_xpenalty_for,
+    })
     root_mincross_input_snapshot.val = Some(snapshot)
   }
 }
@@ -312,26 +319,23 @@ pub fn build_root_snapshot_capture_callback(
 pub fn build_remincross_snapshot_capture_callback(
   edge_xpenalty_for : (@cgraph.Edge) -> Int,
 ) -> (ReMincrossCleanupCaptureInputs) -> Unit {
-  (capture_inputs) => {
+  capture_inputs => {
     if !should_capture_ordering_inputs() {
       return
     }
-    let snapshot =
-      build_remincross_input_snapshot(
-        {
-          rank_keys: capture_inputs.rem_rank_keys,
-          groups: capture_inputs.rem_groups,
-          edges_out: capture_inputs.rem_edges_out,
-          edge_tail_out: capture_inputs.rem_edge_tail_out,
-          edge_head_out: capture_inputs.rem_edge_head_out,
-          edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
-          edge_head_port_x: capture_inputs.rem_edge_head_port_x,
-          edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
-          edge_head_port_order: capture_inputs.rem_edge_head_port_order,
-          cluster_keys: capture_inputs.rem_cluster_keys,
-          edge_xpenalty_for,
-        },
-      )
+    let snapshot = build_remincross_input_snapshot({
+      rank_keys: capture_inputs.rem_rank_keys,
+      groups: capture_inputs.rem_groups,
+      edges_out: capture_inputs.rem_edges_out,
+      edge_tail_out: capture_inputs.rem_edge_tail_out,
+      edge_head_out: capture_inputs.rem_edge_head_out,
+      edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+      edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+      edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+      edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+      cluster_keys: capture_inputs.rem_cluster_keys,
+      edge_xpenalty_for,
+    })
     remincross_input_snapshot.val = Some(snapshot)
   }
 }

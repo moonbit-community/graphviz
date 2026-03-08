@@ -47,13 +47,9 @@ fn build_edge_endpoint_port_projection(
   let mut endpoint_idx = 0
   while endpoint_idx < edges.length() {
     let edge = edges[endpoint_idx]
-    let (tail_name, head_name) =
-      edge_endpoints_at(
-        edge,
-        endpoint_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail_name, head_name) = edge_endpoints_at(
+      edge, endpoint_idx, edge_tail, edge_head,
+    )
     let tail_port = edge_tail_port_for_name(edge, tail_name)
     let head_port = edge_head_port_for_name(edge, head_name)
     tail_names.push(tail_name)
@@ -76,8 +72,12 @@ fn sample_edge_endpoint_ports(
   let head_values : Array[Double] = []
   let mut idx = 0
   while idx < projection.tail_names.length() {
-    tail_values.push(sample_fn(projection.tail_names[idx], projection.tail_ports[idx]))
-    head_values.push(sample_fn(projection.head_names[idx], projection.head_ports[idx]))
+    tail_values.push(
+      sample_fn(projection.tail_names[idx], projection.tail_ports[idx]),
+    )
+    head_values.push(
+      sample_fn(projection.head_names[idx], projection.head_ports[idx]),
+    )
     idx = idx + 1
   }
   { tail_values, head_values }
@@ -101,14 +101,13 @@ pub fn build_edge_port_sample_bundle(
       head_port_order: [],
     }
   }
-  let endpoint_projection =
-    build_edge_endpoint_port_projection(
-      edges,
-      edge_tail,
-      edge_head,
-    )
+  let endpoint_projection = build_edge_endpoint_port_projection(
+    edges, edge_tail, edge_head,
+  )
   let x_samples = sample_edge_endpoint_ports(endpoint_projection, sample_x_fn)
-  let order_samples = sample_edge_endpoint_ports(endpoint_projection, sample_order_fn)
+  let order_samples = sample_edge_endpoint_ports(
+    endpoint_projection, sample_order_fn,
+  )
   {
     tail_port_x: x_samples.tail_values,
     head_port_x: x_samples.head_values,

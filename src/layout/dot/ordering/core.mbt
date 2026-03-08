@@ -13,9 +13,7 @@ pub(all) struct ExtraConstraintNode {
 ///|
 /// Graphviz parity: cluster traversal order index is seeded from Graphviz
 /// cluster_order for cluster tie-breaking in ordering passes.
-fn build_cluster_order_index(
-  cluster_order : Array[String],
-) -> Map[String, Int] {
+fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
   let cluster_index : Map[String, Int] = Map::new()
   for idx, name in cluster_order {
     cluster_index[name] = idx
@@ -98,9 +96,7 @@ priv struct RankSameMetadata {
 /// Graphviz parity: rank=same group/order metadata is collected from graph
 /// attributes before ordering setup and flat-constraint wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_rank_same_metadata(
-  graph : @cgraph.Graph,
-) -> RankSameMetadata {
+fn collect_rank_same_metadata(graph : @cgraph.Graph) -> RankSameMetadata {
   let rank_same_groups : Map[String, Int] = Map::new()
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
@@ -131,16 +127,9 @@ fn build_cluster_ordering_metadata(
   cluster_keys : Map[String, String],
 ) -> ClusterOrderingMetadata {
   let rank_same_metadata = collect_rank_same_metadata(graph)
-  let flat_constraint_metadata =
-    build_cluster_flat_constraints(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      ranks,
-      cluster_keys,
-    )
+  let flat_constraint_metadata = build_cluster_flat_constraints(
+    graph, nodes, edges, edge_tail, edge_head, ranks, cluster_keys,
+  )
   {
     rank_same_groups: rank_same_metadata.rank_same_groups,
     rank_same_order: rank_same_metadata.rank_same_order,
@@ -173,12 +162,9 @@ pub(all) struct DotClusterMetadataSources {
 pub fn build_dot_cluster_metadata_from_sources(
   sources : DotClusterMetadataSources,
 ) -> DotClusterMetadata {
-  let graphviz_flip =
-    sources.rankdir == @rankdir.RankDir::LR || sources.rankdir == @rankdir.RankDir::RL
-  build_dot_cluster_metadata(
-    sources,
-    graphviz_flip,
-  )
+  let graphviz_flip = sources.rankdir == @rankdir.RankDir::LR ||
+    sources.rankdir == @rankdir.RankDir::RL
+  build_dot_cluster_metadata(sources, graphviz_flip)
 }
 
 ///|
@@ -207,26 +193,24 @@ fn build_dot_cluster_metadata(
   sources : DotClusterMetadataSources,
   graphviz_flip : Bool,
 ) -> DotClusterMetadata {
-  let cluster_core =
-    @clustering.build_cluster_core_metadata_for_ordering(
-      sources.graph,
-      sources.nodes,
-      sources.groups,
-      sources.ranks,
-      sources.node_order,
-      graphviz_flip,
-      @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
-    )
-  let ordering_metadata =
-    build_cluster_ordering_metadata(
-      sources.graph,
-      sources.nodes,
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-      sources.ranks,
-      cluster_core.cluster_keys,
-    )
+  let cluster_core = @clustering.build_cluster_core_metadata_for_ordering(
+    sources.graph,
+    sources.nodes,
+    sources.groups,
+    sources.ranks,
+    sources.node_order,
+    graphviz_flip,
+    @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
+  )
+  let ordering_metadata = build_cluster_ordering_metadata(
+    sources.graph,
+    sources.nodes,
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+    sources.ranks,
+    cluster_core.cluster_keys,
+  )
   {
     has_clusters: cluster_core.has_clusters,
     cluster_keys: cluster_core.cluster_keys,
@@ -273,7 +257,6 @@ pub(all) struct BuildOrderingPipelineContextSources {
   cluster_meta : DotClusterMetadata
 }
 
-
 ///|
 /// Graphviz parity: ordering stage result keeps reordered rank groups, vnode
 /// metadata, and derived edge-order snapshots grouped for downstream stages.
@@ -298,53 +281,44 @@ pub(all) struct OrderingResult {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_pipeline_context_from_sources(
   sources : BuildOrderingPipelineContextSources,
-  build_port_sample_bundle : (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-  ) -> EdgePortSampleBundle,
+  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
 ) -> OrderingPipelineContext {
-  let runtime_context =
-    build_ordering_runtime_context_from_sources({
-      graph: sources.graph,
-      nodes: sources.nodes,
+  let runtime_context = build_ordering_runtime_context_from_sources({
+    graph: sources.graph,
+    nodes: sources.nodes,
+    edges: sources.edges,
+    edge_tail: sources.edge_tail,
+    edge_head: sources.edge_head,
+    edge_out_order: sources.edge_out_order,
+    ranks: sources.ranks,
+    node_order: sources.node_order,
+    nodesep_pt: sources.nodesep_pt,
+    rankdir: sources.rankdir,
+    cluster_meta: sources.cluster_meta,
+  })
+  let edge_port_data = build_ordering_edge_port_data_from_sources(
+    {
       edges: sources.edges,
       edge_tail: sources.edge_tail,
       edge_head: sources.edge_head,
-      edge_out_order: sources.edge_out_order,
-      ranks: sources.ranks,
-      node_order: sources.node_order,
-      nodesep_pt: sources.nodesep_pt,
-      rankdir: sources.rankdir,
-      cluster_meta: sources.cluster_meta,
-    })
-  let edge_port_data =
-    build_ordering_edge_port_data_from_sources(
-      {
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-      },
-      build_port_sample_bundle,
-    )
-  let reorder_setup =
-    build_ordering_reorder_setup_from_sources(
-      {
-        nodes: sources.nodes,
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-        edge_reversed: sources.edge_reversed,
-        edge_out_order: sources.edge_out_order,
-        ranks: sources.ranks,
-        groups: sources.groups,
-        node_order: sources.node_order,
-        runtime_context,
-        cluster_meta: sources.cluster_meta,
-        rankdir: sources.rankdir,
-        edge_port_data,
-      },
-    )
+    },
+    build_port_sample_bundle,
+  )
+  let reorder_setup = build_ordering_reorder_setup_from_sources({
+    nodes: sources.nodes,
+    edges: sources.edges,
+    edge_tail: sources.edge_tail,
+    edge_head: sources.edge_head,
+    edge_reversed: sources.edge_reversed,
+    edge_out_order: sources.edge_out_order,
+    ranks: sources.ranks,
+    groups: sources.groups,
+    node_order: sources.node_order,
+    runtime_context,
+    cluster_meta: sources.cluster_meta,
+    rankdir: sources.rankdir,
+    edge_port_data,
+  })
   { runtime_context, edge_port_data, reorder_setup }
 }
 
@@ -458,28 +432,64 @@ fn sort_by_positions_fast(
   infos.sort_by((a, b) => {
     let diff = a.key - b.key
     if Double::abs(diff) > eps {
-      if diff < 0.0 { -1 } else { 1 }
+      if diff < 0.0 {
+        -1
+      } else {
+        1
+      }
     } else if a.is_vnode != b.is_vnode {
-      if a.is_vnode { -1 } else { 1 }
+      if a.is_vnode {
+        -1
+      } else {
+        1
+      }
     } else if a.degree != b.degree {
-      if a.degree > b.degree { -1 } else { 1 }
+      if a.degree > b.degree {
+        -1
+      } else {
+        1
+      }
     } else if a.ported != b.ported {
-      if a.ported { -1 } else { 1 }
+      if a.ported {
+        -1
+      } else {
+        1
+      }
     } else if a.secondary != b.secondary {
-      if a.secondary > b.secondary { -1 } else { 1 }
+      if a.secondary > b.secondary {
+        -1
+      } else {
+        1
+      }
     } else if a.penalty != b.penalty {
-      if a.penalty > b.penalty { -1 } else { 1 }
+      if a.penalty > b.penalty {
+        -1
+      } else {
+        1
+      }
     } else if a.node_order != b.node_order {
       if reverse_ties {
-        if a.node_order < b.node_order { 1 } else { -1 }
+        if a.node_order < b.node_order {
+          1
+        } else {
+          -1
+        }
+      } else if a.node_order < b.node_order {
+        -1
       } else {
-        if a.node_order < b.node_order { -1 } else { 1 }
+        1
       }
     } else if a.original_index != b.original_index {
       if reverse_ties {
-        if a.original_index < b.original_index { 1 } else { -1 }
+        if a.original_index < b.original_index {
+          1
+        } else {
+          -1
+        }
+      } else if a.original_index < b.original_index {
+        -1
       } else {
-        if a.original_index < b.original_index { -1 } else { 1 }
+        1
       }
     } else {
       0
@@ -554,14 +564,22 @@ fn sort_by_positions_large(
   infos.sort_by((a, b) => {
     let diff = a.key - b.key
     if Double::abs(diff) > eps {
-      if diff < 0.0 { -1 } else { 1 }
+      if diff < 0.0 {
+        -1
+      } else {
+        1
+      }
     } else {
       let port_cmp = match a.port_order {
         Some(a_port) =>
           match b.port_order {
             Some(b_port) =>
               if a_port != b_port {
-                if a_port < b_port { -1 } else { 1 }
+                if a_port < b_port {
+                  -1
+                } else {
+                  1
+                }
               } else {
                 0
               }
@@ -572,39 +590,82 @@ fn sort_by_positions_large(
       if port_cmp != 0 {
         port_cmp
       } else if a.is_vnode != b.is_vnode {
-        if a.is_vnode { -1 } else { 1 }
+        if a.is_vnode {
+          -1
+        } else {
+          1
+        }
       } else if a.degree != b.degree {
-        if a.degree > b.degree { -1 } else { 1 }
+        if a.degree > b.degree {
+          -1
+        } else {
+          1
+        }
       } else if a.ported != b.ported {
-        if a.ported { -1 } else { 1 }
+        if a.ported {
+          -1
+        } else {
+          1
+        }
       } else if a.secondary != b.secondary {
-        if a.secondary > b.secondary { -1 } else { 1 }
+        if a.secondary > b.secondary {
+          -1
+        } else {
+          1
+        }
       } else if a.penalty != b.penalty {
-        if a.penalty > b.penalty { -1 } else { 1 }
+        if a.penalty > b.penalty {
+          -1
+        } else {
+          1
+        }
       } else if a.ported && b.ported && a.node_order != b.node_order {
         if reverse_ties {
-          if a.node_order < b.node_order { 1 } else { -1 }
+          if a.node_order < b.node_order {
+            1
+          } else {
+            -1
+          }
+        } else if a.node_order < b.node_order {
+          -1
         } else {
-          if a.node_order < b.node_order { -1 } else { 1 }
+          1
         }
       } else {
         match a.rank_same_group {
           Some(group) =>
             match b.rank_same_group {
               Some(other_group) =>
-                if group == other_group && a.rank_same_order != b.rank_same_order {
-                  if a.rank_same_order < b.rank_same_order { -1 } else { 1 }
+                if group == other_group &&
+                  a.rank_same_order != b.rank_same_order {
+                  if a.rank_same_order < b.rank_same_order {
+                    -1
+                  } else {
+                    1
+                  }
                 } else if a.node_order != b.node_order {
                   if reverse_ties {
-                    if a.node_order < b.node_order { 1 } else { -1 }
+                    if a.node_order < b.node_order {
+                      1
+                    } else {
+                      -1
+                    }
+                  } else if a.node_order < b.node_order {
+                    -1
                   } else {
-                    if a.node_order < b.node_order { -1 } else { 1 }
+                    1
                   }
                 } else if a.original_index != b.original_index {
                   if reverse_ties {
-                    if a.original_index < b.original_index { 1 } else { -1 }
+                    if a.original_index < b.original_index {
+                      1
+                    } else {
+                      -1
+                    }
+                  } else if a.original_index < b.original_index {
+                    -1
                   } else {
-                    if a.original_index < b.original_index { -1 } else { 1 }
+                    1
                   }
                 } else {
                   0
@@ -612,15 +673,27 @@ fn sort_by_positions_large(
               None =>
                 if a.node_order != b.node_order {
                   if reverse_ties {
-                    if a.node_order < b.node_order { 1 } else { -1 }
+                    if a.node_order < b.node_order {
+                      1
+                    } else {
+                      -1
+                    }
+                  } else if a.node_order < b.node_order {
+                    -1
                   } else {
-                    if a.node_order < b.node_order { -1 } else { 1 }
+                    1
                   }
                 } else if a.original_index != b.original_index {
                   if reverse_ties {
-                    if a.original_index < b.original_index { 1 } else { -1 }
+                    if a.original_index < b.original_index {
+                      1
+                    } else {
+                      -1
+                    }
+                  } else if a.original_index < b.original_index {
+                    -1
                   } else {
-                    if a.original_index < b.original_index { -1 } else { 1 }
+                    1
                   }
                 } else {
                   0
@@ -629,15 +702,27 @@ fn sort_by_positions_large(
           None =>
             if a.node_order != b.node_order {
               if reverse_ties {
-                if a.node_order < b.node_order { 1 } else { -1 }
+                if a.node_order < b.node_order {
+                  1
+                } else {
+                  -1
+                }
+              } else if a.node_order < b.node_order {
+                -1
               } else {
-                if a.node_order < b.node_order { -1 } else { 1 }
+                1
               }
             } else if a.original_index != b.original_index {
               if reverse_ties {
-                if a.original_index < b.original_index { 1 } else { -1 }
+                if a.original_index < b.original_index {
+                  1
+                } else {
+                  -1
+                }
+              } else if a.original_index < b.original_index {
+                -1
               } else {
-                if a.original_index < b.original_index { -1 } else { 1 }
+                1
               }
             } else {
               0
@@ -692,31 +777,17 @@ pub fn sort_by_positions(
   }
   if sorted.length() >= LARGE_SORT_THRESHOLD {
     return sort_by_positions_large(
-      sorted,
-      desired,
-      x_positions,
-      primary,
-      secondary,
-      node_penalty,
-      port_edge_nodes,
-      node_order,
-      rank_same_groups,
-      rank_same_order,
-      port_order_positions,
-      reverse_ties,
+      sorted, desired, x_positions, primary, secondary, node_penalty, port_edge_nodes,
+      node_order, rank_same_groups, rank_same_order, port_order_positions, reverse_ties,
     )
   }
-  if sorted.length() >= 64 && !has_port_order && !has_rank_same && !has_ported_nodes {
+  if sorted.length() >= 64 &&
+    !has_port_order &&
+    !has_rank_same &&
+    !has_ported_nodes {
     return sort_by_positions_fast(
-      sorted,
-      desired,
-      x_positions,
-      primary,
-      secondary,
-      node_penalty,
-      port_edge_nodes,
-      node_order,
-      reverse_ties,
+      sorted, desired, x_positions, primary, secondary, node_penalty, port_edge_nodes,
+      node_order, reverse_ties,
     )
   }
   let _ = edge_order
@@ -804,99 +875,102 @@ pub fn sort_by_positions(
               } else if prev_penalty > current_penalty {
                 break
               } else {
-              let mut decided = false
-              if prev_ported && current_ported {
-                let prev_idx = match node_order.get(prev) {
-                  Some(value) => value
-                  None => 0
-                }
-                let current_idx = match node_order.get(current) {
-                  Some(value) => value
-                  None => 0
-                }
-                decided = true
-                let keep_order =
-                  if reverse_ties { prev_idx >= current_idx } else { prev_idx <= current_idx }
-                if keep_order {
-                  break
-                }
-              }
-              if !decided {
-                match rank_same_groups.get(prev) {
-                  Some(prev_group) =>
-                    match rank_same_groups.get(current) {
-                      Some(current_group) =>
-                        if prev_group == current_group {
-                          let prev_idx = match rank_same_order.get(prev) {
-                            Some(value) => value
-                            None => 0
-                          }
-                          let current_idx = match rank_same_order.get(current) {
-                            Some(value) => value
-                            None => 0
-                          }
-                          decided = true
-                          let keep_order = prev_idx <= current_idx
-                          if keep_order {
-                            break
-                          }
-                        }
-                      None => ()
-                    }
-                  None => ()
-                }
-              }
-              if !decided {
-                let prev_parents = match parents_map.get(prev) {
-                  Some(list) => list
-                  None => []
-                }
-                let current_parents = match parents_map.get(current) {
-                  Some(list) => list
-                  None => []
-                }
-                for parent in prev_parents {
-                  let mut shared = false
-                  for candidate in current_parents {
-                    if candidate == parent {
-                      shared = true
-                      break
-                    }
+                let mut decided = false
+                if prev_ported && current_ported {
+                  let prev_idx = match node_order.get(prev) {
+                    Some(value) => value
+                    None => 0
                   }
-                  if !shared {
-                    continue
+                  let current_idx = match node_order.get(current) {
+                    Some(value) => value
+                    None => 0
                   }
-                  let prev_key = "\{parent}|\{prev}"
-                  let current_key = "\{parent}|\{current}"
-                  match edge_pair_order.get(prev_key) {
-                    Some(prev_idx) =>
-                      match edge_pair_order.get(current_key) {
-                        Some(current_idx) => {
-                          decided = true
-                          let keep_order =
-                            if reverse_ties {
-                              prev_idx >= current_idx
-                            } else {
-                              prev_idx <= current_idx
+                  decided = true
+                  let keep_order = if reverse_ties {
+                    prev_idx >= current_idx
+                  } else {
+                    prev_idx <= current_idx
+                  }
+                  if keep_order {
+                    break
+                  }
+                }
+                if !decided {
+                  match rank_same_groups.get(prev) {
+                    Some(prev_group) =>
+                      match rank_same_groups.get(current) {
+                        Some(current_group) =>
+                          if prev_group == current_group {
+                            let prev_idx = match rank_same_order.get(prev) {
+                              Some(value) => value
+                              None => 0
                             }
-                          if keep_order {
-                            break
+                            let current_idx = match
+                              rank_same_order.get(current) {
+                              Some(value) => value
+                              None => 0
+                            }
+                            decided = true
+                            let keep_order = prev_idx <= current_idx
+                            if keep_order {
+                              break
+                            }
                           }
-                        }
                         None => ()
                       }
                     None => ()
                   }
-                  if decided {
+                }
+                if !decided {
+                  let prev_parents = match parents_map.get(prev) {
+                    Some(list) => list
+                    None => []
+                  }
+                  let current_parents = match parents_map.get(current) {
+                    Some(list) => list
+                    None => []
+                  }
+                  for parent in prev_parents {
+                    let mut shared = false
+                    for candidate in current_parents {
+                      if candidate == parent {
+                        shared = true
+                        break
+                      }
+                    }
+                    if !shared {
+                      continue
+                    }
+                    let prev_key = "\{parent}|\{prev}"
+                    let current_key = "\{parent}|\{current}"
+                    match edge_pair_order.get(prev_key) {
+                      Some(prev_idx) =>
+                        match edge_pair_order.get(current_key) {
+                          Some(current_idx) => {
+                            decided = true
+                            let keep_order = if reverse_ties {
+                              prev_idx >= current_idx
+                            } else {
+                              prev_idx <= current_idx
+                            }
+                            if keep_order {
+                              break
+                            }
+                          }
+                          None => ()
+                        }
+                      None => ()
+                    }
+                    if decided {
+                      break
+                    }
+                  }
+                }
+                if !decided {
+                  if !reverse_ties {
                     break
                   }
                 }
-              }
-              if !decided {
-                if !reverse_ties {
-                  break
-                }
-              }
               }
             }
           }
@@ -956,8 +1030,7 @@ pub fn median_value_mc_scale(values : Array[Double]) -> Double? {
   if lspan == rspan {
     Some(((scaled[lm] + scaled[rm]) / 2).to_double() / scale)
   } else {
-    let weighted =
-      scaled[lm].to_double() * rspan.to_double() +
+    let weighted = scaled[lm].to_double() * rspan.to_double() +
       scaled[rm].to_double() * lspan.to_double()
     Some(weighted / (lspan + rspan).to_double() / scale)
   }
@@ -1159,6 +1232,7 @@ pub fn clone_rank_groups(
   cloned
 }
 
+///|
 /// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
 pub fn apply_rank_same_order(
@@ -1363,11 +1437,19 @@ fn count_inversions(values : Array[Int]) -> Int {
       let left = i
       let mid = {
         let next = i + size
-        if next < n { next } else { n }
+        if next < n {
+          next
+        } else {
+          n
+        }
       }
       let right = {
         let next = i + size + size
-        if next < n { next } else { n }
+        if next < n {
+          next
+        } else {
+          n
+        }
       }
       let mut a = left
       let mut b = mid
@@ -1457,7 +1539,11 @@ pub fn count_crossings(
     list.sort_by((a, b) => {
       let (a0, a1) = a
       let (b0, b1) = b
-      if a0 == b0 { a1 - b1 } else { a0 - b0 }
+      if a0 == b0 {
+        a1 - b1
+      } else {
+        a0 - b0
+      }
     })
     let heads : Array[Int] = []
     for pair in list {
@@ -1470,6 +1556,7 @@ pub fn count_crossings(
 }
 
 ///|
+
 ///|
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
@@ -1501,15 +1588,19 @@ fn local_cross_out_port_aware(
       Some(value) => value
       None => continue
     }
-    let penalty =
-      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    let penalty = if edge_idx < edge_penalty.length() {
+      edge_penalty[edge_idx]
+    } else {
+      0
+    }
     if penalty <= 0 {
       continue
     }
-    let port_x =
-      if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
-        0.0
-      }
+    let port_x = if edge_idx < edge_tail_port_x.length() {
+      edge_tail_port_x[edge_idx]
+    } else {
+      0.0
+    }
     items.push((head_order, port_x, penalty))
   }
   if items.length() < 2 {
@@ -1563,15 +1654,19 @@ fn local_cross_in_port_aware(
       Some(value) => value
       None => continue
     }
-    let penalty =
-      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    let penalty = if edge_idx < edge_penalty.length() {
+      edge_penalty[edge_idx]
+    } else {
+      0
+    }
     if penalty <= 0 {
       continue
     }
-    let port_x =
-      if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
-        0.0
-      }
+    let port_x = if edge_idx < edge_head_port_x.length() {
+      edge_head_port_x[edge_idx]
+    } else {
+      0.0
+    }
     items.push((tail_order, port_x, penalty))
   }
   if items.length() < 2 {
@@ -1650,8 +1745,8 @@ pub fn count_crossings_port_aware(
       None => edge_in[head] = [edge_idx]
     }
   }
-  let include_ports =
-    edge_tail_port_x.length() > 0 || edge_head_port_x.length() > 0
+  let include_ports = edge_tail_port_x.length() > 0 ||
+    edge_head_port_x.length() > 0
   let mut crossings = 0
   let mut idx = 0
   while idx + 1 < rank_keys.length() {
@@ -1681,15 +1776,14 @@ pub fn count_crossings_port_aware(
         if penalty <= 0 {
           continue
         }
-        let inv =
-          match order.get(head) {
-            Some(value) => value
-            None =>
-              match fixed_order.get(head) {
-                Some(value) => value
-                None => continue
-              }
-          }
+        let inv = match order.get(head) {
+          Some(value) => value
+          None =>
+            match fixed_order.get(head) {
+              Some(value) => value
+              None => continue
+            }
+        }
         if inv < 0 {
           continue
         }
@@ -1713,15 +1807,14 @@ pub fn count_crossings_port_aware(
           if ranks.get(head) != Some(next_rank) {
             continue
           }
-          let inv =
-            match order.get(head) {
-              Some(value) => value
-              None =>
-                match fixed_order.get(head) {
-                  Some(value) => value
-                  None => continue
-                }
-            }
+          let inv = match order.get(head) {
+            Some(value) => value
+            None =>
+              match fixed_order.get(head) {
+                Some(value) => value
+                None => continue
+              }
+          }
           if inv < 0 {
             continue
           }
@@ -1741,15 +1834,14 @@ pub fn count_crossings_port_aware(
         if ranks.get(head) != Some(next_rank) {
           continue
         }
-        let inv =
-          match order.get(head) {
-            Some(value) => value
-            None =>
-              match fixed_order.get(head) {
-                Some(value) => value
-                None => continue
-              }
-          }
+        let inv = match order.get(head) {
+          Some(value) => value
+          None =>
+            match fixed_order.get(head) {
+              Some(value) => value
+              None => continue
+            }
+        }
         if inv < 0 {
           continue
         }
@@ -1765,31 +1857,16 @@ pub fn count_crossings_port_aware(
     }
     if include_ports {
       for top in top_nodes {
-        rank_cross =
-          rank_cross +
+        rank_cross = rank_cross +
           local_cross_out_port_aware(
-            top,
-            next_rank,
-            ranks,
-            order,
-            edge_out,
-            edge_head,
-            edge_tail_port_x,
+            top, next_rank, ranks, order, edge_out, edge_head, edge_tail_port_x,
             edge_penalty,
           )
       }
       for bottom in next_nodes {
-        rank_cross =
-          rank_cross +
+        rank_cross = rank_cross +
           local_cross_in_port_aware(
-            bottom,
-            rank,
-            ranks,
-            order,
-            edge_in,
-            edge_tail,
-            edge_head_port_x,
-            edge_penalty,
+            bottom, rank, ranks, order, edge_in, edge_tail, edge_head_port_x, edge_penalty,
           )
       }
     }
@@ -1872,5 +1949,5 @@ pub fn crossing_for_pair(
     None => []
   }
   count_pairs_greater(left_parents, right_parents) +
-    count_pairs_greater(left_children, right_children)
+  count_pairs_greater(left_children, right_children)
 }

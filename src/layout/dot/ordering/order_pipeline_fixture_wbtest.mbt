@@ -20,10 +20,13 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   @sys.set_env_var("DOT_CAPTURE_ORDERING_INPUTS", "1")
   @sys.set_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE", "1")
   let graph = @dot_parser.parse_dot_file("refs/graphviz/doc/infosrc/plugins.gv")
-  let prep = match @input_stage.prepare_layout_prep(
-    graph,
-    { rankdir: None, nodesep: None, ranksep: None, splines: None },
-  ) {
+  let prep = match
+    @input_stage.prepare_layout_prep(graph, {
+      rankdir: None,
+      nodesep: None,
+      ranksep: None,
+      splines: None,
+    }) {
     Ok(value) => value
     Err(message) => fail(message)
   }

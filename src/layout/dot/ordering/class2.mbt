@@ -4,9 +4,18 @@
 ///|
 pub(all) struct OrderingClass2Data {
   edges_by_tail : Map[String, Array[Int]]
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
+  order_edges_by_tail_root : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
+  order_edges_by_tail_unmapped : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
   root_edge_creation : Array[(String, String)]
   skeleton_edge_creation : Array[(String, String)]
   edge_creation_order : Array[(String, String)]
@@ -104,8 +113,8 @@ pub(all) struct OrderingReorderSetupSources {
 fn build_ordering_reorder_setup_from_sources(
   sources : OrderingReorderSetupSources,
 ) -> OrderingReorderSetup {
-  let graphviz_flip =
-    sources.rankdir == @rankdir.RankDir::RL || sources.rankdir == @rankdir.RankDir::LR
+  let graphviz_flip = sources.rankdir == @rankdir.RankDir::RL ||
+    sources.rankdir == @rankdir.RankDir::LR
   let ordering_groups_base = apply_rank_same_order(
     sources.groups,
     sources.cluster_meta.rank_same_groups,
@@ -116,72 +125,71 @@ fn build_ordering_reorder_setup_from_sources(
   let base_order_index = build_order_index(ordering_groups_base)
   let vnode_count = sources.runtime_context.vnode_info.vnode_ranks.length()
   let order_with_vnodes = vnode_count > 0
-  let order_with_clusters =
-    sources.cluster_meta.has_clusters &&
+  let order_with_clusters = sources.cluster_meta.has_clusters &&
     sources.cluster_meta.cluster_min_rank.length() > 0
-  let flat_rank_constraints =
-    build_flat_rank_constraints(sources.edge_tail, sources.edge_head, sources.ranks)
-  let class2_data =
-    build_ordering_class2_data(
-      sources.nodes,
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-      sources.edge_out_order,
-      sources.edge_port_data.edge_tail_port_x,
-      sources.edge_port_data.edge_head_port_x,
-      sources.edge_port_data.edge_tail_port_order,
-      sources.edge_port_data.edge_head_port_order,
-      sources.ranks,
-      sources.runtime_context.vnode_info.edge_vnodes,
-      order_with_vnodes,
-      order_with_clusters,
-      sources.cluster_meta.cluster_keys,
-      sources.cluster_meta.cluster_order,
-      sources.cluster_meta.cluster_min_rank,
-      sources.cluster_meta.cluster_max_rank,
-      sources.cluster_meta.has_clusters,
-      flat_rank_constraints,
-      graphviz_flip,
-    )
-  let gdnlist_order =
-    build_gdnlist_order(
-      class2_data,
-      graphviz_flip,
-      sources.cluster_meta.cluster_order,
-    )
+  let flat_rank_constraints = build_flat_rank_constraints(
+    sources.edge_tail,
+    sources.edge_head,
+    sources.ranks,
+  )
+  let class2_data = build_ordering_class2_data(
+    sources.nodes,
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+    sources.edge_out_order,
+    sources.edge_port_data.edge_tail_port_x,
+    sources.edge_port_data.edge_head_port_x,
+    sources.edge_port_data.edge_tail_port_order,
+    sources.edge_port_data.edge_head_port_order,
+    sources.ranks,
+    sources.runtime_context.vnode_info.edge_vnodes,
+    order_with_vnodes,
+    order_with_clusters,
+    sources.cluster_meta.cluster_keys,
+    sources.cluster_meta.cluster_order,
+    sources.cluster_meta.cluster_min_rank,
+    sources.cluster_meta.cluster_max_rank,
+    sources.cluster_meta.has_clusters,
+    flat_rank_constraints,
+    graphviz_flip,
+  )
+  let gdnlist_order = build_gdnlist_order(
+    class2_data,
+    graphviz_flip,
+    sources.cluster_meta.cluster_order,
+  )
   let nlist_order_index : Map[String, Int] = Map::new()
   let mut nlist_idx = 0
   for name in class2_data.nlist_order {
     nlist_order_index[name] = nlist_idx
     nlist_idx = nlist_idx + 1
   }
-  let vnode_order_keys_for_ordering =
-    if vnode_count <= 0 {
-      Map::new()
-    } else if sources.cluster_meta.has_clusters {
-      build_vnode_order_keys(
-        sources.edges,
-        sources.edge_tail,
-        sources.edge_head,
-        sources.edge_reversed,
-        sources.ranks,
-        base_order_index,
-        sources.cluster_meta.cluster_keys,
-        sources.cluster_meta.cluster_parents,
-        sources.runtime_context.vnode_info.edge_vnodes,
-        sources.runtime_context.vnode_info.vnode_ranks,
-      )
-    } else {
-      build_vnode_keys_from_nlist(
-        ordering_groups_base,
-        sources.runtime_context.vnode_info.vnodes_by_rank,
-        base_order_index,
-        nlist_order_index,
-        Map::new(),
-        false,
-      )
-    }
+  let vnode_order_keys_for_ordering = if vnode_count <= 0 {
+    Map::new()
+  } else if sources.cluster_meta.has_clusters {
+    build_vnode_order_keys(
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+      sources.edge_reversed,
+      sources.ranks,
+      base_order_index,
+      sources.cluster_meta.cluster_keys,
+      sources.cluster_meta.cluster_parents,
+      sources.runtime_context.vnode_info.edge_vnodes,
+      sources.runtime_context.vnode_info.vnode_ranks,
+    )
+  } else {
+    build_vnode_keys_from_nlist(
+      ordering_groups_base,
+      sources.runtime_context.vnode_info.vnodes_by_rank,
+      base_order_index,
+      nlist_order_index,
+      Map::new(),
+      false,
+    )
+  }
   {
     ordering_groups_base,
     base_order_index,
@@ -203,15 +211,20 @@ fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
   @cluster_identity.cluster_skeleton_name(cluster, rank)
 }
 
-///| 
+///|
 fn prepend_order_edge_entry(
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
   tail_name : String,
   entry : (String, String, Int, Bool, Double, Double, Double, Double),
 ) -> Unit {
   match order_edges_by_tail.get(tail_name) {
     Some(list) => {
-      let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = [entry]
+      let updated : Array[
+        (String, String, Int, Bool, Double, Double, Double, Double),
+      ] = [entry]
       for item in list {
         updated.push(item)
       }
@@ -226,8 +239,14 @@ fn append_cluster_skeleton_edges(
   cluster : String,
   min_rank : Int,
   max_rank : Int,
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
+  order_edges_by_tail_root : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
   skeleton_edge_creation : Array[(String, String)],
 ) -> Unit {
   let mut rank = min_rank
@@ -236,16 +255,8 @@ fn append_cluster_skeleton_edges(
     let head_name = skeleton_name_for_rank(cluster, rank + 1)
     let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
     skeleton_edge_creation.push((tail_name, head_name))
-    prepend_order_edge_entry(
-      order_edges_by_tail,
-      tail_name,
-      entry,
-    )
-    prepend_order_edge_entry(
-      order_edges_by_tail_root,
-      tail_name,
-      entry,
-    )
+    prepend_order_edge_entry(order_edges_by_tail, tail_name, entry)
+    prepend_order_edge_entry(order_edges_by_tail_root, tail_name, entry)
     rank = rank + 1
   }
 }
@@ -256,8 +267,14 @@ fn build_skeleton_edge_creation(
   cluster_order : Array[String],
   cluster_min_rank : Map[String, Int],
   cluster_max_rank : Map[String, Int],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
+  order_edges_by_tail_root : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
 ) -> Array[(String, String)] {
   let skeleton_edge_creation : Array[(String, String)] = []
   if !order_with_clusters {
@@ -272,11 +289,7 @@ fn build_skeleton_edge_creation(
           None => min_rank
         }
         append_cluster_skeleton_edges(
-          cluster,
-          min_rank,
-          max_rank,
-          order_edges_by_tail,
-          order_edges_by_tail_root,
+          cluster, min_rank, max_rank, order_edges_by_tail, order_edges_by_tail_root,
           skeleton_edge_creation,
         )
         cluster_seen[cluster] = true
@@ -293,11 +306,7 @@ fn build_skeleton_edge_creation(
       None => min_rank
     }
     append_cluster_skeleton_edges(
-      cluster,
-      min_rank,
-      max_rank,
-      order_edges_by_tail,
-      order_edges_by_tail_root,
+      cluster, min_rank, max_rank, order_edges_by_tail, order_edges_by_tail_root,
       skeleton_edge_creation,
     )
   }
@@ -342,84 +351,37 @@ fn build_ordering_class2_data(
       None => edges_by_tail[name] = []
     }
   }
-  let order_edges_by_tail_output =
-    build_order_edges_by_tail(
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      cluster_keys,
-      order_with_clusters,
-      false,
-      true,
-      edges_by_tail,
-    )
+  let order_edges_by_tail_output = build_order_edges_by_tail(
+    creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+    edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
+    cluster_keys, order_with_clusters, false, true, edges_by_tail,
+  )
   let order_edges_by_tail = order_edges_by_tail_output.order_edges_by_tail
   let vnode_creation_by_tail = order_edges_by_tail_output.vnode_creation_by_tail
   let order_edge_creation = order_edges_by_tail_output.edge_creation_order
-  let (
-    order_edges_by_tail_root,
-    root_edge_creation,
-  ) =
-    if order_with_clusters {
-      let root_edges_by_tail_output =
-        build_order_edges_by_tail(
-          creation_order,
-          edges,
-          edge_tail,
-          edge_head,
-          edge_tail_port_x,
-          edge_head_port_x,
-          edge_tail_port_order,
-          edge_head_port_order,
-          ranks,
-          edge_vnodes,
-          order_with_vnodes,
-          cluster_keys,
-          order_with_clusters,
-          true,
-          true,
-          edges_by_tail,
-        )
-      let root_edges_by_tail = root_edges_by_tail_output.order_edges_by_tail
-      let root_edge_creation = root_edges_by_tail_output.edge_creation_order
-      (root_edges_by_tail, root_edge_creation)
-    } else {
-      (order_edges_by_tail, order_edge_creation)
-    }
-  let order_edges_by_tail_unmapped =
-    if order_with_clusters {
-      let unmapped_output =
-        build_order_edges_by_tail(
-          creation_order,
-          edges,
-          edge_tail,
-          edge_head,
-          edge_tail_port_x,
-          edge_head_port_x,
-          edge_tail_port_order,
-          edge_head_port_order,
-          ranks,
-          edge_vnodes,
-          order_with_vnodes,
-          cluster_keys,
-          order_with_clusters,
-          false,
-          false,
-          edges_by_tail,
-        )
-      let unmapped_edges_by_tail = unmapped_output.order_edges_by_tail
-      unmapped_edges_by_tail
-    } else {
-      order_edges_by_tail
-    }
+  let (order_edges_by_tail_root, root_edge_creation) = if order_with_clusters {
+    let root_edges_by_tail_output = build_order_edges_by_tail(
+      creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+      edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
+      cluster_keys, order_with_clusters, true, true, edges_by_tail,
+    )
+    let root_edges_by_tail = root_edges_by_tail_output.order_edges_by_tail
+    let root_edge_creation = root_edges_by_tail_output.edge_creation_order
+    (root_edges_by_tail, root_edge_creation)
+  } else {
+    (order_edges_by_tail, order_edge_creation)
+  }
+  let order_edges_by_tail_unmapped = if order_with_clusters {
+    let unmapped_output = build_order_edges_by_tail(
+      creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
+      edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
+      cluster_keys, order_with_clusters, false, false, edges_by_tail,
+    )
+    let unmapped_edges_by_tail = unmapped_output.order_edges_by_tail
+    unmapped_edges_by_tail
+  } else {
+    order_edges_by_tail
+  }
   let cluster_skeleton_creation : Array[String] = []
   if order_with_clusters {
     let cluster_seen : Map[String, Bool] = Map::new()
@@ -430,7 +392,7 @@ fn build_ordering_class2_data(
             Some(value) => value
             None => min_rank
           }
-          for rank in min_rank..=max_rank {
+          for rank in min_rank..<=max_rank {
             cluster_skeleton_creation.push(
               skeleton_name_for_rank(cluster, rank),
             )
@@ -448,84 +410,53 @@ fn build_ordering_class2_data(
         Some(value) => value
         None => min_rank
       }
-      for rank in min_rank..=max_rank {
-        cluster_skeleton_creation.push(
-          skeleton_name_for_rank(cluster, rank),
-        )
+      for rank in min_rank..<=max_rank {
+        cluster_skeleton_creation.push(skeleton_name_for_rank(cluster, rank))
       }
     }
   }
-  let skeleton_edge_creation =
-    build_skeleton_edge_creation(
-      order_with_clusters,
-      cluster_order,
-      cluster_min_rank,
-      cluster_max_rank,
-      order_edges_by_tail,
-      order_edges_by_tail_root,
-    )
-  let edge_creation_order =
-    merge_edge_creation_sequences(
-      skeleton_edge_creation,
-      order_edge_creation,
-    )
-  let (order_creation, vnode_creation_order) =
-    {
-      let order_creation : Array[String] = []
-      let order_seen : Map[String, Bool] = Map::new()
-      for name in cluster_skeleton_creation {
-        append_creation_name(
-          order_creation,
-          order_seen,
-          name,
-        )
-      }
-      for tail_name in creation_order {
-        append_creation_name(
-          order_creation,
-          order_seen,
-          tail_name,
-        )
-        let vnodes = match vnode_creation_by_tail.get(tail_name) {
-          Some(list) => list
-          None => []
-        }
-        for vnode in vnodes {
-          append_creation_name(
-            order_creation,
-            order_seen,
-            vnode,
-          )
-        }
-      }
-      let vnode_creation_order : Array[String] = []
-      for name in order_creation {
-        if @edge_identity.is_edge_vnode_name(name) {
-          vnode_creation_order.push(name)
-        }
-      }
-      (order_creation, vnode_creation_order)
+  let skeleton_edge_creation = build_skeleton_edge_creation(
+    order_with_clusters, cluster_order, cluster_min_rank, cluster_max_rank, order_edges_by_tail,
+    order_edges_by_tail_root,
+  )
+  let edge_creation_order = merge_edge_creation_sequences(
+    skeleton_edge_creation, order_edge_creation,
+  )
+  let (order_creation, vnode_creation_order) = {
+    let order_creation : Array[String] = []
+    let order_seen : Map[String, Bool] = Map::new()
+    for name in cluster_skeleton_creation {
+      append_creation_name(order_creation, order_seen, name)
     }
-  let nlist_tail_order =
-    if has_clusters {
-      creation_order
-    } else {
-      order_creation
+    for tail_name in creation_order {
+      append_creation_name(order_creation, order_seen, tail_name)
+      let vnodes = match vnode_creation_by_tail.get(tail_name) {
+        Some(list) => list
+        None => []
+      }
+      for vnode in vnodes {
+        append_creation_name(order_creation, order_seen, vnode)
+      }
     }
-  let nlist_order_raw =
-    @rank_constraints.build_graphviz_nlist_order_from_edges(
-      nlist_tail_order,
-      order_creation,
-      edge_creation_order,
-      flat_rank_constraints,
-    )
-  let nlist_order =
-    adjust_nlist_order_for_flip(
-      nlist_order_raw,
-      graphviz_flip,
-      has_clusters,
-      cluster_keys,
-    )
+    let vnode_creation_order : Array[String] = []
+    for name in order_creation {
+      if @edge_identity.is_edge_vnode_name(name) {
+        vnode_creation_order.push(name)
+      }
+    }
+    (order_creation, vnode_creation_order)
+  }
+  let nlist_tail_order = if has_clusters {
+    creation_order
+  } else {
+    order_creation
+  }
+  let nlist_order_raw = @rank_constraints.build_graphviz_nlist_order_from_edges(
+    nlist_tail_order, order_creation, edge_creation_order, flat_rank_constraints,
+  )
+  let nlist_order = adjust_nlist_order_for_flip(
+    nlist_order_raw, graphviz_flip, has_clusters, cluster_keys,
+  )
   {
     edges_by_tail,
     order_edges_by_tail,
@@ -568,7 +499,6 @@ pub(all) struct OrderingEdgePortDataSources {
   edge_head : Array[String]
 }
 
-
 ///|
 /// Graphviz parity: ordering edge-port data keeps dedup ordering-edge
 /// extraction and endpoint port samples in Graphviz-compatible construction
@@ -576,30 +506,23 @@ pub(all) struct OrderingEdgePortDataSources {
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_edge_port_data_from_sources(
   sources : OrderingEdgePortDataSources,
-  build_port_sample_bundle : (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-  ) -> EdgePortSampleBundle,
+  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
 ) -> OrderingEdgePortData {
-  let edge_port_samples =
-    build_port_sample_bundle(
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-    )
-  let dedup_order_edges =
-    dedup_ordering_edges(
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-    )
-  let order_edge_port_samples =
-    build_port_sample_bundle(
-      dedup_order_edges.order_edges,
-      dedup_order_edges.order_edge_tail,
-      dedup_order_edges.order_edge_head,
-    )
+  let edge_port_samples = build_port_sample_bundle(
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+  )
+  let dedup_order_edges = dedup_ordering_edges(
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+  )
+  let order_edge_port_samples = build_port_sample_bundle(
+    dedup_order_edges.order_edges,
+    dedup_order_edges.order_edge_tail,
+    dedup_order_edges.order_edge_head,
+  )
   {
     edge_order: collect_edge_order(sources.edges),
     edge_tail_port_x: edge_port_samples.tail_port_x,

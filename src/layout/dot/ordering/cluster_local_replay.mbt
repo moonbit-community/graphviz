@@ -81,55 +81,50 @@ fn run_cluster_local_rank_replay_after_root_from_sources(
   if !sources.order_with_clusters {
     return ()
   }
-  run_cluster_local_rank_replay(
-    {
-      groups: sources.groups,
-      graph: sources.graph,
-      cluster_order: sources.cluster_order,
-      cluster_parents: sources.cluster_parents,
-      rank_same_groups: sources.rank_same_groups,
-      rank_same_order: sources.rank_same_order,
-      intercluster_keys: sources.intercluster_keys,
-      flat_constraints: sources.flat_constraints,
-      node_order: sources.node_order,
-      order_edges: sources.order_edges,
-      order_edge_tail: sources.order_edge_tail,
-      order_edge_head: sources.order_edge_head,
-      order_edge_tail_port_x: sources.order_edge_tail_port_x,
-      order_edge_head_port_x: sources.order_edge_head_port_x,
-      order_edge_tail_port_order: sources.order_edge_tail_port_order,
-      order_edge_head_port_order: sources.order_edge_head_port_order,
-      graphviz_out_neighbors: sources.graphviz_out_neighbors,
-      graphviz_in_neighbors: sources.graphviz_in_neighbors,
-      ranks: sources.ranks,
-      order_sizes: sources.order_sizes,
-      nodesep_pt: sources.nodesep_pt,
-      has_edge_labels: sources.has_edge_labels,
-      port_order_positions: sources.port_order_positions,
-      port_order_contrib: sources.port_order_contrib,
-      vnode_ranks: sources.vnode_ranks,
-      vnode_clusters: sources.vnode_clusters,
-      vnode_sizes: sources.vnode_sizes,
-      order_with_vnodes: sources.order_with_vnodes,
-    },
-  )
+  run_cluster_local_rank_replay({
+    groups: sources.groups,
+    graph: sources.graph,
+    cluster_order: sources.cluster_order,
+    cluster_parents: sources.cluster_parents,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    intercluster_keys: sources.intercluster_keys,
+    flat_constraints: sources.flat_constraints,
+    node_order: sources.node_order,
+    order_edges: sources.order_edges,
+    order_edge_tail: sources.order_edge_tail,
+    order_edge_head: sources.order_edge_head,
+    order_edge_tail_port_x: sources.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.order_edge_head_port_order,
+    graphviz_out_neighbors: sources.graphviz_out_neighbors,
+    graphviz_in_neighbors: sources.graphviz_in_neighbors,
+    ranks: sources.ranks,
+    order_sizes: sources.order_sizes,
+    nodesep_pt: sources.nodesep_pt,
+    has_edge_labels: sources.has_edge_labels,
+    port_order_positions: sources.port_order_positions,
+    port_order_contrib: sources.port_order_contrib,
+    vnode_ranks: sources.vnode_ranks,
+    vnode_clusters: sources.vnode_clusters,
+    vnode_sizes: sources.vnode_sizes,
+    order_with_vnodes: sources.order_with_vnodes,
+  })
 }
 
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_replay(
-  input : ClusterLocalRankReplayInput,
-) -> Unit {
+fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
   if input.cluster_order.length() == 0 {
     return ()
   }
-  let cluster_graph_order =
-    build_cluster_graph_order(
-      input.graph,
-      input.cluster_order,
-      input.cluster_parents,
-    )
+  let cluster_graph_order = build_cluster_graph_order(
+    input.graph,
+    input.cluster_order,
+    input.cluster_parents,
+  )
   let cluster_graphs = cluster_graph_order.cluster_graphs
   let cluster_names = cluster_graph_order.cluster_names
   if cluster_graphs.length() == 0 {
@@ -139,37 +134,35 @@ fn run_cluster_local_rank_replay(
   let fixed_ranks = merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
-  let neighbor_sources =
-    build_cluster_local_neighbor_sources(
-      input.graph,
-      input.graphviz_out_neighbors,
-      input.graphviz_in_neighbors,
-    )
-  let dispatch_context : ClusterLocalReorderDispatchContext =
-    {
-      node_order: input.node_order,
-      order_edges: input.order_edges,
-      order_edge_tail: input.order_edge_tail,
-      order_edge_head: input.order_edge_head,
-      order_edge_tail_port_x: input.order_edge_tail_port_x,
-      order_edge_head_port_x: input.order_edge_head_port_x,
-      order_edge_tail_port_order: input.order_edge_tail_port_order,
-      order_edge_head_port_order: input.order_edge_head_port_order,
-      neighbor_sources,
-      order_sizes: input.order_sizes,
-      nodesep_pt: input.nodesep_pt,
-      has_edge_labels: input.has_edge_labels,
-      port_order_positions: input.port_order_positions,
-      port_order_contrib: input.port_order_contrib,
-      rank_same_groups: input.rank_same_groups,
-      rank_same_order: input.rank_same_order,
-      intercluster_keys: input.intercluster_keys,
-      flat_constraints: input.flat_constraints,
-      vnode_clusters: input.vnode_clusters,
-      vnode_sizes: input.vnode_sizes,
-      fixed_ranks,
-      order_with_vnodes: input.order_with_vnodes,
-    }
+  let neighbor_sources = build_cluster_local_neighbor_sources(
+    input.graph,
+    input.graphviz_out_neighbors,
+    input.graphviz_in_neighbors,
+  )
+  let dispatch_context : ClusterLocalReorderDispatchContext = {
+    node_order: input.node_order,
+    order_edges: input.order_edges,
+    order_edge_tail: input.order_edge_tail,
+    order_edge_head: input.order_edge_head,
+    order_edge_tail_port_x: input.order_edge_tail_port_x,
+    order_edge_head_port_x: input.order_edge_head_port_x,
+    order_edge_tail_port_order: input.order_edge_tail_port_order,
+    order_edge_head_port_order: input.order_edge_head_port_order,
+    neighbor_sources,
+    order_sizes: input.order_sizes,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    port_order_positions: input.port_order_positions,
+    port_order_contrib: input.port_order_contrib,
+    rank_same_groups: input.rank_same_groups,
+    rank_same_order: input.rank_same_order,
+    intercluster_keys: input.intercluster_keys,
+    flat_constraints: input.flat_constraints,
+    vnode_clusters: input.vnode_clusters,
+    vnode_sizes: input.vnode_sizes,
+    fixed_ranks,
+    order_with_vnodes: input.order_with_vnodes,
+  }
   reorder_cluster_rank_groups(
     cluster_names,
     cluster_graphs,

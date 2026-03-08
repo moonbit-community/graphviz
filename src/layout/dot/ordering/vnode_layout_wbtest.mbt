@@ -267,20 +267,19 @@ test "build_edge_vnodes applies edge cluster key when endpoints stay at root" {
   let edge_cluster_keys : Map[String, String] = Map::new()
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "cluster_edge_owner"
 
-  let vnode_info =
-    build_edge_vnodes(
-      [a, b],
-      [edge],
-      [],
-      [],
-      Map::new(),
-      ranks,
-      20.0,
-      @rankdir.RankDir::TB,
-      existing_names,
-      edge_cluster_keys,
-      Map::new(),
-    )
+  let vnode_info = build_edge_vnodes(
+    [a, b],
+    [edge],
+    [],
+    [],
+    Map::new(),
+    ranks,
+    20.0,
+    @rankdir.RankDir::TB,
+    existing_names,
+    edge_cluster_keys,
+    Map::new(),
+  )
   let chain = edge_vnode_chain_for_test(vnode_info, edge)
 
   assert_eq(chain, [
@@ -312,20 +311,19 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
   edge_out_order["b"] = [1]
   edge_out_order["a"] = [0]
 
-  let vnode_info =
-    build_edge_vnodes(
-      [b, a],
-      [forward, reverse],
-      [],
-      [],
-      edge_out_order,
-      ranks,
-      20.0,
-      @rankdir.RankDir::TB,
-      existing_names,
-      Map::new(),
-      Map::new(),
-    )
+  let vnode_info = build_edge_vnodes(
+    [b, a],
+    [forward, reverse],
+    [],
+    [],
+    edge_out_order,
+    ranks,
+    20.0,
+    @rankdir.RankDir::TB,
+    existing_names,
+    Map::new(),
+    Map::new(),
+  )
   let forward_chain = edge_vnode_chain_for_test(vnode_info, forward)
   let reverse_chain = edge_vnode_chain_for_test(vnode_info, reverse)
 

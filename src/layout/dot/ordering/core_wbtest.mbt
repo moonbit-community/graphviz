@@ -64,16 +64,7 @@ test "count_crossings counts inversions across adjacent ranks" {
   let edge_tail = ["a", "b"]
   let edge_head = ["y", "x"]
 
-  assert_eq(
-    count_crossings(
-      groups,
-      ranks,
-      edges,
-      edge_tail,
-      edge_head,
-    ),
-    1,
-  )
+  assert_eq(count_crossings(groups, ranks, edges, edge_tail, edge_head), 1)
 }
 
 ///|
@@ -104,29 +95,17 @@ test "left2right_constraint combines cluster pinning and flat constraints" {
 
   assert_true(
     left2right_constraint(
-      "left",
-      "right",
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
+      "left", "right", cluster_keys, cluster_skeleton, flat_constraints,
     ),
   )
   assert_false(
     left2right_constraint(
-      "left",
-      "skeleton",
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
+      "left", "skeleton", cluster_keys, cluster_skeleton, flat_constraints,
     ),
   )
   assert_true(
     left2right_constraint(
-      "flat_left",
-      "flat_right",
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
+      "flat_left", "flat_right", cluster_keys, cluster_skeleton, flat_constraints,
     ),
   )
   assert_true(
@@ -179,14 +158,13 @@ test "apply_rank_same_order reorders unported rank-same groups only" {
   let port_edge_nodes : Map[String, Bool] = Map::new()
   port_edge_nodes["c"] = true
 
-  let adjusted =
-    apply_rank_same_order(
-      groups,
-      rank_same_groups,
-      rank_same_order,
-      Map::new(),
-      port_edge_nodes,
-    )
+  let adjusted = apply_rank_same_order(
+    groups,
+    rank_same_groups,
+    rank_same_order,
+    Map::new(),
+    port_edge_nodes,
+  )
 
   assert_eq(adjusted.get(0), Some(["b", "a", "c", "d"]))
 }
@@ -215,10 +193,7 @@ test "apply_rank_same_order_nodes rewrites node order for unported groups only" 
   port_edge_nodes["c"] = true
 
   apply_rank_same_order_nodes(
-    node_order,
-    rank_same_groups,
-    rank_same_order,
-    port_edge_nodes,
+    node_order, rank_same_groups, rank_same_order, port_edge_nodes,
   )
 
   assert_eq(node_order.get("b"), Some(2))

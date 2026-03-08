@@ -125,11 +125,7 @@ pub fn build_neighbor_rank_groups(
   let in_neighbors = neighbors.in_neighbors
   if has_graphviz_neighbor_hints(graphviz_out_neighbors, graphviz_in_neighbors) {
     copy_graphviz_neighbor_hints(
-      nlist,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      out_neighbors,
-      in_neighbors,
+      nlist, graphviz_out_neighbors, graphviz_in_neighbors, out_neighbors, in_neighbors,
     )
   } else {
     for edge_idx in 0..<edge_tail.length() {
@@ -150,7 +146,8 @@ pub fn build_neighbor_rank_groups(
   }
   for name in nlist {
     let cluster = cluster_keys.get(name).unwrap_or_default()
-    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) &&
+    if cluster != "" &&
+      cluster_has_skeleton.get(cluster) == Some(true) &&
       cluster_skeleton.get(name) == Some(true) {
       // Graphviz parity: install_cluster only enqueues rankleader (skeleton) nodes,
       // not all nodes in the cluster.
@@ -170,8 +167,12 @@ pub fn build_neighbor_rank_groups(
         } else if a_rank > b_rank {
           1
         } else {
-          let a_idx = resolve_component_order_index(a, node_order, fallback_order)
-          let b_idx = resolve_component_order_index(b, node_order, fallback_order)
+          let a_idx = resolve_component_order_index(
+            a, node_order, fallback_order,
+          )
+          let b_idx = resolve_component_order_index(
+            b, node_order, fallback_order,
+          )
           if a_idx < b_idx {
             -1
           } else if a_idx > b_idx {
@@ -187,12 +188,11 @@ pub fn build_neighbor_rank_groups(
   let marks : Map[String, Bool] = Map::new()
   let installed_clusters : Map[String, Bool] = Map::new()
   for node in nlist {
-    let other =
-      if pass == 0 {
-        in_neighbors.get(node).unwrap_or_default()
-      } else {
-        out_neighbors.get(node).unwrap_or_default()
-      }
+    let other = if pass == 0 {
+      in_neighbors.get(node).unwrap_or_default()
+    } else {
+      out_neighbors.get(node).unwrap_or_default()
+    }
     if other.length() > 0 {
       continue
     }
@@ -223,12 +223,11 @@ pub fn build_neighbor_rank_groups(
           marks[cluster_node] = true
         }
         for cluster_node in cluster_list {
-          let neighbors =
-            if pass == 0 {
-              out_neighbors.get(cluster_node).unwrap_or_default()
-            } else {
-              in_neighbors.get(cluster_node).unwrap_or_default()
-            }
+          let neighbors = if pass == 0 {
+            out_neighbors.get(cluster_node).unwrap_or_default()
+          } else {
+            in_neighbors.get(cluster_node).unwrap_or_default()
+          }
           for neighbor in neighbors {
             if marks.get(neighbor) != Some(true) {
               marks[neighbor] = true
@@ -247,12 +246,11 @@ pub fn build_neighbor_rank_groups(
         }
         installed[current] = true
       }
-      let neighbors =
-        if pass == 0 {
-          out_neighbors.get(current).unwrap_or_default()
-        } else {
-          in_neighbors.get(current).unwrap_or_default()
-        }
+      let neighbors = if pass == 0 {
+        out_neighbors.get(current).unwrap_or_default()
+      } else {
+        in_neighbors.get(current).unwrap_or_default()
+      }
       for neighbor in neighbors {
         if marks.get(neighbor) != Some(true) {
           marks[neighbor] = true
@@ -343,8 +341,8 @@ pub fn build_component_rank_groups(
     cluster_keys,
     cluster_skeleton,
     flat_constraints,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
+    graphviz_out_neighbors~,
+    graphviz_in_neighbors~,
   )
   if components.length() <= 1 {
     return build_neighbor_rank_groups(
@@ -357,24 +355,14 @@ pub fn build_component_rank_groups(
       cluster_keys,
       cluster_skeleton,
       pass,
-      flip=flip,
-      graphviz_out_neighbors=graphviz_out_neighbors,
-      graphviz_in_neighbors=graphviz_in_neighbors,
+      flip~,
+      graphviz_out_neighbors~,
+      graphviz_in_neighbors~,
     )
   }
   merge_rank_groups_components(
-    rank_keys,
-    groups,
-    edge_tail,
-    edge_head,
-    node_ranks,
-    node_order,
-    cluster_keys,
-    cluster_skeleton,
-    pass,
-    flip,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
+    rank_keys, groups, edge_tail, edge_head, node_ranks, node_order, cluster_keys,
+    cluster_skeleton, pass, flip, graphviz_out_neighbors, graphviz_in_neighbors,
     components,
   )
 }
@@ -436,16 +424,8 @@ fn build_component_order(
   let ordered_nodes = nodes.copy()
   if ordered_nodes.length() > 1 {
     ordered_nodes.sort_by((a, b) => {
-      let a_idx = resolve_component_order_index(
-        a,
-        node_order,
-        fallback_order,
-      )
-      let b_idx = resolve_component_order_index(
-        b,
-        node_order,
-        fallback_order,
-      )
+      let a_idx = resolve_component_order_index(a, node_order, fallback_order)
+      let b_idx = resolve_component_order_index(b, node_order, fallback_order)
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -475,11 +455,7 @@ fn build_component_neighbors(
   let in_neighbors = neighbors.in_neighbors
   if has_graphviz_neighbor_hints(graphviz_out_neighbors, graphviz_in_neighbors) {
     copy_graphviz_neighbor_hints(
-      nodes,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      out_neighbors,
-      in_neighbors,
+      nodes, graphviz_out_neighbors, graphviz_in_neighbors, out_neighbors, in_neighbors,
     )
   } else {
     for idx in 0..<edge_tail.length() {
@@ -535,14 +511,10 @@ fn collect_component_skeletons(
           1
         } else {
           let a_idx = resolve_component_order_index(
-            a,
-            node_order,
-            fallback_order,
+            a, node_order, fallback_order,
           )
           let b_idx = resolve_component_order_index(
-            b,
-            node_order,
-            fallback_order,
+            b, node_order, fallback_order,
           )
           if a_idx < b_idx {
             -1
@@ -613,16 +585,9 @@ fn prepare_component_discovery(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> ComponentDiscoveryPrepared {
-  let order_data = build_component_order(
-    nodes,
-    node_order,
-  )
+  let order_data = build_component_order(nodes, node_order)
   let neighbors_data = build_component_neighbors(
-    nodes,
-    edge_tail,
-    edge_head,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
+    nodes, edge_tail, edge_head, graphviz_out_neighbors, graphviz_in_neighbors,
   )
   let cluster_skeleton_nodes = collect_component_skeletons(
     order_data.ordered_nodes,
@@ -688,7 +653,11 @@ fn discover_components(
     }
     start_nodes.push(name)
   }
-  let starts = if start_nodes.length() > 0 { start_nodes } else { ordered_nodes }
+  let starts = if start_nodes.length() > 0 {
+    start_nodes
+  } else {
+    ordered_nodes
+  }
   for start in starts {
     if visited.get(start) == Some(true) {
       continue
@@ -772,16 +741,8 @@ fn discover_rank_components(
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Array[Array[String]] {
   let prepared = prepare_component_discovery(
-    nodes,
-    edge_tail,
-    edge_head,
-    node_ranks,
-    node_order,
-    cluster_keys,
-    cluster_skeleton,
-    flat_constraints,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
+    nodes, edge_tail, edge_head, node_ranks, node_order, cluster_keys, cluster_skeleton,
+    flat_constraints, graphviz_out_neighbors, graphviz_in_neighbors,
   )
   discover_components(
     nodes,
@@ -795,6 +756,7 @@ fn discover_rank_components(
     prepared.flat_in,
   )
 }
+
 ///|
 /// Graphviz parity: component-local merge inputs preserve rank-group filtering
 /// and in/out neighbor projection constrained to the component node set.
@@ -805,7 +767,11 @@ fn prepare_merge_inputs(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   component : Array[String],
-) -> (Map[Int, Array[String]], Map[String, Array[String]], Map[String, Array[String]]) {
+) -> (
+  Map[Int, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+) {
   let component_set : Map[String, Bool] = Map::new()
   for name in component {
     component_set[name] = true
@@ -931,11 +897,7 @@ fn merge_rank_groups_components(
   }
   for component in components {
     let (component_groups, filtered_out, filtered_in) = prepare_merge_inputs(
-      rank_keys,
-      groups,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      component,
+      rank_keys, groups, graphviz_out_neighbors, graphviz_in_neighbors, component,
     )
     let ordered_component = build_neighbor_rank_groups(
       rank_keys,
@@ -947,15 +909,11 @@ fn merge_rank_groups_components(
       cluster_keys,
       cluster_skeleton,
       pass,
-      flip=flip,
+      flip~,
       graphviz_out_neighbors=filtered_out,
       graphviz_in_neighbors=filtered_in,
     )
-    append_component_order(
-      rank_keys,
-      merged,
-      ordered_component,
-    )
+    append_component_order(rank_keys, merged, ordered_component)
   }
   dedup_rank_groups_merged(rank_keys, merged)
 }

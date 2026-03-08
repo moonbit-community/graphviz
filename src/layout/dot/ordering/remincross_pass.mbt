@@ -194,8 +194,9 @@ fn build_clustered_finalize_stage_from_sources(
     real_nodes: sources.real_nodes,
     order_with_clusters: sources.reorder_setup.order_with_clusters,
     order_rank_keys: sources.pre_root_stage.reorder_context.order_rank_keys,
-    remincross_context:
-      build_remincross_pass_context_from_finalize_stage_sources(sources),
+    remincross_context: build_remincross_pass_context_from_finalize_stage_sources(
+      sources,
+    ),
   }
 }
 
@@ -207,14 +208,13 @@ fn build_clustered_finalize_stage_from_sources(
 fn build_clustered_finalize_inputs_from_root_phase_stage_sources(
   sources : ClusteredFinalizeStageRootSources,
 ) -> ClusteredFinalizeInputs {
-  let cluster_rank_order =
-    build_cluster_rank_order_from_root_phase(
-      sources.phase_base,
-      sources.root_cluster_stage,
-      sources.order_cluster_keys,
-      sources.order_cluster_skeleton,
-      sources.real_nodes,
-    )
+  let cluster_rank_order = build_cluster_rank_order_from_root_phase(
+    sources.phase_base,
+    sources.root_cluster_stage,
+    sources.order_cluster_keys,
+    sources.order_cluster_skeleton,
+    sources.real_nodes,
+  )
   {
     order_with_clusters: sources.order_with_clusters,
     order_rank_keys: sources.order_rank_keys,
@@ -235,12 +235,11 @@ pub fn run_clustered_finalize_stage(
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
   let sources = build_clustered_finalize_stage_from_sources(build_sources)
-  let finalize_inputs =
-    build_clustered_finalize_inputs_from_root_phase_stage_sources(sources)
+  let finalize_inputs = build_clustered_finalize_inputs_from_root_phase_stage_sources(
+    sources,
+  )
   run_clustered_finalize_order_groups(
-    finalize_inputs,
-    capture_call,
-    reorder_call,
+    finalize_inputs, capture_call, reorder_call,
   )
 }
 
@@ -267,17 +266,17 @@ pub fn build_remincross_groups(
   let prefer_seeded_from_ordered_with_vnodes = inputs.ratio == "fill"
   // Graphviz parity: seeded-group path is considered only when vnode ordering
   // is enabled and graph shape matches single-cluster or ratio=fill scenarios.
-  let should_try_seeded =
-    inputs.vnode_group_inputs.order_with_vnodes &&
-    (inputs.cluster_order.length() == 1 ||
-    prefer_seeded_from_ordered_with_vnodes)
+  let should_try_seeded = inputs.vnode_group_inputs.order_with_vnodes &&
+    (
+      inputs.cluster_order.length() == 1 ||
+      prefer_seeded_from_ordered_with_vnodes
+    )
   if should_try_seeded {
-    let seeded =
-      build_seeded_remincross(
-        inputs.vnode_group_inputs.final_groups,
-        inputs.ordered_with_vnodes,
-        inputs.cluster_keys,
-      )
+    let seeded = build_seeded_remincross(
+      inputs.vnode_group_inputs.final_groups,
+      inputs.ordered_with_vnodes,
+      inputs.cluster_keys,
+    )
     if seeded.length() > 0 {
       return seeded
     }
@@ -297,26 +296,24 @@ fn run_clustered_finalize_order_groups(
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
-  let cleaned_groups =
-    collect_real_only_rank_groups(
-      inputs.order_rank_keys,
-      inputs.ordered,
-      inputs.remincross_context.real_nodes,
-    )
+  let cleaned_groups = collect_real_only_rank_groups(
+    inputs.order_rank_keys,
+    inputs.ordered,
+    inputs.remincross_context.real_nodes,
+  )
   if !inputs.order_with_clusters {
     return {
       ordered_groups: cleaned_groups,
       ordered_with_vnodes: inputs.remincross_context.ordered_with_vnodes,
     }
   }
-  let final_groups =
-    build_clustered_finalize_groups(
-      cleaned_groups,
-      inputs.cluster_rank_order,
-      inputs.remincross_context.cluster_keys,
-      inputs.remincross_context.intercluster_keys,
-      inputs.remincross_context.local_cluster_order,
-    )
+  let final_groups = build_clustered_finalize_groups(
+    cleaned_groups,
+    inputs.cluster_rank_order,
+    inputs.remincross_context.cluster_keys,
+    inputs.remincross_context.intercluster_keys,
+    inputs.remincross_context.local_cluster_order,
+  )
   run_remincross_pass(
     inputs.remincross_context,
     final_groups,
@@ -336,31 +333,28 @@ pub fn run_remincross_pass(
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
-  let rem_groups =
-    build_remincross_groups(
-      {
-        ratio: context.ratio,
-        cluster_order: context.cluster_order,
-        ordered_with_vnodes: context.ordered_with_vnodes,
-        cluster_keys: context.cluster_keys,
-        vnode_group_inputs: {
-          final_groups: base_groups,
-          order_with_vnodes: context.order_with_vnodes,
-          edges: context.edges,
-          edge_tail: context.edge_tail,
-          edge_head: context.edge_head,
-          edge_reversed: context.edge_reversed,
-          ranks: context.ranks,
-          intercluster_keys: context.intercluster_keys,
-          cluster_parents: context.cluster_parents,
-          cluster_min_rank: context.cluster_min_rank,
-          cluster_max_rank: context.cluster_max_rank,
-          edge_vnodes: context.edge_vnodes,
-          vnode_ranks: context.vnode_ranks,
-          vnodes_by_rank: context.vnodes_by_rank,
-        },
-      },
-    )
+  let rem_groups = build_remincross_groups({
+    ratio: context.ratio,
+    cluster_order: context.cluster_order,
+    ordered_with_vnodes: context.ordered_with_vnodes,
+    cluster_keys: context.cluster_keys,
+    vnode_group_inputs: {
+      final_groups: base_groups,
+      order_with_vnodes: context.order_with_vnodes,
+      edges: context.edges,
+      edge_tail: context.edge_tail,
+      edge_head: context.edge_head,
+      edge_reversed: context.edge_reversed,
+      ranks: context.ranks,
+      intercluster_keys: context.intercluster_keys,
+      cluster_parents: context.cluster_parents,
+      cluster_min_rank: context.cluster_min_rank,
+      cluster_max_rank: context.cluster_max_rank,
+      edge_vnodes: context.edge_vnodes,
+      vnode_ranks: context.vnode_ranks,
+      vnodes_by_rank: context.vnodes_by_rank,
+    },
+  })
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
@@ -370,62 +364,54 @@ pub fn run_remincross_pass(
   } else {
     // Graphviz parity: clustered ReMincross multi-rank branch materializes
     // remapped edges and executes clustered cleanup reorder in startpass=2.
-    let materialized_inputs =
-      build_remincross_materialized_inputs(
-        {
-          rem_rank_keys,
-          rem_groups,
-          creation_order: context.creation_order,
-          edges: context.edges,
-          edge_tail: context.edge_tail,
-          edge_head: context.edge_head,
-          edge_tail_port_x: context.edge_tail_port_x,
-          edge_head_port_x: context.edge_head_port_x,
-          edge_tail_port_order: context.edge_tail_port_order,
-          edge_head_port_order: context.edge_head_port_order,
-          ranks: context.ranks,
-          edge_vnodes: context.edge_vnodes,
-          order_with_vnodes: context.order_with_vnodes,
-          intercluster_keys: context.intercluster_keys,
-          cluster_order: context.cluster_order,
-          order_with_clusters: true,
-          edges_by_tail: context.edges_by_tail,
-          root_tail_order_override: context.root_tail_order_override,
-          root_cluster: context.root_cluster,
-          cluster_parents: context.cluster_parents,
-          order_sizes: context.order_sizes,
-          vnode_sizes: context.vnode_sizes,
-          cluster_flat_constraints: context.cluster_flat_constraints,
-          rank_same_constraints: context.rank_same_constraints,
-        },
-      )
-    let rem_ordered =
-      run_remincross_cleanup(
-        {
-          rem_rank_keys,
-          rem_groups,
-          materialized_inputs,
-          rank_same_groups: context.rank_same_groups,
-          rank_same_order: context.rank_same_order,
-          nodesep_pt: context.nodesep_pt,
-          has_edge_labels: context.has_edge_labels,
-          port_order_positions: context.port_order_positions,
-          port_order_contrib: context.port_order_contrib,
-          graphviz_flip: context.graphviz_flip,
-        },
-        capture_call,
-        reorder_call,
-      )
-    let rem_cleaned =
-      collect_real_only_rank_groups(
+    let materialized_inputs = build_remincross_materialized_inputs({
+      rem_rank_keys,
+      rem_groups,
+      creation_order: context.creation_order,
+      edges: context.edges,
+      edge_tail: context.edge_tail,
+      edge_head: context.edge_head,
+      edge_tail_port_x: context.edge_tail_port_x,
+      edge_head_port_x: context.edge_head_port_x,
+      edge_tail_port_order: context.edge_tail_port_order,
+      edge_head_port_order: context.edge_head_port_order,
+      ranks: context.ranks,
+      edge_vnodes: context.edge_vnodes,
+      order_with_vnodes: context.order_with_vnodes,
+      intercluster_keys: context.intercluster_keys,
+      cluster_order: context.cluster_order,
+      order_with_clusters: true,
+      edges_by_tail: context.edges_by_tail,
+      root_tail_order_override: context.root_tail_order_override,
+      root_cluster: context.root_cluster,
+      cluster_parents: context.cluster_parents,
+      order_sizes: context.order_sizes,
+      vnode_sizes: context.vnode_sizes,
+      cluster_flat_constraints: context.cluster_flat_constraints,
+      rank_same_constraints: context.rank_same_constraints,
+    })
+    let rem_ordered = run_remincross_cleanup(
+      {
         rem_rank_keys,
-        rem_ordered,
-        context.real_nodes,
-      )
-    {
-      ordered_groups: rem_cleaned,
-      ordered_with_vnodes: rem_ordered,
-    }
+        rem_groups,
+        materialized_inputs,
+        rank_same_groups: context.rank_same_groups,
+        rank_same_order: context.rank_same_order,
+        nodesep_pt: context.nodesep_pt,
+        has_edge_labels: context.has_edge_labels,
+        port_order_positions: context.port_order_positions,
+        port_order_contrib: context.port_order_contrib,
+        graphviz_flip: context.graphviz_flip,
+      },
+      capture_call,
+      reorder_call,
+    )
+    let rem_cleaned = collect_real_only_rank_groups(
+      rem_rank_keys,
+      rem_ordered,
+      context.real_nodes,
+    )
+    { ordered_groups: rem_cleaned, ordered_with_vnodes: rem_ordered }
   }
 }
 
@@ -500,57 +486,52 @@ pub fn run_remincross_cleanup(
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let materialized_inputs = inputs.materialized_inputs
-  let rem_edge_indices =
-    build_edge_indices_and_order(
-      materialized_inputs.rem_nodes,
-      materialized_inputs.rem_edge_tail_out,
-      materialized_inputs.rem_edge_head_out,
-      materialized_inputs.rem_ranks,
-      materialized_inputs.rem_edges_out,
-    )
+  let rem_edge_indices = build_edge_indices_and_order(
+    materialized_inputs.rem_nodes,
+    materialized_inputs.rem_edge_tail_out,
+    materialized_inputs.rem_edge_head_out,
+    materialized_inputs.rem_ranks,
+    materialized_inputs.rem_edges_out,
+  )
   // Graphviz parity: ReMincross clustered reorder executes startpass=2 on the
   // same rematerialized edge snapshot captured for fixture/debug parity.
-  capture_call(
-    {
-      rem_rank_keys: inputs.rem_rank_keys,
-      rem_groups: inputs.rem_groups,
-      rem_edges_out: materialized_inputs.rem_edges_out,
-      rem_edge_tail_out: materialized_inputs.rem_edge_tail_out,
-      rem_edge_head_out: materialized_inputs.rem_edge_head_out,
-      rem_edge_tail_port_x: materialized_inputs.rem_edge_tail_port_x,
-      rem_edge_head_port_x: materialized_inputs.rem_edge_head_port_x,
-      rem_edge_tail_port_order: materialized_inputs.rem_edge_tail_port_order,
-      rem_edge_head_port_order: materialized_inputs.rem_edge_head_port_order,
-      rem_cluster_keys: materialized_inputs.rem_cluster_keys,
-    },
-  )
-  reorder_call(
-    {
-      rem_rank_keys: inputs.rem_rank_keys,
-      rem_groups: inputs.rem_groups,
-      rem_edges_out: materialized_inputs.rem_edges_out,
-      rem_edge_tail_out: materialized_inputs.rem_edge_tail_out,
-      rem_edge_head_out: materialized_inputs.rem_edge_head_out,
-      rem_edge_tail_port_x: materialized_inputs.rem_edge_tail_port_x,
-      rem_edge_head_port_x: materialized_inputs.rem_edge_head_port_x,
-      rem_edge_tail_port_order: materialized_inputs.rem_edge_tail_port_order,
-      rem_edge_head_port_order: materialized_inputs.rem_edge_head_port_order,
-      rem_parents: rem_edge_indices.parents,
-      rem_children: rem_edge_indices.children,
-      rem_cluster_keys: materialized_inputs.rem_cluster_keys,
-      rank_same_groups: inputs.rank_same_groups,
-      rank_same_order: inputs.rank_same_order,
-      rem_edge_order: rem_edge_indices.edge_order,
-      rem_node_order: materialized_inputs.rem_node_order,
-      rem_sizes: materialized_inputs.rem_sizes,
-      nodesep_pt: inputs.nodesep_pt,
-      has_edge_labels: inputs.has_edge_labels,
-      port_order_positions: inputs.port_order_positions,
-      port_order_contrib: inputs.port_order_contrib,
-      rem_flat_constraints: materialized_inputs.rem_flat_constraints,
-      graphviz_flip: inputs.graphviz_flip,
-    },
-  )
+  capture_call({
+    rem_rank_keys: inputs.rem_rank_keys,
+    rem_groups: inputs.rem_groups,
+    rem_edges_out: materialized_inputs.rem_edges_out,
+    rem_edge_tail_out: materialized_inputs.rem_edge_tail_out,
+    rem_edge_head_out: materialized_inputs.rem_edge_head_out,
+    rem_edge_tail_port_x: materialized_inputs.rem_edge_tail_port_x,
+    rem_edge_head_port_x: materialized_inputs.rem_edge_head_port_x,
+    rem_edge_tail_port_order: materialized_inputs.rem_edge_tail_port_order,
+    rem_edge_head_port_order: materialized_inputs.rem_edge_head_port_order,
+    rem_cluster_keys: materialized_inputs.rem_cluster_keys,
+  })
+  reorder_call({
+    rem_rank_keys: inputs.rem_rank_keys,
+    rem_groups: inputs.rem_groups,
+    rem_edges_out: materialized_inputs.rem_edges_out,
+    rem_edge_tail_out: materialized_inputs.rem_edge_tail_out,
+    rem_edge_head_out: materialized_inputs.rem_edge_head_out,
+    rem_edge_tail_port_x: materialized_inputs.rem_edge_tail_port_x,
+    rem_edge_head_port_x: materialized_inputs.rem_edge_head_port_x,
+    rem_edge_tail_port_order: materialized_inputs.rem_edge_tail_port_order,
+    rem_edge_head_port_order: materialized_inputs.rem_edge_head_port_order,
+    rem_parents: rem_edge_indices.parents,
+    rem_children: rem_edge_indices.children,
+    rem_cluster_keys: materialized_inputs.rem_cluster_keys,
+    rank_same_groups: inputs.rank_same_groups,
+    rank_same_order: inputs.rank_same_order,
+    rem_edge_order: rem_edge_indices.edge_order,
+    rem_node_order: materialized_inputs.rem_node_order,
+    rem_sizes: materialized_inputs.rem_sizes,
+    nodesep_pt: inputs.nodesep_pt,
+    has_edge_labels: inputs.has_edge_labels,
+    port_order_positions: inputs.port_order_positions,
+    port_order_contrib: inputs.port_order_contrib,
+    rem_flat_constraints: materialized_inputs.rem_flat_constraints,
+    graphviz_flip: inputs.graphviz_flip,
+  })
 }
 
 ///|
@@ -683,27 +664,21 @@ fn build_seeded_rank_order(
   }
   // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
   // sequence aligned with Graphviz before generic key-based placement.
-  match try_build_special_seed_order(
-    filtered,
-    base_real,
-    real_order,
-    cluster_keys,
-  ) {
+  match
+    try_build_special_seed_order(filtered, base_real, real_order, cluster_keys) {
     Some(special_order) => special_order
     None => {
-      let neighbor_indices =
-        build_neighbor_real_indices(filtered, real_order)
+      let neighbor_indices = build_neighbor_real_indices(filtered, real_order)
       let keyed : Array[(String, Int, Int)] = []
       for i in 0..<filtered.length() {
         let name = filtered[i]
-        let key =
-          seeded_rank_merge_key(
-            i,
-            name,
-            real_order,
-            neighbor_indices.prev_real,
-            neighbor_indices.next_real_by_pos,
-          )
+        let key = seeded_rank_merge_key(
+          i,
+          name,
+          real_order,
+          neighbor_indices.prev_real,
+          neighbor_indices.next_real_by_pos,
+        )
         keyed.push((name, key, i))
       }
       // Graphviz parity: seeded rank replay uses keyed sort output order
@@ -762,12 +737,9 @@ pub fn build_seeded_remincross(
       rem_groups[rank] = filtered
       continue
     }
-    let ordered_rank =
-      build_seeded_rank_order(
-        filtered,
-        base_real,
-        cluster_keys,
-      )
+    let ordered_rank = build_seeded_rank_order(
+      filtered, base_real, cluster_keys,
+    )
     rem_groups[rank] = ordered_rank
   }
   rem_groups
@@ -951,8 +923,7 @@ pub fn build_vnode_keys_from_nlist(
         if ord >= 0 && first_real_order is None {
           first_real_order = Some(ord)
         }
-        let left_key =
-          if prev_order >= 0 {
+        let left_key = if prev_order >= 0 {
           prev_order.to_double()
         } else {
           let base = match first_real_order {
@@ -1003,10 +974,7 @@ pub fn build_vnode_order_keys(
       None => continue
     }
     match max_order_by_rank.get(rank) {
-      Some(current) =>
-        if order > current {
-          max_order_by_rank[rank] = order
-        }
+      Some(current) => if order > current { max_order_by_rank[rank] = order }
       None => max_order_by_rank[rank] = order
     }
   }
@@ -1014,17 +982,15 @@ pub fn build_vnode_order_keys(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let vnodes = edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
+    let vnodes = edge_vnodes
+      .get(@edge_identity.edge_vnode_key(edge))
+      .unwrap_or_default()
     if vnodes.length() == 0 {
       continue
     }
-    let (tail, head) =
-      edge_endpoints_at(
-        edge,
-        current_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = edge_endpoints_at(
+      edge, current_idx, edge_tail, edge_head,
+    )
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
@@ -1050,13 +1016,14 @@ pub fn build_vnode_order_keys(
     let low_order_f = Double::from_int(low_order)
     let high_order_f = Double::from_int(high_order)
     let same_order = low_order == high_order
-    let internal =
-      tail_cluster != "" && head_cluster != "" &&
+    let internal = tail_cluster != "" &&
+      head_cluster != "" &&
       edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
-    let trail_external =
-      !internal &&
-      ((tail_cluster == "" && head_cluster != "") ||
-        (tail_cluster != "" && head_cluster == ""))
+    let trail_external = !internal &&
+      (
+        (tail_cluster == "" && head_cluster != "") ||
+        (tail_cluster != "" && head_cluster == "")
+      )
     let edge_offset = Double::from_int(current_idx) * 0.001
     let mut vnode_seq = 0
     for vnode in vnodes {
@@ -1065,14 +1032,13 @@ pub fn build_vnode_order_keys(
         None => continue
       }
       let t = Double::from_int(vnode_rank - low_rank) / span_f
-      let mut base_key =
-        if same_order {
-          // Graphviz parity: when tail/head orders match, vnodes precede
-          // nodes with that order in the intermediate ranks.
-          low_order_f - (1.0 - t)
-        } else {
-          low_order_f + (high_order_f - low_order_f) * t
-        }
+      let mut base_key = if same_order {
+        // Graphviz parity: when tail/head orders match, vnodes precede
+        // nodes with that order in the intermediate ranks.
+        low_order_f - (1.0 - t)
+      } else {
+        low_order_f + (high_order_f - low_order_f) * t
+      }
       if trail_external {
         // Graphviz parity: edges crossing cluster boundaries from/to root
         // place vnodes after real nodes on the rank.
@@ -1123,19 +1089,13 @@ fn collect_remincross_trailing(
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
-    let (tail, head) =
-      edge_endpoints_at(
-        edge,
-        edge_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = remincross_cluster_keys.get(tail).unwrap_or_default()
     let head_cluster = remincross_cluster_keys.get(head).unwrap_or_default()
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
-    let internal =
-      tail_cluster != "" && head_cluster != "" &&
+    let internal = tail_cluster != "" &&
+      head_cluster != "" &&
       edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
     if internal ||
       tail_cluster == head_cluster ||
@@ -1144,15 +1104,13 @@ fn collect_remincross_trailing(
       continue
     }
     if cluster_rank_ranges_overlap(
-      tail_cluster,
-      head_cluster,
-      cluster_min_rank,
-      cluster_max_rank,
-    ) {
+        tail_cluster, head_cluster, cluster_min_rank, cluster_max_rank,
+      ) {
       continue
     }
-    let vnodes =
-      edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
+    let vnodes = edge_vnodes
+      .get(@edge_identity.edge_vnode_key(edge))
+      .unwrap_or_default()
     for vnode in vnodes {
       intercluster_vnodes[vnode] = true
     }
@@ -1182,10 +1140,7 @@ fn apply_remincross_floor(
       None => continue
     }
     match max_order_by_rank.get(rank) {
-      Some(current) =>
-        if order > current {
-          max_order_by_rank[rank] = order
-        }
+      Some(current) => if order > current { max_order_by_rank[rank] = order }
       None => max_order_by_rank[rank] = order
     }
   }
@@ -1200,10 +1155,7 @@ fn apply_remincross_floor(
     let offset = Double::from_int(seq) * 0.000001
     let min_key = base + offset
     match keys.get(vnode) {
-      Some(current) =>
-        if current < min_key {
-          keys[vnode] = min_key
-        }
+      Some(current) => if current < min_key { keys[vnode] = min_key }
       None => keys[vnode] = min_key
     }
     seq = seq + 1
@@ -1242,17 +1194,16 @@ fn build_remincross_vnode_keys(
   for name, key in inputs.intercluster_keys {
     remincross_cluster_keys[name] = key
   }
-  let intercluster_vnodes =
-    collect_remincross_trailing(
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_vnodes,
-      remincross_cluster_keys,
-      inputs.cluster_parents,
-      inputs.cluster_min_rank,
-      inputs.cluster_max_rank,
-    )
+  let intercluster_vnodes = collect_remincross_trailing(
+    inputs.edges,
+    inputs.edge_tail,
+    inputs.edge_head,
+    inputs.edge_vnodes,
+    remincross_cluster_keys,
+    inputs.cluster_parents,
+    inputs.cluster_min_rank,
+    inputs.cluster_max_rank,
+  )
   let keys = build_vnode_order_keys(
     inputs.edges,
     inputs.edge_tail,
@@ -1285,15 +1236,11 @@ pub fn build_remincross_vnode_groups(
 ) -> Map[Int, Array[String]] {
   let rem_base_groups = clone_rank_groups(inputs.final_groups)
   let rem_base_order_index = build_order_index(rem_base_groups)
-  let rem_vnode_order_keys =
-    if !inputs.order_with_vnodes {
-      Map::new()
-    } else {
-      build_remincross_vnode_keys(
-        inputs,
-        rem_base_order_index,
-      )
-    }
+  let rem_vnode_order_keys = if !inputs.order_with_vnodes {
+    Map::new()
+  } else {
+    build_remincross_vnode_keys(inputs, rem_base_order_index)
+  }
   if inputs.order_with_vnodes {
     build_x_groups_with_vnodes(
       rem_base_groups,

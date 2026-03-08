@@ -238,7 +238,9 @@ fn parse_optional_flat_edges(
 }
 
 ///|
-fn load_mincross_fixtures_from(path : String) -> Array[(MincrossInput, MincrossOutput)] raise {
+fn load_mincross_fixtures_from(
+  path : String,
+) -> Array[(MincrossInput, MincrossOutput)] raise {
   let data = @fs.read_file_to_string(path)
   let cases : Array[(MincrossInput, MincrossOutput)] = []
   let mut pending : MincrossInput? = None

@@ -94,12 +94,11 @@ pub fn order_rank_by_cluster(
         } else if prev_secondary > current_secondary {
           break
         } else {
-          let keep_order =
-            if reverse_ties {
-              group_order[prev] >= group_order[current]
-            } else {
-              group_order[prev] <= group_order[current]
-            }
+          let keep_order = if reverse_ties {
+            group_order[prev] >= group_order[current]
+          } else {
+            group_order[prev] <= group_order[current]
+          }
           if keep_order {
             break
           }
@@ -117,8 +116,7 @@ pub fn order_rank_by_cluster(
     let ordered_group = sort_by_positions(
       group, desired, x_positions, primary, secondary, node_penalty, parents_map,
       rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-      edge_pair_order, port_order_positions,
-      reverse_ties,
+      edge_pair_order, port_order_positions, reverse_ties,
     )
     for name in ordered_group {
       result.push(name)
@@ -127,6 +125,7 @@ pub fn order_rank_by_cluster(
   result
 }
 
+///|
 pub fn reorder_by_medians(
   names : Array[String],
   desired : Map[String, Double],
@@ -166,13 +165,13 @@ pub fn reorder_by_medians(
           continue
         }
         if left2right_constraint(
-          sorted[lp],
-          sorted[rp],
-          cluster_keys,
-          cluster_skeleton,
-          flat_constraints,
-          remincross_mode=remincross_mode,
-        ) {
+            sorted[lp],
+            sorted[rp],
+            cluster_keys,
+            cluster_skeleton,
+            flat_constraints,
+            remincross_mode~,
+          ) {
           muststay = true
           break
         }
@@ -212,6 +211,7 @@ pub fn reorder_by_medians(
   sorted
 }
 
+///|
 pub fn compute_desired_positions(
   names : Array[String],
   neighbors : Map[String, Array[String]],
@@ -296,6 +296,7 @@ pub fn compute_scaled_medians(
   desired
 }
 
+///|
 fn transpose_rank(
   rank : Int,
   names : Array[String],
@@ -306,20 +307,26 @@ fn transpose_rank(
   reverse : Bool,
 ) -> Bool {
   let mut changed = false
-  let parent_orders =
-    build_neighbor_order_index(names, parents, ranks, order, rank - 1)
-  let child_orders =
-    build_neighbor_order_index(names, children, ranks, order, rank + 1)
+  let parent_orders = build_neighbor_order_index(
+    names,
+    parents,
+    ranks,
+    order,
+    rank - 1,
+  )
+  let child_orders = build_neighbor_order_index(
+    names,
+    children,
+    ranks,
+    order,
+    rank + 1,
+  )
   let mut i = 0
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    let c0 = crossing_for_pair(
-      left, right, parent_orders, child_orders,
-    )
-    let c1 = crossing_for_pair(
-      right, left, parent_orders, child_orders,
-    )
+    let c0 = crossing_for_pair(left, right, parent_orders, child_orders)
+    let c1 = crossing_for_pair(right, left, parent_orders, child_orders)
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
@@ -408,10 +415,11 @@ fn in_cross_port_tiebreak(
           None => 0
         }
     }
-    let inv_port =
-      if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
-        0.0
-      }
+    let inv_port = if edge_idx < edge_tail_port_x.length() {
+      edge_tail_port_x[edge_idx]
+    } else {
+      0.0
+    }
     for edge_idx2 in left_in {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
@@ -426,10 +434,11 @@ fn in_cross_port_tiebreak(
           }
       }
       let t = tail_order - inv
-      let tail_port =
-        if edge_idx2 < edge_tail_port_x.length() { edge_tail_port_x[edge_idx2] } else {
-          0.0
-        }
+      let tail_port = if edge_idx2 < edge_tail_port_x.length() {
+        edge_tail_port_x[edge_idx2]
+      } else {
+        0.0
+      }
       if t > 0 || (t == 0 && tail_port > inv_port) {
         cross = cross + weight * cnt
       }
@@ -476,10 +485,11 @@ fn out_cross_port_tiebreak(
           None => 0
         }
     }
-    let inv_port =
-      if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
-        0.0
-      }
+    let inv_port = if edge_idx < edge_head_port_x.length() {
+      edge_head_port_x[edge_idx]
+    } else {
+      0.0
+    }
     for edge_idx2 in left_out {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
@@ -494,10 +504,11 @@ fn out_cross_port_tiebreak(
           }
       }
       let t = head_order - inv
-      let head_port =
-        if edge_idx2 < edge_head_port_x.length() { edge_head_port_x[edge_idx2] } else {
-          0.0
-        }
+      let head_port = if edge_idx2 < edge_head_port_x.length() {
+        edge_head_port_x[edge_idx2]
+      } else {
+        0.0
+      }
       if t > 0 || (t == 0 && head_port > inv_port) {
         cross = cross + weight * cnt
       }
@@ -531,30 +542,16 @@ pub fn count_rank_crossings_port(
     let mut right_idx = left_idx + 1
     while right_idx < names.length() {
       let right = names[right_idx]
-      cross = cross + in_cross_port_tiebreak(
-        left,
-        right,
-        rank,
-        ranks,
-        order,
-        fixed_order,
-        edge_in,
-        edge_tail,
-        edge_tail_port_x,
-        edge_penalty,
-      )
-      cross = cross + out_cross_port_tiebreak(
-        left,
-        right,
-        rank,
-        ranks,
-        order,
-        fixed_order,
-        edge_out,
-        edge_head,
-        edge_head_port_x,
-        edge_penalty,
-      )
+      cross = cross +
+        in_cross_port_tiebreak(
+          left, right, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
+          edge_penalty,
+        )
+      cross = cross +
+        out_cross_port_tiebreak(
+          left, right, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
+          edge_penalty,
+        )
       right_idx = right_idx + 1
     }
     left_idx = left_idx + 1
@@ -576,8 +573,11 @@ pub fn has_single_rank_incidents(
     rank_nodes[name] = true
   }
   for edge_idx in 0..<edge_tail.length() {
-    let penalty =
-      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    let penalty = if edge_idx < edge_penalty.length() {
+      edge_penalty[edge_idx]
+    } else {
+      0
+    }
     if penalty <= 0 {
       continue
     }
@@ -589,7 +589,8 @@ pub fn has_single_rank_incidents(
       continue
     }
     let other = if tail_in { head } else { tail }
-    if !@edge_identity.is_edge_vnode_name(other) && !@cluster_identity.is_cluster_skeleton_name(other) {
+    if !@edge_identity.is_edge_vnode_name(other) &&
+      !@cluster_identity.is_cluster_skeleton_name(other) {
       return true
     }
   }
@@ -602,7 +603,8 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !@edge_identity.is_edge_vnode_name(other) && !@cluster_identity.is_cluster_skeleton_name(other) {
+      if !@edge_identity.is_edge_vnode_name(other) &&
+        !@cluster_identity.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -614,7 +616,8 @@ pub fn has_single_rank_incidents(
       if rank_nodes.get(other) is Some(_) {
         continue
       }
-      if !@edge_identity.is_edge_vnode_name(other) && !@cluster_identity.is_cluster_skeleton_name(other) {
+      if !@edge_identity.is_edge_vnode_name(other) &&
+        !@cluster_identity.is_cluster_skeleton_name(other) {
         return true
       }
     }
@@ -655,66 +658,38 @@ fn transpose_rank_port_tiebreak(
     let left = names[i]
     let right = names[i + 1]
     if left2right_constraint(
-      left,
-      right,
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
-      remincross_mode=remincross_mode,
-    ) {
+        left,
+        right,
+        cluster_keys,
+        cluster_skeleton,
+        flat_constraints,
+        remincross_mode~,
+      ) {
       i = i + 1
       continue
     }
     let mut c0 = 0
     let mut c1 = 0
-    c0 = c0 + in_cross_port_tiebreak(
-      left,
-      right,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_in,
-      edge_tail,
-      edge_tail_port_x,
-      edge_penalty,
-    )
-    c1 = c1 + in_cross_port_tiebreak(
-      right,
-      left,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_in,
-      edge_tail,
-      edge_tail_port_x,
-      edge_penalty,
-    )
-    c0 = c0 + out_cross_port_tiebreak(
-      left,
-      right,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_out,
-      edge_head,
-      edge_head_port_x,
-      edge_penalty,
-    )
-    c1 = c1 + out_cross_port_tiebreak(
-      right,
-      left,
-      rank,
-      ranks,
-      order,
-      fixed_order,
-      edge_out,
-      edge_head,
-      edge_head_port_x,
-      edge_penalty,
-    )
+    c0 = c0 +
+      in_cross_port_tiebreak(
+        left, right, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
+        edge_penalty,
+      )
+    c1 = c1 +
+      in_cross_port_tiebreak(
+        right, left, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
+        edge_penalty,
+      )
+    c0 = c0 +
+      out_cross_port_tiebreak(
+        left, right, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
+        edge_penalty,
+      )
+    c1 = c1 +
+      out_cross_port_tiebreak(
+        right, left, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
+        edge_penalty,
+      )
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
@@ -776,23 +751,9 @@ pub fn transpose_rank_groups_port(
         continue
       }
       let transpose_result = transpose_rank_port_tiebreak(
-        rank,
-        ranks,
-        names,
-        order,
-        fixed_order,
-        edge_in,
-        edge_out,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_penalty,
-        cluster_keys,
-        cluster_skeleton,
-        flat_constraints,
-        reverse,
-        remincross_mode,
+        rank, ranks, names, order, fixed_order, edge_in, edge_out, edge_tail, edge_head,
+        edge_tail_port_x, edge_head_port_x, edge_penalty, cluster_keys, cluster_skeleton,
+        flat_constraints, reverse, remincross_mode,
       )
       if transpose_result.changed {
         ordered[rank] = names
@@ -930,12 +891,11 @@ pub fn apply_flat_mvals(
           i = i + 1
         }
         match desired.get(chosen) {
-          Some(value) => {
+          Some(value) =>
             if value > 0.0 {
               desired[name] = value - mc_eps
               assigned = true
             }
-          }
           None => ()
         }
       }
@@ -1062,12 +1022,11 @@ pub fn flat_reorder_rank_groups(
     }
     let mut i = 0
     while i < names.length() {
-      let v =
-        if graphviz_flip {
-          names[i]
-        } else {
-          names[names.length() - i - 1]
-        }
+      let v = if graphviz_flip {
+        names[i]
+      } else {
+        names[names.length() - i - 1]
+      }
       let local_in = match flat_in.get(v) {
         Some(list) => list
         None => []
@@ -1086,18 +1045,17 @@ pub fn flat_reorder_rank_groups(
     if temprank.length() == 0 {
       continue
     }
-    let reordered : Array[String] =
-      if graphviz_flip {
-        temprank
-      } else {
-        let reversed : Array[String] = []
-        let mut idx = temprank.length()
-        while idx > 0 {
-          idx = idx - 1
-          reversed.push(temprank[idx])
-        }
-        reversed
+    let reordered : Array[String] = if graphviz_flip {
+      temprank
+    } else {
+      let reversed : Array[String] = []
+      let mut idx = temprank.length()
+      while idx > 0 {
+        idx = idx - 1
+        reversed.push(temprank[idx])
       }
+      reversed
+    }
     if reordered.length() < names.length() {
       let seen : Map[String, Bool] = Map::new()
       for name in reordered {
@@ -1150,8 +1108,11 @@ pub fn build_seeded_reorder_groups(
   // Graphviz parity: seed build_ranks from component-scoped walk,
   // matching decompose/install traversal used by remincross with
   // cluster-expanded flat constraints.
-  let seed_pass =
-    if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
+  let seed_pass = if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) {
+    1
+  } else {
+    0
+  }
   let seeded_groups = build_component_rank_groups(
     build_context.order_rank_keys,
     build_context.order_groups,
@@ -1179,15 +1140,14 @@ pub fn build_seeded_reorder_groups(
     edge_head_port_x=build_context.order_edge_head_port_x,
   )
   if seed_cross > 0 {
-    let transpose_seed_maps =
-      build_transpose_seed_maps(
-        build_context.order_rank_keys,
-        seeded_groups,
-        build_context.order_edges_out,
-        build_context.order_edge_tail_out,
-        build_context.order_edge_head_out,
-        build_context.order_ranks,
-      )
+    let transpose_seed_maps = build_transpose_seed_maps(
+      build_context.order_rank_keys,
+      seeded_groups,
+      build_context.order_edges_out,
+      build_context.order_edge_tail_out,
+      build_context.order_edge_head_out,
+      build_context.order_ranks,
+    )
     let _ = transpose_rank_groups_port(
       build_context.order_rank_keys,
       seeded_groups,
@@ -1209,12 +1169,13 @@ pub fn build_seeded_reorder_groups(
   seeded_groups
 }
 
-
 ///|
 pub let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
 
 ///|
-pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(None)
+pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(
+  None,
+)
 
 ///|
 fn maybe_capture_seed_groups(
@@ -1243,9 +1204,7 @@ fn maybe_capture_seed_groups(
 /// Graphviz parity: root ReMincross pass0 capture wraps root rank-reorder and
 /// resets shared capture state immediately after the phase call returns.
 /// Do not change behavior without updating fixtures/tests.
-pub fn[T] run_with_pass0_flat_seed_capture(
-  run_phase : () -> T,
-) -> T {
+pub fn[T] run_with_pass0_flat_seed_capture(run_phase : () -> T) -> T {
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
   let result = run_phase()
@@ -1295,8 +1254,13 @@ pub fn reorder_rank_groups(
   let _ = sizes
   let _ = nodesep_pt
   let _ = has_edge_labels
-  let startpass =
-    if startpass < 0 { 0 } else if startpass > 2 { 2 } else { startpass }
+  let startpass = if startpass < 0 {
+    0
+  } else if startpass > 2 {
+    2
+  } else {
+    startpass
+  }
   let mut ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -1429,17 +1393,20 @@ pub fn reorder_rank_groups(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     let mut penalty = base_penalty
-    if coalesce_parallel_edges && base_penalty > 0 && @edge_semantics.edge_is_constraint(edge) {
-      let tail_port_order =
-        if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
-          0.5
-        }
-      let head_port_order =
-        if edge_idx < edge_head_port_order.length() { edge_head_port_order[edge_idx] } else {
-          0.5
-        }
-      let merge_key =
-        "\{tail}|\{head}|\{tail_port_order.to_string()}|\{head_port_order.to_string()}"
+    if coalesce_parallel_edges &&
+      base_penalty > 0 &&
+      @edge_semantics.edge_is_constraint(edge) {
+      let tail_port_order = if edge_idx < edge_tail_port_order.length() {
+        edge_tail_port_order[edge_idx]
+      } else {
+        0.5
+      }
+      let head_port_order = if edge_idx < edge_head_port_order.length() {
+        edge_head_port_order[edge_idx]
+      } else {
+        0.5
+      }
+      let merge_key = "\{tail}|\{head}|\{tail_port_order.to_string()}|\{head_port_order.to_string()}"
       match coalesced_edge_index.get(merge_key) {
         Some(first_idx) => {
           let prev = edge_penalty[first_idx]
@@ -1467,14 +1434,16 @@ pub fn reorder_rank_groups(
     if graphviz_style {
       // Graphviz parity: median neighbor positions include compass-port order
       // fractions (VAL/MC_SCALE tie-breaking in mincross.c).
-      let tail_port_order =
-        if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
-          0.5
-        }
-      let head_port_order =
-        if edge_idx < edge_head_port_order.length() { edge_head_port_order[edge_idx] } else {
-          0.5
-        }
+      let tail_port_order = if edge_idx < edge_tail_port_order.length() {
+        edge_tail_port_order[edge_idx]
+      } else {
+        0.5
+      }
+      let head_port_order = if edge_idx < edge_head_port_order.length() {
+        edge_head_port_order[edge_idx]
+      } else {
+        0.5
+      }
       match median_parents.get(head) {
         Some(list) => list.push((tail, tail_port_order))
         None => median_parents[head] = [(tail, tail_port_order)]
@@ -1559,8 +1528,9 @@ pub fn reorder_rank_groups(
   }
   // Graphviz parity: initial passes should always allow acceptance of
   // improved orderings before final crossing baseline is established.
-  let mut best_cross =
-    if graphviz_style && startpass > 1 && startpass_init_infinite {
+  let mut best_cross = if graphviz_style &&
+    startpass > 1 &&
+    startpass_init_infinite {
     2147483647
   } else if graphviz_style && startpass <= 1 {
     2147483647
@@ -1571,9 +1541,9 @@ pub fn reorder_rank_groups(
       edges,
       edge_tail,
       edge_head,
-      edge_tail_port_x=edge_tail_port_x,
-      edge_head_port_x=edge_head_port_x,
-      fixed_order=fixed_order,
+      edge_tail_port_x~,
+      edge_head_port_x~,
+      fixed_order~,
     )
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
@@ -1591,35 +1561,30 @@ pub fn reorder_rank_groups(
       0,
       flat_constraints,
       flip=graphviz_flip,
-      graphviz_out_neighbors=graphviz_out_neighbors,
-      graphviz_in_neighbors=graphviz_in_neighbors,
+      graphviz_out_neighbors~,
+      graphviz_in_neighbors~,
     )
     ordered = flat_reorder_rank_groups(
-      rank_keys,
-      ordered,
-      node_ranks,
-      flat_constraints,
-      graphviz_flip,
+      rank_keys, ordered, node_ranks, flat_constraints, graphviz_flip,
     )
     order_positions = order_positions_from_groups(ordered)
     merge_fixed_positions()
-    let seed_cross =
-      count_crossings_port_aware(
-        ordered,
-        node_ranks,
-        edges,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x=edge_tail_port_x,
-        edge_head_port_x=edge_head_port_x,
-        fixed_order=fixed_order,
-      )
+    let seed_cross = count_crossings_port_aware(
+      ordered,
+      node_ranks,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x~,
+      edge_head_port_x~,
+      fixed_order~,
+    )
     if seed_cross > 0 {
       let _ = transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
-        fixed_order=fixed_order,
+        fixed_order~,
         edge_in,
         edge_out,
         edge_tail,
@@ -1632,13 +1597,15 @@ pub fn reorder_rank_groups(
         flat_constraints,
         false,
         0,
-        remincross_mode=remincross_mode,
+        remincross_mode~,
       )
       order_positions = order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
     best_ordered = clone_rank_groups(ordered)
-    best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+    best_cross = count_crossings(
+      ordered, node_ranks, edges, edge_tail, edge_head,
+    )
   }
   if graphviz_style && rank_keys.length() == 1 {
     let max_iter = 24
@@ -1650,13 +1617,9 @@ pub fn reorder_rank_groups(
       None => []
     }
     if !has_single_rank_incidents(
-      single_names,
-      edge_tail,
-      edge_head,
-      edge_penalty,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-    ) {
+        single_names, edge_tail, edge_head, edge_penalty, graphviz_out_neighbors,
+        graphviz_in_neighbors,
+      ) {
       return ordered
     }
     let compute_single_cross = () => {
@@ -1665,17 +1628,8 @@ pub fn reorder_rank_groups(
         None => []
       }
       count_rank_crossings_port(
-        rank,
-        names,
-        node_ranks,
-        fixed_order,
-        edge_in,
-        edge_out,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_penalty,
+        rank, names, node_ranks, fixed_order, edge_in, edge_out, edge_tail, edge_head,
+        edge_tail_port_x, edge_head_port_x, edge_penalty,
       )
     }
     let mut force_single_rank_probe = false
@@ -1694,9 +1648,12 @@ pub fn reorder_rank_groups(
     let mut cur_cross = best_cross
     let mut pass = startpass
     while pass <= 2 {
-      let max_this_pass =
-        if pass <= 1 {
-        if max_iter < 4 { max_iter } else { 4 }
+      let max_this_pass = if pass <= 1 {
+        if max_iter < 4 {
+          max_iter
+        } else {
+          4
+        }
       } else {
         max_iter
       }
@@ -1713,8 +1670,8 @@ pub fn reorder_rank_groups(
           pass,
           flat_constraints,
           flip=graphviz_flip,
-          graphviz_out_neighbors=graphviz_out_neighbors,
-          graphviz_in_neighbors=graphviz_in_neighbors,
+          graphviz_out_neighbors~,
+          graphviz_in_neighbors~,
         )
         let seed_cross = compute_single_cross()
         if seed_cross > 0 {
@@ -1722,7 +1679,7 @@ pub fn reorder_rank_groups(
             rank_keys,
             ordered,
             node_ranks,
-            fixed_order=fixed_order,
+            fixed_order~,
             edge_in,
             edge_out,
             edge_tail,
@@ -1735,15 +1692,11 @@ pub fn reorder_rank_groups(
             flat_constraints,
             false,
             0,
-            remincross_mode=remincross_mode,
+            remincross_mode~,
           )
         }
         ordered = flat_reorder_rank_groups(
-          rank_keys,
-          ordered,
-          node_ranks,
-          flat_constraints,
-          graphviz_flip,
+          rank_keys, ordered, node_ranks, flat_constraints, graphviz_flip,
         )
         maybe_capture_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
@@ -1781,26 +1734,13 @@ pub fn reorder_rank_groups(
           None => []
         }
         if names.length() > 1 {
-          let desired =
-            if iter % 2 == 0 {
-              compute_scaled_medians(
-                names,
-                median_parents,
-                order_positions,
-              )
-            } else {
-              compute_scaled_medians(
-                names,
-                median_children,
-                order_positions,
-              )
-            }
+          let desired = if iter % 2 == 0 {
+            compute_scaled_medians(names, median_parents, order_positions)
+          } else {
+            compute_scaled_medians(names, median_children, order_positions)
+          }
           let hasfixed = apply_flat_mvals(
-            names,
-            desired,
-            edge_in,
-            edge_out,
-            flat_constraints,
+            names, desired, edge_in, edge_out, flat_constraints,
           )
           ordered[rank] = reorder_by_medians(
             names,
@@ -1810,7 +1750,7 @@ pub fn reorder_rank_groups(
             cluster_keys,
             cluster_skeleton,
             flat_constraints,
-            remincross_mode=remincross_mode,
+            remincross_mode~,
           )
           order_positions = order_positions_from_groups(ordered)
           merge_fixed_positions()
@@ -1819,7 +1759,7 @@ pub fn reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
-          fixed_order=fixed_order,
+          fixed_order~,
           edge_in,
           edge_out,
           edge_tail,
@@ -1832,7 +1772,7 @@ pub fn reorder_rank_groups(
           flat_constraints,
           !reverse,
           0,
-          remincross_mode=remincross_mode,
+          remincross_mode~,
         )
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
@@ -1869,7 +1809,7 @@ pub fn reorder_rank_groups(
         rank_keys,
         ordered,
         node_ranks,
-        fixed_order=fixed_order,
+        fixed_order~,
         edge_in,
         edge_out,
         edge_tail,
@@ -1882,7 +1822,7 @@ pub fn reorder_rank_groups(
         flat_constraints,
         false,
         0,
-        remincross_mode=remincross_mode,
+        remincross_mode~,
       )
     }
     return ordered
@@ -1892,7 +1832,9 @@ pub fn reorder_rank_groups(
     let min_quit = 8
     let convergence = 0.995
     let mut force_graphviz_probe = false
-    if startpass > 1 && rank_keys.length() <= 3 && best_cross == 0 &&
+    if startpass > 1 &&
+      rank_keys.length() <= 3 &&
+      best_cross == 0 &&
       has_graphviz_neighbor_hints {
       // Graphviz parity: ND_in/ND_out medians may drive reorder despite a
       // zero local crossing baseline.
@@ -1902,9 +1844,12 @@ pub fn reorder_rank_groups(
     let mut cur_cross = best_cross
     let mut pass = startpass
     while pass <= 2 {
-      let max_this_pass =
-        if pass <= 1 {
-        if max_iter < 4 { max_iter } else { 4 }
+      let max_this_pass = if pass <= 1 {
+        if max_iter < 4 {
+          max_iter
+        } else {
+          4
+        }
       } else {
         max_iter
       }
@@ -1921,28 +1866,27 @@ pub fn reorder_rank_groups(
           pass,
           flat_constraints,
           flip=graphviz_flip,
-          graphviz_out_neighbors=graphviz_out_neighbors,
-          graphviz_in_neighbors=graphviz_in_neighbors,
+          graphviz_out_neighbors~,
+          graphviz_in_neighbors~,
         )
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
-        let seed_cross =
-          count_crossings_port_aware(
-            ordered,
-            node_ranks,
-            edges,
-            edge_tail,
-            edge_head,
-            edge_tail_port_x=edge_tail_port_x,
-            edge_head_port_x=edge_head_port_x,
-            fixed_order=fixed_order,
-          )
+        let seed_cross = count_crossings_port_aware(
+          ordered,
+          node_ranks,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x~,
+          edge_head_port_x~,
+          fixed_order~,
+        )
         if seed_cross > 0 {
           let _ = transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
-            fixed_order=fixed_order,
+            fixed_order~,
             edge_in,
             edge_out,
             edge_tail,
@@ -1955,30 +1899,25 @@ pub fn reorder_rank_groups(
             flat_constraints,
             false,
             0,
-            remincross_mode=remincross_mode,
+            remincross_mode~,
           )
         }
         ordered = flat_reorder_rank_groups(
-          rank_keys,
-          ordered,
-          node_ranks,
-          flat_constraints,
-          graphviz_flip,
+          rank_keys, ordered, node_ranks, flat_constraints, graphviz_flip,
         )
         maybe_capture_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
-        cur_cross =
-          count_crossings_port_aware(
-            ordered,
-            node_ranks,
-            edges,
-            edge_tail,
-            edge_head,
-            edge_tail_port_x=edge_tail_port_x,
-            edge_head_port_x=edge_head_port_x,
-            fixed_order=fixed_order,
-          )
+        cur_cross = count_crossings_port_aware(
+          ordered,
+          node_ranks,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x~,
+          edge_head_port_x~,
+          fixed_order~,
+        )
         if cur_cross <= best_cross {
           best_cross = cur_cross
           best_ordered = clone_rank_groups(ordered)
@@ -2009,10 +1948,15 @@ pub fn reorder_rank_groups(
         }
         trying = trying + 1
         let reverse = iter % 4 < 2
-        let use_sweep_snapshot = startpass > 1 && pass > 1 &&
-          has_graphviz_neighbor_hints && iter % 2 == 0
-        let sweep_positions =
-          if use_sweep_snapshot { order_positions.copy() } else { order_positions }
+        let use_sweep_snapshot = startpass > 1 &&
+          pass > 1 &&
+          has_graphviz_neighbor_hints &&
+          iter % 2 == 0
+        let sweep_positions = if use_sweep_snapshot {
+          order_positions.copy()
+        } else {
+          order_positions
+        }
         if iter % 2 == 0 {
           let mut idx = if include_min_rank { 0 } else { 1 }
           while idx < rank_keys.length() {
@@ -2022,19 +1966,16 @@ pub fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired_positions =
-                if use_sweep_snapshot { sweep_positions } else { order_positions }
+              let desired_positions = if use_sweep_snapshot {
+                sweep_positions
+              } else {
+                order_positions
+              }
               let desired = compute_scaled_medians(
-                names,
-                median_parents,
-                desired_positions,
+                names, median_parents, desired_positions,
               )
               let hasfixed = apply_flat_mvals(
-                names,
-                desired,
-                edge_in,
-                edge_out,
-                flat_constraints,
+                names, desired, edge_in, edge_out, flat_constraints,
               )
               ordered[rank] = reorder_by_medians(
                 names,
@@ -2044,7 +1985,7 @@ pub fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
-                remincross_mode=remincross_mode,
+                remincross_mode~,
               )
               if !use_sweep_snapshot {
                 order_positions = order_positions_from_groups(ordered)
@@ -2054,12 +1995,11 @@ pub fn reorder_rank_groups(
             idx = idx + 1
           }
         } else {
-          let mut idx =
-            if include_max_rank {
-              rank_keys.length() - 1
-            } else {
-              rank_keys.length() - 2
-            }
+          let mut idx = if include_max_rank {
+            rank_keys.length() - 1
+          } else {
+            rank_keys.length() - 2
+          }
           while true {
             let rank = rank_keys[idx]
             let names = match ordered.get(rank) {
@@ -2067,19 +2007,16 @@ pub fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired_positions =
-                if use_sweep_snapshot { sweep_positions } else { order_positions }
+              let desired_positions = if use_sweep_snapshot {
+                sweep_positions
+              } else {
+                order_positions
+              }
               let desired = compute_scaled_medians(
-                names,
-                median_children,
-                desired_positions,
+                names, median_children, desired_positions,
               )
               let hasfixed = apply_flat_mvals(
-                names,
-                desired,
-                edge_in,
-                edge_out,
-                flat_constraints,
+                names, desired, edge_in, edge_out, flat_constraints,
               )
               ordered[rank] = reorder_by_medians(
                 names,
@@ -2089,7 +2026,7 @@ pub fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
-                remincross_mode=remincross_mode,
+                remincross_mode~,
               )
               if !use_sweep_snapshot {
                 order_positions = order_positions_from_groups(ordered)
@@ -2112,7 +2049,7 @@ pub fn reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
-          fixed_order=fixed_order,
+          fixed_order~,
           edge_in,
           edge_out,
           edge_tail,
@@ -2125,21 +2062,20 @@ pub fn reorder_rank_groups(
           flat_constraints,
           !reverse,
           0,
-          remincross_mode=remincross_mode,
+          remincross_mode~,
         )
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
-        cur_cross =
-          count_crossings_port_aware(
-            ordered,
-            node_ranks,
-            edges,
-            edge_tail,
-            edge_head,
-            edge_tail_port_x=edge_tail_port_x,
-            edge_head_port_x=edge_head_port_x,
-            fixed_order=fixed_order,
-          )
+        cur_cross = count_crossings_port_aware(
+          ordered,
+          node_ranks,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x~,
+          edge_head_port_x~,
+          fixed_order~,
+        )
         if cur_cross <= best_cross {
           let prev_best = best_cross
           best_cross = cur_cross
@@ -2172,7 +2108,7 @@ pub fn reorder_rank_groups(
         rank_keys,
         ordered,
         node_ranks,
-        fixed_order=fixed_order,
+        fixed_order~,
         edge_in,
         edge_out,
         edge_tail,
@@ -2185,7 +2121,7 @@ pub fn reorder_rank_groups(
         flat_constraints,
         false,
         0,
-        remincross_mode=remincross_mode,
+        remincross_mode~,
       )
     }
     return ordered
@@ -2206,9 +2142,7 @@ pub fn reorder_rank_groups(
             }
             if names.length() > 1 {
               let desired = compute_scaled_medians(
-                names,
-                median_parents,
-                order_positions,
+                names, median_parents, order_positions,
               )
               ordered[rank] = reorder_by_medians(
                 names,
@@ -2218,7 +2152,7 @@ pub fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
-                remincross_mode=remincross_mode,
+                remincross_mode~,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -2235,9 +2169,7 @@ pub fn reorder_rank_groups(
             }
             if names.length() > 1 {
               let desired = compute_scaled_medians(
-                names,
-                median_children,
-                order_positions,
+                names, median_children, order_positions,
               )
               ordered[rank] = reorder_by_medians(
                 names,
@@ -2247,7 +2179,7 @@ pub fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
-                remincross_mode=remincross_mode,
+                remincross_mode~,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -2263,7 +2195,7 @@ pub fn reorder_rank_groups(
             rank_keys,
             ordered,
             node_ranks,
-            fixed_order=fixed_order,
+            fixed_order~,
             edge_in,
             edge_out,
             edge_tail,
@@ -2276,22 +2208,21 @@ pub fn reorder_rank_groups(
             flat_constraints,
             !reverse_ties,
             0,
-            remincross_mode=remincross_mode,
+            remincross_mode~,
           )
           order_positions = order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
-        let cross =
-          count_crossings_port_aware(
-            ordered,
-            node_ranks,
-            edges,
-            edge_tail,
-            edge_head,
-            edge_tail_port_x=edge_tail_port_x,
-            edge_head_port_x=edge_head_port_x,
-            fixed_order=fixed_order,
-          )
+        let cross = count_crossings_port_aware(
+          ordered,
+          node_ranks,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x~,
+          edge_head_port_x~,
+          fixed_order~,
+        )
         if cross <= best_cross {
           best_cross = cross
           best_ordered = clone_rank_groups(ordered)
@@ -2306,17 +2237,12 @@ pub fn reorder_rank_groups(
           }
           if names.length() > 1 {
             let desired = compute_desired_positions(
-              names,
-              parents,
-              order_positions,
-              port_order_contrib,
-              preferred_positions,
+              names, parents, order_positions, port_order_contrib, preferred_positions,
             )
             ordered[rank] = order_rank_by_cluster(
               names, desired, order_positions, parents, children, node_penalty, parents,
-              cluster_keys,
-              rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-              edge_pair_order, port_order_positions, reverse_ties,
+              cluster_keys, rank_same_groups, rank_same_order, edge_order, node_order,
+              port_edge_nodes, edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
             merge_fixed_positions()
@@ -2335,23 +2261,20 @@ pub fn reorder_rank_groups(
           }
           if names.length() > 1 {
             let desired = compute_desired_positions(
-              names,
-              parents,
-              order_positions,
-              port_order_contrib,
-              preferred_positions,
+              names, parents, order_positions, port_order_contrib, preferred_positions,
             )
             ordered[rank] = order_rank_by_cluster(
               names, desired, order_positions, parents, children, node_penalty, parents,
-              cluster_keys,
-              rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-              edge_pair_order, port_order_positions, reverse_ties,
+              cluster_keys, rank_same_groups, rank_same_order, edge_order, node_order,
+              port_edge_nodes, edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
         }
-        let down_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+        let down_cross = count_crossings(
+          ordered, node_ranks, edges, edge_tail, edge_head,
+        )
         if down_cross < best_cross {
           best_cross = down_cross
           best_ordered = clone_rank_groups(ordered)
@@ -2365,17 +2288,12 @@ pub fn reorder_rank_groups(
           }
           if names.length() > 1 {
             let desired = compute_desired_positions(
-              names,
-              children,
-              order_positions,
-              port_order_contrib,
-              preferred_positions,
+              names, children, order_positions, port_order_contrib, preferred_positions,
             )
             ordered[rank] = order_rank_by_cluster(
               names, desired, order_positions, children, parents, node_penalty, parents,
-              cluster_keys,
-              rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-              edge_pair_order, port_order_positions, reverse_ties,
+              cluster_keys, rank_same_groups, rank_same_order, edge_order, node_order,
+              port_edge_nodes, edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
             merge_fixed_positions()
@@ -2394,23 +2312,20 @@ pub fn reorder_rank_groups(
           }
           if names.length() > 1 {
             let desired = compute_desired_positions(
-              names,
-              children,
-              order_positions,
-              port_order_contrib,
-              preferred_positions,
+              names, children, order_positions, port_order_contrib, preferred_positions,
             )
             ordered[rank] = order_rank_by_cluster(
               names, desired, order_positions, children, parents, node_penalty, parents,
-              cluster_keys,
-              rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-              edge_pair_order, port_order_positions, reverse_ties,
+              cluster_keys, rank_same_groups, rank_same_order, edge_order, node_order,
+              port_edge_nodes, edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
         }
-        let up_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+        let up_cross = count_crossings(
+          ordered, node_ranks, edges, edge_tail, edge_head,
+        )
         if up_cross < best_cross {
           best_cross = up_cross
           best_ordered = clone_rank_groups(ordered)

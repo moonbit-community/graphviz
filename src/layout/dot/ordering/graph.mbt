@@ -92,9 +92,7 @@ fn adjust_nlist_order_for_flip(
       }
       let resolved = if idx < list.length() { list[idx] } else { name }
       cluster_index[cluster] = idx + 1
-      adjusted.push(
-        resolved,
-      )
+      adjusted.push(resolved)
     }
   }
   adjusted
@@ -150,24 +148,37 @@ pub fn order_edge_merge_key(
 fn coalesce_order_edges_for_tail(
   entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
 ) -> Array[(String, String, Int, Bool, Double, Double, Double, Double)] {
-  let coalesced : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
+  let coalesced : Array[
+    (String, String, Int, Bool, Double, Double, Double, Double),
+  ] = []
   let key_index : Map[String, Int] = Map::new()
   for entry in entries {
-    let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-      entry
-    let key =
-      order_edge_merge_key(
-        tail,
-        head,
-        constraint,
-        tail_port_order,
-        head_port_order,
-      )
+    let (
+      tail,
+      head,
+      penalty,
+      constraint,
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+    ) = entry
+    let key = order_edge_merge_key(
+      tail, head, constraint, tail_port_order, head_port_order,
+    )
     match key_index.get(key) {
-      Some(rep_index) => {
+      Some(rep_index) =>
         if penalty > 0 {
-          let (rep_tail, rep_head, rep_penalty, rep_constraint, rep_tail_port_x, rep_head_port_x, rep_tail_port_order, rep_head_port_order) =
-            coalesced[rep_index]
+          let (
+            rep_tail,
+            rep_head,
+            rep_penalty,
+            rep_constraint,
+            rep_tail_port_x,
+            rep_head_port_x,
+            rep_tail_port_order,
+            rep_head_port_order,
+          ) = coalesced[rep_index]
           coalesced[rep_index] = (
             rep_tail,
             rep_head,
@@ -180,13 +191,18 @@ fn coalesce_order_edges_for_tail(
           )
         } else {
           coalesced.push(
-            (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+            (
+              tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order,
+              head_port_order,
+            ),
           )
         }
-      }
       None => {
         coalesced.push(
-          (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+          (
+            tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order,
+            head_port_order,
+          ),
         )
         key_index[key] = coalesced.length() - 1
       }
@@ -200,10 +216,18 @@ fn coalesce_order_edges_for_tail(
 /// segments per tail after chain materialization.
 /// Do not change behavior without updating fixtures/tests.
 pub fn coalesce_order_edges_by_tail(
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
-  let coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-    Map::new()
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
+) -> Map[
+  String,
+  Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+] {
+  let coalesced : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ] = Map::new()
   for tail_name, entries in order_edges_by_tail {
     coalesced[tail_name] = coalesce_order_edges_for_tail(entries)
   }
@@ -218,8 +242,7 @@ pub fn edge_orientation_is_reversed(
   tail_name : String,
   head_name : String,
 ) -> Bool {
-  tail_name == edge.head().name() &&
-  head_name == edge.tail().name()
+  tail_name == edge.head().name() && head_name == edge.tail().name()
 }
 
 ///|
@@ -292,13 +315,7 @@ fn collect_intercluster_bonus(
     }
     for idx in indices {
       let edge = edges[idx]
-      let (tail, head) =
-        edge_endpoints_at(
-          edge,
-          idx,
-          edge_tail,
-          edge_head,
-        )
+      let (tail, head) = edge_endpoints_at(edge, idx, edge_tail, edge_head)
       let tail_rank = match ranks.get(tail) {
         Some(value) => value
         None => 0
@@ -310,44 +327,48 @@ fn collect_intercluster_bonus(
       if tail_rank == head_rank {
         continue
       }
-      let tail_cluster =
-        if order_with_clusters {
-          cluster_key_or_empty(cluster_keys, tail)
-        } else {
-          ""
-        }
-      let head_cluster =
-        if order_with_clusters {
-          cluster_key_or_empty(cluster_keys, head)
-        } else {
-          ""
-        }
-      let intercluster =
-        order_with_clusters && tail_cluster != head_cluster &&
+      let tail_cluster = if order_with_clusters {
+        cluster_key_or_empty(cluster_keys, tail)
+      } else {
+        ""
+      }
+      let head_cluster = if order_with_clusters {
+        cluster_key_or_empty(cluster_keys, head)
+      } else {
+        ""
+      }
+      let intercluster = order_with_clusters &&
+        tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
-      if !intercluster || !@edge_semantics.edge_is_constraint(edge) || @edge_semantics.edge_xpenalty(edge) <= 0 {
+      if !intercluster ||
+        !@edge_semantics.edge_is_constraint(edge) ||
+        @edge_semantics.edge_xpenalty(edge) <= 0 {
         continue
       }
-      let tail_port_order =
-        if idx < edge_tail_port_order.length() { edge_tail_port_order[idx] } else {
-          0.5
+      let tail_port_order = if idx < edge_tail_port_order.length() {
+        edge_tail_port_order[idx]
+      } else {
+        0.5
+      }
+      let head_port_order = if idx < edge_head_port_order.length() {
+        edge_head_port_order[idx]
+      } else {
+        0.5
+      }
+      let vnodes = if order_with_vnodes {
+        match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
+          Some(list) => list
+          None => []
         }
-      let head_port_order =
-        if idx < edge_head_port_order.length() { edge_head_port_order[idx] } else {
-          0.5
-        }
-      let vnodes =
-        if order_with_vnodes {
-          match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
-            Some(list) => list
-            None => []
-          }
-        } else {
-          []
-        }
+      } else {
+        []
+      }
       let chain : Array[String] = []
-      let (chain_tail, chain_head) =
-        if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
+      let (chain_tail, chain_head) = if tail_rank <= head_rank {
+        (tail, head)
+      } else {
+        (head, tail)
+      }
       chain.push(chain_tail)
       if order_with_vnodes && vnodes.length() > 0 {
         for vnode in vnodes {
@@ -360,30 +381,23 @@ fn collect_intercluster_bonus(
         let t = chain[i]
         let h = chain[i + 1]
         if t != h && @edge_identity.is_edge_vnode_name(t) {
-          let seg_tail_order =
-            if t == tail && chain_tail == tail {
-              tail_port_order
-            } else if t == head && chain_head == head {
-              head_port_order
-            } else {
-              0.0
-            }
-          let seg_head_order =
-            if h == head && chain_head == head {
-              head_port_order
-            } else if h == tail && chain_tail == tail {
-              tail_port_order
-            } else {
-              0.0
-            }
-          let key =
-            order_edge_merge_key(
-              t,
-              h,
-              true,
-              seg_tail_order,
-              seg_head_order,
-            )
+          let seg_tail_order = if t == tail && chain_tail == tail {
+            tail_port_order
+          } else if t == head && chain_head == head {
+            head_port_order
+          } else {
+            0.0
+          }
+          let seg_head_order = if h == head && chain_head == head {
+            head_port_order
+          } else if h == tail && chain_tail == tail {
+            tail_port_order
+          } else {
+            0.0
+          }
+          let key = order_edge_merge_key(
+            t, h, true, seg_tail_order, seg_head_order,
+          )
           let prev = match count_by_key.get(key) {
             Some(value) => value
             None => 0
@@ -462,27 +476,25 @@ priv struct OrderSeedGroupsInputs {
 fn build_order_seed_groups(
   inputs : OrderSeedGroupsInputs,
 ) -> OrderSeedGroupsOutput {
-  let order_groups =
-    if inputs.order_with_vnodes {
-      build_x_groups_with_vnodes(
-        inputs.ordering_groups_base,
-        inputs.base_order_index,
-        inputs.vnodes_by_rank,
-        inputs.vnode_order_keys_for_ordering,
-      )
-    } else {
-      let out : Map[Int, Array[String]] = Map::new()
-      for rank, names in inputs.ordering_groups_base {
-        out[rank] = names.copy()
-      }
-      out
-    }
-  let order_sizes_out =
-    build_sizes_for_order_graph(
-      inputs.order_sizes,
-      inputs.order_with_vnodes,
-      inputs.vnode_sizes,
+  let order_groups = if inputs.order_with_vnodes {
+    build_x_groups_with_vnodes(
+      inputs.ordering_groups_base,
+      inputs.base_order_index,
+      inputs.vnodes_by_rank,
+      inputs.vnode_order_keys_for_ordering,
     )
+  } else {
+    let out : Map[Int, Array[String]] = Map::new()
+    for rank, names in inputs.ordering_groups_base {
+      out[rank] = names.copy()
+    }
+    out
+  }
+  let order_sizes_out = build_sizes_for_order_graph(
+    inputs.order_sizes,
+    inputs.order_with_vnodes,
+    inputs.vnode_sizes,
+  )
   // Graphviz parity: order graph cluster-key map starts from real-node keys and
   // appends vnode cluster keys only when vnode ordering is enabled.
   let order_cluster_keys : Map[String, String] = Map::new()
@@ -539,12 +551,7 @@ fn build_order_seed_groups(
       )
     }
   }
-  {
-    order_groups,
-    order_sizes_out,
-    order_cluster_keys,
-    order_cluster_skeleton,
-  }
+  { order_groups, order_sizes_out, order_cluster_keys, order_cluster_skeleton }
 }
 
 ///|
@@ -561,7 +568,7 @@ fn append_cluster_skeleton_range(
   order_groups : Map[Int, Array[String]],
   skeleton_size : NodeSize,
 ) -> Unit {
-  for rank in min_rank..=max_rank {
+  for rank in min_rank..<=max_rank {
     let name = @cluster_identity.cluster_skeleton_name(cluster, rank)
     order_cluster_keys[name] = cluster
     order_cluster_skeleton[name] = true
@@ -594,7 +601,8 @@ pub fn build_order_nodes_from_groups(
   order_nodes
 }
 
-///| Graphviz parity: clustered pre-root reorder context keeps build_ranks seed
+///|
+/// Graphviz parity: clustered pre-root reorder context keeps build_ranks seed
 /// ranks, order-graph snapshots, and node-order seed maps unchanged.
 pub(all) struct OrderReorderContext {
   order_rank_keys : Array[Int]
@@ -633,14 +641,18 @@ fn build_order_reorder_context(
 ) -> OrderReorderContext {
   let order_rank_keys = collect_rank_keys(inputs.order_groups)
   let order_ranks = build_node_ranks(inputs.order_groups)
-  let order_nodes =
-    build_order_nodes_from_groups(inputs.order_groups, order_rank_keys)
-  let order_graph_output =
-    build_order_graph_and_nodes("order_graph", order_nodes)
+  let order_nodes = build_order_nodes_from_groups(
+    inputs.order_groups,
+    order_rank_keys,
+  )
+  let order_graph_output = build_order_graph_and_nodes(
+    "order_graph", order_nodes,
+  )
   let order_graph = order_graph_output.order_graph
   let order_node_map = order_graph_output.order_node_map
-  let order_graph_unmapped_output =
-    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  let order_graph_unmapped_output = build_order_graph_and_nodes(
+    "order_graph_unmapped", order_nodes,
+  )
   let order_graph_unmapped = order_graph_unmapped_output.order_graph
   let order_node_map_unmapped = order_graph_unmapped_output.order_node_map
   let creation_order : Array[String] = []
@@ -666,7 +678,8 @@ fn build_order_reorder_context(
   }
   // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
   for name, idx in inputs.node_order {
-    if inputs.real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+    if inputs.real_nodes.get(name) is Some(_) &&
+      order_node_order.get(name) is None {
       order_node_order[name] = idx
     }
   }
@@ -724,12 +737,11 @@ pub fn build_order_graph_and_nodes(
   graph_name : String,
   order_nodes : Array[String],
 ) -> OrderGraphAndNodes {
-  let order_graph =
-    @cgraph.Graph::new(
-      @cgraph.GraphKind::Directed,
-      name=graph_name,
-      strict=false,
-    )
+  let order_graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    name=graph_name,
+    strict=false,
+  )
   let order_node_map : Map[String, @cgraph.Node] = Map::new()
   for name in order_nodes {
     order_node_map[name] = order_graph.node(name)
@@ -757,7 +769,10 @@ pub(all) struct OrderEdgeArrays {
 /// Do not change behavior without updating fixtures/tests.
 pub fn collect_order_edges_for_tails(
   tail_sequence : Array[String],
-  edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
 ) -> OrderEdgeArrays {
@@ -774,18 +789,7 @@ pub fn collect_order_edges_for_tails(
       None => []
     }
     for entry in list {
-      let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        entry
-      add_order_edge(
-        order_graph,
-        order_node_map,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
+      let (
         edge_tail_name,
         edge_head_name,
         penalty,
@@ -794,6 +798,12 @@ pub fn collect_order_edges_for_tails(
         head_port_x,
         tail_port_order,
         head_port_order,
+      ) = entry
+      add_order_edge(
+        order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
+        order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order,
+        order_edge_head_port_order, edge_tail_name, edge_head_name, penalty, constraint,
+        tail_port_x, head_port_x, tail_port_order, head_port_order,
       )
     }
   }
@@ -837,10 +847,16 @@ pub(all) struct OrderMaterializationData {
 /// snapshots and flat constraints unchanged before edge-array build.
 priv struct OrderMaterializationInputs {
   nlist_order : Array[String]
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
   order_graph_unmapped : @cgraph.Graph
   order_node_map_unmapped : Map[String, @cgraph.Node]
   order_nodes : Array[String]
@@ -859,7 +875,10 @@ priv struct MaterializedGraphvizNeighborMaps {
 /// AGSEQ replay order before unconstrained seed overrides.
 fn build_materialized_graphviz_neighbors(
   order_nodes : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ],
   edge_creation_order : Array[(String, String)],
 ) -> MaterializedGraphvizNeighborMaps {
   // Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
@@ -872,8 +891,16 @@ fn build_materialized_graphviz_neighbors(
   for tail, entries in order_edges_by_tail {
     let heads : Array[String] = []
     for entry in entries {
-      let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
-        entry
+      let (
+        _t,
+        h,
+        _pen,
+        _constraint,
+        _tail_port_x,
+        _head_port_x,
+        _tail_port_order,
+        _head_port_order,
+      ) = entry
       heads.push(h)
     }
     graphviz_out_neighbors[tail] = heads
@@ -889,10 +916,7 @@ fn build_materialized_graphviz_neighbors(
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
-  {
-    out_neighbors: graphviz_out_neighbors,
-    in_neighbors: graphviz_in_neighbors,
-  }
+  { out_neighbors: graphviz_out_neighbors, in_neighbors: graphviz_in_neighbors }
 }
 
 ///|
@@ -904,26 +928,23 @@ fn build_order_materialization_data(
 ) -> OrderMaterializationData {
   // Graphviz parity: mapped/unmapped order-edge arrays are materialized from
   // GD_nlist tail order against remapped and non-remapped order graphs.
-  let mapped_edges =
-    collect_order_edges_for_tails(
-      inputs.nlist_order,
-      inputs.order_edges_by_tail,
-      inputs.order_graph,
-      inputs.order_node_map,
-    )
-  let unmapped_edges =
-    collect_order_edges_for_tails(
-      inputs.nlist_order,
-      inputs.order_edges_by_tail_unmapped,
-      inputs.order_graph_unmapped,
-      inputs.order_node_map_unmapped,
-    )
-  let graphviz_neighbors =
-    build_materialized_graphviz_neighbors(
-      inputs.order_nodes,
-      inputs.order_edges_by_tail,
-      inputs.edge_creation_order,
-    )
+  let mapped_edges = collect_order_edges_for_tails(
+    inputs.nlist_order,
+    inputs.order_edges_by_tail,
+    inputs.order_graph,
+    inputs.order_node_map,
+  )
+  let unmapped_edges = collect_order_edges_for_tails(
+    inputs.nlist_order,
+    inputs.order_edges_by_tail_unmapped,
+    inputs.order_graph_unmapped,
+    inputs.order_node_map_unmapped,
+  )
+  let graphviz_neighbors = build_materialized_graphviz_neighbors(
+    inputs.order_nodes,
+    inputs.order_edges_by_tail,
+    inputs.edge_creation_order,
+  )
   let order_flat_constraints : Map[String, Bool] = Map::new()
   for key, value in inputs.flat_constraints {
     order_flat_constraints[key] = value
@@ -1162,25 +1183,22 @@ pub struct ClusteredPreRootStageOutput {
 fn build_clustered_order_seed_stage(
   sources : ClusteredPreRootStageSources,
 ) -> OrderSeedGroupsOutput {
-  build_order_seed_groups(
-    {
-      ordering_groups_base: sources.reorder_setup.ordering_groups_base,
-      base_order_index: sources.reorder_setup.base_order_index,
-      order_with_vnodes: sources.reorder_setup.order_with_vnodes,
-      order_with_clusters: sources.reorder_setup.order_with_clusters,
-      cluster_keys: sources.cluster_keys,
-      cluster_order: sources.cluster_order,
-      cluster_min_rank: sources.cluster_min_rank,
-      cluster_max_rank: sources.cluster_max_rank,
-      vnode_clusters: sources.vnode_clusters,
-      vnodes_by_rank: sources.vnodes_by_rank,
-      vnode_order_keys_for_ordering:
-        sources.reorder_setup.vnode_order_keys_for_ordering,
-      order_sizes: sources.order_sizes,
-      vnode_sizes: sources.vnode_sizes,
-      skeleton_size: sources.skeleton_size,
-    },
-  )
+  build_order_seed_groups({
+    ordering_groups_base: sources.reorder_setup.ordering_groups_base,
+    base_order_index: sources.reorder_setup.base_order_index,
+    order_with_vnodes: sources.reorder_setup.order_with_vnodes,
+    order_with_clusters: sources.reorder_setup.order_with_clusters,
+    cluster_keys: sources.cluster_keys,
+    cluster_order: sources.cluster_order,
+    cluster_min_rank: sources.cluster_min_rank,
+    cluster_max_rank: sources.cluster_max_rank,
+    vnode_clusters: sources.vnode_clusters,
+    vnodes_by_rank: sources.vnodes_by_rank,
+    vnode_order_keys_for_ordering: sources.reorder_setup.vnode_order_keys_for_ordering,
+    order_sizes: sources.order_sizes,
+    vnode_sizes: sources.vnode_sizes,
+    skeleton_size: sources.skeleton_size,
+  })
 }
 
 ///|
@@ -1192,37 +1210,30 @@ fn build_clustered_materialized_stage(
   sources : ClusteredPreRootStageSources,
   order_groups : Map[Int, Array[String]],
 ) -> ClusteredMaterializedStageOutput {
-  let reorder_context =
-    build_order_reorder_context(
-      {
-        order_groups,
-        nlist_order: sources.reorder_setup.class2_data.nlist_order,
-        gdnlist_order: sources.reorder_setup.gdnlist_order,
-        node_order: sources.node_order,
-        real_nodes: sources.real_nodes,
-        has_clusters: sources.has_clusters,
-        base_order_index: sources.reorder_setup.base_order_index,
-        rank_same_groups: sources.rank_same_groups,
-        rank_same_order: sources.rank_same_order,
-        port_edge_nodes: sources.port_edge_nodes,
-      },
-    )
-  let materialized =
-    build_order_materialization_data(
-      {
-        nlist_order: sources.reorder_setup.class2_data.nlist_order,
-        order_edges_by_tail: sources.reorder_setup.class2_data.order_edges_by_tail,
-        order_graph: reorder_context.order_graph,
-        order_node_map: reorder_context.order_node_map,
-        order_edges_by_tail_unmapped:
-          sources.reorder_setup.class2_data.order_edges_by_tail_unmapped,
-        order_graph_unmapped: reorder_context.order_graph_unmapped,
-        order_node_map_unmapped: reorder_context.order_node_map_unmapped,
-        order_nodes: reorder_context.order_nodes,
-        edge_creation_order: sources.reorder_setup.class2_data.edge_creation_order,
-        flat_constraints: sources.flat_constraints,
-      },
-    )
+  let reorder_context = build_order_reorder_context({
+    order_groups,
+    nlist_order: sources.reorder_setup.class2_data.nlist_order,
+    gdnlist_order: sources.reorder_setup.gdnlist_order,
+    node_order: sources.node_order,
+    real_nodes: sources.real_nodes,
+    has_clusters: sources.has_clusters,
+    base_order_index: sources.reorder_setup.base_order_index,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    port_edge_nodes: sources.port_edge_nodes,
+  })
+  let materialized = build_order_materialization_data({
+    nlist_order: sources.reorder_setup.class2_data.nlist_order,
+    order_edges_by_tail: sources.reorder_setup.class2_data.order_edges_by_tail,
+    order_graph: reorder_context.order_graph,
+    order_node_map: reorder_context.order_node_map,
+    order_edges_by_tail_unmapped: sources.reorder_setup.class2_data.order_edges_by_tail_unmapped,
+    order_graph_unmapped: reorder_context.order_graph_unmapped,
+    order_node_map_unmapped: reorder_context.order_node_map_unmapped,
+    order_nodes: reorder_context.order_nodes,
+    edge_creation_order: sources.reorder_setup.class2_data.edge_creation_order,
+    flat_constraints: sources.flat_constraints,
+  })
   // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
   // before unconstrained-node seed-order overrides for build_ranks seeding.
   apply_unconstrained_order_overrides(
@@ -1238,10 +1249,7 @@ fn build_clustered_materialized_stage(
     sources.intercluster_keys,
     reorder_context.order_node_order,
   )
-  {
-    reorder_context,
-    materialized,
-  }
+  { reorder_context, materialized }
 }
 
 ///|
@@ -1252,13 +1260,11 @@ fn build_clustered_materialized_stage(
 pub fn run_clustered_pre_root_stage_from_sources(
   sources : ClusteredPreRootStageSources,
 ) -> ClusteredPreRootStageOutput {
-  let order_seed_stage =
-    build_clustered_order_seed_stage(sources)
-  let materialized_stage =
-    build_clustered_materialized_stage(
-      sources,
-      order_seed_stage.order_groups,
-    )
+  let order_seed_stage = build_clustered_order_seed_stage(sources)
+  let materialized_stage = build_clustered_materialized_stage(
+    sources,
+    order_seed_stage.order_groups,
+  )
   {
     order_groups: order_seed_stage.order_groups,
     order_sizes_out: order_seed_stage.order_sizes_out,
@@ -1290,13 +1296,9 @@ pub fn build_edge_indices_and_order(
   order_ranks : Map[String, Int],
   edges_out : Array[@cgraph.Edge],
 ) -> EdgeIndicesAndOrder {
-  let edge_index_data =
-    build_edge_index_for_names(
-      order_nodes,
-      edge_tail_out,
-      edge_head_out,
-      order_ranks,
-    )
+  let edge_index_data = build_edge_index_for_names(
+    order_nodes, edge_tail_out, edge_head_out, order_ranks,
+  )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
   let edge_order = collect_edge_order(edges_out)

@@ -4245,4 +4245,3 @@ test "rank_reorder reorders dense abstract layered case" {
   let (input, output) = abstract_dense_rank_reorder_case()
   run_mincross_case_with_name_order(input, output, Map::new())
 }
-

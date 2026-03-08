@@ -19,7 +19,9 @@ fn edge_tail_at(
   edge_idx : Int,
   edge_tail : Array[String],
 ) -> String {
-  if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+  if edge_idx < edge_tail.length() {
+    edge_tail[edge_idx]
+  } else {
     edge.tail().name()
   }
 }
@@ -30,7 +32,9 @@ fn edge_head_at(
   edge_idx : Int,
   edge_head : Array[String],
 ) -> String {
-  if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+  if edge_idx < edge_head.length() {
+    edge_head[edge_idx]
+  } else {
     edge.head().name()
   }
 }
@@ -65,13 +69,7 @@ fn dedup_ordering_edges(
   let out_tail : Array[String] = []
   let out_head : Array[String] = []
   for i in 0..<edges.length() {
-    let (tail, head) =
-      edge_endpoints_at(
-        edges[i],
-        i,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = edge_endpoints_at(edges[i], i, edge_tail, edge_head)
     let key = "\{tail}|\{head}"
     if seen.get(key) is Some(_) {
       continue
@@ -81,7 +79,11 @@ fn dedup_ordering_edges(
     out_tail.push(tail)
     out_head.push(head)
   }
-  { order_edges: out_edges, order_edge_tail: out_tail, order_edge_head: out_head }
+  {
+    order_edges: out_edges,
+    order_edge_tail: out_tail,
+    order_edge_head: out_head,
+  }
 }
 
 ///|
@@ -108,13 +110,7 @@ fn build_flat_constraints(
     in_edges[name] = []
   }
   for i in 0..<edges.length() {
-    let (tail, head) =
-      edge_endpoints_at(
-        edges[i],
-        i,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = edge_endpoints_at(edges[i], i, edge_tail, edge_head)
     let tail_cluster = match cluster_keys.get(tail) {
       Some(value) => value
       None => ""
@@ -138,18 +134,16 @@ fn build_flat_constraints(
   }
   let apply_ordering = (name : String, mode : OrderingMode) => {
     let list = match mode {
-      OrderingMode::Out => {
+      OrderingMode::Out =>
         match out_edges.get(name) {
           Some(items) => items
           None => []
         }
-      }
-      OrderingMode::In => {
+      OrderingMode::In =>
         match in_edges.get(name) {
           Some(items) => items
           None => []
         }
-      }
     }
     if list.length() <= 1 {
       return ()
@@ -170,20 +164,18 @@ fn build_flat_constraints(
     while idx < sorted.length() {
       let (_prev_id, prev_idx) = sorted[idx - 1]
       let (_curr_id, curr_idx) = sorted[idx]
-      let (prev_tail, prev_head) =
-        edge_endpoints_at(
-          edges[prev_idx],
-          prev_idx,
-          edge_tail,
-          edge_head,
-        )
-      let (curr_tail, curr_head) =
-        edge_endpoints_at(
-          edges[curr_idx],
-          curr_idx,
-          edge_tail,
-          edge_head,
-        )
+      let (prev_tail, prev_head) = edge_endpoints_at(
+        edges[prev_idx],
+        prev_idx,
+        edge_tail,
+        edge_head,
+      )
+      let (curr_tail, curr_head) = edge_endpoints_at(
+        edges[curr_idx],
+        curr_idx,
+        edge_tail,
+        edge_head,
+      )
       let left = match mode {
         OrderingMode::Out => prev_head
         OrderingMode::In => prev_tail
@@ -210,7 +202,7 @@ fn build_flat_constraints(
         apply_ordering(node.name(), mode)
       }
     }
-    None => {
+    None =>
       for node in nodes {
         match node.get_attr("ordering") {
           Some(value) =>
@@ -224,7 +216,6 @@ fn build_flat_constraints(
           None => ()
         }
       }
-    }
   }
   { flat_constraints, ordering_set }
 }
@@ -242,7 +233,8 @@ fn add_same_rank_constraint_edges_to_flat_constraints(
 ) -> Unit {
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !@edge_semantics.edge_is_constraint(edges[edge_idx]) {
+    if edge_idx < edges.length() &&
+      !@edge_semantics.edge_is_constraint(edges[edge_idx]) {
       edge_idx = edge_idx + 1
       continue
     }
@@ -272,27 +264,14 @@ fn build_cluster_flat_constraints(
   ranks : Map[String, Int],
   cluster_keys : Map[String, String],
 ) -> FlatConstraintsOutput {
-  let flat_constraints_output =
-    build_flat_constraints(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      cluster_keys,
-    )
+  let flat_constraints_output = build_flat_constraints(
+    graph, nodes, edges, edge_tail, edge_head, cluster_keys,
+  )
   let flat_constraints = flat_constraints_output.flat_constraints
   add_same_rank_constraint_edges_to_flat_constraints(
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    flat_constraints,
+    edges, edge_tail, edge_head, ranks, flat_constraints,
   )
-  {
-    flat_constraints,
-    ordering_set: flat_constraints_output.ordering_set,
-  }
+  { flat_constraints, ordering_set: flat_constraints_output.ordering_set }
 }
 
 ///|
@@ -313,13 +292,7 @@ pub fn build_edge_index_for_order(
   for node in nodes {
     node_names.push(node.name())
   }
-  build_edge_index_impl(
-    node_names,
-    edge_tail,
-    edge_head,
-    ranks,
-    edges.length(),
-  )
+  build_edge_index_impl(node_names, edge_tail, edge_head, ranks, edges.length())
 }
 
 ///|
@@ -424,10 +397,14 @@ pub fn add_order_edge(
   }
 }
 
+///|
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct OrderEdgesByTailOutput {
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
   vnode_creation_by_tail : Map[String, Array[String]]
   edge_creation_order : Array[(String, String)]
 }
@@ -454,8 +431,10 @@ pub fn build_order_edges_by_tail(
   edges_by_tail : Map[String, Array[Int]],
   cluster_order_index? : Map[String, Int] = Map::new(),
 ) -> OrderEdgesByTailOutput {
-  let out : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-    Map::new()
+  let out : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ] = Map::new()
   let vnode_seen : Map[String, Bool] = Map::new()
   let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
   let edge_creation : Array[(String, String)] = []
@@ -472,163 +451,160 @@ pub fn build_order_edges_by_tail(
       Some(list) => list
       None => []
     }
-    let indices =
-      if !order_with_clusters || cluster_order_index_local.length() == 0 ||
-        indices_raw.length() <= 1 {
-        indices_raw
-      } else {
-        let tail_cluster_name = match cluster_keys.get(tail_name) {
+    let indices = if !order_with_clusters ||
+      cluster_order_index_local.length() == 0 ||
+      indices_raw.length() <= 1 {
+      indices_raw
+    } else {
+      let tail_cluster_name = match cluster_keys.get(tail_name) {
+        Some(value) => value
+        None => ""
+      }
+      let tail_cluster_rank = match
+        cluster_order_index_local.get(tail_cluster_name) {
+        Some(value) => value
+        None => -1
+      }
+      let head_cluster_default = cluster_order_index_local.length() + 1
+      let keyed : Array[(Int, Int, Int, Int, String)] = []
+      let mut original_pos = 0
+      for idx in indices_raw {
+        let edge = edges[idx]
+        let (tail, head) = edge_endpoints_at(edge, idx, edge_tail, edge_head)
+        let tail_cluster = match cluster_keys.get(tail) {
           Some(value) => value
           None => ""
         }
-        let tail_cluster_rank = match cluster_order_index_local.get(tail_cluster_name) {
+        let head_cluster = match cluster_keys.get(head) {
           Some(value) => value
-          None => -1
+          None => ""
         }
-        let head_cluster_default = cluster_order_index_local.length() + 1
-        let keyed : Array[(Int, Int, Int, Int, String)] = []
-        let mut original_pos = 0
-        for idx in indices_raw {
-          let edge = edges[idx]
-          let (tail, head) =
-            edge_endpoints_at(
-              edge,
-              idx,
-              edge_tail,
-              edge_head,
-            )
-          let tail_cluster = match cluster_keys.get(tail) {
-            Some(value) => value
-            None => ""
-          }
-          let head_cluster = match cluster_keys.get(head) {
-            Some(value) => value
-            None => ""
-          }
-          let same_cluster =
-            tail_cluster != "" && head_cluster != "" && tail_cluster == head_cluster
-          let cluster_rank = match cluster_order_index_local.get(head_cluster) {
-            Some(value) => value
-            None => head_cluster_default
-          }
-          keyed.push(
-            (
-              idx,
-              if same_cluster { 0 } else { 1 },
-              cluster_rank,
-              original_pos,
-              head_cluster,
-            ),
-          )
-          original_pos = original_pos + 1
+        let same_cluster = tail_cluster != "" &&
+          head_cluster != "" &&
+          tail_cluster == head_cluster
+        let cluster_rank = match cluster_order_index_local.get(head_cluster) {
+          Some(value) => value
+          None => head_cluster_default
         }
-        if keyed.length() > 1 {
-          keyed.sort_by((a, b) => {
-            let (_idx_a, same_a, rank_a, pos_a, _cluster_a) = a
-            let (_idx_b, same_b, rank_b, pos_b, _cluster_b) = b
-            if same_a < same_b {
-              -1
-            } else if same_a > same_b {
-              1
-            } else if rank_a < rank_b {
-              -1
-            } else if rank_a > rank_b {
-              1
-            } else if pos_a < pos_b {
-              -1
-            } else if pos_a > pos_b {
-              1
-            } else {
+        keyed.push(
+          (
+            idx,
+            if same_cluster {
               0
-            }
-          })
-        }
-        // Graphviz parity: when a tail points into later clusters, agfstout
-        // starts each cluster bucket from its rankleader edge, then walks the
-        // remaining edges in original order.
-        let keyed_rotated : Array[(Int, Int, Int, Int, String)] = []
-        if tail_cluster_name != "" && tail_cluster_rank >= 0 && keyed.length() > 1 {
-          let leader_entries : Array[(Int, Int, Int, Int, String)] = []
-          let body_entries : Array[(Int, Int, Int, Int, String)] = []
-          let mut insert_pos = -1
-          let mut i = 0
-          while i < keyed.length() {
-            let (_idx_i, same_i, rank_i, _pos_i, cluster_i) = keyed[i]
-            let mut j = i + 1
-            while j < keyed.length() {
-              let (_idx_j, same_j, rank_j, _pos_j, cluster_j) = keyed[j]
-              if same_j != same_i || rank_j != rank_i || cluster_j != cluster_i {
-                break
-              }
-              j = j + 1
-            }
-            let segment_len = j - i
-            let use_right_cluster_leader =
-              same_i == 1 && cluster_i != "" && rank_i > tail_cluster_rank &&
-              segment_len > 1
-            if use_right_cluster_leader {
-              if insert_pos < 0 {
-                insert_pos = body_entries.length()
-              }
-              let mut k = i
-              while k + 1 < j {
-                body_entries.push(keyed[k])
-                k = k + 1
-              }
-              leader_entries.push(keyed[j - 1])
             } else {
-              let mut k = i
-              while k < j {
-                body_entries.push(keyed[k])
-                k = k + 1
-              }
-            }
-            i = j
-          }
-          if leader_entries.length() > 0 {
-            let split =
-              if insert_pos >= 0 { insert_pos } else { body_entries.length() }
-            let mut i = 0
-            while i < split {
-              keyed_rotated.push(body_entries[i])
-              i = i + 1
-            }
-            for entry in leader_entries {
-              keyed_rotated.push(entry)
-            }
-            i = split
-            while i < body_entries.length() {
-              keyed_rotated.push(body_entries[i])
-              i = i + 1
-            }
+              1
+            },
+            cluster_rank,
+            original_pos,
+            head_cluster,
+          ),
+        )
+        original_pos = original_pos + 1
+      }
+      if keyed.length() > 1 {
+        keyed.sort_by((a, b) => {
+          let (_idx_a, same_a, rank_a, pos_a, _cluster_a) = a
+          let (_idx_b, same_b, rank_b, pos_b, _cluster_b) = b
+          if same_a < same_b {
+            -1
+          } else if same_a > same_b {
+            1
+          } else if rank_a < rank_b {
+            -1
+          } else if rank_a > rank_b {
+            1
+          } else if pos_a < pos_b {
+            -1
+          } else if pos_a > pos_b {
+            1
           } else {
-            for entry in keyed {
-              keyed_rotated.push(entry)
+            0
+          }
+        })
+      }
+      // Graphviz parity: when a tail points into later clusters, agfstout
+      // starts each cluster bucket from its rankleader edge, then walks the
+      // remaining edges in original order.
+      let keyed_rotated : Array[(Int, Int, Int, Int, String)] = []
+      if tail_cluster_name != "" && tail_cluster_rank >= 0 && keyed.length() > 1 {
+        let leader_entries : Array[(Int, Int, Int, Int, String)] = []
+        let body_entries : Array[(Int, Int, Int, Int, String)] = []
+        let mut insert_pos = -1
+        let mut i = 0
+        while i < keyed.length() {
+          let (_idx_i, same_i, rank_i, _pos_i, cluster_i) = keyed[i]
+          let mut j = i + 1
+          while j < keyed.length() {
+            let (_idx_j, same_j, rank_j, _pos_j, cluster_j) = keyed[j]
+            if same_j != same_i || rank_j != rank_i || cluster_j != cluster_i {
+              break
             }
+            j = j + 1
+          }
+          let segment_len = j - i
+          let use_right_cluster_leader = same_i == 1 &&
+            cluster_i != "" &&
+            rank_i > tail_cluster_rank &&
+            segment_len > 1
+          if use_right_cluster_leader {
+            if insert_pos < 0 {
+              insert_pos = body_entries.length()
+            }
+            let mut k = i
+            while k + 1 < j {
+              body_entries.push(keyed[k])
+              k = k + 1
+            }
+            leader_entries.push(keyed[j - 1])
+          } else {
+            let mut k = i
+            while k < j {
+              body_entries.push(keyed[k])
+              k = k + 1
+            }
+          }
+          i = j
+        }
+        if leader_entries.length() > 0 {
+          let split = if insert_pos >= 0 {
+            insert_pos
+          } else {
+            body_entries.length()
+          }
+          let mut i = 0
+          while i < split {
+            keyed_rotated.push(body_entries[i])
+            i = i + 1
+          }
+          for entry in leader_entries {
+            keyed_rotated.push(entry)
+          }
+          i = split
+          while i < body_entries.length() {
+            keyed_rotated.push(body_entries[i])
+            i = i + 1
           }
         } else {
           for entry in keyed {
             keyed_rotated.push(entry)
           }
         }
-        let sorted_indices : Array[Int] = []
-        for entry in keyed_rotated {
-          let (idx, _same, _rank, _pos, _cluster) = entry
-          sorted_indices.push(idx)
+      } else {
+        for entry in keyed {
+          keyed_rotated.push(entry)
         }
-        sorted_indices
       }
+      let sorted_indices : Array[Int] = []
+      for entry in keyed_rotated {
+        let (idx, _same, _rank, _pos, _cluster) = entry
+        sorted_indices.push(idx)
+      }
+      sorted_indices
+    }
     for idx in indices {
       let edge = edges[idx]
-      let (tail, head) =
-        edge_endpoints_at(
-          edge,
-          idx,
-          edge_tail,
-          edge_head,
-        )
-      let tail_cluster =
-        if order_with_clusters {
+      let (tail, head) = edge_endpoints_at(edge, idx, edge_tail, edge_head)
+      let tail_cluster = if order_with_clusters {
         match cluster_keys.get(tail) {
           Some(value) => value
           None => ""
@@ -636,8 +612,7 @@ pub fn build_order_edges_by_tail(
       } else {
         ""
       }
-      let head_cluster =
-        if order_with_clusters {
+      let head_cluster = if order_with_clusters {
         match cluster_keys.get(head) {
           Some(value) => value
           None => ""
@@ -661,42 +636,43 @@ pub fn build_order_edges_by_tail(
       }
       // Graphviz parity: intercluster edges map to cluster rankleaders
       // in ordering (class2/interclrep).
-      let intercluster =
-        order_with_clusters && tail_cluster != head_cluster &&
+      let intercluster = order_with_clusters &&
+        tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
       let map_edge = use_mapping || (map_intercluster && intercluster)
-      let mapped_tail =
-        if map_edge && tail_cluster != "" {
+      let mapped_tail = if map_edge && tail_cluster != "" {
         @cluster_identity.cluster_skeleton_name(tail_cluster, tail_rank)
       } else {
         tail
       }
-      let mapped_head =
-        if map_edge && head_cluster != "" {
+      let mapped_head = if map_edge && head_cluster != "" {
         @cluster_identity.cluster_skeleton_name(head_cluster, head_rank)
       } else {
         head
       }
       let penalty = @edge_semantics.edge_xpenalty(edge)
       let constraint = @edge_semantics.edge_is_constraint(edge)
-      let tail_port_x =
-        if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else {
-          0.0
-        }
-      let head_port_x =
-        if idx < edge_head_port_x.length() { edge_head_port_x[idx] } else {
-          0.0
-        }
-      let tail_port_order =
-        if idx < edge_tail_port_order.length() { edge_tail_port_order[idx] } else {
-          0.5
-        }
-      let head_port_order =
-        if idx < edge_head_port_order.length() { edge_head_port_order[idx] } else {
-          0.5
-        }
-      let vnodes =
-        if order_with_vnodes {
+      let tail_port_x = if idx < edge_tail_port_x.length() {
+        edge_tail_port_x[idx]
+      } else {
+        0.0
+      }
+      let head_port_x = if idx < edge_head_port_x.length() {
+        edge_head_port_x[idx]
+      } else {
+        0.0
+      }
+      let tail_port_order = if idx < edge_tail_port_order.length() {
+        edge_tail_port_order[idx]
+      } else {
+        0.5
+      }
+      let head_port_order = if idx < edge_head_port_order.length() {
+        edge_head_port_order[idx]
+      } else {
+        0.5
+      }
+      let vnodes = if order_with_vnodes {
         match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
           Some(list) => list
           None => []
@@ -713,10 +689,11 @@ pub fn build_order_edges_by_tail(
         }
       }
       let chain : Array[String] = []
-      let (chain_tail, chain_head) =
-        if tail_rank <= head_rank { (mapped_tail, mapped_head) } else {
-          (mapped_head, mapped_tail)
-        }
+      let (chain_tail, chain_head) = if tail_rank <= head_rank {
+        (mapped_tail, mapped_head)
+      } else {
+        (mapped_head, mapped_tail)
+      }
       chain.push(chain_tail)
       if order_with_vnodes && vnodes.length() > 0 {
         for vnode in vnodes {
@@ -729,46 +706,48 @@ pub fn build_order_edges_by_tail(
         let t = chain[i]
         let h = chain[i + 1]
         if t != h {
-          let seg_tail_port =
-            if t == tail && mapped_tail == tail {
-              tail_port_x
-            } else if t == head && mapped_head == head {
-              head_port_x
-            } else {
-              0.5
-            }
-          let seg_head_port =
-            if h == head && mapped_head == head {
-              head_port_x
-            } else if h == tail && mapped_tail == tail {
-              tail_port_x
-            } else {
-              0.5
-            }
-          let seg_tail_order =
-            if t == tail && mapped_tail == tail {
-              tail_port_order
-            } else if t == head && mapped_head == head {
-              head_port_order
-            } else {
-              0.0
-            }
-          let seg_head_order =
-            if h == head && mapped_head == head {
-              head_port_order
-            } else if h == tail && mapped_tail == tail {
-              tail_port_order
-            } else {
-              0.0
-            }
+          let seg_tail_port = if t == tail && mapped_tail == tail {
+            tail_port_x
+          } else if t == head && mapped_head == head {
+            head_port_x
+          } else {
+            0.5
+          }
+          let seg_head_port = if h == head && mapped_head == head {
+            head_port_x
+          } else if h == tail && mapped_tail == tail {
+            tail_port_x
+          } else {
+            0.5
+          }
+          let seg_tail_order = if t == tail && mapped_tail == tail {
+            tail_port_order
+          } else if t == head && mapped_head == head {
+            head_port_order
+          } else {
+            0.0
+          }
+          let seg_head_order = if h == head && mapped_head == head {
+            head_port_order
+          } else if h == tail && mapped_tail == tail {
+            tail_port_order
+          } else {
+            0.0
+          }
           match out.get(t) {
             Some(list) =>
               list.push(
-                (t, h, penalty, constraint, seg_tail_port, seg_head_port, seg_tail_order, seg_head_order),
+                (
+                  t, h, penalty, constraint, seg_tail_port, seg_head_port, seg_tail_order,
+                  seg_head_order,
+                ),
               )
             None =>
               out[t] = [
-                (t, h, penalty, constraint, seg_tail_port, seg_head_port, seg_tail_order, seg_head_order),
+                (
+                  t, h, penalty, constraint, seg_tail_port, seg_head_port, seg_tail_order,
+                  seg_head_order,
+                ),
               ]
           }
           edge_creation.push((t, h))
@@ -822,8 +801,13 @@ pub fn build_edge_index_with_vnodes(
     if tail_rank == head_rank {
       continue
     }
-    let (low, high) = if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
-    let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edges[edge_idx])) {
+    let (low, high) = if tail_rank <= head_rank {
+      (tail, head)
+    } else {
+      (head, tail)
+    }
+    let vnodes = match
+      edge_vnodes.get(@edge_identity.edge_vnode_key(edges[edge_idx])) {
       Some(list) => list
       None => []
     }

@@ -50,7 +50,10 @@ fn canonical_snapshot_name(
 }
 
 ///|
-fn build_rank_lookup(rank_keys : Array[Int], groups : Map[Int, Array[String]]) -> Map[String, Int] {
+fn build_rank_lookup(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+) -> Map[String, Int] {
   let rank_lookup : Map[String, Int] = Map::new()
   for rank in rank_keys {
     let names = groups.get(rank).unwrap_or_default()
@@ -62,7 +65,9 @@ fn build_rank_lookup(rank_keys : Array[Int], groups : Map[Int, Array[String]]) -
 }
 
 ///|
-fn canonical_fixture_ordering_input(input : MincrossInput) -> CanonicalOrderingInput raise {
+fn canonical_fixture_ordering_input(
+  input : MincrossInput,
+) -> CanonicalOrderingInput raise {
   let node_by_id = build_fixture_node_index(input)
   let rank_rows : Array[Array[String]] = []
   for rank_nodes in input.ranks {
@@ -86,17 +91,15 @@ fn canonical_fixture_ordering_input(input : MincrossInput) -> CanonicalOrderingI
       Some(value) => value
       None => fail("missing fixture head id \{edge.head}")
     }
-    edges.push(
-      {
-        tail: canonical_fixture_node_name(tail_node),
-        head: canonical_fixture_node_name(head_node),
-        xpenalty: edge.xpenalty,
-        tail_port_x: edge.tail_port_x,
-        head_port_x: edge.head_port_x,
-        tail_port_order: edge.tail_port_order,
-        head_port_order: edge.head_port_order,
-      },
-    )
+    edges.push({
+      tail: canonical_fixture_node_name(tail_node),
+      head: canonical_fixture_node_name(head_node),
+      xpenalty: edge.xpenalty,
+      tail_port_x: edge.tail_port_x,
+      head_port_x: edge.head_port_x,
+      tail_port_order: edge.tail_port_order,
+      head_port_order: edge.head_port_order,
+    })
   }
   { rank_rows, edges }
 }
@@ -133,29 +136,25 @@ fn canonical_root_snapshot_input(
       Some(value) => value
       None => fail("missing root rank for head \{edge.head}")
     }
-    edges.push(
-      {
-        tail:
-          canonical_snapshot_name(
-            edge.tail,
-            tail_rank,
-            snapshot.cluster_keys,
-            snapshot.cluster_skeleton,
-          ),
-        head:
-          canonical_snapshot_name(
-            edge.head,
-            head_rank,
-            snapshot.cluster_keys,
-            snapshot.cluster_skeleton,
-          ),
-        xpenalty: edge.xpenalty,
-        tail_port_x: edge.tail_port_x,
-        head_port_x: edge.head_port_x,
-        tail_port_order: edge.tail_port_order,
-        head_port_order: edge.head_port_order,
-      },
-    )
+    edges.push({
+      tail: canonical_snapshot_name(
+        edge.tail,
+        tail_rank,
+        snapshot.cluster_keys,
+        snapshot.cluster_skeleton,
+      ),
+      head: canonical_snapshot_name(
+        edge.head,
+        head_rank,
+        snapshot.cluster_keys,
+        snapshot.cluster_skeleton,
+      ),
+      xpenalty: edge.xpenalty,
+      tail_port_x: edge.tail_port_x,
+      head_port_x: edge.head_port_x,
+      tail_port_order: edge.tail_port_order,
+      head_port_order: edge.head_port_order,
+    })
   }
   { rank_rows, edges }
 }
@@ -215,4 +214,3 @@ fn assert_canonical_ordering_input_eq(
     }
   }
 }
-

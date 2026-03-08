@@ -136,10 +136,8 @@ fn anchor_root_bucket(
   if order_map.get("") is None {
     return ()
   }
-  let left_anchor = match select_root_left_anchor(
-    order_map,
-    previous_order_map,
-  ) {
+  let left_anchor = match
+    select_root_left_anchor(order_map, previous_order_map) {
     Some(value) => value
     None => return ()
   }
@@ -147,8 +145,9 @@ fn anchor_root_bucket(
   if sorted_clusters.length() == 0 {
     return ()
   }
-  let reordered_clusters =
-    build_root_anchor_reordered_clusters(sorted_clusters, left_anchor)
+  let reordered_clusters = build_root_anchor_reordered_clusters(
+    sorted_clusters, left_anchor,
+  )
   rewrite_cluster_order_map(order_map, reordered_clusters)
 }
 
@@ -260,17 +259,10 @@ fn build_cluster_order_from_root(
   let mut previous_order_map : Map[String, Int]? = None
   for rank in root_rank_keys {
     let names = ordered_root.get(rank).unwrap_or_default()
-    let order_map =
-      build_rank_cluster_bucket_order_map(
-        names,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        real_nodes,
-      )
-    anchor_root_bucket(
-      order_map,
-      previous_order_map,
+    let order_map = build_rank_cluster_bucket_order_map(
+      names, order_cluster_keys, order_cluster_skeleton, real_nodes,
     )
+    anchor_root_bucket(order_map, previous_order_map)
     if order_map.length() > 0 {
       cluster_rank_order[rank] = order_map
       previous_order_map = Some(order_map)
@@ -462,30 +454,24 @@ fn has_root_nodes_on_both_sides(
   if names.length() <= 2 {
     return false
   }
-  let cluster_block_bounds =
-    find_cluster_block_bounds(names, cluster_keys)
+  let cluster_block_bounds = find_cluster_block_bounds(names, cluster_keys)
   let first_cluster = cluster_block_bounds.first_cluster
   if first_cluster < 0 {
     return false
   }
-  let root_before =
+  let root_before = has_root_node_in_range(
+    names, cluster_keys, 0, first_cluster,
+  )
+  let root_after = if cluster_block_bounds.last_cluster + 1 >= names.length() {
+    false
+  } else {
     has_root_node_in_range(
       names,
       cluster_keys,
-      0,
-      first_cluster,
+      cluster_block_bounds.last_cluster + 1,
+      names.length(),
     )
-  let root_after =
-    if cluster_block_bounds.last_cluster + 1 >= names.length() {
-      false
-    } else {
-      has_root_node_in_range(
-        names,
-        cluster_keys,
-        cluster_block_bounds.last_cluster + 1,
-        names.length(),
-      )
-    }
+  }
   root_before && root_after
 }
 
@@ -558,19 +544,14 @@ fn reorder_rank_group_by_cluster_order(
 ) -> Array[String] {
   match order_map {
     None => names
-    Some(value) => {
+    Some(value) =>
       // Graphviz parity: per-rank cluster-rank-order replay preserves original
       // rank order when root nodes straddle clustered block.
       if has_root_nodes_on_both_sides(names, cluster_keys) {
         names
       } else {
-        order_rank_names_by_cluster_buckets(
-          names,
-          value,
-          cluster_keys,
-        )
+        order_rank_names_by_cluster_buckets(names, value, cluster_keys)
       }
-    }
   }
 }
 
@@ -585,12 +566,11 @@ fn reorder_groups_by_cluster(
 ) -> Map[Int, Array[String]] {
   let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
   for rank, names in final_groups {
-    ordered_by_cluster[rank] =
-      reorder_rank_group_by_cluster_order(
-        names,
-        cluster_rank_order.get(rank),
-        cluster_keys,
-      )
+    ordered_by_cluster[rank] = reorder_rank_group_by_cluster_order(
+      names,
+      cluster_rank_order.get(rank),
+      cluster_keys,
+    )
   }
   ordered_by_cluster
 }
@@ -653,27 +633,16 @@ fn build_clustered_finalize_groups(
   local_cluster_keys : Map[String, String],
   local_cluster_order : Map[String, Int],
 ) -> Map[Int, Array[String]] {
-  let should_skip_cluster_rank_reorder =
-    should_skip_cluster_rank_bucket_reorder(
-      cluster_rank_order,
-      cleaned_groups,
-      cluster_keys,
-    )
-  let final_groups =
-    if should_skip_cluster_rank_reorder {
-      cleaned_groups
-    } else {
-      reorder_groups_by_cluster(
-        cleaned_groups,
-        cluster_rank_order,
-        cluster_keys,
-      )
-    }
+  let should_skip_cluster_rank_reorder = should_skip_cluster_rank_bucket_reorder(
+    cluster_rank_order, cleaned_groups, cluster_keys,
+  )
+  let final_groups = if should_skip_cluster_rank_reorder {
+    cleaned_groups
+  } else {
+    reorder_groups_by_cluster(cleaned_groups, cluster_rank_order, cluster_keys)
+  }
   reorder_groups_by_local_cluster(
-    final_groups,
-    cluster_keys,
-    local_cluster_keys,
-    local_cluster_order,
+    final_groups, cluster_keys, local_cluster_keys, local_cluster_order,
   )
   final_groups
 }

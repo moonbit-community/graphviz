@@ -79,38 +79,36 @@ pub(all) struct NonclusterReorderInputsBuildSources {
 pub fn run_noncluster_reorder_pass(
   sources : NonclusterReorderInputsBuildSources,
 ) -> Map[Int, Array[String]] {
-  run_noncluster_reorder_pass_with_inputs(
-    {
-      nodes: sources.nodes,
-      edges: sources.edges,
-      edge_head: sources.edge_head,
-      edge_out_order: sources.edge_out_order,
-      ranks: sources.ranks,
-      rank_keys: sources.rank_keys,
-      groups: sources.groups,
-      nlist_order: sources.reorder_setup.class2_data.nlist_order,
-      node_order: sources.node_order,
-      order_edges: sources.edge_port_data.order_edges,
-      order_edge_tail: sources.edge_port_data.order_edge_tail,
-      order_edge_head: sources.edge_port_data.order_edge_head,
-      order_edge_tail_port_x: sources.edge_port_data.order_edge_tail_port_x,
-      order_edge_head_port_x: sources.edge_port_data.order_edge_head_port_x,
-      order_edge_tail_port_order: sources.edge_port_data.order_edge_tail_port_order,
-      order_edge_head_port_order: sources.edge_port_data.order_edge_head_port_order,
-      cluster_keys: sources.cluster_keys,
-      cluster_skeleton: sources.cluster_skeleton,
-      rank_same_groups: sources.rank_same_groups,
-      rank_same_order: sources.rank_same_order,
-      edge_order: sources.edge_port_data.edge_order,
-      order_sizes: sources.order_sizes,
-      nodesep_pt: sources.nodesep_pt,
-      has_edge_labels: sources.has_edge_labels,
-      port_order_positions: sources.port_order_positions,
-      port_order_contrib: sources.port_order_contrib,
-      flat_constraints: sources.flat_constraints,
-      graphviz_flip: sources.reorder_setup.graphviz_flip,
-    },
-  )
+  run_noncluster_reorder_pass_with_inputs({
+    nodes: sources.nodes,
+    edges: sources.edges,
+    edge_head: sources.edge_head,
+    edge_out_order: sources.edge_out_order,
+    ranks: sources.ranks,
+    rank_keys: sources.rank_keys,
+    groups: sources.groups,
+    nlist_order: sources.reorder_setup.class2_data.nlist_order,
+    node_order: sources.node_order,
+    order_edges: sources.edge_port_data.order_edges,
+    order_edge_tail: sources.edge_port_data.order_edge_tail,
+    order_edge_head: sources.edge_port_data.order_edge_head,
+    order_edge_tail_port_x: sources.edge_port_data.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.edge_port_data.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.edge_port_data.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.edge_port_data.order_edge_head_port_order,
+    cluster_keys: sources.cluster_keys,
+    cluster_skeleton: sources.cluster_skeleton,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    edge_order: sources.edge_port_data.edge_order,
+    order_sizes: sources.order_sizes,
+    nodesep_pt: sources.nodesep_pt,
+    has_edge_labels: sources.has_edge_labels,
+    port_order_positions: sources.port_order_positions,
+    port_order_contrib: sources.port_order_contrib,
+    flat_constraints: sources.flat_constraints,
+    graphviz_flip: sources.reorder_setup.graphviz_flip,
+  })
 }
 
 ///|
@@ -209,10 +207,7 @@ fn build_noncluster_graphviz_neighbors(
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
-  {
-    out_neighbors: graphviz_out_neighbors,
-    in_neighbors: graphviz_in_neighbors,
-  }
+  { out_neighbors: graphviz_out_neighbors, in_neighbors: graphviz_in_neighbors }
 }
 
 ///|
@@ -223,51 +218,50 @@ fn build_noncluster_graphviz_neighbors(
 fn run_noncluster_reorder_pass_with_inputs(
   inputs : NonclusterReorderInputs,
 ) -> Map[Int, Array[String]] {
-  let order_node_order =
-    build_noncluster_order_node_order(inputs.nlist_order, inputs.node_order)
-  let edge_index_data =
-    build_edge_index_for_order(
-      inputs.nodes,
-      inputs.order_edges,
-      inputs.order_edge_tail,
-      inputs.order_edge_head,
-      inputs.ranks,
-    )
-  let graphviz_neighbors =
-    build_noncluster_graphviz_neighbors(
-      inputs.nodes,
-      inputs.edges,
-      inputs.edge_head,
-      inputs.edge_out_order,
-    )
-  let call_inputs : NonclusterRankReorderInputs =
-    {
-      rank_keys: inputs.rank_keys,
-      groups: inputs.groups,
-      order_edges: inputs.order_edges,
-      order_edge_tail: inputs.order_edge_tail,
-      order_edge_head: inputs.order_edge_head,
-      order_edge_tail_port_x: inputs.order_edge_tail_port_x,
-      order_edge_head_port_x: inputs.order_edge_head_port_x,
-      order_edge_tail_port_order: inputs.order_edge_tail_port_order,
-      order_edge_head_port_order: inputs.order_edge_head_port_order,
-      parents: edge_index_data.parents,
-      children: edge_index_data.children,
-      cluster_keys: inputs.cluster_keys,
-      rank_same_groups: inputs.rank_same_groups,
-      rank_same_order: inputs.rank_same_order,
-      edge_order: inputs.edge_order,
-      order_node_order,
-      order_sizes: inputs.order_sizes,
-      nodesep_pt: inputs.nodesep_pt,
-      has_edge_labels: inputs.has_edge_labels,
-      port_order_positions: inputs.port_order_positions,
-      port_order_contrib: inputs.port_order_contrib,
-      cluster_skeleton: inputs.cluster_skeleton,
-      flat_constraints: inputs.flat_constraints,
-      graphviz_out_neighbors: graphviz_neighbors.out_neighbors,
-      graphviz_in_neighbors: graphviz_neighbors.in_neighbors,
-      graphviz_flip: inputs.graphviz_flip,
-    }
+  let order_node_order = build_noncluster_order_node_order(
+    inputs.nlist_order,
+    inputs.node_order,
+  )
+  let edge_index_data = build_edge_index_for_order(
+    inputs.nodes,
+    inputs.order_edges,
+    inputs.order_edge_tail,
+    inputs.order_edge_head,
+    inputs.ranks,
+  )
+  let graphviz_neighbors = build_noncluster_graphviz_neighbors(
+    inputs.nodes,
+    inputs.edges,
+    inputs.edge_head,
+    inputs.edge_out_order,
+  )
+  let call_inputs : NonclusterRankReorderInputs = {
+    rank_keys: inputs.rank_keys,
+    groups: inputs.groups,
+    order_edges: inputs.order_edges,
+    order_edge_tail: inputs.order_edge_tail,
+    order_edge_head: inputs.order_edge_head,
+    order_edge_tail_port_x: inputs.order_edge_tail_port_x,
+    order_edge_head_port_x: inputs.order_edge_head_port_x,
+    order_edge_tail_port_order: inputs.order_edge_tail_port_order,
+    order_edge_head_port_order: inputs.order_edge_head_port_order,
+    parents: edge_index_data.parents,
+    children: edge_index_data.children,
+    cluster_keys: inputs.cluster_keys,
+    rank_same_groups: inputs.rank_same_groups,
+    rank_same_order: inputs.rank_same_order,
+    edge_order: inputs.edge_order,
+    order_node_order,
+    order_sizes: inputs.order_sizes,
+    nodesep_pt: inputs.nodesep_pt,
+    has_edge_labels: inputs.has_edge_labels,
+    port_order_positions: inputs.port_order_positions,
+    port_order_contrib: inputs.port_order_contrib,
+    cluster_skeleton: inputs.cluster_skeleton,
+    flat_constraints: inputs.flat_constraints,
+    graphviz_out_neighbors: graphviz_neighbors.out_neighbors,
+    graphviz_in_neighbors: graphviz_neighbors.in_neighbors,
+    graphviz_flip: inputs.graphviz_flip,
+  }
   run_noncluster_rank_reorder(call_inputs)
 }
