@@ -99,8 +99,16 @@ pub(all) struct OrderingReorderSetupSources {
   ranks : Map[String, Int]
   groups : Map[Int, Array[String]]
   node_order : Map[String, Int]
-  runtime_context : OrderingRuntimeContext
-  cluster_meta : DotClusterMetadata
+  port_edge_nodes : Map[String, Bool]
+  vnode_info : @routing.EdgeVnodeInfo
+  cluster_has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_parents : Map[String, String?]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
   rankdir : @rankdir.RankDir
   edge_port_data : OrderingEdgePortData
 }
@@ -110,23 +118,23 @@ pub(all) struct OrderingReorderSetupSources {
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence from
 /// grouped runtime + cluster sources.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_reorder_setup_from_sources(
+pub fn build_ordering_reorder_setup_from_sources(
   sources : OrderingReorderSetupSources,
 ) -> OrderingReorderSetup {
   let graphviz_flip = sources.rankdir == @rankdir.RankDir::RL ||
     sources.rankdir == @rankdir.RankDir::LR
   let ordering_groups_base = apply_rank_same_order(
     sources.groups,
-    sources.cluster_meta.rank_same_groups,
-    sources.cluster_meta.rank_same_order,
+    sources.rank_same_groups,
+    sources.rank_same_order,
     sources.node_order,
-    sources.runtime_context.port_edge_nodes,
+    sources.port_edge_nodes,
   )
   let base_order_index = build_order_index(ordering_groups_base)
-  let vnode_count = sources.runtime_context.vnode_info.vnode_ranks.length()
+  let vnode_count = sources.vnode_info.vnode_ranks.length()
   let order_with_vnodes = vnode_count > 0
-  let order_with_clusters = sources.cluster_meta.has_clusters &&
-    sources.cluster_meta.cluster_min_rank.length() > 0
+  let order_with_clusters = sources.cluster_has_clusters &&
+    sources.cluster_min_rank.length() > 0
   let flat_rank_constraints = build_flat_rank_constraints(
     sources.edge_tail,
     sources.edge_head,
@@ -143,21 +151,21 @@ fn build_ordering_reorder_setup_from_sources(
     sources.edge_port_data.edge_tail_port_order,
     sources.edge_port_data.edge_head_port_order,
     sources.ranks,
-    sources.runtime_context.vnode_info.edge_vnodes,
+    sources.vnode_info.edge_vnodes,
     order_with_vnodes,
     order_with_clusters,
-    sources.cluster_meta.cluster_keys,
-    sources.cluster_meta.cluster_order,
-    sources.cluster_meta.cluster_min_rank,
-    sources.cluster_meta.cluster_max_rank,
-    sources.cluster_meta.has_clusters,
+    sources.cluster_keys,
+    sources.cluster_order,
+    sources.cluster_min_rank,
+    sources.cluster_max_rank,
+    sources.cluster_has_clusters,
     flat_rank_constraints,
     graphviz_flip,
   )
   let gdnlist_order = build_gdnlist_order(
     class2_data,
     graphviz_flip,
-    sources.cluster_meta.cluster_order,
+    sources.cluster_order,
   )
   let nlist_order_index : Map[String, Int] = Map::new()
   let mut nlist_idx = 0
@@ -167,7 +175,7 @@ fn build_ordering_reorder_setup_from_sources(
   }
   let vnode_order_keys_for_ordering = if vnode_count <= 0 {
     Map::new()
-  } else if sources.cluster_meta.has_clusters {
+  } else if sources.cluster_has_clusters {
     build_vnode_order_keys(
       sources.edges,
       sources.edge_tail,
@@ -175,15 +183,15 @@ fn build_ordering_reorder_setup_from_sources(
       sources.edge_reversed,
       sources.ranks,
       base_order_index,
-      sources.cluster_meta.cluster_keys,
-      sources.cluster_meta.cluster_parents,
-      sources.runtime_context.vnode_info.edge_vnodes,
-      sources.runtime_context.vnode_info.vnode_ranks,
+      sources.cluster_keys,
+      sources.cluster_parents,
+      sources.vnode_info.edge_vnodes,
+      sources.vnode_info.vnode_ranks,
     )
   } else {
     build_vnode_keys_from_nlist(
       ordering_groups_base,
-      sources.runtime_context.vnode_info.vnodes_by_rank,
+      sources.vnode_info.vnodes_by_rank,
       base_order_index,
       nlist_order_index,
       Map::new(),
@@ -504,7 +512,7 @@ pub(all) struct OrderingEdgePortDataSources {
 /// extraction and endpoint port samples in Graphviz-compatible construction
 /// order from grouped sources.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_edge_port_data_from_sources(
+pub fn build_ordering_edge_port_data_from_sources(
   sources : OrderingEdgePortDataSources,
   build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
 ) -> OrderingEdgePortData {

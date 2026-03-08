@@ -32,10 +32,10 @@ type RankData = @rank_assignment.RankData
 type RankHeights = @rank_assignment.RankHeights
 
 ///|
-type ClusterMetadata = @ordering.DotClusterMetadata
+type ClusterMetadata = @setup.DotClusterMetadata
 
 ///|
-type OrderingResult = @ordering.OrderingResult
+type OrderingResult = @setup.OrderingResult
 
 ///|
 type PositionResult = @positioning.PositionResult

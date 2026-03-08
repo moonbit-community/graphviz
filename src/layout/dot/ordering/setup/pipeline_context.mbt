@@ -2,6 +2,214 @@
 /// Ordering domain: Stage C cluster metadata and pipeline-context assembly.
 
 ///|
+priv enum OrderingMode {
+  Out
+  In
+}
+
+///|
+fn parse_ordering_mode(value : String) -> OrderingMode? {
+  match value.to_lower() {
+    "out" => Some(OrderingMode::Out)
+    "in" => Some(OrderingMode::In)
+    _ => None
+  }
+}
+
+///|
+pub(all) struct FlatConstraintsOutput {
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
+fn build_flat_constraints(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+) -> FlatConstraintsOutput {
+  let flat_constraints : Map[String, Bool] = Map::new()
+  let out_edges : Map[String, Array[(Int, Int)]] = Map::new()
+  let in_edges : Map[String, Array[(Int, Int)]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    out_edges[name] = []
+    in_edges[name] = []
+  }
+  for i in 0..<edges.length() {
+    let (tail, head) = @ordering.edge_endpoints_at(
+      edges[i],
+      i,
+      edge_tail,
+      edge_head,
+    )
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
+    if tail_cluster != head_cluster {
+      continue
+    }
+    let edge_id = edges[i].id()
+    match out_edges.get(tail) {
+      Some(list) => list.push((edge_id, i))
+      None => out_edges[tail] = [(edge_id, i)]
+    }
+    match in_edges.get(head) {
+      Some(list) => list.push((edge_id, i))
+      None => in_edges[head] = [(edge_id, i)]
+    }
+  }
+  let apply_ordering = (name : String, mode : OrderingMode) => {
+    let list = match mode {
+      OrderingMode::Out =>
+        match out_edges.get(name) {
+          Some(items) => items
+          None => []
+        }
+      OrderingMode::In =>
+        match in_edges.get(name) {
+          Some(items) => items
+          None => []
+        }
+    }
+    if list.length() <= 1 {
+      return ()
+    }
+    let sorted = list.copy()
+    sorted.sort_by((a, b) => {
+      let (a_id, _a_idx) = a
+      let (b_id, _b_idx) = b
+      if a_id < b_id {
+        -1
+      } else if a_id > b_id {
+        1
+      } else {
+        0
+      }
+    })
+    let mut idx = 1
+    while idx < sorted.length() {
+      let (_prev_id, prev_idx) = sorted[idx - 1]
+      let (_curr_id, curr_idx) = sorted[idx]
+      let (prev_tail, prev_head) = @ordering.edge_endpoints_at(
+        edges[prev_idx],
+        prev_idx,
+        edge_tail,
+        edge_head,
+      )
+      let (curr_tail, curr_head) = @ordering.edge_endpoints_at(
+        edges[curr_idx],
+        curr_idx,
+        edge_tail,
+        edge_head,
+      )
+      let left = match mode {
+        OrderingMode::Out => prev_head
+        OrderingMode::In => prev_tail
+      }
+      let right = match mode {
+        OrderingMode::Out => curr_head
+        OrderingMode::In => curr_tail
+      }
+      if left != right {
+        flat_constraints["\{left}|\{right}"] = true
+      }
+      idx = idx + 1
+    }
+  }
+  let graph_ordering = match graph.get_attr("ordering") {
+    Some(value) => parse_ordering_mode(value)
+    None => None
+  }
+  let mut ordering_set = false
+  match graph_ordering {
+    Some(mode) => {
+      ordering_set = true
+      for node in nodes {
+        apply_ordering(node.name(), mode)
+      }
+    }
+    None =>
+      for node in nodes {
+        match node.get_attr("ordering") {
+          Some(value) =>
+            match parse_ordering_mode(value) {
+              Some(mode) => {
+                ordering_set = true
+                apply_ordering(node.name(), mode)
+              }
+              None => ()
+            }
+          None => ()
+        }
+      }
+  }
+  { flat_constraints, ordering_set }
+}
+
+///|
+/// Graphviz parity: same-rank constrained edges are promoted to flat ordering
+/// constraints before clustered reorder dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn add_same_rank_constraint_edges_to_flat_constraints(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  flat_constraints : Map[String, Bool],
+) -> Unit {
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    if edge_idx < edges.length() &&
+      !@edge_semantics.edge_is_constraint(edges[edge_idx]) {
+      edge_idx = edge_idx + 1
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
+      if tail_rank == head_rank {
+        flat_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+}
+
+///|
+/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
+/// plus same-rank constrained edges before clustered reorder dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_flat_constraints(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> FlatConstraintsOutput {
+  let flat_constraints_output = build_flat_constraints(
+    graph, nodes, edges, edge_tail, edge_head, cluster_keys,
+  )
+  let flat_constraints = flat_constraints_output.flat_constraints
+  add_same_rank_constraint_edges_to_flat_constraints(
+    edges, edge_tail, edge_head, ranks, flat_constraints,
+  )
+  { flat_constraints, ordering_set: flat_constraints_output.ordering_set }
+}
+
+///|
 fn collect_rank_same_order(
   graph : @cgraph.Graph,
   group_ids : Map[String, Int],
@@ -180,8 +388,8 @@ fn build_dot_cluster_metadata(
 /// reuse the same Stage C setup artifacts.
 pub(all) struct OrderingPipelineContext {
   runtime_context : OrderingRuntimeContext
-  edge_port_data : OrderingEdgePortData
-  reorder_setup : OrderingReorderSetup
+  edge_port_data : @ordering.OrderingEdgePortData
+  reorder_setup : @ordering.OrderingReorderSetup
 }
 
 ///|
@@ -228,7 +436,7 @@ pub(all) struct OrderingResult {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_pipeline_context_from_sources(
   sources : BuildOrderingPipelineContextSources,
-  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
+  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> @ordering.EdgePortSampleBundle,
 ) -> OrderingPipelineContext {
   let runtime_context = build_ordering_runtime_context_from_sources({
     graph: sources.graph,
@@ -243,7 +451,7 @@ pub fn build_ordering_pipeline_context_from_sources(
     rankdir: sources.rankdir,
     cluster_meta: sources.cluster_meta,
   })
-  let edge_port_data = build_ordering_edge_port_data_from_sources(
+  let edge_port_data = @ordering.build_ordering_edge_port_data_from_sources(
     {
       edges: sources.edges,
       edge_tail: sources.edge_tail,
@@ -251,7 +459,7 @@ pub fn build_ordering_pipeline_context_from_sources(
     },
     build_port_sample_bundle,
   )
-  let reorder_setup = build_ordering_reorder_setup_from_sources({
+  let reorder_setup = @ordering.build_ordering_reorder_setup_from_sources({
     nodes: sources.nodes,
     edges: sources.edges,
     edge_tail: sources.edge_tail,
@@ -261,8 +469,16 @@ pub fn build_ordering_pipeline_context_from_sources(
     ranks: sources.ranks,
     groups: sources.groups,
     node_order: sources.node_order,
-    runtime_context,
-    cluster_meta: sources.cluster_meta,
+    port_edge_nodes: runtime_context.port_edge_nodes,
+    vnode_info: runtime_context.vnode_info,
+    cluster_has_clusters: sources.cluster_meta.has_clusters,
+    cluster_keys: sources.cluster_meta.cluster_keys,
+    cluster_order: sources.cluster_meta.cluster_order,
+    cluster_min_rank: sources.cluster_meta.cluster_min_rank,
+    cluster_max_rank: sources.cluster_meta.cluster_max_rank,
+    cluster_parents: sources.cluster_meta.cluster_parents,
+    rank_same_groups: sources.cluster_meta.rank_same_groups,
+    rank_same_order: sources.cluster_meta.rank_same_order,
     rankdir: sources.rankdir,
     edge_port_data,
   })
@@ -293,4 +509,3 @@ pub fn build_ordering_result_from_pipeline_context(
     vnode_creation_order: pipeline_context.reorder_setup.class2_data.vnode_creation_order,
   }
 }
-

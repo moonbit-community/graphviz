@@ -3,6 +3,8 @@
 /// outputs into ordering-owned pipeline context and final ordering results so
 /// the owner-side `rank_stage` package now keeps both the Stage B entry and the Stage C dispatch pipeline.
 type RankDir = @rankdir.RankDir
+
+///|
 type NodeSize = @node_primitives.NodeSize
 
 ///|
@@ -35,7 +37,7 @@ priv struct OrderingDispatchOutput {
 }
 
 ///|
-type OrderingPipelineContext = @ordering.OrderingPipelineContext
+type OrderingPipelineContext = @setup.OrderingPipelineContext
 
 ///|
 
@@ -69,35 +71,29 @@ fn run_nonclustered_ordering_dispatch(
   let input = dispatch_context.input
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
-  let ordered_groups =
-    @mincross.run_noncluster_reorder_pass(
-      {
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_head: input.edge_head,
-        edge_out_order: input.edge_out_order,
-        ranks: input.ranks,
-        rank_keys: input.rank_keys,
-        groups: input.groups,
-        node_order: input.node_order,
-        cluster_keys: cluster_meta.cluster_keys,
-        cluster_skeleton: cluster_meta.cluster_skeleton,
-        rank_same_groups: cluster_meta.rank_same_groups,
-        rank_same_order: cluster_meta.rank_same_order,
-        order_sizes: input.order_sizes,
-        nodesep_pt: input.nodesep_pt,
-        has_edge_labels: input.has_edge_labels,
-        port_order_positions: input.port_order_positions,
-        port_order_contrib: input.port_order_contrib,
-        flat_constraints: cluster_meta.flat_constraints,
-        reorder_setup: pipeline_context.reorder_setup,
-        edge_port_data: pipeline_context.edge_port_data,
-      },
-    )
-  {
-    ordered_groups,
-    ordered_with_vnodes: Map::new(),
-  }
+  let ordered_groups = @mincross.run_noncluster_reorder_pass({
+    nodes: input.nodes,
+    edges: input.edges,
+    edge_head: input.edge_head,
+    edge_out_order: input.edge_out_order,
+    ranks: input.ranks,
+    rank_keys: input.rank_keys,
+    groups: input.groups,
+    node_order: input.node_order,
+    cluster_keys: cluster_meta.cluster_keys,
+    cluster_skeleton: cluster_meta.cluster_skeleton,
+    rank_same_groups: cluster_meta.rank_same_groups,
+    rank_same_order: cluster_meta.rank_same_order,
+    order_sizes: input.order_sizes,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    port_order_positions: input.port_order_positions,
+    port_order_contrib: input.port_order_contrib,
+    flat_constraints: cluster_meta.flat_constraints,
+    reorder_setup: pipeline_context.reorder_setup,
+    edge_port_data: pipeline_context.edge_port_data,
+  })
+  { ordered_groups, ordered_with_vnodes: Map::new() }
 }
 
 ///|
@@ -115,32 +111,30 @@ fn build_clustered_pre_root(
   let cluster_meta = dispatch_context.cluster_meta
   let runtime_context = dispatch_context.pipeline_context.runtime_context
   let reorder_setup = dispatch_context.pipeline_context.reorder_setup
-  @ordering.run_clustered_pre_root_stage_from_sources(
-    {
-      reorder_setup,
-      cluster_keys: cluster_meta.cluster_keys,
-      cluster_order: cluster_meta.cluster_order,
-      cluster_min_rank: cluster_meta.cluster_min_rank,
-      cluster_max_rank: cluster_meta.cluster_max_rank,
-      vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-      order_sizes: input.order_sizes,
-      vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-      // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-      skeleton_size: @node_primitives.vnode_size_from_widths(1.0, 1.0),
-      node_order: input.node_order,
-      real_nodes: runtime_context.real_nodes,
-      has_clusters: cluster_meta.has_clusters,
-      rank_same_groups: cluster_meta.rank_same_groups,
-      rank_same_order: cluster_meta.rank_same_order,
-      port_edge_nodes: runtime_context.port_edge_nodes,
-      flat_constraints: cluster_meta.flat_constraints,
-      edge_tail: input.edge_tail,
-      edge_head: input.edge_head,
-      nodes: input.nodes,
-      intercluster_keys: cluster_meta.intercluster_keys,
-    },
-  )
+  @ordering.run_clustered_pre_root_stage_from_sources({
+    reorder_setup,
+    cluster_keys: cluster_meta.cluster_keys,
+    cluster_order: cluster_meta.cluster_order,
+    cluster_min_rank: cluster_meta.cluster_min_rank,
+    cluster_max_rank: cluster_meta.cluster_max_rank,
+    vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+    vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+    order_sizes: input.order_sizes,
+    vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+    // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+    skeleton_size: @node_primitives.vnode_size_from_widths(1.0, 1.0),
+    node_order: input.node_order,
+    real_nodes: runtime_context.real_nodes,
+    has_clusters: cluster_meta.has_clusters,
+    rank_same_groups: cluster_meta.rank_same_groups,
+    rank_same_order: cluster_meta.rank_same_order,
+    port_edge_nodes: runtime_context.port_edge_nodes,
+    flat_constraints: cluster_meta.flat_constraints,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    nodes: input.nodes,
+    intercluster_keys: cluster_meta.intercluster_keys,
+  })
 }
 
 ///|
@@ -184,7 +178,9 @@ fn run_clustered_root_phase(
       vnode_clusters: runtime_context.vnode_info.vnode_clusters,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     },
-    @mincross.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
+    @mincross.build_root_snapshot_capture_callback(
+      @edge_semantics.edge_xpenalty,
+    ),
   )
 }
 
@@ -202,52 +198,51 @@ fn run_clustered_finalize_phase(
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
   let edge_port_data = pipeline_context.edge_port_data
-  let finalize_output =
-    @mincross.run_clustered_finalize_stage(
-      {
-        phase_base: root_phase_output.root_rank_order_phase_base,
-        root_cluster_stage: root_phase_output.root_cluster_stage,
-        root_tail_order_override: root_phase_output.root_tail_order_override,
-        pre_root_stage,
-        real_nodes: runtime_context.real_nodes,
-        ratio: input.graph.get_attr("ratio").unwrap_or_default(),
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        edge_reversed: input.edge_reversed,
-        edge_tail_port_x: edge_port_data.edge_tail_port_x,
-        edge_head_port_x: edge_port_data.edge_head_port_x,
-        edge_tail_port_order: edge_port_data.edge_tail_port_order,
-        edge_head_port_order: edge_port_data.edge_head_port_order,
-        ranks: input.ranks,
-        reorder_setup: pipeline_context.reorder_setup,
-        local_cluster_order: runtime_context.local_cluster_order,
-        cluster_order: cluster_meta.cluster_order,
-        cluster_keys: cluster_meta.cluster_keys,
-        intercluster_keys: cluster_meta.intercluster_keys,
-        cluster_parents: cluster_meta.cluster_parents,
-        cluster_min_rank: cluster_meta.cluster_min_rank,
-        cluster_max_rank: cluster_meta.cluster_max_rank,
-        cluster_flat_constraints: cluster_meta.flat_constraints,
-        rank_same_groups: cluster_meta.rank_same_groups,
-        rank_same_order: cluster_meta.rank_same_order,
-        edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-        vnode_ranks: runtime_context.vnode_info.vnode_ranks,
-        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-        order_sizes: input.order_sizes,
-        rank_same_constraints: runtime_context.rank_same_constraints,
-        root_cluster: input.graph.name().unwrap_or("__root__"),
-        nodesep_pt: input.nodesep_pt,
-        has_edge_labels: input.has_edge_labels,
-        port_order_positions: input.port_order_positions,
-        port_order_contrib: input.port_order_contrib,
-      },
-      @mincross.build_remincross_snapshot_capture_callback(
-        @edge_semantics.edge_xpenalty,
-      ),
-      @mincross.run_remincross_cleanup_reorder,
-    )
+  let finalize_output = @mincross.run_clustered_finalize_stage(
+    {
+      phase_base: root_phase_output.root_rank_order_phase_base,
+      root_cluster_stage: root_phase_output.root_cluster_stage,
+      root_tail_order_override: root_phase_output.root_tail_order_override,
+      pre_root_stage,
+      real_nodes: runtime_context.real_nodes,
+      ratio: input.graph.get_attr("ratio").unwrap_or_default(),
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_reversed: input.edge_reversed,
+      edge_tail_port_x: edge_port_data.edge_tail_port_x,
+      edge_head_port_x: edge_port_data.edge_head_port_x,
+      edge_tail_port_order: edge_port_data.edge_tail_port_order,
+      edge_head_port_order: edge_port_data.edge_head_port_order,
+      ranks: input.ranks,
+      reorder_setup: pipeline_context.reorder_setup,
+      local_cluster_order: runtime_context.local_cluster_order,
+      cluster_order: cluster_meta.cluster_order,
+      cluster_keys: cluster_meta.cluster_keys,
+      intercluster_keys: cluster_meta.intercluster_keys,
+      cluster_parents: cluster_meta.cluster_parents,
+      cluster_min_rank: cluster_meta.cluster_min_rank,
+      cluster_max_rank: cluster_meta.cluster_max_rank,
+      cluster_flat_constraints: cluster_meta.flat_constraints,
+      rank_same_groups: cluster_meta.rank_same_groups,
+      rank_same_order: cluster_meta.rank_same_order,
+      edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+      vnode_ranks: runtime_context.vnode_info.vnode_ranks,
+      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+      vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+      order_sizes: input.order_sizes,
+      rank_same_constraints: runtime_context.rank_same_constraints,
+      root_cluster: input.graph.name().unwrap_or("__root__"),
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      port_order_positions: input.port_order_positions,
+      port_order_contrib: input.port_order_contrib,
+    },
+    @mincross.build_remincross_snapshot_capture_callback(
+      @edge_semantics.edge_xpenalty,
+    ),
+    @mincross.run_remincross_cleanup_reorder,
+  )
   {
     ordered_groups: finalize_output.ordered_groups,
     ordered_with_vnodes: finalize_output.ordered_with_vnodes,
@@ -262,12 +257,11 @@ fn run_clustered_ordering_dispatch(
   dispatch_context : OrderingDispatchContext,
 ) -> OrderingDispatchOutput {
   let pre_root_stage = build_clustered_pre_root(dispatch_context)
-  let root_phase_output =
-    run_clustered_root_phase(dispatch_context, pre_root_stage)
+  let root_phase_output = run_clustered_root_phase(
+    dispatch_context, pre_root_stage,
+  )
   run_clustered_finalize_phase(
-    dispatch_context,
-    pre_root_stage,
-    root_phase_output,
+    dispatch_context, pre_root_stage, root_phase_output,
   )
 }
 
@@ -286,70 +280,61 @@ fn run_ordering_dispatch(
   }
 }
 
-
 ///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_ordering_pipeline(
   input : OrderingPipelineInput,
 ) -> OrderingPipelineOutput {
-  let cluster_meta =
-    @ordering.build_dot_cluster_metadata_from_sources(
-      {
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        groups: input.groups,
-        ranks: input.ranks,
-        node_order: input.node_order,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        rankdir: input.rankdir,
-      },
+  let cluster_meta = @setup.build_dot_cluster_metadata_from_sources({
+    graph: input.graph,
+    nodes: input.nodes,
+    edges: input.edges,
+    groups: input.groups,
+    ranks: input.ranks,
+    node_order: input.node_order,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    rankdir: input.rankdir,
+  })
+  let build_port_sample_bundle = (edges, edge_tail, edge_head) => {
+    @ports.build_edge_port_sample_bundle(
+      input.nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      input.order_sizes,
     )
-  let build_port_sample_bundle =
-    (edges, edge_tail, edge_head) =>
-      @ports.build_edge_port_sample_bundle(
-        input.nodes,
-        edges,
-        edge_tail,
-        edge_head,
-        input.order_sizes,
-      )
-  let pipeline_context =
-    @ordering.build_ordering_pipeline_context_from_sources(
-      {
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        edge_reversed: input.edge_reversed,
-        edge_out_order: input.edge_out_order,
-        ranks: input.ranks,
-        groups: input.groups,
-        node_order: input.node_order,
-        nodesep_pt: input.nodesep_pt,
-        rankdir: input.rankdir,
-        cluster_meta,
-      },
-      build_port_sample_bundle,
-    )
-  let dispatch_output =
-    run_ordering_dispatch(
-      {
-        input,
-        cluster_meta,
-        pipeline_context,
-      },
-    )
+  }
+  let pipeline_context = @setup.build_ordering_pipeline_context_from_sources(
+    {
+      graph: input.graph,
+      nodes: input.nodes,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_reversed: input.edge_reversed,
+      edge_out_order: input.edge_out_order,
+      ranks: input.ranks,
+      groups: input.groups,
+      node_order: input.node_order,
+      nodesep_pt: input.nodesep_pt,
+      rankdir: input.rankdir,
+      cluster_meta,
+    },
+    build_port_sample_bundle,
+  )
+  let dispatch_output = run_ordering_dispatch({
+    input,
+    cluster_meta,
+    pipeline_context,
+  })
   {
     cluster_meta,
-    ordering:
-      @ordering.build_ordering_result_from_pipeline_context(
-        pipeline_context,
-        dispatch_output.ordered_groups,
-        dispatch_output.ordered_with_vnodes,
-      ),
+    ordering: @setup.build_ordering_result_from_pipeline_context(
+      pipeline_context,
+      dispatch_output.ordered_groups,
+      dispatch_output.ordered_with_vnodes,
+    ),
   }
 }
