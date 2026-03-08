@@ -239,8 +239,9 @@ fn run_spline_case(
 /// straight corridor (case=1, C1N1 -> C2N1), exact long straight corridor
 /// (case=1, accel -> tunnel_egress), exact barrier-aware bend fit
 /// (case=5, zzz_worker -> zzz), exact single-bend corridor
-/// (case=9, foo_agent -> zzz_worker), and exact constrained horizontal head
-/// tangent (case=18, z_shapeshifter -> machsrv_xprot_gen). Keep fixture replay
+/// (case=9, foo_agent -> zzz_worker), exact constrained horizontal head
+/// tangent (case=18, z_shapeshifter -> machsrv_xprot_gen), and exact stepped
+/// cluster corridor fit (case=43, a3 -> a0 in clust1). Keep fixture replay
 /// for the remaining representative corridors whose longer or graph-specific
 /// barrier ladders still add distinct regression signal.
 fn edge_spline_fixture_needs_replay(input : SplineInput) -> Bool {
@@ -262,6 +263,10 @@ fn edge_spline_fixture_needs_replay(input : SplineInput) -> Bool {
   }
   if input.case_id == 18 && input.graph == "" && input.tail == "z_shapeshifter" &&
     input.head == "machsrv_xprot_gen" {
+    return false
+  }
+  if input.case_id == 43 && input.graph == "clust1" && input.tail == "a3" &&
+    input.head == "a0" {
     return false
   }
   true

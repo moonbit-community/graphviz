@@ -158,6 +158,69 @@ test "route_polyline_to_bezier matches Graphviz long straight corridor fixture" 
 }
 
 ///|
+test "route_polyline_to_bezier matches Graphviz stepped cluster corridor fit" {
+  let shortest : Array[@geom.Point] = [
+    point(83.0, 241.0),
+    point(99.0, 188.0),
+    point(99.0, 152.0),
+    point(83.0, 27.0),
+  ]
+  let polygon : Array[@geom.Point] = [
+    point(122.0, 242.0),
+    point(122.0, 224.0),
+    point(252.0, 224.0),
+    point(252.0, 188.0),
+    point(122.0, 188.0),
+    point(122.0, 152.0),
+    point(252.0, 152.0),
+    point(252.0, 116.0),
+    point(122.0, 116.0),
+    point(122.0, 80.0),
+    point(252.0, 80.0),
+    point(252.0, 44.0),
+    point(122.0, 44.0),
+    point(122.0, 26.0),
+    point(-80.0, 26.0),
+    point(-80.0, 44.0),
+    point(-80.0, 44.0),
+    point(-80.0, 80.0),
+    point(86.0, 80.0),
+    point(86.0, 116.0),
+    point(-80.0, 116.0),
+    point(-80.0, 152.0),
+    point(99.0, 152.0),
+    point(99.0, 188.0),
+    point(-80.0, 188.0),
+    point(-80.0, 224.0),
+    point(-80.0, 224.0),
+    point(-80.0, 242.0),
+  ]
+  let bezier = route_polyline_to_bezier(
+    shortest,
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    true,
+    1.0,
+    0.0,
+    route_barriers=bezier_test_polygon_edges(polygon),
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(83.0, 241.0),
+      point(83.0, 241.0),
+      point(95.40589554843454, 212.34162098046613),
+      point(99.0, 188.0),
+      point(109.50353269078028, 116.86322165635785),
+      point(83.0, 27.0),
+      point(83.0, 27.0),
+    ],
+    eps=0.0001,
+  )
+}
+
+///|
 test "route_polyline_to_bezier reproduces the barrier-aware bend fit from Graphviz fixtures" {
   let shortest : Array[@geom.Point] = [
     point(780.0, 178.5),

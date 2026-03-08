@@ -463,3 +463,58 @@ test "route_pathplan_from_boxes matches Graphviz constrained head tangent corrid
     { x: 208.02978515625, y: 483.5 },
   ])
 }
+
+///|
+test "route_pathplan_from_boxes matches Graphviz stepped cluster corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -80.0, lly: 224.0, urx: 122.0, ury: 242.0 },
+    { llx: -80.0, lly: 188.0, urx: 252.0, ury: 224.0 },
+    { llx: 99.0, lly: 152.0, urx: 122.0, ury: 188.0 },
+    { llx: -80.0, lly: 116.0, urx: 252.0, ury: 152.0 },
+    { llx: 86.0, lly: 80.0, urx: 122.0, ury: 116.0 },
+    { llx: -80.0, lly: 44.0, urx: 252.0, ury: 80.0 },
+    { llx: -80.0, lly: 26.0, urx: 122.0, ury: 44.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 83.0, y: 241.0 }, { x: 83.0, y: 27.0 }) {
+    Some(value) => value
+    None => fail("expected route for stepped cluster corridor fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 122.0, y: 242.0 },
+    { x: 122.0, y: 224.0 },
+    { x: 252.0, y: 224.0 },
+    { x: 252.0, y: 188.0 },
+    { x: 122.0, y: 188.0 },
+    { x: 122.0, y: 152.0 },
+    { x: 252.0, y: 152.0 },
+    { x: 252.0, y: 116.0 },
+    { x: 122.0, y: 116.0 },
+    { x: 122.0, y: 80.0 },
+    { x: 252.0, y: 80.0 },
+    { x: 252.0, y: 44.0 },
+    { x: 122.0, y: 44.0 },
+    { x: 122.0, y: 26.0 },
+    { x: -80.0, y: 26.0 },
+    { x: -80.0, y: 44.0 },
+    { x: -80.0, y: 44.0 },
+    { x: -80.0, y: 80.0 },
+    { x: 86.0, y: 80.0 },
+    { x: 86.0, y: 116.0 },
+    { x: -80.0, y: 116.0 },
+    { x: -80.0, y: 152.0 },
+    { x: 99.0, y: 152.0 },
+    { x: 99.0, y: 188.0 },
+    { x: -80.0, y: 188.0 },
+    { x: -80.0, y: 224.0 },
+    { x: -80.0, y: 224.0 },
+    { x: -80.0, y: 242.0 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 83.0, y: 241.0 },
+    { x: 99.0, y: 188.0 },
+    { x: 99.0, y: 152.0 },
+    { x: 83.0, y: 27.0 },
+  ])
+}
