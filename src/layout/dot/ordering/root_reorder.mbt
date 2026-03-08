@@ -779,6 +779,43 @@ fn build_root_rank_order_call_inputs(
 }
 
 ///|
+/// Graphviz parity: root cluster-rank-order pass uses reorder_rank_groups with
+/// coalesced-parallel mode on root-only rematerialized edge arrays.
+pub fn run_root_rank_order_reorder(
+  call_inputs : RootRankOrderCallInputs,
+  root_graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.root_rank_keys,
+    call_inputs.root_groups,
+    call_inputs.root_edges_out,
+    call_inputs.root_edge_tail_out,
+    call_inputs.root_edge_head_out,
+    call_inputs.root_edge_tail_port_x,
+    call_inputs.root_edge_head_port_x,
+    call_inputs.root_edge_tail_port_order,
+    call_inputs.root_edge_head_port_order,
+    call_inputs.root_parents,
+    call_inputs.root_children,
+    call_inputs.order_cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.root_edge_order,
+    call_inputs.root_node_order,
+    call_inputs.order_sizes_out,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    call_inputs.order_cluster_skeleton,
+    call_inputs.order_flat_constraints,
+    graphviz_flip=root_graphviz_flip,
+    coalesce_parallel_edges=true,
+  )
+}
+
+///|
 /// Graphviz parity: graphviz_flip root output merge replays ordered root
 /// membership from root mincross back into seeded root rank groups.
 fn build_graphviz_flip_merged_root_groups(

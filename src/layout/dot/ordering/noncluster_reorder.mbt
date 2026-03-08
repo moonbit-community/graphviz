@@ -166,6 +166,43 @@ fn build_noncluster_order_node_order(
 }
 
 ///|
+/// Graphviz parity: non-cluster rank reorder call uses the same
+/// reorder_rank_groups wiring as Graphviz non-cluster mincross pass.
+pub fn run_noncluster_rank_reorder(
+  call_inputs : NonclusterRankReorderInputs,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.rank_keys,
+    call_inputs.groups,
+    call_inputs.order_edges,
+    call_inputs.order_edge_tail,
+    call_inputs.order_edge_head,
+    call_inputs.order_edge_tail_port_x,
+    call_inputs.order_edge_head_port_x,
+    call_inputs.order_edge_tail_port_order,
+    call_inputs.order_edge_head_port_order,
+    call_inputs.parents,
+    call_inputs.children,
+    call_inputs.cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.edge_order,
+    call_inputs.order_node_order,
+    call_inputs.order_sizes,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    call_inputs.cluster_skeleton,
+    call_inputs.flat_constraints,
+    graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=call_inputs.graphviz_in_neighbors,
+    graphviz_flip=call_inputs.graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
 /// edge_out_order and ND_in head order from node-ordered ND_out scans.
 /// Do not change behavior without updating fixtures/tests.

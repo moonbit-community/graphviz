@@ -64,6 +64,133 @@ fn apply_intercluster_bonus(
   }
   adjusted
 }
+///|
+/// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
+/// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_intercluster_bonus(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_keys : Map[String, String],
+) -> Map[String, Int] {
+  let count_by_key : Map[String, Int] = Map::new()
+  for tail_name in creation_order {
+    let indices = match edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for idx in indices {
+      let edge = edges[idx]
+      let (tail, head) = edge_endpoints_at(edge, idx, edge_tail, edge_head)
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      if tail_rank == head_rank {
+        continue
+      }
+      let tail_cluster = if order_with_clusters {
+        cluster_key_or_empty(cluster_keys, tail)
+      } else {
+        ""
+      }
+      let head_cluster = if order_with_clusters {
+        cluster_key_or_empty(cluster_keys, head)
+      } else {
+        ""
+      }
+      let intercluster = order_with_clusters &&
+        tail_cluster != head_cluster &&
+        (tail_cluster != "" || head_cluster != "")
+      if !intercluster ||
+        !@edge_semantics.edge_is_constraint(edge) ||
+        @edge_semantics.edge_xpenalty(edge) <= 0 {
+        continue
+      }
+      let tail_port_order = if idx < edge_tail_port_order.length() {
+        edge_tail_port_order[idx]
+      } else {
+        0.5
+      }
+      let head_port_order = if idx < edge_head_port_order.length() {
+        edge_head_port_order[idx]
+      } else {
+        0.5
+      }
+      let vnodes = if order_with_vnodes {
+        match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
+          Some(list) => list
+          None => []
+        }
+      } else {
+        []
+      }
+      let chain : Array[String] = []
+      let (chain_tail, chain_head) = if tail_rank <= head_rank {
+        (tail, head)
+      } else {
+        (head, tail)
+      }
+      chain.push(chain_tail)
+      if order_with_vnodes && vnodes.length() > 0 {
+        for vnode in vnodes {
+          chain.push(vnode)
+        }
+      }
+      chain.push(chain_head)
+      let mut i = 0
+      while i + 1 < chain.length() {
+        let t = chain[i]
+        let h = chain[i + 1]
+        if t != h && @edge_identity.is_edge_vnode_name(t) {
+          let seg_tail_order = if t == tail && chain_tail == tail {
+            tail_port_order
+          } else if t == head && chain_head == head {
+            head_port_order
+          } else {
+            0.0
+          }
+          let seg_head_order = if h == head && chain_head == head {
+            head_port_order
+          } else if h == tail && chain_tail == tail {
+            tail_port_order
+          } else {
+            0.0
+          }
+          let key = order_edge_merge_key(
+            t, h, true, seg_tail_order, seg_head_order,
+          )
+          let prev = match count_by_key.get(key) {
+            Some(value) => value
+            None => 0
+          }
+          count_by_key[key] = prev + 1
+        }
+        i = i + 1
+      }
+    }
+  }
+  let bonus_by_key : Map[String, Int] = Map::new()
+  for key, count in count_by_key {
+    if count > 1 {
+      bonus_by_key[key] = count - 1
+    }
+  }
+  bonus_by_key
+}
 
 ///|
 /// Graphviz parity: ReMincross creation-order replay starts from tail creation

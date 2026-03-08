@@ -459,6 +459,45 @@ pub(all) struct ReMincrossCleanupReorderInputs {
   rem_flat_constraints : Map[String, Bool]
   graphviz_flip : Bool
 }
+///|
+/// Graphviz parity: clustered ReMincross cleanup reorder executes startpass=2
+/// with coalesced-parallel mode on rematerialized edge arrays.
+pub fn run_remincross_cleanup_reorder(
+  reorder_inputs : ReMincrossCleanupReorderInputs,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    reorder_inputs.rem_rank_keys,
+    reorder_inputs.rem_groups,
+    reorder_inputs.rem_edges_out,
+    reorder_inputs.rem_edge_tail_out,
+    reorder_inputs.rem_edge_head_out,
+    reorder_inputs.rem_edge_tail_port_x,
+    reorder_inputs.rem_edge_head_port_x,
+    reorder_inputs.rem_edge_tail_port_order,
+    reorder_inputs.rem_edge_head_port_order,
+    reorder_inputs.rem_parents,
+    reorder_inputs.rem_children,
+    reorder_inputs.rem_cluster_keys,
+    reorder_inputs.rank_same_groups,
+    reorder_inputs.rank_same_order,
+    reorder_inputs.rem_edge_order,
+    reorder_inputs.rem_node_order,
+    reorder_inputs.rem_sizes,
+    reorder_inputs.nodesep_pt,
+    reorder_inputs.has_edge_labels,
+    reorder_inputs.port_order_positions,
+    reorder_inputs.port_order_contrib,
+    Map::new(),
+    Map::new(),
+    reorder_inputs.rem_flat_constraints,
+    graphviz_flip=reorder_inputs.graphviz_flip,
+    // Graphviz parity: ReMincross counts parallel chain segments once
+    // with summed xpenalty before startpass=2 transposition.
+    coalesce_parallel_edges=true,
+    startpass=2,
+    remincross_mode=true,
+  )
+}
 
 ///|
 /// Graphviz parity: clustered ReMincross cleanup inputs keep rematerialized

@@ -43,6 +43,67 @@ pub(all) struct BuildOrderingRuntimeContextSources {
 }
 
 ///|
+/// Graphviz parity: local cluster ordering uses minrank + first node order
+/// before deterministic cluster-name tie-breaks (cluster.c).
+/// Do not change behavior without updating fixtures/tests.
+fn build_local_cluster_order(
+  nodes : Array[@cgraph.Node],
+  local_cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+) -> Map[String, Int] {
+  let min_rank : Map[String, Int] = Map::new()
+  let first_order : Map[String, Int] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = local_cluster_keys.get(name).unwrap_or_default()
+    if cluster == "" {
+      continue
+    }
+    let rank = ranks.get(name).unwrap_or_default()
+    match min_rank.get(cluster) {
+      Some(current) => if rank < current { min_rank[cluster] = rank }
+      None => min_rank[cluster] = rank
+    }
+    if first_order.get(cluster) is None {
+      first_order[cluster] = node_order.get(name).unwrap_or_default()
+    }
+  }
+  let entries : Array[(String, Int, Int)] = []
+  for cluster, rank in min_rank {
+    entries.push((cluster, rank, first_order.get(cluster).unwrap_or_default()))
+  }
+  entries.sort_by((a, b) => {
+    let (name_a, rank_a, order_a) = a
+    let (name_b, rank_b, order_b) = b
+    if rank_a < rank_b {
+      -1
+    } else if rank_a > rank_b {
+      1
+    } else if order_a < order_b {
+      -1
+    } else if order_a > order_b {
+      1
+    } else if name_a < name_b {
+      -1
+    } else if name_a > name_b {
+      1
+    } else {
+      0
+    }
+  })
+  let order_map : Map[String, Int] = Map::new()
+  let mut idx = 0
+  for entry in entries {
+    let (cluster, _rank, _order) = entry
+    if order_map.get(cluster) is None {
+      order_map[cluster] = idx
+      idx = idx + 1
+    }
+  }
+  order_map
+}
+///|
 /// Graphviz parity: ordering runtime-core setup keeps name-set build,
 /// edge-cluster collection, and order/port map derivation in fixed sequence.
 /// Do not change behavior without updating fixtures/tests.
