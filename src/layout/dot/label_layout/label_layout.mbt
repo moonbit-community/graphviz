@@ -1,9 +1,12 @@
 ///|
 /// Label layout boundary helpers: cache reset and raw label-port dispatch
 /// across record and HTML implementations.
-
 type RecordOrientation = @shared.RecordOrientation
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
 
 ///|
