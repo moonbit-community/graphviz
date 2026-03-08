@@ -263,7 +263,7 @@ fn build_projection_result(
   let x_positions =
     compute_layout_x_positions(pipeline, x_data)
   let position_output_maps =
-    @positioning.build_position_output_pipeline(
+    @output_maps.build_position_output_pipeline(
       {
         has_clusters: pipeline.cluster_meta.has_clusters,
         has_dotted_edges: pipeline.prep.has_dotted_edges,
@@ -281,7 +281,7 @@ fn build_projection_result(
         use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
         vnode_ranks: pipeline.ordering.vnode_info.vnode_ranks,
         edge_vnodes: pipeline.ordering.vnode_info.edge_vnodes,
-        cluster_rounding_enabled: @positioning.cluster_rounding_enabled(),
+        cluster_rounding_enabled: @output_maps.cluster_rounding_enabled(),
         vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
         sizes: pipeline.prep.sizes,
         cluster_margin_pt_for: @clustering.cluster_margin_pt,
