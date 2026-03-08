@@ -50,9 +50,7 @@ pub(all) struct ClusterGraphMaps {
 }
 
 ///|
-pub fn collect_cluster_graph_maps(
-  graph : @cgraph.Graph,
-) -> ClusterGraphMaps {
+pub fn collect_cluster_graph_maps(graph : @cgraph.Graph) -> ClusterGraphMaps {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
