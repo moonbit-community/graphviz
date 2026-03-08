@@ -1,10 +1,5 @@
 ///|
 type LayoutPrep = @shared.LayoutPrep
-type RankDir = @rankdir.RankDir
-type SplinesMode = @shared.SplinesMode
-type RecordOrientation = @shared.RecordOrientation
-type NodeSize = @node_primitives.NodeSize
-type RecordPort = @record_geometry.RecordPort
 type DotLayoutNode = @shared.DotLayoutNode
 type DotLayoutEdge = @routing.DotLayoutEdge
 type RankData = @rank_assignment.RankData
@@ -52,7 +47,7 @@ pub fn compute_dot_routing_stage(
   let ordering = input.ordering
   let positions_state = input.positions_state
   let spatial_data =
-    build_routing_spatial_data({
+    @integration.build_routing_spatial_data({
       graph,
       prep,
       ranks: rank_data.ranks,
@@ -60,7 +55,7 @@ pub fn compute_dot_routing_stage(
     })
   let nodes_out = spatial_data.nodes_out
   let ratio_adjusted_data =
-    build_routing_ratio_adjusted_data({
+    @integration.build_routing_ratio_adjusted_data({
       graph,
       prep,
       rank_data,
@@ -82,7 +77,7 @@ pub fn compute_dot_routing_stage(
     )
   let enable_complex_tuning = @precompute.complex_tuning_enabled()
   let precompute_data =
-    build_routing_precompute_data({
+    @integration.build_routing_precompute_data({
       prep,
       rank_data,
       rank_heights,
@@ -100,7 +95,7 @@ pub fn compute_dot_routing_stage(
   let path_groups = precompute_data.path_groups
   let routing_context = precompute_data.routing_context
   let edges_routed =
-    route_edges_for_dot({
+    @integration.route_edges_for_dot({
       graph,
       prep,
       rank_data,
