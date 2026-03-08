@@ -12,7 +12,6 @@
     "moonbit-community/graphviz/layout/dot/routing/precompute",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
-    "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ],
   "wbtest-import": [

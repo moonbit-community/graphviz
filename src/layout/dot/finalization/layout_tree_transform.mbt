@@ -470,7 +470,7 @@ fn scale_layout_tree(
     },
     label_pos: @shared.scale_optional_point(layout.label_pos, sx, sy),
     nodes,
-    edges: @routing.scale_edge_layout_output(layout.edges, sx, sy),
+    edges: @shared.scale_edge_layout_output(layout.edges, sx, sy),
     subgraphs,
   }
 }
