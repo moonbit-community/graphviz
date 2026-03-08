@@ -235,13 +235,23 @@ fn run_spline_case(
 }
 
 ///|
-/// Graphviz parity: owner-local direct tests now pin the exact barrier-aware
-/// bend fit (case=5, zzz_worker -> zzz), exact single-bend corridor
+/// Graphviz parity: owner-local direct tests now pin the exact simple
+/// straight corridor (case=1, C1N1 -> C2N1), exact long straight corridor
+/// (case=1, accel -> tunnel_egress), exact barrier-aware bend fit
+/// (case=5, zzz_worker -> zzz), exact single-bend corridor
 /// (case=9, foo_agent -> zzz_worker), and exact constrained horizontal head
 /// tangent (case=18, z_shapeshifter -> machsrv_xprot_gen). Keep fixture replay
 /// for the remaining representative corridors whose longer or graph-specific
 /// barrier ladders still add distinct regression signal.
 fn edge_spline_fixture_needs_replay(input : SplineInput) -> Bool {
+  if input.case_id == 1 && input.graph == "" && input.tail == "C1N1" &&
+    input.head == "C2N1" {
+    return false
+  }
+  if input.case_id == 1 && input.graph == "" && input.tail == "accel" &&
+    input.head == "tunnel_egress" {
+    return false
+  }
   if input.case_id == 5 && input.graph == "" && input.tail == "zzz_worker" &&
     input.head == "zzz" {
     return false
