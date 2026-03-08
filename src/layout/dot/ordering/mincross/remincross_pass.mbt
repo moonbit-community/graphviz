@@ -104,7 +104,7 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
   ranks : Map[String, Int]
-  reorder_setup : @ordering.OrderingReorderSetup
+  reorder_setup : @setup.OrderingReorderSetup
   local_cluster_order : Map[String, Int]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]

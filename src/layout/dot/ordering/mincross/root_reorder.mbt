@@ -613,8 +613,8 @@ struct RootRankOrderPhaseBase {
 /// materialization and clustered metadata snapshots paired before base assembly.
 /// Do not change behavior without updating fixtures/tests.
 priv struct RootRankOrderPhaseBaseBuildSources {
-  reorder_setup : @ordering.OrderingReorderSetup
-  class2_data : @ordering.OrderingClass2Data
+  reorder_setup : @setup.OrderingReorderSetup
+  class2_data : @setup.OrderingClass2Data
   order_rank_keys : Array[Int]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]

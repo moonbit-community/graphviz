@@ -2,7 +2,6 @@ import {
   "moonbit-community/graphviz/layout/dot/shared",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/edge_semantics",
-  "moonbit-community/graphviz/layout/dot/ordering",
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/ordering/mincross",
   "moonbit-community/graphviz/layout/dot/positioning/ports",

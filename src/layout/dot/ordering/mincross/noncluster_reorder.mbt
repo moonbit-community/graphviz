@@ -67,8 +67,8 @@ pub(all) struct NonclusterReorderInputsBuildSources {
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   flat_constraints : Map[String, Bool]
-  reorder_setup : @ordering.OrderingReorderSetup
-  edge_port_data : @ordering.OrderingEdgePortData
+  reorder_setup : @setup.OrderingReorderSetup
+  edge_port_data : @setup.OrderingEdgePortData
 }
 
 ///|

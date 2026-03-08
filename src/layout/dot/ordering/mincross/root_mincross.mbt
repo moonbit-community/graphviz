@@ -818,7 +818,7 @@ priv struct ClusteredRootPhaseStageSources {
 /// snapshots and root-stage metadata grouped before deterministic stage run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredRootPhaseStageBuildSources {
-  reorder_setup : @ordering.OrderingReorderSetup
+  reorder_setup : @setup.OrderingReorderSetup
   pre_root_stage : ClusteredPreRootStageOutput
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]

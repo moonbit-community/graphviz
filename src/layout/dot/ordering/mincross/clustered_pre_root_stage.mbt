@@ -588,7 +588,7 @@ priv struct ClusteredMaterializedStageOutput {
 /// pre-root run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredPreRootStageSources {
-  reorder_setup : @ordering.OrderingReorderSetup
+  reorder_setup : @setup.OrderingReorderSetup
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
   cluster_min_rank : Map[String, Int]

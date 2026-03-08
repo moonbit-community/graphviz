@@ -232,7 +232,7 @@ fn build_edge_port_samples_with_callbacks(
     @rankdir.RankDir,
     Map[String, @cgraph.Node],
   ) -> Double,
-) -> @ordering.EdgePortSampleBundle {
+) -> @setup.EdgePortSampleBundle {
   let rankdir = if nodes.length() > 0 {
     @rankdir.graph_rankdir(nodes[0].graph())
   } else {
@@ -243,7 +243,7 @@ fn build_edge_port_samples_with_callbacks(
     nodes_by_name[node.name()] = node
   }
   let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  @ordering.build_edge_port_sample_bundle(
+  @setup.build_edge_port_sample_bundle(
     edges,
     edge_tail,
     edge_head,

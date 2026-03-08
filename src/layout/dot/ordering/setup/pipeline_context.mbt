@@ -388,8 +388,8 @@ fn build_dot_cluster_metadata(
 /// reuse the same Stage C setup artifacts.
 pub(all) struct OrderingPipelineContext {
   runtime_context : OrderingRuntimeContext
-  edge_port_data : @ordering.OrderingEdgePortData
-  reorder_setup : @ordering.OrderingReorderSetup
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
 }
 
 ///|
@@ -436,7 +436,7 @@ pub(all) struct OrderingResult {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_pipeline_context_from_sources(
   sources : BuildOrderingPipelineContextSources,
-  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> @ordering.EdgePortSampleBundle,
+  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
 ) -> OrderingPipelineContext {
   let runtime_context = build_ordering_runtime_context_from_sources({
     graph: sources.graph,
@@ -451,7 +451,7 @@ pub fn build_ordering_pipeline_context_from_sources(
     rankdir: sources.rankdir,
     cluster_meta: sources.cluster_meta,
   })
-  let edge_port_data = @ordering.build_ordering_edge_port_data_from_sources(
+  let edge_port_data = build_ordering_edge_port_data_from_sources(
     {
       edges: sources.edges,
       edge_tail: sources.edge_tail,
@@ -459,7 +459,7 @@ pub fn build_ordering_pipeline_context_from_sources(
     },
     build_port_sample_bundle,
   )
-  let reorder_setup = @ordering.build_ordering_reorder_setup_from_sources({
+  let reorder_setup = build_ordering_reorder_setup_from_sources({
     nodes: sources.nodes,
     edges: sources.edges,
     edge_tail: sources.edge_tail,

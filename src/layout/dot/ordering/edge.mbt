@@ -37,41 +37,6 @@ pub fn edge_endpoints_at(
 }
 
 ///|
-pub(all) struct DedupOrderingEdgesOutput {
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-}
-
-///|
-fn dedup_ordering_edges(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> DedupOrderingEdgesOutput {
-  let seen : Map[String, Bool] = Map::new()
-  let out_edges : Array[@cgraph.Edge] = []
-  let out_tail : Array[String] = []
-  let out_head : Array[String] = []
-  for i in 0..<edges.length() {
-    let (tail, head) = edge_endpoints_at(edges[i], i, edge_tail, edge_head)
-    let key = "\{tail}|\{head}"
-    if seen.get(key) is Some(_) {
-      continue
-    }
-    seen[key] = true
-    out_edges.push(edges[i])
-    out_tail.push(tail)
-    out_head.push(head)
-  }
-  {
-    order_edges: out_edges,
-    order_edge_tail: out_tail,
-    order_edge_head: out_head,
-  }
-}
-
-///|
 pub(all) struct EdgeIndexData {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]

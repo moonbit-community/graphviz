@@ -76,7 +76,7 @@ fn require_int(map : Map[String, Int], key : String) -> Int raise {
 test "build_edge_port_sample_bundle follows oriented endpoints and port remapping" {
   let graph = @dot_parser.parse_dot("digraph { a:p:e -> b:q:w; b:r:s -> c; }")
   let edges = graph.edges()
-  let bundle = @ordering.build_edge_port_sample_bundle(
+  let bundle = build_edge_port_sample_bundle(
     edges,
     ["a", "c"],
     ["b", "b"],
@@ -92,7 +92,7 @@ test "build_edge_port_sample_bundle follows oriented endpoints and port remappin
 
 ///|
 test "build_edge_port_sample_bundle returns empty arrays when there are no edges" {
-  let bundle = @ordering.build_edge_port_sample_bundle(
+  let bundle = build_edge_port_sample_bundle(
     [],
     [],
     [],

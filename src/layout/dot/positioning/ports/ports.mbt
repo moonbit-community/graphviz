@@ -123,7 +123,7 @@ pub fn build_edge_port_sample_bundle(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-) -> @ordering.EdgePortSampleBundle {
+) -> @setup.EdgePortSampleBundle {
   build_edge_port_samples_with_callbacks(
     nodes, edges, edge_tail, edge_head, sizes, port_offsets_for_nodes, edge_port_offset,
     edge_port_order,
