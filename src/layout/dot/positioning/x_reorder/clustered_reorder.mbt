@@ -28,67 +28,60 @@ pub struct ClusteredXposReorderInput {
   graphviz_flip : Bool
 }
 
+///|
 /// Graphviz parity: clustered xpos reorder runs seed build, order-edge
 /// materialization, and reorder_rank_groups in Graphviz-equivalent sequence.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_xpos_groups(
   input : ClusteredXposReorderInput,
 ) -> Map[Int, Array[String]] {
-  let reorder_seed_data =
-    build_clustered_xpos_seed(
-      {
-        x_groups: input.x_groups,
-        x_order_sizes: input.x_order_sizes,
-        x_cluster_keys: input.x_cluster_keys,
-        cluster_min_rank: input.cluster_min_rank,
-        cluster_max_rank: input.cluster_max_rank,
-        node_order: input.node_order,
-        cluster_skeleton_size: input.cluster_skeleton_size,
-      },
-    )
-  let reorder_edges_data =
-    build_clustered_xpos_edges(
-      {
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        ranks: input.ranks,
-        edge_vnodes: input.edge_vnodes,
-        order_nodes: reorder_seed_data.order_nodes,
-        edge_tail_port_x: input.edge_tail_port_x,
-        edge_head_port_x: input.edge_head_port_x,
-        edge_tail_port_order: input.edge_tail_port_order,
-        edge_head_port_order: input.edge_head_port_order,
-        cluster_min_rank: input.cluster_min_rank,
-        cluster_max_rank: input.cluster_max_rank,
-        cluster_skeleton_penalty: input.cluster_skeleton_penalty,
-      },
-    )
-  apply_clustered_xpos_reorder(
-    {
-      order_rank_keys: reorder_seed_data.order_rank_keys,
-      order_groups: reorder_seed_data.order_groups,
-      order_edges_out: reorder_edges_data.order_edges_out,
-      order_edge_tail_out: reorder_edges_data.order_edge_tail_out,
-      order_edge_head_out: reorder_edges_data.order_edge_head_out,
-      order_edge_tail_port_x: reorder_edges_data.order_edge_tail_port_x,
-      order_edge_head_port_x: reorder_edges_data.order_edge_head_port_x,
-      order_edge_tail_port_order: reorder_edges_data.order_edge_tail_port_order,
-      order_edge_head_port_order: reorder_edges_data.order_edge_head_port_order,
-      order_nodes: reorder_seed_data.order_nodes,
-      order_ranks: reorder_seed_data.order_ranks,
-      order_cluster_keys: reorder_seed_data.order_cluster_keys,
-      rank_same_groups: input.rank_same_groups,
-      rank_same_order: input.rank_same_order,
-      order_node_order: reorder_seed_data.order_node_order,
-      order_sizes: reorder_seed_data.order_sizes,
-      nodesep_pt: input.nodesep_pt,
-      has_edge_labels: input.has_edge_labels,
-      order_cluster_skeleton: reorder_seed_data.order_cluster_skeleton,
-      flat_constraints: input.flat_constraints,
-      graphviz_flip: input.graphviz_flip,
-    },
-  )
+  let reorder_seed_data = build_clustered_xpos_seed({
+    x_groups: input.x_groups,
+    x_order_sizes: input.x_order_sizes,
+    x_cluster_keys: input.x_cluster_keys,
+    cluster_min_rank: input.cluster_min_rank,
+    cluster_max_rank: input.cluster_max_rank,
+    node_order: input.node_order,
+    cluster_skeleton_size: input.cluster_skeleton_size,
+  })
+  let reorder_edges_data = build_clustered_xpos_edges({
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    ranks: input.ranks,
+    edge_vnodes: input.edge_vnodes,
+    order_nodes: reorder_seed_data.order_nodes,
+    edge_tail_port_x: input.edge_tail_port_x,
+    edge_head_port_x: input.edge_head_port_x,
+    edge_tail_port_order: input.edge_tail_port_order,
+    edge_head_port_order: input.edge_head_port_order,
+    cluster_min_rank: input.cluster_min_rank,
+    cluster_max_rank: input.cluster_max_rank,
+    cluster_skeleton_penalty: input.cluster_skeleton_penalty,
+  })
+  apply_clustered_xpos_reorder({
+    order_rank_keys: reorder_seed_data.order_rank_keys,
+    order_groups: reorder_seed_data.order_groups,
+    order_edges_out: reorder_edges_data.order_edges_out,
+    order_edge_tail_out: reorder_edges_data.order_edge_tail_out,
+    order_edge_head_out: reorder_edges_data.order_edge_head_out,
+    order_edge_tail_port_x: reorder_edges_data.order_edge_tail_port_x,
+    order_edge_head_port_x: reorder_edges_data.order_edge_head_port_x,
+    order_edge_tail_port_order: reorder_edges_data.order_edge_tail_port_order,
+    order_edge_head_port_order: reorder_edges_data.order_edge_head_port_order,
+    order_nodes: reorder_seed_data.order_nodes,
+    order_ranks: reorder_seed_data.order_ranks,
+    order_cluster_keys: reorder_seed_data.order_cluster_keys,
+    rank_same_groups: input.rank_same_groups,
+    rank_same_order: input.rank_same_order,
+    order_node_order: reorder_seed_data.order_node_order,
+    order_sizes: reorder_seed_data.order_sizes,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    order_cluster_skeleton: reorder_seed_data.order_cluster_skeleton,
+    flat_constraints: input.flat_constraints,
+    graphviz_flip: input.graphviz_flip,
+  })
 }
 
 ///|
@@ -208,7 +201,7 @@ fn append_skeleton_nodes(
 ) -> Unit {
   for cluster, min_rank in input.cluster_min_rank {
     let max_rank = input.cluster_max_rank.get(cluster).unwrap_or(min_rank)
-    for rank in min_rank..=max_rank {
+    for rank in min_rank..<=max_rank {
       let name = @cluster_identity.cluster_skeleton_name(cluster, rank)
       order_cluster_keys[name] = cluster
       order_cluster_skeleton[name] = true
@@ -242,11 +235,7 @@ fn build_clustered_xpos_seed(
   }
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
   append_skeleton_nodes(
-    input,
-    order_groups,
-    order_sizes,
-    order_cluster_keys,
-    order_cluster_skeleton,
+    input, order_groups, order_sizes, order_cluster_keys, order_cluster_skeleton,
   )
   let order_node_order : Map[String, Int] = Map::new()
   for name, value in input.node_order {
@@ -314,7 +303,11 @@ priv struct ClusteredXposEdgeMaterializationOutput {
 
 ///|
 fn edge_name_at(names : Array[String], idx : Int, fallback : String) -> String {
-  if idx < names.length() { names[idx] } else { fallback }
+  if idx < names.length() {
+    names[idx]
+  } else {
+    fallback
+  }
 }
 
 ///|
@@ -323,7 +316,11 @@ fn edge_port_value_or_default(
   idx : Int,
   fallback : Double,
 ) -> Double {
-  if idx < values.length() { values[idx] } else { fallback }
+  if idx < values.length() {
+    values[idx]
+  } else {
+    fallback
+  }
 }
 
 ///|
@@ -377,10 +374,12 @@ fn append_xpos_chain_segments(
   while idx + 1 < chain.length() {
     let seg_tail_port = if chain[idx] == tail { tail_port_x } else { 0.0 }
     let seg_head_port = if chain[idx + 1] == head { head_port_x } else { 0.0 }
-    let seg_tail_order =
-      if chain[idx] == tail { tail_port_order } else { 0.5 }
-    let seg_head_order =
-      if chain[idx + 1] == head { head_port_order } else { 0.5 }
+    let seg_tail_order = if chain[idx] == tail { tail_port_order } else { 0.5 }
+    let seg_head_order = if chain[idx + 1] == head {
+      head_port_order
+    } else {
+      0.5
+    }
     @ordering.add_order_edge(
       order_graph,
       order_node_map,
@@ -428,45 +427,18 @@ fn append_xpos_edge_with_vnodes(
 ) -> Unit {
   if vnodes.length() == 0 {
     @ordering.add_order_edge(
-      order_graph,
-      order_node_map,
-      order_edges_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      tail,
-      head,
-      penalty,
-      constraint,
-      tail_port_x,
-      head_port_x,
-      tail_port_order,
-      head_port_order,
+      order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
+      order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order,
+      order_edge_head_port_order, tail, head, penalty, constraint, tail_port_x, head_port_x,
+      tail_port_order, head_port_order,
     )
   } else {
     let chain = build_xpos_chain_with_vnodes(ranks, tail, head, vnodes)
     append_xpos_chain_segments(
-      order_graph,
-      order_node_map,
-      order_edges_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      chain,
-      tail,
-      head,
-      penalty,
-      constraint,
-      tail_port_x,
-      head_port_x,
-      tail_port_order,
-      head_port_order,
+      order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
+      order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order,
+      order_edge_head_port_order, chain, tail, head, penalty, constraint, tail_port_x,
+      head_port_x, tail_port_order, head_port_order,
     )
   }
 }
@@ -490,14 +462,29 @@ fn append_clustered_input_edges(
     let head = edge_name_at(input.edge_head, edge_idx, edge.head().name())
     let penalty = @edge_semantics.edge_xpenalty(edge)
     let constraint = @edge_semantics.edge_is_constraint(edge)
-    let tail_port_x = edge_port_value_or_default(input.edge_tail_port_x, edge_idx, 0.0)
-    let head_port_x = edge_port_value_or_default(input.edge_head_port_x, edge_idx, 0.0)
-    let tail_port_order =
-      edge_port_value_or_default(input.edge_tail_port_order, edge_idx, 0.5)
-    let head_port_order =
-      edge_port_value_or_default(input.edge_head_port_order, edge_idx, 0.5)
-    let vnodes =
-      input.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or_default()
+    let tail_port_x = edge_port_value_or_default(
+      input.edge_tail_port_x,
+      edge_idx,
+      0.0,
+    )
+    let head_port_x = edge_port_value_or_default(
+      input.edge_head_port_x,
+      edge_idx,
+      0.0,
+    )
+    let tail_port_order = edge_port_value_or_default(
+      input.edge_tail_port_order,
+      edge_idx,
+      0.5,
+    )
+    let head_port_order = edge_port_value_or_default(
+      input.edge_head_port_order,
+      edge_idx,
+      0.5,
+    )
+    let vnodes = input.edge_vnodes
+      .get(@edge_identity.edge_vnode_key(edge))
+      .unwrap_or_default()
     append_xpos_edge_with_vnodes(
       order_graph,
       order_node_map,
@@ -573,8 +560,11 @@ fn append_skeleton_edges(
 fn build_clustered_xpos_edges(
   input : ClusteredXposEdgeMaterializationInput,
 ) -> ClusteredXposEdgeMaterializationOutput {
-  let order_graph =
-    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
+  let order_graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    name="xpos_order",
+    strict=false,
+  )
   let order_node_map : Map[String, @cgraph.Node] = Map::new()
   for name in input.order_nodes {
     order_node_map[name] = order_graph.node(name)
@@ -587,28 +577,12 @@ fn build_clustered_xpos_edges(
   let order_edge_tail_port_order : Array[Double] = []
   let order_edge_head_port_order : Array[Double] = []
   append_clustered_input_edges(
-    input,
-    order_graph,
-    order_node_map,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
+    input, order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
+    order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order, order_edge_head_port_order,
   )
   append_skeleton_edges(
-    input,
-    order_graph,
-    order_node_map,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
+    input, order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
+    order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order, order_edge_head_port_order,
   )
   {
     order_edges_out,

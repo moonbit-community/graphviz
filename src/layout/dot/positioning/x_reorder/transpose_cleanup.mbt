@@ -35,21 +35,9 @@ fn apply_xpos_transpose_cleanup(
   let tmp_rank_keys = @ordering.collect_rank_keys(x_groups)
   let tmp_ranks = @ordering.build_node_ranks(x_groups)
   let _ = @ordering.transpose_rank_groups_limited(
-    tmp_rank_keys,
-    x_groups,
-    parents,
-    children,
-    tmp_ranks,
-    false,
-    max_passes,
+    tmp_rank_keys, x_groups, parents, children, tmp_ranks, false, max_passes,
   )
   let _ = @ordering.transpose_rank_groups_limited(
-    tmp_rank_keys,
-    x_groups,
-    parents,
-    children,
-    tmp_ranks,
-    true,
-    max_passes,
+    tmp_rank_keys, x_groups, parents, children, tmp_ranks, true, max_passes,
   )
 }

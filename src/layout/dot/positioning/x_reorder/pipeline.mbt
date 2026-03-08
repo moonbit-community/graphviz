@@ -61,17 +61,14 @@ pub(all) struct XposReorderPipelineSources {
 fn build_xpos_reorder_path_flags(
   input : XposReorderPipelineSources,
 ) -> XposReorderPathFlags {
-  let base_reorder_enabled =
-    input.xpos_reorder_enabled &&
+  let base_reorder_enabled = input.xpos_reorder_enabled &&
     input.allow_xpos_reorder &&
     !input.ordering_set
   {
-    clustered_reorder_enabled:
-      base_reorder_enabled && input.use_vnodes_for_xpos,
-    nonclustered_reorder_enabled:
-      base_reorder_enabled &&
-      !input.has_vnode_order &&
-      !input.has_clusters,
+    clustered_reorder_enabled: base_reorder_enabled && input.use_vnodes_for_xpos,
+    nonclustered_reorder_enabled: base_reorder_enabled &&
+    !input.has_vnode_order &&
+    !input.has_clusters,
   }
 }
 
@@ -81,33 +78,31 @@ fn build_xpos_reorder_path_flags(
 fn apply_clustered_xpos_reorder_path(
   input : XposReorderPipelineSources,
 ) -> Map[Int, Array[String]] {
-  build_clustered_xpos_groups(
-    {
-      x_groups: input.x_groups,
-      x_order_sizes: input.x_order_sizes,
-      x_cluster_keys: input.x_cluster_keys,
-      cluster_min_rank: input.cluster_min_rank,
-      cluster_max_rank: input.cluster_max_rank,
-      node_order: input.node_order,
-      cluster_skeleton_size: input.cluster_skeleton_size,
-      edges: input.edges,
-      edge_tail: input.edge_tail,
-      edge_head: input.edge_head,
-      ranks: input.ranks,
-      edge_vnodes: input.edge_vnodes,
-      edge_tail_port_x: input.edge_tail_port_x,
-      edge_head_port_x: input.edge_head_port_x,
-      edge_tail_port_order: input.edge_tail_port_order,
-      edge_head_port_order: input.edge_head_port_order,
-      cluster_skeleton_penalty: input.cluster_skeleton_penalty,
-      rank_same_groups: input.rank_same_groups,
-      rank_same_order: input.rank_same_order,
-      nodesep_pt: input.nodesep_pt,
-      has_edge_labels: input.has_edge_labels,
-      flat_constraints: input.flat_constraints,
-      graphviz_flip: input.graphviz_flip,
-    },
-  )
+  build_clustered_xpos_groups({
+    x_groups: input.x_groups,
+    x_order_sizes: input.x_order_sizes,
+    x_cluster_keys: input.x_cluster_keys,
+    cluster_min_rank: input.cluster_min_rank,
+    cluster_max_rank: input.cluster_max_rank,
+    node_order: input.node_order,
+    cluster_skeleton_size: input.cluster_skeleton_size,
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    ranks: input.ranks,
+    edge_vnodes: input.edge_vnodes,
+    edge_tail_port_x: input.edge_tail_port_x,
+    edge_head_port_x: input.edge_head_port_x,
+    edge_tail_port_order: input.edge_tail_port_order,
+    edge_head_port_order: input.edge_head_port_order,
+    cluster_skeleton_penalty: input.cluster_skeleton_penalty,
+    rank_same_groups: input.rank_same_groups,
+    rank_same_order: input.rank_same_order,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    flat_constraints: input.flat_constraints,
+    graphviz_flip: input.graphviz_flip,
+  })
 }
 
 ///|
@@ -182,16 +177,13 @@ pub fn build_x_groups_after_reorder(
   input : XposReorderPipelineSources,
 ) -> Map[Int, Array[String]] {
   let path_flags = build_xpos_reorder_path_flags(input)
-  let x_groups =
-    if path_flags.clustered_reorder_enabled {
-      apply_clustered_xpos_reorder_path(input)
-    } else if path_flags.nonclustered_reorder_enabled {
-      apply_nonclustered_xpos_reorder(
-        input,
-      )
-    } else {
-      input.x_groups
-    }
+  let x_groups = if path_flags.clustered_reorder_enabled {
+    apply_clustered_xpos_reorder_path(input)
+  } else if path_flags.nonclustered_reorder_enabled {
+    apply_nonclustered_xpos_reorder(input)
+  } else {
+    input.x_groups
+  }
   maybe_apply_xpos_transpose_cleanup(path_flags, input, x_groups)
   x_groups
 }
