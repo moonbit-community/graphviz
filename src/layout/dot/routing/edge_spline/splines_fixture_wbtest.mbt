@@ -235,14 +235,43 @@ fn run_spline_case(
 }
 
 ///|
+/// Graphviz parity: owner-local direct tests now pin the exact barrier-aware
+/// bend fit (case=5, zzz_worker -> zzz), exact single-bend corridor
+/// (case=9, foo_agent -> zzz_worker), and exact constrained horizontal head
+/// tangent (case=18, z_shapeshifter -> machsrv_xprot_gen). Keep fixture replay
+/// for the remaining representative corridors whose longer or graph-specific
+/// barrier ladders still add distinct regression signal.
+fn edge_spline_fixture_needs_replay(input : SplineInput) -> Bool {
+  if input.case_id == 5 && input.graph == "" && input.tail == "zzz_worker" &&
+    input.head == "zzz" {
+    return false
+  }
+  if input.case_id == 9 && input.graph == "" && input.tail == "foo_agent" &&
+    input.head == "zzz_worker" {
+    return false
+  }
+  if input.case_id == 18 && input.graph == "" && input.tail == "z_shapeshifter" &&
+    input.head == "machsrv_xprot_gen" {
+    return false
+  }
+  true
+}
+
+///|
 test "spline fixtures match route spline output" {
   // Graphviz fixtures come from native libm; non-native math drifts slightly.
   if !LIBM_IS_NATIVE {
     return
   }
   let cases = load_spline_fixtures()
+  let mut matched = 0
   for entry in cases {
     let (input, shortest, output) = entry
+    if !edge_spline_fixture_needs_replay(input) {
+      continue
+    }
+    matched = matched + 1
     run_spline_case(input, shortest, output)
   }
+  assert_true(matched > 0)
 }
