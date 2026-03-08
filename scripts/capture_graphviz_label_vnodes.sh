@@ -78,6 +78,8 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_LABEL_VNODES="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the integrated smoke graphs still replayed by label_vnode_fixture_test.
+grep -E '"graph":"(yours_truly|finite_state_machine)"' "$TMP_FILE" > "$OUT_FILE"
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"
