@@ -8,14 +8,16 @@ fn edge_endpoints_at(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {
-  let tail =
-    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
-    }
-  let head =
-    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
+  let tail = if edge_idx < edge_tail.length() {
+    edge_tail[edge_idx]
+  } else {
+    edge.tail().name()
+  }
+  let head = if edge_idx < edge_head.length() {
+    edge_head[edge_idx]
+  } else {
+    edge.head().name()
+  }
   (tail, head)
 }
 
@@ -25,8 +27,7 @@ fn edge_orientation_is_reversed(
   tail_name : String,
   head_name : String,
 ) -> Bool {
-  tail_name == edge.head().name() &&
-  head_name == edge.tail().name()
+  tail_name == edge.head().name() && head_name == edge.tail().name()
 }
 
 ///|
@@ -42,14 +43,12 @@ pub fn collect_parallel_offset_edge_flags(
   let edge_has_label_by_id : Map[Int, Bool] = Map::new()
   for i in 0..<edges.length() {
     let edge = edges[i]
-    let (oriented_tail, oriented_head) =
-      edge_endpoints_at(
-        edge,
-        i,
-        edge_tail,
-        edge_head,
-      )
-    let reversed = edge_orientation_is_reversed(edge, oriented_tail, oriented_head)
+    let (oriented_tail, oriented_head) = edge_endpoints_at(
+      edge, i, edge_tail, edge_head,
+    )
+    let reversed = edge_orientation_is_reversed(
+      edge, oriented_tail, oriented_head,
+    )
     edge_reversed_by_id[edge.id()] = reversed
     edge_has_label_by_id[edge.id()] = @edge_semantics.edge_has_label(edge)
   }
@@ -117,13 +116,12 @@ pub fn build_edge_parallel_offsets(
     if tail_rank == head_rank {
       continue
     }
-    let key =
-      @edge_ops.edge_parallel_key(
-        orig_tail,
-        orig_head,
-        edge.tail_port(),
-        edge.head_port(),
-      )
+    let key = @edge_ops.edge_parallel_key(
+      orig_tail,
+      orig_head,
+      edge.tail_port(),
+      edge.head_port(),
+    )
     let dir_attr = @edge_ops.edge_dir_attr_key(edge)
     let mark = @edge_ops.edge_has_sameport_mark(edge)
     sameport_marked[edge.id()] = mark
@@ -197,8 +195,7 @@ pub fn build_edge_parallel_offsets(
               Some(value) => value
               None => ""
             }
-            let intercluster =
-              a_tail_cluster != a_head_cluster &&
+            let intercluster = a_tail_cluster != a_head_cluster &&
               (a_tail_cluster != "" || a_head_cluster != "")
             let a_tail_has_self = match has_self_edge.get(a_tail) {
               Some(value) => value

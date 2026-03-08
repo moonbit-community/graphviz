@@ -136,30 +136,26 @@ pub struct RoutingPrecomputePipelineOutput {
 pub fn build_routing_precompute_pipeline(
   input : RoutingPrecomputePipelineInput,
 ) -> RoutingPrecomputePipelineOutput {
-  let path_groups =
-    select_path_groups(
-      input.x_groups,
-      input.ordered_groups_with_vnodes,
-      input.ordered_groups,
-    )
-  let routing_context =
-    prepare_routing_context(
-      {
-        edges: input.edges,
-        edge_tail: input.edge_tail,
-        edge_head: input.edge_head,
-        ranks: input.ranks,
-        ordered_groups: input.ordered_groups,
-        x_groups: path_groups,
-        nodesep_pt: input.nodesep_pt,
-        edge_vnodes: input.edge_vnodes,
-        pathplan_sizes: input.pathplan_sizes,
-        path_cluster_keys: input.path_cluster_keys,
-        vnode_sizes: input.vnode_sizes,
-        vnode_positions: input.vnode_positions,
-        cluster_bboxes: input.cluster_bboxes,
-      },
-    )
+  let path_groups = select_path_groups(
+    input.x_groups,
+    input.ordered_groups_with_vnodes,
+    input.ordered_groups,
+  )
+  let routing_context = prepare_routing_context({
+    edges: input.edges,
+    edge_tail: input.edge_tail,
+    edge_head: input.edge_head,
+    ranks: input.ranks,
+    ordered_groups: input.ordered_groups,
+    x_groups: path_groups,
+    nodesep_pt: input.nodesep_pt,
+    edge_vnodes: input.edge_vnodes,
+    pathplan_sizes: input.pathplan_sizes,
+    path_cluster_keys: input.path_cluster_keys,
+    vnode_sizes: input.vnode_sizes,
+    vnode_positions: input.vnode_positions,
+    cluster_bboxes: input.cluster_bboxes,
+  })
   {
     port_pad_below: input.port_pad_below,
     port_pad_above: input.port_pad_above,

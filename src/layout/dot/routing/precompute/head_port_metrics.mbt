@@ -21,7 +21,11 @@ fn head_metric_key_for_edge(
   let head_name = edge.head().name()
   let head_port = @edge_identity.port_key(edge.head_port())
   if head_port == "" {
-    if (is_record_shape)(edge.head()) { head_name } else { "" }
+    if is_record_shape(edge.head()) {
+      head_name
+    } else {
+      ""
+    }
   } else {
     "\{head_name}:\{head_port}"
   }
@@ -44,34 +48,26 @@ fn head_metric_distance_for_edge(
 ) -> Double {
   let tail_name = edge.tail().name()
   let head_name = edge.head().name()
-  let tail_pos =
-    positions.get(tail_name).unwrap_or({
-      x: 0.0,
-      y: 0.0,
-    })
-  let head_pos =
-    positions.get(head_name).unwrap_or({
-      x: 0.0,
-      y: 0.0,
-    })
-  let tail_size =
-    sizes.get(tail_name).unwrap_or((node_size_for_missing)(edge.tail()))
-  let head_size =
-    sizes.get(head_name).unwrap_or((node_size_for_missing)(edge.head()))
-  let tail_geometry =
-    (port_geometry_for)(
-      tail_name,
-      edge.tail_port(),
-      tail_pos,
-      tail_size,
-    )
-  let head_geometry =
-    (port_geometry_for)(
-      head_name,
-      edge.head_port(),
-      head_pos,
-      head_size,
-    )
+  let tail_pos = positions.get(tail_name).unwrap_or({ x: 0.0, y: 0.0 })
+  let head_pos = positions.get(head_name).unwrap_or({ x: 0.0, y: 0.0 })
+  let tail_size = sizes
+    .get(tail_name)
+    .unwrap_or(node_size_for_missing(edge.tail()))
+  let head_size = sizes
+    .get(head_name)
+    .unwrap_or(node_size_for_missing(edge.head()))
+  let tail_geometry = port_geometry_for(
+    tail_name,
+    edge.tail_port(),
+    tail_pos,
+    tail_size,
+  )
+  let head_geometry = port_geometry_for(
+    head_name,
+    edge.head_port(),
+    head_pos,
+    head_size,
+  )
   let dx = head_geometry.center.x - tail_geometry.center.x
   let dy = head_geometry.center.y - tail_geometry.center.y
   Double::sqrt(dx * dx + dy * dy)
@@ -94,31 +90,24 @@ fn build_head_port_metrics_from_geometry(
     @node_primitives.NodeSize,
   ) -> RoutePortGeometry,
 ) -> HeadPortMetrics {
-  build_head_port_metrics(
-    edges,
-    enable_complex_tuning,
-    edge => {
-      let key = head_metric_key_for_edge(edge, is_record_shape)
-      if key == "" {
-        None
-      } else {
-        let dist =
-          head_metric_distance_for_edge(
-            edge,
-            positions,
-            sizes,
-            node_size_for_missing,
-            port_geometry_for,
-          )
-        Some((key, dist))
-      }
-    },
-  )
+  build_head_port_metrics(edges, enable_complex_tuning, edge => {
+    let key = head_metric_key_for_edge(edge, is_record_shape)
+    if key == "" {
+      None
+    } else {
+      let dist = head_metric_distance_for_edge(
+        edge, positions, sizes, node_size_for_missing, port_geometry_for,
+      )
+      Some((key, dist))
+    }
+  })
 }
 
 ///|
 /// Dot-specific head-port metric assembly for routing precompute.
 type RecordOrientation = @dot_shared.RecordOrientation
+
+///|
 type RecordPort = @record_geometry.RecordPort
 
 ///|
@@ -141,18 +130,10 @@ pub fn build_dot_head_port_metrics(
     @record_geometry.is_record_shape,
     node => @node_geometry.node_size(node, record_orientation),
     (node_name, port, node_pos, node_size) => {
-      let geometry =
-        @port_geometry.port_geometry(
-          node_name,
-          port,
-          label_ports_map,
-          node_pos,
-          node_size,
-        )
-      {
-        center: geometry.center,
-        size: geometry.size,
-      }
+      let geometry = @port_geometry.port_geometry(
+        node_name, port, label_ports_map, node_pos, node_size,
+      )
+      { center: geometry.center, size: geometry.size }
     },
   )
 }
