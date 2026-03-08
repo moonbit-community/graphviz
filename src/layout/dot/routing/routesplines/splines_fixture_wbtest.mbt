@@ -239,8 +239,9 @@ fn run_spline_case(
 /// (case=1, accel -> tunnel_egress), exact single-bend corridor
 /// (case=9, foo_agent -> zzz_worker), exact barrier-aware bend corridor
 /// (case=5, zzz_worker -> zzz), exact constrained head tangent corridor
-/// (case=18, z_shapeshifter -> machsrv_xprot_gen), and exact stepped cluster
-/// corridor (case=43, a3 -> a0 in clust1). Keep fixture replay for
+/// (case=18, z_shapeshifter -> machsrv_xprot_gen), exact stepped cluster
+/// corridor (case=43, a3 -> a0 in clust1), and exact routed multi-bend
+/// corridor (case=21, arbiter_vadam -> other_xprot). Keep fixture replay for
 /// the remaining representative corridors whose graph-specific box ladders
 /// still add distinct regression signal.
 fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
@@ -266,6 +267,10 @@ fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
   }
   if input.case_id == 43 && input.graph == "clust1" && input.tail == "a3" &&
     input.head == "a0" {
+    return false
+  }
+  if input.case_id == 21 && input.graph == "" && input.tail == "arbiter_vadam" &&
+    input.head == "other_xprot" {
     return false
   }
   true
