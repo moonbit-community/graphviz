@@ -74,8 +74,10 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
     continue
   fi
   MBT_CAPTURE_XLABELS="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
-  done
+done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the TB smoke graph that still provides integrated xlabel signal.
+grep '"graph":"xlabels_tb"' "$TMP_FILE" > "$OUT_FILE"
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"

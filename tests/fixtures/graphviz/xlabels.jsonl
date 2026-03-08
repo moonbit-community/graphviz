@@ -1,8 +1,3 @@
-{"event":"xlabel","graph":"xlabels_lr","kind":"node_xlabel","node":"a","tail":"","head":"","label":"XLA","label_html":false,"flip":true,"width":27.75,"height":16.5,"pos_x":13.875,"pos_y":8.25}
-{"event":"xlabel","graph":"xlabels_lr","kind":"taillabel","node":"","tail":"a","head":"b","label":"TAB","label_html":false,"flip":true,"width":27,"height":16.5,"pos_x":95.652901649475098,"pos_y":26.25}
-{"event":"xlabel","graph":"xlabels_lr","kind":"headlabel","node":"","tail":"a","head":"b","label":"HAB","label_html":false,"flip":true,"width":28.5,"height":16.5,"pos_x":103.11573232211276,"pos_y":42.75}
-{"event":"xlabel","graph":"xlabels_lr","kind":"edge_xlabel","node":"","tail":"a","head":"b","label":"XAB","label_html":false,"flip":true,"width":28.5,"height":16.5,"pos_x":113.77201626976985,"pos_y":26.25}
-{"event":"xlabel","graph":"xlabels_lr","kind":"node_xlabel","node":"b","tail":"","head":"","label":"XLB","label_html":false,"flip":true,"width":27,"height":16.5,"pos_x":104.25,"pos_y":8.25}
 {"event":"xlabel","graph":"xlabels_tb","kind":"node_xlabel","node":"a","tail":"","head":"","label":"XA","label_html":false,"flip":false,"width":19.5,"height":16.5,"pos_x":9.75,"pos_y":116.25}
 {"event":"xlabel","graph":"xlabels_tb","kind":"taillabel","node":"","tail":"a","head":"c","label":"TAC","label_html":false,"flip":false,"width":27,"height":16.5,"pos_x":41.898878574371338,"pos_y":63.446624994277954}
 {"event":"xlabel","graph":"xlabels_tb","kind":"headlabel","node":"","tail":"a","head":"c","label":"HAC","label_html":false,"flip":false,"width":28.5,"height":16.5,"pos_x":59.453485534624861,"pos_y":44.354333682673882}
