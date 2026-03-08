@@ -1,4 +1,8 @@
 ///|
+/// Internal layout output types shared across dot subpackages so tree-heavy
+/// algorithms can work with one cohesive layout payload.
+
+///|
 /// Node layout output.
 /// pos is in points; width/height are in inches.
 pub(all) struct DotLayoutNode {
@@ -20,4 +24,16 @@ pub(all) struct DotLayoutEdge {
   head_label_pos : @geom.Point?
   tail_label_pos : @geom.Point?
   xlabel_pos : @geom.Point?
+}
+
+///|
+/// Internal recursive layout tree used by dot subpackages so tree-heavy
+/// algorithms do not need to depend directly on the root public layout type.
+pub(all) struct LayoutTree {
+  graph : @cgraph.Graph
+  bbox : @geom.Rect
+  label_pos : @geom.Point?
+  nodes : Array[DotLayoutNode]
+  edges : Array[DotLayoutEdge]
+  subgraphs : Array[LayoutTree]
 }
