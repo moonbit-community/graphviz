@@ -1,0 +1,127 @@
+///|
+test "shift_layout_to_origin translates only root layouts" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster = root.subgraph(name="cluster_0")
+  let a = root.node("a")
+  let b = root.node("b")
+  let edge = root.edge(a, b)
+  let cluster_layout = make_layout_tree(
+    cluster,
+    { llx: 6.0, lly: 8.0, urx: 12.0, ury: 14.0 },
+    label_pos=Some({ x: 9.0, y: 13.0 }),
+    nodes=[make_node_layout(b, { x: 11.0, y: 12.0 }, 1.0, 1.0)],
+  )
+  let layout = make_layout_tree(
+    root,
+    { llx: 5.0, lly: 7.0, urx: 15.0, ury: 17.0 },
+    label_pos=Some({ x: 9.0, y: 16.0 }),
+    nodes=[make_node_layout(a, { x: 6.0, y: 8.0 }, 1.0, 1.0)],
+    edges=[
+      make_edge_layout(
+        edge,
+        {
+          start: Some({ x: 5.0, y: 7.0 }),
+          end: Some({ x: 15.0, y: 17.0 }),
+          points: [
+            { x: 5.0, y: 7.0 },
+            { x: 8.0, y: 9.0 },
+            { x: 11.0, y: 12.0 },
+            { x: 15.0, y: 17.0 },
+          ],
+        },
+        label_pos=Some({ x: 10.0, y: 11.0 }),
+      ),
+    ],
+    subgraphs=[cluster_layout],
+  )
+
+  let shifted = shift_layout_to_origin(layout)
+  let root_edge = shifted.edges[0].splines[0]
+  let shifted_cluster = shifted.subgraphs[0]
+
+  assert_eq(shifted.bbox, { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 })
+  assert_eq(shifted.label_pos, Some({ x: 4.0, y: 9.0 }))
+  assert_eq(shifted.nodes[0].pos, { x: 1.0, y: 1.0 })
+  assert_eq(root_edge.start, Some({ x: 0.0, y: 0.0 }))
+  assert_eq(root_edge.end, Some({ x: 10.0, y: 10.0 }))
+  assert_eq(root_edge.points[1], { x: 3.0, y: 2.0 })
+  assert_eq(shifted.edges[0].label_pos, Some({ x: 5.0, y: 4.0 }))
+  assert_eq(shifted_cluster.bbox, { llx: 1.0, lly: 1.0, urx: 7.0, ury: 7.0 })
+  assert_eq(shifted_cluster.label_pos, Some({ x: 4.0, y: 6.0 }))
+  assert_eq(shifted_cluster.nodes[0].pos, { x: 6.0, y: 5.0 })
+
+  assert_eq(shift_layout_to_origin(cluster_layout).bbox, cluster_layout.bbox)
+}
+
+///|
+test "apply_root_cluster_padding shifts content by bottom pad and refreshes the root label" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  root.set_attr("label", "Root")
+  root.set_attr("labelloc", "t")
+  let a = root.node("a")
+  let edge = root.edge(a, root.node("b"))
+  let layout = make_layout_tree(
+    root,
+    { llx: 0.0, lly: 0.0, urx: 20.0, ury: 20.0 },
+    label_pos=Some({ x: -1.0, y: -1.0 }),
+    nodes=[make_node_layout(a, { x: 10.0, y: 5.0 }, 1.0, 1.0)],
+    edges=[
+      make_edge_layout(
+        edge,
+        {
+          start: Some({ x: 1.0, y: 2.0 }),
+          end: Some({ x: 19.0, y: 18.0 }),
+          points: [
+            { x: 1.0, y: 2.0 },
+            { x: 5.0, y: 6.0 },
+            { x: 12.0, y: 12.0 },
+            { x: 19.0, y: 18.0 },
+          ],
+        },
+      ),
+    ],
+  )
+  let padded = apply_root_cluster_padding({
+    layout,
+    root_cluster_pad_top: 2.0,
+    root_cluster_pad_bottom: 3.0,
+  })
+  let expected_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 25.0 }
+
+  assert_eq(padded.bbox, expected_bbox)
+  assert_eq(padded.nodes[0].pos, { x: 10.0, y: 8.0 })
+  assert_eq(padded.edges[0].splines[0].start, Some({ x: 1.0, y: 5.0 }))
+  assert_eq(padded.edges[0].splines[0].end, Some({ x: 19.0, y: 21.0 }))
+  assert_eq(padded.label_pos, root_label_pos_for_bbox(root, expected_bbox))
+}
+
+///|
+test "finalize_root_coordinates applies root margin then shifts to origin and refreshes root labels" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  root.set_attr("label", "Root")
+  root.set_attr("margin", "0.5")
+  ignore(root.subgraph(name="cluster_0"))
+  let a = root.node("a")
+  let layout = make_layout_tree(
+    root,
+    { llx: 10.0, lly: 20.0, urx: 30.0, ury: 40.0 },
+    label_pos=Some({ x: -1.0, y: -1.0 }),
+    nodes=[make_node_layout(a, { x: 12.0, y: 25.0 }, 1.0, 1.0)],
+    subgraphs=[
+      make_layout_tree(
+        root.subgraph(name="cluster_1"),
+        { llx: 11.0, lly: 21.0, urx: 15.0, ury: 24.0 },
+        label_pos=Some({ x: 12.0, y: 22.0 }),
+      ),
+    ],
+  )
+
+  let finalized = finalize_root_coordinates(layout)
+  let expected_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 92.0, ury: 20.0 }
+
+  assert_eq(finalized.bbox, expected_bbox)
+  assert_eq(finalized.nodes[0].pos, { x: 38.0, y: 5.0 })
+  assert_eq(finalized.subgraphs[0].bbox, { llx: 37.0, lly: 1.0, urx: 41.0, ury: 4.0 })
+  assert_eq(finalized.subgraphs[0].label_pos, Some({ x: 38.0, y: 2.0 }))
+  assert_eq(finalized.label_pos, root_label_pos_for_bbox(root, expected_bbox))
+}
