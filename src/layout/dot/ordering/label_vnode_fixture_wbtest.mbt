@@ -126,7 +126,7 @@ fn collect_label_vnode_actuals(
     let name = nodes[i].name()
     edge_out_order[name] = out_edges[i].copy()
   }
-  let vnode_info = @ordering.build_edge_vnodes(
+  let vnode_info = build_edge_vnodes(
     nodes,
     edges,
     edge_tail,
