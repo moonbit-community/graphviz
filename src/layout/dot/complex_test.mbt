@@ -1,8 +1,9 @@
 ///|
-test "dot layout handles complex sample" {
+test "dot layout handles and matches graphviz for complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
   layout.apply()
+
   let nodes = graph.nodes()
   guard nodes.length() > 0 else { fail("expected nodes") }
   for node in nodes {
@@ -37,14 +38,8 @@ test "dot layout handles complex sample" {
       fail("expected \{ordered[i - 1]} left of \{ordered[i]}")
     }
   }
-}
 
-///|
-test "dot layout matches graphviz geometry for complex sample" {
   let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
-  let layout = layout_dot(graph)
-  layout.apply()
 
   let node_eps = 3.0
   for node in reference.nodes() {
