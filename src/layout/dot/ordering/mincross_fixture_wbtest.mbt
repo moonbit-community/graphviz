@@ -259,11 +259,15 @@ fn parse_optional_flat_edges(
 }
 
 ///|
+/// Plugin fixtures may carry explicit `mincross_name_order` events so replay
+/// does not depend on unrelated cases to infer stable external anchor order.
+/// When present, these explicit entries replace inferred per-file fallback.
 fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
   let data = @fs.read_file_to_string(path)
   let cases : Array[(MincrossInput, MincrossOutput)] = []
   let known_name_order : Map[String, Int] = Map::new()
   let ambiguous_name_order : Map[String, Bool] = Map::new()
+  let explicit_name_order : Map[String, Int] = Map::new()
   let mut pending : MincrossInput? = None
   for line in data.split("\n") {
     if line.length() == 0 {
@@ -310,6 +314,19 @@ fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
           None => fail("mincross_output without mincross_input")
         }
       }
+      "mincross_name_order" => {
+        let name : String = @json.from_json(obj["name"])
+        let order : Int = @json.from_json(obj["order"])
+        match explicit_name_order.get(name) {
+          Some(prev_order) =>
+            if prev_order != order {
+              fail(
+                "conflicting mincross_name_order for \{name}: \{prev_order} vs \{order}",
+              )
+            }
+          None => explicit_name_order[name] = order
+        }
+      }
       "mincross_rank" => ()
       "mincross_iter" => ()
       _ => fail("unknown mincross fixture event: \{event}")
@@ -319,13 +336,19 @@ fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
     Some(_) => fail("missing mincross_output for last case")
     None => ()
   }
-  let stable_name_order : Map[String, Int] = Map::new()
-  for name, order in known_name_order {
-    if ambiguous_name_order.get(name) is None {
-      stable_name_order[name] = order
+  let fixture_name_order : Map[String, Int] = Map::new()
+  if explicit_name_order.length() > 0 {
+    for name, order in explicit_name_order {
+      fixture_name_order[name] = order
+    }
+  } else {
+    for name, order in known_name_order {
+      if ambiguous_name_order.get(name) is None {
+        fixture_name_order[name] = order
+      }
     }
   }
-  { cases, name_order: stable_name_order }
+  { cases, name_order: fixture_name_order }
 }
 
 ///|
