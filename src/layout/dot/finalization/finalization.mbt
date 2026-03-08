@@ -1,18 +1,39 @@
 ///|
 /// Stage F finalization package: final layout payload assembly, pre/post-
 /// rotation transforms, and root coordinate writeback.
-
 type LayoutTree = @shared.LayoutTree
+
+///|
 type LayoutPrep = @shared.LayoutPrep
+
+///|
 type RankDir = @rankdir.RankDir
+
+///|
 type SplinesMode = @shared.SplinesMode
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type DotLayoutNode = @shared.DotLayoutNode
+
+///|
 type DotLayoutEdge = @shared.DotLayoutEdge
+
+///|
 type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
+
+///|
 type RankData = @rank_assignment.RankData
+
+///|
 type RankHeights = @rank_assignment.RankHeights
+
+///|
 type PositionResult = @positioning.PositionResult
+
+///|
 type DotRoutingStageOutput = @integration.DotRoutingStageOutput
 
 ///|
@@ -94,22 +115,16 @@ fn rotate_and_mirror_final_layout(
   let rotated = if rankdir == RankDir::TB {
     pre_rotation.layout
   } else {
-    rotate_layout_graph(
-      pre_rotation.layout,
-      pre_rotation.layout.bbox,
-      rankdir,
-    )
+    rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
   }
-  apply_cluster_lr_mirror_after_rotation(
-    {
-      graph,
-      rankdir,
-      rotated,
-      pre_rotation_bbox: pre_rotation.layout.bbox,
-      rank_bbox: pre_rotation.rank_bbox,
-      subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
-    },
-  )
+  apply_cluster_lr_mirror_after_rotation({
+    graph,
+    rankdir,
+    rotated,
+    pre_rotation_bbox: pre_rotation.layout.bbox,
+    rank_bbox: pre_rotation.rank_bbox,
+    subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
+  })
 }
 
 ///|
@@ -120,11 +135,10 @@ pub fn finalize_layout_from_sources(
   sources : FinalizeLayoutBuildSources,
 ) -> LayoutTree {
   let input = build_finalize_layout_input_from_sources(sources)
-  let rotated =
-    rotate_and_mirror_final_layout(
-      input.graph,
-      input.rankdir,
-      build_pre_rotation_layout_data(input),
-    )
+  let rotated = rotate_and_mirror_final_layout(
+    input.graph,
+    input.rankdir,
+    build_pre_rotation_layout_data(input),
+  )
   finalize_root_coordinates(rotated)
 }

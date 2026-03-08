@@ -15,12 +15,11 @@ fn scale_layout_tree(
 ) -> LayoutTree {
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
-    let scaled_pos =
-      if round_node_pos {
-        @shared.scale_point_rounded(node_layout.pos, sx, sy)
-      } else {
-        @shared.scale_point(node_layout.pos, sx, sy)
-      }
+    let scaled_pos = if round_node_pos {
+      @shared.scale_point_rounded(node_layout.pos, sx, sy)
+    } else {
+      @shared.scale_point(node_layout.pos, sx, sy)
+    }
     nodes.push({
       node: node_layout.node,
       pos: scaled_pos,
@@ -77,15 +76,12 @@ fn shift_layout_to_origin(layout : LayoutTree) -> LayoutTree {
 }
 
 ///|
-fn refresh_root_label_position(
-  layout : LayoutTree,
-) -> LayoutTree {
+fn refresh_root_label_position(layout : LayoutTree) -> LayoutTree {
   if layout.graph.is_root() {
-    let label_pos =
-      match root_label_pos_for_bbox(layout.graph, layout.bbox) {
-        Some(pos) => Some(pos)
-        None => layout.label_pos
-      }
+    let label_pos = match root_label_pos_for_bbox(layout.graph, layout.bbox) {
+      Some(pos) => Some(pos)
+      None => layout.label_pos
+    }
     {
       graph: layout.graph,
       bbox: layout.bbox,
@@ -109,21 +105,19 @@ fn apply_root_cluster_padding(
   let layout = input.layout
   if layout.graph.is_root() &&
     (input.root_cluster_pad_top > 0.0 || input.root_cluster_pad_bottom > 0.0) {
-    let padded =
-      shift_layout_graph(layout, 0.0, input.root_cluster_pad_bottom)
+    let padded = shift_layout_graph(layout, 0.0, input.root_cluster_pad_bottom)
     let padded_bbox : @geom.Rect = {
       llx: layout.bbox.llx,
       lly: layout.bbox.lly,
       urx: layout.bbox.urx,
-      ury:
-        layout.bbox.ury + input.root_cluster_pad_bottom +
-        input.root_cluster_pad_top,
+      ury: layout.bbox.ury +
+      input.root_cluster_pad_bottom +
+      input.root_cluster_pad_top,
     }
-    let label_pos =
-      match root_label_pos_for_bbox(layout.graph, padded_bbox) {
-        Some(pos) => Some(pos)
-        None => padded.label_pos
-      }
+    let label_pos = match root_label_pos_for_bbox(layout.graph, padded_bbox) {
+      Some(pos) => Some(pos)
+      None => padded.label_pos
+    }
     {
       graph: padded.graph,
       bbox: padded_bbox,
@@ -149,14 +143,13 @@ fn apply_ratio_fill_scale(
     return layout
   }
   match @shared.ratio_fill_scale_factors(layout.graph, ratio_bbox, rankdir) {
-    Some(scale_factors) => {
+    Some(scale_factors) =>
       if scale_factors.sx == 1.0 && scale_factors.sy == 1.0 {
         layout
       } else {
         // Graphviz parity: set_aspect rounds ND_coord after scaling.
         scale_layout_tree(layout, scale_factors.sx, scale_factors.sy, true)
       }
-    }
     None => layout
   }
 }
@@ -174,7 +167,5 @@ fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
     edges: layout.edges,
     subgraphs: layout.subgraphs,
   }
-  refresh_root_label_position(
-    shift_layout_to_origin(with_margin),
-  )
+  refresh_root_label_position(shift_layout_to_origin(with_margin))
 }

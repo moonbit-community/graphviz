@@ -23,7 +23,10 @@ fn set_edge_label_pos_if_present(
   match pos {
     Some(value) =>
       match edge.get_attr(label_attr) {
-        Some(text) => if text != "" { edge.set_attr(pos_attr, @shared.format_point(value)) }
+        Some(text) =>
+          if text != "" {
+            edge.set_attr(pos_attr, @shared.format_point(value))
+          }
         None => ()
       }
     None => ()
@@ -31,10 +34,13 @@ fn set_edge_label_pos_if_present(
 }
 
 ///|
-fn apply_graph_output_attrs(layout : @shared.LayoutTree) -> @shared.RecordOrientation {
+fn apply_graph_output_attrs(
+  layout : @shared.LayoutTree,
+) -> @shared.RecordOrientation {
   let graph = layout.graph
-  let record_orientation =
-    @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let record_orientation = @shared.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
   let write_bb = should_write_bbox(graph)
   if write_bb {
     graph.set_attr("bb", @shared.format_rect(layout.bbox))
@@ -42,8 +48,14 @@ fn apply_graph_output_attrs(layout : @shared.LayoutTree) -> @shared.RecordOrient
   if write_bb {
     match @label_metrics.graph_label_metrics(graph) {
       Some(metrics) => {
-        graph.set_attr("lwidth", @shared.format_fixed(metrics.width_pt / 72.0, 2))
-        graph.set_attr("lheight", @shared.format_fixed(metrics.height_pt / 72.0, 2))
+        graph.set_attr(
+          "lwidth",
+          @shared.format_fixed(metrics.width_pt / 72.0, 2),
+        )
+        graph.set_attr(
+          "lheight",
+          @shared.format_fixed(metrics.height_pt / 72.0, 2),
+        )
       }
       None => ()
     }

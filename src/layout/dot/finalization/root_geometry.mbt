@@ -2,8 +2,9 @@
 /// Root-graph geometry kernels: cluster/port padding, root label bbox
 /// placement, and root margin expansion. These helpers do not mutate
 /// DotLayoutGraph trees directly.
-
 type LabelLoc = @shared.LabelLoc
+
+///|
 type LabelJust = @shared.LabelJust
 
 ///|
@@ -25,7 +26,9 @@ pub fn compute_root_cluster_padding(
   all_ranks : Array[Int],
   ranks : Map[String, Int],
 ) -> RootClusterPadding {
-  if graph.is_root() && @cluster_graph.graph_has_cluster(graph) && all_ranks.length() > 0 {
+  if graph.is_root() &&
+    @cluster_graph.graph_has_cluster(graph) &&
+    all_ranks.length() > 0 {
     let min_rank = all_ranks[0]
     let max_rank = all_ranks[all_ranks.length() - 1]
     let mut cluster_at_min = false
@@ -52,14 +55,21 @@ pub fn compute_root_cluster_padding(
     }
     let pad = @clustering.cluster_margin_pt(graph)
     {
-      root_cluster_pad_top: if cluster_at_min { pad } else { 0.0 },
-      root_cluster_pad_bottom: if cluster_at_max { pad } else { 0.0 },
+      root_cluster_pad_top: if cluster_at_min {
+        pad
+      } else {
+        0.0
+      },
+      root_cluster_pad_bottom: if cluster_at_max {
+        pad
+      } else {
+        0.0
+      },
     }
   } else {
     { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0 }
   }
 }
-
 
 ///|
 /// Graphviz parity: rankdir=BT flips top/bottom root cluster padding because
@@ -107,9 +117,10 @@ pub fn apply_root_port_padding(
   }
 }
 
-
 ///|
-fn root_graph_label_metrics(graph : @cgraph.Graph) -> @shared.GraphLabelMetrics? {
+fn root_graph_label_metrics(
+  graph : @cgraph.Graph,
+) -> @shared.GraphLabelMetrics? {
   @shared.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions)
 }
 
@@ -188,9 +199,7 @@ priv struct RootLabelPlacementSpec {
 ///|
 /// Graphviz parity: root-label placement spec reads graph label metrics + attrs
 /// once per call path before bbox/position emission.
-fn root_label_placement_spec(
-  graph : @cgraph.Graph,
-) -> RootLabelPlacementSpec? {
+fn root_label_placement_spec(graph : @cgraph.Graph) -> RootLabelPlacementSpec? {
   if !graph.is_root() {
     return None
   }
@@ -221,14 +230,13 @@ pub fn apply_root_label_bbox(
   let mut label_pos : @geom.Point? = None
   match root_label_placement_spec(graph) {
     Some(spec) => {
-      bbox =
-        expand_root_bbox_for_label(
-          bbox,
-          spec.padded_width,
-          spec.padded_height,
-          spec.loc,
-          rankdir,
-        )
+      bbox = expand_root_bbox_for_label(
+        bbox,
+        spec.padded_width,
+        spec.padded_height,
+        spec.loc,
+        rankdir,
+      )
       label_pos = Some(
         @shared.graph_label_pos(
           bbox,

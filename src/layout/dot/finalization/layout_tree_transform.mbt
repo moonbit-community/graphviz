@@ -49,7 +49,11 @@ pub fn transform_spline(
 }
 
 ///|
-pub fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
+pub fn shift_point(
+  point : @geom.Point,
+  dx : Double,
+  dy : Double,
+) -> @geom.Point {
   { x: point.x + dx, y: point.y + dy }
 }
 
@@ -114,16 +118,24 @@ pub fn transform_bbox_with_root(
       max_y = mapped.y
       first = false
     } else {
-      if mapped.x < min_x { min_x = mapped.x }
-      if mapped.x > max_x { max_x = mapped.x }
-      if mapped.y < min_y { min_y = mapped.y }
-      if mapped.y > max_y { max_y = mapped.y }
+      if mapped.x < min_x {
+        min_x = mapped.x
+      }
+      if mapped.x > max_x {
+        max_x = mapped.x
+      }
+      if mapped.y < min_y {
+        min_y = mapped.y
+      }
+      if mapped.y > max_y {
+        max_y = mapped.y
+      }
     }
   }
   { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
 }
 
-
+///|
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
@@ -193,12 +205,13 @@ fn mirror_layout_points(
   }
   let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(
-      mirror_layout_points(subgraph, point_bbox, bbox_bbox),
-    )
+    subgraphs.push(mirror_layout_points(subgraph, point_bbox, bbox_bbox))
   }
-  let mirrored_bbox =
-    transform_bbox_with_root(layout.bbox, bbox_bbox, RankDir::BT)
+  let mirrored_bbox = transform_bbox_with_root(
+    layout.bbox,
+    bbox_bbox,
+    RankDir::BT,
+  )
   {
     graph: layout.graph,
     bbox: mirrored_bbox,
@@ -210,33 +223,30 @@ fn mirror_layout_points(
 }
 
 ///|
-fn refresh_cluster_labels(
-  layout : LayoutTree,
-) -> LayoutTree {
+fn refresh_cluster_labels(layout : LayoutTree) -> LayoutTree {
   let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(refresh_cluster_labels(subgraph))
   }
-  let label_pos =
-    if @cluster_graph.is_cluster_graph(layout.graph) {
-      match @label_metrics.graph_label_metrics(layout.graph) {
-        Some(metrics) => {
-          let pad = @clustering.CLUSTER_LABEL_PAD_PT
-          Some(
-            @shared.graph_label_pos(
-              layout.bbox,
-              metrics.width_pt + pad * 2.0,
-              metrics.height_pt + pad,
-              @shared.graph_label_loc(layout.graph),
-              @shared.graph_label_just(layout.graph),
-            ),
-          )
-        }
-        None => layout.label_pos
+  let label_pos = if @cluster_graph.is_cluster_graph(layout.graph) {
+    match @label_metrics.graph_label_metrics(layout.graph) {
+      Some(metrics) => {
+        let pad = @clustering.CLUSTER_LABEL_PAD_PT
+        Some(
+          @shared.graph_label_pos(
+            layout.bbox,
+            metrics.width_pt + pad * 2.0,
+            metrics.height_pt + pad,
+            @shared.graph_label_loc(layout.graph),
+            @shared.graph_label_just(layout.graph),
+          ),
+        )
       }
-    } else {
-      layout.label_pos
+      None => layout.label_pos
     }
+  } else {
+    layout.label_pos
+  }
   {
     graph: layout.graph,
     bbox: layout.bbox,
@@ -266,19 +276,23 @@ priv struct ClusterLRMirrorInput {
 fn apply_cluster_lr_mirror_after_rotation(
   input : ClusterLRMirrorInput,
 ) -> LayoutTree {
-  let use_cluster_point_mirror =
-    input.subgraph_base_bbox.urx > input.rank_bbox.urx &&
+  let use_cluster_point_mirror = input.subgraph_base_bbox.urx >
+    input.rank_bbox.urx &&
     (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
     @cluster_graph.graph_has_cluster(input.graph)
-  let use_lr_multi_cluster_creation_order_mode =
-    (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
+  let use_lr_multi_cluster_creation_order_mode = (
+      input.rankdir == RankDir::LR || input.rankdir == RankDir::RL
+    ) &&
     count_cluster_subgraphs(input.graph) > 1
   if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
     @cluster_graph.graph_has_cluster(input.graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
-      let cluster_mirror_bbox =
-        transform_bbox_with_root(input.rank_bbox, input.pre_rotation_bbox, input.rankdir)
+      let cluster_mirror_bbox = transform_bbox_with_root(
+        input.rank_bbox,
+        input.pre_rotation_bbox,
+        input.rankdir,
+      )
       refresh_cluster_labels(
         mirror_layout_points(
           input.rotated,

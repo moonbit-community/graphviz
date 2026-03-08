@@ -72,25 +72,20 @@ priv struct RootPaddedLayoutData {
 /// Graphviz parity: Stage F subgraph+bbox assembly delegates recursive cluster
 /// layout to layout_subgraphs, then applies root cluster-bbox expansion.
 /// Do not change behavior without updating fixtures/tests.
-fn build_subgraphs_and_bbox(
-  input : SubgraphsAndBBoxInput,
-) -> SubgraphsAndBBox {
-  let subgraphs =
-    @clustering.layout_subgraphs(
-      {
-        graph: input.graph,
-        nodes_out: input.nodes,
-        edges_out: input.edges,
-        cluster_ln_x: input.cluster_ln_x,
-        cluster_rn_x: input.cluster_rn_x,
-        cluster_bbox_heights: input.cluster_bbox_heights,
-        rankdir: input.rankdir,
-        ranks: input.ranks,
-        rank_y: input.rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-      },
-    )
+fn build_subgraphs_and_bbox(input : SubgraphsAndBBoxInput) -> SubgraphsAndBBox {
+  let subgraphs = @clustering.layout_subgraphs({
+    graph: input.graph,
+    nodes_out: input.nodes,
+    edges_out: input.edges,
+    cluster_ln_x: input.cluster_ln_x,
+    cluster_rn_x: input.cluster_rn_x,
+    cluster_bbox_heights: input.cluster_bbox_heights,
+    rankdir: input.rankdir,
+    ranks: input.ranks,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+  })
   let expanded = if subgraphs.length() > 0 {
     @clustering.expand_bbox_with_clusters(input.bbox, subgraphs)
   } else {
@@ -106,16 +101,14 @@ fn build_subgraphs_and_bbox(
 fn build_final_layout_geometry(
   input : FinalLayoutGeometryInput,
 ) -> FinalLayoutGeometry {
-  let base_bbox = @bbox.compute_dot_bbox(
-    {
-      nodes_out: input.nodes_out,
-      all_ranks: input.all_ranks,
-      sizes: input.sizes,
-      rank_y: input.rank_y,
-      rank_ht1: input.rank_ht1,
-      rank_ht2: input.rank_ht2,
-    },
-  )
+  let base_bbox = @bbox.compute_dot_bbox({
+    nodes_out: input.nodes_out,
+    all_ranks: input.all_ranks,
+    sizes: input.sizes,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+  })
   {
     final_nodes: input.nodes_out,
     final_edges: input.edges_out,
@@ -134,39 +127,34 @@ fn build_root_padded_layout_data(
 ) -> RootPaddedLayoutData {
   let graph = input.graph
   let rankdir = input.rankdir
-  let (root_cluster_pad_top, root_cluster_pad_bottom) =
-    root_cluster_padding_for_rankdir(
-      rankdir,
-      compute_root_cluster_padding(
-        graph,
-        input.nodes,
-        input.all_ranks,
-        input.ranks,
-      ),
-    )
-  let bbox =
-    apply_root_port_padding(
+  let (root_cluster_pad_top, root_cluster_pad_bottom) = root_cluster_padding_for_rankdir(
+    rankdir,
+    compute_root_cluster_padding(
       graph,
-      subgraphs_and_bbox.base_bbox,
-      rankdir,
-      input.port_pad_below,
-      input.port_pad_above,
-    )
-  let layout_with_root_pad =
-    apply_root_cluster_padding(
-      {
-        layout: {
-          graph,
-          bbox,
-          label_pos: None,
-          nodes: final_geometry.final_nodes,
-          edges: final_geometry.final_edges,
-          subgraphs: subgraphs_and_bbox.subgraphs,
-        },
-        root_cluster_pad_top,
-        root_cluster_pad_bottom,
-      },
-    )
+      input.nodes,
+      input.all_ranks,
+      input.ranks,
+    ),
+  )
+  let bbox = apply_root_port_padding(
+    graph,
+    subgraphs_and_bbox.base_bbox,
+    rankdir,
+    input.port_pad_below,
+    input.port_pad_above,
+  )
+  let layout_with_root_pad = apply_root_cluster_padding({
+    layout: {
+      graph,
+      bbox,
+      label_pos: None,
+      nodes: final_geometry.final_nodes,
+      edges: final_geometry.final_edges,
+      subgraphs: subgraphs_and_bbox.subgraphs,
+    },
+    root_cluster_pad_top,
+    root_cluster_pad_bottom,
+  })
   // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
   // padding that is part of set_ycoords before final edge bbox expansion.
   let ratio_bbox = layout_with_root_pad.bbox
@@ -186,8 +174,10 @@ fn apply_pre_rotation_layout_postprocess(
   let rankdir = input.rankdir
   let layout_with_root_pad = root_padded.layout_with_root_pad
   // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
-  let bbox =
-    @bbox.expand_bbox_with_edges(layout_with_root_pad.bbox, layout_with_root_pad.edges)
+  let bbox = @bbox.expand_bbox_with_edges(
+    layout_with_root_pad.bbox,
+    layout_with_root_pad.edges,
+  )
   let layout : LayoutTree = {
     graph: layout_with_root_pad.graph,
     bbox,
@@ -196,31 +186,19 @@ fn apply_pre_rotation_layout_postprocess(
     edges: layout_with_root_pad.edges,
     subgraphs: layout_with_root_pad.subgraphs,
   }
-  let layout =
-    apply_ratio_fill_scale(
-      layout,
-      rankdir,
-      root_padded.ratio_bbox,
-    )
-  let adjusted =
-    adjust_edge_labels_if_enabled(
-      layout,
-      input.nodesep_pt,
-      rankdir,
-    )
-  let labeled =
-    expand_layout_tree_bbox_for_edge_labels(
-      adjusted,
-      input.ranks,
-      input.flat_label_edge_vnodes,
-    )
-  let with_xlabels =
-    @xlabel.apply_xlabels(
-      labeled,
-      input.splines,
-    )
-  let root_label_bbox =
-    apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
+  let layout = apply_ratio_fill_scale(layout, rankdir, root_padded.ratio_bbox)
+  let adjusted = adjust_edge_labels_if_enabled(
+    layout,
+    input.nodesep_pt,
+    rankdir,
+  )
+  let labeled = expand_layout_tree_bbox_for_edge_labels(
+    adjusted,
+    input.ranks,
+    input.flat_label_edge_vnodes,
+  )
+  let with_xlabels = @xlabel.apply_xlabels(labeled, input.splines)
+  let root_label_bbox = apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   {
     graph: with_xlabels.graph,
     bbox: root_label_bbox.bbox,
@@ -240,41 +218,35 @@ fn build_pre_rotation_layout_data(
 ) -> PreRotationLayoutData {
   let graph = input.graph
   let rankdir = input.rankdir
-  let final_geometry =
-    build_final_layout_geometry(
-      {
-        nodes_out: input.nodes_out,
-        edges_out: input.edges_out,
-        all_ranks: input.all_ranks,
-        sizes: input.sizes,
-        rank_y: input.rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-      },
-    )
-  let subgraphs_and_bbox =
-    build_subgraphs_and_bbox(
-      {
-        graph,
-        nodes: final_geometry.final_nodes,
-        edges: final_geometry.final_edges,
-        bbox: final_geometry.rank_bbox,
-        cluster_ln_x: input.cluster_ln_x,
-        cluster_rn_x: input.cluster_rn_x,
-        cluster_bbox_heights: input.cluster_bbox_heights,
-        rankdir,
-        ranks: input.ranks,
-        rank_y: input.rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-      },
-    )
-  let root_padded =
-    build_root_padded_layout_data(input, final_geometry, subgraphs_and_bbox)
+  let final_geometry = build_final_layout_geometry({
+    nodes_out: input.nodes_out,
+    edges_out: input.edges_out,
+    all_ranks: input.all_ranks,
+    sizes: input.sizes,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+  })
+  let subgraphs_and_bbox = build_subgraphs_and_bbox({
+    graph,
+    nodes: final_geometry.final_nodes,
+    edges: final_geometry.final_edges,
+    bbox: final_geometry.rank_bbox,
+    cluster_ln_x: input.cluster_ln_x,
+    cluster_rn_x: input.cluster_rn_x,
+    cluster_bbox_heights: input.cluster_bbox_heights,
+    rankdir,
+    ranks: input.ranks,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+  })
+  let root_padded = build_root_padded_layout_data(
+    input, final_geometry, subgraphs_and_bbox,
+  )
   {
     layout: apply_pre_rotation_layout_postprocess(input, root_padded),
     rank_bbox: final_geometry.rank_bbox,
     subgraph_base_bbox: subgraphs_and_bbox.base_bbox,
   }
 }
-
