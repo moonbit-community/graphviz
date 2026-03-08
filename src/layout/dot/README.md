@@ -21,7 +21,7 @@ Graphviz source map (layout/dot parity)
   - MoonBit: `src/layout/dot/ordering_stage/*`, `src/layout/dot/ordering/*`
   - Graphviz: `refs/graphviz/lib/dotgen/mincross.c`, `refs/graphviz/lib/dotgen/flat.c`
 - X-position constraints (class2 / position)
-  - MoonBit: `src/layout/dot/position_stage/*`, `src/layout/dot/positioning/*`, `src/layout/dot/ordering/core.mbt`
+  - MoonBit: `src/layout/dot/positioning/*`, `src/layout/dot/ordering/core.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/position.c`, `refs/graphviz/lib/dotgen/class2.c`, `refs/graphviz/lib/dotgen/cluster.c`, `refs/graphviz/lib/dotgen/sameport.c`
 - Edge routing + splines / pathplan
   - MoonBit: `src/layout/dot/routing_stage/*`, `src/layout/dot/clustering/subgraph_layout.mbt`, `src/layout/dot/routing/*`, `src/layout/dot/routing/pathplan/*`, `src/layout/dot/routing/routesplines/*`, `src/layout/dot/routing/edge_spline/*`, `src/layout/dot/routing/edge_ops/*`

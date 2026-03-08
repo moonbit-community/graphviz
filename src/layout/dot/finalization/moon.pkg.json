@@ -36,7 +36,7 @@
     },
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/ordering_stage",
-    "moonbit-community/graphviz/layout/dot/position_stage",
+    "moonbit-community/graphviz/layout/dot/positioning",
     "moonbitlang/core/json",
     "moonbitlang/x/fs"
   ]

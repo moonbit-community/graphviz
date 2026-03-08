@@ -62,7 +62,7 @@ fn compute_finalized_xlabel_layout(
   }
   let rank_stage = @ordering_stage.compute_dot_rank_stage({ graph, prep })
   let positions_state =
-    @position_stage.compute_positions(
+    @positioning.compute_positions(
       {
         graph,
         prep,

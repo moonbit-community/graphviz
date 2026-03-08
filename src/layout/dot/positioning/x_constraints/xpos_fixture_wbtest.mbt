@@ -43,10 +43,10 @@ fn fixture_build_rank_order_map(ranks : Array[Array[Int]]) -> Map[Int, Int] rais
 }
 
 ///|
-fn capture_position_stage_xpos_snapshot(
+fn capture_xpos_snapshot(
   graph : @cgraph.Graph,
   capture_value : String,
-) -> @x_constraints.XposConstraintSnapshot raise {
+) -> XposConstraintSnapshot raise {
   let prep = match @input_stage.prepare_layout_prep(
     graph,
     { rankdir: None, nodesep: None, ranksep: None, splines: None },
@@ -56,9 +56,9 @@ fn capture_position_stage_xpos_snapshot(
   }
   let rank_stage_output =
     @ordering_stage.compute_dot_rank_stage({ graph, prep })
-  @x_constraints.xpos_constraint_snapshot.val = None
+  xpos_constraint_snapshot.val = None
   @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", capture_value)
-  let _ = compute_positions(
+  let _ = @positioning.compute_positions(
     {
       graph,
       prep,
@@ -69,11 +69,11 @@ fn capture_position_stage_xpos_snapshot(
     },
   )
   @sys.unset_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS")
-  let snapshot = match @x_constraints.xpos_constraint_snapshot.val {
+  let snapshot = match xpos_constraint_snapshot.val {
     Some(value) => value
     None => fail("missing xpos constraint snapshot")
   }
-  @x_constraints.xpos_constraint_snapshot.val = None
+  xpos_constraint_snapshot.val = None
   snapshot
 }
 
@@ -260,7 +260,7 @@ fn fixture_node_key(
 
 ///|
 fn snapshot_node_key(
-  node : @x_constraints.XposConstraintNodeSnapshot,
+  node : XposConstraintNodeSnapshot,
   real_nodes : Map[String, Bool],
 ) -> String {
   match node.name {
@@ -299,10 +299,10 @@ fn fixture_named_nodes(
 
 ///|
 fn snapshot_named_nodes(
-  snapshot : @x_constraints.XposConstraintSnapshot,
+  snapshot : XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
-) -> Map[String, @x_constraints.XposConstraintNodeSnapshot] {
-  let map : Map[String, @x_constraints.XposConstraintNodeSnapshot] = Map::new()
+) -> Map[String, XposConstraintNodeSnapshot] {
+  let map : Map[String, XposConstraintNodeSnapshot] = Map::new()
   for node in snapshot.nodes {
     match node.name {
       Some(value) =>
@@ -353,7 +353,7 @@ fn fixture_edge_counts(fixture : XposConstraintFixture) -> Map[String, Int] {
 
 ///|
 fn snapshot_node_counts(
-  snapshot : @x_constraints.XposConstraintSnapshot,
+  snapshot : XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
 ) -> Map[String, Int] {
   let counts : Map[String, Int] = Map::new()
@@ -365,7 +365,7 @@ fn snapshot_node_counts(
 
 ///|
 fn snapshot_edge_counts(
-  snapshot : @x_constraints.XposConstraintSnapshot,
+  snapshot : XposConstraintSnapshot,
   real_nodes : Map[String, Bool],
 ) -> Map[String, Int] {
   let counts : Map[String, Int] = Map::new()
@@ -433,7 +433,7 @@ fn real_node_names(graph : @cgraph.Graph) -> Map[String, Bool] {
 struct XposConstraintCase {
   fixture : XposConstraintFixture
   real_nodes : Map[String, Bool]
-  snapshot : @x_constraints.XposConstraintSnapshot
+  snapshot : XposConstraintSnapshot
 }
 
 ///|
@@ -448,7 +448,7 @@ fn load_complex_xpos_constraint_case() -> XposConstraintCase raise {
   {
     fixture,
     real_nodes: real_node_names(graph),
-    snapshot: capture_position_stage_xpos_snapshot(graph, fixture.graph),
+    snapshot: capture_xpos_snapshot(graph, fixture.graph),
   }
 }
 
@@ -605,7 +605,7 @@ test "dump xpos constraints" {
     Some(value) => value
   }
   let graph = @dot_parser.parse_dot_file(input)
-  let snapshot = capture_position_stage_xpos_snapshot(graph, "1")
+  let snapshot = capture_xpos_snapshot(graph, "1")
   let sb = StringBuilder::new()
   let mut idx = 0
   for node in snapshot.nodes {

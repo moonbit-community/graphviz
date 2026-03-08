@@ -85,7 +85,7 @@ Pipeline orchestrator files:
 
 - `src/layout/dot/layout.mbt`
 - `src/layout/dot/ordering_stage/*`
-- `src/layout/dot/position_stage/*`
+- `src/layout/dot/positioning/*`
 - `src/layout/dot/routing_stage/*`
 - `src/layout/dot/finalization/finalization.mbt`
 
@@ -99,7 +99,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across the root layout entry and stage/subpackage boundaries (for example `layout.mbt`, `ordering_stage/*`, `position_stage/*`, and `routing_stage/*`).
+Defined across the root layout entry and stage/subpackage boundaries (for example `layout.mbt`, `ordering_stage/*`, `positioning/*`, and `routing_stage/*`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -319,8 +319,8 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/position_stage/position_stage.mbt`
-- stage helpers in `src/layout/dot/position_stage/*` and `src/layout/dot/positioning/*`
+- `compute_positions` in `src/layout/dot/positioning/pipeline.mbt`
+- stage helpers in `src/layout/dot/positioning/*`
 
 ### D1) Mode gating
 
@@ -501,7 +501,7 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `ordering_stage/*`, `position_stage/*`, `routing_stage/*`, `finalization/finalization.mbt`
+  - `layout.mbt`, `ordering_stage/*`, `positioning/*`, `routing_stage/*`, `finalization/finalization.mbt`
 - Alternative engines (`dot -n` / `neato -n` / `neato`):
   - `engines.mbt`
 - Shared validation/constants:
@@ -534,10 +534,9 @@ Repository guard validates:
   - `ordering/remincross_pass.mbt`
   - `ordering/remincross_materialized.mbt`
 - Stage D position/xpos internals:
-  - `position_stage/*`
   - `positioning/*`
 - Crossing helpers:
-  - `position_stage/*`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
+  - `positioning/*`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`
 - Routing:
   - `routing_stage/*`, `clustering/subgraph_layout.mbt`, `routing/*`
 - Final graph writeback:
@@ -555,7 +554,7 @@ If you are new to layout algorithms, read in this order:
 4. `ordering_stage/ordering_stage.mbt` + `rank_assignment/*` — understand rank and spacing foundations.
 5. `ordering_stage/*` + `ordering/graph.mbt` — understand order graph construction.
 6. `ordering/root_reorder.mbt` + `ordering/root_mincross.mbt` + `ordering/remincross_*` — understand clustered reorder/refinement.
-7. `ordering_stage/*` + `position_stage/*` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
+7. `ordering_stage/*` + `positioning/*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `routing_stage/*` + `clustering/subgraph_layout.mbt` + `routing/precompute/context.mbt` + `routing/execution/regular_pass.mbt` + `routing/curve_mode/curve_mode.mbt` — understand edge geometry generation.
 9. `finalization/finalization.mbt` — understand output attribute mapping.
 
