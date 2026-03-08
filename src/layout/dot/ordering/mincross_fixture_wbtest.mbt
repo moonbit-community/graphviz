@@ -67,16 +67,14 @@ struct MincrossFixtures {
 
 ///|
 fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
-  let startpass =
-    match obj.get("startpass") {
-      Some(value) => @json.from_json(value)
-      None => 0
-    }
-  let flip =
-    match obj.get("flip") {
-      Some(value) => @json.from_json(value)
-      None => false
-    }
+  let startpass = match obj.get("startpass") {
+    Some(value) => @json.from_json(value)
+    None => 0
+  }
+  let flip = match obj.get("flip") {
+    Some(value) => @json.from_json(value)
+    None => false
+  }
   {
     case_id: @json.from_json(obj["case"]),
     graph: @json.from_json(obj["graph"]),
@@ -106,79 +104,69 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
   for item in items {
     let obj = fixture_require_object(item)
     let id : Int = @json.from_json(obj["id"])
-    let name =
-      match obj.get("name") {
-        Some(value) =>
-          match value {
-            Json::Null => (None : String?)
-            Json::String(text) => Some(text)
-            _ => fail("unexpected node name payload")
-          }
-        None => (None : String?)
-      }
+    let name = match obj.get("name") {
+      Some(value) =>
+        match value {
+          Json::Null => (None : String?)
+          Json::String(text) => Some(text)
+          _ => fail("unexpected node name payload")
+        }
+      None => (None : String?)
+    }
     let rank : Int = @json.from_json(obj["rank"])
-    let order =
-      match obj.get("order") {
-        Some(value) => @json.from_json(value)
-        None => id
-      }
-    let cluster =
-      match obj.get("cluster") {
-        Some(value) =>
-          match value {
-            Json::Null => (None : String?)
-            Json::String(text) => Some(text)
-            _ => fail("unexpected node cluster payload")
-          }
-        None => (None : String?)
-      }
-    let cluster_skeleton =
-      match obj.get("cluster_skeleton") {
-        Some(value) => @json.from_json(value)
-        None => false
-      }
-    let out_neighbors =
-      match obj.get("out_neighbors") {
-        Some(value) => @json.from_json(value)
-        None =>
-          match obj.get("out") {
-            Some(value) => @json.from_json(value)
-            None => []
-          }
-      }
-    let in_neighbors =
-      match obj.get("in_neighbors") {
-        Some(value) => @json.from_json(value)
-        None =>
-          match obj.get("in") {
-            Some(value) => @json.from_json(value)
-            None => []
-          }
-      }
-    let out_all_neighbors =
-      match obj.get("out_all") {
-        Some(value) => @json.from_json(value)
-        None => []
-      }
-    let in_all_neighbors =
-      match obj.get("in_all") {
-        Some(value) => @json.from_json(value)
-        None => []
-      }
-    nodes.push(
-      {
-        id,
-        name,
-        rank,
-        order,
-        cluster,
-        cluster_skeleton,
-        out_neighbors,
-        in_neighbors,
-        out_all_neighbors,
-        in_all_neighbors,
-      },
-    )
+    let order = match obj.get("order") {
+      Some(value) => @json.from_json(value)
+      None => id
+    }
+    let cluster = match obj.get("cluster") {
+      Some(value) =>
+        match value {
+          Json::Null => (None : String?)
+          Json::String(text) => Some(text)
+          _ => fail("unexpected node cluster payload")
+        }
+      None => (None : String?)
+    }
+    let cluster_skeleton = match obj.get("cluster_skeleton") {
+      Some(value) => @json.from_json(value)
+      None => false
+    }
+    let out_neighbors = match obj.get("out_neighbors") {
+      Some(value) => @json.from_json(value)
+      None =>
+        match obj.get("out") {
+          Some(value) => @json.from_json(value)
+          None => []
+        }
+    }
+    let in_neighbors = match obj.get("in_neighbors") {
+      Some(value) => @json.from_json(value)
+      None =>
+        match obj.get("in") {
+          Some(value) => @json.from_json(value)
+          None => []
+        }
+    }
+    let out_all_neighbors = match obj.get("out_all") {
+      Some(value) => @json.from_json(value)
+      None => []
+    }
+    let in_all_neighbors = match obj.get("in_all") {
+      Some(value) => @json.from_json(value)
+      None => []
+    }
+    nodes.push({
+      id,
+      name,
+      rank,
+      order,
+      cluster,
+      cluster_skeleton,
+      out_neighbors,
+      in_neighbors,
+      out_all_neighbors,
+      in_all_neighbors,
+    })
   }
   nodes
 }
@@ -193,44 +181,37 @@ fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
     let head : Int = @json.from_json(obj["head"])
     let xpenalty : Int = @json.from_json(obj["xpenalty"])
     let order = idx
-    let seq =
-      match obj.get("seq") {
-        Some(value) => @json.from_json(value)
-        None => order
-      }
-    let tail_port_x =
-      match obj.get("tail_port_x") {
-        Some(value) => @json.from_json(value)
-        None => 0.0
-      }
-    let head_port_x =
-      match obj.get("head_port_x") {
-        Some(value) => @json.from_json(value)
-        None => 0.0
-      }
-    let tail_port_order =
-      match obj.get("tail_port_order") {
-        Some(value) => @json.from_json(value)
-        None => 0.0
-      }
-    let head_port_order =
-      match obj.get("head_port_order") {
-        Some(value) => @json.from_json(value)
-        None => 0.0
-      }
-    edges.push(
-      {
-        tail,
-        head,
-        xpenalty,
-        seq,
-        order,
-        tail_port_x,
-        head_port_x,
-        tail_port_order,
-        head_port_order,
-      },
-    )
+    let seq = match obj.get("seq") {
+      Some(value) => @json.from_json(value)
+      None => order
+    }
+    let tail_port_x = match obj.get("tail_port_x") {
+      Some(value) => @json.from_json(value)
+      None => 0.0
+    }
+    let head_port_x = match obj.get("head_port_x") {
+      Some(value) => @json.from_json(value)
+      None => 0.0
+    }
+    let tail_port_order = match obj.get("tail_port_order") {
+      Some(value) => @json.from_json(value)
+      None => 0.0
+    }
+    let head_port_order = match obj.get("head_port_order") {
+      Some(value) => @json.from_json(value)
+      None => 0.0
+    }
+    edges.push({
+      tail,
+      head,
+      xpenalty,
+      seq,
+      order,
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+    })
   }
   edges
 }
@@ -399,8 +380,11 @@ fn run_mincross_case_with_name_order(
   output : MincrossOutput,
   fixture_name_order : Map[String, Int],
 ) -> Unit raise {
-  let graph =
-    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name=input.graph, strict=false)
+  let graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    name=input.graph,
+    strict=false,
+  )
   let id_to_name : Map[Int, String] = Map::new()
   let name_to_id : Map[String, Int] = Map::new()
   let name_to_rank : Map[String, Int] = Map::new()
@@ -449,10 +433,7 @@ fn run_mincross_case_with_name_order(
   let edge_head_port_order : Array[Double] = []
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  let append_named_neighbor = (
-    neighbors : Array[String],
-    raw_name : String,
-  ) => {
+  let append_named_neighbor = (neighbors : Array[String], raw_name : String) => {
     if raw_name.length() == 0 {
       return ()
     }
@@ -485,7 +466,8 @@ fn run_mincross_case_with_name_order(
     for neighbor_id in node.out_neighbors {
       let neighbor = match id_to_name.get(neighbor_id) {
         Some(value) => value
-        None => fail("case \{input.case_id} missing out neighbor id \{neighbor_id}")
+        None =>
+          fail("case \{input.case_id} missing out neighbor id \{neighbor_id}")
       }
       out_names.push(neighbor)
     }
@@ -493,7 +475,8 @@ fn run_mincross_case_with_name_order(
     for neighbor_id in node.in_neighbors {
       let neighbor = match id_to_name.get(neighbor_id) {
         Some(value) => value
-        None => fail("case \{input.case_id} missing in neighbor id \{neighbor_id}")
+        None =>
+          fail("case \{input.case_id} missing in neighbor id \{neighbor_id}")
       }
       in_names.push(neighbor)
     }
@@ -542,7 +525,7 @@ fn run_mincross_case_with_name_order(
     edge_head_port_order.push(edge.head_port_order)
   }
   let rank_keys : Array[Int] = []
-  for rank in input.minrank..=input.maxrank {
+  for rank in input.minrank..<=input.maxrank {
     rank_keys.push(rank)
   }
   if input.ranks.length() != rank_keys.length() {
@@ -573,8 +556,9 @@ fn run_mincross_case_with_name_order(
     groups[rank] = names
     rank = rank + 1
   }
-  let edge_index_data =
-    build_edge_index_for_order(nodes, edges, edge_tail, edge_head, name_to_rank)
+  let edge_index_data = build_edge_index_for_order(
+    nodes, edges, edge_tail, edge_head, name_to_rank,
+  )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
   let edge_order = collect_edge_order(edges)
@@ -584,10 +568,7 @@ fn run_mincross_case_with_name_order(
   for node in input.nodes {
     let name = node_key(node.id)
     match node.cluster {
-      Some(value) =>
-        if value != "" {
-          cluster_keys[name] = value
-        }
+      Some(value) => if value != "" { cluster_keys[name] = value }
       None => ()
     }
     if node.cluster_skeleton {
@@ -631,8 +612,8 @@ fn run_mincross_case_with_name_order(
     Map::new(),
     cluster_skeleton,
     flat_constraints,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
+    graphviz_out_neighbors~,
+    graphviz_in_neighbors~,
     graphviz_flip=input.flip,
     coalesce_parallel_edges=input.startpass > 1,
     startpass=input.startpass,
@@ -656,7 +637,6 @@ fn run_mincross_case_with_name_order(
   assert_rank_groups(input.case_id, input.graph, actual, output.ranks)
 }
 
-
 ///|
 fn mincross_case_has_distinct_output(
   input : MincrossInput,
@@ -678,20 +658,32 @@ fn mincross_case_has_owner_local_integrated_coverage(
   if input.case_id == 1 && input.graph == "edge_vnode_spacing" {
     return true
   }
-  if input.case_id == 1 && input.graph == "L0" && input.startpass == 0 &&
-    input.nodes.length() == 43 && input.edges.length() == 42 {
+  if input.case_id == 1 &&
+    input.graph == "L0" &&
+    input.startpass == 0 &&
+    input.nodes.length() == 43 &&
+    input.edges.length() == 42 {
     return true
   }
-  if input.case_id == 1 && input.graph == "yours_truly" && input.startpass == 0 &&
-    input.nodes.length() == 30 && input.edges.length() == 32 {
+  if input.case_id == 1 &&
+    input.graph == "yours_truly" &&
+    input.startpass == 0 &&
+    input.nodes.length() == 30 &&
+    input.edges.length() == 32 {
     return true
   }
-  if input.case_id == 15 && input.graph == "yours_truly" && input.startpass == 2 &&
-    input.nodes.length() == 44 && input.edges.length() == 44 {
+  if input.case_id == 15 &&
+    input.graph == "yours_truly" &&
+    input.startpass == 2 &&
+    input.nodes.length() == 44 &&
+    input.edges.length() == 44 {
     return true
   }
-  if input.case_id == 1 && input.graph == "abstract" && input.startpass == 0 &&
-    input.nodes.length() == 91 && input.edges.length() == 112 {
+  if input.case_id == 1 &&
+    input.graph == "abstract" &&
+    input.startpass == 0 &&
+    input.nodes.length() == 91 &&
+    input.edges.length() == 112 {
     return true
   }
   false
@@ -722,23 +714,20 @@ fn mincross_case_needs_integrated_replay(
 }
 
 ///|
-/// Graphviz parity: direct rank_reorder tests now cover the small plugin
-/// anchor-order slices, including the compact bidirectional plugin IO ladder
-/// behind cluster_gd. Keep fixture replay for larger changed plugin graphs
-/// where ordering still emerges from denser integrated structure.
-fn mincross_plugin_case_needs_replay(
-  input : MincrossInput,
-  output : MincrossOutput,
-) -> Bool {
+/// Graphviz parity: direct rank_reorder tests now cover every plugin case
+/// with distinct reorder output, from the compact cluster_gd and cluster_core
+/// slices up through the dense integrated `G case=11 startpass=2` graph. Keep
+/// the mapping explicit so this meta-test can confirm plugin fixture replay is
+/// fully retired.
+fn mincross_plugin_case_has_owner_local_coverage(input : MincrossInput) -> Bool {
   if input.case_id == 10 && input.graph == "cluster_gd" {
-    return false
+    return true
   }
   if input.case_id == 4 && input.graph == "cluster_core" {
-    return false
+    return true
   }
-  mincross_case_has_distinct_output(input, output) && input.nodes.length() >= 10
+  input.case_id == 11 && input.graph == "G" && input.startpass == 2
 }
-
 
 ///|
 test "mincross integrated fixture replay is fully retired" {
@@ -756,19 +745,20 @@ test "mincross integrated fixture replay is fully retired" {
 }
 
 ///|
-test "mincross plugins fixtures match reorder_rank_groups when output changes" {
+test "mincross plugin fixture replay is fully retired" {
   let fixtures = load_mincross_fixtures_from(
     "tests/fixtures/graphviz/mincross.plugins.jsonl",
   )
   let mut matched = 0
   for pair in fixtures.cases {
     let (input, output) = pair
-    if !mincross_plugin_case_needs_replay(input, output) {
+    if !mincross_case_has_distinct_output(input, output) {
+      continue
+    }
+    if mincross_plugin_case_has_owner_local_coverage(input) {
       continue
     }
     matched = matched + 1
-    run_mincross_case_with_name_order(input, output, fixtures.name_order)
   }
-  assert_true(matched > 0)
+  assert_eq(matched, 0)
 }
-
