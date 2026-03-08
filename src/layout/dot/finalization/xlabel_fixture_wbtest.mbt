@@ -60,7 +60,7 @@ fn compute_finalized_xlabel_layout(
     Ok(value) => value
     Err(message) => fail(message)
   }
-  let rank_stage = @ordering_stage.compute_dot_rank_stage({ graph, prep })
+  let rank_stage = @rank_stage.compute_dot_rank_stage({ graph, prep })
   let positions_state =
     @positioning.compute_positions(
       {

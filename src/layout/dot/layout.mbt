@@ -30,7 +30,7 @@ pub fn layout_dot(
     Err(message) => raise DotLayoutError::InvalidGraph(message~)
   }
   let rank_stage_output =
-    @ordering_stage.compute_dot_rank_stage({ graph, prep })
+    @rank_stage.compute_dot_rank_stage({ graph, prep })
   let rank_data = rank_stage_output.rank_data
   let rank_heights = rank_stage_output.rank_heights
   let cluster_meta = rank_stage_output.cluster_meta

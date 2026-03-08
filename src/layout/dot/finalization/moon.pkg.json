@@ -35,7 +35,7 @@
       "alias": "dot_parser"
     },
     "moonbit-community/graphviz/layout/dot/input_stage",
-    "moonbit-community/graphviz/layout/dot/ordering_stage",
+    "moonbit-community/graphviz/layout/dot/ordering/rank_stage",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbitlang/core/json",
     "moonbitlang/x/fs"

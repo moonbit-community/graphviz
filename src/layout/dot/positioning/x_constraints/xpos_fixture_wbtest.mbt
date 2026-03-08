@@ -55,7 +55,7 @@ fn capture_xpos_snapshot(
     Err(message) => fail(message)
   }
   let rank_stage_output =
-    @ordering_stage.compute_dot_rank_stage({ graph, prep })
+    @rank_stage.compute_dot_rank_stage({ graph, prep })
   xpos_constraint_snapshot.val = None
   @sys.set_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS", capture_value)
   let _ = @positioning.compute_positions(

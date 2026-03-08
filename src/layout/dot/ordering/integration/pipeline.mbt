@@ -1,7 +1,7 @@
 ///|
 /// Ordering owner package: Stage C clustered/non-clustered dispatch adapts rank
 /// outputs into ordering-owned pipeline context and final ordering results so
-/// the root `ordering_stage` package keeps only the cross-stage boundary entry.
+/// the owner-side `rank_stage` package keeps the Stage B/C boundary entry.
 type RankDir = @rankdir.RankDir
 type NodeSize = @node_primitives.NodeSize
 type ClusterMetadata = @ordering.DotClusterMetadata

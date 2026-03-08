@@ -8,7 +8,7 @@
       "alias": "dot_shared"
     },
     "moonbit-community/graphviz/layout/dot/rankdir",
-    "moonbit-community/graphviz/layout/dot/ordering_stage",
+    "moonbit-community/graphviz/layout/dot/ordering/rank_stage",
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/routing/integration",

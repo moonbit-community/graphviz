@@ -243,7 +243,7 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
     Ok(value) => value
     Err(message) => fail(message)
   }
-  ignore(@ordering_stage.compute_dot_rank_stage({ graph, prep }))
+  ignore(@rank_stage.compute_dot_rank_stage({ graph, prep }))
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_INPUTS")
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE")
 

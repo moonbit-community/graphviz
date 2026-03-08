@@ -15,10 +15,10 @@ Manual regeneration:
 
 Graphviz source map (layout/dot parity)
 - Rank assignment / network simplex
-  - MoonBit: `src/layout/dot/ordering_stage/*`, `src/layout/dot/rank_assignment/*`, `src/layout/dot/network_simplex/network_simplex.mbt`
+  - MoonBit: `src/layout/dot/ordering/rank_stage/*`, `src/layout/dot/rank_assignment/*`, `src/layout/dot/network_simplex/network_simplex.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/rank.c`, `refs/graphviz/lib/common/ns.c`, `refs/graphviz/lib/dotgen/acyclic.c`
 - Crossing reduction (mincross / ordering)
-  - MoonBit: `src/layout/dot/ordering_stage/*`, `src/layout/dot/ordering/*`
+  - MoonBit: `src/layout/dot/ordering/rank_stage/*`, `src/layout/dot/ordering/*`
   - Graphviz: `refs/graphviz/lib/dotgen/mincross.c`, `refs/graphviz/lib/dotgen/flat.c`
 - X-position constraints (class2 / position)
   - MoonBit: `src/layout/dot/positioning/*`, `src/layout/dot/ordering/core.mbt`
