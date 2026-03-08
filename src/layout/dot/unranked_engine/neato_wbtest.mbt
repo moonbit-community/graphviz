@@ -50,7 +50,7 @@ test "layout_neato preserves pinned positions" {
   let graph = @dot_parser.parse_dot(
     "graph { node [shape=box,width=1,height=1,label=\"\"]; a [pos=\"10,20!\"]; b [pos=\"30,40\", pin=true]; c; a -- c; b -- c; }",
   )
-  let layout = layout_neato(graph)
+  let layout = @dot_layout.layout_neato(graph)
   layout.apply()
   let a_pos = match neato_node_pos(graph, "a") {
     Some(value) => value
@@ -74,9 +74,9 @@ test "layout_neato scales spacing with nodesep" {
   let graph_large = @dot_parser.parse_dot(
     "graph { nodesep=2; node [shape=box,width=1,height=1,label=\"\"]; a; b; }",
   )
-  let layout_small = layout_neato(graph_small)
+  let layout_small = @dot_layout.layout_neato(graph_small)
   layout_small.apply()
-  let layout_large = layout_neato(graph_large)
+  let layout_large = @dot_layout.layout_neato(graph_large)
   layout_large.apply()
   let a_small = match neato_node_pos(graph_small, "a") {
     Some(value) => value
@@ -107,9 +107,9 @@ test "layout_neato respects edge length" {
   let long_graph = @dot_parser.parse_dot(
     "graph { nodesep=0; node [shape=box,width=1,height=1,label=\"\"]; a -- b [len=3]; }",
   )
-  let short_layout = layout_neato(short_graph)
+  let short_layout = @dot_layout.layout_neato(short_graph)
   short_layout.apply()
-  let long_layout = layout_neato(long_graph)
+  let long_layout = @dot_layout.layout_neato(long_graph)
   long_layout.apply()
   let short_a = match neato_node_pos(short_graph, "a") {
     Some(value) => value
