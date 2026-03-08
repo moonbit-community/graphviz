@@ -111,3 +111,90 @@ test "adjust_intercluster_alignment shifts one cluster-rank group toward its sha
   assert_eq(x_positions.get("b"), Some(108.0))
   assert_eq(x_positions.get("target"), Some(100.0))
 }
+
+///|
+test "output map env gates read the expected variables" {
+  let align_key = "DOT_INTERCLUSTER_ALIGN"
+  let rounding_key = "DOT_ADJUST_CLUSTER_ROUNDING"
+  let original_align = @sys.get_env_var(align_key)
+  let original_rounding = @sys.get_env_var(rounding_key)
+
+  @sys.unset_env_var(align_key)
+  @sys.unset_env_var(rounding_key)
+  let defaults = (intercluster_alignment_enabled(), cluster_rounding_enabled())
+
+  @sys.set_env_var(align_key, "1")
+  @sys.set_env_var(rounding_key, "1")
+  let enabled = (intercluster_alignment_enabled(), cluster_rounding_enabled())
+
+  @sys.set_env_var(align_key, "0")
+  @sys.set_env_var(rounding_key, "")
+  let disabled = (intercluster_alignment_enabled(), cluster_rounding_enabled())
+
+  match original_align {
+    Some(value) => @sys.set_env_var(align_key, value)
+    None => @sys.unset_env_var(align_key)
+  }
+  match original_rounding {
+    Some(value) => @sys.set_env_var(rounding_key, value)
+    None => @sys.unset_env_var(rounding_key)
+  }
+
+  assert_eq(defaults, (false, false))
+  assert_eq(enabled, (true, true))
+  assert_eq(disabled, (false, false))
+}
+
+///|
+test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
+  let vnode_ranks : Map[String, Int] = Map::new()
+  vnode_ranks["v1"] = 1
+  let x_positions : Map[String, Double] = Map::new()
+  x_positions["v1"] = 42.0
+  let rank_y : Map[Int, Double] = Map::new()
+  rank_y[1] = 18.0
+
+  let fallback_calls = Ref::new(0)
+  let direct = build_vnode_positions({
+    use_vnodes_for_xpos: true,
+    vnode_ranks,
+    x_positions,
+    rank_y,
+    fallback_fn: () => {
+      fallback_calls.val = fallback_calls.val + 1
+      { "fallback": { x: 1.0, y: 2.0 } }
+    },
+  })
+
+  let fallback = build_vnode_positions({
+    use_vnodes_for_xpos: false,
+    vnode_ranks,
+    x_positions,
+    rank_y,
+    fallback_fn: () => {
+      fallback_calls.val = fallback_calls.val + 1
+      { "fallback": { x: 1.0, y: 2.0 } }
+    },
+  })
+
+  assert_eq(fallback_calls.val, 1)
+  assert_eq(direct.get("v1"), Some({ x: 42.0, y: 18.0 }))
+  assert_eq(fallback.get("fallback"), Some({ x: 1.0, y: 2.0 }))
+}
+
+///|
+test "build_node_positions_map defaults missing coordinates to zero" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+
+  let x_positions : Map[String, Double] = Map::new()
+  x_positions["a"] = 10.0
+  let y_positions : Map[String, Double] = Map::new()
+  y_positions["b"] = 20.0
+
+  let positions = build_node_positions_map([a, b], x_positions, y_positions)
+
+  assert_eq(positions.get("a"), Some({ x: 10.0, y: 0.0 }))
+  assert_eq(positions.get("b"), Some({ x: 0.0, y: 20.0 }))
+}
