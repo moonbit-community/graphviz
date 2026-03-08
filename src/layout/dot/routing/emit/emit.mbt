@@ -1,3 +1,4 @@
+///|
 priv struct BezierLayoutSplineResult {
   final_spline : @geom.Spline
   layout_spline_result : EdgeSplineResult
@@ -27,28 +28,19 @@ fn build_bezier_layout_spline_result(
   let apply_dotted_adjustment = input.apply_dotted_adjustment
   let tail_swap = input.tail_swap
   let head_swap = input.head_swap
-  let spline =
-    build_bezier_points_spline(
-      {
-        base,
-        bezier_points: raw_bezier,
-        tail_clip_enabled: base.tail_clip_enabled,
-        head_clip_enabled: base.head_clip_enabled,
-        clip_swapped: tail_swap,
-        arrow_swapped: head_swap,
-      },
-    )
-  let spline_result =
-    edge_spline_result_for_bezier(
-      spline,
-      raw_bezier,
-      label_pad_boost,
-      apply_dotted_adjustment,
-    )
-  let layout_spline_result =
-    rebuild_spline_for_render(base, spline_result)
-  let final_spline =
-    finalize_edge_spline(base, layout_spline_result)
+  let spline = build_bezier_points_spline({
+    base,
+    bezier_points: raw_bezier,
+    tail_clip_enabled: base.tail_clip_enabled,
+    head_clip_enabled: base.head_clip_enabled,
+    clip_swapped: tail_swap,
+    arrow_swapped: head_swap,
+  })
+  let spline_result = edge_spline_result_for_bezier(
+    spline, raw_bezier, label_pad_boost, apply_dotted_adjustment,
+  )
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let final_spline = finalize_edge_spline(base, layout_spline_result)
   { final_spline, layout_spline_result }
 }
 
@@ -67,24 +59,19 @@ priv struct BezierLayoutEdgeBuildInput {
 fn build_bezier_layout_edge(
   input : BezierLayoutEdgeBuildInput,
 ) -> DotLayoutEdge {
-  let bezier_layout_result =
-    build_bezier_layout_spline_result(
-      {
-        base: input.base,
-        raw_bezier: input.raw_bezier,
-        label_pad_boost: input.label_pad_boost,
-        apply_dotted_adjustment: input.apply_dotted_adjustment,
-        tail_swap: input.tail_swap,
-        head_swap: input.head_swap,
-      },
-    )
-  (input.build_edge_layout_fn)(
-    {
-      base: input.base,
-      spline: bezier_layout_result.final_spline,
-      spline_result: bezier_layout_result.layout_spline_result,
-    },
-  )
+  let bezier_layout_result = build_bezier_layout_spline_result({
+    base: input.base,
+    raw_bezier: input.raw_bezier,
+    label_pad_boost: input.label_pad_boost,
+    apply_dotted_adjustment: input.apply_dotted_adjustment,
+    tail_swap: input.tail_swap,
+    head_swap: input.head_swap,
+  })
+  (input.build_edge_layout_fn)({
+    base: input.base,
+    spline: bezier_layout_result.final_spline,
+    spline_result: bezier_layout_result.layout_spline_result,
+  })
 }
 
 ///|
@@ -95,18 +82,15 @@ pub fn build_self_edge_layout(
   route : SelfEdgeRoute,
   build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
-  let mut edge_layout =
-    build_bezier_layout_edge(
-      {
-        base,
-        raw_bezier: route.points,
-        label_pad_boost: 0.0,
-        apply_dotted_adjustment: false,
-        tail_swap: false,
-        head_swap: false,
-        build_edge_layout_fn,
-      },
-    )
+  let mut edge_layout = build_bezier_layout_edge({
+    base,
+    raw_bezier: route.points,
+    label_pad_boost: 0.0,
+    apply_dotted_adjustment: false,
+    tail_swap: false,
+    head_swap: false,
+    build_edge_layout_fn,
+  })
   match route.label_pos {
     Some(pos) =>
       edge_layout = {
@@ -131,17 +115,15 @@ pub fn build_flat_adjacent_layout(
   bezier : Array[@geom.Point],
   build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
-  build_bezier_layout_edge(
-    {
-      base,
-      raw_bezier: bezier,
-      label_pad_boost: 0.0,
-      apply_dotted_adjustment: false,
-      tail_swap: base.swap_ends,
-      head_swap: base.swap_ends,
-      build_edge_layout_fn,
-    },
-  )
+  build_bezier_layout_edge({
+    base,
+    raw_bezier: bezier,
+    label_pad_boost: 0.0,
+    apply_dotted_adjustment: false,
+    tail_swap: base.swap_ends,
+    head_swap: base.swap_ends,
+    build_edge_layout_fn,
+  })
 }
 
 ///|
@@ -151,15 +133,13 @@ pub fn build_regular_bezier_layout(
   shared_spline_result : EdgeSplineResult,
   build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
-  build_bezier_layout_edge(
-    {
-      base,
-      raw_bezier: shared_spline_result.raw_bezier,
-      label_pad_boost: shared_spline_result.label_pad_boost,
-      apply_dotted_adjustment: shared_spline_result.apply_dotted_adjustment,
-      tail_swap: base.swap_ends,
-      head_swap: base.swap_ends,
-      build_edge_layout_fn,
-    },
-  )
+  build_bezier_layout_edge({
+    base,
+    raw_bezier: shared_spline_result.raw_bezier,
+    label_pad_boost: shared_spline_result.label_pad_boost,
+    apply_dotted_adjustment: shared_spline_result.apply_dotted_adjustment,
+    tail_swap: base.swap_ends,
+    head_swap: base.swap_ends,
+    build_edge_layout_fn,
+  })
 }

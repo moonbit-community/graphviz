@@ -1,3 +1,4 @@
+///|
 pub fn edge_spline_result_for_bezier(
   spline : @geom.Spline,
   raw_bezier : Array[@geom.Point],
@@ -91,7 +92,9 @@ pub fn finalize_edge_spline(
   if base.swap_ends {
     spline = @edge_ops.reverse_spline(spline)
   }
-  if result.apply_dotted_adjustment && base.is_dotted && !base.same_outer_cluster &&
+  if result.apply_dotted_adjustment &&
+    base.is_dotted &&
+    !base.same_outer_cluster &&
     spline.points.length() > 1 {
     let tuned = spline.points.copy()
     let tail_bias = 0.7
@@ -127,16 +130,14 @@ fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
 ) -> EdgeSameportDirectFlags {
-  let samehead_direct =
-    match edge.get_attr("samehead") {
-      Some(value) => value != ""
-      None => false
-    }
-  let sametail_direct =
-    match edge.get_attr("sametail") {
-      Some(value) => value != ""
-      None => false
-    }
+  let samehead_direct = match edge.get_attr("samehead") {
+    Some(value) => value != ""
+    None => false
+  }
+  let sametail_direct = match edge.get_attr("sametail") {
+    Some(value) => value != ""
+    None => false
+  }
   if swap_ends {
     { tail_direct: samehead_direct, head_direct: sametail_direct }
   } else {
@@ -145,23 +146,23 @@ fn edge_sameport_direct_flags(
 }
 
 ///|
-fn edge_render_clip_flags(
-  base : EdgeRouteBase,
-) -> EdgeRenderClipFlags {
-  let sameport_direct_flags =
-    edge_sameport_direct_flags(base.edge, base.swap_ends)
-  let tail_clip_enabled =
-    if !base.tail_clip_enabled && !sameport_direct_flags.tail_direct {
-      true
-    } else {
-      base.tail_clip_enabled
-    }
-  let head_clip_enabled =
-    if !base.head_clip_enabled && !sameport_direct_flags.head_direct {
-      true
-    } else {
-      base.head_clip_enabled
-    }
+fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
+  let sameport_direct_flags = edge_sameport_direct_flags(
+    base.edge,
+    base.swap_ends,
+  )
+  let tail_clip_enabled = if !base.tail_clip_enabled &&
+    !sameport_direct_flags.tail_direct {
+    true
+  } else {
+    base.tail_clip_enabled
+  }
+  let head_clip_enabled = if !base.head_clip_enabled &&
+    !sameport_direct_flags.head_direct {
+    true
+  } else {
+    base.head_clip_enabled
+  }
   { tail_clip_enabled, head_clip_enabled }
 }
 
@@ -178,17 +179,14 @@ pub fn rebuild_spline_for_render(
   if spline_result.raw_bezier.length() < 4 {
     return spline_result
   }
-  let rebuilt =
-    build_bezier_points_spline(
-      {
-        base,
-        bezier_points: spline_result.raw_bezier,
-        tail_clip_enabled: edge_clip_flags.tail_clip_enabled,
-        head_clip_enabled: edge_clip_flags.head_clip_enabled,
-        clip_swapped: base.swap_ends,
-        arrow_swapped: base.swap_ends,
-      },
-    )
+  let rebuilt = build_bezier_points_spline({
+    base,
+    bezier_points: spline_result.raw_bezier,
+    tail_clip_enabled: edge_clip_flags.tail_clip_enabled,
+    head_clip_enabled: edge_clip_flags.head_clip_enabled,
+    clip_swapped: base.swap_ends,
+    arrow_swapped: base.swap_ends,
+  })
   {
     spline: rebuilt,
     label_pad_boost: spline_result.label_pad_boost,
