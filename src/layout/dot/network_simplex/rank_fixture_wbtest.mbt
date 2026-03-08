@@ -340,10 +340,62 @@ fn run_pre_balance_case(case_info : SimplexCase) -> Unit raise {
 }
 
 ///|
+/// Graphviz parity: owner-local direct tests cover a small subset of exact
+/// fixture graphs whose behavior is algorithmic enough to express locally.
+fn simplex_case_has_owner_local_integrated_coverage(
+  case_info : SimplexCase,
+) -> Bool {
+  let input = case_info.input
+  if input.case_id == 1 && input.balance == 1 && input.nodes.length() == 43 &&
+    input.edges.length() == 42 {
+    return true
+  }
+  if input.case_id == 1 && input.balance == 1 && input.nodes.length() == 47 &&
+    input.edges.length() == 68 {
+    return true
+  }
+  if input.case_id == 4 && input.balance == 2 && input.nodes.length() == 9 {
+    return true
+  }
+  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 10 &&
+    input.edges.length() == 11 {
+    return true
+  }
+  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 37 &&
+    input.edges.length() == 48 {
+    return true
+  }
+  if input.case_id == 16 && input.balance == 0 && input.nodes.length() == 18 &&
+    input.edges.length() == 20 {
+    return true
+  }
+  false
+}
+
+///|
+/// Graphviz parity: a smaller subset of directly covered cases also exercises
+/// the final post-balance ranks, so fixture replay can skip them entirely.
+fn simplex_case_has_owner_local_final_coverage(case_info : SimplexCase) -> Bool {
+  let input = case_info.input
+  if input.case_id == 1 && input.balance == 1 && input.nodes.length() == 47 &&
+    input.edges.length() == 68 {
+    return true
+  }
+  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 37 &&
+    input.edges.length() == 48 {
+    return true
+  }
+  false
+}
+
+///|
 /// Graphviz parity: keep final-balance fixture replay only for cases where
-/// network_simplex changes ranks beyond pre-balance; identical cases are
-/// already covered by the dedicated pre-balance fixture test.
+/// network_simplex changes ranks beyond pre-balance and no owner-local exact
+/// test already covers the final result.
 fn simplex_case_has_distinct_final_output(case_info : SimplexCase) -> Bool {
+  if simplex_case_has_owner_local_final_coverage(case_info) {
+    return false
+  }
   let expected = case_info.output.ranks
   let pre_balance = case_info.pre_balance
   if pre_balance.length() != expected.length() {
@@ -359,35 +411,19 @@ fn simplex_case_has_distinct_final_output(case_info : SimplexCase) -> Bool {
 
 ///|
 /// Graphviz parity: owner-local network_simplex tests now cover the small
-/// canonical feasible-tree and pre-balance kernels, including the compact
-/// LR compound-cluster case behind fixture case=4, the compact LR edge-label
-/// ladder behind fixture case=2 with 10 nodes, the integrated edge-vnode
-/// ladder behind fixture case=2 with 37 nodes, and the compact zero-balance
-/// fan scaffold behind fixture case=16 with 18 nodes. Keep fixture replay
-/// only for larger integrated graphs whose tree shape/rank movement still
-/// emerges from coupled slack/virtual structure.
+/// canonical feasible-tree and pre-balance kernels, including the 43-node
+/// all-normal tree behind fixture case=1, the 47-node dense normal feedback
+/// graph behind fixture case=1, the compact LR compound-cluster case behind
+/// fixture case=4, the compact LR edge-label ladder behind fixture case=2
+/// with 10 nodes, the integrated edge-vnode ladder behind fixture case=2 with
+/// 37 nodes, and the compact zero-balance fan scaffold behind fixture case=16
+/// with 18 nodes. Keep fixture replay only for larger integrated graphs whose
+/// tree shape/rank movement still emerges from coupled slack/virtual structure.
 fn simplex_case_needs_integrated_replay(case_info : SimplexCase) -> Bool {
-  let input = case_info.input
-  if input.case_id == 1 && input.balance == 1 && input.nodes.length() == 43 &&
-    input.edges.length() == 42 {
+  if simplex_case_has_owner_local_integrated_coverage(case_info) {
     return false
   }
-  if input.case_id == 4 && input.balance == 2 && input.nodes.length() == 9 {
-    return false
-  }
-  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 10 &&
-    input.edges.length() == 11 {
-    return false
-  }
-  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 37 &&
-    input.edges.length() == 48 {
-    return false
-  }
-  if input.case_id == 16 && input.balance == 0 && input.nodes.length() == 18 &&
-    input.edges.length() == 20 {
-    return false
-  }
-  input.nodes.length() >= 9
+  case_info.input.nodes.length() >= 9
 }
 
 ///|
