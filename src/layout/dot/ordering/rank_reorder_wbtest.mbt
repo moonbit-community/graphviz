@@ -846,12 +846,93 @@ test "rank_reorder preserves opposing edge-vnode ladders when ordering is alread
 }
 
 ///|
+fn build_exact_layered_rank_reorder_case(
+  case_id : Int,
+  graph : String,
+  startpass : Int,
+  flip : Bool,
+  minrank : Int,
+  input_ranks : Array[Array[Int]],
+  output_ranks : Array[Array[Int]],
+  node_names : Array[String?],
+  node_clusters : Array[String?],
+  node_cluster_skeleton : Array[Bool],
+  edges : Array[MincrossEdge],
+) -> (MincrossInput, MincrossOutput) {
+  let out_neighbors : Map[Int, Array[Int]] = Map::new()
+  let in_neighbors : Map[Int, Array[Int]] = Map::new()
+  let node_rank_by_id : Map[Int, Int] = Map::new()
+  let node_order_by_id : Map[Int, Int] = Map::new()
+  for rank_offset, rank_nodes in input_ranks {
+    let rank = minrank + rank_offset
+    for order, id in rank_nodes {
+      out_neighbors[id] = []
+      in_neighbors[id] = []
+      node_rank_by_id[id] = rank
+      node_order_by_id[id] = order
+    }
+  }
+  for edge in edges {
+    out_neighbors[edge.tail].push(edge.head)
+    in_neighbors[edge.head].push(edge.tail)
+  }
+  let nodes : Array[MincrossNode] = []
+  for id in 0..<node_names.length() {
+    let rank = match node_rank_by_id.get(id) {
+      Some(value) => value
+      None => abort("missing rank for node \{id}")
+    }
+    let order = match node_order_by_id.get(id) {
+      Some(value) => value
+      None => abort("missing order for node \{id}")
+    }
+    nodes.push({
+      id,
+      name: node_names[id],
+      rank,
+      order,
+      cluster: node_clusters[id],
+      cluster_skeleton: node_cluster_skeleton[id],
+      out_neighbors: out_neighbors.get(id).unwrap_or_default(),
+      in_neighbors: in_neighbors.get(id).unwrap_or_default(),
+      out_all_neighbors: [],
+      in_all_neighbors: [],
+    })
+  }
+  let input : MincrossInput = {
+    case_id,
+    graph,
+    startpass,
+    flip,
+    minrank,
+    maxrank: minrank + input_ranks.length() - 1,
+    nodes,
+    edges,
+    flat_edges: [],
+    ranks: input_ranks,
+  }
+  let output : MincrossOutput = {
+    case_id,
+    ranks: output_ranks,
+  }
+  (input, output)
+}
+
+///|
 /// Graphviz parity: this is the stable wide normal tree behind the L0
 /// integrated fixture. Keep exact owner-local coverage so the fixture replay
 /// can focus on denser integrated reorder cases.
 fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
   let input_ranks : Array[Array[Int]] = [[3],[0,4,5,39,40],[1,6,16,17,41],[2,7,8,15,18,19,38,42],[9,20,26,27],[10,12,13,21,23,24,28],[11,14,22,25,29,30,37],[31],[32,34,35],[33,36]]
   let output_ranks : Array[Array[Int]] = [[3],[0,4,5,39,40],[1,6,16,17,41],[2,7,8,15,18,19,38,42],[9,20,26,27],[10,12,13,21,23,24,28],[11,14,22,25,29,30,37],[31],[32,34,35],[33,36]]
+  let node_names : Array[String?] = []
+  let node_clusters : Array[String?] = []
+  let node_cluster_skeleton : Array[Bool] = []
+  for _ in 0..<43 {
+    node_names.push(None)
+    node_clusters.push(None)
+    node_cluster_skeleton.push(false)
+  }
   let edges : Array[MincrossEdge] = [
     { tail: 0, head: 1, xpenalty: 1, seq: 6, order: 0, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
     { tail: 1, head: 2, xpenalty: 1, seq: 7, order: 1, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
@@ -896,58 +977,135 @@ fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     { tail: 40, head: 41, xpenalty: 1, seq: 41, order: 40, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
     { tail: 41, head: 42, xpenalty: 1, seq: 42, order: 41, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
   ]
-  let out_neighbors : Map[Int, Array[Int]] = Map::new()
-  let in_neighbors : Map[Int, Array[Int]] = Map::new()
-  for rank_nodes in input_ranks {
-    for id in rank_nodes {
-      out_neighbors[id] = []
-      in_neighbors[id] = []
-    }
-  }
-  for edge in edges {
-    out_neighbors[edge.tail].push(edge.head)
-    in_neighbors[edge.head].push(edge.tail)
-  }
-  let nodes : Array[MincrossNode] = []
-  for rank, rank_nodes in input_ranks {
-    for order, id in rank_nodes {
-      nodes.push({
-        id,
-        name: None,
-        rank,
-        order,
-        cluster: None,
-        cluster_skeleton: false,
-        out_neighbors: out_neighbors.get(id).unwrap_or_default(),
-        in_neighbors: in_neighbors.get(id).unwrap_or_default(),
-        out_all_neighbors: [],
-        in_all_neighbors: [],
-      })
-    }
-  }
-  let input : MincrossInput = {
-    case_id: 1011,
-    graph: "wide_normal_tree_stable",
-    startpass: 0,
-    flip: false,
-    minrank: 0,
-    maxrank: 9,
-    nodes,
+  build_exact_layered_rank_reorder_case(
+    1011,
+    "wide_normal_tree_stable",
+    0,
+    false,
+    0,
+    input_ranks,
+    output_ranks,
+    node_names,
+    node_clusters,
+    node_cluster_skeleton,
     edges,
-    flat_edges: [],
-    ranks: input_ranks,
-  }
-  let output : MincrossOutput = {
-    case_id: 1011,
-    ranks: output_ranks,
-  }
-  (input, output)
+  )
 }
 
 ///|
 test "rank_reorder preserves wide normal tree order when layering is already stable" {
   let (input, output) = wide_normal_tree_rank_reorder_case()
   run_fixed_rank_reorder_case(input, output)
+}
+
+///|
+/// Graphviz parity: this clustered-skeleton tree is the smallest remaining
+/// changed integrated mincross case. Keep exact owner-local coverage so the
+/// fixture replay can focus on denser clustered reorder interactions.
+fn clustered_skeleton_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
+  let input_ranks : Array[Array[Int]] = [[29],[28],[7,24],[6,8,23,25,27],[0,5,22,10,26],[1,3,4,21,9,11],[2,12],[13],[14],[15],[16],[17],[18],[19],[20]]
+  let output_ranks : Array[Array[Int]] = [[29],[28],[7,24],[8,6,23,27,25],[5,0,10,22,26],[4,1,3,9,11,21],[2,12],[13],[14],[15],[16],[17],[18],[19],[20]]
+  let node_names : Array[String?] = []
+  let node_clusters : Array[String?] = []
+  let node_cluster_skeleton : Array[Bool] = []
+  for _ in 0..<30 {
+    node_names.push(None)
+    node_clusters.push(None)
+    node_cluster_skeleton.push(false)
+  }
+  node_clusters[0] = Some("cluster_clients_mobvm_a")
+  node_cluster_skeleton[0] = true
+  node_clusters[2] = Some("cluster_machsrv")
+  node_cluster_skeleton[2] = true
+  node_clusters[5] = Some("cluster_prot_asrv")
+  node_cluster_skeleton[5] = true
+  node_clusters[7] = Some("cluster_clients_prot_a")
+  node_cluster_skeleton[7] = true
+  node_clusters[10] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[10] = true
+  node_clusters[11] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[11] = true
+  node_clusters[12] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[12] = true
+  node_clusters[13] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[13] = true
+  node_clusters[14] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[14] = true
+  node_clusters[16] = Some("cluster_space_ship_a")
+  node_cluster_skeleton[16] = true
+  node_clusters[17] = Some("cluster_space_ship_a")
+  node_cluster_skeleton[17] = true
+  node_clusters[18] = Some("cluster_space_ship_a")
+  node_cluster_skeleton[18] = true
+  node_clusters[19] = Some("cluster_space_ship_a")
+  node_cluster_skeleton[19] = true
+  node_clusters[20] = Some("cluster_space_ship_a")
+  node_cluster_skeleton[20] = true
+  node_clusters[22] = Some("cluster_accel")
+  node_cluster_skeleton[22] = true
+  node_clusters[23] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[23] = true
+  node_clusters[24] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[24] = true
+  node_clusters[26] = Some("cluster_shapeshifter_misc")
+  node_cluster_skeleton[26] = true
+  node_clusters[28] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[28] = true
+  node_clusters[29] = Some("cluster_yours_trulybox")
+  node_cluster_skeleton[29] = true
+  let edges : Array[MincrossEdge] = [
+    { tail: 0, head: 1, xpenalty: 1, seq: 5, order: 0, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 0, head: 3, xpenalty: 1, seq: 4, order: 1, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 1, head: 2, xpenalty: 1, seq: 5, order: 2, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 3, head: 2, xpenalty: 1, seq: 4, order: 3, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 4, head: 2, xpenalty: 1, seq: 3, order: 4, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 5, head: 4, xpenalty: 1, seq: 3, order: 5, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 6, head: 5, xpenalty: 1, seq: 2, order: 6, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 7, head: 6, xpenalty: 1, seq: 2, order: 7, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 7, head: 8, xpenalty: 1, seq: 1, order: 8, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 8, head: 5, xpenalty: 1, seq: 1, order: 9, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 9, head: 2, xpenalty: 1, seq: 14, order: 10, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 10, head: 11, xpenalty: 1000, seq: 0, order: 11, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 10, head: 9, xpenalty: 1, seq: 14, order: 12, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 11, head: 12, xpenalty: 1000, seq: 0, order: 13, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 12, head: 13, xpenalty: 1000, seq: 0, order: 14, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 13, head: 14, xpenalty: 1000, seq: 0, order: 15, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 14, head: 15, xpenalty: 1, seq: 21, order: 16, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 15, head: 16, xpenalty: 1, seq: 21, order: 17, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 16, head: 17, xpenalty: 1000, seq: 0, order: 18, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 17, head: 18, xpenalty: 1000, seq: 0, order: 19, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 18, head: 19, xpenalty: 1000, seq: 0, order: 20, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 19, head: 20, xpenalty: 1000, seq: 0, order: 21, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 21, head: 12, xpenalty: 1, seq: 8, order: 22, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 22, head: 21, xpenalty: 1, seq: 8, order: 23, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 23, head: 10, xpenalty: 1000, seq: 0, order: 24, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 24, head: 23, xpenalty: 1000, seq: 0, order: 25, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 24, head: 25, xpenalty: 1, seq: 16, order: 26, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 24, head: 27, xpenalty: 1, seq: 15, order: 27, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 25, head: 26, xpenalty: 1, seq: 16, order: 28, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 27, head: 26, xpenalty: 1, seq: 15, order: 29, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 28, head: 24, xpenalty: 1000, seq: 0, order: 30, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+    { tail: 29, head: 28, xpenalty: 1000, seq: 0, order: 31, tail_port_x: 0, head_port_x: 0, tail_port_order: 0, head_port_order: 0 },
+  ]
+  build_exact_layered_rank_reorder_case(
+    1012,
+    "clustered_skeleton_tree_reorder",
+    0,
+    false,
+    0,
+    input_ranks,
+    output_ranks,
+    node_names,
+    node_clusters,
+    node_cluster_skeleton,
+    edges,
+  )
+}
+
+///|
+test "rank_reorder reorders clustered skeleton tree to reduce crossings" {
+  let (input, output) = clustered_skeleton_tree_rank_reorder_case()
+  run_mincross_case_with_name_order(input, output, Map::new())
 }
 
 test "rank_reorder uses external anchor order for plugin-style single-rank slices" {

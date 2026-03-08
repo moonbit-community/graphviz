@@ -668,7 +668,8 @@ fn mincross_case_has_distinct_output(
 ///|
 /// Graphviz parity: owner-local direct tests now cover a small subset of
 /// exact integrated reorder fixtures whose signal is maintainable outside the
-/// fixture harness.
+/// fixture harness, including the compact edge_vnode_spacing ladder, the L0
+/// wide normal tree, and a small clustered skeleton case from yours_truly.
 fn mincross_case_has_owner_local_integrated_coverage(
   input : MincrossInput,
 ) -> Bool {
@@ -679,6 +680,10 @@ fn mincross_case_has_owner_local_integrated_coverage(
     input.nodes.length() == 43 && input.edges.length() == 42 {
     return true
   }
+  if input.case_id == 1 && input.graph == "yours_truly" && input.startpass == 0 &&
+    input.nodes.length() == 30 && input.edges.length() == 32 {
+    return true
+  }
   false
 }
 
@@ -686,8 +691,9 @@ fn mincross_case_has_owner_local_integrated_coverage(
 /// Graphviz parity: keep fixture replay for cases that still carry distinct
 /// reorder signal, plus a small set of unchanged integrated graphs that still
 /// add signal beyond the owner-local direct coverage above. The compact
-/// edge_vnode_spacing ladder and the stable wide normal tree behind L0 are now
-/// covered directly in rank_reorder_wbtest.
+/// edge_vnode_spacing ladder, the stable wide normal tree behind L0, and the
+/// small clustered skeleton yours_truly slice are now covered directly in
+/// rank_reorder_wbtest.
 fn mincross_case_needs_integrated_replay(
   input : MincrossInput,
   output : MincrossOutput,
