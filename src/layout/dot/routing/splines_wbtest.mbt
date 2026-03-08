@@ -3,7 +3,7 @@ test "layout_dot accepts non-spline modes" {
   let modes : Array[String] = ["none", "polyline", "ortho"]
   for mode in modes {
     let graph = @dot_parser.parse_dot("digraph { splines=\{mode}; a -> b; }")
-    let layout = layout_dot(graph)
+    let layout = @dot_layout.layout_dot(graph)
     layout.apply()
     let edges = graph.edges()
     assert_eq(edges.length(), 1)
@@ -60,7 +60,7 @@ test "layout_dot ortho adds more control points than polyline" {
   let graph_poly = @dot_parser.parse_dot(
     "digraph { splines=polyline; \{source} }",
   )
-  let layout_poly = layout_dot(graph_poly)
+  let layout_poly = @dot_layout.layout_dot(graph_poly)
   layout_poly.apply()
   let poly_edge = match find_edge(graph_poly, "a", "c") {
     Some(edge) => edge
@@ -71,7 +71,7 @@ test "layout_dot ortho adds more control points than polyline" {
   let graph_ortho = @dot_parser.parse_dot(
     "digraph { splines=ortho; \{source} }",
   )
-  let layout_ortho = layout_dot(graph_ortho)
+  let layout_ortho = @dot_layout.layout_dot(graph_ortho)
   layout_ortho.apply()
   let ortho_edge = match find_edge(graph_ortho, "a", "c") {
     Some(edge) => edge
@@ -93,7 +93,7 @@ test "layout_dot ortho routes multi-input edge heads on cardinal sides" {
   let graph = @dot_parser.parse_dot(
     "digraph { graph [nodesep=1.0, splines=ortho]; x -> y [radius=8]; z -> y; }",
   )
-  let layout = layout_dot(graph)
+  let layout = @dot_layout.layout_dot(graph)
   layout.apply()
   let xy = match find_edge(graph, "x", "y") {
     Some(edge) => edge
