@@ -76,6 +76,37 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_MINCROSS="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the high-signal integrated main mincross cases that remain in fixture
+# replay. Plugin mincross cases stay in their dedicated fixture file because their
+# cross-case name_order fallback depends on graphs that are not replayed directly.
+python3 - "$TMP_FILE" "$OUT_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+src_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+keep_cases = {
+    ("yours_truly", 1, 0),
+    ("yours_truly", 15, 2),
+    ("edge_vnode_spacing", 1, 0),
+    ("L0", 1, 0),
+    ("abstract", 1, 0),
+}
+keep_case = False
+with src_path.open() as src, out_path.open("w") as out:
+    for line in src:
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        event = obj["event"]
+        if event == "mincross_input":
+            keep_case = (obj["graph"], obj["case"], obj.get("startpass", 0)) in keep_cases
+        if keep_case:
+            out.write(line)
+        if event == "mincross_output":
+            keep_case = False
+PY
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"
