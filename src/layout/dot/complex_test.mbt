@@ -40,12 +40,13 @@ test "dot layout handles complex sample" {
 }
 
 ///|
-test "dot layout matches graphviz node positions for complex sample" {
+test "dot layout matches graphviz geometry for complex sample" {
   let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
   layout.apply()
-  let eps = 3.0
+
+  let node_eps = 3.0
   for node in reference.nodes() {
     let name = node.name()
     let expected = match complex_node_pos(reference, name) {
@@ -56,22 +57,15 @@ test "dot layout matches graphviz node positions for complex sample" {
       Some(value) => value
       None => fail("missing pos in layout for node \{name}")
     }
-    if !complex_pos_close(actual, expected, eps) {
+    if !complex_pos_close(actual, expected, node_eps) {
       fail(
         "node \{name} pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
       )
     }
   }
-}
 
-///|
-test "dot layout matches graphviz edge control points for complex sample" {
-  let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
-  let layout = layout_dot(graph)
-  layout.apply()
-  let tol = 60.0
-  let tol_sq = tol * tol
+  let edge_tol = 60.0
+  let edge_tol_sq = edge_tol * edge_tol
   let mut worst_tail = ""
   let mut worst_head = ""
   let mut worst_sq = 0.0
@@ -109,20 +103,13 @@ test "dot layout matches graphviz edge control points for complex sample" {
       worst_head = head
     }
   }
-  if worst_sq > tol_sq {
+  if worst_sq > edge_tol_sq {
     fail(
-      "edge \{worst_tail} -> \{worst_head} pos drift: max \{Double::sqrt(worst_sq)} > \{tol}",
+      "edge \{worst_tail} -> \{worst_head} pos drift: max \{Double::sqrt(worst_sq)} > \{edge_tol}",
     )
   }
-}
 
-///|
-test "dot layout matches graphviz edge label positions for complex sample" {
-  let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
-  let layout = layout_dot(graph)
-  layout.apply()
-  let eps = 18.0
+  let label_eps = 18.0
   for edge in reference.edges() {
     let expected = match complex_edge_label_pos(edge) {
       Some(value) => value
@@ -138,7 +125,7 @@ test "dot layout matches graphviz edge label positions for complex sample" {
       Some(value) => value
       None => fail("missing label pos for edge \{tail} -> \{head}")
     }
-    if !complex_pos_close(actual, expected, eps) {
+    if !complex_pos_close(actual, expected, label_eps) {
       fail(
         "edge \{tail} -> \{head} label pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
       )
