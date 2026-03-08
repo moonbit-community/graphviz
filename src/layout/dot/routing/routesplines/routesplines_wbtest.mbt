@@ -305,6 +305,49 @@ test "route_pathplan_from_boxes matches Graphviz simple straight corridor fixtur
 }
 
 ///|
+test "route_pathplan_from_boxes matches Graphviz long straight corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: 511.0, lly: 457.0, urx: 1434.35693359375, ury: 483.5 },
+    { llx: -240.0, lly: 447.0, urx: 1434.35693359375, ury: 457.0 },
+    { llx: -240.0, lly: 446.0, urx: 1434.35693359375, ury: 447.0 },
+    { llx: -240.0, lly: 428.0, urx: 1434.35693359375, ury: 446.0 },
+    { llx: -240.0, lly: 409.5, urx: 1434.35693359375, ury: 428.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 824.0, y: 482.5 }, { x: 824.0, y: 410.5 }) {
+    Some(value) => value
+    None => fail("expected route for long straight corridor fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 1434.35693359375, y: 483.5 },
+    { x: 1434.35693359375, y: 457.0 },
+    { x: 1434.35693359375, y: 457.0 },
+    { x: 1434.35693359375, y: 447.0 },
+    { x: 1434.35693359375, y: 447.0 },
+    { x: 1434.35693359375, y: 446.0 },
+    { x: 1434.35693359375, y: 446.0 },
+    { x: 1434.35693359375, y: 428.0 },
+    { x: 1434.35693359375, y: 428.0 },
+    { x: 1434.35693359375, y: 409.5 },
+    { x: -240.0, y: 409.5 },
+    { x: -240.0, y: 428.0 },
+    { x: -240.0, y: 428.0 },
+    { x: -240.0, y: 446.0 },
+    { x: -240.0, y: 446.0 },
+    { x: -240.0, y: 447.0 },
+    { x: -240.0, y: 447.0 },
+    { x: -240.0, y: 457.0 },
+    { x: 511.0, y: 457.0 },
+    { x: 511.0, y: 483.5 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 824.0, y: 482.5 },
+    { x: 824.0, y: 410.5 },
+  ])
+}
+
+///|
 test "route_pathplan_from_boxes matches Graphviz single-bend corridor fixture" {
   let boxes : Array[@geom.Rect] = [
     { llx: -240.0, lly: 248.0, urx: 1434.35693359375, ury: 266.5 },

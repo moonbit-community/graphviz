@@ -235,7 +235,8 @@ fn run_spline_case(
 
 ///|
 /// Graphviz parity: owner-local direct tests now pin the exact simple
-/// straight corridor (case=1, C1N1 -> C2N1), exact single-bend corridor
+/// straight corridor (case=1, C1N1 -> C2N1), exact long straight corridor
+/// (case=1, accel -> tunnel_egress), exact single-bend corridor
 /// (case=9, foo_agent -> zzz_worker), exact barrier-aware bend corridor
 /// (case=5, zzz_worker -> zzz), exact constrained head tangent corridor
 /// (case=18, z_shapeshifter -> machsrv_xprot_gen), and exact stepped cluster
@@ -245,6 +246,10 @@ fn run_spline_case(
 fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
   if input.case_id == 1 && input.graph == "" && input.tail == "C1N1" &&
     input.head == "C2N1" {
+    return false
+  }
+  if input.case_id == 1 && input.graph == "" && input.tail == "accel" &&
+    input.head == "tunnel_egress" {
     return false
   }
   if input.case_id == 5 && input.graph == "" && input.tail == "zzz_worker" &&
