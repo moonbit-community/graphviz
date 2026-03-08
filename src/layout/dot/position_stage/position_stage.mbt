@@ -108,7 +108,7 @@ fn build_x_with_flat_labels(
         pipeline.prep.rankdir,
         pipeline.prep.record_orientation,
       )
-  let build_x_port_samples : (Map[String, NodeSize]) -> @positioning.XSeedPortSamples =
+  let build_x_port_samples : (Map[String, NodeSize]) -> @x_seed.XSeedPortSamples =
     (x_order_sizes : Map[String, NodeSize]) => {
       let build_port_sample_bundle =
         (edges, edge_tail, edge_head) =>
@@ -143,7 +143,7 @@ fn build_x_with_flat_labels(
       }
     }
   let x_seed =
-    @positioning.build_x_seed_data(
+    @x_seed.build_x_seed_data(
       {
         use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
         ordered_groups: pipeline.ordering.ordered_groups,
