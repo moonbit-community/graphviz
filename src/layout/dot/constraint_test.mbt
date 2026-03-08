@@ -31,33 +31,42 @@ fn node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
 }
 
 ///|
-test "constraint false keeps nodes on same rank" {
-  let graph = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
-  let layout = layout_dot(graph)
-  layout.apply()
-  let a_pos = match node_pos(graph, "a") {
+test "constraint=false keeps same rank while default separates ranks" {
+  let unconstrained = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
+  let unconstrained_layout = layout_dot(unconstrained)
+  unconstrained_layout.apply()
+  let unconstrained_a = match node_pos(unconstrained, "a") {
     Some(value) => value
     None => fail("missing pos for node a")
   }
-  let b_pos = match node_pos(graph, "b") {
+  let unconstrained_b = match node_pos(unconstrained, "b") {
     Some(value) => value
     None => fail("missing pos for node b")
   }
-  assert_true(Double::is_close(a_pos.y, b_pos.y, absolute_tolerance=0.01))
-}
+  assert_true(
+    Double::is_close(
+      unconstrained_a.y,
+      unconstrained_b.y,
+      absolute_tolerance=0.01,
+    ),
+  )
 
-///|
-test "default constraint separates ranks" {
-  let graph = @dot_parser.parse_dot("digraph { a -> b; }")
-  let layout = layout_dot(graph)
-  layout.apply()
-  let a_pos = match node_pos(graph, "a") {
+  let constrained = @dot_parser.parse_dot("digraph { a -> b; }")
+  let constrained_layout = layout_dot(constrained)
+  constrained_layout.apply()
+  let constrained_a = match node_pos(constrained, "a") {
     Some(value) => value
     None => fail("missing pos for node a")
   }
-  let b_pos = match node_pos(graph, "b") {
+  let constrained_b = match node_pos(constrained, "b") {
     Some(value) => value
     None => fail("missing pos for node b")
   }
-  assert_true(!Double::is_close(a_pos.y, b_pos.y, absolute_tolerance=0.01))
+  assert_true(
+    !Double::is_close(
+      constrained_a.y,
+      constrained_b.y,
+      absolute_tolerance=0.01,
+    ),
+  )
 }
