@@ -1,10 +1,15 @@
 ///|
 /// Positioning-owned port geometry and self-edge spacing logic shared across
 /// ordering, positioning, and routing stage boundaries.
-
 type RankDir = @rankdir.RankDir
+
+///|
 type RecordOrientation = @shared.RecordOrientation
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
 
 ///|
@@ -24,7 +29,9 @@ pub fn port_offsets_for_nodes(
     },
     (node, origin, base_size, rankdir) => {
       let record_orientation = @shared.record_layout_orientation(rankdir)
-      @label_layout.raw_label_ports_for_node(node, origin, base_size, record_orientation)
+      @label_layout.raw_label_ports_for_node(
+        node, origin, base_size, record_orientation,
+      )
     },
     @port_geometry.layout_port_offset,
     @node_primitives.swap_node_size,
@@ -46,14 +53,15 @@ fn compass_port_point_for_layout(
     sizes,
     rankdir,
     @node_geometry.compass_uses_shape_clipping,
-    (shape_node, size, shape_compass, shape_rankdir) =>
+    (shape_node, size, shape_compass, shape_rankdir) => {
       @edge_spline.compass_port_point_on_shape(
         shape_node,
         @edge_spline.point(0.0, 0.0),
         size,
         shape_compass,
         shape_rankdir,
-      ),
+      )
+    },
     @port_geometry.layout_port_offset,
   )
 }
@@ -67,24 +75,21 @@ pub fn edge_port_offset(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  sample_edge_port_offset(
-    node_name,
-    port,
-    offsets,
-    compass =>
-      sample_compass_port_offset(
-        compass,
-        node_name,
-        sizes,
-        rankdir,
-        nodes_by_name.get(node_name),
-        compass_port_point_for_layout,
-        node =>
-          @record_geometry.is_record_shape(node) ||
-          @html_label.is_html_label_text(@label_attrs.label_text(node)),
-        @port_geometry.layout_port_offset,
-      ),
-  )
+  sample_edge_port_offset(node_name, port, offsets, compass => {
+    sample_compass_port_offset(
+      compass,
+      node_name,
+      sizes,
+      rankdir,
+      nodes_by_name.get(node_name),
+      compass_port_point_for_layout,
+      node => {
+        @record_geometry.is_record_shape(node) ||
+        @html_label.is_html_label_text(@label_attrs.label_text(node))
+      },
+      @port_geometry.layout_port_offset,
+    )
+  })
 }
 
 ///|
@@ -96,19 +101,15 @@ pub fn edge_port_order(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  sample_edge_port_order(
-    node_name,
-    port,
-    offsets,
-    compass =>
-      compass_port_point_for_layout(
-        node_name,
-        nodes_by_name.get(node_name),
-        compass,
-        sizes,
-        rankdir,
-      ),
-  )
+  sample_edge_port_order(node_name, port, offsets, compass => {
+    compass_port_point_for_layout(
+      node_name,
+      nodes_by_name.get(node_name),
+      compass,
+      sizes,
+      rankdir,
+    )
+  })
 }
 
 ///|
@@ -124,13 +125,7 @@ pub fn build_edge_port_sample_bundle(
   sizes : Map[String, NodeSize],
 ) -> @ordering.EdgePortSampleBundle {
   build_edge_port_samples_with_callbacks(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    sizes,
-    port_offsets_for_nodes,
-    edge_port_offset,
+    nodes, edges, edge_tail, edge_head, sizes, port_offsets_for_nodes, edge_port_offset,
     edge_port_order,
   )
 }
@@ -145,14 +140,12 @@ fn build_port_maps_for_nodes(
   let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
   for node in nodes {
     let name = node.name()
-    let size = @node_geometry.resolve_node_output_size(sizes, node, record_orientation)
-    let ports =
-      @label_layout.raw_label_ports_for_node(
-        node,
-        origin,
-        size,
-        record_orientation,
-      )
+    let size = @node_geometry.resolve_node_output_size(
+      sizes, node, record_orientation,
+    )
+    let ports = @label_layout.raw_label_ports_for_node(
+      node, origin, size, record_orientation,
+    )
     if ports.length() > 0 {
       port_maps[name] = ports
     }
@@ -200,15 +193,14 @@ pub fn apply_self_edge_right_space(
   record_orientation : RecordOrientation,
 ) -> Map[String, NodeSize] {
   let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
-  @self_edge.apply_self_edge_right_space(
-    {
-      edges,
-      sizes,
-      rankdir,
-      self_edge_size_pt: @node_geometry.SELF_EDGE_SIZE_PT,
-      self_edge_label_width_for: @edge_label_metrics.self_edge_label_width_pt,
-      port_side_mask_for:
-        (node, port) => port_side_mask_for_self_edge(node, port, port_maps),
+  @self_edge.apply_self_edge_right_space({
+    edges,
+    sizes,
+    rankdir,
+    self_edge_size_pt: @node_geometry.SELF_EDGE_SIZE_PT,
+    self_edge_label_width_for: @edge_label_metrics.self_edge_label_width_pt,
+    port_side_mask_for: (node, port) => {
+      port_side_mask_for_self_edge(node, port, port_maps)
     },
-  )
+  })
 }

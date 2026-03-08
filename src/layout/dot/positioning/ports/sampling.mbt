@@ -10,17 +10,21 @@ fn build_port_offsets_with_callbacks(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, @node_primitives.NodeSize],
   node_size_for_missing : (@cgraph.Node, @rankdir.RankDir) -> @node_primitives.NodeSize,
-  ports_for_node : (@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @rankdir.RankDir) -> Map[String, @record_geometry.RecordPort],
+  ports_for_node : (
+    @cgraph.Node,
+    @geom.Point,
+    @node_primitives.NodeSize,
+    @rankdir.RankDir,
+  ) -> Map[String, @record_geometry.RecordPort],
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point,
   swap_node_size : (@node_primitives.NodeSize) -> @node_primitives.NodeSize,
 ) -> Map[String, Map[String, @record_geometry.RecordPort]] {
   let offsets : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
-  let rankdir =
-    if nodes.length() > 0 {
-      @rankdir.graph_rankdir(nodes[0].graph())
-    } else {
-      @rankdir.RankDir::TB
-    }
+  let rankdir = if nodes.length() > 0 {
+    @rankdir.graph_rankdir(nodes[0].graph())
+  } else {
+    @rankdir.RankDir::TB
+  }
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   for node in nodes {
     let name = node.name()
@@ -34,10 +38,15 @@ fn build_port_offsets_with_callbacks(
       for port_name, port_info in ports {
         let offset = layout_port_offset(port_info.center, rankdir)
         let size = match rankdir {
-          @rankdir.RankDir::LR | @rankdir.RankDir::RL => swap_node_size(port_info.size)
+          @rankdir.RankDir::LR | @rankdir.RankDir::RL =>
+            swap_node_size(port_info.size)
           _ => port_info.size
         }
-        node_offsets[port_name] = { center: offset, size, sides: port_info.sides }
+        node_offsets[port_name] = {
+          center: offset,
+          size,
+          sides: port_info.sides,
+        }
       }
       offsets[name] = node_offsets
     }
@@ -167,10 +176,13 @@ fn sample_edge_port_order(
             Some(node_offsets) =>
               match node_offsets.get(name) {
                 Some(port_info) =>
-                  port_order_fraction(record_port_point(port_info, value.compass))
+                  port_order_fraction(
+                    record_port_point(port_info, value.compass),
+                  )
                 None =>
                   match value.compass {
-                    Some(compass) => port_order_fraction(compass_point_for(compass))
+                    Some(compass) =>
+                      port_order_fraction(compass_point_for(compass))
                     None => 0.5
                   }
               }
@@ -200,16 +212,32 @@ fn build_edge_port_samples_with_callbacks(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, @node_primitives.NodeSize],
-  port_offsets_for_nodes : (Array[@cgraph.Node], Map[String, @node_primitives.NodeSize]) -> Map[String, Map[String, @record_geometry.RecordPort]],
-  edge_port_x : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @rankdir.RankDir, Map[String, @cgraph.Node]) -> Double,
-  edge_port_order : (String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @rankdir.RankDir, Map[String, @cgraph.Node]) -> Double,
+  port_offsets_for_nodes : (
+    Array[@cgraph.Node],
+    Map[String, @node_primitives.NodeSize],
+  ) -> Map[String, Map[String, @record_geometry.RecordPort]],
+  edge_port_x : (
+    String,
+    @cgraph.Port?,
+    Map[String, Map[String, @record_geometry.RecordPort]],
+    Map[String, @node_primitives.NodeSize],
+    @rankdir.RankDir,
+    Map[String, @cgraph.Node],
+  ) -> Double,
+  edge_port_order : (
+    String,
+    @cgraph.Port?,
+    Map[String, Map[String, @record_geometry.RecordPort]],
+    Map[String, @node_primitives.NodeSize],
+    @rankdir.RankDir,
+    Map[String, @cgraph.Node],
+  ) -> Double,
 ) -> @ordering.EdgePortSampleBundle {
-  let rankdir =
-    if nodes.length() > 0 {
-      @rankdir.graph_rankdir(nodes[0].graph())
-    } else {
-      @rankdir.RankDir::TB
-    }
+  let rankdir = if nodes.length() > 0 {
+    @rankdir.graph_rankdir(nodes[0].graph())
+  } else {
+    @rankdir.RankDir::TB
+  }
   let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
   for node in nodes {
     nodes_by_name[node.name()] = node
@@ -219,24 +247,12 @@ fn build_edge_port_samples_with_callbacks(
     edges,
     edge_tail,
     edge_head,
-    (name, port) =>
-      edge_port_x(
-        name,
-        port,
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      ),
-    (name, port) =>
-      edge_port_order(
-        name,
-        port,
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      ),
+    (name, port) => {
+      edge_port_x(name, port, port_offsets, sizes, rankdir, nodes_by_name)
+    },
+    (name, port) => {
+      edge_port_order(name, port, port_offsets, sizes, rankdir, nodes_by_name)
+    },
   )
 }
 
@@ -276,7 +292,12 @@ fn resolve_compass_port_point(
   sizes : Map[String, @node_primitives.NodeSize],
   rankdir : @rankdir.RankDir,
   uses_shape_clipping : (@cgraph.Node) -> Bool,
-  shape_clipped_point_on_node : (@cgraph.Node, @node_primitives.NodeSize, @cgraph.Compass, @rankdir.RankDir) -> @geom.Point,
+  shape_clipped_point_on_node : (
+    @cgraph.Node,
+    @node_primitives.NodeSize,
+    @cgraph.Compass,
+    @rankdir.RankDir,
+  ) -> @geom.Point,
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point,
 ) -> @geom.Point {
   let base_size = node_size_for_compass(node_name, sizes)
@@ -332,12 +353,23 @@ fn sample_compass_port_offset(
   sizes : Map[String, @node_primitives.NodeSize],
   rankdir : @rankdir.RankDir,
   node : @cgraph.Node?,
-  compass_port_point : (String, @cgraph.Node?, @cgraph.Compass, Map[String, @node_primitives.NodeSize], @rankdir.RankDir) -> @geom.Point,
+  compass_port_point : (
+    String,
+    @cgraph.Node?,
+    @cgraph.Compass,
+    Map[String, @node_primitives.NodeSize],
+    @rankdir.RankDir,
+  ) -> @geom.Point,
   use_unrotated_x_for_node : (@cgraph.Node) -> Bool,
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point,
 ) -> Double {
-  let unrotated =
-    compass_port_point(node_name, node, compass, sizes, @rankdir.RankDir::TB)
+  let unrotated = compass_port_point(
+    node_name,
+    node,
+    compass,
+    sizes,
+    @rankdir.RankDir::TB,
+  )
   match node {
     Some(value) =>
       if use_unrotated_x_for_node(value) {
