@@ -21,12 +21,10 @@ pub fn compute_local_cluster_ranks_and_leaders(
   cluster_graphs : Map[String, @cgraph.Graph],
   cluster_members : Map[String, Map[String, Bool]],
   compute_cluster_ranks : (
-    (
-      @cgraph.Graph,
-      Array[@cgraph.Node],
-      Array[@cgraph.Edge],
-    ) -> Map[String, Int]
-  ),
+    @cgraph.Graph,
+    Array[@cgraph.Node],
+    Array[@cgraph.Edge],
+  ) -> Map[String, Int],
 ) -> LocalClusterRankResult {
   let local_ranks : Map[String, Int] = Map::new()
   let cluster_leaders : Map[String, String] = Map::new()
@@ -56,8 +54,9 @@ pub fn compute_local_cluster_ranks_and_leaders(
       Some(value) => value
       None => source
     }
-    let cluster_ranks =
-      compute_cluster_ranks(cluster_graph, cluster_nodes, cluster_edges)
+    let cluster_ranks = compute_cluster_ranks(
+      cluster_graph, cluster_nodes, cluster_edges,
+    )
     for name, rank in cluster_ranks {
       local_ranks[name] = rank
     }
@@ -72,11 +71,10 @@ pub fn compute_local_cluster_ranks_and_leaders(
         None => ()
       }
     }
-    let leader =
-      match leader_name {
-        Some(name) => name
-        None => cluster_nodes[0].name()
-      }
+    let leader = match leader_name {
+      Some(name) => name
+      None => cluster_nodes[0].name()
+    }
     cluster_leaders[cluster_name] = leader
   }
   { local_ranks, cluster_leaders }
@@ -92,13 +90,11 @@ pub fn solve_clustered_leader_ranks(
   has_edge_labels : Bool,
   back_weight_scale : Int,
   orient_edges_for_names : (
-    (
-      Array[String],
-      Array[String],
-      Array[String],
-      Array[Bool],
-    ) -> AcyclicNameDirections
-  ),
+    Array[String],
+    Array[String],
+    Array[String],
+    Array[Bool],
+  ) -> (Array[String], Array[String], Array[Bool]),
 ) -> Map[String, Int] {
   let rank_graph = @network_simplex.new_graph()
   let rank_index : Map[String, Int] = Map::new()
@@ -109,15 +105,14 @@ pub fn solve_clustered_leader_ranks(
       Some(value) => value
       None => ""
     }
-    let key =
-      if cluster == "" {
-        name
-      } else {
-        match cluster_leaders.get(cluster) {
-          Some(value) => value
-          None => name
-        }
+    let key = if cluster == "" {
+      name
+    } else {
+      match cluster_leaders.get(cluster) {
+        Some(value) => value
+        None => name
       }
+    }
     if rank_index.get(key) is None {
       rank_index[key] = @network_simplex.add_node(rank_graph, key)
       rank_names.push(key)
@@ -156,24 +151,22 @@ pub fn solve_clustered_leader_ranks(
       }
       continue
     }
-    let tail_leader =
-      if tail_cluster == "" {
-        tail_name
-      } else {
-        match cluster_leaders.get(tail_cluster) {
-          Some(value) => value
-          None => tail_name
-        }
+    let tail_leader = if tail_cluster == "" {
+      tail_name
+    } else {
+      match cluster_leaders.get(tail_cluster) {
+        Some(value) => value
+        None => tail_name
       }
-    let head_leader =
-      if head_cluster == "" {
-        head_name
-      } else {
-        match cluster_leaders.get(head_cluster) {
-          Some(value) => value
-          None => head_name
-        }
+    }
+    let head_leader = if head_cluster == "" {
+      head_name
+    } else {
+      match cluster_leaders.get(head_cluster) {
+        Some(value) => value
+        None => head_name
       }
+    }
     let tail_local = match local_ranks.get(tail_name) {
       Some(value) => value
       None => 0
@@ -208,21 +201,12 @@ pub fn solve_clustered_leader_ranks(
       weight * back_weight_scale,
     )
     let _ = @network_simplex.add_edge(
-      rank_graph,
-      slack_idx,
-      head_idx,
-      head_slack_len,
-      weight,
+      rank_graph, slack_idx, head_idx, head_slack_len, weight,
     )
   }
-  let direct_oriented = orient_edges_for_names(
-    rank_names,
-    direct_tail,
-    direct_head,
-    direct_active,
+  let (direct_tail_final, direct_head_final, _direct_reversed) = orient_edges_for_names(
+    rank_names, direct_tail, direct_head, direct_active,
   )
-  let direct_tail_final = direct_oriented.tail
-  let direct_head_final = direct_oriented.head
   let merged_edges : Map[String, LeaderRankEdge] = Map::new()
   for i in 0..<direct_tail_final.length() {
     let tail_name = direct_tail_final[i]
@@ -243,8 +227,11 @@ pub fn solve_clustered_leader_ranks(
     let key = "\{tail_idx}:\{head_idx}"
     match merged_edges.get(key) {
       Some(entry) => {
-        let next_minlen =
-          if minlen > entry.minlen { minlen } else { entry.minlen }
+        let next_minlen = if minlen > entry.minlen {
+          minlen
+        } else {
+          entry.minlen
+        }
         merged_edges[key] = {
           tail_idx,
           head_idx,

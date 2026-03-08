@@ -60,7 +60,6 @@ priv struct MergedRankEdge {
   weight : Int
 }
 
-
 ///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/rank.c + common/ns.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -83,8 +82,11 @@ pub fn compute_ranks_directed_base(
   }
   let head_order_by_edge : Array[Int] = []
   for edge_idx in 0..<edges.length() {
-    let head_name =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else { "" }
+    let head_name = if edge_idx < edge_head.length() {
+      edge_head[edge_idx]
+    } else {
+      ""
+    }
     head_order_by_edge.push(node_order_index.get(head_name).unwrap_or_default())
   }
   let edges_by_tail : Map[String, Array[Int]] = Map::new()
@@ -214,8 +216,11 @@ pub fn compute_ranks_directed_base(
       let key = "\{tail_idx}:\{head_idx}"
       match merged_edges.get(key) {
         Some(entry) => {
-          let next_minlen =
-            if minlen > entry.minlen { minlen } else { entry.minlen }
+          let next_minlen = if minlen > entry.minlen {
+            minlen
+          } else {
+            entry.minlen
+          }
           merged_edges[key] = {
             tail_idx,
             head_idx,
@@ -247,8 +252,10 @@ pub fn compute_ranks_directed_base(
         Some(value) => value
         None => continue
       }
-      if entry.tail_idx >= 0 && entry.tail_idx < adjacency.length() &&
-        entry.head_idx >= 0 && entry.head_idx < adjacency.length() {
+      if entry.tail_idx >= 0 &&
+        entry.tail_idx < adjacency.length() &&
+        entry.head_idx >= 0 &&
+        entry.head_idx < adjacency.length() {
         adjacency[entry.tail_idx].push(entry.head_idx)
         adjacency[entry.head_idx].push(entry.tail_idx)
       }
@@ -276,14 +283,7 @@ pub fn compute_ranks_directed_base(
           }
         }
       }
-      component.sort_by((a, b) =>
-        if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        })
+      component.sort_by((a, b) => if a < b { -1 } else if a > b { 1 } else { 0 })
       components.push(component)
     }
   }
@@ -319,7 +319,11 @@ pub fn compute_ranks_directed_base(
         entry.weight,
       )
     }
-    @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::TB)
+    @network_simplex.network_simplex(
+      graph,
+      0x7fffffff,
+      @network_simplex.BalanceMode::TB,
+    )
     tb_tie_adjust_rank_assignment(graph)
     let mut component_min_rank = 0
     let mut component_seen = false
@@ -342,15 +346,15 @@ pub fn compute_ranks_directed_base(
         None => continue
       }
       let rep_name = rep_order[rep_idx]
-      rep_ranks[rep_name] = @network_simplex.node_rank(graph, local_idx) - component_min_rank
+      rep_ranks[rep_name] = @network_simplex.node_rank(graph, local_idx) -
+        component_min_rank
     }
   }
-  let default_rank =
-    if rep_order.length() > 0 {
-      rep_ranks.get(rep_order[0]).unwrap_or_default()
-    } else {
-      0
-    }
+  let default_rank = if rep_order.length() > 0 {
+    rep_ranks.get(rep_order[0]).unwrap_or_default()
+  } else {
+    0
+  }
   let rank_for_name = (name : String) => {
     let rep = match rank_same_reps.get(name) {
       Some(value) => value
@@ -379,7 +383,7 @@ pub fn compute_ranks_directed_base(
   }
   let min_nodes : Map[String, Bool] = Map::new()
   let max_nodes : Map[String, Bool] = Map::new()
-  collect_rank_extremes(source, min_nodes, max_nodes)
-  apply_rank_extremes(ranks, min_nodes, max_nodes)
+  @cluster_ranks.collect_rank_extremes(source, min_nodes, max_nodes)
+  @cluster_ranks.apply_rank_extremes(ranks, min_nodes, max_nodes)
   ranks
 }

@@ -108,27 +108,26 @@ pub fn project_clustered_node_ranks(
       Some(value) => value
       None => ""
     }
-    let base_rank =
-      if cluster == "" {
-        match leader_ranks.get(name) {
-          Some(value) => value
-          None => 0
-        }
-      } else {
-        let leader = match cluster_leaders.get(cluster) {
-          Some(value) => value
-          None => name
-        }
-        let leader_rank = match leader_ranks.get(leader) {
-          Some(value) => value
-          None => 0
-        }
-        let local_rank = match local_ranks.get(name) {
-          Some(value) => value
-          None => 0
-        }
-        leader_rank + local_rank
+    let base_rank = if cluster == "" {
+      match leader_ranks.get(name) {
+        Some(value) => value
+        None => 0
       }
+    } else {
+      let leader = match cluster_leaders.get(cluster) {
+        Some(value) => value
+        None => name
+      }
+      let leader_rank = match leader_ranks.get(leader) {
+        Some(value) => value
+        None => 0
+      }
+      let local_rank = match local_ranks.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      leader_rank + local_rank
+    }
     if !seen {
       min_rank = base_rank
       seen = true

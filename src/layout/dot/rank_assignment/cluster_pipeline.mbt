@@ -13,20 +13,11 @@ pub fn compute_ranks_directed(
 ) -> Map[String, Int] {
   if @cluster_graph.graph_has_cluster(source) {
     return compute_clustered_ranks(
-      source,
-      nodes,
-      edges,
-      has_edge_labels,
-      back_weight_scale,
+      source, nodes, edges, has_edge_labels, back_weight_scale,
     )
   }
   compute_ranks_directed_base(
-    source,
-    nodes,
-    edges,
-    has_edge_labels,
-    edge_tail,
-    edge_head,
+    source, nodes, edges, has_edge_labels, edge_tail, edge_head,
   )
 }
 
@@ -39,18 +30,13 @@ pub fn compute_ranks_directed_with_clusters(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let acyclic_directions =
-    acyclic_edge_directions_with_order(source, nodes, edges)
+  let acyclic_directions = acyclic_edge_directions_with_order(
+    source, nodes, edges,
+  )
   let edge_tail = acyclic_directions.tail
   let edge_head = acyclic_directions.head
   compute_ranks_directed(
-    source,
-    nodes,
-    edges,
-    has_edge_labels,
-    edge_tail,
-    edge_head,
-    back_weight_scale,
+    source, nodes, edges, has_edge_labels, edge_tail, edge_head, back_weight_scale,
   )
 }
 
@@ -62,26 +48,24 @@ fn compute_clustered_ranks(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let top_cluster_data = collect_top_clusters(source)
+  let top_cluster_data = @cluster_ranks.collect_top_clusters(source)
   let cluster_graphs = top_cluster_data.cluster_graphs
   let top_clusters = top_cluster_data.top_clusters
   if top_clusters.length() == 0 {
-    let acyclic_directions =
-      acyclic_edge_directions_with_order(source, nodes, edges)
+    let acyclic_directions = acyclic_edge_directions_with_order(
+      source, nodes, edges,
+    )
     let tail = acyclic_directions.tail
     let head = acyclic_directions.head
     return compute_ranks_directed_base(
-      source,
-      nodes,
-      edges,
-      has_edge_labels,
-      tail,
-      head,
+      source, nodes, edges, has_edge_labels, tail, head,
     )
   }
-  let cluster_members = collect_cluster_members(cluster_graphs)
-  let node_cluster = build_node_cluster_index(top_clusters, cluster_members)
-  let local_cluster_ranks = compute_local_cluster_ranks_and_leaders(
+  let cluster_members = @cluster_ranks.collect_cluster_members(cluster_graphs)
+  let node_cluster = @cluster_ranks.build_node_cluster_index(
+    top_clusters, cluster_members,
+  )
+  let local_cluster_ranks = @cluster_ranks.compute_local_cluster_ranks_and_leaders(
     source,
     nodes,
     edges,
@@ -90,26 +74,19 @@ fn compute_clustered_ranks(
     cluster_members,
     (cluster_graph, cluster_nodes, cluster_edges) => {
       let acyclic_directions = acyclic_edge_directions_with_order(
-        cluster_graph,
-        cluster_nodes,
-        cluster_edges,
+        cluster_graph, cluster_nodes, cluster_edges,
       )
       let tail = acyclic_directions.tail
       let head = acyclic_directions.head
       compute_ranks_directed(
-        cluster_graph,
-        cluster_nodes,
-        cluster_edges,
-        has_edge_labels,
-        tail,
-        head,
+        cluster_graph, cluster_nodes, cluster_edges, has_edge_labels, tail, head,
         back_weight_scale,
       )
     },
   )
   let local_ranks = local_cluster_ranks.local_ranks
   let cluster_leaders = local_cluster_ranks.cluster_leaders
-  let leader_ranks = solve_clustered_leader_ranks(
+  let leader_ranks = @cluster_ranks.solve_clustered_leader_ranks(
     nodes,
     edges,
     node_cluster,
@@ -117,14 +94,15 @@ fn compute_clustered_ranks(
     local_ranks,
     has_edge_labels,
     back_weight_scale,
-    acyclic_edge_directions_for_names,
+    (node_names, edge_tail, edge_head, edge_is_active) => {
+      let directions = acyclic_edge_directions_for_names(
+        node_names, edge_tail, edge_head, edge_is_active,
+      )
+      (directions.tail, directions.head, directions.reversed)
+    },
   )
-  let ranks = project_clustered_node_ranks(
-    nodes,
-    node_cluster,
-    cluster_leaders,
-    local_ranks,
-    leader_ranks,
+  let ranks = @cluster_ranks.project_clustered_node_ranks(
+    nodes, node_cluster, cluster_leaders, local_ranks, leader_ranks,
   )
-  apply_clustered_rank_postprocessing(source, nodes, ranks)
+  @cluster_ranks.apply_clustered_rank_postprocessing(source, nodes, ranks)
 }

@@ -20,14 +20,11 @@ pub struct TopClustersCollected {
 }
 
 ///|
-pub fn collect_top_clusters(
-  source : @cgraph.Graph,
-) -> TopClustersCollected {
+pub fn collect_top_clusters(source : @cgraph.Graph) -> TopClustersCollected {
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(source)
   let cluster_graphs = cluster_maps.cluster_graphs
   let cluster_parents = cluster_maps.cluster_parents
-  let root_cluster_name =
-    if @cluster_graph.is_cluster_graph(source) {
+  let root_cluster_name = if @cluster_graph.is_cluster_graph(source) {
     match source.name() {
       Some(value) => value
       None => ""
@@ -38,10 +35,7 @@ pub fn collect_top_clusters(
   let top_clusters : Array[String] = []
   for name, parent in cluster_parents {
     match parent {
-      None =>
-        if name != root_cluster_name {
-          top_clusters.push(name)
-        }
+      None => if name != root_cluster_name { top_clusters.push(name) }
       Some(_) => ()
     }
   }
