@@ -138,6 +138,64 @@ test "route_polyline_to_bezier reproduces the barrier-aware bend fit from Graphv
 }
 
 ///|
+test "route_polyline_to_bezier matches Graphviz multi-bend corridor fit" {
+  let shortest : Array[@geom.Point] = [
+    point(586.0, 724.5),
+    point(631.0, 699.0),
+    point(746.0, 667.0),
+    point(823.0, 591.5),
+  ]
+  let polygon : Array[@geom.Point] = [
+    point(631.0, 725.5),
+    point(631.0, 699.0),
+    point(1434.35693359375, 699.0),
+    point(1434.35693359375, 689.0),
+    point(832.5771484375, 689.0),
+    point(832.5771484375, 675.0),
+    point(1434.35693359375, 675.0),
+    point(1434.35693359375, 667.0),
+    point(908.0, 667.0),
+    point(908.0, 590.5),
+    point(746.0, 590.5),
+    point(746.0, 667.0),
+    point(-240.0, 667.0),
+    point(-240.0, 675.0),
+    point(595.0, 675.0),
+    point(595.0, 689.0),
+    point(-240.0, 689.0),
+    point(-240.0, 699.0),
+    point(537.0, 699.0),
+    point(537.0, 725.5),
+  ]
+  let bezier = route_polyline_to_bezier(
+    shortest,
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    true,
+    1.0,
+    0.0,
+    route_barriers=bezier_test_polygon_edges(polygon),
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(586.0, 724.5),
+      point(586.0, 724.5),
+      point(609.7687386985847, 707.8135116721695),
+      point(631.0, 699.0),
+      point(679.9988404072257, 678.659623339332),
+      point(700.0516020945997, 693.5209730944704),
+      point(746.0, 667.0),
+      point(787.5101242690987, 643.0407557374377),
+      point(823.0, 591.5),
+      point(823.0, 591.5),
+    ],
+    eps=0.0001,
+  )
+}
+
+///|
 test "parse_arrow_flags handles defaults synonyms and invalid values" {
   assert_eq(parse_arrow_flags(None), [ARR_TYPE_NORM])
   assert_eq(parse_arrow_flags(Some("")), [ARR_TYPE_NORM])

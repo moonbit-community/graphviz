@@ -76,6 +76,48 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_SPLINES="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the integrated spline/pathplan replay cases that still provide
+# signal beyond the owner-local pathplan, routesplines, and edge_spline tests.
+python3 - "$TMP_FILE" "$OUT_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+src_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+keep_counts = {
+    ("", "accel", "tunnel_egress"): 1,
+    ("", "C1N1", "C2N1"): 1,
+    ("", "foo_agent", "zzz_worker"): 1,
+    ("", "zzz_worker", "zzz"): 1,
+    ("", "z_shapeshifter", "machsrv_xprot_gen"): 1,
+    ("", "arbiter_vadam", "other_xprot"): 1,
+    ("clust1", "a3", "a0"): 1,
+    ("states", "empty", "full"): 1,
+}
+seen_counts = {key: 0 for key in keep_counts}
+keep_case = False
+current_key = None
+with src_path.open() as src, out_path.open("w") as out:
+    for line in src:
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        event = obj["event"]
+        if event == "spline_input":
+            current_key = (obj.get("graph") or "", obj["tail"], obj["head"])
+            keep_case = current_key in keep_counts and seen_counts[current_key] < keep_counts[current_key]
+            if keep_case:
+                seen_counts[current_key] += 1
+        if keep_case:
+            out.write(line)
+        if event == "spline_output":
+            keep_case = False
+            current_key = None
+missing = [key for key, count in keep_counts.items() if seen_counts[key] != count]
+if missing:
+    raise SystemExit(f"missing spline keep cases: {missing}")
+PY
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"
