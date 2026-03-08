@@ -669,8 +669,9 @@ fn mincross_case_has_distinct_output(
 /// Graphviz parity: owner-local direct tests now cover a small subset of
 /// exact integrated reorder fixtures whose signal is maintainable outside the
 /// fixture harness, including the compact edge_vnode_spacing ladder, the L0
-/// wide normal tree, and two maintainable yours_truly slices (one clustered
-/// skeleton slice and one stable named multi-cluster startpass=2 slice).
+/// wide normal tree, two maintainable yours_truly slices (one clustered
+/// skeleton slice and one stable named multi-cluster startpass=2 slice), and
+/// the dense non-clustered abstract reorder slice.
 fn mincross_case_has_owner_local_integrated_coverage(
   input : MincrossInput,
 ) -> Bool {
@@ -689,6 +690,10 @@ fn mincross_case_has_owner_local_integrated_coverage(
     input.nodes.length() == 44 && input.edges.length() == 44 {
     return true
   }
+  if input.case_id == 1 && input.graph == "abstract" && input.startpass == 0 &&
+    input.nodes.length() == 91 && input.edges.length() == 112 {
+    return true
+  }
   false
 }
 
@@ -697,9 +702,9 @@ fn mincross_case_has_owner_local_integrated_coverage(
 /// reorder signal, plus a small set of unchanged integrated graphs that still
 /// add signal beyond the owner-local direct coverage above. The compact
 /// edge_vnode_spacing ladder, the stable wide normal tree behind L0, the
-/// small clustered skeleton yours_truly slice, and the stable named
-/// multi-cluster yours_truly startpass=2 slice are now covered directly in
-/// rank_reorder_wbtest.
+/// small clustered skeleton yours_truly slice, the stable named multi-cluster
+/// yours_truly startpass=2 slice, and the dense abstract layered case are now
+/// covered directly in rank_reorder_wbtest.
 fn mincross_case_needs_integrated_replay(
   input : MincrossInput,
   output : MincrossOutput,
@@ -736,7 +741,7 @@ fn mincross_plugin_case_needs_replay(
 
 
 ///|
-test "mincross fixtures match reorder_rank_groups for integrated cases" {
+test "mincross integrated fixture replay is fully retired" {
   let fixtures = load_mincross_fixtures()
   let mut matched = 0
   for pair in fixtures.cases {
@@ -747,7 +752,7 @@ test "mincross fixtures match reorder_rank_groups for integrated cases" {
     matched = matched + 1
     run_mincross_case_with_name_order(input, output, fixtures.name_order)
   }
-  assert_true(matched > 0)
+  assert_eq(matched, 0)
 }
 
 ///|
