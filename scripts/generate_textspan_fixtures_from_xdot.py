@@ -5,7 +5,10 @@ from pathlib import Path
 
 repo_root = Path(__file__).resolve().parents[1]
 xdot_dir = repo_root / "tests" / "render" / "xdot"
-output_path = repo_root / "tests" / "fixtures" / "graphviz" / "textspan.jsonl"
+overrides_output_path = repo_root / "src" / "layout" / "dot" / "font_metrics" / "textspan_overrides.jsonl"
+sample_output_path = repo_root / "tests" / "fixtures" / "graphviz" / "textspan.jsonl"
+# Full override data stays with the runtime owner package; tests only replay a
+# small representative sample derived from distinct offset families.
 
 draw_attr_re = re.compile(r'_(?:l|h|t)?draw_="')
 float_re = re.compile(r"[+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?")
@@ -123,6 +126,13 @@ def parse_draw_ops(draw: str):
     return spans
 
 
+def read_snapshot_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return path.read_text(encoding="latin-1")
+
+
 def extract_draw_strings(content: str):
     strings = []
     index = 0
@@ -175,8 +185,8 @@ def line_height_scale(font_name: str, font_size: float) -> float:
 
 
 entries = {}
-if output_path.exists():
-    for line in output_path.read_text(encoding="utf-8").splitlines():
+if overrides_output_path.exists():
+    for line in overrides_output_path.read_text(encoding="utf-8").splitlines():
         if not line:
             continue
         data = json.loads(line)
@@ -194,7 +204,7 @@ if output_path.exists():
             "has_capture": has_capture,
         }
 for path in sorted(xdot_dir.glob("*.xdot")):
-    content = path.read_text(encoding="utf-8")
+    content = read_snapshot_text(path)
     for draw in extract_draw_strings(content):
         for font, size, text, width in parse_draw_ops(draw):
             key = (font, float(size), text)
@@ -219,20 +229,45 @@ for path in sorted(xdot_dir.glob("*.xdot")):
                     prev["height"] = max(prev["height"], height)
 
 
-output_path.parent.mkdir(parents=True, exist_ok=True)
-with output_path.open("w", encoding="ascii") as handle:
-    for (font, size, text), entry in sorted(entries.items()):
+sorted_entries = []
+for (font, size, text), entry in sorted(entries.items()):
+    if entry.get("has_capture", False):
+        width = entry["width"]
+        height = entry["height"]
+    else:
         width = entry.get("xdot_width", entry["width"])
         height = entry.get("xdot_height", entry["height"])
-        data = {
-            "font": font,
-            "size": size,
-            "flags": entry.get("flags", 0),
-            "text": text,
-            "width": width,
-            "height": height,
-            "yoffset_layout": entry.get("yoffset_layout", 0.0),
-            "yoffset_centerline": entry.get("yoffset_centerline", 0.0),
-        }
+    sorted_entries.append({
+        "font": font,
+        "size": size,
+        "flags": entry.get("flags", 0),
+        "text": text,
+        "width": width,
+        "height": height,
+        "yoffset_layout": entry.get("yoffset_layout", 0.0),
+        "yoffset_centerline": entry.get("yoffset_centerline", 0.0),
+    })
+
+overrides_output_path.parent.mkdir(parents=True, exist_ok=True)
+with overrides_output_path.open("w", encoding="ascii") as handle:
+    for data in sorted_entries:
+        handle.write(json.dumps(data, ensure_ascii=True))
+        handle.write("\n")
+
+sample_output_path.parent.mkdir(parents=True, exist_ok=True)
+# Keep one entry per distinct (font, size, offset) family so the label_metrics
+# fixture test remains broad but no longer depends on the full runtime corpus.
+seen_samples = set()
+with sample_output_path.open("w", encoding="ascii") as handle:
+    for data in sorted_entries:
+        sample_key = (
+            data["font"],
+            float(data["size"]),
+            float(data["yoffset_layout"]),
+            float(data["yoffset_centerline"]),
+        )
+        if sample_key in seen_samples:
+            continue
+        seen_samples.add(sample_key)
         handle.write(json.dumps(data, ensure_ascii=True))
         handle.write("\n")

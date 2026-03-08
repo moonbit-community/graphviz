@@ -27,6 +27,7 @@ fn load_textspan_fixtures() -> Array[TextspanFixture] raise {
 
 ///|
 test "textspan fixtures match label_text_dimensions" {
+  // Representative sample only; full override data now lives with font_metrics.
   let fixtures = load_textspan_fixtures()
   for fixture in fixtures {
     let (width, height, yoffset_layout, yoffset_centerline) =

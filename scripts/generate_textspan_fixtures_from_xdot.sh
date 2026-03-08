@@ -2,7 +2,6 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-output_path="${repo_root}/tests/fixtures/graphviz/textspan.jsonl"
 xdot_dir="${repo_root}/tests/render/xdot"
 
 if [ ! -d "$xdot_dir" ]; then
