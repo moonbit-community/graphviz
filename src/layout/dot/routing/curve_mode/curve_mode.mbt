@@ -22,16 +22,6 @@ priv struct CurveModeSplineBuildResult {
 }
 
 ///|
-fn curve_max_double(a : Double, b : Double) -> Double {
-  if a > b { a } else { b }
-}
-
-///|
-fn curve_min_double(a : Double, b : Double) -> Double {
-  if a < b { a } else { b }
-}
-
-///|
 fn curve_point_line_distance(
   point : @geom.Point,
   a : @geom.Point,
@@ -89,123 +79,6 @@ fn segment_intersects_rect(
     return false
   }
   true
-}
-
-///|
-priv struct DetourPolylineInput {
-  tail : @geom.Point
-  head : @geom.Point
-  tail_rect : @geom.Rect
-  head_rect : @geom.Rect
-  nodesep_pt : Double
-  rankdir : RankDir
-}
-
-///|
-fn detour_polyline_for_rects(
-  input : DetourPolylineInput,
-) -> Array[@geom.Point] {
-  let tail = input.tail
-  let head = input.head
-  let tail_rect = input.tail_rect
-  let head_rect = input.head_rect
-  let nodesep_pt = input.nodesep_pt
-  let rankdir = input.rankdir
-  let detour_margin = curve_max_double(nodesep_pt * 0.75, 8.0)
-  let exit_base = curve_max_double(nodesep_pt * 1.25, 16.0)
-  let entry_base = curve_max_double(nodesep_pt * 0.3, 5.71)
-  match rankdir {
-    RankDir::TB | RankDir::BT => {
-      let dy = head.y - tail.y
-      let total = Double::abs(dy)
-      let exit_turn = if total > 0.0 {
-        curve_min_double(exit_base, total / 2.0)
-      } else {
-        exit_base
-      }
-      let entry_turn = if total > 0.0 {
-        curve_min_double(entry_base, total / 2.0)
-      } else {
-        entry_base
-      }
-      let exit_y =
-        if dy < 0.0 {
-          tail_rect.lly - exit_turn
-        } else {
-          tail_rect.ury + exit_turn
-        }
-      let entry_y =
-        if dy < 0.0 {
-          head_rect.lly - entry_turn
-        } else {
-          head_rect.ury + entry_turn
-        }
-      let left_x = curve_min_double(tail_rect.llx, head_rect.llx) - detour_margin
-      let right_x = curve_max_double(tail_rect.urx, head_rect.urx) + detour_margin
-      let path_len = (detour_x : Double) => {
-        Double::abs(tail.y - exit_y) +
-        Double::abs(tail.x - detour_x) +
-        Double::abs(exit_y - entry_y) +
-        Double::abs(head.x - detour_x) +
-        Double::abs(head.y - entry_y)
-      }
-      let detour_x =
-        if path_len(left_x) <= path_len(right_x) { left_x } else { right_x }
-      [
-        tail,
-        @edge_spline.point(tail.x, exit_y),
-        @edge_spline.point(detour_x, exit_y),
-        @edge_spline.point(detour_x, entry_y),
-        @edge_spline.point(head.x, entry_y),
-        head,
-      ]
-    }
-    RankDir::LR | RankDir::RL => {
-      let dx = head.x - tail.x
-      let total = Double::abs(dx)
-      let exit_turn = if total > 0.0 {
-        curve_min_double(exit_base, total / 2.0)
-      } else {
-        exit_base
-      }
-      let entry_turn = if total > 0.0 {
-        curve_min_double(entry_base, total / 2.0)
-      } else {
-        entry_base
-      }
-      let exit_x =
-        if dx < 0.0 {
-          tail_rect.llx - exit_turn
-        } else {
-          tail_rect.urx + exit_turn
-        }
-      let entry_x =
-        if dx < 0.0 {
-          head_rect.llx - entry_turn
-        } else {
-          head_rect.urx + entry_turn
-        }
-      let lower_y = curve_min_double(tail_rect.lly, head_rect.lly) - detour_margin
-      let upper_y = curve_max_double(tail_rect.ury, head_rect.ury) + detour_margin
-      let path_len = (detour_y : Double) => {
-        Double::abs(tail.x - exit_x) +
-        Double::abs(tail.y - detour_y) +
-        Double::abs(exit_x - entry_x) +
-        Double::abs(head.y - detour_y) +
-        Double::abs(head.x - entry_x)
-      }
-      let detour_y =
-        if path_len(lower_y) <= path_len(upper_y) { lower_y } else { upper_y }
-      [
-        tail,
-        @edge_spline.point(exit_x, tail.y),
-        @edge_spline.point(exit_x, detour_y),
-        @edge_spline.point(entry_x, detour_y),
-        @edge_spline.point(entry_x, head.y),
-        head,
-      ]
-    }
-  }
 }
 
 ///|
@@ -1062,7 +935,7 @@ fn adjust_route_points(
   let using_pathplan = input.using_pathplan
   let nodesep_pt = input.nodesep_pt
   let mut points = input.points
-  let touch_eps = curve_max_double(@record_geometry.RECORD_BORDER_PT + 0.01, 1.5)
+  let touch_eps = max_double(@record_geometry.RECORD_BORDER_PT + 0.01, 1.5)
   let head_lr_touch =
     match head_port_rect {
       Some(rect) => {
@@ -1122,7 +995,7 @@ fn adjust_route_points(
   }
   if has_explicit_port && base.has_side_anchor && points.length() <= 2 &&
     !using_pathplan {
-    let offset = curve_max_double(4.0, nodesep_pt * 0.5)
+    let offset = max_double(4.0, nodesep_pt * 0.5)
     let kinked : Array[@geom.Point] = [base.tail_anchor]
     if base.tail_slope.x != 0.0 || base.tail_slope.y != 0.0 {
       kinked.push(@edge_spline.point_add(base.tail_anchor, @edge_spline.point_scale(base.tail_slope, offset)))

@@ -60,6 +60,124 @@ priv struct ShortRouteDetourResolution {
 }
 
 ///|
+priv struct DetourPolylineInput {
+  tail : @geom.Point
+  head : @geom.Point
+  tail_rect : @geom.Rect
+  head_rect : @geom.Rect
+  nodesep_pt : Double
+  rankdir : RankDir
+}
+
+///|
+fn detour_polyline_for_rects(
+  input : DetourPolylineInput,
+) -> Array[@geom.Point] {
+  let tail = input.tail
+  let head = input.head
+  let tail_rect = input.tail_rect
+  let head_rect = input.head_rect
+  let nodesep_pt = input.nodesep_pt
+  let rankdir = input.rankdir
+  let detour_margin = max_double(nodesep_pt * 0.75, 8.0)
+  let exit_base = max_double(nodesep_pt * 1.25, 16.0)
+  let entry_base = max_double(nodesep_pt * 0.3, 5.71)
+  match rankdir {
+    RankDir::TB | RankDir::BT => {
+      let dy = head.y - tail.y
+      let total = Double::abs(dy)
+      let exit_turn = if total > 0.0 {
+        min_double(exit_base, total / 2.0)
+      } else {
+        exit_base
+      }
+      let entry_turn = if total > 0.0 {
+        min_double(entry_base, total / 2.0)
+      } else {
+        entry_base
+      }
+      let exit_y =
+        if dy < 0.0 {
+          tail_rect.lly - exit_turn
+        } else {
+          tail_rect.ury + exit_turn
+        }
+      let entry_y =
+        if dy < 0.0 {
+          head_rect.lly - entry_turn
+        } else {
+          head_rect.ury + entry_turn
+        }
+      let left_x = min_double(tail_rect.llx, head_rect.llx) - detour_margin
+      let right_x = max_double(tail_rect.urx, head_rect.urx) + detour_margin
+      let path_len = (detour_x : Double) => {
+        Double::abs(tail.y - exit_y) +
+        Double::abs(tail.x - detour_x) +
+        Double::abs(exit_y - entry_y) +
+        Double::abs(head.x - detour_x) +
+        Double::abs(head.y - entry_y)
+      }
+      let detour_x =
+        if path_len(left_x) <= path_len(right_x) { left_x } else { right_x }
+      [
+        tail,
+        @edge_spline.point(tail.x, exit_y),
+        @edge_spline.point(detour_x, exit_y),
+        @edge_spline.point(detour_x, entry_y),
+        @edge_spline.point(head.x, entry_y),
+        head,
+      ]
+    }
+    RankDir::LR | RankDir::RL => {
+      let dx = head.x - tail.x
+      let total = Double::abs(dx)
+      let exit_turn = if total > 0.0 {
+        min_double(exit_base, total / 2.0)
+      } else {
+        exit_base
+      }
+      let entry_turn = if total > 0.0 {
+        min_double(entry_base, total / 2.0)
+      } else {
+        entry_base
+      }
+      let exit_x =
+        if dx < 0.0 {
+          tail_rect.llx - exit_turn
+        } else {
+          tail_rect.urx + exit_turn
+        }
+      let entry_x =
+        if dx < 0.0 {
+          head_rect.llx - entry_turn
+        } else {
+          head_rect.urx + entry_turn
+        }
+      let lower_y = min_double(tail_rect.lly, head_rect.lly) - detour_margin
+      let upper_y = max_double(tail_rect.ury, head_rect.ury) + detour_margin
+      let path_len = (detour_y : Double) => {
+        Double::abs(tail.x - exit_x) +
+        Double::abs(tail.y - detour_y) +
+        Double::abs(exit_x - entry_x) +
+        Double::abs(head.y - detour_y) +
+        Double::abs(head.x - entry_x)
+      }
+      let detour_y =
+        if path_len(lower_y) <= path_len(upper_y) { lower_y } else { upper_y }
+      [
+        tail,
+        @edge_spline.point(exit_x, tail.y),
+        @edge_spline.point(exit_x, detour_y),
+        @edge_spline.point(entry_x, detour_y),
+        @edge_spline.point(entry_x, head.y),
+        head,
+      ]
+    }
+  }
+}
+
+///|
+
 priv struct FlatDetourScanInput {
   lookup : FlatDetourLookupContext
   line_start : @geom.Point
