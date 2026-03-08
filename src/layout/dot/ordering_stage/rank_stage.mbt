@@ -4,6 +4,8 @@
 type LayoutPrep = @shared.LayoutPrep
 type RankData = @rank_assignment.RankData
 type RankHeights = @rank_assignment.RankHeights
+type ClusterMetadata = @ordering.DotClusterMetadata
+type OrderingResult = @ordering.OrderingResult
 
 ///|
 /// Graphviz parity: rank stage payload keeps Stage A-prepared inputs grouped
@@ -76,8 +78,8 @@ pub fn compute_dot_rank_stage(
         @clustering.cluster_label_padding_for_layout,
       ),
     )
-  let ordering_stage_output =
-    compute_ordering_stage(
+  let ordering_pipeline_output =
+    @integration.compute_ordering_pipeline(
       {
         graph,
         nodes: prep.nodes,
@@ -101,7 +103,7 @@ pub fn compute_dot_rank_stage(
   {
     rank_data,
     rank_heights,
-    cluster_meta: ordering_stage_output.cluster_meta,
-    ordering: ordering_stage_output.ordering,
+    cluster_meta: ordering_pipeline_output.cluster_meta,
+    ordering: ordering_pipeline_output.ordering,
   }
 }

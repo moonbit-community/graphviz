@@ -1,7 +1,6 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
-    "moonbit-community/graphviz/layout/dot/rankdir",
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/ordering/integration",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
