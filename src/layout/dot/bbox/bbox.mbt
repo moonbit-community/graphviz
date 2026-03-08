@@ -1,13 +1,15 @@
 ///|
 /// Pure bbox aggregation and dot_compute_bb helpers extracted from the root
 /// dot package so DotLayoutGraph-specific recursion can stay at the boundary.
-
 type DotLayoutNode = @shared.DotLayoutNode
 
+///|
 type DotLayoutEdge = @shared.DotLayoutEdge
 
+///|
 type NodeSize = @node_primitives.NodeSize
 
+///|
 priv struct BBoxAccumulator {
   set : Bool
   min_x : Double
@@ -16,14 +18,17 @@ priv struct BBoxAccumulator {
   max_y : Double
 }
 
+///|
 fn bbox_is_zero_sentinel(bbox : @geom.Rect) -> Bool {
   bbox.llx == 0.0 && bbox.lly == 0.0 && bbox.urx == 0.0 && bbox.ury == 0.0
 }
 
+///|
 fn bbox_acc_empty() -> BBoxAccumulator {
   { set: false, min_x: 0.0, max_x: 0.0, min_y: 0.0, max_y: 0.0 }
 }
 
+///|
 fn bbox_acc_from_bbox(bbox : @geom.Rect) -> BBoxAccumulator {
   if bbox_is_zero_sentinel(bbox) {
     bbox_acc_empty()
@@ -38,29 +43,41 @@ fn bbox_acc_from_bbox(bbox : @geom.Rect) -> BBoxAccumulator {
   }
 }
 
+///|
 fn bbox_acc_include_point(
   acc : BBoxAccumulator,
   p : @geom.Point,
 ) -> BBoxAccumulator {
   if !acc.set {
-    {
-      set: true,
-      min_x: p.x,
-      max_x: p.x,
-      min_y: p.y,
-      max_y: p.y,
-    }
+    { set: true, min_x: p.x, max_x: p.x, min_y: p.y, max_y: p.y }
   } else {
     {
       set: true,
-      min_x: if p.x < acc.min_x { p.x } else { acc.min_x },
-      max_x: if p.x > acc.max_x { p.x } else { acc.max_x },
-      min_y: if p.y < acc.min_y { p.y } else { acc.min_y },
-      max_y: if p.y > acc.max_y { p.y } else { acc.max_y },
+      min_x: if p.x < acc.min_x {
+        p.x
+      } else {
+        acc.min_x
+      },
+      max_x: if p.x > acc.max_x {
+        p.x
+      } else {
+        acc.max_x
+      },
+      min_y: if p.y < acc.min_y {
+        p.y
+      } else {
+        acc.min_y
+      },
+      max_y: if p.y > acc.max_y {
+        p.y
+      } else {
+        acc.max_y
+      },
     }
   }
 }
 
+///|
 fn bbox_acc_to_rect(acc : BBoxAccumulator) -> @geom.Rect {
   if acc.set {
     { llx: acc.min_x, lly: acc.min_y, urx: acc.max_x, ury: acc.max_y }
@@ -90,9 +107,7 @@ pub fn compute_bbox(
   }
   for edge in edges {
     for spline in edge.splines {
-      let update = (p : @geom.Point) => {
-        acc = bbox_acc_include_point(acc, p)
-      }
+      let update = (p : @geom.Point) => acc = bbox_acc_include_point(acc, p)
       match spline.start {
         Some(point) => update(point)
         None => ()
@@ -122,9 +137,7 @@ pub fn expand_bbox_with_edges(
   edges : Array[DotLayoutEdge],
 ) -> @geom.Rect {
   let mut acc = bbox_acc_from_bbox(bbox)
-  let update = (p : @geom.Point) => {
-    acc = bbox_acc_include_point(acc, p)
-  }
+  let update = (p : @geom.Point) => acc = bbox_acc_include_point(acc, p)
   for edge in edges {
     for spline in edge.splines {
       match spline.start {
@@ -175,12 +188,7 @@ pub fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
 
 ///|
 pub fn round_bbox(bbox : @geom.Rect) -> @geom.Rect {
-  {
-    llx: bbox.llx.round(),
-    lly: bbox.lly,
-    urx: bbox.urx.round(),
-    ury: bbox.ury,
-  }
+  { llx: bbox.llx.round(), lly: bbox.lly, urx: bbox.urx.round(), ury: bbox.ury }
 }
 
 ///|
@@ -200,10 +208,18 @@ pub fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
     let mut min_y = points[0].y
     let mut max_y = points[0].y
     for p in points {
-      if p.x < min_x { min_x = p.x }
-      if p.x > max_x { max_x = p.x }
-      if p.y < min_y { min_y = p.y }
-      if p.y > max_y { max_y = p.y }
+      if p.x < min_x {
+        min_x = p.x
+      }
+      if p.x > max_x {
+        max_x = p.x
+      }
+      if p.y < min_y {
+        min_y = p.y
+      }
+      if p.y > max_y {
+        max_y = p.y
+      }
     }
     return Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y })
   }
@@ -225,15 +241,33 @@ pub fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
   Some(bbox)
 }
 
+///|
 fn expand_bbox_with_point(bbox : @geom.Rect, p : @geom.Point) -> @geom.Rect {
   {
-    llx: if p.x < bbox.llx { p.x } else { bbox.llx },
-    lly: if p.y < bbox.lly { p.y } else { bbox.lly },
-    urx: if p.x > bbox.urx { p.x } else { bbox.urx },
-    ury: if p.y > bbox.ury { p.y } else { bbox.ury },
+    llx: if p.x < bbox.llx {
+      p.x
+    } else {
+      bbox.llx
+    },
+    lly: if p.y < bbox.lly {
+      p.y
+    } else {
+      bbox.lly
+    },
+    urx: if p.x > bbox.urx {
+      p.x
+    } else {
+      bbox.urx
+    },
+    ury: if p.y > bbox.ury {
+      p.y
+    } else {
+      bbox.ury
+    },
   }
 }
 
+///|
 fn pt_to_line2(a : @geom.Point, b : @geom.Point, p : @geom.Point) -> Double {
   let dx = b.x - a.x
   let dy = b.y - a.y
@@ -243,10 +277,15 @@ fn pt_to_line2(a : @geom.Point, b : @geom.Point, p : @geom.Point) -> Double {
     0.0
   } else {
     let denom = dx * dx + dy * dy
-    if denom == 0.0 { 0.0 } else { a2_sq / denom }
+    if denom == 0.0 {
+      0.0
+    } else {
+      a2_sq / denom
+    }
   }
 }
 
+///|
 fn bezier_controls_near_line(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -259,6 +298,7 @@ fn bezier_controls_near_line(
   dis1 < hw * hw && dis2 < hw * hw
 }
 
+///|
 priv struct CubicBezierSegment {
   p0 : @geom.Point
   p1 : @geom.Point
@@ -266,11 +306,13 @@ priv struct CubicBezierSegment {
   p3 : @geom.Point
 }
 
+///|
 priv struct SplitBezierHalf {
   left : CubicBezierSegment
   right : CubicBezierSegment
 }
 
+///|
 fn split_bezier_half(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -280,15 +322,25 @@ fn split_bezier_half(
   let p01 : @geom.Point = { x: (p0.x + p1.x) / 2.0, y: (p0.y + p1.y) / 2.0 }
   let p12 : @geom.Point = { x: (p1.x + p2.x) / 2.0, y: (p1.y + p2.y) / 2.0 }
   let p23 : @geom.Point = { x: (p2.x + p3.x) / 2.0, y: (p2.y + p3.y) / 2.0 }
-  let p012 : @geom.Point = { x: (p01.x + p12.x) / 2.0, y: (p01.y + p12.y) / 2.0 }
-  let p123 : @geom.Point = { x: (p12.x + p23.x) / 2.0, y: (p12.y + p23.y) / 2.0 }
-  let p0123 : @geom.Point = { x: (p012.x + p123.x) / 2.0, y: (p012.y + p123.y) / 2.0 }
+  let p012 : @geom.Point = {
+    x: (p01.x + p12.x) / 2.0,
+    y: (p01.y + p12.y) / 2.0,
+  }
+  let p123 : @geom.Point = {
+    x: (p12.x + p23.x) / 2.0,
+    y: (p12.y + p23.y) / 2.0,
+  }
+  let p0123 : @geom.Point = {
+    x: (p012.x + p123.x) / 2.0,
+    y: (p012.y + p123.y) / 2.0,
+  }
   {
     left: { p0, p1: p01, p2: p012, p3: p0123 },
     right: { p0: p0123, p1: p123, p2: p23, p3 },
   }
 }
 
+///|
 fn update_bbox_with_bezier(
   bbox : @geom.Rect,
   p0 : @geom.Point,
@@ -297,10 +349,22 @@ fn update_bbox_with_bezier(
   p3 : @geom.Point,
 ) -> @geom.Rect {
   let mut out = bbox
-  if p0.x > out.urx || p0.x < out.llx || p0.y > out.ury || p0.y < out.lly ||
-    p1.x > out.urx || p1.x < out.llx || p1.y > out.ury || p1.y < out.lly ||
-    p2.x > out.urx || p2.x < out.llx || p2.y > out.ury || p2.y < out.lly ||
-    p3.x > out.urx || p3.x < out.llx || p3.y > out.ury || p3.y < out.lly {
+  if p0.x > out.urx ||
+    p0.x < out.llx ||
+    p0.y > out.ury ||
+    p0.y < out.lly ||
+    p1.x > out.urx ||
+    p1.x < out.llx ||
+    p1.y > out.ury ||
+    p1.y < out.lly ||
+    p2.x > out.urx ||
+    p2.x < out.llx ||
+    p2.y > out.ury ||
+    p2.y < out.lly ||
+    p3.x > out.urx ||
+    p3.x < out.llx ||
+    p3.y > out.ury ||
+    p3.y < out.lly {
     if bezier_controls_near_line(p0, p1, p2, p3) {
       out = expand_bbox_with_point(out, p0)
       out = expand_bbox_with_point(out, p1)
@@ -308,22 +372,20 @@ fn update_bbox_with_bezier(
       out = expand_bbox_with_point(out, p3)
     } else {
       let split = split_bezier_half(p0, p1, p2, p3)
-      let left =
-        update_bbox_with_bezier(
-          out,
-          split.left.p0,
-          split.left.p1,
-          split.left.p2,
-          split.left.p3,
-        )
-      out =
-        update_bbox_with_bezier(
-          left,
-          split.right.p0,
-          split.right.p1,
-          split.right.p2,
-          split.right.p3,
-        )
+      let left = update_bbox_with_bezier(
+        out,
+        split.left.p0,
+        split.left.p1,
+        split.left.p2,
+        split.left.p3,
+      )
+      out = update_bbox_with_bezier(
+        left,
+        split.right.p0,
+        split.right.p1,
+        split.right.p2,
+        split.right.p3,
+      )
     }
   }
   out
@@ -348,9 +410,7 @@ pub(all) struct DotBBoxInput {
 /// Graphviz parity: rank-based bbox aligned to refs/graphviz/lib/dotgen/position.c
 /// (dot_compute_bb).
 /// Do not change behavior without updating fixtures/tests.
-pub fn compute_dot_bbox(
-  input : DotBBoxInput,
-) -> @geom.Rect {
+pub fn compute_dot_bbox(input : DotBBoxInput) -> @geom.Rect {
   if input.nodes_out.length() == 0 {
     return { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
   }
@@ -368,8 +428,12 @@ pub fn compute_dot_bbox(
       max_x = urx
       first = false
     } else {
-      if llx < min_x { min_x = llx }
-      if urx > max_x { max_x = urx }
+      if llx < min_x {
+        min_x = llx
+      }
+      if urx > max_x {
+        max_x = urx
+      }
     }
   }
   let mut min_y = 0.0
