@@ -1,3 +1,9 @@
+type LayoutTree = @shared.LayoutTree
+type SplinesMode = @shared.SplinesMode
+type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutEdge = @shared.DotLayoutEdge
+type RankDir = @rankdir.RankDir
+
 ///|
 /// Graphviz parity: exterior label placement aligned to refs/graphviz/lib/label/xlabels.c
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).

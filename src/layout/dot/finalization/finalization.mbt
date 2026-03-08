@@ -295,7 +295,7 @@ fn apply_pre_rotation_layout_postprocess(
       input.flat_label_edge_vnodes,
     )
   let with_xlabels =
-    apply_xlabels(
+    @xlabel.apply_xlabels(
       labeled,
       input.splines,
     )

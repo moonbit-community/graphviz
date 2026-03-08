@@ -11,10 +11,7 @@
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/routing",
     "moonbit-community/graphviz/layout/dot/routing/edge_label",
-    "moonbit-community/graphviz/layout/dot/routing/edge_spline",
     "moonbit-community/graphviz/layout/dot/routing/integration",
-    "moonbit-community/graphviz/layout/dot/edge_identity",
-    "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/x/sys",
@@ -27,7 +24,8 @@
       "path": "moonbit-community/graphviz/layout/html",
       "alias": "html_label"
     },
-    "moonbit-community/graphviz/layout/dot/runtime_flags"
+    "moonbit-community/graphviz/layout/dot/runtime_flags",
+    "moonbit-community/graphviz/layout/dot/finalization/xlabel"
   ],
   "wbtest-import": [
     {
