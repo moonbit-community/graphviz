@@ -63,8 +63,7 @@ pub fn unique_cluster_boundary_name(
 /// Graphviz parity: cluster boundary slack nodes are identified by ln/rn
 /// prefixes in xpos constraint graphs.
 pub fn is_cluster_boundary_name(name : String) -> Bool {
-  name.has_prefix(CLUSTER_LN_PREFIX) ||
-  name.has_prefix(CLUSTER_RN_PREFIX)
+  name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX)
 }
 
 ///|
@@ -83,17 +82,11 @@ pub fn cluster_key_from_boundary(
   let mut rest : String? = None
   if name.has_prefix(CLUSTER_LN_PREFIX) {
     rest = Some(
-      name.unsafe_substring(
-        start=CLUSTER_LN_PREFIX.length(),
-        end=name.length(),
-      ),
+      name.unsafe_substring(start=CLUSTER_LN_PREFIX.length(), end=name.length()),
     )
   } else if name.has_prefix(CLUSTER_RN_PREFIX) {
     rest = Some(
-      name.unsafe_substring(
-        start=CLUSTER_RN_PREFIX.length(),
-        end=name.length(),
-      ),
+      name.unsafe_substring(start=CLUSTER_RN_PREFIX.length(), end=name.length()),
     )
   }
   let rest = match rest {
