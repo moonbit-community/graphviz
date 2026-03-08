@@ -1,21 +1,11 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
-    "moonbit-community/graphviz/layout/dot/rankdir",
-    "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/positioning",
-    "moonbit-community/graphviz/layout/dot/positioning/x_seed",
-    "moonbit-community/graphviz/layout/dot/positioning/y_positions",
-    "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
-    "moonbit-community/graphviz/layout/dot/positioning/x_flat_labels",
-    "moonbit-community/graphviz/layout/dot/positioning/output_maps",
+    "moonbit-community/graphviz/layout/dot/positioning/integration",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
-    "moonbit-community/graphviz/layout/dot/clustering",
-    "moonbit-community/graphviz/layout/dot/edge_label_metrics",
-    "moonbit-community/graphviz/layout/dot/positioning/ports",
-    "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+    "moonbit-community/graphviz/cgraph"
   ],
   "wbtest-import": [
     {
@@ -28,6 +18,7 @@
     },
     "moonbit-community/graphviz/layout/dot/input_stage",
     "moonbit-community/graphviz/layout/dot/ordering_stage",
+    "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
     "moonbitlang/core/json",
     "moonbitlang/x/fs",
