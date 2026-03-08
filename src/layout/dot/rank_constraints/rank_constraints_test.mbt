@@ -43,7 +43,7 @@ test "rank=min places nodes at top" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=min; a; b; } c; a -> c; b -> c; }",
   )
-  let layout = layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph)
   layout.apply()
   let a_pos = match rank_node_pos(graph, "a") {
     Some(value) => value
@@ -66,7 +66,7 @@ test "rank=max places nodes at bottom" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=max; a; b; } c; c -> a; c -> b; }",
   )
-  let layout = layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph)
   layout.apply()
   let a_pos = match rank_node_pos(graph, "a") {
     Some(value) => value
@@ -89,7 +89,7 @@ test "rank=source and rank=sink keep extremes" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=source; s1; s2; } subgraph { rank=sink; t1; t2; } s1 -> t1; s2 -> t2; }",
   )
-  let layout = layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph)
   layout.apply()
   let s1_pos = match rank_node_pos(graph, "s1") {
     Some(value) => value

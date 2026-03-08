@@ -1,5 +1,17 @@
 {
   "import": [
     "moonbit-community/graphviz/cgraph"
+  ],
+  "test-import": [
+    {
+      "path": "moonbit-community/graphviz/layout/dot",
+      "alias": "layout_dot"
+    },
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    "moonbitlang/core/strconv",
+    "moonbit-community/graphviz/geom"
   ]
 }
