@@ -1,7 +1,6 @@
 {
   "import": [],
   "wbtest-import": [
-    "moonbitlang/core/json",
-    "moonbitlang/x/fs"
+    "moonbitlang/core/json"
   ]
 }
