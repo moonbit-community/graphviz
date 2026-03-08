@@ -92,7 +92,7 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   phase_base : RootRankOrderPhaseBase
   root_cluster_stage : RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  pre_root_stage : @ordering.ClusteredPreRootStageOutput
+  pre_root_stage : ClusteredPreRootStageOutput
   real_nodes : Map[String, Bool]
   ratio : String
   edges : Array[@cgraph.Edge]

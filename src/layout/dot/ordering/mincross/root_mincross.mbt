@@ -800,8 +800,8 @@ pub struct ClusteredRootPhaseStageOutput {
 priv struct ClusteredRootPhaseStageSources {
   root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
   order_groups_for_root_phase : Map[Int, Array[String]]
-  reorder_context : @ordering.OrderReorderContext
-  materialized : @ordering.OrderMaterializationData
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
   graph : @cgraph.Graph
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
@@ -819,7 +819,7 @@ priv struct ClusteredRootPhaseStageSources {
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredRootPhaseStageBuildSources {
   reorder_setup : @ordering.OrderingReorderSetup
-  pre_root_stage : @ordering.ClusteredPreRootStageOutput
+  pre_root_stage : ClusteredPreRootStageOutput
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
