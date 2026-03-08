@@ -30,6 +30,18 @@ fn assert_points_close(
 }
 
 ///|
+fn bezier_test_polygon_edges(
+  polygon : Array[@geom.Point],
+) -> Array[(@geom.Point, @geom.Point)] {
+  let edges : Array[(@geom.Point, @geom.Point)] = []
+  for i in 0..<polygon.length() {
+    let next = if i + 1 < polygon.length() { i + 1 } else { 0 }
+    edges.push((polygon[i], polygon[next]))
+  }
+  edges
+}
+
+///|
 test "route_polyline_to_bezier keeps unconstrained straight segments as degenerate cubic" {
   let bezier = route_polyline_to_bezier(
     [point(0.0, 12.0), point(0.0, 0.0)],
@@ -98,11 +110,7 @@ test "route_polyline_to_bezier reproduces the barrier-aware bend fit from Graphv
     point(-240.0, 153.0),
     point(-240.0, 179.5),
   ]
-  let route_barriers : Array[(@geom.Point, @geom.Point)] = []
-  for i in 0..<polygon.length() {
-    let next = if i + 1 < polygon.length() { i + 1 } else { 0 }
-    route_barriers.push((polygon[i], polygon[next]))
-  }
+  let route_barriers = bezier_test_polygon_edges(polygon)
 
   let bezier = route_polyline_to_bezier(
     shortest,
@@ -220,4 +228,79 @@ test "bbox spline clipping trims straight bezier at the first boundary hit" {
   assert_point_close(start_clipped[1], point(5.6666667, 0.0), eps=0.01)
   assert_point_close(start_clipped[2], point(7.3333333, 0.0), eps=0.01)
   assert_point_close(start_clipped[3], point(9.0, 0.0))
+}
+
+///|
+test "route_polyline_to_bezier matches Graphviz constrained vertical head tangent" {
+  let polygon : Array[@geom.Point] = [
+    point(519.0, 590.5),
+    point(519.0, 564.0),
+    point(1434.35693359375, 564.0),
+    point(1434.35693359375, 554.0),
+    point(385.0, 554.0),
+    point(385.0, 540.0),
+    point(1434.35693359375, 540.0),
+    point(1434.35693359375, 532.0),
+    point(746.0, 532.0),
+    point(746.0, 457.0),
+    point(-240.0, 457.0),
+    point(-240.0, 532.0),
+    point(-240.0, 532.0),
+    point(-240.0, 540.0),
+    point(271.0, 540.0),
+    point(271.0, 554.0),
+    point(-240.0, 554.0),
+    point(-240.0, 564.0),
+    point(333.0, 564.0),
+    point(333.0, 590.5),
+  ]
+  let bezier = route_polyline_to_bezier(
+    [
+      point(408.0, 589.5),
+      point(256.8798828125, 502.5),
+    ],
+    point(0.0, 0.0),
+    point(0.0, -1.0),
+    true,
+    1.0,
+    0.0,
+    route_barriers=bezier_test_polygon_edges(polygon),
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(408.0, 589.5),
+      point(408.0, 589.5),
+      point(256.8798828125, 541.2497764669068),
+      point(256.8798828125, 502.5),
+    ],
+    eps=0.0001,
+  )
+}
+
+///|
+test "route_polyline_to_bezier matches Graphviz constrained horizontal head tangent" {
+  let bezier = route_polyline_to_bezier(
+    [
+      point(79.0, 589.5),
+      point(208.02978515625, 483.5),
+    ],
+    point(0.0, 0.0),
+    point(1.0, 0.0),
+    true,
+    1.0,
+    0.0,
+  )
+
+  assert_points_close(
+    bezier,
+    [
+      point(79.0, 589.5),
+      point(79.0, 589.5),
+      point(133.8133043969875, 483.5),
+      point(208.02978515625, 483.5),
+    ],
+    eps=0.0001,
+  )
 }

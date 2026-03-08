@@ -270,3 +270,70 @@ test "limit_boxes_for_spline falls back to polyline when spline sampling misses 
     assert_eq(box.urx, 10.0)
   }
 }
+
+///|
+test "route_pathplan_from_boxes matches Graphviz single-bend corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -240.0, lly: 248.0, urx: 1434.35693359375, ury: 266.5 },
+    { llx: -240.0, lly: 230.0, urx: 1434.35693359375, ury: 248.0 },
+    { llx: -240.0, lly: 216.0, urx: 788.896484375, ury: 230.0 },
+    { llx: -240.0, lly: 198.0, urx: 1434.35693359375, ury: 216.0 },
+    { llx: -240.0, lly: 179.5, urx: 833.0, ury: 198.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 824.0, y: 265.5 }, { x: 780.0, y: 180.5 }) {
+    Some(value) => value
+    None => fail("expected route for single-bend fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 1434.35693359375, y: 266.5 },
+    { x: 1434.35693359375, y: 248.0 },
+    { x: 1434.35693359375, y: 248.0 },
+    { x: 1434.35693359375, y: 230.0 },
+    { x: 788.896484375, y: 230.0 },
+    { x: 788.896484375, y: 216.0 },
+    { x: 1434.35693359375, y: 216.0 },
+    { x: 1434.35693359375, y: 198.0 },
+    { x: 833.0, y: 198.0 },
+    { x: 833.0, y: 179.5 },
+    { x: -240.0, y: 179.5 },
+    { x: -240.0, y: 198.0 },
+    { x: -240.0, y: 198.0 },
+    { x: -240.0, y: 216.0 },
+    { x: -240.0, y: 216.0 },
+    { x: -240.0, y: 230.0 },
+    { x: -240.0, y: 230.0 },
+    { x: -240.0, y: 248.0 },
+    { x: -240.0, y: 248.0 },
+    { x: -240.0, y: 266.5 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 824.0, y: 265.5 },
+    { x: 788.896484375, y: 230.0 },
+    { x: 780.0, y: 180.5 },
+  ])
+}
+
+///|
+test "route_pathplan_from_boxes matches Graphviz multi-bend corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: 537.0, lly: 699.0, urx: 631.0, ury: 725.5 },
+    { llx: -240.0, lly: 689.0, urx: 1434.35693359375, ury: 699.0 },
+    { llx: 595.0, lly: 675.0, urx: 832.5771484375, ury: 689.0 },
+    { llx: -240.0, lly: 667.0, urx: 1434.35693359375, ury: 675.0 },
+    { llx: 746.0, lly: 590.5, urx: 908.0, ury: 667.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 586.0, y: 724.5 }, { x: 823.0, y: 591.5 }) {
+    Some(value) => value
+    None => fail("expected route for multi-bend fixture")
+  }
+
+  assert_points_eq(route.points, [
+    { x: 586.0, y: 724.5 },
+    { x: 631.0, y: 699.0 },
+    { x: 746.0, y: 667.0 },
+    { x: 823.0, y: 591.5 },
+  ])
+}
