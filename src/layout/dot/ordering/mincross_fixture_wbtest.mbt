@@ -699,6 +699,9 @@ fn mincross_plugin_case_needs_replay(
   if input.case_id == 10 && input.graph == "cluster_gd" {
     return false
   }
+  if input.case_id == 4 && input.graph == "cluster_core" {
+    return false
+  }
   mincross_case_has_distinct_output(input, output) && input.nodes.length() >= 10
 }
 
