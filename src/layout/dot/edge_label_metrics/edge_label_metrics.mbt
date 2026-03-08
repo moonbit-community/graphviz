@@ -46,20 +46,19 @@ pub fn edge_label_metrics_for_attr(
       } else {
         let base_size = @attrs.font_size(edge.get_attr("fontsize"))
         let base_font = @attrs.font_name(edge.get_attr("fontname"))
-        let font_size_pt =
-          if use_label_font {
-            @attrs.font_size(edge.get_attr("labelfontsize"), default=base_size)
-          } else {
-            base_size
-          }
-        let font =
-          if use_label_font {
-            @attrs.font_name(edge.get_attr("labelfontname"), default=base_font)
-          } else {
-            base_font
-          }
-        let (width, height) =
-          @label_metrics.label_text_dimensions(text, font, font_size_pt)
+        let font_size_pt = if use_label_font {
+          @attrs.font_size(edge.get_attr("labelfontsize"), default=base_size)
+        } else {
+          base_size
+        }
+        let font = if use_label_font {
+          @attrs.font_name(edge.get_attr("labelfontname"), default=base_font)
+        } else {
+          base_font
+        }
+        let (width, height) = @label_metrics.label_text_dimensions(
+          text, font, font_size_pt,
+        )
         Some({ width, height })
       }
     None => None
@@ -70,15 +69,24 @@ pub fn edge_label_metrics_for_attr(
 pub fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
   let mut max_height = 0.0
   match edge_label_metrics_for_attr(edge, "label", false) {
-    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
+    Some(metrics) =>
+      if metrics.height > max_height {
+        max_height = metrics.height
+      }
     None => ()
   }
   match edge_label_metrics_for_attr(edge, "headlabel", true) {
-    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
+    Some(metrics) =>
+      if metrics.height > max_height {
+        max_height = metrics.height
+      }
     None => ()
   }
   match edge_label_metrics_for_attr(edge, "taillabel", true) {
-    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
+    Some(metrics) =>
+      if metrics.height > max_height {
+        max_height = metrics.height
+      }
     None => ()
   }
   max_height
@@ -95,7 +103,10 @@ pub fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
 }
 
 ///|
-pub fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
+pub fn self_edge_label_width_pt(
+  edge : @cgraph.Edge,
+  rankdir : RankDir,
+) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
@@ -108,7 +119,10 @@ pub fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Doubl
 }
 
 ///|
-pub fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
+pub fn self_edge_label_height_pt(
+  edge : @cgraph.Edge,
+  rankdir : RankDir,
+) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
