@@ -215,9 +215,9 @@ fn build_root_padded_layout_data(
   let graph = input.graph
   let rankdir = input.rankdir
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
-    @root_geometry.root_cluster_padding_for_rankdir(
+    root_cluster_padding_for_rankdir(
       rankdir,
-      @root_geometry.compute_root_cluster_padding(
+      compute_root_cluster_padding(
         graph,
         input.nodes,
         input.all_ranks,
@@ -225,7 +225,7 @@ fn build_root_padded_layout_data(
       ),
     )
   let bbox =
-    @root_geometry.apply_root_port_padding(
+    apply_root_port_padding(
       graph,
       subgraphs_and_bbox.base_bbox,
       rankdir,
@@ -295,12 +295,12 @@ fn apply_pre_rotation_layout_postprocess(
       input.flat_label_edge_vnodes,
     )
   let with_xlabels =
-    @xlabel_collection.apply_xlabels(
+    apply_xlabels(
       labeled,
       input.splines,
     )
   let root_label_bbox =
-    @root_geometry.apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
+    apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   {
     graph: with_xlabels.graph,
     bbox: root_label_bbox.bbox,

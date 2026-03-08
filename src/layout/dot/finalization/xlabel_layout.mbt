@@ -3,8 +3,6 @@
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).
 /// Do not change behavior without updating fixtures/tests.
 
-type LayoutTree = @shared.LayoutTree
-type RankDir = @rankdir.RankDir
 
 
 priv struct XLabelUpdateMaps {
@@ -121,7 +119,7 @@ pub fn apply_xlabels(
   collect_cluster_label_objects(layout, objects, flip)
   if labels.length() > 0 {
     let force = parse_forcelabels(layout.graph)
-    @xlabel_solver.place_labels(objects, labels, force)
+    place_labels(objects, labels, force)
   }
   finalize_xlabels(layout, labels, flip)
 }
@@ -143,7 +141,7 @@ fn finalize_xlabels(
     if !label.set {
       continue
     }
-    let center = @xlabel_solver.xlabel_center(label)
+    let center = xlabel_center(label)
     bbox = @edge_label.expand_bbox_for_label_pos(
       bbox,
       Some(center),

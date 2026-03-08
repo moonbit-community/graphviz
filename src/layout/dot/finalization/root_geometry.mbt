@@ -3,7 +3,6 @@
 /// placement, and root margin expansion. These helpers do not mutate
 /// DotLayoutGraph trees directly.
 
-type RankDir = @rankdir.RankDir
 type LabelLoc = @shared.LabelLoc
 type LabelJust = @shared.LabelJust
 

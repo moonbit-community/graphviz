@@ -1,5 +1,5 @@
 ///|
-fn make_node_layout(
+fn xlabel_make_node_layout(
   node : @cgraph.Node,
   pos : @geom.Point,
   width_in : Double,
@@ -10,7 +10,7 @@ fn make_node_layout(
 }
 
 ///|
-fn make_edge_layout(
+fn xlabel_make_edge_layout(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
   label_pos? : @geom.Point? = None,
@@ -51,7 +51,7 @@ test "build_node_obstacle_with_xlabel_slot creates a deferred slot for unresolve
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   let obstacle = build_node_obstacle_with_xlabel_slot(
-    make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5),
+    xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5),
     false,
     labels,
     objects,
@@ -82,7 +82,7 @@ test "build_node_obstacle_with_xlabel_slot keeps resolved xlabels as fixed obsta
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   let obstacle = build_node_obstacle_with_xlabel_slot(
-    make_node_layout(
+    xlabel_make_node_layout(
       node,
       @edge_spline.point(40.0, 50.0),
       1.5,
@@ -130,7 +130,7 @@ test "collect_edge_xlabel_candidates uses anchors for unresolved edge labels and
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   collect_edge_xlabel_candidates(
-    make_edge_layout(
+    xlabel_make_edge_layout(
       edge,
       straight_spline(),
       label_pos=Some(@edge_spline.point(20.0, 30.0)),
@@ -189,7 +189,7 @@ test "collect_edge_xlabel_candidates flips dimensions for existing and deferred 
   let objects : Array[XObject] = []
   let resolved_mid = @edge_spline.point(20.0, 30.0)
   collect_edge_xlabel_candidates(
-    make_edge_layout(edge, straight_spline(), label_pos=Some(resolved_mid)),
+    xlabel_make_edge_layout(edge, straight_spline(), label_pos=Some(resolved_mid)),
     @shared.SplinesMode::Spline,
     true,
     labels,
@@ -305,7 +305,7 @@ test "collect_edge_xlabel_candidates skips deferred labels when spline geometry 
 }
 
 ///|
-fn make_layout_tree(
+fn xlabel_make_layout_tree(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
   nodes? : Array[DotLayoutNode] = [],
@@ -326,14 +326,14 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
 
   let node_xlabel = @edge_spline.point(20.0, 30.0)
   let edge_xlabel = @edge_spline.point(-10.0, 8.0)
-  let layout = make_layout_tree(
+  let layout = xlabel_make_layout_tree(
     graph,
     { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
     nodes=[
-      make_node_layout(a, @edge_spline.point(5.0, 5.0), 1.0, 0.5, xlabel_pos=Some(node_xlabel)),
+      xlabel_make_node_layout(a, @edge_spline.point(5.0, 5.0), 1.0, 0.5, xlabel_pos=Some(node_xlabel)),
     ],
     edges=[
-      make_edge_layout(edge, straight_spline(), xlabel_pos=Some(edge_xlabel)),
+      xlabel_make_edge_layout(edge, straight_spline(), xlabel_pos=Some(edge_xlabel)),
     ],
   )
 
@@ -368,10 +368,10 @@ test "apply_xlabels places unresolved node xlabels and expands bbox" {
   let node = graph.node("n")
   node.set_attr("xlabel", "outside")
 
-  let layout = make_layout_tree(
+  let layout = xlabel_make_layout_tree(
     graph,
     { llx: 0.0, lly: 0.0, urx: 80.0, ury: 80.0 },
-    nodes=[make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5)],
+    nodes=[xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5)],
   )
 
   let updated = apply_xlabels(layout, @shared.SplinesMode::Spline)
@@ -400,14 +400,14 @@ test "apply_xlabels writes unresolved edge xlabels back through the edge update 
   let edge = graph.edge(a, b)
   edge.set_attr("xlabel", "edge-out")
 
-  let layout = make_layout_tree(
+  let layout = xlabel_make_layout_tree(
     graph,
     { llx: 0.0, lly: 0.0, urx: 20.0, ury: 20.0 },
     nodes=[
-      make_node_layout(a, @edge_spline.point(100.0, 100.0), 0.25, 0.25),
-      make_node_layout(b, @edge_spline.point(120.0, 100.0), 0.25, 0.25),
+      xlabel_make_node_layout(a, @edge_spline.point(100.0, 100.0), 0.25, 0.25),
+      xlabel_make_node_layout(b, @edge_spline.point(120.0, 100.0), 0.25, 0.25),
     ],
-    edges=[make_edge_layout(edge, straight_spline())],
+    edges=[xlabel_make_edge_layout(edge, straight_spline())],
   )
 
   let updated = apply_xlabels(layout, @shared.SplinesMode::Spline)

@@ -25,15 +25,15 @@ fn mirror_layout_points(
   for node_layout in layout.nodes {
     nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.transform_point(node_layout.pos, point_bbox, RankDir::BT),
+      pos: transform_point(node_layout.pos, point_bbox, RankDir::BT),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         node_layout.label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         node_layout.xlabel_pos,
         point_bbox,
         RankDir::BT,
@@ -44,27 +44,27 @@ fn mirror_layout_points(
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.transform_spline(spline, point_bbox, RankDir::BT))
+      splines.push(transform_spline(spline, point_bbox, RankDir::BT))
     }
     edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         edge_layout.label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      head_label_pos: @coordinate_transform.transform_optional_point(
+      head_label_pos: transform_optional_point(
         edge_layout.head_label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      tail_label_pos: @coordinate_transform.transform_optional_point(
+      tail_label_pos: transform_optional_point(
         edge_layout.tail_label_pos,
         point_bbox,
         RankDir::BT,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         edge_layout.xlabel_pos,
         point_bbox,
         RankDir::BT,
@@ -78,7 +78,7 @@ fn mirror_layout_points(
     )
   }
   let mirrored_bbox =
-    @coordinate_transform.transform_bbox_with_root(layout.bbox, bbox_bbox, RankDir::BT)
+    transform_bbox_with_root(layout.bbox, bbox_bbox, RankDir::BT)
   {
     graph: layout.graph,
     bbox: mirrored_bbox,
@@ -158,7 +158,7 @@ fn apply_cluster_lr_mirror_after_rotation(
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       let cluster_mirror_bbox =
-        @coordinate_transform.transform_bbox_with_root(input.rank_bbox, input.pre_rotation_bbox, input.rankdir)
+        transform_bbox_with_root(input.rank_bbox, input.pre_rotation_bbox, input.rankdir)
       refresh_cluster_labels(
         mirror_layout_points(
           input.rotated,
@@ -190,26 +190,26 @@ fn shift_layout_graph(
   for node_layout in layout.nodes {
     shifted_nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.shift_point(node_layout.pos, dx, dy),
+      pos: shift_point(node_layout.pos, dx, dy),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.shift_optional_point(node_layout.label_pos, dx, dy),
-      xlabel_pos: @coordinate_transform.shift_optional_point(node_layout.xlabel_pos, dx, dy),
+      label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(node_layout.xlabel_pos, dx, dy),
     })
   }
   let shifted_edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.shift_spline(spline, dx, dy))
+      splines.push(shift_spline(spline, dx, dy))
     }
     shifted_edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.shift_optional_point(edge_layout.label_pos, dx, dy),
-      head_label_pos: @coordinate_transform.shift_optional_point(edge_layout.head_label_pos, dx, dy),
-      tail_label_pos: @coordinate_transform.shift_optional_point(edge_layout.tail_label_pos, dx, dy),
-      xlabel_pos: @coordinate_transform.shift_optional_point(edge_layout.xlabel_pos, dx, dy),
+      label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
+      head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
+      tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(edge_layout.xlabel_pos, dx, dy),
     })
   }
   let shifted_subgraphs : Array[LayoutTree] = []
@@ -225,7 +225,7 @@ fn shift_layout_graph(
   {
     graph: layout.graph,
     bbox: shifted_bbox,
-    label_pos: @coordinate_transform.shift_optional_point(layout.label_pos, dx, dy),
+    label_pos: shift_optional_point(layout.label_pos, dx, dy),
     nodes: shifted_nodes,
     edges: shifted_edges,
     subgraphs: shifted_subgraphs,
@@ -248,15 +248,15 @@ fn rotate_layout_graph(
   for node_layout in layout.nodes {
     nodes.push({
       node: node_layout.node,
-      pos: @coordinate_transform.transform_point(node_layout.pos, root_bbox, rankdir),
+      pos: transform_point(node_layout.pos, root_bbox, rankdir),
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         node_layout.label_pos,
         root_bbox,
         rankdir,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         node_layout.xlabel_pos,
         root_bbox,
         rankdir,
@@ -267,27 +267,27 @@ fn rotate_layout_graph(
   for edge_layout in layout.edges {
     let splines : Array[@geom.Spline] = []
     for spline in edge_layout.splines {
-      splines.push(@coordinate_transform.transform_spline(spline, root_bbox, rankdir))
+      splines.push(transform_spline(spline, root_bbox, rankdir))
     }
     edges.push({
       edge: edge_layout.edge,
       splines,
-      label_pos: @coordinate_transform.transform_optional_point(
+      label_pos: transform_optional_point(
         edge_layout.label_pos,
         root_bbox,
         rankdir,
       ),
-      head_label_pos: @coordinate_transform.transform_optional_point(
+      head_label_pos: transform_optional_point(
         edge_layout.head_label_pos,
         root_bbox,
         rankdir,
       ),
-      tail_label_pos: @coordinate_transform.transform_optional_point(
+      tail_label_pos: transform_optional_point(
         edge_layout.tail_label_pos,
         root_bbox,
         rankdir,
       ),
-      xlabel_pos: @coordinate_transform.transform_optional_point(
+      xlabel_pos: transform_optional_point(
         edge_layout.xlabel_pos,
         root_bbox,
         rankdir,
@@ -300,8 +300,8 @@ fn rotate_layout_graph(
   }
   {
     graph: layout.graph,
-    bbox: @coordinate_transform.transform_bbox_with_root(layout.bbox, root_bbox, rankdir),
-    label_pos: @coordinate_transform.transform_optional_point(layout.label_pos, root_bbox, rankdir),
+    bbox: transform_bbox_with_root(layout.bbox, root_bbox, rankdir),
+    label_pos: transform_optional_point(layout.label_pos, root_bbox, rankdir),
     nodes,
     edges,
     subgraphs,
@@ -388,7 +388,7 @@ fn refresh_root_label_position(
 ) -> LayoutTree {
   if layout.graph.is_root() {
     let label_pos =
-      match @root_geometry.root_label_pos_for_bbox(layout.graph, layout.bbox) {
+      match root_label_pos_for_bbox(layout.graph, layout.bbox) {
         Some(pos) => Some(pos)
         None => layout.label_pos
       }
@@ -426,7 +426,7 @@ fn apply_root_cluster_padding(
         input.root_cluster_pad_top,
     }
     let label_pos =
-      match @root_geometry.root_label_pos_for_bbox(layout.graph, padded_bbox) {
+      match root_label_pos_for_bbox(layout.graph, padded_bbox) {
         Some(pos) => Some(pos)
         None => padded.label_pos
       }
@@ -474,7 +474,7 @@ fn apply_ratio_fill_scale(
 fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
   let with_margin : LayoutTree = {
     graph: layout.graph,
-    bbox: @root_geometry.apply_root_margin_x(layout.graph, layout.bbox),
+    bbox: apply_root_margin_x(layout.graph, layout.bbox),
     label_pos: layout.label_pos,
     nodes: layout.nodes,
     edges: layout.edges,

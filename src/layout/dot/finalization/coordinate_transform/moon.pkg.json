@@ -1,6 +1,0 @@
-{
-  "import": [
-    "moonbit-community/graphviz/layout/dot/rankdir",
-    "moonbit-community/graphviz/geom"
-  ]
-}

@@ -3,7 +3,6 @@
 /// translation of points/splines. These helpers are independent of
 /// DotLayoutGraph recursion.
 
-type RankDir = @rankdir.RankDir
 
 ///|
 /// Graphviz parity: rankdir coordinate transform aligned to

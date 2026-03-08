@@ -2,12 +2,6 @@
 /// Xlabel candidate collection kernels: label metrics, rankdir-aware
 /// dimensions, obstacle construction, and edge-anchor candidate assembly.
 
-type DotLayoutNode = @shared.DotLayoutNode
-type DotLayoutEdge = @shared.DotLayoutEdge
-type SplinesMode = @shared.SplinesMode
-type XLabelTarget = @xlabel_solver.XLabelTarget
-type XLabel = @xlabel_solver.XLabel
-type XObject = @xlabel_solver.XObject
 
 ///|
 /// Xlabel dimension metrics and rankdir-flip helpers shared by candidate,
