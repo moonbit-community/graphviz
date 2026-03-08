@@ -365,6 +365,10 @@ fn simplex_case_has_owner_local_integrated_coverage(
     input.edges.length() == 48 {
     return true
   }
+  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 85 &&
+    input.edges.length() == 117 {
+    return true
+  }
   if input.case_id == 16 && input.balance == 0 && input.nodes.length() == 18 &&
     input.edges.length() == 20 {
     return true
@@ -383,6 +387,10 @@ fn simplex_case_has_owner_local_final_coverage(case_info : SimplexCase) -> Bool 
   }
   if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 37 &&
     input.edges.length() == 48 {
+    return true
+  }
+  if input.case_id == 2 && input.balance == 2 && input.nodes.length() == 85 &&
+    input.edges.length() == 117 {
     return true
   }
   false
@@ -416,7 +424,8 @@ fn simplex_case_has_distinct_final_output(case_info : SimplexCase) -> Bool {
 /// graph behind fixture case=1, the compact LR compound-cluster case behind
 /// fixture case=4, the compact LR edge-label ladder behind fixture case=2
 /// with 10 nodes, the integrated edge-vnode ladder behind fixture case=2 with
-/// 37 nodes, and the compact zero-balance fan scaffold behind fixture case=16
+/// 37 nodes, the larger LR slack-normal scaffold behind fixture case=2 with
+/// 85 nodes, and the compact zero-balance fan scaffold behind fixture case=16
 /// with 18 nodes. Keep fixture replay only for larger integrated graphs whose
 /// tree shape/rank movement still emerges from coupled slack/virtual structure.
 fn simplex_case_needs_integrated_replay(case_info : SimplexCase) -> Bool {
