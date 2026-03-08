@@ -179,17 +179,12 @@ fn assert_edge_label_position(
 }
 
 ///|
-test "node xlabels match finalized xlabels_tb smoke graph" {
+test "node and edge xlabels match finalized xlabels_tb smoke graph" {
   let layout = load_tb_xlabel_layout()
 
   assert_node_xlabel(layout, "a", "XA", 9.75, 116.25)
   assert_node_xlabel(layout, "b", "XB", 100.875, 116.25)
   assert_node_xlabel(layout, "c", "XC", 46.125, 8.25)
-}
-
-///|
-test "edge xlabels match finalized xlabels_tb smoke graph" {
-  let layout = load_tb_xlabel_layout()
 
   assert_edge_label_position(
     layout, "a", "c", "taillabel", "TAC", 41.898878574371338, 63.446624994277954,
