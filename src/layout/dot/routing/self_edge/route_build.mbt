@@ -19,8 +19,12 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
       max_rank = rank
       seen = true
     } else {
-      if rank < min_rank { min_rank = rank }
-      if rank > max_rank { max_rank = rank }
+      if rank < min_rank {
+        min_rank = rank
+      }
+      if rank > max_rank {
+        max_rank = rank
+      }
     }
   }
   { min_rank, max_rank }
@@ -37,9 +41,7 @@ priv struct SelfEdgeRankSpacingInput {
 }
 
 ///|
-fn self_edge_rank_spacing(
-  input : SelfEdgeRankSpacingInput,
-) -> Double {
+fn self_edge_rank_spacing(input : SelfEdgeRankSpacingInput) -> Double {
   let rank = input.rank
   let rank_y = input.rank_y
   let node_y = input.node_y
@@ -121,9 +123,7 @@ priv struct TopSelfEdgeRoutesInput {
 }
 
 ///|
-fn self_edge_routes_top(
-  input : TopSelfEdgeRoutesInput,
-) -> Array[SelfEdgeRoute] {
+fn self_edge_routes_top(input : TopSelfEdgeRoutesInput) -> Array[SelfEdgeRoute] {
   let edges = input.edges
   let base0 = input.base0
   let nodesep_pt = input.nodesep_pt
@@ -142,36 +142,17 @@ fn self_edge_routes_top(
   let rw = base0.tail_size.right_pt
   let mut dx = 0.0
   match point_pair {
-    15 => {
-      dx = sgn * (rw - (hp.x - np.x) + stepx)
-    }
-    38 => {
-      dx = sgn * (lw - (np.x - hp.x) + stepx)
-    }
-    41 | 48 => {
-      dx = sgn * (rw - (tp.x - np.x) + stepx)
-    }
-    14 | 37 | 47 | 51 | 57 | 58 => {
-      dx =
-        sgn *
-          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 3.0)
-    }
-    73 => {
-      dx = sgn * (lw - (np.x - tp.x) + stepx)
-    }
-    83 => {
-      dx = sgn * (lw - (np.x - tp.x))
-    }
-    84 => {
-      dx =
-        sgn *
-          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + stepx)
-    }
-    74 | 75 | 85 => {
-      dx =
-        sgn *
-          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + 2.0 * stepx)
-    }
+    15 => dx = sgn * (rw - (hp.x - np.x) + stepx)
+    38 => dx = sgn * (lw - (np.x - hp.x) + stepx)
+    41 | 48 => dx = sgn * (rw - (tp.x - np.x) + stepx)
+    14 | 37 | 47 | 51 | 57 | 58 =>
+      dx = sgn * ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 3.0)
+    73 => dx = sgn * (lw - (np.x - tp.x) + stepx)
+    83 => dx = sgn * (lw - (np.x - tp.x))
+    84 => dx = sgn * ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + stepx)
+    74 | 75 | 85 =>
+      dx = sgn *
+        ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + 2.0 * stepx)
     _ => ()
   }
   let mut dy = base0.tail_size.height_pt / 2.0
@@ -194,8 +175,7 @@ fn self_edge_routes_top(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height =
-      self_edge_label_height_fn(edge, base0.layout_rankdir)
+    let label_height = self_edge_label_height_fn(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(@edge_spline.point(np.x, np.y + dy + label_height / 2.0))
       if label_height > stepy {
@@ -259,8 +239,7 @@ fn self_edge_routes_bottom(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height =
-      self_edge_label_height_fn(edge, base0.layout_rankdir)
+    let label_height = self_edge_label_height_fn(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(@edge_spline.point(np.x, np.y - dy - label_height / 2.0))
       if label_height > stepy {
@@ -341,18 +320,16 @@ fn self_edge_routes_horizontal_side(
   }
   let mut dx = side_width
   let mut dy = 0.0
-  let mut tx =
-    if to_right {
-      min_double(dx, 3.0 * (np.x + dx - tp.x))
-    } else {
-      min_double(dx, 3.0 * (tp.x + dx - np.x))
-    }
-  let mut hx =
-    if to_right {
-      min_double(dx, 3.0 * (np.x + dx - hp.x))
-    } else {
-      min_double(dx, 3.0 * (hp.x + dx - np.x))
-    }
+  let mut tx = if to_right {
+    min_double(dx, 3.0 * (np.x + dx - tp.x))
+  } else {
+    min_double(dx, 3.0 * (tp.x + dx - np.x))
+  }
+  let mut hx = if to_right {
+    min_double(dx, 3.0 * (np.x + dx - hp.x))
+  } else {
+    min_double(dx, 3.0 * (hp.x + dx - np.x))
+  }
   let x_sign = if to_right { 1.0 } else { -1.0 }
   let routes : Array[SelfEdgeRoute] = []
   for i in 0..<cnt {
@@ -371,8 +348,7 @@ fn self_edge_routes_horizontal_side(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_width =
-      self_edge_label_width_fn(edge, base0.rankdir)
+    let label_width = self_edge_label_width_fn(edge, base0.rankdir)
     if label_width > 0.0 {
       label_pos = Some(
         @edge_spline.point(np.x + x_sign * (dx + label_width / 2.0), np.y),
@@ -415,52 +391,75 @@ fn build_self_edge_routes(
   let np = base0.tail_pos
   let tp = base0.tail_anchor
   let hp = base0.head_anchor
-  let all_sides =
-    PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
-  let tail_side =
-    resolve_self_edge_port_side(
-      base0.tail_port_side,
-      base0.tail_port,
-      all_sides,
-    )
-  let head_side =
-    resolve_self_edge_port_side(
-      base0.head_port_side,
-      base0.head_port,
-      all_sides,
-    )
+  let all_sides = PORT_SIDE_BOTTOM |
+    PORT_SIDE_RIGHT |
+    PORT_SIDE_TOP |
+    PORT_SIDE_LEFT
+  let tail_side = resolve_self_edge_port_side(
+    base0.tail_port_side,
+    base0.tail_port,
+    all_sides,
+  )
+  let head_side = resolve_self_edge_port_side(
+    base0.head_port_side,
+    base0.head_port,
+    all_sides,
+  )
   let tail_defined = @edge_identity.port_is_explicit(base0.tail_port)
   let head_defined = @edge_identity.port_is_explicit(base0.head_port)
   let bounds = rank_bounds(rank_y)
-  let sizey =
-    self_edge_rank_spacing(
-      {
-        rank: base0.tail_rank,
-        rank_y,
-        node_y: np.y,
-        node_height: base0.tail_size.height_pt,
-        min_rank: bounds.min_rank,
-        max_rank: bounds.max_rank,
-      },
-    )
+  let sizey = self_edge_rank_spacing({
+    rank: base0.tail_rank,
+    rank_y,
+    node_y: np.y,
+    node_height: base0.tail_size.height_pt,
+    min_rank: bounds.min_rank,
+    max_rank: bounds.max_rank,
+  })
   let sizey_param = sizey / 2.0
   let same_side = tail_side == head_side
   let tail_tb = (tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
-  let go_right =
-    (!tail_defined && !head_defined) ||
-      (
-        (tail_side & PORT_SIDE_LEFT) == 0 &&
-          (head_side & PORT_SIDE_LEFT) == 0 &&
-          (!same_side || !tail_tb)
-      )
-  let uses_left =
-    (tail_side & PORT_SIDE_LEFT) != 0 || (head_side & PORT_SIDE_LEFT) != 0
-  let uses_right =
-    (tail_side & PORT_SIDE_RIGHT) != 0 || (head_side & PORT_SIDE_RIGHT) != 0
+  let go_right = (!tail_defined && !head_defined) ||
+    (
+      (tail_side & PORT_SIDE_LEFT) == 0 &&
+      (head_side & PORT_SIDE_LEFT) == 0 &&
+      (!same_side || !tail_tb)
+    )
+  let uses_left = (tail_side & PORT_SIDE_LEFT) != 0 ||
+    (head_side & PORT_SIDE_LEFT) != 0
+  let uses_right = (tail_side & PORT_SIDE_RIGHT) != 0 ||
+    (head_side & PORT_SIDE_RIGHT) != 0
   if go_right {
     let point_pair = convert_sides_to_points(tail_side, head_side)
-    return self_edge_routes_horizontal_side(
-      {
+    return self_edge_routes_horizontal_side({
+      edges,
+      base0,
+      nodesep_pt,
+      sizey_param,
+      np,
+      tp,
+      hp,
+      point_pair,
+      flip_pair_a: 32,
+      flip_pair_b: 65,
+      side_width: base0.tail_size.right_pt,
+      to_right: true,
+      self_edge_label_width_fn,
+    })
+  }
+  if uses_left {
+    if uses_right {
+      return self_edge_routes_top({
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        point_pair: convert_sides_to_points(tail_side, head_side),
+        self_edge_label_height_fn,
+      })
+    } else {
+      let point_pair = convert_sides_to_points(tail_side, head_side)
+      return self_edge_routes_horizontal_side({
         edges,
         base0,
         nodesep_pt,
@@ -469,80 +468,41 @@ fn build_self_edge_routes(
         tp,
         hp,
         point_pair,
-        flip_pair_a: 32,
-        flip_pair_b: 65,
-        side_width: base0.tail_size.right_pt,
-        to_right: true,
+        flip_pair_a: 12,
+        flip_pair_b: 67,
+        side_width: base0.tail_size.left_pt,
+        to_right: false,
         self_edge_label_width_fn,
-      },
-    )
-  }
-  if uses_left {
-    if uses_right {
-      return self_edge_routes_top(
-        {
-          edges,
-          base0,
-          nodesep_pt,
-          sizey_param,
-          point_pair: convert_sides_to_points(tail_side, head_side),
-          self_edge_label_height_fn,
-        },
-      )
-    } else {
-      let point_pair = convert_sides_to_points(tail_side, head_side)
-      return self_edge_routes_horizontal_side(
-        {
-          edges,
-          base0,
-          nodesep_pt,
-          sizey_param,
-          np,
-          tp,
-          hp,
-          point_pair,
-          flip_pair_a: 12,
-          flip_pair_b: 67,
-          side_width: base0.tail_size.left_pt,
-          to_right: false,
-          self_edge_label_width_fn,
-        },
-      )
+      })
     }
   }
   let point_pair = convert_sides_to_points(tail_side, head_side)
   if (tail_side & PORT_SIDE_TOP) != 0 {
-    return self_edge_routes_top(
-      {
-        edges,
-        base0,
-        nodesep_pt,
-        sizey_param,
-        point_pair,
-        self_edge_label_height_fn,
-      },
-    )
-  }
-  if (tail_side & PORT_SIDE_BOTTOM) != 0 {
-    return self_edge_routes_bottom(
-      {
-        edges,
-        base0,
-        nodesep_pt,
-        sizey_param,
-        point_pair,
-        self_edge_label_height_fn,
-      },
-    )
-  }
-  self_edge_routes_top(
-    {
+    return self_edge_routes_top({
       edges,
       base0,
       nodesep_pt,
       sizey_param,
       point_pair,
       self_edge_label_height_fn,
-    },
-  )
+    })
+  }
+  if (tail_side & PORT_SIDE_BOTTOM) != 0 {
+    return self_edge_routes_bottom({
+      edges,
+      base0,
+      nodesep_pt,
+      sizey_param,
+      point_pair,
+      self_edge_label_height_fn,
+    })
+  }
+  self_edge_routes_top({
+    edges,
+    base0,
+    nodesep_pt,
+    sizey_param,
+    point_pair,
+    self_edge_label_height_fn,
+  })
 }

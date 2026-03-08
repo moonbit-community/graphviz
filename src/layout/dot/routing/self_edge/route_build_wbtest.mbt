@@ -1,5 +1,9 @@
 ///|
-fn assert_close(actual : Double, expected : Double, eps? : Double = 0.000001) -> Unit raise {
+fn assert_close(
+  actual : Double,
+  expected : Double,
+  eps? : Double = 0.000001,
+) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
   }
@@ -93,27 +97,23 @@ test "build_self_edge_routes sends implicit self-edge loops to the right" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("n")
   let edge = graph.edge(node, node)
-  let base =
-    build_self_edge_base(
-      edge,
-      @edge_spline.point(8.0, 5.0),
-      @edge_spline.point(8.0, -5.0),
-      0,
-      0,
-    )
+  let base = build_self_edge_base(
+    edge,
+    @edge_spline.point(8.0, 5.0),
+    @edge_spline.point(8.0, -5.0),
+    0,
+    0,
+  )
   let rank_y : Map[Int, Double] = { 0: 0.0 }
 
-  let routes =
-    build_self_edge_routes(
-      {
-        edges: [edge],
-        bases: [base],
-        nodesep_pt: 12.0,
-        rank_y,
-        self_edge_label_height_fn: (_edge, _rankdir) => 0.0,
-        self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
-      },
-    )
+  let routes = build_self_edge_routes({
+    edges: [edge],
+    bases: [base],
+    nodesep_pt: 12.0,
+    rank_y,
+    self_edge_label_height_fn: (_edge, _rankdir) => 0.0,
+    self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
+  })
 
   assert_eq(routes.length(), 1)
   let route = routes[0]
@@ -130,30 +130,29 @@ test "build_self_edge_routes keeps top-port labels above the node" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("n")
   let edge = graph.edge(node, node)
-  let top_port = Some(@cgraph.Port::{ name: None, compass: Some(@cgraph.Compass::N) })
-  let base =
-    build_self_edge_base(
-      edge,
-      @edge_spline.point(-6.0, 10.0),
-      @edge_spline.point(6.0, 10.0),
-      PORT_SIDE_TOP,
-      PORT_SIDE_TOP,
-      tail_port=top_port,
-      head_port=top_port,
-    )
+  let top_port = Some(@cgraph.Port::{
+    name: None,
+    compass: Some(@cgraph.Compass::N),
+  })
+  let base = build_self_edge_base(
+    edge,
+    @edge_spline.point(-6.0, 10.0),
+    @edge_spline.point(6.0, 10.0),
+    PORT_SIDE_TOP,
+    PORT_SIDE_TOP,
+    tail_port=top_port,
+    head_port=top_port,
+  )
   let rank_y : Map[Int, Double] = { 0: 0.0 }
 
-  let routes =
-    build_self_edge_routes(
-      {
-        edges: [edge],
-        bases: [base],
-        nodesep_pt: 12.0,
-        rank_y,
-        self_edge_label_height_fn: (_edge, _rankdir) => 8.0,
-        self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
-      },
-    )
+  let routes = build_self_edge_routes({
+    edges: [edge],
+    bases: [base],
+    nodesep_pt: 12.0,
+    rank_y,
+    self_edge_label_height_fn: (_edge, _rankdir) => 8.0,
+    self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
+  })
 
   assert_eq(routes.length(), 1)
   let route = routes[0]

@@ -9,20 +9,31 @@ type SelfEdgeRoute = @routing.SelfEdgeRoute
 
 ///|
 fn min_double(a : Double, b : Double) -> Double {
-  if a < b { a } else { b }
+  if a < b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {
-  if a > b { a } else { b }
+  if a > b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
 const PORT_SIDE_BOTTOM : Int = 1
+
 ///|
 const PORT_SIDE_RIGHT : Int = 2
+
 ///|
 const PORT_SIDE_TOP : Int = 4
+
 ///|
 const PORT_SIDE_LEFT : Int = 8
 
@@ -45,8 +56,7 @@ fn self_edge_right_space_for(
   let head_port = edge.head_port()
   let tail_explicit = @edge_identity.port_is_explicit(tail_port)
   let head_explicit = @edge_identity.port_is_explicit(head_port)
-  let label_width =
-    (input.self_edge_label_width_for)(edge, input.rankdir)
+  let label_width = (input.self_edge_label_width_for)(edge, input.rankdir)
   if !tail_explicit && !head_explicit {
     return input.self_edge_size_pt + label_width
   }
@@ -94,18 +104,16 @@ pub fn apply_self_edge_right_space(
   for name, size in input.sizes {
     match extra_right.get(name) {
       Some(extra) =>
-        adjusted[name] =
-          @node_primitives.vnode_size_from_widths_with_h(
-            size.left_pt,
-            size.right_pt + extra,
-            size.height_pt,
-          )
+        adjusted[name] = @node_primitives.vnode_size_from_widths_with_h(
+          size.left_pt,
+          size.right_pt + extra,
+          size.height_pt,
+        )
       None => adjusted[name] = size
     }
   }
   adjusted
 }
-
 
 ///|
 /// Graphviz parity: self-edge routing groups reuse edge_parallel_key classes.
@@ -155,9 +163,7 @@ priv struct EnsureSelfEdgeRoutesInput {
 }
 
 ///|
-fn ensure_self_edge_routes(
-  input : EnsureSelfEdgeRoutesInput,
-) -> Unit {
+fn ensure_self_edge_routes(input : EnsureSelfEdgeRoutesInput) -> Unit {
   let edge = input.edge
   let self_edge_groups = input.self_edge_groups
   let base_cache = input.base_cache
@@ -182,17 +188,14 @@ fn ensure_self_edge_routes(
         }
         group_bases.push(gbase)
       }
-      let group_routes =
-        build_self_edge_routes(
-          {
-            edges: group_edges,
-            bases: group_bases,
-            nodesep_pt,
-            rank_y,
-            self_edge_label_height_fn,
-            self_edge_label_width_fn,
-          },
-        )
+      let group_routes = build_self_edge_routes({
+        edges: group_edges,
+        bases: group_bases,
+        nodesep_pt,
+        rank_y,
+        self_edge_label_height_fn,
+        self_edge_label_width_fn,
+      })
       for i in 0..<group_edges.length() {
         self_edge_routes[group_edges[i].id()] = group_routes[i]
       }
@@ -230,17 +233,15 @@ pub fn self_edge_route_for_edge(
   if edge.tail().name() != edge.head().name() {
     return None
   }
-  ensure_self_edge_routes(
-    {
-      edge,
-      self_edge_groups,
-      base_cache,
-      nodesep_pt,
-      rank_y,
-      self_edge_routes,
-      self_edge_label_height_fn,
-      self_edge_label_width_fn,
-    },
-  )
+  ensure_self_edge_routes({
+    edge,
+    self_edge_groups,
+    base_cache,
+    nodesep_pt,
+    rank_y,
+    self_edge_routes,
+    self_edge_label_height_fn,
+    self_edge_label_width_fn,
+  })
   self_edge_routes.get(edge.id())
 }

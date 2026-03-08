@@ -48,6 +48,9 @@ my_module
   the package source directory defines the package name, not the file name.
   Imports refer to module + package paths, NEVER to file names.
 
+- **Manifest normalization by tooling**:
+  In practice, MoonBit tooling may normalize package manifest filenames during formatting. In particular, `moon fmt` may rewrite a legacy `moon.pkg.json` file into `moon.pkg` while preserving package semantics. Treat that rename as expected formatter output after verifying the manifest content is still equivalent; do not mistake it for unrelated worktree drift by default.
+
 - **Files**:
   A `.mbt` file is just a chunk of source code inside a package.
   File names do NOT create modules, packages, or namespaces.
@@ -122,7 +125,7 @@ my_module
 - `moon check --target all` - Type check for all backends
 - `moon add package` - Add dependency
 - `moon remove package` - Remove dependency
-- `moon fmt` - Format code - should be run periodically - note that the files may be rewritten
+- `moon fmt` - Format code - should be run periodically - note that the files may be rewritten, including package manifest normalization such as `moon.pkg.json` -> `moon.pkg` when the tool canonicalizes the package file name
 
 ### Test Commands
 
