@@ -10,10 +10,6 @@
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric"
   ],
-  "wbtest-import": [
-    "moonbitlang/core/json",
-    "moonbitlang/x/fs"
-  ],
   "targets": {
     "libm_native.mbt": [
       "native"

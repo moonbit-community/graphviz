@@ -10,10 +10,5 @@
     "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
     "moonbit-community/graphviz/layout/dot/numeric"
-  ],
-  "wbtest-import": [
-    "moonbitlang/core/json",
-    "moonbitlang/core/math",
-    "moonbitlang/x/fs"
   ]
 }
