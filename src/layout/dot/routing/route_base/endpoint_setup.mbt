@@ -22,18 +22,17 @@ fn adjusted_self_edge_compass_clip_size(
             let penwidth = sameport_node_penwidth_pt(node)
             if penwidth > 0.0 {
               let pad = penwidth * 0.33055
-              let width_pt =
-                match compass {
-                  @cgraph.Compass::NE
-                  | @cgraph.Compass::NW
-                  | @cgraph.Compass::SE
-                  | @cgraph.Compass::SW =>
-                    max_double(
-                      size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
-                      size.height_pt,
-                    )
-                  _ => size.width_pt
-                }
+              let width_pt = match compass {
+                @cgraph.Compass::NE
+                | @cgraph.Compass::NW
+                | @cgraph.Compass::SE
+                | @cgraph.Compass::SW =>
+                  max_double(
+                    size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
+                    size.height_pt,
+                  )
+                _ => size.width_pt
+              }
               @node_primitives.node_size_from_points(
                 width_pt,
                 size.height_pt + pad * 2.0,
@@ -62,9 +61,7 @@ priv struct CompassClipPointInput {
 }
 
 ///|
-fn compass_clip_point_if_needed(
-  input : CompassClipPointInput,
-) -> @geom.Point? {
+fn compass_clip_point_if_needed(input : CompassClipPointInput) -> @geom.Point? {
   if input.self_edge || (input.is_record_shape)(input.node) {
     return None
   }
@@ -137,15 +134,18 @@ priv struct RouteEndpointPortSideInput {
 }
 
 ///|
-fn port_side_for_route_endpoint(
-  input : RouteEndpointPortSideInput,
-) -> Int {
+fn port_side_for_route_endpoint(input : RouteEndpointPortSideInput) -> Int {
   if input.sameport_anchor is Some(_) {
     (input.port_side_mask_from_anchor)(input.anchor_base, input.pos, input.size)
   } else if input.dynamic_anchor.is_dynamic {
     input.dynamic_anchor.side
   } else {
-    (input.port_side_for_edge)(input.port, input.port_rect, input.pos, input.size)
+    (input.port_side_for_edge)(
+      input.port,
+      input.port_rect,
+      input.pos,
+      input.size,
+    )
   }
 }
 
@@ -187,19 +187,17 @@ fn clustered_edge_arrow_len_override(
   if input.tail_cluster_bbox is None && input.head_cluster_bbox is None {
     return None
   }
-  let arrow_lengths =
-    @edge_spline.arrow_length_for_edge(
-      input.edge,
-      input.include_tail,
-      input.include_head,
-      None,
-    )
-  let base =
-    if arrow_lengths.tail > arrow_lengths.head {
-      arrow_lengths.tail
-    } else {
-      arrow_lengths.head
-    }
+  let arrow_lengths = @edge_spline.arrow_length_for_edge(
+    input.edge,
+    input.include_tail,
+    input.include_head,
+    None,
+  )
+  let base = if arrow_lengths.tail > arrow_lengths.head {
+    arrow_lengths.tail
+  } else {
+    arrow_lengths.head
+  }
   let span = @edge_spline.point_dist(input.tail_clip, input.head_clip)
   let max_len = if span < 12.0 { span * 0.25 } else { span }
   if max_len > 0.0 && max_len < base {
@@ -286,7 +284,10 @@ fn should_apply_flat_bottom_dirboth_x_nudge(
       (input.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
       (input.tail_port_side & PORT_SIDE_TOP) == 0 &&
       (input.head_port_side & PORT_SIDE_TOP) == 0 &&
-      (input.layout_rankdir == RankDir::TB || input.layout_rankdir == RankDir::BT)
+      (
+        input.layout_rankdir == RankDir::TB ||
+        input.layout_rankdir == RankDir::BT
+      )
     _ => false
   }
 }

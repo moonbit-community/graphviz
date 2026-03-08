@@ -1,3 +1,4 @@
+///|
 fn clip_to_ellipse(
   center : @geom.Point,
   size : NodeSize,
@@ -13,7 +14,7 @@ fn clip_to_ellipse(
   if rx <= 0.0 || ry <= 0.0 {
     return center
   }
-  let denom = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+  let denom = dx * dx / (rx * rx) + dy * dy / (ry * ry)
   if denom <= 0.0 {
     return center
   }
@@ -82,10 +83,7 @@ fn clip_to_bbox(
       return
     }
     match best {
-      Some(value) =>
-        if t < value {
-          best = Some(t)
-        }
+      Some(value) => if t < value { best = Some(t) }
       None => best = Some(t)
     }
   }
@@ -110,7 +108,8 @@ fn clip_polygon_attr_int(
   fallback : Int,
 ) -> Int {
   match node.get_attr(key) {
-    Some(value) => @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
+    Some(value) =>
+      @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
     None => fallback
   }
 }
@@ -141,7 +140,8 @@ fn clip_polygon_shape_params(
   shape : String,
 ) -> ClipPolygonShapeParams? {
   match shape {
-    "triangle" => Some({ sides: 3, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "triangle" =>
+      Some({ sides: 3, orientation: 0.0, distortion: 0.0, skew: 0.0 })
     "invtriangle" =>
       Some({ sides: 3, orientation: 180.0, distortion: 0.0, skew: 0.0 })
     "trapezium" =>
@@ -151,12 +151,16 @@ fn clip_polygon_shape_params(
     "parallelogram" =>
       Some({ sides: 4, orientation: 0.0, distortion: 0.0, skew: 0.6 })
     "egg" => Some({ sides: 120, orientation: 0.0, distortion: -0.3, skew: 0.0 })
-    "house" => Some({ sides: 5, orientation: 0.0, distortion: -0.64, skew: 0.0 })
+    "house" =>
+      Some({ sides: 5, orientation: 0.0, distortion: -0.64, skew: 0.0 })
     "invhouse" =>
       Some({ sides: 5, orientation: 180.0, distortion: -0.64, skew: 0.0 })
-    "pentagon" => Some({ sides: 5, orientation: 0.0, distortion: 0.0, skew: 0.0 })
-    "hexagon" => Some({ sides: 6, orientation: 0.0, distortion: 0.0, skew: 0.0 })
-    "septagon" => Some({ sides: 7, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "pentagon" =>
+      Some({ sides: 5, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "hexagon" =>
+      Some({ sides: 6, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "septagon" =>
+      Some({ sides: 7, orientation: 0.0, distortion: 0.0, skew: 0.0 })
     "octagon" | "doubleoctagon" | "tripleoctagon" =>
       Some({ sides: 8, orientation: 0.0, distortion: 0.0, skew: 0.0 })
     "polygon" => {
@@ -167,7 +171,8 @@ fn clip_polygon_shape_params(
       let orientation = clip_polygon_attr_double(node, "orientation", 0.0)
       let distortion = clip_polygon_attr_double(node, "distortion", 0.0)
       let skew = clip_polygon_attr_double(node, "skew", 0.0)
-      if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+      if sides <= 2 &&
+        (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
         sides = 120
       }
       if sides >= 3 {
@@ -267,9 +272,7 @@ priv struct PolygonShapeClipInput {
 }
 
 ///|
-fn clip_to_polygon_shape(
-  input : PolygonShapeClipInput,
-) -> @geom.Point {
+fn clip_to_polygon_shape(input : PolygonShapeClipInput) -> @geom.Point {
   let center = input.center
   let size = input.size
   let target = input.target
@@ -277,16 +280,13 @@ fn clip_to_polygon_shape(
   let orientation_deg = input.orientation_deg
   let distortion = input.distortion
   let skew = input.skew
-  let vertices =
-    clip_polygon_for_shape(
-      {
-        size,
-        sides,
-        orientation_deg,
-        distortion,
-        skew,
-      },
-    )
+  let vertices = clip_polygon_for_shape({
+    size,
+    sides,
+    orientation_deg,
+    distortion,
+    skew,
+  })
   if vertices.length() < 3 {
     return @node_primitives.clip_to_rect(center, size, target)
   }
@@ -345,17 +345,15 @@ fn clip_to_node_shape(
     _ =>
       match clip_polygon_shape_params(node, shape) {
         Some(params) =>
-          clip_to_polygon_shape(
-            {
-              center,
-              size,
-              target,
-              sides: params.sides,
-              orientation_deg: params.orientation,
-              distortion: params.distortion,
-              skew: params.skew,
-            },
-          )
+          clip_to_polygon_shape({
+            center,
+            size,
+            target,
+            sides: params.sides,
+            orientation_deg: params.orientation,
+            distortion: params.distortion,
+            skew: params.skew,
+          })
         None => @node_primitives.clip_to_rect(center, size, target)
       }
   }

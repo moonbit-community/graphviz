@@ -1,3 +1,4 @@
+///|
 /// Graphviz parity: samehead/sametail group collection aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports/sameedge).
 /// Do not change behavior without updating fixtures/tests.
@@ -66,11 +67,9 @@ fn assign_sameport_override(
   edge : @cgraph.Edge,
   anchor : @geom.Point,
 ) -> Unit {
-  for_each_sameport_class_member_edge_id(
-    merge_classes,
-    edge,
-    (member_edge_id) => overrides[member_edge_id] = anchor,
-  )
+  for_each_sameport_class_member_edge_id(merge_classes, edge, member_edge_id => {
+    overrides[member_edge_id] = anchor
+  })
 }
 
 ///|
@@ -80,11 +79,9 @@ fn assign_sameport_group_size(
   edge : @cgraph.Edge,
   group_size : Int,
 ) -> Unit {
-  for_each_sameport_class_member_edge_id(
-    merge_classes,
-    edge,
-    (member_edge_id) => group_sizes[member_edge_id] = group_size,
-  )
+  for_each_sameport_class_member_edge_id(merge_classes, edge, member_edge_id => {
+    group_sizes[member_edge_id] = group_size
+  })
 }
 
 ///|
@@ -130,9 +127,7 @@ priv struct SameportAnchorInput {
 }
 
 ///|
-fn sameport_anchor_for_group(
-  input : SameportAnchorInput,
-) -> @geom.Point? {
+fn sameport_anchor_for_group(input : SameportAnchorInput) -> @geom.Point? {
   let node = input.node
   let group_edges = input.group_edges
   let head_group = input.head_group
@@ -146,50 +141,50 @@ fn sameport_anchor_for_group(
     Some(value) => value
     None => return None
   }
-  let node_size =
-    size_for_name_or_node(
-      sizes,
-      node_name,
-      node,
-      node_size_for_missing,
-    )
-  let base_clip_size =
-    match layout_rankdir {
-      RankDir::LR | RankDir::RL =>
-        @node_primitives.node_size_from_points(node_size.height_pt, node_size.width_pt)
-      RankDir::TB | RankDir::BT => node_size
-    }
-  let clip_size =
-    if group_edges.length() > 3 {
-      base_clip_size
-    } else {
-      let clip_size =
-        if sameport_shape_has_outline(node) {
-          let penwidth = sameport_node_penwidth_pt(node)
-          if penwidth > 0.0 {
-            @node_primitives.node_size_from_points(
-              base_clip_size.width_pt + penwidth / 2.0,
-              base_clip_size.height_pt + penwidth / 2.0,
-            )
-          } else {
-            base_clip_size
-          }
-        } else {
-          base_clip_size
-        }
-      if group_edges.length() > 2 {
+  let node_size = size_for_name_or_node(
+    sizes, node_name, node, node_size_for_missing,
+  )
+  let base_clip_size = match layout_rankdir {
+    RankDir::LR | RankDir::RL =>
+      @node_primitives.node_size_from_points(
+        node_size.height_pt,
+        node_size.width_pt,
+      )
+    RankDir::TB | RankDir::BT => node_size
+  }
+  let clip_size = if group_edges.length() > 3 {
+    base_clip_size
+  } else {
+    let clip_size = if sameport_shape_has_outline(node) {
+      let penwidth = sameport_node_penwidth_pt(node)
+      if penwidth > 0.0 {
         @node_primitives.node_size_from_points(
-          clip_size.width_pt + 2.0,
-          clip_size.height_pt + 2.0,
+          base_clip_size.width_pt + penwidth / 2.0,
+          base_clip_size.height_pt + penwidth / 2.0,
         )
       } else {
-        clip_size
+        base_clip_size
       }
+    } else {
+      base_clip_size
     }
+    if group_edges.length() > 2 {
+      @node_primitives.node_size_from_points(
+        clip_size.width_pt + 2.0,
+        clip_size.height_pt + 2.0,
+      )
+    } else {
+      clip_size
+    }
+  }
   let mut sum_x = 0.0
   let mut sum_y = 0.0
   for edge in group_edges {
-    let peer_name = if head_group { edge.tail().name() } else { edge.head().name() }
+    let peer_name = if head_group {
+      edge.tail().name()
+    } else {
+      edge.head().name()
+    }
     let peer_pos = match positions.get(peer_name) {
       Some(value) => value
       None => continue
@@ -213,27 +208,24 @@ fn sameport_anchor_for_group(
     clip_size.left_pt + clip_size.right_pt,
     clip_size.height_pt + ranksep_pt,
   )
-  let target = @edge_spline.point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
+  let target = @edge_spline.point(
+    node_pos.x + dir_x * far,
+    node_pos.y + dir_y * far,
+  )
   let clipped0 = clip_to_node_shape(node, node_pos, clip_size, target)
-  let clipped =
-    if group_edges.length() > 3 {
-      if Double::abs(dir_x) <= Double::abs(dir_y) * 0.25 {
-        @edge_spline.point(clipped0.x + dir_x, clipped0.y + dir_y)
-      } else {
-        clipped0
-      }
+  let clipped = if group_edges.length() > 3 {
+    if Double::abs(dir_x) <= Double::abs(dir_y) * 0.25 {
+      @edge_spline.point(clipped0.x + dir_x, clipped0.y + dir_y)
     } else {
-      let sameport_nudge =
-        if group_edges.length() > 2 {
-          0.5
-        } else {
-          1.0
-        }
-      @edge_spline.point(
-        clipped0.x + dir_x * sameport_nudge,
-        clipped0.y + dir_y * sameport_nudge,
-      )
+      clipped0
     }
+  } else {
+    let sameport_nudge = if group_edges.length() > 2 { 0.5 } else { 1.0 }
+    @edge_spline.point(
+      clipped0.x + dir_x * sameport_nudge,
+      clipped0.y + dir_y * sameport_nudge,
+    )
+  }
   // Graphviz sameport stores integer offset from node center.
   let rel_x = (clipped.x - node_pos.x).round()
   let rel_y = (clipped.y - node_pos.y).round()
@@ -305,21 +297,21 @@ priv struct RouteBaseSwapEndsInput {
 }
 
 ///|
-fn edge_swap_ends_for_route_base(
-  input : RouteBaseSwapEndsInput,
-) -> Bool {
+fn edge_swap_ends_for_route_base(input : RouteBaseSwapEndsInput) -> Bool {
   let edge = input.edge
   let orig_tail_name = input.orig_tail_name
   let orig_head_name = input.orig_head_name
   let ranks = input.ranks
   let order_index = input.order_index
   let node_local_cluster_key_fn = input.node_local_cluster_key_fn
-  let swap_ends_raw =
-    @edge_ops.edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+  let swap_ends_raw = @edge_ops.edge_swap_ends(
+    orig_tail_name, orig_head_name, ranks, order_index,
+  )
   let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
   let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
   if tail_rank_for_swap == head_rank_for_swap &&
-    node_local_cluster_key_fn(edge.tail()) != node_local_cluster_key_fn(edge.head()) {
+    node_local_cluster_key_fn(edge.tail()) !=
+    node_local_cluster_key_fn(edge.head()) {
     false
   } else {
     swap_ends_raw
@@ -334,16 +326,24 @@ fn edge_sameport_orientation_info(
 ) -> EdgeSameportOrientationInfo {
   let samehead_anchor = sameport_overrides.samehead_anchors.get(edge_id)
   let sametail_anchor = sameport_overrides.sametail_anchors.get(edge_id)
-  let samehead_group_size =
-    sameport_overrides.samehead_group_sizes.get(edge_id).unwrap_or_default()
-  let sametail_group_size =
-    sameport_overrides.sametail_group_sizes.get(edge_id).unwrap_or_default()
+  let samehead_group_size = sameport_overrides.samehead_group_sizes
+    .get(edge_id)
+    .unwrap_or_default()
+  let sametail_group_size = sameport_overrides.sametail_group_sizes
+    .get(edge_id)
+    .unwrap_or_default()
   let tail_anchor = if swap_ends { samehead_anchor } else { sametail_anchor }
   let head_anchor = if swap_ends { sametail_anchor } else { samehead_anchor }
-  let tail_group_size =
-    if swap_ends { samehead_group_size } else { sametail_group_size }
-  let head_group_size =
-    if swap_ends { sametail_group_size } else { samehead_group_size }
+  let tail_group_size = if swap_ends {
+    samehead_group_size
+  } else {
+    sametail_group_size
+  }
+  let head_group_size = if swap_ends {
+    sametail_group_size
+  } else {
+    samehead_group_size
+  }
   { tail_anchor, head_anchor, tail_group_size, head_group_size }
 }
 
@@ -385,10 +385,13 @@ fn apply_sameport_group_overrides(
     if group_edges.length() <= 1 {
       continue
     }
-    let anchor_node =
-      if head_group { group_edges[0].head() } else { group_edges[0].tail() }
-    match sameport_anchor_for_group(
-      {
+    let anchor_node = if head_group {
+      group_edges[0].head()
+    } else {
+      group_edges[0].tail()
+    }
+    match
+      sameport_anchor_for_group({
         node: anchor_node,
         group_edges,
         head_group,
@@ -397,8 +400,7 @@ fn apply_sameport_group_overrides(
         node_size_for_missing,
         layout_rankdir,
         ranksep_pt,
-      },
-    ) {
+      }) {
       Some(anchor) =>
         for edge in group_edges {
           assign_sameport_override(overrides, merge_classes, edge, anchor)
@@ -467,38 +469,34 @@ fn collect_sameport_overrides(
   }
   let samehead_overrides : Map[Int, @geom.Point] = Map::new()
   let samehead_group_sizes : Map[Int, Int] = Map::new()
-  apply_sameport_group_overrides(
-    {
-      groups: samehead_groups,
-      group_order: samehead_group_order,
-      head_group: true,
-      overrides: samehead_overrides,
-      group_sizes: samehead_group_sizes,
-      merge_classes,
-      positions,
-      sizes,
-      node_size_for_missing,
-      layout_rankdir,
-      ranksep_pt,
-    },
-  )
+  apply_sameport_group_overrides({
+    groups: samehead_groups,
+    group_order: samehead_group_order,
+    head_group: true,
+    overrides: samehead_overrides,
+    group_sizes: samehead_group_sizes,
+    merge_classes,
+    positions,
+    sizes,
+    node_size_for_missing,
+    layout_rankdir,
+    ranksep_pt,
+  })
   let sametail_overrides : Map[Int, @geom.Point] = Map::new()
   let sametail_group_sizes : Map[Int, Int] = Map::new()
-  apply_sameport_group_overrides(
-    {
-      groups: sametail_groups,
-      group_order: sametail_group_order,
-      head_group: false,
-      overrides: sametail_overrides,
-      group_sizes: sametail_group_sizes,
-      merge_classes,
-      positions,
-      sizes,
-      node_size_for_missing,
-      layout_rankdir,
-      ranksep_pt,
-    },
-  )
+  apply_sameport_group_overrides({
+    groups: sametail_groups,
+    group_order: sametail_group_order,
+    head_group: false,
+    overrides: sametail_overrides,
+    group_sizes: sametail_group_sizes,
+    merge_classes,
+    positions,
+    sizes,
+    node_size_for_missing,
+    layout_rankdir,
+    ranksep_pt,
+  })
   {
     samehead_anchors: samehead_overrides,
     sametail_anchors: sametail_overrides,
