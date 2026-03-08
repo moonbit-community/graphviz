@@ -1,10 +1,9 @@
 ///|
 /// Ordering owner package: Stage C clustered/non-clustered dispatch adapts rank
 /// outputs into ordering-owned pipeline context and final ordering results so
-/// the owner-side `rank_stage` package keeps the Stage B/C boundary entry.
+/// the owner-side `rank_stage` package now keeps both the Stage B entry and the Stage C dispatch pipeline.
 type RankDir = @rankdir.RankDir
 type NodeSize = @node_primitives.NodeSize
-type ClusterMetadata = @ordering.DotClusterMetadata
 
 ///|
 /// Graphviz parity: owner-side ordering pipeline input keeps rank/order-context
@@ -39,7 +38,6 @@ priv struct OrderingDispatchOutput {
 type OrderingPipelineContext = @ordering.OrderingPipelineContext
 
 ///|
-type OrderingResult = @ordering.OrderingResult
 
 ///|
 /// Graphviz parity: ordering pipeline output keeps cluster metadata and

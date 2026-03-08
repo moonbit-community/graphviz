@@ -233,7 +233,7 @@ Clusters alter ordering and positioning constraints globally. This metadata is r
 
 Entry:
 
-- `compute_ordering_pipeline` in `src/layout/dot/ordering/integration/pipeline.mbt`
+- `compute_ordering_pipeline` in `src/layout/dot/ordering/rank_stage/ordering_pipeline.mbt`
 
 Supporting files:
 

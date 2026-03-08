@@ -79,7 +79,7 @@ pub fn compute_dot_rank_stage(
       ),
     )
   let ordering_pipeline_output =
-    @integration.compute_ordering_pipeline(
+    compute_ordering_pipeline(
       {
         graph,
         nodes: prep.nodes,
