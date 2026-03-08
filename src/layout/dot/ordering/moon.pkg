@@ -17,8 +17,4 @@ import {
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot/input_stage",
-  "moonbit-community/graphviz/layout/dot/ordering/rank_stage",
-  "moonbitlang/core/json",
-  "moonbitlang/x/fs",
-  "moonbitlang/x/sys",
 } for "wbtest"
