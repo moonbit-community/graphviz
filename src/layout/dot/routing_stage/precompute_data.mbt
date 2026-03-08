@@ -51,7 +51,7 @@ fn build_routing_precompute_data(
       input.label_ports_map,
     )
   let pathplan_sizes =
-    @port_bridge.apply_self_edge_right_space(
+    @ports.apply_self_edge_right_space(
       prep.nodes,
       prep.edges,
       input.sizes,

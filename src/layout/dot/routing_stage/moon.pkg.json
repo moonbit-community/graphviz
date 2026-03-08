@@ -16,7 +16,7 @@
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/node_geometry",
-    "moonbit-community/graphviz/layout/dot/port_bridge",
+    "moonbit-community/graphviz/layout/dot/positioning/ports",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",

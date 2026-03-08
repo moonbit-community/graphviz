@@ -316,7 +316,7 @@ pub fn compute_ordering_stage(
     )
   let build_port_sample_bundle =
     (edges, edge_tail, edge_head) =>
-      @port_bridge.build_edge_port_sample_bundle(
+      @ports.build_edge_port_sample_bundle(
         input.nodes,
         edges,
         edge_tail,

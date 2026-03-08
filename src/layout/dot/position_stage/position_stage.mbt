@@ -101,7 +101,7 @@ fn build_x_with_flat_labels(
     )
   let build_x_base_sizes : () -> Map[String, NodeSize] =
     () =>
-      @port_bridge.apply_self_edge_right_space(
+      @ports.apply_self_edge_right_space(
         pipeline.prep.nodes,
         pipeline.prep.edges,
         pipeline.prep.sizes,
@@ -112,7 +112,7 @@ fn build_x_with_flat_labels(
     (x_order_sizes : Map[String, NodeSize]) => {
       let build_port_sample_bundle =
         (edges, edge_tail, edge_head) =>
-          @port_bridge.build_edge_port_sample_bundle(
+          @ports.build_edge_port_sample_bundle(
             pipeline.prep.nodes,
             edges,
             edge_tail,
@@ -339,7 +339,7 @@ fn compute_x_positions_for_stage(
 ) -> Map[String, Double] {
   let port_offsets =
     if has_port_edges {
-      @port_bridge.port_offsets_for_nodes(input.nodes, input.output_sizes)
+      @ports.port_offsets_for_nodes(input.nodes, input.output_sizes)
     } else {
       Map::new()
     }
@@ -353,7 +353,7 @@ fn compute_x_positions_for_stage(
       @x_constraints.segment_slack_minlen(
         segment,
         (node_name, port) =>
-          @port_bridge.edge_port_offset(
+          @ports.edge_port_offset(
             node_name,
             port,
             port_offsets,

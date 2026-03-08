@@ -1,6 +1,6 @@
 ///|
-/// Shared port-geometry bridge logic used across ordering, positioning, and
-/// routing stage boundaries.
+/// Positioning-owned port geometry and self-edge spacing logic shared across
+/// ordering, positioning, and routing stage boundaries.
 
 type RankDir = @rankdir.RankDir
 type RecordOrientation = @shared.RecordOrientation
