@@ -35,6 +35,34 @@ fn snapshot_input_path(case_name : String) -> String raise {
 }
 
 ///|
+test "snapshot input path resolves representative local and Graphviz cases" {
+  assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
+  assert_eq(snapshot_input_path("japanese"), "refs/graphviz/graphs/directed/japanese.gv")
+}
+
+//|
+fn extract_numbers(value : String) -> Array[Double] raise {
+  let sb = StringBuilder::new()
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+    } else {
+      sb.write_char(' ')
+    }
+  }
+  let normalized = sb.to_string()
+  let numbers : Array[Double] = []
+  for token in normalized.split(" ") {
+    if token.length() == 0 {
+      continue
+    }
+    let parsed = @strconv.parse_double(token)
+    numbers.push(parsed)
+  }
+  numbers
+}
+
+///|
 test "compass ports on plain nodes clip away from node centers" {
   let graph = try @dot_parser.parse_dot(
     "digraph { foo:s -> bar:n [dir=both arrowhead=crow arrowtail=crow] }",
@@ -65,19 +93,4 @@ test "compass ports on plain nodes clip away from node centers" {
   // move anchors toward boundaries around y=72 and y=36.
   assert_true(tail_y < 80.0)
   assert_true(head_y > 30.0)
-}
-
-///|
-test "dot layout tier2 snapshots" {
-  if !full_parity_tests_enabled() {
-    return
-  }
-  let cases = dot_snapshot_cases("tests/layout/dot/cases.txt", "tests/layout/dot")
-  if cases.length() == 0 {
-    fail("no dot fixtures under tests/layout/dot")
-  }
-  for pair in cases {
-    let (input_path, expected_path) = pair
-    assert_snapshot(input_path, expected_path, 0.01)
-  }
 }

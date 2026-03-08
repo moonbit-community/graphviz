@@ -24,9 +24,6 @@
       "alias": "dot_parser"
     },
     "moonbitlang/x/fs",
-    "moonbitlang/core/strconv",
-    "moonbitlang/x/sys",
-    "moonbit-community/graphviz/layout/dot/edge_identity",
-    "moonbitlang/core/json",
+    "moonbitlang/core/strconv"
   ]
 }
