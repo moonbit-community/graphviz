@@ -1,3 +1,4 @@
+///|
 priv struct FlatDetourLookupInput {
   base : EdgeRouteBase
   positions : Map[String, @geom.Point]
@@ -53,6 +54,7 @@ pub(all) struct FlatDetourLookupContext {
   rankdir : RankDir
 }
 
+///|
 priv struct ShortRouteDetourResolution {
   detour_spline : PointsSplineResult?
   flat_no_arrow_candidate : Bool
@@ -70,9 +72,7 @@ priv struct DetourPolylineInput {
 }
 
 ///|
-fn detour_polyline_for_rects(
-  input : DetourPolylineInput,
-) -> Array[@geom.Point] {
+fn detour_polyline_for_rects(input : DetourPolylineInput) -> Array[@geom.Point] {
   let tail = input.tail
   let head = input.head
   let tail_rect = input.tail_rect
@@ -96,18 +96,16 @@ fn detour_polyline_for_rects(
       } else {
         entry_base
       }
-      let exit_y =
-        if dy < 0.0 {
-          tail_rect.lly - exit_turn
-        } else {
-          tail_rect.ury + exit_turn
-        }
-      let entry_y =
-        if dy < 0.0 {
-          head_rect.lly - entry_turn
-        } else {
-          head_rect.ury + entry_turn
-        }
+      let exit_y = if dy < 0.0 {
+        tail_rect.lly - exit_turn
+      } else {
+        tail_rect.ury + exit_turn
+      }
+      let entry_y = if dy < 0.0 {
+        head_rect.lly - entry_turn
+      } else {
+        head_rect.ury + entry_turn
+      }
       let left_x = min_double(tail_rect.llx, head_rect.llx) - detour_margin
       let right_x = max_double(tail_rect.urx, head_rect.urx) + detour_margin
       let path_len = (detour_x : Double) => {
@@ -117,8 +115,11 @@ fn detour_polyline_for_rects(
         Double::abs(head.x - detour_x) +
         Double::abs(head.y - entry_y)
       }
-      let detour_x =
-        if path_len(left_x) <= path_len(right_x) { left_x } else { right_x }
+      let detour_x = if path_len(left_x) <= path_len(right_x) {
+        left_x
+      } else {
+        right_x
+      }
       [
         tail,
         @edge_spline.point(tail.x, exit_y),
@@ -141,18 +142,16 @@ fn detour_polyline_for_rects(
       } else {
         entry_base
       }
-      let exit_x =
-        if dx < 0.0 {
-          tail_rect.llx - exit_turn
-        } else {
-          tail_rect.urx + exit_turn
-        }
-      let entry_x =
-        if dx < 0.0 {
-          head_rect.llx - entry_turn
-        } else {
-          head_rect.urx + entry_turn
-        }
+      let exit_x = if dx < 0.0 {
+        tail_rect.llx - exit_turn
+      } else {
+        tail_rect.urx + exit_turn
+      }
+      let entry_x = if dx < 0.0 {
+        head_rect.llx - entry_turn
+      } else {
+        head_rect.urx + entry_turn
+      }
       let lower_y = min_double(tail_rect.lly, head_rect.lly) - detour_margin
       let upper_y = max_double(tail_rect.ury, head_rect.ury) + detour_margin
       let path_len = (detour_y : Double) => {
@@ -162,8 +161,11 @@ fn detour_polyline_for_rects(
         Double::abs(head.y - detour_y) +
         Double::abs(head.x - entry_x)
       }
-      let detour_y =
-        if path_len(lower_y) <= path_len(upper_y) { lower_y } else { upper_y }
+      let detour_y = if path_len(lower_y) <= path_len(upper_y) {
+        lower_y
+      } else {
+        upper_y
+      }
       [
         tail,
         @edge_spline.point(exit_x, tail.y),
@@ -177,7 +179,6 @@ fn detour_polyline_for_rects(
 }
 
 ///|
-
 priv struct FlatDetourScanInput {
   lookup : FlatDetourLookupContext
   line_start : @geom.Point
@@ -255,43 +256,45 @@ fn flat_detour_points_if_blocked(
       if !found {
         None
       } else {
-        let vspace =
-          if rank > 0 {
-            match (
+        let vspace = if rank > 0 {
+          match
+            (
               rank_y.get(rank),
               rank_ht2.get(rank),
               rank_y.get(rank - 1),
               rank_ht1.get(rank - 1),
             ) {
-              (Some(cur_y), Some(cur_ht2), Some(prev_y), Some(prev_ht1)) => {
-                let gap = prev_y - prev_ht1 - cur_y - cur_ht2
-                if gap > 0.0 { gap } else { ranksep_pt }
+            (Some(cur_y), Some(cur_ht2), Some(prev_y), Some(prev_ht1)) => {
+              let gap = prev_y - prev_ht1 - cur_y - cur_ht2
+              if gap > 0.0 {
+                gap
+              } else {
+                ranksep_pt
               }
-              _ => ranksep_pt
             }
-          } else {
-            ranksep_pt
+            _ => ranksep_pt
           }
+        } else {
+          ranksep_pt
+        }
         let detour_y = max_top + vspace / 2.0
-        let bend1_x =
-          if line_start.x <= line_end.x {
-            blocker_min_left
-          } else {
-            blocker_max_right
-          }
-        let bend2_x =
-          if line_start.x <= line_end.x {
-            blocker_max_right
-          } else {
-            blocker_min_left
-          }
+        let bend1_x = if line_start.x <= line_end.x {
+          blocker_min_left
+        } else {
+          blocker_max_right
+        }
+        let bend2_x = if line_start.x <= line_end.x {
+          blocker_max_right
+        } else {
+          blocker_min_left
+        }
         Some({
           points: [
-          line_start,
-          @edge_spline.point(bend1_x, detour_y),
-          @edge_spline.point(bend2_x, detour_y),
-          line_end,
-        ],
+            line_start,
+            @edge_spline.point(bend1_x, detour_y),
+            @edge_spline.point(bend2_x, detour_y),
+            line_end,
+          ],
           first_right,
           last_left,
           detour_y,
@@ -364,9 +367,7 @@ fn maybe_flat_detour_points_if_blocked(
   flat_detour_scan_input : FlatDetourScanInput,
 ) -> FlatDetourResult? {
   if flat_no_arrow_candidate || flat_top_compass_single_arrow_candidate {
-    flat_detour_points_if_blocked(
-      flat_detour_scan_input,
-    )
+    flat_detour_points_if_blocked(flat_detour_scan_input)
   } else {
     None
   }
@@ -435,12 +436,11 @@ fn record_port_detour_points(
       if Double::abs(side) <= 0.01 {
         side = head_clip.x - tail_clip.x
       }
-      let detour_x =
-        if side < 0.0 {
-          min_double(tail_rect.llx, head_rect.llx) - detour_offset
-        } else {
-          max_double(tail_rect.urx, head_rect.urx) + detour_offset
-        }
+      let detour_x = if side < 0.0 {
+        min_double(tail_rect.llx, head_rect.llx) - detour_offset
+      } else {
+        max_double(tail_rect.urx, head_rect.urx) + detour_offset
+      }
       [
         tail_clip,
         @edge_spline.point(detour_x, tail_clip.y),
@@ -456,12 +456,11 @@ fn record_port_detour_points(
       if Double::abs(side) <= 0.01 {
         side = head_clip.y - tail_clip.y
       }
-      let detour_y =
-        if side < 0.0 {
-          min_double(tail_rect.lly, head_rect.lly) - detour_offset
-        } else {
-          max_double(tail_rect.ury, head_rect.ury) + detour_offset
-        }
+      let detour_y = if side < 0.0 {
+        min_double(tail_rect.lly, head_rect.lly) - detour_offset
+      } else {
+        max_double(tail_rect.ury, head_rect.ury) + detour_offset
+      }
       if lr_detour_uses_x_axis {
         // Graphviz parity: keep legacy short-route LR detour axis mapping in this branch.
         [
@@ -500,32 +499,25 @@ fn resolve_short_route_detour(
   input : ShortRouteDetourResolveInput,
 ) -> ShortRouteDetourResolution {
   let flat_no_arrow_candidate = input.detour_context.flat_no_arrow_candidate
-  let flat_top_compass_single_arrow_candidate =
-    input.detour_context.flat_top_compass_single_arrow_candidate
-  let flat_detour =
-    flat_detour_points_for_line(
-      {
-        context: input.flat_detour_lookup,
-        flat_no_arrow_candidate,
-        flat_top_compass_single_arrow_candidate,
-        line_start: input.line_start,
-        line_end: input.line_end,
-      },
-    )
-  let detour_spline =
-    detour_spline_if_any(
-      {
-        base: input.base,
-        needs_record_detour: input.detour_context.needs_record_detour,
-        flat_detour,
-        using_pathplan: input.using_pathplan,
-        tail_slope_line: input.detour_context.tail_slope_line,
-        head_slope_line: input.detour_context.head_slope_line,
-        route_barriers: input.route_barriers,
-        nodesep_pt: input.nodesep_pt,
-        lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
-      },
-    )
+  let flat_top_compass_single_arrow_candidate = input.detour_context.flat_top_compass_single_arrow_candidate
+  let flat_detour = flat_detour_points_for_line({
+    context: input.flat_detour_lookup,
+    flat_no_arrow_candidate,
+    flat_top_compass_single_arrow_candidate,
+    line_start: input.line_start,
+    line_end: input.line_end,
+  })
+  let detour_spline = detour_spline_if_any({
+    base: input.base,
+    needs_record_detour: input.detour_context.needs_record_detour,
+    flat_detour,
+    using_pathplan: input.using_pathplan,
+    tail_slope_line: input.detour_context.tail_slope_line,
+    head_slope_line: input.detour_context.head_slope_line,
+    route_barriers: input.route_barriers,
+    nodesep_pt: input.nodesep_pt,
+    lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
+  })
   {
     detour_spline,
     flat_no_arrow_candidate,
@@ -551,26 +543,22 @@ priv struct ShortRouteDetourResolveForBaseInput {
 fn resolve_short_route_detour_for_base(
   input : ShortRouteDetourResolveForBaseInput,
 ) -> (ShortRouteDetourContext, ShortRouteDetourResolution) {
-  let detour_context =
-    short_route_detour_context_for_base(
-      input.base,
-      input.using_pathplan,
-      input.has_explicit_port,
-      input.label_width_pt,
-    )
-  let detour_resolution =
-    resolve_short_route_detour(
-      {
-        base: input.base,
-        detour_context,
-        flat_detour_lookup: input.flat_detour_lookup,
-        line_start: input.line_start,
-        line_end: input.line_end,
-        using_pathplan: input.using_pathplan,
-        route_barriers: input.route_barriers,
-        nodesep_pt: input.nodesep_pt,
-        lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
-      },
-    )
+  let detour_context = short_route_detour_context_for_base(
+    input.base,
+    input.using_pathplan,
+    input.has_explicit_port,
+    input.label_width_pt,
+  )
+  let detour_resolution = resolve_short_route_detour({
+    base: input.base,
+    detour_context,
+    flat_detour_lookup: input.flat_detour_lookup,
+    line_start: input.line_start,
+    line_end: input.line_end,
+    using_pathplan: input.using_pathplan,
+    route_barriers: input.route_barriers,
+    nodesep_pt: input.nodesep_pt,
+    lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
+  })
   (detour_context, detour_resolution)
 }

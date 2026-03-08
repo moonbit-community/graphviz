@@ -1,3 +1,4 @@
+///|
 priv struct BottomSingleArrowLineEndpointsInput {
   prefer_linear_flat_bottom_single_arrow : Bool
   line_start : @geom.Point
@@ -13,8 +14,10 @@ fn bottom_single_arrow_line_endpoints(
   input : BottomSingleArrowLineEndpointsInput,
 ) -> (@geom.Point, @geom.Point) {
   if input.prefer_linear_flat_bottom_single_arrow {
-    let tail_bottom = input.tail_clip_center.y - input.tail_clip_size.height_pt / 2.0
-    let head_bottom = input.head_clip_center.y - input.head_clip_size.height_pt / 2.0
+    let tail_bottom = input.tail_clip_center.y -
+      input.tail_clip_size.height_pt / 2.0
+    let head_bottom = input.head_clip_center.y -
+      input.head_clip_size.height_pt / 2.0
     let line_y = min_double(tail_bottom, head_bottom)
     (
       @edge_spline.point(input.line_start.x, line_y),
@@ -51,46 +54,42 @@ pub(all) struct PointsSplineBuildInput {
 }
 
 ///|
-fn build_points_spline(
-  input : PointsSplineBuildInput,
-) -> PointsSplineResult {
-  let raw_bezier =
-    if input.using_pathplan {
-      @edge_spline.edge_spline_raw_for_points(
-        input.points,
-        input.tail_slope_line,
-        input.head_slope_line,
-        input.force_segmented,
-        route_barriers=input.route_barriers,
-      )
-    } else {
-      []
-    }
-  let spline =
-    @edge_spline.edge_spline_for_points(
-      input.base.edge,
+fn build_points_spline(input : PointsSplineBuildInput) -> PointsSplineResult {
+  let raw_bezier = if input.using_pathplan {
+    @edge_spline.edge_spline_raw_for_points(
       input.points,
-      input.base.tail_clip_center,
-      input.base.head_clip_center,
-      input.base.tail_clip_size,
-      input.base.head_clip_size,
       input.tail_slope_line,
       input.head_slope_line,
       input.force_segmented,
-      input.base.route_include_tail,
-      input.base.route_include_head,
-      tail_clip_enabled=input.base.tail_clip_enabled,
-      head_clip_enabled=input.base.head_clip_enabled,
-      tail_port_side=input.base.tail_port_side,
-      head_port_side=input.base.head_port_side,
       route_barriers=input.route_barriers,
-      arrow_len_override=input.base.arrow_len_override,
-      tail_cluster_bbox=input.base.tail_cluster_bbox,
-      head_cluster_bbox=input.base.head_cluster_bbox,
-      parallel_offset=input.base.parallel_offset,
-      clip_swapped=input.base.swap_ends,
-      arrow_swapped=input.base.swap_ends,
     )
+  } else {
+    []
+  }
+  let spline = @edge_spline.edge_spline_for_points(
+    input.base.edge,
+    input.points,
+    input.base.tail_clip_center,
+    input.base.head_clip_center,
+    input.base.tail_clip_size,
+    input.base.head_clip_size,
+    input.tail_slope_line,
+    input.head_slope_line,
+    input.force_segmented,
+    input.base.route_include_tail,
+    input.base.route_include_head,
+    tail_clip_enabled=input.base.tail_clip_enabled,
+    head_clip_enabled=input.base.head_clip_enabled,
+    tail_port_side=input.base.tail_port_side,
+    head_port_side=input.base.head_port_side,
+    route_barriers=input.route_barriers,
+    arrow_len_override=input.base.arrow_len_override,
+    tail_cluster_bbox=input.base.tail_cluster_bbox,
+    head_cluster_bbox=input.base.head_cluster_bbox,
+    parallel_offset=input.base.parallel_offset,
+    clip_swapped=input.base.swap_ends,
+    arrow_swapped=input.base.swap_ends,
+  )
   { spline, raw_bezier }
 }
 
@@ -100,7 +99,11 @@ fn pathplan_line_points_or_endpoints(
   line_start : @geom.Point,
   line_end : @geom.Point,
 ) -> Array[@geom.Point] {
-  if points.length() >= 2 { points } else { [line_start, line_end] }
+  if points.length() >= 2 {
+    points
+  } else {
+    [line_start, line_end]
+  }
 }
 
 ///|
@@ -117,17 +120,15 @@ priv struct PathplanPointsSplineBuildInput {
 fn build_pathplan_points_spline(
   input : PathplanPointsSplineBuildInput,
 ) -> PointsSplineResult {
-  build_points_spline(
-    {
-      base: input.base,
-      points: input.pathplan_points,
-      tail_slope_line: input.tail_slope_line,
-      head_slope_line: input.head_slope_line,
-      force_segmented: input.force_segmented,
-      using_pathplan: true,
-      route_barriers: input.route_barriers,
-    },
-  )
+  build_points_spline({
+    base: input.base,
+    points: input.pathplan_points,
+    tail_slope_line: input.tail_slope_line,
+    head_slope_line: input.head_slope_line,
+    force_segmented: input.force_segmented,
+    using_pathplan: true,
+    route_barriers: input.route_barriers,
+  })
 }
 
 ///|
@@ -145,9 +146,7 @@ priv struct LineSplineBuildInput {
 }
 
 ///|
-fn build_line_spline(
-  input : LineSplineBuildInput,
-) -> @geom.Spline {
+fn build_line_spline(input : LineSplineBuildInput) -> @geom.Spline {
   let base = input.base
   let line_start = input.line_start
   let line_end = input.line_end
@@ -170,15 +169,15 @@ fn build_line_spline(
     head_slope_line,
     base.route_include_tail,
     base.route_include_head,
-    tail_clip_enabled=tail_clip_enabled,
-    head_clip_enabled=head_clip_enabled,
+    tail_clip_enabled~,
+    head_clip_enabled~,
     base.layout_rankdir,
     curve_offset,
     curve_skew,
     arrow_len_override=base.arrow_len_override,
     tail_cluster_bbox=base.tail_cluster_bbox,
     head_cluster_bbox=base.head_cluster_bbox,
-    prefer_linear=prefer_linear,
+    prefer_linear~,
     parallel_offset=base.parallel_offset,
     clip_swapped=base.swap_ends,
     arrow_swapped=base.swap_ends,
@@ -210,33 +209,28 @@ fn build_short_route_line_or_pathplan_spline(
   input : ShortRouteLineOrPathplanBuildInput,
 ) -> PointsSplineResult {
   if input.using_pathplan {
-    build_pathplan_points_spline(
-      {
-        base: input.base,
-        pathplan_points: input.pathplan_points,
-        tail_slope_line: input.tail_slope_line,
-        head_slope_line: input.head_slope_line,
-        force_segmented: input.force_segmented,
-        route_barriers: input.route_barriers,
-      },
-    )
+    build_pathplan_points_spline({
+      base: input.base,
+      pathplan_points: input.pathplan_points,
+      tail_slope_line: input.tail_slope_line,
+      head_slope_line: input.head_slope_line,
+      force_segmented: input.force_segmented,
+      route_barriers: input.route_barriers,
+    })
   } else {
     {
-      spline:
-        build_line_spline(
-          {
-            base: input.base,
-            line_start: input.line_start,
-            line_end: input.line_end,
-            tail_slope_line: input.tail_slope_line,
-            head_slope_line: input.head_slope_line,
-            tail_clip_enabled: input.tail_clip_enabled,
-            head_clip_enabled: input.head_clip_enabled,
-            curve_offset: input.curve_offset,
-            curve_skew: input.curve_skew,
-            prefer_linear: input.prefer_linear,
-          },
-        ),
+      spline: build_line_spline({
+        base: input.base,
+        line_start: input.line_start,
+        line_end: input.line_end,
+        tail_slope_line: input.tail_slope_line,
+        head_slope_line: input.head_slope_line,
+        tail_clip_enabled: input.tail_clip_enabled,
+        head_clip_enabled: input.head_clip_enabled,
+        curve_offset: input.curve_offset,
+        curve_skew: input.curve_skew,
+        prefer_linear: input.prefer_linear,
+      }),
       raw_bezier: [],
     }
   }
@@ -267,18 +261,15 @@ fn build_flat_detour_spline(
   let last_left = detour.last_left
   let detour_y = detour.detour_y
   let vspace = detour.vspace
-  let points_spline =
-    build_points_spline(
-      {
-        base,
-        points: detour_points,
-        tail_slope_line,
-        head_slope_line,
-        force_segmented: true,
-        using_pathplan,
-        route_barriers,
-      },
-    )
+  let points_spline = build_points_spline({
+    base,
+    points: detour_points,
+    tail_slope_line,
+    head_slope_line,
+    force_segmented: true,
+    using_pathplan,
+    route_barriers,
+  })
   let raw_bezier = points_spline.raw_bezier
   let mut detour_spline = points_spline.spline
   if detour_spline.points.length() == 10 &&
@@ -286,14 +277,8 @@ fn build_flat_detour_spline(
     let gap = last_left - first_right
     if gap > 200.0 {
       let points = detour_spline.points.copy()
-      points[4] = {
-        x: first_right + 0.76,
-        y: detour_y + vspace * 0.3535,
-      }
-      points[5] = {
-        x: last_left + 0.25,
-        y: detour_y + vspace * 0.4016,
-      }
+      points[4] = { x: first_right + 0.76, y: detour_y + vspace * 0.3535 }
+      points[5] = { x: last_left + 0.25, y: detour_y + vspace * 0.4016 }
       detour_spline = {
         start: detour_spline.start,
         end: detour_spline.end,
@@ -320,57 +305,49 @@ priv struct DetourSplineBuildInput {
 }
 
 ///|
-fn detour_spline_if_any(
-  input : DetourSplineBuildInput,
-) -> PointsSplineResult? {
+fn detour_spline_if_any(input : DetourSplineBuildInput) -> PointsSplineResult? {
   if input.needs_record_detour {
-    let detour_points =
-      record_port_detour_points(
-        {
-          tail_clip_center: input.base.tail_clip_center,
-          head_clip_center: input.base.head_clip_center,
-          tail_clip_size: input.base.tail_clip_size,
-          head_clip_size: input.base.head_clip_size,
-          tail_clip: input.base.tail_clip,
-          head_clip: input.base.head_clip,
-          nodesep_pt: input.nodesep_pt,
-          layout_rankdir: input.base.layout_rankdir,
-          lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
-        },
-      )
+    let detour_points = record_port_detour_points({
+      tail_clip_center: input.base.tail_clip_center,
+      head_clip_center: input.base.head_clip_center,
+      tail_clip_size: input.base.tail_clip_size,
+      head_clip_size: input.base.head_clip_size,
+      tail_clip: input.base.tail_clip,
+      head_clip: input.base.head_clip,
+      nodesep_pt: input.nodesep_pt,
+      layout_rankdir: input.base.layout_rankdir,
+      lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
+    })
     Some(
-      build_points_spline(
-        {
-          base: input.base,
-          points: detour_points,
-          tail_slope_line: input.tail_slope_line,
-          head_slope_line: input.head_slope_line,
-          force_segmented: true,
-          using_pathplan: input.using_pathplan,
-          route_barriers: input.route_barriers,
-        },
-      ),
+      build_points_spline({
+        base: input.base,
+        points: detour_points,
+        tail_slope_line: input.tail_slope_line,
+        head_slope_line: input.head_slope_line,
+        force_segmented: true,
+        using_pathplan: input.using_pathplan,
+        route_barriers: input.route_barriers,
+      }),
     )
   } else {
     match input.flat_detour {
       Some(detour) =>
         Some(
-          build_flat_detour_spline(
-            {
-              base: input.base,
-              detour,
-              using_pathplan: input.using_pathplan,
-              tail_slope_line: input.tail_slope_line,
-              head_slope_line: input.head_slope_line,
-              route_barriers: input.route_barriers,
-            },
-          ),
+          build_flat_detour_spline({
+            base: input.base,
+            detour,
+            using_pathplan: input.using_pathplan,
+            tail_slope_line: input.tail_slope_line,
+            head_slope_line: input.head_slope_line,
+            route_barriers: input.route_barriers,
+          }),
         )
       None => None
     }
   }
 }
 
+///|
 /// Do not change behavior without updating fixtures/tests.
 fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
   match rankdir {
@@ -413,17 +390,18 @@ fn pathplan_segment_slopes(
   let head_slope_for = input.head_slope_for
   let join_dir = input.join_dir
   let seg_tail_slope = if seg_idx == 0 { tail_slope_for } else { join_dir }
-  let seg_head_slope =
-    if seg_idx + 1 == segment_count {
-      head_slope_for
-    } else {
-      join_dir
-    }
+  let seg_head_slope = if seg_idx + 1 == segment_count {
+    head_slope_for
+  } else {
+    join_dir
+  }
   (seg_tail_slope, seg_head_slope)
 }
 
 ///|
-fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+fn trimmed_pathplan_segment_points(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
   if points.length() < 3 {
     return points
   }
@@ -441,12 +419,11 @@ fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.P
   let wx = prev.x - prev2.x
   let wy = prev.y - prev2.y
   let span = Double::sqrt(vx * vx + vy * vy)
-  let offset =
-    if span > 0.0 {
-      Double::abs(vx * wy - vy * wx) / span
-    } else {
-      0.0
-    }
+  let offset = if span > 0.0 {
+    Double::abs(vx * wy - vy * wx) / span
+  } else {
+    0.0
+  }
   if offset > 0.02 {
     return points
   }
@@ -485,22 +462,18 @@ fn pathplan_segment_raw_bezier(
   let join_dir = input.join_dir
   let force_segmented = input.force_segmented
   let trim_points = input.trim_points
-  let segment_points =
-    if trim_points {
-      trimmed_pathplan_segment_points(segment.points)
-    } else {
-      segment.points
-    }
-  let (seg_tail_slope, seg_head_slope) =
-    pathplan_segment_slopes(
-      {
-        seg_idx,
-        segment_count,
-        tail_slope_for,
-        head_slope_for,
-        join_dir,
-      },
-    )
+  let segment_points = if trim_points {
+    trimmed_pathplan_segment_points(segment.points)
+  } else {
+    segment.points
+  }
+  let (seg_tail_slope, seg_head_slope) = pathplan_segment_slopes({
+    seg_idx,
+    segment_count,
+    tail_slope_for,
+    head_slope_for,
+    join_dir,
+  })
   @edge_spline.edge_spline_raw_for_points(
     segment_points,
     seg_tail_slope,
@@ -515,33 +488,33 @@ fn limit_pathplan_segment_boxes(
   base : EdgeRouteBase,
   pathplan_segments : Array[@routesplines.PathplanSegment],
 ) -> Array[@routesplines.PathplanSegment] {
-  let (tail_slope_for, head_slope_for) =
-    route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
+  let (tail_slope_for, head_slope_for) = route_endpoint_slopes(
+    base.tail_port,
+    base.head_port,
+    base.tail_slope,
+    base.head_slope,
+  )
   let join_dir = straight_path_join_dir(base.layout_rankdir)
   let limited_segments : Array[@routesplines.PathplanSegment] = []
   let segment_count = pathplan_segments.length()
   let mut seg_idx = 0
   while seg_idx < segment_count {
     let segment = pathplan_segments[seg_idx]
-    let segment_raw =
-      pathplan_segment_raw_bezier(
-        {
-          segment,
-          seg_idx,
-          segment_count,
-          tail_slope_for,
-          head_slope_for,
-          join_dir,
-          force_segmented: false,
-          trim_points: false,
-        },
-      )
-    let limited_boxes =
-      @routesplines.limit_boxes_for_spline(
-        segment.boxes,
-        segment_raw,
-        fallback_polyline=segment.points,
-      )
+    let segment_raw = pathplan_segment_raw_bezier({
+      segment,
+      seg_idx,
+      segment_count,
+      tail_slope_for,
+      head_slope_for,
+      join_dir,
+      force_segmented: false,
+      trim_points: false,
+    })
+    let limited_boxes = @routesplines.limit_boxes_for_spline(
+      segment.boxes,
+      segment_raw,
+      fallback_polyline=segment.points,
+    )
     limited_segments.push({
       points: segment.points,
       barriers: segment.barriers,
@@ -576,19 +549,16 @@ fn segmented_pathplan_raw_bezier(
   let mut seg_idx = 0
   while seg_idx < segment_count {
     let segment = pathplan_segments[seg_idx]
-    let seg_raw =
-      pathplan_segment_raw_bezier(
-        {
-          segment,
-          seg_idx,
-          segment_count,
-          tail_slope_for,
-          head_slope_for,
-          join_dir,
-          force_segmented,
-          trim_points: true,
-        },
-      )
+    let seg_raw = pathplan_segment_raw_bezier({
+      segment,
+      seg_idx,
+      segment_count,
+      tail_slope_for,
+      head_slope_for,
+      join_dir,
+      force_segmented,
+      trim_points: true,
+    })
     if seg_raw.length() > 0 {
       if segmented_raw.length() > 0 {
         let last = segmented_raw[segmented_raw.length() - 1]
@@ -628,51 +598,52 @@ fn build_multi_point_routed_spline(
   let route_barriers = input.route_barriers
   let tail_clip_enabled = input.tail_clip_enabled
   let head_clip_enabled = input.head_clip_enabled
-  let (tail_slope_for, head_slope_for) =
-    route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
+  let (tail_slope_for, head_slope_for) = route_endpoint_slopes(
+    base.tail_port,
+    base.head_port,
+    base.tail_slope,
+    base.head_slope,
+  )
   // Graphviz parity: pathplan edges always allow spline fitting.
-  let edge_force_segmented = if using_pathplan { false } else { force_segmented }
-  let segmented_raw : Array[@geom.Point] =
-    if using_pathplan && pathplan_segments.length() > 0 {
-      // Graphviz parity: straight_path segment joins constrain slope along rankdir.
-      let join_dir = straight_path_join_dir(base.layout_rankdir)
-      segmented_pathplan_raw_bezier(
-        {
-          pathplan_segments,
-          tail_slope_for,
-          head_slope_for,
-          join_dir,
-          force_segmented: edge_force_segmented,
-        },
-      )
-    } else {
-      []
-    }
+  let edge_force_segmented = if using_pathplan {
+    false
+  } else {
+    force_segmented
+  }
+  let segmented_raw : Array[@geom.Point] = if using_pathplan &&
+    pathplan_segments.length() > 0 {
+    // Graphviz parity: straight_path segment joins constrain slope along rankdir.
+    let join_dir = straight_path_join_dir(base.layout_rankdir)
+    segmented_pathplan_raw_bezier({
+      pathplan_segments,
+      tail_slope_for,
+      head_slope_for,
+      join_dir,
+      force_segmented: edge_force_segmented,
+    })
+  } else {
+    []
+  }
   if segmented_raw.length() > 0 {
-    let spline =
-      @emit.build_bezier_points_spline(
-        {
-          base,
-          bezier_points: segmented_raw,
-          tail_clip_enabled,
-          head_clip_enabled,
-          clip_swapped: base.swap_ends,
-          arrow_swapped: base.swap_ends,
-        },
-      )
+    let spline = @emit.build_bezier_points_spline({
+      base,
+      bezier_points: segmented_raw,
+      tail_clip_enabled,
+      head_clip_enabled,
+      clip_swapped: base.swap_ends,
+      arrow_swapped: base.swap_ends,
+    })
     { spline, raw_bezier: segmented_raw }
   } else {
-    build_points_spline(
-      {
-        base,
-        points: adjusted,
-        tail_slope_line: tail_slope_for,
-        head_slope_line: head_slope_for,
-        force_segmented: edge_force_segmented,
-        using_pathplan,
-        route_barriers,
-      },
-    )
+    build_points_spline({
+      base,
+      points: adjusted,
+      tail_slope_line: tail_slope_for,
+      head_slope_line: head_slope_for,
+      force_segmented: edge_force_segmented,
+      using_pathplan,
+      route_barriers,
+    })
   }
 }
 
@@ -698,12 +669,11 @@ fn finalize_pathplan_boxes_and_segments(
   let mut limited_segments = input.pathplan_segments
   if using_pathplan && limited_boxes.length() > 0 && raw_bezier.length() >= 4 {
     // Graphviz parity: limit boxes based on routed spline before recover_slack.
-    limited_boxes =
-      @routesplines.limit_boxes_for_spline(
-        limited_boxes,
-        raw_bezier,
-        fallback_polyline=pathplan_points,
-      )
+    limited_boxes = @routesplines.limit_boxes_for_spline(
+      limited_boxes,
+      raw_bezier,
+      fallback_polyline=pathplan_points,
+    )
   }
   if using_pathplan && limited_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.

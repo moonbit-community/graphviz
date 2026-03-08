@@ -27,9 +27,7 @@ priv struct EdgePolylinePointsInput {
 }
 
 ///|
-fn edge_polyline_points(
-  input : EdgePolylinePointsInput,
-) -> Array[@geom.Point] {
+fn edge_polyline_points(input : EdgePolylinePointsInput) -> Array[@geom.Point] {
   let edge = input.edge
   let tail_name = input.tail_name
   let head_name = input.head_name
@@ -68,22 +66,20 @@ fn edge_polyline_points(
               Some(pos) =>
                 if label_width_pt > 0.0 {
                   let half = label_width_pt / 2.0
-                  let bend_y =
-                    match label_height_pt {
-                      Some(height) => {
-                        let label_top = pos.y + height / 2.0
-                        let source_y =
-                          if tail_anchor.x <= head_anchor.x {
-                            tail_anchor.y
-                          } else {
-                            head_anchor.y
-                          }
-                        let ydelta = (pos.y - source_y) / 6.0
-                        let lift = if ydelta > 5.0 { ydelta } else { 5.0 }
-                        label_top - lift
+                  let bend_y = match label_height_pt {
+                    Some(height) => {
+                      let label_top = pos.y + height / 2.0
+                      let source_y = if tail_anchor.x <= head_anchor.x {
+                        tail_anchor.y
+                      } else {
+                        head_anchor.y
                       }
-                      None => pos.y
+                      let ydelta = (pos.y - source_y) / 6.0
+                      let lift = if ydelta > 5.0 { ydelta } else { 5.0 }
+                      label_top - lift
                     }
+                    None => pos.y
+                  }
                   if tail_anchor.x <= head_anchor.x {
                     points.push({ x: pos.x - half, y: bend_y })
                     points.push({ x: pos.x + half, y: bend_y })
@@ -110,8 +106,16 @@ fn edge_polyline_points(
             }
           }
         } else {
-          let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-          let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+          let min_rank = if tail_rank < head_rank {
+            tail_rank
+          } else {
+            head_rank
+          }
+          let max_rank = if tail_rank < head_rank {
+            head_rank
+          } else {
+            tail_rank
+          }
           let label_rank = if label_width_pt > 0.0 {
             (min_rank + max_rank) / 2
           } else {
@@ -123,26 +127,29 @@ fn edge_polyline_points(
             None => ""
           }
           let is_dotted = style_value.contains("dotted")
-          let has_explicit_port =
-            @edge_identity.port_is_explicit(tail_port) || @edge_identity.port_is_explicit(head_port)
-          let base_vnode_weight =
-            if use_cluster_tuning {
-              if is_dotted {
-                if same_local_cluster { dotted_weight * 0.7 } else { dotted_weight }
-              } else if split_label {
-                0.3
-              } else if label_width_pt > 0.0 && !has_explicit_port {
-                if same_local_cluster {
-                  1.0
-                } else {
-                  0.4
-                }
+          let has_explicit_port = @edge_identity.port_is_explicit(tail_port) ||
+            @edge_identity.port_is_explicit(head_port)
+          let base_vnode_weight = if use_cluster_tuning {
+            if is_dotted {
+              if same_local_cluster {
+                dotted_weight * 0.7
               } else {
-                0.0
+                dotted_weight
+              }
+            } else if split_label {
+              0.3
+            } else if label_width_pt > 0.0 && !has_explicit_port {
+              if same_local_cluster {
+                1.0
+              } else {
+                0.4
               }
             } else {
-              default_vnode_weight
+              0.0
             }
+          } else {
+            default_vnode_weight
+          }
           let span_f = Double::from_int(span)
           let push_point = (name : String) => {
             match vnode_positions.get(name) {
@@ -150,17 +157,19 @@ fn edge_polyline_points(
                 match vnode_ranks.get(name) {
                   Some(rank) => {
                     let t_raw = Double::from_int(rank - tail_rank) / span_f
-                    let t =
-                      if use_cluster_tuning && !is_dotted && head_anchor.x >= tail_anchor.x {
-                        if split_label && rank == label_rank {
-                          t_raw
-                        } else {
-                          t_raw * t_raw
-                        }
-                      } else {
+                    let t = if use_cluster_tuning &&
+                      !is_dotted &&
+                      head_anchor.x >= tail_anchor.x {
+                      if split_label && rank == label_rank {
                         t_raw
+                      } else {
+                        t_raw * t_raw
                       }
-                    let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
+                    } else {
+                      t_raw
+                    }
+                    let interp_x = tail_anchor.x +
+                      (head_anchor.x - tail_anchor.x) * t
                     let base_y = match rank_y.get(rank) {
                       Some(value) => value
                       None => pos.y
@@ -171,7 +180,8 @@ fn edge_polyline_points(
                     }
                     let y = base_y + base_offset
                     let vnode_weight = base_vnode_weight
-                    let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
+                    let x = pos.x * vnode_weight +
+                      interp_x * (1.0 - vnode_weight)
                     if split_label && rank == label_rank {
                       let split_width = label_width_pt * 1.5
                       let split_x = x - nodesep_pt * 1.25

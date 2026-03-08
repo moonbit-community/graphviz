@@ -31,22 +31,42 @@ fn segment_intersects_rect(
   let mut t1 = 1.0
   let update = (p : Double, q : Double) => {
     if Double::abs(p) < 0.0000001 {
-      if q < 0.0 { return false } else { return true }
+      if q < 0.0 {
+        return false
+      } else {
+        return true
+      }
     }
     let r = q / p
     if p < 0.0 {
-      if r > t1 { return false }
-      if r > t0 { t0 = r }
+      if r > t1 {
+        return false
+      }
+      if r > t0 {
+        t0 = r
+      }
     } else {
-      if r < t0 { return false }
-      if r < t1 { t1 = r }
+      if r < t0 {
+        return false
+      }
+      if r < t1 {
+        t1 = r
+      }
     }
     true
   }
-  if !update(-dx, start.x - rect.llx) { return false }
-  if !update(dx, rect.urx - start.x) { return false }
-  if !update(-dy, start.y - rect.lly) { return false }
-  if !update(dy, rect.ury - start.y) { return false }
+  if !update(-dx, start.x - rect.llx) {
+    return false
+  }
+  if !update(dx, rect.urx - start.x) {
+    return false
+  }
+  if !update(-dy, start.y - rect.lly) {
+    return false
+  }
+  if !update(dy, rect.ury - start.y) {
+    return false
+  }
   if t1 < 0.0 || t0 > 1.0 {
     return false
   }
@@ -123,27 +143,21 @@ fn sameport_path_port_box(
 ) -> @geom.Rect {
   // Graphviz parity: large sameport groups keep a tiny inward port-box offset;
   // this preserves oldarrows/honda routing-label snapshots exactly.
-  let (bx, by) =
-    if group_size > 3 {
-      let dx = anchor.x - center.x
-      let dy = anchor.y - center.y
-      let len = Double::sqrt(dx * dx + dy * dy)
-      if len > 0.0 {
-        let offset = 0.005
-        (anchor.x - dx / len * offset, anchor.y - dy / len * offset)
-      } else {
-        (anchor.x, anchor.y)
-      }
+  let (bx, by) = if group_size > 3 {
+    let dx = anchor.x - center.x
+    let dy = anchor.y - center.y
+    let len = Double::sqrt(dx * dx + dy * dy)
+    if len > 0.0 {
+      let offset = 0.005
+      (anchor.x - dx / len * offset, anchor.y - dy / len * offset)
     } else {
       (anchor.x, anchor.y)
     }
-  let eps = if group_size > 3 { 0.005 } else { 0.01 }
-  {
-    llx: bx - eps,
-    lly: by - eps,
-    urx: bx + eps,
-    ury: by + eps,
+  } else {
+    (anchor.x, anchor.y)
   }
+  let eps = if group_size > 3 { 0.005 } else { 0.01 }
+  { llx: bx - eps, lly: by - eps, urx: bx + eps, ury: by + eps }
 }
 
 ///|
@@ -179,74 +193,73 @@ fn compute_pathplan_route_points(
   let mut pathplan_boxes : Array[@geom.Rect] = []
   let mut pathplan_points : Array[@geom.Point] = []
   let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
-  let (points, pathplan_used) =
-    if input.base.use_pathplan && !input.base.is_flat_edge {
+  let (points, pathplan_used) = if input.base.use_pathplan &&
+    !input.base.is_flat_edge {
     let has_edge_label = input.base.mid_label_width_pt > 0.0
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
-    let tail_port_box : @geom.Rect? =
-      if !input.base.tail_clip_enabled {
-        Some(
-          sameport_path_port_box(
-            input.base.tail_pos,
-            input.base.tail_anchor,
-            input.base.tail_sameport_group_size,
-          ),
-        )
-      } else if input.base.tail_port_side == 0 {
-        input.base.tail_record_path_box
-      } else {
-        None
-      }
-    let head_port_box : @geom.Rect? =
-      if !input.base.head_clip_enabled {
-        Some(
-          sameport_path_port_box(
-            input.base.head_pos,
-            input.base.head_anchor,
-            input.base.head_sameport_group_size,
-          ),
-        )
-      } else if input.base.head_port_side == 0 {
-        input.base.head_record_path_box
-      } else {
-        None
-      }
-    match @routesplines.edge_pathplan_polyline(
-      input.base.edge,
-      input.base.tail_name,
-      input.base.head_name,
-      input.base.tail_anchor,
-      input.base.head_anchor,
-      input.base.layout_rankdir,
-      input.base.tail_port_side,
-      input.base.head_port_side,
-      tail_port_box,
-      head_port_box,
-      input.ranksep_pt,
-      input.ranks,
-      input.vnode_info.vnode_ranks,
-      input.vnode_info.edge_vnodes,
-      input.positions,
-      input.vnode_positions,
-      input.sizes,
-      input.routing_context.pathplan_sizes,
-      input.routing_context.pathplan_vnode_mval_sizes,
-      input.vnode_info.vnode_sizes,
-      input.routing_context.path_cluster_keys,
-      input.routing_context.path_vnode_clusters,
-      input.routing_context.cluster_bboxes,
-      input.x_groups,
-      input.routing_context.path_order_index,
-      input.routing_context.path_adjacency.out_edges,
-      input.routing_context.path_adjacency.in_edges,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
-      input.nodesep_pt,
-      input.path_left_bound,
-      input.path_right_bound,
-      has_edge_label,
-    ) {
+    let tail_port_box : @geom.Rect? = if !input.base.tail_clip_enabled {
+      Some(
+        sameport_path_port_box(
+          input.base.tail_pos,
+          input.base.tail_anchor,
+          input.base.tail_sameport_group_size,
+        ),
+      )
+    } else if input.base.tail_port_side == 0 {
+      input.base.tail_record_path_box
+    } else {
+      None
+    }
+    let head_port_box : @geom.Rect? = if !input.base.head_clip_enabled {
+      Some(
+        sameport_path_port_box(
+          input.base.head_pos,
+          input.base.head_anchor,
+          input.base.head_sameport_group_size,
+        ),
+      )
+    } else if input.base.head_port_side == 0 {
+      input.base.head_record_path_box
+    } else {
+      None
+    }
+    match
+      @routesplines.edge_pathplan_polyline(
+        input.base.edge,
+        input.base.tail_name,
+        input.base.head_name,
+        input.base.tail_anchor,
+        input.base.head_anchor,
+        input.base.layout_rankdir,
+        input.base.tail_port_side,
+        input.base.head_port_side,
+        tail_port_box,
+        head_port_box,
+        input.ranksep_pt,
+        input.ranks,
+        input.vnode_info.vnode_ranks,
+        input.vnode_info.edge_vnodes,
+        input.positions,
+        input.vnode_positions,
+        input.sizes,
+        input.routing_context.pathplan_sizes,
+        input.routing_context.pathplan_vnode_mval_sizes,
+        input.vnode_info.vnode_sizes,
+        input.routing_context.path_cluster_keys,
+        input.routing_context.path_vnode_clusters,
+        input.routing_context.cluster_bboxes,
+        input.x_groups,
+        input.routing_context.path_order_index,
+        input.routing_context.path_adjacency.out_edges,
+        input.routing_context.path_adjacency.in_edges,
+        input.rank_y,
+        input.rank_ht1,
+        input.rank_ht2,
+        input.nodesep_pt,
+        input.path_left_bound,
+        input.path_right_bound,
+        has_edge_label,
+      ) {
       Some(result) => {
         route_barriers = result.barriers
         pathplan_boxes = result.boxes
@@ -257,10 +270,7 @@ fn compute_pathplan_route_points(
       None => (input.guide_points, false)
     }
   } else {
-    (
-      input.guide_points,
-      false,
-    )
+    (input.guide_points, false)
   }
   {
     points,
@@ -285,9 +295,7 @@ priv struct AdjustRoutePointsInput {
 }
 
 ///|
-fn adjust_route_points(
-  input : AdjustRoutePointsInput,
-) -> Array[@geom.Point] {
+fn adjust_route_points(input : AdjustRoutePointsInput) -> Array[@geom.Point] {
   let base = input.base
   let head_port_rect = input.head_port_rect
   let has_explicit_port = input.has_explicit_port
@@ -295,52 +303,45 @@ fn adjust_route_points(
   let nodesep_pt = input.nodesep_pt
   let mut points = input.points
   let touch_eps = max_double(@record_geometry.RECORD_BORDER_PT + 0.01, 1.5)
-  let head_lr_touch =
-    match head_port_rect {
-      Some(rect) => {
-        let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
-        Double::abs(rect.llx - node_rect.llx) <= touch_eps ||
-          Double::abs(rect.urx - node_rect.urx) <= touch_eps
-      }
-      None => false
+  let head_lr_touch = match head_port_rect {
+    Some(rect) => {
+      let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
+      Double::abs(rect.llx - node_rect.llx) <= touch_eps ||
+      Double::abs(rect.urx - node_rect.urx) <= touch_eps
     }
-  let head_tb_touch =
-    match head_port_rect {
-      Some(rect) => {
-        let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
-        Double::abs(rect.lly - node_rect.lly) <= touch_eps ||
-          Double::abs(rect.ury - node_rect.ury) <= touch_eps
-      }
-      None => false
+    None => false
+  }
+  let head_tb_touch = match head_port_rect {
+    Some(rect) => {
+      let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
+      Double::abs(rect.lly - node_rect.lly) <= touch_eps ||
+      Double::abs(rect.ury - node_rect.ury) <= touch_eps
     }
-  let detour_ok =
-    match base.layout_rankdir {
-      RankDir::TB | RankDir::BT => head_tb_touch && !head_lr_touch
-      RankDir::LR | RankDir::RL => head_lr_touch && !head_tb_touch
-    }
+    None => false
+  }
+  let detour_ok = match base.layout_rankdir {
+    RankDir::TB | RankDir::BT => head_tb_touch && !head_lr_touch
+    RankDir::LR | RankDir::RL => head_lr_touch && !head_tb_touch
+  }
   if points.length() <= 2 && has_explicit_port && detour_ok && !using_pathplan {
     let tail_rect = @edge_spline.port_side_rect(base.tail_pos, base.tail_size)
     let head_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
     let anchor_eps = 0.02
-    let needs_detour =
-      segment_intersects_rect(
-        base.tail_anchor,
-        base.head_anchor,
-        head_rect,
-        anchor_eps,
-      )
+    let needs_detour = segment_intersects_rect(
+      base.tail_anchor,
+      base.head_anchor,
+      head_rect,
+      anchor_eps,
+    )
     if needs_detour {
-      points =
-        detour_polyline_for_rects(
-          {
-            tail: base.tail_anchor,
-            head: base.head_anchor,
-            tail_rect,
-            head_rect,
-            nodesep_pt,
-            rankdir: base.layout_rankdir,
-          },
-        )
+      points = detour_polyline_for_rects({
+        tail: base.tail_anchor,
+        head: base.head_anchor,
+        tail_rect,
+        head_rect,
+        nodesep_pt,
+        rankdir: base.layout_rankdir,
+      })
     }
   }
   if base.is_dotted && !base.same_outer_cluster && !using_pathplan {
@@ -352,15 +353,27 @@ fn adjust_route_points(
       nodesep_pt,
     )
   }
-  if has_explicit_port && base.has_side_anchor && points.length() <= 2 &&
+  if has_explicit_port &&
+    base.has_side_anchor &&
+    points.length() <= 2 &&
     !using_pathplan {
     let offset = max_double(4.0, nodesep_pt * 0.5)
     let kinked : Array[@geom.Point] = [base.tail_anchor]
     if base.tail_slope.x != 0.0 || base.tail_slope.y != 0.0 {
-      kinked.push(@edge_spline.point_add(base.tail_anchor, @edge_spline.point_scale(base.tail_slope, offset)))
+      kinked.push(
+        @edge_spline.point_add(
+          base.tail_anchor,
+          @edge_spline.point_scale(base.tail_slope, offset),
+        ),
+      )
     }
     if base.head_slope.x != 0.0 || base.head_slope.y != 0.0 {
-      kinked.push(@edge_spline.point_add(base.head_anchor, @edge_spline.point_scale(base.head_slope, -offset)))
+      kinked.push(
+        @edge_spline.point_add(
+          base.head_anchor,
+          @edge_spline.point_scale(base.head_slope, -offset),
+        ),
+      )
     }
     kinked.push(base.head_anchor)
     points = kinked
@@ -392,27 +405,30 @@ fn adjusted_curve_mode_points(
     Some(value) => value > 1
     None => false
   }
-  let keep_label_kink =
-    prepared.label_width_pt > 0.0 &&
-    (prepared.has_explicit_port ||
-      (base.same_outer_cluster &&
-          (prepared.abs_dx < nodesep_pt ||
-            (tail_label_edges && prepared.abs_dx < prepared.label_width_pt))))
-  let simplified =
-    if prepared.using_pathplan {
-      points
-    } else if enable_complex_tuning &&
-      base.has_vnodes &&
-      !prepared.split_label &&
-      !keep_label_kink {
-      simplify_polyline(points, simplify_tol)
-    } else {
-      points
-    }
+  let keep_label_kink = prepared.label_width_pt > 0.0 &&
+    (
+      prepared.has_explicit_port ||
+      (
+        base.same_outer_cluster &&
+        (
+          prepared.abs_dx < nodesep_pt ||
+          (tail_label_edges && prepared.abs_dx < prepared.label_width_pt)
+        )
+      )
+    )
+  let simplified = if prepared.using_pathplan {
+    points
+  } else if enable_complex_tuning &&
+    base.has_vnodes &&
+    !prepared.split_label &&
+    !keep_label_kink {
+    simplify_polyline(points, simplify_tol)
+  } else {
+    points
+  }
   if !prepared.using_pathplan && base.is_dotted && base.same_outer_cluster {
     @edge_ops.adjust_intracluster_dots(simplified)
   } else {
     simplified
   }
 }
-

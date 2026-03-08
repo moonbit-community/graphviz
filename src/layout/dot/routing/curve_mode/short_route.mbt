@@ -28,11 +28,8 @@ priv struct RecordPortDetourNeedInput {
 }
 
 ///|
-fn needs_record_port_detour(
-  input : RecordPortDetourNeedInput,
-) -> Bool {
-  let record_port_edge =
-    (
+fn needs_record_port_detour(input : RecordPortDetourNeedInput) -> Bool {
+  let record_port_edge = (
       @record_geometry.is_record_shape(input.tail_node) &&
       @edge_identity.port_is_explicit(input.tail_port)
     ) ||
@@ -78,14 +75,12 @@ priv struct FlatDetourCandidateInput {
 fn flat_detour_candidate_flags(
   input : FlatDetourCandidateInput,
 ) -> FlatDetourCandidateFlags {
-  let no_arrow =
-    !input.using_pathplan &&
+  let no_arrow = !input.using_pathplan &&
     input.is_flat_edge &&
     !input.has_explicit_port &&
     input.label_width_pt <= 0.0 &&
     route_has_no_arrowheads(input.route_include_tail, input.route_include_head)
-  let top_single_arrow =
-    !input.using_pathplan &&
+  let top_single_arrow = !input.using_pathplan &&
     input.is_flat_edge &&
     input.has_explicit_port &&
     input.label_width_pt <= 0.0 &&
@@ -94,7 +89,10 @@ fn flat_detour_candidate_flags(
     (input.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
     (input.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
     (input.layout_rankdir == RankDir::TB || input.layout_rankdir == RankDir::BT) &&
-    route_has_single_arrowhead(input.route_include_tail, input.route_include_head)
+    route_has_single_arrowhead(
+      input.route_include_tail,
+      input.route_include_head,
+    )
   { no_arrow, top_single_arrow }
 }
 
@@ -103,7 +101,11 @@ fn edge_port_slope_or_zero(
   port : @cgraph.Port?,
   slope : @geom.Point,
 ) -> @geom.Point {
-  if @edge_identity.port_is_explicit(port) { slope } else { @edge_spline.point(0.0, 0.0) }
+  if @edge_identity.port_is_explicit(port) {
+    slope
+  } else {
+    @edge_spline.point(0.0, 0.0)
+  }
 }
 
 ///|
@@ -140,36 +142,36 @@ priv struct ShortRouteDetourContextInput {
 fn short_route_detour_context(
   input : ShortRouteDetourContextInput,
 ) -> ShortRouteDetourContext {
-  let tail_slope_line = edge_port_slope_or_zero(input.tail_port, input.tail_slope)
-  let head_slope_line = edge_port_slope_or_zero(input.head_port, input.head_slope)
-  let needs_record_detour =
-    needs_record_port_detour(
-      {
-        using_pathplan: input.using_pathplan,
-        is_flat_edge: input.is_flat_edge,
-        tail_node: input.tail_node,
-        head_node: input.head_node,
-        tail_port: input.tail_port,
-        head_port: input.head_port,
-        tail_slope_line,
-        head_slope_line,
-        layout_rankdir: input.layout_rankdir,
-      },
-    )
-  let flat_detour_flags =
-    flat_detour_candidate_flags(
-      {
-        using_pathplan: input.using_pathplan,
-        is_flat_edge: input.is_flat_edge,
-        has_explicit_port: input.has_explicit_port,
-        label_width_pt: input.label_width_pt,
-        tail_port_side: input.tail_port_side,
-        head_port_side: input.head_port_side,
-        layout_rankdir: input.layout_rankdir,
-        route_include_tail: input.route_include_tail,
-        route_include_head: input.route_include_head,
-      },
-    )
+  let tail_slope_line = edge_port_slope_or_zero(
+    input.tail_port,
+    input.tail_slope,
+  )
+  let head_slope_line = edge_port_slope_or_zero(
+    input.head_port,
+    input.head_slope,
+  )
+  let needs_record_detour = needs_record_port_detour({
+    using_pathplan: input.using_pathplan,
+    is_flat_edge: input.is_flat_edge,
+    tail_node: input.tail_node,
+    head_node: input.head_node,
+    tail_port: input.tail_port,
+    head_port: input.head_port,
+    tail_slope_line,
+    head_slope_line,
+    layout_rankdir: input.layout_rankdir,
+  })
+  let flat_detour_flags = flat_detour_candidate_flags({
+    using_pathplan: input.using_pathplan,
+    is_flat_edge: input.is_flat_edge,
+    has_explicit_port: input.has_explicit_port,
+    label_width_pt: input.label_width_pt,
+    tail_port_side: input.tail_port_side,
+    head_port_side: input.head_port_side,
+    layout_rankdir: input.layout_rankdir,
+    route_include_tail: input.route_include_tail,
+    route_include_head: input.route_include_head,
+  })
   {
     tail_slope_line,
     head_slope_line,
@@ -186,25 +188,23 @@ fn short_route_detour_context_for_base(
   has_explicit_port : Bool,
   label_width_pt : Double,
 ) -> ShortRouteDetourContext {
-  short_route_detour_context(
-    {
-      using_pathplan,
-      is_flat_edge: base.is_flat_edge,
-      tail_node: base.tail_node,
-      head_node: base.head_node,
-      tail_port: base.tail_port,
-      head_port: base.head_port,
-      tail_slope: base.tail_slope,
-      head_slope: base.head_slope,
-      layout_rankdir: base.layout_rankdir,
-      has_explicit_port,
-      label_width_pt,
-      tail_port_side: base.tail_port_side,
-      head_port_side: base.head_port_side,
-      route_include_tail: base.route_include_tail,
-      route_include_head: base.route_include_head,
-    },
-  )
+  short_route_detour_context({
+    using_pathplan,
+    is_flat_edge: base.is_flat_edge,
+    tail_node: base.tail_node,
+    head_node: base.head_node,
+    tail_port: base.tail_port,
+    head_port: base.head_port,
+    tail_slope: base.tail_slope,
+    head_slope: base.head_slope,
+    layout_rankdir: base.layout_rankdir,
+    has_explicit_port,
+    label_width_pt,
+    tail_port_side: base.tail_port_side,
+    head_port_side: base.head_port_side,
+    route_include_tail: base.route_include_tail,
+    route_include_head: base.route_include_head,
+  })
 }
 
 ///|
@@ -287,31 +287,28 @@ priv struct ShortRouteFallbackBuildInput {
 fn build_short_route_fallback_spline(
   input : ShortRouteFallbackBuildInput,
 ) -> PointsSplineResult {
-  let prefer_linear_flat_line =
-    prefer_linear_for_flat_line(
-      input.prefer_linear_flat_invis,
-      input.detour_resolution.flat_no_arrow_candidate,
-      input.detour_resolution.has_flat_detour,
-      input.prefer_linear_flat_bottom_single_arrow,
-    )
-  build_short_route_line_or_pathplan_spline(
-    {
-      base: input.base,
-      using_pathplan: input.using_pathplan,
-      pathplan_points: input.pathplan_points,
-      line_start: input.line_start,
-      line_end: input.line_end,
-      tail_slope_line: input.detour_context.tail_slope_line,
-      head_slope_line: input.detour_context.head_slope_line,
-      force_segmented: input.force_segmented,
-      route_barriers: input.route_barriers,
-      tail_clip_enabled: input.tail_clip_enabled,
-      head_clip_enabled: input.head_clip_enabled,
-      curve_offset: input.curve_offset,
-      curve_skew: input.curve_skew,
-      prefer_linear: prefer_linear_flat_line,
-    },
+  let prefer_linear_flat_line = prefer_linear_for_flat_line(
+    input.prefer_linear_flat_invis,
+    input.detour_resolution.flat_no_arrow_candidate,
+    input.detour_resolution.has_flat_detour,
+    input.prefer_linear_flat_bottom_single_arrow,
   )
+  build_short_route_line_or_pathplan_spline({
+    base: input.base,
+    using_pathplan: input.using_pathplan,
+    pathplan_points: input.pathplan_points,
+    line_start: input.line_start,
+    line_end: input.line_end,
+    tail_slope_line: input.detour_context.tail_slope_line,
+    head_slope_line: input.detour_context.head_slope_line,
+    force_segmented: input.force_segmented,
+    route_barriers: input.route_barriers,
+    tail_clip_enabled: input.tail_clip_enabled,
+    head_clip_enabled: input.head_clip_enabled,
+    curve_offset: input.curve_offset,
+    curve_skew: input.curve_skew,
+    prefer_linear: prefer_linear_flat_line,
+  })
 }
 
 ///|
@@ -324,13 +321,11 @@ fn short_route_build_context(
   }
   // Graphviz parity: flat invisible edges use linear control points in
   // line routing (matches proc3d rank=same invis edge snapshots).
-  let prefer_linear_flat_invis =
-    input.base.is_flat_edge &&
+  let prefer_linear_flat_invis = input.base.is_flat_edge &&
     !input.has_explicit_port &&
     input.label_width_pt <= 0.0 &&
     style_value.contains("invis")
-  let prefer_linear_flat_bottom_single_arrow =
-    input.base.is_flat_edge &&
+  let prefer_linear_flat_bottom_single_arrow = input.base.is_flat_edge &&
     !input.base.is_flat_adjacent &&
     !input.base.swap_ends &&
     input.has_explicit_port &&
@@ -339,20 +334,20 @@ fn short_route_build_context(
     (input.base.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
     (input.base.tail_port_side & PORT_SIDE_TOP) == 0 &&
     (input.base.head_port_side & PORT_SIDE_TOP) == 0 &&
-    route_has_single_arrowhead(input.base.route_include_tail, input.base.route_include_head)
-  let flat_detour_lookup =
-    flat_detour_lookup_context(
-      {
-        base: input.base,
-        positions: input.positions,
-        sizes: input.sizes,
-        ranks: input.ranks,
-        rank_y: input.rank_y,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-        ranksep_pt: input.ranksep_pt,
-      },
+    route_has_single_arrowhead(
+      input.base.route_include_tail,
+      input.base.route_include_head,
     )
+  let flat_detour_lookup = flat_detour_lookup_context({
+    base: input.base,
+    positions: input.positions,
+    sizes: input.sizes,
+    ranks: input.ranks,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    ranksep_pt: input.ranksep_pt,
+  })
   {
     using_pathplan: input.using_pathplan,
     has_explicit_port: input.has_explicit_port,
@@ -404,18 +399,16 @@ fn short_route_spec_for_anchor_or_pathplan_points(
   let head_anchor = input.head_anchor
   let tail_clip_enabled = input.tail_clip_enabled
   let head_clip_enabled = input.head_clip_enabled
-  let fallback_line_start =
-    if using_pathplan && points.length() >= 2 {
-      points[0]
-    } else {
-      tail_anchor
-    }
-  let fallback_line_end =
-    if using_pathplan && points.length() >= 2 {
-      points[points.length() - 1]
-    } else {
-      head_anchor
-    }
+  let fallback_line_start = if using_pathplan && points.length() >= 2 {
+    points[0]
+  } else {
+    tail_anchor
+  }
+  let fallback_line_end = if using_pathplan && points.length() >= 2 {
+    points[points.length() - 1]
+  } else {
+    head_anchor
+  }
   {
     detour_line_start: tail_anchor,
     detour_line_end: head_anchor,
@@ -434,62 +427,52 @@ fn build_short_route_spline_with_detour(
   short_route_context : ShortRouteBuildContext,
   short_route_spec : ShortRouteBuildSpec,
 ) -> PointsSplineResult {
-  let (detour_context, detour_resolution) =
-    resolve_short_route_detour_for_base(
-      {
-        base,
-        using_pathplan: short_route_context.using_pathplan,
-        has_explicit_port: short_route_context.has_explicit_port,
-        label_width_pt: short_route_context.label_width_pt,
-        flat_detour_lookup: short_route_context.flat_detour_lookup,
-        line_start: short_route_spec.detour_line_start,
-        line_end: short_route_spec.detour_line_end,
-        route_barriers: short_route_context.route_barriers,
-        nodesep_pt: short_route_context.nodesep_pt,
-        lr_detour_uses_x_axis: short_route_spec.lr_detour_uses_x_axis,
-      },
-    )
+  let (detour_context, detour_resolution) = resolve_short_route_detour_for_base({
+      base,
+      using_pathplan: short_route_context.using_pathplan,
+      has_explicit_port: short_route_context.has_explicit_port,
+      label_width_pt: short_route_context.label_width_pt,
+      flat_detour_lookup: short_route_context.flat_detour_lookup,
+      line_start: short_route_spec.detour_line_start,
+      line_end: short_route_spec.detour_line_end,
+      route_barriers: short_route_context.route_barriers,
+      nodesep_pt: short_route_context.nodesep_pt,
+      lr_detour_uses_x_axis: short_route_spec.lr_detour_uses_x_axis,
+    },
+  )
   if detour_resolution.detour_spline is Some(result) {
     result
   } else {
-    let (line_start, line_end) =
-      bottom_single_arrow_line_endpoints(
-        {
-          prefer_linear_flat_bottom_single_arrow:
-            short_route_context.prefer_linear_flat_bottom_single_arrow,
-          line_start: short_route_spec.fallback_line_start,
-          line_end: short_route_spec.fallback_line_end,
-          tail_clip_center: base.tail_clip_center,
-          head_clip_center: base.head_clip_center,
-          tail_clip_size: base.tail_clip_size,
-          head_clip_size: base.head_clip_size,
-        },
-      )
-    let line_points =
-      pathplan_line_points_or_endpoints(
-        short_route_spec.fallback_points,
-        line_start,
-        line_end,
-      )
-    build_short_route_fallback_spline(
-      {
-        base,
-        using_pathplan: short_route_context.using_pathplan,
-        pathplan_points: line_points,
-        line_start,
-        line_end,
-        detour_context,
-        detour_resolution,
-        force_segmented: short_route_context.force_segmented,
-        route_barriers: short_route_context.route_barriers,
-        tail_clip_enabled: short_route_spec.tail_clip_enabled,
-        head_clip_enabled: short_route_spec.head_clip_enabled,
-        curve_offset: short_route_context.curve_offset,
-        curve_skew: short_route_context.curve_skew,
-        prefer_linear_flat_invis: short_route_context.prefer_linear_flat_invis,
-        prefer_linear_flat_bottom_single_arrow:
-          short_route_context.prefer_linear_flat_bottom_single_arrow,
-      },
+    let (line_start, line_end) = bottom_single_arrow_line_endpoints({
+      prefer_linear_flat_bottom_single_arrow: short_route_context.prefer_linear_flat_bottom_single_arrow,
+      line_start: short_route_spec.fallback_line_start,
+      line_end: short_route_spec.fallback_line_end,
+      tail_clip_center: base.tail_clip_center,
+      head_clip_center: base.head_clip_center,
+      tail_clip_size: base.tail_clip_size,
+      head_clip_size: base.head_clip_size,
+    })
+    let line_points = pathplan_line_points_or_endpoints(
+      short_route_spec.fallback_points,
+      line_start,
+      line_end,
     )
+    build_short_route_fallback_spline({
+      base,
+      using_pathplan: short_route_context.using_pathplan,
+      pathplan_points: line_points,
+      line_start,
+      line_end,
+      detour_context,
+      detour_resolution,
+      force_segmented: short_route_context.force_segmented,
+      route_barriers: short_route_context.route_barriers,
+      tail_clip_enabled: short_route_spec.tail_clip_enabled,
+      head_clip_enabled: short_route_spec.head_clip_enabled,
+      curve_offset: short_route_context.curve_offset,
+      curve_skew: short_route_context.curve_skew,
+      prefer_linear_flat_invis: short_route_context.prefer_linear_flat_invis,
+      prefer_linear_flat_bottom_single_arrow: short_route_context.prefer_linear_flat_bottom_single_arrow,
+    })
   }
 }
