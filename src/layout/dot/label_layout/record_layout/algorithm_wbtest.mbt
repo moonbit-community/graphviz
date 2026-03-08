@@ -224,6 +224,56 @@ test "layout_record_tree preserves exact geometry for split record fields" {
 }
 
 ///|
+test "layout_record_tree preserves exact geometry for compact leaf record" {
+  let source =
+    "digraph { node [shape=Mrecord]; zzz [label=\"ZZZ\"]; }"
+  let (inner_rect, layout) = record_layout_for_node(source, "zzz")
+
+  assert_rect_close(inner_rect, -27.0, -18.0, 27.0, 18.0)
+  guard layout.length() == 1 else { fail("expected single field") }
+  let leaf = layout[0]
+  assert_eq(leaf.sides, ALL_PORT_SIDES)
+  assert_eq(leaf.children.length(), 0)
+  assert_rect_close(leaf.rect, -27.0, -18.0, 26.75, 18.0)
+  match leaf.field {
+    Some(field) => {
+      assert_eq(field.name, None)
+      assert_eq(field.text, "ZZZ")
+    }
+    None => fail("expected leaf field")
+  }
+}
+
+///|
+test "layout_record_tree preserves exact geometry for wrapped worker record" {
+  let source =
+    "digraph { node [shape=Mrecord]; zzz_worker [label=\"{ZZZ Worker}\"]; }"
+  let (inner_rect, layout) = record_layout_for_node(source, "zzz_worker")
+
+  assert_rect_close(inner_rect, -42.5, -18.0, 42.5, 18.0)
+  guard layout.length() == 1 else { fail("expected wrapped top-level group") }
+  let group = layout[0]
+  assert_eq(group.sides, ALL_PORT_SIDES)
+  assert_rect_close(group.rect, -42.5, -18.0, 42.5, 18.0)
+  match group.field {
+    Some(_) => fail("expected group node")
+    None => ()
+  }
+  guard group.children.length() == 1 else { fail("expected nested leaf") }
+  let leaf = group.children[0]
+  assert_eq(leaf.sides, ALL_PORT_SIDES)
+  assert_eq(leaf.children.length(), 0)
+  assert_rect_close(leaf.rect, -42.5, -17.5, 42.5, 18.0)
+  match leaf.field {
+    Some(field) => {
+      assert_eq(field.name, None)
+      assert_eq(field.text, "ZZZ Worker")
+    }
+    None => fail("expected wrapped leaf field")
+  }
+}
+
+///|
 test "layout_record_tree preserves exact geometry for wrapped single-field record" {
   let source =
     "digraph { node [shape=Mrecord]; foo_agent [label=\"{Foo Agent}\"]; }"
