@@ -6,9 +6,7 @@ from pathlib import Path
 repo_root = Path(__file__).resolve().parents[1]
 xdot_dir = repo_root / "tests" / "render" / "xdot"
 overrides_output_path = repo_root / "src" / "layout" / "dot" / "font_metrics" / "textspan_overrides.jsonl"
-sample_output_path = repo_root / "tests" / "fixtures" / "graphviz" / "textspan.jsonl"
-# Full override data stays with the runtime owner package; tests only replay a
-# small representative sample derived from distinct offset families.
+# Full override data stays with the runtime owner package.
 
 draw_attr_re = re.compile(r'_(?:l|h|t)?draw_="')
 float_re = re.compile(r"[+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?")
@@ -251,23 +249,5 @@ for (font, size, text), entry in sorted(entries.items()):
 overrides_output_path.parent.mkdir(parents=True, exist_ok=True)
 with overrides_output_path.open("w", encoding="ascii") as handle:
     for data in sorted_entries:
-        handle.write(json.dumps(data, ensure_ascii=True))
-        handle.write("\n")
-
-sample_output_path.parent.mkdir(parents=True, exist_ok=True)
-# Keep one entry per distinct (font, size, offset) family so the label_metrics
-# fixture test remains broad but no longer depends on the full runtime corpus.
-seen_samples = set()
-with sample_output_path.open("w", encoding="ascii") as handle:
-    for data in sorted_entries:
-        sample_key = (
-            data["font"],
-            float(data["size"]),
-            float(data["yoffset_layout"]),
-            float(data["yoffset_centerline"]),
-        )
-        if sample_key in seen_samples:
-            continue
-        seen_samples.add(sample_key)
         handle.write(json.dumps(data, ensure_ascii=True))
         handle.write("\n")
