@@ -424,6 +424,30 @@ fn build_exact_rank_fixture_graph(
 }
 
 ///|
+struct CapturedRankEdgeSpec {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+}
+
+///|
+fn build_captured_rank_fixture_graph(
+  node_specs : Array[ExactRankNodeSpec],
+  edge_specs : Array[CapturedRankEdgeSpec],
+) -> NsGraph {
+  let graph = new_graph()
+  for spec in node_specs {
+    let node = add_node(graph, spec.name, kind=spec.kind)
+    set_node_rank(graph, node, spec.rank)
+  }
+  for spec in edge_specs {
+    ignore(add_edge(graph, spec.tail, spec.head, spec.minlen, spec.weight))
+  }
+  graph
+}
+
+///|
 fn build_single_node_graph() -> NsGraph {
   let graph = new_graph()
   ignore(add_node(graph, "solo"))

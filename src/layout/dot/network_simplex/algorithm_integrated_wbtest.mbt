@@ -199,6 +199,117 @@ test "network_simplex LR rebalances large slack-normal scaffold" {
 }
 
 ///|
+/// Graphviz parity: the captured LR xpos scaffold for `L0` is not identical
+/// to the rank-fixture-derived slack-normal scaffold above. Keep the exact
+/// captured node ranks and minlen ladder owner-locally so the xpos fixture
+/// replay can retire without losing its distinct signal.
+fn build_l0_xpos_fixture_graph() -> NsGraph {
+  let node_specs : Array[ExactRankNodeSpec] = []
+  let slack_ranks : Array[Int] = [
+    287, 287, 94, -1, -1, -1, -1, -1, 431, 431, 367, 215, 284, 189, 71, 71, 71, 215, 143, 71, 215,
+    215, 215, 94, -1, -1, -1, -1, -1, 71, 71, 71, 143, 143, 71, -1, -1, -1, -1, -1, -1, -1,
+  ]
+  for rank in slack_ranks {
+    node_specs.push({ name: "", kind: NodeKind::Slack, rank })
+  }
+  let normal_names : Array[String] = [
+    "n1", "n2", "n3", "n0", "n4", "n5", "n6", "n7", "n8", "n9", "n10", "n11", "n12", "n13", "n14",
+    "n15", "n16", "n17", "n18", "n19", "n20", "n21", "n22", "n23", "n24", "n25", "n26", "n27",
+    "n28", "n29", "n30", "n31", "n32", "n33", "n34", "n35", "n36", "n37", "n38", "n39", "n40",
+    "n41", "n42",
+  ]
+  let normal_ranks : Array[Int] = [
+    0, 0, 0, 0, 72, 144, 72, 83, 155, 0, 0, 0, 72, 144, 95, 227, 144, 216, 299, 371, 72, 216, 190,
+    288, 360, 285, 144, 216, 432, 368, 440, 0, 0, 0, 72, 144, 95, 512, 443, 216, 288, 288, 526,
+  ]
+  for i in 0..<normal_names.length() {
+    node_specs.push({
+      name: normal_names[i],
+      kind: NodeKind::Normal,
+      rank: normal_ranks[i],
+    })
+  }
+  build_captured_rank_fixture_graph(
+    node_specs,
+    [
+      { tail: 0, head: 83, minlen: 1, weight: 1 }, { tail: 0, head: 84, minlen: 1, weight: 1 },
+      { tail: 1, head: 82, minlen: 1, weight: 1 }, { tail: 1, head: 83, minlen: 1, weight: 1 },
+      { tail: 2, head: 77, minlen: 1, weight: 1 }, { tail: 2, head: 78, minlen: 1, weight: 1 },
+      { tail: 3, head: 74, minlen: 1, weight: 1 }, { tail: 3, head: 75, minlen: 1, weight: 1 },
+      { tail: 4, head: 73, minlen: 1, weight: 1 }, { tail: 4, head: 77, minlen: 1, weight: 1 },
+      { tail: 5, head: 73, minlen: 1, weight: 1 }, { tail: 5, head: 76, minlen: 1, weight: 1 },
+      { tail: 6, head: 73, minlen: 1, weight: 1 }, { tail: 6, head: 74, minlen: 1, weight: 1 },
+      { tail: 7, head: 72, minlen: 1, weight: 1 }, { tail: 7, head: 73, minlen: 1, weight: 1 },
+      { tail: 8, head: 70, minlen: 1, weight: 1 }, { tail: 8, head: 79, minlen: 1, weight: 1 },
+      { tail: 9, head: 70, minlen: 1, weight: 1 }, { tail: 9, head: 72, minlen: 1, weight: 1 },
+      { tail: 10, head: 70, minlen: 1, weight: 1 }, { tail: 10, head: 71, minlen: 1, weight: 1 },
+      { tail: 11, head: 69, minlen: 1, weight: 1 }, { tail: 11, head: 70, minlen: 1, weight: 1 },
+      { tail: 12, head: 66, minlen: 1, weight: 1 }, { tail: 12, head: 67, minlen: 1, weight: 1 },
+      { tail: 13, head: 63, minlen: 1, weight: 1 }, { tail: 13, head: 64, minlen: 1, weight: 1 },
+      { tail: 14, head: 62, minlen: 1, weight: 1 }, { tail: 14, head: 66, minlen: 1, weight: 1 },
+      { tail: 15, head: 62, minlen: 1, weight: 1 }, { tail: 15, head: 65, minlen: 1, weight: 1 },
+      { tail: 16, head: 62, minlen: 1, weight: 1 }, { tail: 16, head: 63, minlen: 1, weight: 1 },
+      { tail: 17, head: 61, minlen: 1, weight: 1 }, { tail: 17, head: 69, minlen: 1, weight: 1 },
+      { tail: 18, head: 61, minlen: 1, weight: 1 }, { tail: 18, head: 68, minlen: 1, weight: 1 },
+      { tail: 19, head: 61, minlen: 1, weight: 1 }, { tail: 19, head: 62, minlen: 1, weight: 1 },
+      { tail: 20, head: 59, minlen: 1, weight: 1 }, { tail: 20, head: 80, minlen: 1, weight: 1 },
+      { tail: 21, head: 59, minlen: 1, weight: 1 }, { tail: 21, head: 61, minlen: 1, weight: 1 },
+      { tail: 22, head: 59, minlen: 1, weight: 1 }, { tail: 22, head: 60, minlen: 1, weight: 1 },
+      { tail: 23, head: 55, minlen: 1, weight: 1 }, { tail: 23, head: 56, minlen: 1, weight: 1 },
+      { tail: 24, head: 52, minlen: 1, weight: 1 }, { tail: 24, head: 53, minlen: 1, weight: 1 },
+      { tail: 25, head: 51, minlen: 1, weight: 1 }, { tail: 25, head: 55, minlen: 1, weight: 1 },
+      { tail: 26, head: 51, minlen: 1, weight: 1 }, { tail: 26, head: 54, minlen: 1, weight: 1 },
+      { tail: 27, head: 51, minlen: 1, weight: 1 }, { tail: 27, head: 52, minlen: 1, weight: 1 },
+      { tail: 28, head: 50, minlen: 1, weight: 1 }, { tail: 28, head: 51, minlen: 1, weight: 1 },
+      { tail: 29, head: 48, minlen: 1, weight: 1 }, { tail: 29, head: 57, minlen: 1, weight: 1 },
+      { tail: 30, head: 48, minlen: 1, weight: 1 }, { tail: 30, head: 50, minlen: 1, weight: 1 },
+      { tail: 31, head: 48, minlen: 1, weight: 1 }, { tail: 31, head: 49, minlen: 1, weight: 1 },
+      { tail: 32, head: 47, minlen: 1, weight: 1 }, { tail: 32, head: 59, minlen: 1, weight: 1 },
+      { tail: 33, head: 47, minlen: 1, weight: 1 }, { tail: 33, head: 58, minlen: 1, weight: 1 },
+      { tail: 34, head: 47, minlen: 1, weight: 1 }, { tail: 34, head: 48, minlen: 1, weight: 1 },
+      { tail: 35, head: 45, minlen: 1, weight: 1 }, { tail: 35, head: 82, minlen: 1, weight: 1 },
+      { tail: 36, head: 45, minlen: 1, weight: 1 }, { tail: 36, head: 81, minlen: 1, weight: 1 },
+      { tail: 37, head: 45, minlen: 1, weight: 1 }, { tail: 37, head: 47, minlen: 1, weight: 1 },
+      { tail: 38, head: 45, minlen: 1, weight: 1 }, { tail: 38, head: 46, minlen: 1, weight: 1 },
+      { tail: 39, head: 45, minlen: 1, weight: 1 }, { tail: 39, head: 42, minlen: 1, weight: 1 },
+      { tail: 40, head: 43, minlen: 1, weight: 1 }, { tail: 40, head: 44, minlen: 1, weight: 1 },
+      { tail: 41, head: 42, minlen: 1, weight: 1 }, { tail: 41, head: 43, minlen: 1, weight: 1 },
+      { tail: 42, head: 46, minlen: 72, weight: 0 }, { tail: 43, head: 48, minlen: 72, weight: 0 },
+      { tail: 44, head: 49, minlen: 83, weight: 0 }, { tail: 46, head: 47, minlen: 72, weight: 0 },
+      { tail: 47, head: 81, minlen: 72, weight: 0 }, { tail: 48, head: 58, minlen: 72, weight: 0 },
+      { tail: 49, head: 50, minlen: 72, weight: 0 }, { tail: 50, head: 57, minlen: 72, weight: 0 },
+      { tail: 51, head: 62, minlen: 72, weight: 0 }, { tail: 52, head: 54, minlen: 72, weight: 0 },
+      { tail: 53, head: 56, minlen: 95, weight: 0 }, { tail: 54, head: 55, minlen: 72, weight: 0 },
+      { tail: 55, head: 63, minlen: 72, weight: 0 }, { tail: 56, head: 64, minlen: 95, weight: 0 },
+      { tail: 57, head: 60, minlen: 72, weight: 0 }, { tail: 58, head: 59, minlen: 72, weight: 0 },
+      { tail: 59, head: 83, minlen: 72, weight: 0 }, { tail: 60, head: 61, minlen: 72, weight: 0 },
+      { tail: 61, head: 80, minlen: 72, weight: 0 }, { tail: 62, head: 68, minlen: 72, weight: 0 },
+      { tail: 63, head: 65, minlen: 72, weight: 0 }, { tail: 64, head: 67, minlen: 95, weight: 0 },
+      { tail: 65, head: 66, minlen: 72, weight: 0 }, { tail: 66, head: 70, minlen: 72, weight: 0 },
+      { tail: 67, head: 71, minlen: 83, weight: 0 }, { tail: 68, head: 69, minlen: 72, weight: 0 },
+      { tail: 71, head: 72, minlen: 72, weight: 0 }, { tail: 72, head: 79, minlen: 72, weight: 0 },
+      { tail: 74, head: 76, minlen: 72, weight: 0 }, { tail: 75, head: 78, minlen: 95, weight: 0 },
+      { tail: 76, head: 77, minlen: 72, weight: 0 }, { tail: 80, head: 84, minlen: 84, weight: 0 },
+      { tail: 81, head: 82, minlen: 72, weight: 0 },
+    ],
+  )
+}
+
+///|
+test "network_simplex LR matches exact L0 xpos fixture ranks" {
+  let graph = build_l0_xpos_fixture_graph()
+
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+
+  assert_eq(collect_node_ranks(graph), [
+    133, 58, 268, 124, 196, 196, 124, 196, 144, 144, 124, 127, 41, -89, -17, -17, -89, 19, 19, -17,
+    -17, -17, -53, -173, -305, -215, -233, -305, -215, -197, -197, -269, -125, -125, -197, -125,
+    -125, -125, -197, -289, -352, -310, -288, -309, -351, -124, -196, -124, -196, -268, -196, -214,
+    -304, -304, -232, -160, -172, -124, -124, -16, -52, 20, -16, -88, -77, -16, 56, 42, 56, 128,
+    145, 125, 197, 197, 125, 125, 197, 269, 269, 269, 92, -52, 59, 134, 176,
+  ])
+}
+///|
 /// Graphviz parity: this larger LR mixed slack-virtual-normal scaffold still
 /// has owner-local algorithmic signal. Keep exact feasible-tree, pre-balance,
 /// and final-rank coverage here so rank fixture replay only protects the one
@@ -550,6 +661,243 @@ test "network_simplex LR rebalances large mixed-node scaffold" {
   assert_eq(collect_node_ranks(graph), [1274, -24, 940, 729, 890, 748, 898, 740, 948, 721, 1266, 1058, 742, 523, 896, 750, 904, 515, 1050, 912, 507, 201, 174, -16, 242, 0, 483, 182, 976, 1110, 823, 823, 353, 64, 78, 123, 256, 256, 256, 354, 91, 59, 78, 909, 693, 822, 822, 823, 823, 823, 585, 531, 585, 639, 531, 585, 686, 686, 531, 585, 585, 531, 591, 406, 768, 854, 823, 782, 779, 869, 768, 865, 887, 780, 870, 783, 824, 855, 783, 866, 769, 1109, 1214, 598, 592, 532, 586, 532, 687, 586, 532, 640, 586, 824, 824, 824, 823, 823, 694, 981, 354, 79, 60, 182, 408, 257, 257, 355, 124, 92, 65, 407, 824, 910, 1111, 977])
 }
 
+///|
+/// Graphviz parity: the captured LR xpos scaffold for `yours_truly` differs
+/// slightly from the rank-fixture-derived mixed scaffold above. Keep the exact
+/// captured slack ranks, virtual ranks, and minlen ladder owner-locally so the
+/// xpos fixture replay can retire without losing this distinct final-rank case.
+fn build_yours_truly_xpos_fixture_graph() -> NsGraph {
+  let node_specs : Array[ExactRankNodeSpec] = []
+  let slack_ranks : Array[Int] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 212, 237,
+    216, -1, -1, -1, -1, -94, -94, -94, 84, 109, 24, -1, -1, 290, 71, 274, 216, -1, -1, -1, -1, -1,
+    -1, 13, -1, 6, 212, 237, 40, 71, 47, 40, 47, 142, -1, 71, -1, -1, -1, 80, -1, 93,
+  ]
+  for rank in slack_ranks {
+    node_specs.push({ name: "", kind: NodeKind::Slack, rank })
+  }
+  let tail_node_specs : Array[ExactRankNodeSpec] = [
+        { name: "yyy_worker", kind: NodeKind::Normal, rank: 105 },
+        { name: "zzz_worker", kind: NodeKind::Normal, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 81 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "foo_agent", kind: NodeKind::Normal, rank: 0 },
+        { name: "yyy", kind: NodeKind::Normal, rank: 72 },
+        { name: "zzz", kind: NodeKind::Normal, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 94 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "handle_1", kind: NodeKind::Normal, rank: 870 },
+        { name: "handle_x", kind: NodeKind::Normal, rank: 973 },
+        { name: "other_xprot", kind: NodeKind::Normal, rank: 465 },
+        { name: "", kind: NodeKind::Virtual, rank: 48 },
+        { name: "", kind: NodeKind::Virtual, rank: 41 },
+        { name: "front_end_jz", kind: NodeKind::Normal, rank: 242 },
+        { name: "", kind: NodeKind::Virtual, rank: 189 },
+        { name: "others", kind: NodeKind::Normal, rank: 340 },
+        { name: "", kind: NodeKind::Virtual, rank: 7 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 14 },
+        { name: "arbiter_vadam", kind: NodeKind::Normal, rank: 0 },
+        { name: "tunnel_egress", kind: NodeKind::Normal, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "accel", kind: NodeKind::Normal, rank: 217 },
+        { name: "", kind: NodeKind::Virtual, rank: 275 },
+        { name: "tunnel_ingress", kind: NodeKind::Normal, rank: 611 },
+        { name: "", kind: NodeKind::Virtual, rank: 72 },
+        { name: "accel_appearance", kind: NodeKind::Normal, rank: 751 },
+        { name: "machsrv_xprot_gen", kind: NodeKind::Normal, rank: 0 },
+        { name: "z_shapeshifter", kind: NodeKind::Normal, rank: 0 },
+        { name: "z_req1", kind: NodeKind::Normal, rank: 0 },
+        { name: "z_req", kind: NodeKind::Normal, rank: 119 },
+        { name: "mobvm_a_req1", kind: NodeKind::Normal, rank: 316 },
+        { name: "mobvm_a_req", kind: NodeKind::Normal, rank: 167 },
+        { name: "", kind: NodeKind::Virtual, rank: 85 },
+        { name: "", kind: NodeKind::Virtual, rank: 110 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 25 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 143 },
+        { name: "", kind: NodeKind::Virtual, rank: 0 },
+        { name: "", kind: NodeKind::Virtual, rank: 291 },
+        { name: "", kind: NodeKind::Virtual, rank: 238 },
+        { name: "", kind: NodeKind::Virtual, rank: 213 },
+  ]
+  for spec in tail_node_specs {
+    node_specs.push(spec)
+  }
+  build_captured_rank_fixture_graph(
+    node_specs,
+    [
+      { tail: 1, head: 27, minlen: 8, weight: 0 }, { tail: 1, head: 25, minlen: 8, weight: 0 },
+      { tail: 1, head: 23, minlen: 8, weight: 0 }, { tail: 1, head: 21, minlen: 8, weight: 0 },
+      { tail: 1, head: 19, minlen: 8, weight: 0 }, { tail: 1, head: 17, minlen: 8, weight: 0 },
+      { tail: 1, head: 11, minlen: 8, weight: 0 }, { tail: 1, head: 9, minlen: 8, weight: 0 },
+      { tail: 2, head: 8, minlen: 8, weight: 0 }, { tail: 3, head: 2, minlen: 68, weight: 128 },
+      { tail: 3, head: 76, minlen: 45, weight: 0 }, { tail: 3, head: 75, minlen: 26, weight: 0 },
+      { tail: 3, head: 73, minlen: 51, weight: 0 }, { tail: 4, head: 6, minlen: 8, weight: 0 },
+      { tail: 5, head: 4, minlen: 66, weight: 128 }, { tail: 5, head: 78, minlen: 35, weight: 0 },
+      { tail: 6, head: 8, minlen: 8, weight: 0 }, { tail: 7, head: 6, minlen: 68, weight: 128 },
+      { tail: 7, head: 78, minlen: 35, weight: 0 }, { tail: 7, head: 5, minlen: 8, weight: 0 },
+      { tail: 8, head: 0, minlen: 8, weight: 0 }, { tail: 9, head: 8, minlen: 51, weight: 128 },
+      { tail: 9, head: 76, minlen: 45, weight: 0 }, { tail: 9, head: 75, minlen: 26, weight: 0 },
+      { tail: 9, head: 73, minlen: 51, weight: 0 }, { tail: 9, head: 80, minlen: 26, weight: 0 },
+      { tail: 9, head: 78, minlen: 35, weight: 0 }, { tail: 9, head: 7, minlen: 8, weight: 0 },
+      { tail: 9, head: 3, minlen: 8, weight: 0 }, { tail: 10, head: 0, minlen: 8, weight: 0 },
+      { tail: 11, head: 10, minlen: 123, weight: 128 },
+      { tail: 11, head: 81, minlen: 50, weight: 0 }, { tail: 12, head: 97, minlen: 71, weight: 0 },
+      { tail: 12, head: 16, minlen: 8, weight: 0 }, { tail: 12, head: 15, minlen: 8, weight: 0 },
+      { tail: 13, head: 12, minlen: 138, weight: 128 },
+      { tail: 13, head: 92, minlen: 58, weight: 0 }, { tail: 13, head: 90, minlen: 9, weight: 0 },
+      { tail: 13, head: 87, minlen: 9, weight: 0 }, { tail: 13, head: 85, minlen: 9, weight: 0 },
+      { tail: 13, head: 83, minlen: 74, weight: 0 }, { tail: 14, head: 99, minlen: 68, weight: 0 },
+      { tail: 14, head: 16, minlen: 8, weight: 0 }, { tail: 15, head: 14, minlen: 83, weight: 128 },
+      { tail: 15, head: 97, minlen: 71, weight: 0 }, { tail: 15, head: 96, minlen: 9, weight: 0 },
+      { tail: 15, head: 95, minlen: 66, weight: 0 }, { tail: 15, head: 94, minlen: 9, weight: 0 },
+      { tail: 15, head: 93, minlen: 70, weight: 0 }, { tail: 16, head: 99, minlen: 68, weight: 0 },
+      { tail: 16, head: 0, minlen: 8, weight: 0 }, { tail: 16, head: 19, minlen: 8, weight: 0 },
+      { tail: 16, head: 11, minlen: 8, weight: 0 }, { tail: 17, head: 16, minlen: 78, weight: 128 },
+      { tail: 17, head: 92, minlen: 58, weight: 0 }, { tail: 17, head: 90, minlen: 9, weight: 0 },
+      { tail: 17, head: 87, minlen: 9, weight: 0 }, { tail: 17, head: 85, minlen: 9, weight: 0 },
+      { tail: 17, head: 83, minlen: 74, weight: 0 }, { tail: 17, head: 96, minlen: 9, weight: 0 },
+      { tail: 17, head: 95, minlen: 66, weight: 0 }, { tail: 17, head: 94, minlen: 9, weight: 0 },
+      { tail: 17, head: 93, minlen: 70, weight: 0 }, { tail: 17, head: 15, minlen: 8, weight: 0 },
+      { tail: 17, head: 13, minlen: 8, weight: 0 }, { tail: 18, head: 81, minlen: 50, weight: 0 },
+      { tail: 18, head: 0, minlen: 8, weight: 0 }, { tail: 18, head: 11, minlen: 8, weight: 0 },
+      { tail: 19, head: 18, minlen: 123, weight: 128 },
+      { tail: 19, head: 99, minlen: 68, weight: 0 }, { tail: 20, head: 95, minlen: 66, weight: 0 },
+      { tail: 20, head: 0, minlen: 8, weight: 0 }, { tail: 20, head: 17, minlen: 8, weight: 0 },
+      { tail: 21, head: 20, minlen: 135, weight: 128 },
+      { tail: 21, head: 100, minlen: 149, weight: 0 },
+      { tail: 22, head: 105, minlen: 74, weight: 0 }, { tail: 22, head: 0, minlen: 8, weight: 0 },
+      { tail: 22, head: 27, minlen: 8, weight: 0 }, { tail: 22, head: 19, minlen: 8, weight: 0 },
+      { tail: 22, head: 17, minlen: 8, weight: 0 }, { tail: 22, head: 11, minlen: 8, weight: 0 },
+      { tail: 23, head: 22, minlen: 101, weight: 128 },
+      { tail: 23, head: 101, minlen: 92, weight: 0 }, { tail: 24, head: 87, minlen: 9, weight: 0 },
+      { tail: 24, head: 0, minlen: 8, weight: 0 }, { tail: 24, head: 17, minlen: 8, weight: 0 },
+      { tail: 25, head: 24, minlen: 66, weight: 128 },
+      { tail: 25, head: 102, minlen: 59, weight: 0 }, { tail: 26, head: 83, minlen: 74, weight: 0 },
+      { tail: 26, head: 0, minlen: 8, weight: 0 }, { tail: 26, head: 19, minlen: 8, weight: 0 },
+      { tail: 26, head: 17, minlen: 8, weight: 0 }, { tail: 26, head: 11, minlen: 8, weight: 0 },
+      { tail: 27, head: 26, minlen: 96, weight: 128 },
+      { tail: 27, head: 105, minlen: 74, weight: 0 }, { tail: 28, head: 115, minlen: 1, weight: 1 },
+      { tail: 28, head: 81, minlen: 1, weight: 1 }, { tail: 29, head: 114, minlen: 1, weight: 1 },
+      { tail: 29, head: 82, minlen: 1, weight: 1 }, { tail: 30, head: 113, minlen: 1, weight: 1 },
+      { tail: 30, head: 95, minlen: 1, weight: 1 }, { tail: 31, head: 112, minlen: 1, weight: 1 },
+      { tail: 31, head: 76, minlen: 1, weight: 1 }, { tail: 32, head: 111, minlen: 1, weight: 1 },
+      { tail: 32, head: 100, minlen: 1, weight: 1 }, { tail: 33, head: 110, minlen: 1, weight: 1 },
+      { tail: 33, head: 101, minlen: 1, weight: 1 }, { tail: 34, head: 109, minlen: 1, weight: 1 },
+      { tail: 34, head: 101, minlen: 1, weight: 1 }, { tail: 35, head: 108, minlen: 1, weight: 1 },
+      { tail: 35, head: 100, minlen: 94, weight: 1 }, { tail: 36, head: 107, minlen: 1, weight: 1 },
+      { tail: 36, head: 100, minlen: 94, weight: 1 }, { tail: 37, head: 106, minlen: 1, weight: 1 },
+      { tail: 37, head: 100, minlen: 94, weight: 1 }, { tail: 38, head: 105, minlen: 1, weight: 1 },
+      { tail: 38, head: 106, minlen: 1, weight: 1 }, { tail: 39, head: 104, minlen: 1, weight: 1 },
+      { tail: 39, head: 107, minlen: 1, weight: 1 }, { tail: 40, head: 103, minlen: 1, weight: 1 },
+      { tail: 40, head: 109, minlen: 1, weight: 1 }, { tail: 41, head: 102, minlen: 1, weight: 1 },
+      { tail: 41, head: 110, minlen: 1, weight: 1 }, { tail: 42, head: 101, minlen: 1, weight: 1 },
+      { tail: 42, head: 108, minlen: 1, weight: 1 }, { tail: 43, head: 99, minlen: 1, weight: 1 },
+      { tail: 43, head: 113, minlen: 1, weight: 1 }, { tail: 44, head: 98, minlen: 1, weight: 1 },
+      { tail: 44, head: 97, minlen: 1, weight: 1 }, { tail: 45, head: 97, minlen: 1, weight: 1 },
+      { tail: 45, head: 96, minlen: 1, weight: 1 }, { tail: 46, head: 96, minlen: 1, weight: 1 },
+      { tail: 46, head: 95, minlen: 1, weight: 1 }, { tail: 47, head: 95, minlen: 1, weight: 1 },
+      { tail: 47, head: 94, minlen: 1, weight: 1 }, { tail: 48, head: 94, minlen: 1, weight: 1 },
+      { tail: 48, head: 93, minlen: 1, weight: 1 }, { tail: 49, head: 93, minlen: 1, weight: 1 },
+      { tail: 49, head: 112, minlen: 1, weight: 1 }, { tail: 50, head: 92, minlen: 1, weight: 1 },
+      { tail: 50, head: 89, minlen: 1, weight: 1 }, { tail: 51, head: 92, minlen: 1, weight: 1 },
+      { tail: 51, head: 90, minlen: 1, weight: 1 }, { tail: 52, head: 92, minlen: 1, weight: 1 },
+      { tail: 52, head: 91, minlen: 1, weight: 1 }, { tail: 53, head: 91, minlen: 1, weight: 1 },
+      { tail: 53, head: 88, minlen: 1, weight: 1 }, { tail: 54, head: 90, minlen: 1, weight: 4 },
+      { tail: 54, head: 87, minlen: 1, weight: 4 }, { tail: 55, head: 89, minlen: 1, weight: 1 },
+      { tail: 55, head: 86, minlen: 1, weight: 1 }, { tail: 56, head: 88, minlen: 1, weight: 1 },
+      { tail: 56, head: 115, minlen: 1, weight: 1 }, { tail: 57, head: 88, minlen: 1, weight: 1 },
+      { tail: 57, head: 114, minlen: 1, weight: 1 }, { tail: 58, head: 87, minlen: 1, weight: 4 },
+      { tail: 58, head: 85, minlen: 1, weight: 4 }, { tail: 59, head: 86, minlen: 1, weight: 1 },
+      { tail: 59, head: 98, minlen: 1, weight: 1 }, { tail: 60, head: 86, minlen: 1, weight: 1 },
+      { tail: 60, head: 84, minlen: 1, weight: 1 }, { tail: 61, head: 85, minlen: 1, weight: 1 },
+      { tail: 61, head: 83, minlen: 1, weight: 1 }, { tail: 62, head: 84, minlen: 1, weight: 1 },
+      { tail: 62, head: 83, minlen: 1, weight: 1 }, { tail: 63, head: 83, minlen: 1, weight: 1 },
+      { tail: 63, head: 111, minlen: 1, weight: 1 }, { tail: 64, head: 80, minlen: 1, weight: 1 },
+      { tail: 64, head: 78, minlen: 1, weight: 1 }, { tail: 65, head: 79, minlen: 1, weight: 1 },
+      { tail: 65, head: 77, minlen: 1, weight: 1 }, { tail: 66, head: 76, minlen: 1, weight: 1 },
+      { tail: 66, head: 74, minlen: 1, weight: 1 }, { tail: 67, head: 76, minlen: 1, weight: 1 },
+      { tail: 67, head: 75, minlen: 1, weight: 1 }, { tail: 68, head: 75, minlen: 1, weight: 1 },
+      { tail: 68, head: 73, minlen: 1, weight: 1 }, { tail: 69, head: 74, minlen: 1, weight: 1 },
+      { tail: 69, head: 72, minlen: 1, weight: 1 }, { tail: 70, head: 73, minlen: 1, weight: 1 },
+      { tail: 70, head: 80, minlen: 1, weight: 1 }, { tail: 71, head: 72, minlen: 1, weight: 1 },
+      { tail: 71, head: 79, minlen: 1, weight: 1 }, { tail: 72, head: 8, minlen: 53, weight: 0 },
+      { tail: 72, head: 2, minlen: 53, weight: 0 }, { tail: 73, head: 72, minlen: 105, weight: 0 },
+      { tail: 74, head: 8, minlen: 67, weight: 0 }, { tail: 74, head: 2, minlen: 67, weight: 0 },
+      { tail: 75, head: 74, minlen: 82, weight: 0 }, { tail: 76, head: 8, minlen: 45, weight: 0 },
+      { tail: 76, head: 2, minlen: 45, weight: 0 }, { tail: 77, head: 8, minlen: 35, weight: 0 },
+      { tail: 77, head: 6, minlen: 35, weight: 0 }, { tail: 77, head: 4, minlen: 35, weight: 0 },
+      { tail: 78, head: 77, minlen: 72, weight: 0 }, { tail: 79, head: 8, minlen: 79, weight: 0 },
+      { tail: 80, head: 79, minlen: 94, weight: 0 }, { tail: 81, head: 82, minlen: 103, weight: 0 },
+      { tail: 82, head: 10, minlen: 51, weight: 0 }, { tail: 83, head: 97, minlen: 147, weight: 0 },
+      { tail: 83, head: 12, minlen: 74, weight: 0 }, { tail: 83, head: 15, minlen: 74, weight: 0 },
+      { tail: 84, head: 98, minlen: 24, weight: 0 }, { tail: 84, head: 12, minlen: 9, weight: 0 },
+      { tail: 85, head: 84, minlen: 7, weight: 0 }, { tail: 86, head: 88, minlen: 99, weight: 0 },
+      { tail: 87, head: 86, minlen: 54, weight: 0 }, { tail: 88, head: 16, minlen: 54, weight: 0 },
+      { tail: 88, head: 12, minlen: 54, weight: 0 }, { tail: 89, head: 91, minlen: 7, weight: 0 },
+      { tail: 90, head: 89, minlen: 7, weight: 0 }, { tail: 91, head: 16, minlen: 9, weight: 0 },
+      { tail: 91, head: 12, minlen: 9, weight: 0 }, { tail: 92, head: 16, minlen: 58, weight: 0 },
+      { tail: 92, head: 12, minlen: 58, weight: 0 }, { tail: 93, head: 16, minlen: 70, weight: 0 },
+      { tail: 93, head: 14, minlen: 70, weight: 0 }, { tail: 94, head: 16, minlen: 9, weight: 0 },
+      { tail: 94, head: 14, minlen: 9, weight: 0 }, { tail: 95, head: 16, minlen: 66, weight: 0 },
+      { tail: 95, head: 14, minlen: 66, weight: 0 }, { tail: 96, head: 113, minlen: 16, weight: 0 },
+      { tail: 96, head: 16, minlen: 9, weight: 0 }, { tail: 96, head: 14, minlen: 9, weight: 0 },
+      { tail: 97, head: 99, minlen: 141, weight: 0 }, { tail: 97, head: 16, minlen: 71, weight: 0 },
+      { tail: 97, head: 14, minlen: 71, weight: 0 }, { tail: 97, head: 19, minlen: 71, weight: 0 },
+      { tail: 98, head: 115, minlen: 141, weight: 0 },
+      { tail: 98, head: 16, minlen: 134, weight: 0 },
+      { tail: 99, head: 81, minlen: 120, weight: 0 }, { tail: 99, head: 18, minlen: 68, weight: 0 },
+      { tail: 99, head: 11, minlen: 68, weight: 0 },
+      { tail: 100, head: 95, minlen: 217, weight: 0 },
+      { tail: 100, head: 20, minlen: 149, weight: 0 },
+      { tail: 100, head: 17, minlen: 149, weight: 0 },
+      { tail: 100, head: 15, minlen: 149, weight: 0 },
+      { tail: 101, head: 105, minlen: 168, weight: 0 },
+      { tail: 101, head: 22, minlen: 92, weight: 0 },
+      { tail: 101, head: 27, minlen: 92, weight: 0 },
+      { tail: 102, head: 103, minlen: 120, weight: 0 },
+      { tail: 103, head: 87, minlen: 70, weight: 0 },
+      { tail: 103, head: 24, minlen: 59, weight: 0 },
+      { tail: 103, head: 17, minlen: 59, weight: 0 },
+      { tail: 103, head: 13, minlen: 59, weight: 0 },
+      { tail: 104, head: 83, minlen: 149, weight: 0 },
+      { tail: 104, head: 26, minlen: 73, weight: 0 },
+      { tail: 104, head: 17, minlen: 73, weight: 0 },
+      { tail: 104, head: 13, minlen: 73, weight: 0 },
+      { tail: 105, head: 104, minlen: 149, weight: 0 },
+      { tail: 106, head: 107, minlen: 25, weight: 0 },
+      { tail: 107, head: 111, minlen: 33, weight: 0 },
+      { tail: 107, head: 17, minlen: 18, weight: 0 },
+      { tail: 108, head: 106, minlen: 86, weight: 0 },
+      { tail: 109, head: 85, minlen: 16, weight: 0 },
+      { tail: 109, head: 17, minlen: 18, weight: 0 },
+      { tail: 109, head: 13, minlen: 18, weight: 0 },
+      { tail: 110, head: 109, minlen: 25, weight: 0 },
+      { tail: 111, head: 96, minlen: 132, weight: 0 },
+      { tail: 111, head: 15, minlen: 134, weight: 0 },
+      { tail: 115, head: 114, minlen: 25, weight: 0 },
+    ],
+  )
+}
+
+///|
+test "network_simplex LR matches exact yours_truly xpos fixture ranks" {
+  let graph = build_yours_truly_xpos_fixture_graph()
+
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+
+  assert_eq(collect_node_ranks(graph), [
+    1250, -20, 922, 713, 875, 733, 883, 725, 930, 705, 1242, 1038, 728, 512, 878, 736, 886, 504,
+    1030, 894, 496, 198, 172, -12, 241, 3, 476, 180, 956, 1088, 806, 806, 346, 65, 79, 123, 253,
+    253, 253, 349, 92, 61, 79, 891, 679, 806, 806, 806, 806, 806, 574, 520, 574, 627, 520, 574, 673,
+    673, 520, 574, 574, 520, 579, 399, 756, 839, 806, 765, 763, 851, 756, 850, 869, 764, 852, 766,
+    807, 840, 768, 851, 757, 1088, 1191, 586, 580, 521, 575, 521, 674, 575, 521, 628, 575, 807, 807,
+    807, 807, 807, 680, 962, 347, 80, 62, 182, 403, 254, 254, 350, 124, 93, 66, 400, 807, 892, 1089,
+    957,
+  ])
+}
 ///|
 /// Graphviz parity: this densest remaining LR mixed-node feedback scaffold is
 /// still fully algorithmic. Keep exact feasible-tree, pre-balance, and final
