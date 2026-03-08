@@ -105,3 +105,44 @@ test "rank keywords keep expected vertical extremes" {
   assert_true(Double::is_close(t1_pos.y, t2_pos.y, absolute_tolerance=0.01))
   assert_true(s1_pos.y > t1_pos.y)
 }
+
+///|
+test "constraint=false keeps same rank while default separates ranks" {
+  let unconstrained = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
+  let unconstrained_layout = @layout_dot.layout_dot(unconstrained)
+  unconstrained_layout.apply()
+  let unconstrained_a = match rank_node_pos(unconstrained, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let unconstrained_b = match rank_node_pos(unconstrained, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  assert_true(
+    Double::is_close(
+      unconstrained_a.y,
+      unconstrained_b.y,
+      absolute_tolerance=0.01,
+    ),
+  )
+
+  let constrained = @dot_parser.parse_dot("digraph { a -> b; }")
+  let constrained_layout = @layout_dot.layout_dot(constrained)
+  constrained_layout.apply()
+  let constrained_a = match rank_node_pos(constrained, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let constrained_b = match rank_node_pos(constrained, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  assert_true(
+    !Double::is_close(
+      constrained_a.y,
+      constrained_b.y,
+      absolute_tolerance=0.01,
+    ),
+  )
+}
