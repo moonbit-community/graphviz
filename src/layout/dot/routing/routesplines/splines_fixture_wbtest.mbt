@@ -235,8 +235,10 @@ fn run_spline_case(
 
 ///|
 /// Graphviz parity: owner-local direct tests now pin the exact simple
-/// straight corridor (case=1, C1N1 -> C2N1) and the exact single-bend
-/// corridor (case=9, foo_agent -> zzz_worker) kernels. Keep fixture replay for
+/// straight corridor (case=1, C1N1 -> C2N1), exact single-bend corridor
+/// (case=9, foo_agent -> zzz_worker), exact barrier-aware bend corridor
+/// (case=5, zzz_worker -> zzz), and exact constrained head tangent corridor
+/// (case=18, z_shapeshifter -> machsrv_xprot_gen). Keep fixture replay for
 /// the remaining representative corridors whose graph-specific box ladders
 /// still add distinct regression signal.
 fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
@@ -244,8 +246,16 @@ fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
     input.head == "C2N1" {
     return false
   }
+  if input.case_id == 5 && input.graph == "" && input.tail == "zzz_worker" &&
+    input.head == "zzz" {
+    return false
+  }
   if input.case_id == 9 && input.graph == "" && input.tail == "foo_agent" &&
     input.head == "zzz_worker" {
+    return false
+  }
+  if input.case_id == 18 && input.graph == "" && input.tail == "z_shapeshifter" &&
+    input.head == "machsrv_xprot_gen" {
     return false
   }
   true

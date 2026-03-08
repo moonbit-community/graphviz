@@ -370,3 +370,96 @@ test "route_pathplan_from_boxes matches Graphviz multi-bend corridor fixture" {
     { x: 823.0, y: 591.5 },
   ])
 }
+
+///|
+test "route_pathplan_from_boxes matches Graphviz barrier-aware bend corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -240.0, lly: 153.0, urx: 833.0, ury: 179.5 },
+    { llx: -240.0, lly: 143.0, urx: 1434.35693359375, ury: 153.0 },
+    { llx: -240.0, lly: 129.0, urx: 770.1103515625, ury: 143.0 },
+    { llx: -240.0, lly: 121.0, urx: 1434.35693359375, ury: 129.0 },
+    { llx: -240.0, lly: 42.5, urx: 819.0, ury: 121.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 780.0, y: 178.5 }, { x: 783.0, y: 43.5 }) {
+    Some(value) => value
+    None => fail("expected route for barrier-aware bend fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 833.0, y: 179.5 },
+    { x: 833.0, y: 153.0 },
+    { x: 1434.35693359375, y: 153.0 },
+    { x: 1434.35693359375, y: 143.0 },
+    { x: 770.1103515625, y: 143.0 },
+    { x: 770.1103515625, y: 129.0 },
+    { x: 1434.35693359375, y: 129.0 },
+    { x: 1434.35693359375, y: 121.0 },
+    { x: 819.0, y: 121.0 },
+    { x: 819.0, y: 42.5 },
+    { x: -240.0, y: 42.5 },
+    { x: -240.0, y: 121.0 },
+    { x: -240.0, y: 121.0 },
+    { x: -240.0, y: 129.0 },
+    { x: -240.0, y: 129.0 },
+    { x: -240.0, y: 143.0 },
+    { x: -240.0, y: 143.0 },
+    { x: -240.0, y: 153.0 },
+    { x: -240.0, y: 153.0 },
+    { x: -240.0, y: 179.5 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 780.0, y: 178.5 },
+    { x: 770.1103515625, y: 143.0 },
+    { x: 770.1103515625, y: 129.0 },
+    { x: 783.0, y: 43.5 },
+  ])
+}
+
+///|
+test "route_pathplan_from_boxes matches Graphviz constrained head tangent corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -240.0, lly: 564.0, urx: 178.0, ury: 590.5 },
+    { llx: -240.0, lly: 554.0, urx: 1434.35693359375, ury: 564.0 },
+    { llx: -240.0, lly: 540.0, urx: 180.2587890625, ury: 554.0 },
+    { llx: -240.0, lly: 532.0, urx: 1434.35693359375, ury: 540.0 },
+    { llx: -240.0, lly: 502.0, urx: 746.0, ury: 532.0 },
+    { llx: -240.0, lly: 483.5, urx: 209.02978515625, ury: 502.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 79.0, y: 589.5 }, { x: 208.02978515625, y: 483.5 }) {
+    Some(value) => value
+    None => fail("expected route for constrained head tangent fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 178.0, y: 590.5 },
+    { x: 178.0, y: 564.0 },
+    { x: 1434.35693359375, y: 564.0 },
+    { x: 1434.35693359375, y: 554.0 },
+    { x: 180.2587890625, y: 554.0 },
+    { x: 180.2587890625, y: 540.0 },
+    { x: 1434.35693359375, y: 540.0 },
+    { x: 1434.35693359375, y: 532.0 },
+    { x: 746.0, y: 532.0 },
+    { x: 746.0, y: 502.0 },
+    { x: 209.02978515625, y: 502.0 },
+    { x: 209.02978515625, y: 483.5 },
+    { x: -240.0, y: 483.5 },
+    { x: -240.0, y: 502.0 },
+    { x: -240.0, y: 502.0 },
+    { x: -240.0, y: 532.0 },
+    { x: -240.0, y: 532.0 },
+    { x: -240.0, y: 540.0 },
+    { x: -240.0, y: 540.0 },
+    { x: -240.0, y: 554.0 },
+    { x: -240.0, y: 554.0 },
+    { x: -240.0, y: 564.0 },
+    { x: -240.0, y: 564.0 },
+    { x: -240.0, y: 590.5 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 79.0, y: 589.5 },
+    { x: 208.02978515625, y: 483.5 },
+  ])
+}
