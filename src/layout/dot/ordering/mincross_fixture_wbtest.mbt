@@ -668,17 +668,20 @@ fn mincross_case_has_distinct_output(
 ///|
 /// Graphviz parity: keep fixture replay for cases that still carry distinct
 /// reorder signal, plus a small set of large unchanged integrated graphs that
-/// remain more valuable than their fixture maintenance cost.
+/// remain more valuable than their fixture maintenance cost. The compact
+/// edge_vnode_spacing ladder is now covered directly in rank_reorder_wbtest.
 fn mincross_case_needs_integrated_replay(
   input : MincrossInput,
   output : MincrossOutput,
 ) -> Bool {
+  if input.case_id == 1 && input.graph == "edge_vnode_spacing" {
+    return false
+  }
   if mincross_case_has_distinct_output(input, output) {
     return true
   }
   match input.graph {
     "L0" => true
-    "edge_vnode_spacing" => true
     "yours_truly" => input.startpass > 0
     _ => false
   }
