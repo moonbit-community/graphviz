@@ -9,18 +9,6 @@ struct CanonicalOrderingInput {
 }
 
 ///|
-fn find_mincross_input_case(path : String, case_id : Int) -> MincrossInput raise {
-  let fixtures = load_mincross_fixtures_from(path)
-  for pair in fixtures {
-    let (input, _output) = pair
-    if input.case_id == case_id {
-      return input
-    }
-  }
-  fail("missing mincross fixture case \{case_id} in \{path}")
-}
-
-///|
 fn build_fixture_node_index(input : MincrossInput) -> Map[Int, MincrossNode] {
   let by_id : Map[Int, MincrossNode] = Map::new()
   for node in input.nodes {

@@ -1,8 +1,18 @@
 ///|
 test "plugins root/remincross mincross inputs match graphviz fixtures" {
   let fixture_path = "tests/fixtures/graphviz/mincross.plugins.jsonl"
-  let root_expected = find_mincross_input_case(fixture_path, 1)
-  let remincross_expected = find_mincross_input_case(fixture_path, 11)
+  let fixture_cases = load_mincross_fixtures_from(fixture_path)
+  let mut root_expected : MincrossInput? = None
+  let mut remincross_expected : MincrossInput? = None
+  for pair in fixture_cases {
+    let (input, _output) = pair
+    if input.case_id == 1 {
+      root_expected = Some(input)
+    }
+    if input.case_id == 11 {
+      remincross_expected = Some(input)
+    }
+  }
 
   root_mincross_input_snapshot.val = None
   remincross_input_snapshot.val = None
@@ -21,6 +31,15 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_INPUTS")
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE")
 
+  let root_expected_input = match root_expected {
+    Some(value) => value
+    None => fail("missing mincross fixture case 1 in \{fixture_path}")
+  }
+  let remincross_expected_input = match remincross_expected {
+    Some(value) => value
+    None => fail("missing mincross fixture case 11 in \{fixture_path}")
+  }
+
   let root_actual = match root_mincross_input_snapshot.val {
     Some(value) => value
     None => fail("missing captured root mincross input snapshot")
@@ -33,12 +52,12 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   assert_canonical_ordering_input_eq(
     "plugins root mincross input",
     canonical_root_snapshot_input(root_actual),
-    canonical_fixture_ordering_input(root_expected),
+    canonical_fixture_ordering_input(root_expected_input),
   )
   assert_canonical_ordering_input_eq(
     "plugins remincross input",
     canonical_remincross_snapshot_input(remincross_actual),
-    canonical_fixture_ordering_input(remincross_expected),
+    canonical_fixture_ordering_input(remincross_expected_input),
   )
 
   root_mincross_input_snapshot.val = None
