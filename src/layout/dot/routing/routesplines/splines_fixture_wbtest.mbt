@@ -234,10 +234,34 @@ fn run_spline_case(
 }
 
 ///|
+/// Graphviz parity: owner-local direct tests now pin the exact simple
+/// straight corridor (case=1, C1N1 -> C2N1) and the exact single-bend
+/// corridor (case=9, foo_agent -> zzz_worker) kernels. Keep fixture replay for
+/// the remaining representative corridors whose graph-specific box ladders
+/// still add distinct regression signal.
+fn routesplines_fixture_needs_replay(input : SplineInput) -> Bool {
+  if input.case_id == 1 && input.graph == "" && input.tail == "C1N1" &&
+    input.head == "C2N1" {
+    return false
+  }
+  if input.case_id == 9 && input.graph == "" && input.tail == "foo_agent" &&
+    input.head == "zzz_worker" {
+    return false
+  }
+  true
+}
+
+///|
 test "spline fixtures match pathplan outputs" {
   let cases = load_spline_fixtures()
+  let mut matched = 0
   for entry in cases {
     let (input, shortest) = entry
+    if !routesplines_fixture_needs_replay(input) {
+      continue
+    }
+    matched = matched + 1
     run_spline_case(input, shortest)
   }
+  assert_true(matched > 0)
 }

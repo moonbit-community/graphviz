@@ -272,6 +272,39 @@ test "limit_boxes_for_spline falls back to polyline when spline sampling misses 
 }
 
 ///|
+test "route_pathplan_from_boxes matches Graphviz simple straight corridor fixture" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -32.0, lly: 82.0, urx: 110.23527602606173, ury: 108.0 },
+    { llx: -32.0, lly: 74.0, urx: 110.23527602606173, ury: 82.0 },
+    { llx: -32.0, lly: 26.0, urx: 110.23527602606173, ury: 74.0 },
+  ]
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 47.0, y: 107.0 }, { x: 47.0, y: 27.0 }) {
+    Some(value) => value
+    None => fail("expected route for straight corridor fixture")
+  }
+
+  assert_points_eq(route.polygon, [
+    { x: 110.23527602606173, y: 108.0 },
+    { x: 110.23527602606173, y: 82.0 },
+    { x: 110.23527602606173, y: 82.0 },
+    { x: 110.23527602606173, y: 74.0 },
+    { x: 110.23527602606173, y: 74.0 },
+    { x: 110.23527602606173, y: 26.0 },
+    { x: -32.0, y: 26.0 },
+    { x: -32.0, y: 74.0 },
+    { x: -32.0, y: 74.0 },
+    { x: -32.0, y: 82.0 },
+    { x: -32.0, y: 82.0 },
+    { x: -32.0, y: 108.0 },
+  ])
+  assert_points_eq(route.points, [
+    { x: 47.0, y: 107.0 },
+    { x: 47.0, y: 27.0 },
+  ])
+}
+
+///|
 test "route_pathplan_from_boxes matches Graphviz single-bend corridor fixture" {
   let boxes : Array[@geom.Rect] = [
     { llx: -240.0, lly: 248.0, urx: 1434.35693359375, ury: 266.5 },
