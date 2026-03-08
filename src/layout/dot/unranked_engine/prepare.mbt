@@ -1,8 +1,8 @@
 ///|
 /// Shared entry/prep helpers for unranked engines: prune handling, graph
 /// cloning, neato validation, and the public neato/noop prepare entry points.
-/// Geometry parsing, solve steps, and layout-tree assembly remain in
-/// unranked_engine.mbt.
+/// Geometry parsing, neato solve, and layout-tree assembly live in
+/// package-local owner files.
 
 fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
   let nodes = graph.nodes()
