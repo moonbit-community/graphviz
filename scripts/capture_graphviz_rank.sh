@@ -76,6 +76,58 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_RANK="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the integrated feasible-tree / pre-balance / final-rank cases that
+# still provide signal beyond the owner-local network_simplex algorithm tests.
+python3 - "$TMP_FILE" "$OUT_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+src_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+keep_cases = {
+    (16, 0, 18, 20, 17),
+    (17, 2, 116, 261, 115),
+    (4, 2, 9, 12, 8),
+    (2, 2, 10, 11, 9),
+    (2, 2, 37, 48, 36),
+    (1, 1, 43, 42, 42),
+    (2, 2, 85, 117, 84),
+    (1, 1, 47, 68, 46),
+    (2, 2, 203, 306, 202),
+}
+pending_lines = []
+input_key = None
+tree_edges = None
+with src_path.open() as src, out_path.open('w') as out:
+    for line in src:
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        event = obj['event']
+        if event == 'simplex_input':
+            pending_lines = [line]
+            input_key = (obj['case'], obj['balance'], len(obj['nodes']), len(obj['edges']))
+            tree_edges = None
+        elif event == 'simplex_tree':
+            pending_lines.append(line)
+            tree_edges = len(obj['edges'])
+        elif event == 'simplex_pre_balance':
+            pending_lines.append(line)
+        elif event == 'simplex_output':
+            pending_lines.append(line)
+            full_key = None if input_key is None else (*input_key, tree_edges)
+            if full_key in keep_cases:
+                for pending_line in pending_lines:
+                    out.write(pending_line)
+            pending_lines = []
+            input_key = None
+            tree_edges = None
+        else:
+            # Drop acyclic trace events. The fixture replay only consumes simplex
+            # input/tree/pre_balance/output blocks.
+            continue
+PY
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"
