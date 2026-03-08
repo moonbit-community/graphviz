@@ -654,6 +654,136 @@ test "network_simplex LR preserves compound cluster spacing" {
 }
 
 ///|
+struct LrXposNodeSpec {
+  kind : NodeKind
+  rank : Int
+}
+
+///|
+struct LrXposEdgeSpec {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+}
+
+///|
+fn build_lr_edge_vnode_spacing_graph() -> NsGraph {
+  let graph = new_graph()
+  let node_specs : Array[LrXposNodeSpec] = [
+    { kind: NodeKind::Slack, rank: 49 },
+    { kind: NodeKind::Slack, rank: 49 },
+    { kind: NodeKind::Slack, rank: 109 },
+    { kind: NodeKind::Slack, rank: 109 },
+    { kind: NodeKind::Slack, rank: 49 },
+    { kind: NodeKind::Slack, rank: 49 },
+    { kind: NodeKind::Slack, rank: 24 },
+    { kind: NodeKind::Slack, rank: 24 },
+    { kind: NodeKind::Slack, rank: 32 },
+    { kind: NodeKind::Slack, rank: 32 },
+    { kind: NodeKind::Slack, rank: 24 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Slack, rank: -1 },
+    { kind: NodeKind::Normal, rank: 0 },
+    { kind: NodeKind::Virtual, rank: 0 },
+    { kind: NodeKind::Normal, rank: 0 },
+    { kind: NodeKind::Virtual, rank: 0 },
+    { kind: NodeKind::Normal, rank: 0 },
+    { kind: NodeKind::Virtual, rank: 0 },
+    { kind: NodeKind::Normal, rank: 0 },
+    { kind: NodeKind::Virtual, rank: 25 },
+    { kind: NodeKind::Virtual, rank: 55 },
+    { kind: NodeKind::Virtual, rank: 33 },
+    { kind: NodeKind::Virtual, rank: 55 },
+    { kind: NodeKind::Virtual, rank: 25 },
+    { kind: NodeKind::Normal, rank: 72 },
+    { kind: NodeKind::Virtual, rank: 50 },
+    { kind: NodeKind::Normal, rank: 110 },
+    { kind: NodeKind::Virtual, rank: 171 },
+    { kind: NodeKind::Normal, rank: 110 },
+    { kind: NodeKind::Virtual, rank: 50 },
+    { kind: NodeKind::Normal, rank: 72 },
+  ]
+  for idx, spec in node_specs {
+    let node = add_node(graph, "n\{idx}", kind=spec.kind)
+    set_node_rank(graph, node, spec.rank)
+  }
+
+  let edge_specs : Array[LrXposEdgeSpec] = [
+    { tail: 0, head: 36, minlen: 1, weight: 2 },
+    { tail: 0, head: 35, minlen: 1, weight: 2 },
+    { tail: 1, head: 35, minlen: 1, weight: 1 },
+    { tail: 1, head: 34, minlen: 1, weight: 1 },
+    { tail: 2, head: 34, minlen: 1, weight: 1 },
+    { tail: 2, head: 33, minlen: 1, weight: 1 },
+    { tail: 3, head: 33, minlen: 1, weight: 1 },
+    { tail: 3, head: 32, minlen: 1, weight: 1 },
+    { tail: 4, head: 32, minlen: 1, weight: 1 },
+    { tail: 4, head: 31, minlen: 1, weight: 1 },
+    { tail: 5, head: 31, minlen: 1, weight: 1 },
+    { tail: 5, head: 30, minlen: 1, weight: 1 },
+    { tail: 6, head: 29, minlen: 1, weight: 1 },
+    { tail: 6, head: 30, minlen: 1, weight: 1 },
+    { tail: 7, head: 28, minlen: 1, weight: 4 },
+    { tail: 7, head: 29, minlen: 1, weight: 4 },
+    { tail: 8, head: 27, minlen: 1, weight: 4 },
+    { tail: 8, head: 28, minlen: 1, weight: 4 },
+    { tail: 9, head: 26, minlen: 1, weight: 4 },
+    { tail: 9, head: 27, minlen: 1, weight: 4 },
+    { tail: 10, head: 25, minlen: 1, weight: 4 },
+    { tail: 10, head: 26, minlen: 1, weight: 4 },
+    { tail: 11, head: 23, minlen: 1, weight: 2 },
+    { tail: 11, head: 24, minlen: 1, weight: 2 },
+    { tail: 12, head: 22, minlen: 1, weight: 1 },
+    { tail: 12, head: 23, minlen: 1, weight: 1 },
+    { tail: 13, head: 21, minlen: 1, weight: 1 },
+    { tail: 13, head: 22, minlen: 1, weight: 1 },
+    { tail: 14, head: 20, minlen: 1, weight: 1 },
+    { tail: 14, head: 21, minlen: 1, weight: 1 },
+    { tail: 15, head: 19, minlen: 1, weight: 1 },
+    { tail: 15, head: 20, minlen: 1, weight: 1 },
+    { tail: 16, head: 18, minlen: 1, weight: 1 },
+    { tail: 16, head: 25, minlen: 1, weight: 1 },
+    { tail: 17, head: 18, minlen: 1, weight: 1 },
+    { tail: 17, head: 19, minlen: 1, weight: 1 },
+    { tail: 18, head: 36, minlen: 72, weight: 0 },
+    { tail: 19, head: 25, minlen: 25, weight: 0 },
+    { tail: 20, head: 26, minlen: 55, weight: 0 },
+    { tail: 21, head: 27, minlen: 33, weight: 0 },
+    { tail: 22, head: 28, minlen: 55, weight: 0 },
+    { tail: 23, head: 29, minlen: 25, weight: 0 },
+    { tail: 24, head: 30, minlen: 72, weight: 0 },
+    { tail: 25, head: 35, minlen: 25, weight: 0 },
+    { tail: 26, head: 34, minlen: 55, weight: 0 },
+    { tail: 27, head: 33, minlen: 139, weight: 0 },
+    { tail: 28, head: 32, minlen: 55, weight: 0 },
+    { tail: 29, head: 31, minlen: 25, weight: 0 },
+  ]
+  for spec in edge_specs {
+    ignore(add_edge(graph, spec.tail, spec.head, spec.minlen, spec.weight))
+  }
+  graph
+}
+
+///|
+test "network_simplex LR preserves integrated edge-vnode spacing ladder" {
+  let graph = build_lr_edge_vnode_spacing_graph()
+
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+
+  assert_eq(collect_node_ranks(graph), [
+    50, 50, 50, 8, -28, -50, -89, -89, -89, -89, -89, -144, -144, -144, -144,
+    -144, -109, -129, -108, -128, -143, -143, -143, -143, -143, -88, -88, -88,
+    -88, -88, -49, -27, 9, 51, 51, 51, 51,
+  ])
+}
+
+///|
 test "network_simplex LR preserves edge-label ladder spacing" {
   let graph = build_lr_edge_labels_graph()
 
