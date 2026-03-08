@@ -15,7 +15,7 @@ pub fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
-  @positioning.build_port_offsets_for_nodes(
+  build_port_offsets_with_callbacks(
     nodes,
     output_sizes,
     (node, rankdir) => {
@@ -39,7 +39,7 @@ fn compass_port_point_for_layout(
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
 ) -> @geom.Point {
-  @positioning.compass_port_point(
+  resolve_compass_port_point(
     node_name,
     node,
     compass,
@@ -67,12 +67,12 @@ pub fn edge_port_offset(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  @positioning.edge_port_offset(
+  sample_edge_port_offset(
     node_name,
     port,
     offsets,
     compass =>
-      @positioning.compass_port_offset(
+      sample_compass_port_offset(
         compass,
         node_name,
         sizes,
@@ -96,7 +96,7 @@ pub fn edge_port_order(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  @positioning.edge_port_order(
+  sample_edge_port_order(
     node_name,
     port,
     offsets,
@@ -123,7 +123,7 @@ pub fn build_edge_port_sample_bundle(
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
 ) -> @ordering.EdgePortSampleBundle {
-  @positioning.build_edge_port_sample_bundle(
+  build_edge_port_samples_with_callbacks(
     nodes,
     edges,
     edge_tail,

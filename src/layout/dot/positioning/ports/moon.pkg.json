@@ -11,8 +11,8 @@
     "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
     "moonbit-community/graphviz/layout/dot/edge_label_metrics",
     "moonbit-community/graphviz/layout/dot/node_geometry",
-    "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/edge_identity",
     "moonbit-community/graphviz/layout/dot/routing/self_edge",
     {
       "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
@@ -20,6 +20,7 @@
     },
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math",
     "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
   ]

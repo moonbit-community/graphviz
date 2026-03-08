@@ -1,12 +1,12 @@
 ///|
-/// Positioning domain: edge-port offset/order sampling core reused by ordering
-/// tie-break preprocessing and xpos simplex slack construction.
+/// Positioning ports domain: internal edge-port offset/order sampling core
+/// reused by the public ports API for ordering and xpos preprocessing.
 
 ///|
 /// Graphviz parity: edge-port sampling context keeps rankdir lookup, node
 /// index, and per-node port offsets fixed before edge endpoint iteration.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_port_offsets_for_nodes(
+fn build_port_offsets_with_callbacks(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, @node_primitives.NodeSize],
   node_size_for_missing : (@cgraph.Node, @rankdir.RankDir) -> @node_primitives.NodeSize,
@@ -91,7 +91,7 @@ fn record_port_point(
 /// Graphviz parity: endpoint port offset follows make_edge_pairs behavior:
 /// explicit label ports use record/html map center (+ compass side half-width),
 /// missing label ports fall back to compass-only node boundary offsets.
-pub fn edge_port_offset(
+fn sample_edge_port_offset(
   node_name : String,
   port : @cgraph.Port?,
   offsets : Map[String, Map[String, @record_geometry.RecordPort]],
@@ -150,7 +150,7 @@ pub fn edge_port_offset(
 /// Graphviz parity: absent ports contribute neutral 0.0 offset/order, explicit
 /// label ports use mapped label-port geometry; compass-only ports quantize
 /// boundary angle to 1/256 turn for mincross tie-break parity.
-pub fn edge_port_order(
+fn sample_edge_port_order(
   node_name : String,
   port : @cgraph.Port?,
   offsets : Map[String, Map[String, @record_geometry.RecordPort]],
@@ -194,7 +194,7 @@ pub fn edge_port_order(
 /// Graphviz parity: shared edge-port sampling setup keeps endpoint remap and
 /// per-edge iteration order identical for both x-offset and port-order passes.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_edge_port_sample_bundle(
+fn build_edge_port_samples_with_callbacks(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -269,7 +269,7 @@ fn node_size_for_compass(
 ///|
 /// Graphviz parity: compass fallback points use node boundary clipping for
 /// shape-clipped nodes and axis-aligned box corners for other shapes.
-pub fn compass_port_point(
+fn resolve_compass_port_point(
   node_name : String,
   node : @cgraph.Node?,
   compass : @cgraph.Compass,
@@ -326,7 +326,7 @@ pub fn compass_port_point(
 /// Graphviz parity: make_edge_pairs consumes compassPort rankdir-rotated
 /// ED_{tail,head}_port.p.x for non-record endpoints; record/html explicit ports
 /// keep unrotated x order behavior.
-pub fn compass_port_offset(
+fn sample_compass_port_offset(
   compass : @cgraph.Compass,
   node_name : String,
   sizes : Map[String, @node_primitives.NodeSize],
