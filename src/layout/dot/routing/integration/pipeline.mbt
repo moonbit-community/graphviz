@@ -3,19 +3,44 @@
 /// spatial, ratio-adjust, precompute, and edge-execution helpers so callers
 /// depend directly on ``.
 type LayoutPrep = @shared.LayoutPrep
+
+///|
 type RankDir = @rankdir.RankDir
+
+///|
 type SplinesMode = @shared.SplinesMode
+
+///|
 type RecordOrientation = @shared.RecordOrientation
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
+
+///|
 type DotLayoutNode = @shared.DotLayoutNode
+
+///|
 type DotLayoutEdge = @routing.DotLayoutEdge
+
+///|
 type RankData = @rank_assignment.RankData
+
+///|
 type RankHeights = @rank_assignment.RankHeights
+
+///|
 type ClusterMetadata = @ordering.DotClusterMetadata
+
+///|
 type OrderingResult = @ordering.OrderingResult
+
+///|
 type PositionResult = @positioning.PositionResult
 
+///|
 pub struct RoutingSpatialData {
   nodes_out : Array[DotLayoutNode]
   label_ports_map : Map[String, Map[String, RecordPort]]
@@ -55,12 +80,9 @@ fn build_routing_layout_nodes(
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let size =
-      @node_geometry.resolve_node_output_size(
-        output_sizes,
-        node,
-        record_orientation,
-      )
+    let size = @node_geometry.resolve_node_output_size(
+      output_sizes, node, record_orientation,
+    )
     nodes_out.push({
       node,
       pos,
@@ -87,28 +109,25 @@ fn build_routing_port_layout_maps(
   let label_ports_raw : Map[String, Map[String, RecordPort]] = Map::new()
   if has_port_edges {
     for node_layout in nodes_out {
-      let final_size =
-        @node_geometry.resolve_node_output_size(
-          output_sizes,
-          node_layout.node,
-          record_orientation,
-        )
+      let final_size = @node_geometry.resolve_node_output_size(
+        output_sizes,
+        node_layout.node,
+        record_orientation,
+      )
       let name = node_layout.node.name()
-      let raw_ports =
-        @label_layout.raw_label_ports_for_node(
-          node_layout.node,
-          { x: 0.0, y: 0.0 },
-          final_size,
-          record_orientation,
-        )
+      let raw_ports = @label_layout.raw_label_ports_for_node(
+        node_layout.node,
+        { x: 0.0, y: 0.0 },
+        final_size,
+        record_orientation,
+      )
       if raw_ports.length() > 0 {
         label_ports_raw[name] = raw_ports
-        let ports =
-          @port_geometry.layout_ports_from_final(
-            raw_ports,
-            node_layout.pos,
-            rankdir,
-          )
+        let ports = @port_geometry.layout_ports_from_final(
+          raw_ports,
+          node_layout.pos,
+          rankdir,
+        )
         label_ports_map[name] = ports
       }
     }
@@ -125,34 +144,31 @@ pub fn build_routing_spatial_data(
 ) -> RoutingSpatialData {
   let prep = input.prep
   let positions_state = input.positions_state
-  let nodes_out =
-    build_routing_layout_nodes(
-      prep.nodes,
-      positions_state.positions,
-      prep.output_sizes,
-      prep.record_orientation,
-    )
-  let port_layout_maps =
-    build_routing_port_layout_maps(
-      nodes_out,
-      prep.output_sizes,
-      prep.record_orientation,
-      prep.rankdir,
-      prep.has_port_edges,
-    )
-  let cluster_bboxes =
-    @clustering.compute_cluster_route_bboxes(
-      input.graph,
-      nodes_out,
-      positions_state.cluster_ln_x,
-      positions_state.cluster_rn_x,
-      positions_state.cluster_bbox_heights,
-      prep.rankdir,
-      input.ranks,
-      positions_state.rank_y,
-      positions_state.rank_ht1,
-      positions_state.rank_ht2,
-    )
+  let nodes_out = build_routing_layout_nodes(
+    prep.nodes,
+    positions_state.positions,
+    prep.output_sizes,
+    prep.record_orientation,
+  )
+  let port_layout_maps = build_routing_port_layout_maps(
+    nodes_out,
+    prep.output_sizes,
+    prep.record_orientation,
+    prep.rankdir,
+    prep.has_port_edges,
+  )
+  let cluster_bboxes = @clustering.compute_cluster_route_bboxes(
+    input.graph,
+    nodes_out,
+    positions_state.cluster_ln_x,
+    positions_state.cluster_rn_x,
+    positions_state.cluster_bbox_heights,
+    prep.rankdir,
+    input.ranks,
+    positions_state.rank_y,
+    positions_state.rank_ht1,
+    positions_state.rank_ht2,
+  )
   {
     nodes_out,
     label_ports_map: port_layout_maps.label_ports_map,
@@ -198,25 +214,24 @@ pub fn build_routing_ratio_adjusted_data(
   let rank_data = input.rank_data
   let nodes_out = input.nodes_out
   let positions_state = input.positions_state
-  let routing_bbox =
-    @bbox.compute_dot_bbox({
-      nodes_out,
-      all_ranks: rank_data.all_ranks,
-      sizes: prep.sizes,
-      rank_y: positions_state.rank_y,
-      rank_ht1: positions_state.rank_ht1,
-      rank_ht2: positions_state.rank_ht2,
-    })
-  let (ratio_sx, ratio_sy) =
-    match @shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
-      Some(scale_factors) =>
-        if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
-          (scale_factors.sx, scale_factors.sy)
-        } else {
-          (1.0, 1.0)
-        }
-      None => (1.0, 1.0)
-    }
+  let routing_bbox = @bbox.compute_dot_bbox({
+    nodes_out,
+    all_ranks: rank_data.all_ranks,
+    sizes: prep.sizes,
+    rank_y: positions_state.rank_y,
+    rank_ht1: positions_state.rank_ht1,
+    rank_ht2: positions_state.rank_ht2,
+  })
+  let (ratio_sx, ratio_sy) = match
+    @shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+    Some(scale_factors) =>
+      if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
+        (scale_factors.sx, scale_factors.sy)
+      } else {
+        (1.0, 1.0)
+      }
+    None => (1.0, 1.0)
+  }
   let ratio_scaled = ratio_sx != 1.0 || ratio_sy != 1.0
   if !ratio_scaled {
     return {
@@ -232,22 +247,24 @@ pub fn build_routing_ratio_adjusted_data(
   let adjusted_positions_state : PositionResult = {
     x_groups: positions_state.x_groups,
     rank_y: @shared.scale_double_map_rounded(positions_state.rank_y, ratio_sy),
-    positions:
-      @shared.scale_point_map_rounded(
-        positions_state.positions,
-        ratio_sx,
-        ratio_sy,
-      ),
-    vnode_positions:
-      @shared.scale_point_map_rounded(
-        positions_state.vnode_positions,
-        ratio_sx,
-        ratio_sy,
-      ),
-    cluster_ln_x:
-      @shared.scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
-    cluster_rn_x:
-      @shared.scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
+    positions: @shared.scale_point_map_rounded(
+      positions_state.positions,
+      ratio_sx,
+      ratio_sy,
+    ),
+    vnode_positions: @shared.scale_point_map_rounded(
+      positions_state.vnode_positions,
+      ratio_sx,
+      ratio_sy,
+    ),
+    cluster_ln_x: @shared.scale_named_double_map(
+      positions_state.cluster_ln_x,
+      ratio_sx,
+    ),
+    cluster_rn_x: @shared.scale_named_double_map(
+      positions_state.cluster_rn_x,
+      ratio_sx,
+    ),
     flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
     rank_ht1: positions_state.rank_ht1,
     rank_ht2: positions_state.rank_ht2,
@@ -258,24 +275,21 @@ pub fn build_routing_ratio_adjusted_data(
     ratio_sx,
     ratio_sy,
     positions_state: adjusted_positions_state,
-    cluster_bboxes:
-      @shared.scale_rect_map(
-        input.cluster_bboxes,
-        ratio_sx,
-        ratio_sy,
-      ),
-    label_ports_map:
-      @shared.scale_record_port_maps(
-        input.label_ports_map,
-        ratio_sx,
-        ratio_sy,
-      ),
-    label_ports_raw:
-      @shared.scale_record_port_maps(
-        input.label_ports_raw,
-        ratio_sx,
-        ratio_sy,
-      ),
+    cluster_bboxes: @shared.scale_rect_map(
+      input.cluster_bboxes,
+      ratio_sx,
+      ratio_sy,
+    ),
+    label_ports_map: @shared.scale_record_port_maps(
+      input.label_ports_map,
+      ratio_sx,
+      ratio_sy,
+    ),
+    label_ports_raw: @shared.scale_record_port_maps(
+      input.label_ports_raw,
+      ratio_sx,
+      ratio_sy,
+    ),
   }
 }
 
@@ -306,60 +320,54 @@ pub fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
-  let port_padding =
-    @precompute.resolve_routing_port_padding(
-      input.cluster_meta.has_clusters,
-      prep.has_port_edges,
-      () => {
-        let padding =
-          @record_layout.record_port_padding_y(
-            prep.edges,
-            input.positions_state.positions,
-            input.label_ports_map,
-          )
-        (padding.below, padding.above)
-      },
-    )
-  let port_pad_below = port_padding.0
-  let port_pad_above = port_padding.1
-  let head_port_metrics =
-    @precompute.build_dot_head_port_metrics(
-      prep.edges,
-      input.enable_complex_tuning,
-      input.positions_state.positions,
-      input.sizes,
-      prep.record_orientation,
-      input.label_ports_map,
-    )
-  let pathplan_sizes =
-    @ports.apply_self_edge_right_space(
-      prep.nodes,
-      prep.edges,
-      input.sizes,
-      prep.rankdir,
-      prep.record_orientation,
-    )
-  @precompute.build_routing_precompute_pipeline(
-    {
-      edges: prep.edges,
-      x_groups: input.positions_state.x_groups,
-      ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
-      ordered_groups: input.ordering.ordered_groups,
-      port_pad_below,
-      port_pad_above,
-      head_port_metrics,
-      edge_tail: input.rank_data.edge_tail,
-      edge_head: input.rank_data.edge_head,
-      ranks: input.rank_data.ranks,
-      nodesep_pt: input.rank_heights.nodesep_pt,
-      edge_vnodes: input.ordering.vnode_info.edge_vnodes,
-      pathplan_sizes,
-      path_cluster_keys: input.cluster_meta.intercluster_keys,
-      vnode_sizes: input.ordering.vnode_info.vnode_sizes,
-      vnode_positions: input.positions_state.vnode_positions,
-      cluster_bboxes: input.cluster_bboxes,
+  let port_padding = @precompute.resolve_routing_port_padding(
+    input.cluster_meta.has_clusters,
+    prep.has_port_edges,
+    () => {
+      let padding = @record_layout.record_port_padding_y(
+        prep.edges,
+        input.positions_state.positions,
+        input.label_ports_map,
+      )
+      (padding.below, padding.above)
     },
   )
+  let port_pad_below = port_padding.0
+  let port_pad_above = port_padding.1
+  let head_port_metrics = @precompute.build_dot_head_port_metrics(
+    prep.edges,
+    input.enable_complex_tuning,
+    input.positions_state.positions,
+    input.sizes,
+    prep.record_orientation,
+    input.label_ports_map,
+  )
+  let pathplan_sizes = @ports.apply_self_edge_right_space(
+    prep.nodes,
+    prep.edges,
+    input.sizes,
+    prep.rankdir,
+    prep.record_orientation,
+  )
+  @precompute.build_routing_precompute_pipeline({
+    edges: prep.edges,
+    x_groups: input.positions_state.x_groups,
+    ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
+    ordered_groups: input.ordering.ordered_groups,
+    port_pad_below,
+    port_pad_above,
+    head_port_metrics,
+    edge_tail: input.rank_data.edge_tail,
+    edge_head: input.rank_data.edge_head,
+    ranks: input.rank_data.ranks,
+    nodesep_pt: input.rank_heights.nodesep_pt,
+    edge_vnodes: input.ordering.vnode_info.edge_vnodes,
+    pathplan_sizes,
+    path_cluster_keys: input.cluster_meta.intercluster_keys,
+    vnode_sizes: input.ordering.vnode_info.vnode_sizes,
+    vnode_positions: input.positions_state.vnode_positions,
+    cluster_bboxes: input.cluster_bboxes,
+  })
 }
 
 ///|
@@ -397,12 +405,11 @@ pub fn route_edges_for_dot(
     flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
   }
   let pipeline_deps : @routing.RouteEdgesPipelineDeps = {
-    route_base_deps:
-      build_dot_route_base_deps(
-        input.prep.record_orientation,
-        input.routing_label_ports_map,
-        input.routing_label_ports_raw,
-      ),
+    route_base_deps: build_dot_route_base_deps(
+      input.prep.record_orientation,
+      input.routing_label_ports_map,
+      input.routing_label_ports_raw,
+    ),
     callbacks: build_dot_routing_callbacks(edge_layout_input),
   }
   let pipeline_input : @routing.RouteEdgesPipelineInput = {
@@ -427,17 +434,13 @@ pub fn route_edges_for_dot(
     routing_context: input.routing_context,
     enable_complex_tuning: input.enable_complex_tuning,
     use_spline_prepass: input.prep.splines == SplinesMode::Spline,
-    spline_mode:
-      match input.prep.splines {
-        SplinesMode::None | SplinesMode::Polyline => 0
-        SplinesMode::Ortho => 1
-        _ => 2
-      },
+    spline_mode: match input.prep.splines {
+      SplinesMode::None | SplinesMode::Polyline => 0
+      SplinesMode::Ortho => 1
+      _ => 2
+    },
   }
-  @execution.route_edges_pipeline(
-    pipeline_input,
-    pipeline_deps,
-  )
+  @execution.route_edges_pipeline(pipeline_input, pipeline_deps)
 }
 
 ///|
@@ -475,81 +478,74 @@ pub fn compute_dot_routing_stage(
   let cluster_meta = input.cluster_meta
   let ordering = input.ordering
   let positions_state = input.positions_state
-  let spatial_data =
-    build_routing_spatial_data({
-      graph,
-      prep,
-      ranks: rank_data.ranks,
-      positions_state,
-    })
+  let spatial_data = build_routing_spatial_data({
+    graph,
+    prep,
+    ranks: rank_data.ranks,
+    positions_state,
+  })
   let nodes_out = spatial_data.nodes_out
-  let ratio_adjusted_data =
-    build_routing_ratio_adjusted_data({
-      graph,
-      prep,
-      rank_data,
-      nodes_out,
-      positions_state,
-      cluster_bboxes: spatial_data.cluster_bboxes,
-      label_ports_map: spatial_data.label_ports_map,
-      label_ports_raw: spatial_data.label_ports_raw,
-    })
+  let ratio_adjusted_data = build_routing_ratio_adjusted_data({
+    graph,
+    prep,
+    rank_data,
+    nodes_out,
+    positions_state,
+    cluster_bboxes: spatial_data.cluster_bboxes,
+    label_ports_map: spatial_data.label_ports_map,
+    label_ports_raw: spatial_data.label_ports_raw,
+  })
   let ratio_scaled = ratio_adjusted_data.ratio_scaled
   let ratio_sx = ratio_adjusted_data.ratio_sx
   let ratio_sy = ratio_adjusted_data.ratio_sy
   let routing_cluster_bboxes = ratio_adjusted_data.cluster_bboxes
   let routing_positions_state = ratio_adjusted_data.positions_state
-  let label_edge_counts =
-    @precompute.build_label_edge_counts(
-      prep.edges,
-      edge => @edge_label_metrics.edge_mid_label_text(edge) is Some(_),
-    )
+  let label_edge_counts = @precompute.build_label_edge_counts(prep.edges, edge => {
+    @edge_label_metrics.edge_mid_label_text(edge) is Some(_)
+  })
   let enable_complex_tuning = @precompute.complex_tuning_enabled()
-  let precompute_data =
-    build_routing_precompute_data({
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      positions_state: routing_positions_state,
-      label_ports_map: ratio_adjusted_data.label_ports_map,
-      cluster_bboxes: routing_cluster_bboxes,
-      sizes: prep.sizes,
-      enable_complex_tuning,
-    })
+  let precompute_data = build_routing_precompute_data({
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    positions_state: routing_positions_state,
+    label_ports_map: ratio_adjusted_data.label_ports_map,
+    cluster_bboxes: routing_cluster_bboxes,
+    sizes: prep.sizes,
+    enable_complex_tuning,
+  })
   let port_pad_below = precompute_data.port_pad_below
   let port_pad_above = precompute_data.port_pad_above
   let head_port_metrics = precompute_data.head_port_metrics
   let path_groups = precompute_data.path_groups
   let routing_context = precompute_data.routing_context
-  let edges_routed =
-    route_edges_for_dot({
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      routing_positions_state: ratio_adjusted_data.positions_state,
-      routing_label_ports_map: ratio_adjusted_data.label_ports_map,
-      routing_label_ports_raw: ratio_adjusted_data.label_ports_raw,
-      routing_sizes: prep.sizes,
-      path_groups,
-      routing_context,
-      label_edge_counts,
-      head_port_metrics,
-      enable_complex_tuning,
-    })
-  let edges_out =
-    if ratio_scaled {
-      @shared.scale_edge_layout_output(
-        edges_routed,
-        1.0 / ratio_sx,
-        1.0 / ratio_sy,
-      )
-    } else {
-      edges_routed
-    }
+  let edges_routed = route_edges_for_dot({
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    routing_positions_state: ratio_adjusted_data.positions_state,
+    routing_label_ports_map: ratio_adjusted_data.label_ports_map,
+    routing_label_ports_raw: ratio_adjusted_data.label_ports_raw,
+    routing_sizes: prep.sizes,
+    path_groups,
+    routing_context,
+    label_edge_counts,
+    head_port_metrics,
+    enable_complex_tuning,
+  })
+  let edges_out = if ratio_scaled {
+    @shared.scale_edge_layout_output(
+      edges_routed,
+      1.0 / ratio_sx,
+      1.0 / ratio_sy,
+    )
+  } else {
+    edges_routed
+  }
   { nodes_out, edges_out, port_pad_below, port_pad_above }
 }
