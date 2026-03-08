@@ -238,7 +238,7 @@ fn build_projection_result(
   x_data : XWithFlatLabelData,
 ) -> PositionResult {
   let y_position_data =
-    @positioning.build_y_position_pipeline(
+    @y_positions.build_y_position_pipeline(
       {
         has_clusters: pipeline.cluster_meta.has_clusters,
         graph: pipeline.graph,
@@ -256,7 +256,7 @@ fn build_projection_result(
         vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
         cluster_margin_pt_for: @clustering.cluster_margin_pt,
         cluster_label_padding_for: @clustering.cluster_label_padding_for_layout,
-        node_half_height_pt_for: @positioning.node_half_height_pt,
+        node_half_height_pt_for: @y_positions.node_half_height_pt,
         cluster_label_width_pt_for: @clustering.cluster_label_width_with_pad_for_layout,
       },
     )

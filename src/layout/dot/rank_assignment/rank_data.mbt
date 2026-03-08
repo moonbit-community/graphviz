@@ -85,9 +85,9 @@ pub fn compute_rank_data(
   rank_keys.sort()
   // Graphviz parity: rank sweep iterates the closed min..max rank interval
   // from sorted rank keys, including missing intermediate ranks.
-  let all_ranks = @positioning.build_all_ranks_with_overlays(rank_keys, [])
+  let all_ranks = @y_positions.build_all_ranks_with_overlays(rank_keys, [])
   let self_edge_labels =
-    @positioning.self_edge_label_half_heights(
+    @y_positions.self_edge_label_half_heights(
       edges,
       input.edge_label_height_pt_for,
     )

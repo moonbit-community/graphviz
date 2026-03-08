@@ -5,6 +5,7 @@
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/ordering",
     "moonbit-community/graphviz/layout/dot/positioning",
+    "moonbit-community/graphviz/layout/dot/positioning/y_positions",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/positioning/x_flat_labels",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
