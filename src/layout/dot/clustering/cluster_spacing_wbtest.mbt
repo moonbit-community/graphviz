@@ -116,20 +116,20 @@ fn spacing_find_subgraph(
 }
 
 ///|
-test "cluster bbox includes margin and label padding" {
-  let graph = @dot_parser.parse_dot(
+test "cluster spacing honors bbox margin, nesting, and empty cluster suppression" {
+  let single_cluster = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
   )
-  let layout = @dot_layout.layout_dot(graph)
-  layout.apply()
-  let cluster = spacing_cluster(graph)
+  let single_cluster_layout = @dot_layout.layout_dot(single_cluster)
+  single_cluster_layout.apply()
+  let cluster = spacing_cluster(single_cluster)
   let bb_text = match cluster.get_attr("bb") {
     Some(value) => value
     None => fail("missing cluster bb")
   }
   let bbox = spacing_parse_rect(bb_text)
-  let pos = spacing_node_pos(graph, "a")
-  let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
+  let pos = spacing_node_pos(single_cluster, "a")
+  let (width_pt, height_pt) = spacing_node_size_pt(single_cluster, "a")
   let margin = cluster_margin_pt(cluster)
   let label_height = match @label_metrics.graph_label_metrics(cluster) {
     Some(metrics) => metrics.height_pt
@@ -155,16 +155,13 @@ test "cluster bbox includes margin and label padding" {
   guard bbox.ury >= expected_top - 0.1 else {
     fail("cluster ury too small: \{bbox.ury} expected >= \{expected_top}")
   }
-}
 
-///|
-test "nested clusters include parent margin" {
-  let graph = @dot_parser.parse_dot(
+  let nested_graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_outer { label=\"Outer\"; subgraph cluster_inner { label=\"Inner\"; a; } } }",
   )
-  let layout = @dot_layout.layout_dot(graph)
-  layout.apply()
-  let outer = spacing_find_subgraph(graph, "cluster_outer")
+  let nested_layout = @dot_layout.layout_dot(nested_graph)
+  nested_layout.apply()
+  let outer = spacing_find_subgraph(nested_graph, "cluster_outer")
   let inner = spacing_find_subgraph(outer, "cluster_inner")
   let outer_bb = match outer.get_attr("bb") {
     Some(value) => spacing_parse_rect(value)
@@ -174,30 +171,27 @@ test "nested clusters include parent margin" {
     Some(value) => spacing_parse_rect(value)
     None => fail("missing inner cluster bb")
   }
-  let margin = cluster_margin_pt(outer)
-  guard outer_bb.llx <= inner_bb.llx - margin + 0.1 else {
-    fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - margin}")
+  let outer_margin = cluster_margin_pt(outer)
+  guard outer_bb.llx <= inner_bb.llx - outer_margin + 0.1 else {
+    fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - outer_margin}")
   }
-  guard outer_bb.lly <= inner_bb.lly - margin + 0.1 else {
-    fail("outer lly too large: \{outer_bb.lly} expected <= \{inner_bb.lly - margin}")
+  guard outer_bb.lly <= inner_bb.lly - outer_margin + 0.1 else {
+    fail("outer lly too large: \{outer_bb.lly} expected <= \{inner_bb.lly - outer_margin}")
   }
-  guard outer_bb.urx >= inner_bb.urx + margin - 0.1 else {
-    fail("outer urx too small: \{outer_bb.urx} expected >= \{inner_bb.urx + margin}")
+  guard outer_bb.urx >= inner_bb.urx + outer_margin - 0.1 else {
+    fail("outer urx too small: \{outer_bb.urx} expected >= \{inner_bb.urx + outer_margin}")
   }
-  guard outer_bb.ury >= inner_bb.ury + margin - 0.1 else {
-    fail("outer ury too small: \{outer_bb.ury} expected >= \{inner_bb.ury + margin}")
+  guard outer_bb.ury >= inner_bb.ury + outer_margin - 0.1 else {
+    fail("outer ury too small: \{outer_bb.ury} expected >= \{inner_bb.ury + outer_margin}")
   }
-}
 
-///|
-test "empty clusters do not receive layout bbox attrs" {
-  let graph = @dot_parser.parse_dot(
+  let empty_graph = @dot_parser.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
   )
-  let layout = @dot_layout.layout_dot(graph)
-  layout.apply()
-  let empty = spacing_find_subgraph(graph, "cluster_empty")
-  let full = spacing_find_subgraph(graph, "cluster_full")
+  let empty_layout = @dot_layout.layout_dot(empty_graph)
+  empty_layout.apply()
+  let empty = spacing_find_subgraph(empty_graph, "cluster_empty")
+  let full = spacing_find_subgraph(empty_graph, "cluster_full")
   guard empty.get_attr("bb") is None else {
     fail("empty cluster should not receive bb")
   }
