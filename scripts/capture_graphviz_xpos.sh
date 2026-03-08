@@ -76,6 +76,30 @@ for input in "$ROOT"/tests/layout/dot/*.dot; do
   MBT_CAPTURE_XPOS="$TMP_FILE" "$DOT_BIN" -Txdot "$input" >/dev/null
 done
 
-mv "$TMP_FILE" "$OUT_FILE"
+# Keep only the large integrated LR x-position cases that still provide signal
+# beyond the owner-local network_simplex LR algorithm tests.
+python3 - "$TMP_FILE" "$OUT_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+src_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+keep_graphs = {"yours_truly", "edge_vnode_spacing", "L0"}
+keep_case = False
+with src_path.open() as src, out_path.open('w') as out:
+    for line in src:
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        event = obj['event']
+        if event == 'xpos_input':
+            keep_case = obj['graph'] in keep_graphs
+        if keep_case:
+            out.write(line)
+        if event == 'xpos_output':
+            keep_case = False
+PY
+rm -f "$TMP_FILE"
 
 echo "Wrote $OUT_FILE"
