@@ -1,10 +1,6 @@
 ///|
-/// Dot-specific RouteBaseDeps assembly for the routing owner package.
-
-type RecordOrientation = @dot_shared.RecordOrientation
-type RankDir = @rankdir.RankDir
-type RecordPort = @record_geometry.RecordPort
-type NodeSize = @node_primitives.NodeSize
+/// Dot-specific Stage E assembly lives with the routing integration owner so
+/// callback/dependency wiring stays alongside the pipeline that consumes it.
 
 ///|
 /// Graphviz parity: dot route-base deps keep port-geometry, record/html border,
@@ -12,11 +8,11 @@ type NodeSize = @node_primitives.NodeSize
 /// Stage E.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_route_base_deps(
-  record_orientation : RecordOrientation,
-  routing_label_ports_map : Map[String, Map[String, RecordPort]],
-  routing_label_ports_raw : Map[String, Map[String, RecordPort]],
-) -> RouteBaseDeps {
-  let route_mid_label_metrics : (@cgraph.Edge) -> RouteLabelMetrics? =
+  record_orientation : @shared.RecordOrientation,
+  routing_label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]],
+  routing_label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]],
+) -> @routing.RouteBaseDeps {
+  let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? =
     (edge : @cgraph.Edge) =>
       match @edge_label_metrics.edge_mid_label_metrics(edge) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height })
@@ -27,13 +23,13 @@ pub fn build_dot_route_base_deps(
       String,
       @cgraph.Port?,
       @geom.Point,
-      NodeSize,
-    ) -> RoutePortGeometry =
+      @node_primitives.NodeSize,
+    ) -> @precompute.RoutePortGeometry =
     (
       node_name : String,
       port : @cgraph.Port?,
       node_pos : @geom.Point,
-      node_size : NodeSize,
+      node_size : @node_primitives.NodeSize,
     ) => {
       let geometry =
         @port_geometry.port_geometry(
@@ -54,15 +50,15 @@ pub fn build_dot_route_base_deps(
       String,
       @geom.Point,
       @geom.Point,
-      RankDir,
+      @rankdir.RankDir,
       Double,
-    ) -> RouteDynamicPortAnchor =
+    ) -> @routing.RouteDynamicPortAnchor =
     (
       port : @cgraph.Port?,
       node_name : String,
       node_pos : @geom.Point,
       other_pos : @geom.Point,
-      rankdir : RankDir,
+      rankdir : @rankdir.RankDir,
       record_border_adjust : Double,
     ) => {
       let anchor =
@@ -82,7 +78,8 @@ pub fn build_dot_route_base_deps(
       }
     }
   {
-    node_size_for_missing: (node) => @node_geometry.node_size(node, record_orientation),
+    node_size_for_missing:
+      node => @node_geometry.node_size(node, record_orientation),
     edge_mid_label_metrics: route_mid_label_metrics,
     record_port_path_box: @record_layout.record_port_path_box,
     port_geometry: route_port_geometry,
@@ -92,7 +89,7 @@ pub fn build_dot_route_base_deps(
         @port_geometry.port_is_label_port(node_name, port, routing_label_ports_raw),
     is_record_shape: @record_geometry.is_record_shape,
     record_border_adjust:
-      (node) =>
+      node =>
         if @record_geometry.is_record_shape(node) &&
           !@html_label.is_html_label_text(@label_attrs.label_text(node)) {
           @record_geometry.RECORD_BORDER_PT
@@ -107,5 +104,43 @@ pub fn build_dot_route_base_deps(
     layout_port_offset: @port_geometry.layout_port_offset,
     node_cluster_key: @clustering.node_cluster_key,
     node_local_cluster_key: @clustering.node_local_cluster_key,
+  }
+}
+
+///|
+/// Graphviz parity: dot routing callbacks keep slack-vnode recovery, edge-label
+/// layout, and port-label placement aligned with Stage E edge-routing rules.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_dot_routing_callbacks(
+  edge_layout_input : @routing.EdgeLayoutInput,
+) -> @routing.RoutingCallbacks {
+  {
+    recover_slack_vnodes_fn:
+      input =>
+        @execution.recover_slack_vnodes(
+          input,
+          (edge, ranks) =>
+            match @edge_label.edge_label_rank_info(
+              edge,
+              ranks,
+              @edge_label_metrics.edge_mid_label_width_pt(edge),
+            ) {
+              Some(info) => Some(info.label_rank)
+              None => None
+            },
+        ),
+    build_edge_layout_fn:
+      input =>
+        @edge_label.build_edge_layout(
+          {
+            base: input.base,
+            spline: input.spline,
+            spline_result: input.spline_result,
+            edge_layout_input,
+          },
+        ),
+    self_edge_label_height_fn: @edge_label_metrics.self_edge_label_height_pt,
+    self_edge_label_width_fn: @edge_label_metrics.self_edge_label_width_pt,
+    edge_port_label_pos_fn: @edge_label.edge_port_label_pos_for_dot,
   }
 }

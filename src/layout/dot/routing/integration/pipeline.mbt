@@ -398,12 +398,12 @@ pub fn route_edges_for_dot(
   }
   let pipeline_deps : @routing.RouteEdgesPipelineDeps = {
     route_base_deps:
-      @routing.build_dot_route_base_deps(
+      build_dot_route_base_deps(
         input.prep.record_orientation,
         input.routing_label_ports_map,
         input.routing_label_ports_raw,
       ),
-    callbacks: @dot_callbacks.build_dot_routing_callbacks(edge_layout_input),
+    callbacks: build_dot_routing_callbacks(edge_layout_input),
   }
   let pipeline_input : @routing.RouteEdgesPipelineInput = {
     graph_kind: input.graph.kind(),
