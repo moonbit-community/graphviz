@@ -13,7 +13,7 @@ type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
 type RankData = @rank_assignment.RankData
 type RankHeights = @rank_assignment.RankHeights
 type PositionResult = @positioning.PositionResult
-type DotRoutingStageOutput = @routing_stage.DotRoutingStageOutput
+type DotRoutingStageOutput = @integration.DotRoutingStageOutput
 
 ///|
 /// Graphviz parity: Stage F source payload keeps upstream stage outputs grouped

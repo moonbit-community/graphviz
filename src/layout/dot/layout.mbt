@@ -47,7 +47,7 @@ pub fn layout_dot(
       },
     )
   let routing_stage_output =
-    @routing_stage.compute_dot_routing_stage(
+    @integration.compute_dot_routing_stage(
       {
         graph,
         prep,
