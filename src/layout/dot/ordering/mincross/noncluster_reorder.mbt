@@ -67,8 +67,8 @@ pub(all) struct NonclusterReorderInputsBuildSources {
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   flat_constraints : Map[String, Bool]
-  reorder_setup : OrderingReorderSetup
-  edge_port_data : OrderingEdgePortData
+  reorder_setup : @ordering.OrderingReorderSetup
+  edge_port_data : @ordering.OrderingEdgePortData
 }
 
 ///|
@@ -171,7 +171,7 @@ fn build_noncluster_order_node_order(
 pub fn run_noncluster_rank_reorder(
   call_inputs : NonclusterRankReorderInputs,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     call_inputs.rank_keys,
     call_inputs.groups,
     call_inputs.order_edges,
@@ -224,8 +224,13 @@ fn build_noncluster_graphviz_neighbors(
   for name, list in edge_out_order {
     let heads : Array[String] = []
     for edge_idx in list {
-      let head = edge_head_at(edges[edge_idx], edge_idx, edge_head)
-      heads.push(head)
+      heads.push(
+        if edge_idx < edge_head.length() {
+          edge_head[edge_idx]
+        } else {
+          edges[edge_idx].head().name()
+        },
+      )
     }
     graphviz_out_neighbors[name] = heads
   }
@@ -259,7 +264,7 @@ fn run_noncluster_reorder_pass_with_inputs(
     inputs.nlist_order,
     inputs.node_order,
   )
-  let edge_index_data = build_edge_index_for_order(
+  let edge_index_data = @ordering.build_edge_index_for_order(
     inputs.nodes,
     inputs.order_edges,
     inputs.order_edge_tail,
