@@ -1,8 +1,5 @@
 ///|
-pub fn env_flag_enabled(
-  value : String?,
-  default_enabled : Bool,
-) -> Bool {
+pub fn env_flag_enabled(value : String?, default_enabled : Bool) -> Bool {
   match value {
     Some(raw) => {
       let lower = raw.to_lower()
