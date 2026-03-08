@@ -11,7 +11,7 @@ struct CanonicalOrderingInput {
 ///|
 fn find_mincross_input_case(path : String, case_id : Int) -> MincrossInput raise {
   let fixtures = load_mincross_fixtures_from(path)
-  for pair in fixtures.cases {
+  for pair in fixtures {
     let (input, _output) = pair
     if input.case_id == case_id {
       return input

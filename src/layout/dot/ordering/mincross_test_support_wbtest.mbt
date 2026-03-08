@@ -64,11 +64,6 @@ struct MincrossOutput {
 }
 
 ///|
-struct MincrossFixtures {
-  cases : Array[(MincrossInput, MincrossOutput)]
-}
-
-///|
 fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
   let startpass = match obj.get("startpass") {
     Some(value) => @json.from_json(value)
@@ -243,7 +238,7 @@ fn parse_optional_flat_edges(
 }
 
 ///|
-fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
+fn load_mincross_fixtures_from(path : String) -> Array[(MincrossInput, MincrossOutput)] raise {
   let data = @fs.read_file_to_string(path)
   let cases : Array[(MincrossInput, MincrossOutput)] = []
   let mut pending : MincrossInput? = None
@@ -287,7 +282,7 @@ fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
     Some(_) => fail("missing mincross_output for last case")
     None => ()
   }
-  { cases: cases }
+  cases
 }
 
 ///|
