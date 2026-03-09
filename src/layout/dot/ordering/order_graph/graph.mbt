@@ -1,6 +1,26 @@
 ///|
 /// Ordering domain: order-graph construction and materialization helpers.
 
+type NodeSize = @node_primitives.NodeSize
+
+///|
+pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
+  let order : Map[String, Int] = Map::new()
+  let mut idx = 0
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if order.get(tail) is None {
+      order[tail] = idx
+    }
+    if order.get(head) is None {
+      order[head] = idx
+    }
+    idx = idx + 1
+  }
+  order
+}
+
 ///|
 /// Graphviz parity: cluster membership lookup treats missing keys as
 /// non-cluster entries across class2 preprocessing passes.

@@ -429,7 +429,7 @@ fn build_local_reorder_edge_bundle(
       input_context.order_edge_head_port_order[i],
     )
   }
-  let edge_index_data = @ordering.build_edge_index_for_names(
+  let edge_index_data = @order_graph.build_edge_index_for_names(
     input_context.cluster_nodes,
     cluster_edge_tail,
     cluster_edge_head,
@@ -445,7 +445,7 @@ fn build_local_reorder_edge_bundle(
     cluster_edge_head_port_order,
     parents: edge_index_data.parents,
     children: edge_index_data.children,
-    edge_order: @ordering.collect_edge_order(cluster_edges),
+    edge_order: @order_graph.collect_edge_order(cluster_edges),
   }
 }
 
@@ -1357,7 +1357,7 @@ fn normalize_external_neighbor_name(
   intercluster_keys : Map[String, String],
   external_anchor_name : String,
 ) -> String {
-  let other_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
+  let other_cluster = @order_graph.cluster_key_or_empty(intercluster_keys, other)
   if other_cluster != "" &&
     other_cluster != cluster &&
     expanded_clusters.get(other_cluster) is None {
@@ -1421,7 +1421,7 @@ fn append_raw_neighbors_with_external_anchor(
       merge_context.external_anchor_name,
     )
     if normalized == merge_context.external_anchor_name {
-      let external_cluster = @ordering.cluster_key_or_empty(
+      let external_cluster = @order_graph.cluster_key_or_empty(
         merge_context.intercluster_keys,
         other,
       )

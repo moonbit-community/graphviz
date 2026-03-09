@@ -147,7 +147,7 @@ fn build_constraint_segment_pass(
       }
       let edge = input.edges[edge_idx]
       let (tail_name, head_name) =
-        @ordering.edge_endpoints_at(
+        @order_graph.edge_endpoints_at(
           edge,
           edge_idx,
           input.edge_tail,
@@ -239,13 +239,13 @@ fn build_constraint_segment_pass(
                   }
                 let weight = seg_base_weight + weight_bonus
                 let mut tail_port =
-                  @ordering.edge_tail_port_for_name(
+                  @order_graph.edge_tail_port_for_name(
                     edge,
                     seg_tail,
                     fallback_to_original=false,
                   )
                 let mut head_port =
-                  @ordering.edge_head_port_for_name(
+                  @order_graph.edge_head_port_for_name(
                     edge,
                     seg_head,
                     fallback_to_original=false,

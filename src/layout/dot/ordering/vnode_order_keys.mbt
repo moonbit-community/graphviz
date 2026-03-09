@@ -241,7 +241,7 @@ pub fn build_vnode_order_keys(
     if vnodes.length() == 0 {
       continue
     }
-    let (tail, head) = edge_endpoints_at(
+    let (tail, head) = @order_graph.edge_endpoints_at(
       edge, current_idx, edge_tail, edge_head,
     )
     let tail_rank = match ranks.get(tail) {

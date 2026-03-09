@@ -40,7 +40,7 @@ fn build_flat_constraints(
     in_edges[name] = []
   }
   for i in 0..<edges.length() {
-    let (tail, head) = @ordering.edge_endpoints_at(
+    let (tail, head) = @order_graph.edge_endpoints_at(
       edges[i],
       i,
       edge_tail,
@@ -99,13 +99,13 @@ fn build_flat_constraints(
     while idx < sorted.length() {
       let (_prev_id, prev_idx) = sorted[idx - 1]
       let (_curr_id, curr_idx) = sorted[idx]
-      let (prev_tail, prev_head) = @ordering.edge_endpoints_at(
+      let (prev_tail, prev_head) = @order_graph.edge_endpoints_at(
         edges[prev_idx],
         prev_idx,
         edge_tail,
         edge_head,
       )
-      let (curr_tail, curr_head) = @ordering.edge_endpoints_at(
+      let (curr_tail, curr_head) = @order_graph.edge_endpoints_at(
         edges[curr_idx],
         curr_idx,
         edge_tail,
@@ -176,8 +176,8 @@ fn add_same_rank_constraint_edges_to_flat_constraints(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     if tail != head {
-      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
+      let tail_rank = @order_graph.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @order_graph.flat_constraint_rank_or_zero(ranks, head)
       if tail_rank == head_rank {
         flat_constraints["\{tail}|\{head}"] = true
       }

@@ -733,24 +733,6 @@ pub fn median_value_mc_scale(values : Array[Double]) -> Double? {
 }
 
 ///|
-pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
-  let order : Map[String, Int] = Map::new()
-  let mut idx = 0
-  for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    if order.get(tail) is None {
-      order[tail] = idx
-    }
-    if order.get(head) is None {
-      order[head] = idx
-    }
-    idx = idx + 1
-  }
-  order
-}
-
-///|
 pub fn left2right_constraint(
   left : String,
   right : String,

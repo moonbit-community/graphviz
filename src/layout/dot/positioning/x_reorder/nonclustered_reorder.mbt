@@ -75,7 +75,7 @@ fn reorder_nonclustered_x_groups(
   input : NonclusteredXposReorderInput,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let edge_index_data = @ordering.build_edge_index_with_vnodes(
+  let edge_index_data = @order_graph.build_edge_index_with_vnodes(
     input.nodes,
     input.order_edges,
     input.order_edge_tail,

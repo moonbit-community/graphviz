@@ -41,7 +41,7 @@ fn adjust_nlist_order_for_flip(
   // cluster key while skipping non-cluster entries.
   let cluster_nodes : Map[String, Array[String]] = Map::new()
   for name in nlist_order_raw {
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -70,7 +70,7 @@ fn adjust_nlist_order_for_flip(
   // cluster names by sequential consumption from reversed buckets.
   let adjusted : Array[String] = []
   for name in nlist_order_raw {
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       adjusted.push(name)
     } else {
@@ -119,8 +119,8 @@ fn build_flat_rank_constraints(
     let tail = edge_tail[flat_idx]
     let head = edge_head[flat_idx]
     if tail != head {
-      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
+      let tail_rank = @order_graph.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @order_graph.flat_constraint_rank_or_zero(ranks, head)
       if tail_rank == head_rank {
         flat_rank_constraints["\{tail}|\{head}"] = true
       }
@@ -427,7 +427,7 @@ fn build_ordering_class2_data(
       None => edges_by_tail[name] = []
     }
   }
-  let order_edges_by_tail_output = @ordering.build_order_edges_by_tail(
+  let order_edges_by_tail_output = @order_graph.build_order_edges_by_tail(
     creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
     edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
     cluster_keys, order_with_clusters, false, true, edges_by_tail,
@@ -436,7 +436,7 @@ fn build_ordering_class2_data(
   let vnode_creation_by_tail = order_edges_by_tail_output.vnode_creation_by_tail
   let order_edge_creation = order_edges_by_tail_output.edge_creation_order
   let (order_edges_by_tail_root, root_edge_creation) = if order_with_clusters {
-    let root_edges_by_tail_output = @ordering.build_order_edges_by_tail(
+    let root_edges_by_tail_output = @order_graph.build_order_edges_by_tail(
       creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
       edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
       cluster_keys, order_with_clusters, true, true, edges_by_tail,
@@ -448,7 +448,7 @@ fn build_ordering_class2_data(
     (order_edges_by_tail, order_edge_creation)
   }
   let order_edges_by_tail_unmapped = if order_with_clusters {
-    let unmapped_output = @ordering.build_order_edges_by_tail(
+    let unmapped_output = @order_graph.build_order_edges_by_tail(
       creation_order, edges, edge_tail, edge_head, edge_tail_port_x, edge_head_port_x,
       edge_tail_port_order, edge_head_port_order, ranks, edge_vnodes, order_with_vnodes,
       cluster_keys, order_with_clusters, false, false, edges_by_tail,
@@ -495,23 +495,23 @@ fn build_ordering_class2_data(
     order_with_clusters, cluster_order, cluster_min_rank, cluster_max_rank, order_edges_by_tail,
     order_edges_by_tail_root,
   )
-  let edge_creation_order = @ordering.merge_edge_creation_sequences(
+  let edge_creation_order = @order_graph.merge_edge_creation_sequences(
     skeleton_edge_creation, order_edge_creation,
   )
   let (order_creation, vnode_creation_order) = {
     let order_creation : Array[String] = []
     let order_seen : Map[String, Bool] = Map::new()
     for name in cluster_skeleton_creation {
-      @ordering.append_creation_name(order_creation, order_seen, name)
+      @order_graph.append_creation_name(order_creation, order_seen, name)
     }
     for tail_name in creation_order {
-      @ordering.append_creation_name(order_creation, order_seen, tail_name)
+      @order_graph.append_creation_name(order_creation, order_seen, tail_name)
       let vnodes = match vnode_creation_by_tail.get(tail_name) {
         Some(list) => list
         None => []
       }
       for vnode in vnodes {
-        @ordering.append_creation_name(order_creation, order_seen, vnode)
+        @order_graph.append_creation_name(order_creation, order_seen, vnode)
       }
     }
     let vnode_creation_order : Array[String] = []
@@ -565,7 +565,7 @@ fn dedup_ordering_edges(
   let out_tail : Array[String] = []
   let out_head : Array[String] = []
   for i in 0..<edges.length() {
-    let (tail, head) = @ordering.edge_endpoints_at(edges[i], i, edge_tail, edge_head)
+    let (tail, head) = @order_graph.edge_endpoints_at(edges[i], i, edge_tail, edge_head)
     let key = "\{tail}|\{head}"
     if seen.get(key) is Some(_) {
       continue
@@ -635,7 +635,7 @@ pub fn build_ordering_edge_port_data_from_sources(
     dedup_order_edges.order_edge_head,
   )
   {
-    edge_order: @ordering.collect_edge_order(sources.edges),
+    edge_order: @order_graph.collect_edge_order(sources.edges),
     edge_tail_port_x: edge_port_samples.tail_port_x,
     edge_head_port_x: edge_port_samples.head_port_x,
     edge_tail_port_order: edge_port_samples.tail_port_order,

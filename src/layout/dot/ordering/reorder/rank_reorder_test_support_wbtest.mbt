@@ -275,12 +275,12 @@ fn run_mincross_case_with_name_order(
     groups[rank] = names
     rank = rank + 1
   }
-  let edge_index_data = @ordering.build_edge_index_for_order(
+  let edge_index_data = @order_graph.build_edge_index_for_order(
     nodes, edges, edge_tail, edge_head, name_to_rank,
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = @ordering.collect_edge_order(edges)
+  let edge_order = @order_graph.collect_edge_order(edges)
   let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
   let cluster_keys : Map[String, String] = Map::new()
   let cluster_skeleton : Map[String, Bool] = Map::new()

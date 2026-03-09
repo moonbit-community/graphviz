@@ -117,7 +117,7 @@ pub fn coalesce_ordering_edge_snapshot_entries(
       None => ()
     }
   }
-  let coalesced_by_tail = @ordering.coalesce_order_edges_by_tail(entries_by_tail)
+  let coalesced_by_tail = @order_graph.coalesce_order_edges_by_tail(entries_by_tail)
   let coalesced : Array[OrderingEdgeSnapshotEntry] = []
   for tail in tail_order {
     let tail_entries = coalesced_by_tail.get(tail).unwrap_or_default()

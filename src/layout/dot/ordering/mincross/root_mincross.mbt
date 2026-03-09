@@ -239,7 +239,7 @@ fn build_root_mincross_edge_bundle(
     mincross_nodes, order_edges_out, order_edge_tail_out, order_edge_head_out, order_edge_tail_port_x,
     order_edge_head_port_x, order_edge_tail_port_order, order_edge_head_port_order,
   )
-  let edge_indices = @ordering.build_edge_indices_and_order(
+  let edge_indices = @order_graph.build_edge_indices_and_order(
     order_nodes_for_mincross,
     mincross_edges_output.order_edge_tail_out_mincross,
     mincross_edges_output.order_edge_head_out_mincross,
@@ -502,7 +502,7 @@ fn build_root_rank_reorder_call_data(
   let order_rank_keys_for_mincross = @ordering.collect_rank_keys(
     order_groups_for_mincross,
   )
-  let order_nodes_for_mincross = @ordering.build_order_nodes_from_groups(
+  let order_nodes_for_mincross = @order_graph.build_order_nodes_from_groups(
     order_groups_for_mincross, order_rank_keys_for_mincross,
   )
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
@@ -988,7 +988,7 @@ fn build_rank_attached_by_skeleton(
 ) -> Map[String, Array[String]] {
   let skeleton_for_cluster = build_skeleton_for_clusters(names, name => {
     if order_cluster_skeleton.get(name) == Some(true) {
-      @ordering.cluster_key_or_empty(order_cluster_keys, name)
+      @order_graph.cluster_key_or_empty(order_cluster_keys, name)
     } else {
       ""
     }
@@ -1079,7 +1079,7 @@ fn build_attached_by_skeleton(
     if should_skip(name) {
       continue
     }
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -1204,7 +1204,7 @@ fn rebuild_root_override_names(
       append_attached_by_skeleton(next_names, seen, attached_by_skeleton, name)
       continue
     }
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
+    let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
       continue
     }
@@ -1503,7 +1503,7 @@ fn collect_noncluster_components(
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
 ) -> Array[Array[String]] {
-  let order_nodes = @ordering.build_order_nodes_from_groups(groups, rank_keys)
+  let order_nodes = @order_graph.build_order_nodes_from_groups(groups, rank_keys)
   if order_nodes.length() == 0 {
     return []
   }

@@ -27,7 +27,7 @@ fn edge_is_reversed_by_endpoints(
     } else {
       edge.head().name()
     }
-  @ordering.edge_orientation_is_reversed(edge, tail_name, head_name)
+  @order_graph.edge_orientation_is_reversed(edge, tail_name, head_name)
 }
 
 ///|

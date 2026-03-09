@@ -1,5 +1,6 @@
 import {
   "moonbit-community/graphviz/layout/dot/ordering",
+  "moonbit-community/graphviz/layout/dot/ordering/order_graph",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/edge_semantics",
   "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",

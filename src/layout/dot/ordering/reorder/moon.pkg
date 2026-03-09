@@ -11,4 +11,5 @@ import {
 
 import {
   "moonbit-community/graphviz/layout/dot/input_stage",
+  "moonbit-community/graphviz/layout/dot/ordering/order_graph",
 } for "wbtest"

@@ -57,7 +57,7 @@ fn collect_vnode_out_heads(
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) =
-      @ordering.edge_endpoints_at(
+      @order_graph.edge_endpoints_at(
         edge,
         edge_idx,
         edge_tail,
@@ -273,7 +273,7 @@ fn add_flat_label_vnodes(
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
     let (tail, head) =
-      @ordering.edge_endpoints_at(
+      @order_graph.edge_endpoints_at(
         edge,
         current_idx,
         edge_tail,

@@ -120,7 +120,7 @@ priv struct ClusteredXposReorderApplyInput {
 fn apply_clustered_xpos_reorder(
   input : ClusteredXposReorderApplyInput,
 ) -> Map[Int, Array[String]] {
-  let edge_index_data = @ordering.build_edge_index_for_names(
+  let edge_index_data = @order_graph.build_edge_index_for_names(
     input.order_nodes,
     input.order_edge_tail_out,
     input.order_edge_head_out,
@@ -128,7 +128,7 @@ fn apply_clustered_xpos_reorder(
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = @ordering.collect_edge_order(input.order_edges_out)
+  let edge_order = @order_graph.collect_edge_order(input.order_edges_out)
   @reorder.reorder_rank_groups(
     input.order_rank_keys,
     input.order_groups,
@@ -380,7 +380,7 @@ fn append_xpos_chain_segments(
     } else {
       0.5
     }
-    @ordering.add_order_edge(
+    @order_graph.add_order_edge(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -426,7 +426,7 @@ fn append_xpos_edge_with_vnodes(
   vnodes : Array[String],
 ) -> Unit {
   if vnodes.length() == 0 {
-    @ordering.add_order_edge(
+    @order_graph.add_order_edge(
       order_graph, order_node_map, order_edges_out, order_edge_tail_out, order_edge_head_out,
       order_edge_tail_port_x, order_edge_head_port_x, order_edge_tail_port_order,
       order_edge_head_port_order, tail, head, penalty, constraint, tail_port_x, head_port_x,
@@ -529,7 +529,7 @@ fn append_skeleton_edges(
     while rank < max_rank {
       let tail_name = @cluster_identity.cluster_skeleton_name(cluster, rank)
       let head_name = @cluster_identity.cluster_skeleton_name(cluster, rank + 1)
-      @ordering.add_order_edge(
+      @order_graph.add_order_edge(
         order_graph,
         order_node_map,
         order_edges_out,

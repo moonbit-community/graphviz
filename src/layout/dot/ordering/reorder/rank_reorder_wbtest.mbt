@@ -114,10 +114,10 @@ fn run_fixed_rank_reorder_case(
     rank = rank + 1
   }
 
-  let edge_index_data = @ordering.build_edge_index_for_order(
+  let edge_index_data = @order_graph.build_edge_index_for_order(
     nodes, edges, edge_tail, edge_head, name_to_rank,
   )
-  let edge_order = @ordering.collect_edge_order(edges)
+  let edge_order = @order_graph.collect_edge_order(edges)
   let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
   let ordered = reorder_rank_groups(
     rank_keys,

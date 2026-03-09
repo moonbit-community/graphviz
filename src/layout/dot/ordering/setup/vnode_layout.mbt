@@ -47,7 +47,7 @@ pub fn build_edge_vnodes(
   let plain_width = 1.0 + nodesep_pt / 2.0
   for idx in edge_indices {
     let edge = edges[idx]
-    let (tail, head) = @ordering.edge_endpoints_at(
+    let (tail, head) = @order_graph.edge_endpoints_at(
       edge, idx, edge_tail, edge_head,
     )
     let tail_cluster = @clustering.node_cluster_key(edge.tail())

@@ -525,7 +525,7 @@ pub fn run_remincross_cleanup(
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let materialized_inputs = inputs.materialized_inputs
-  let rem_edge_indices = @ordering.build_edge_indices_and_order(
+  let rem_edge_indices = @order_graph.build_edge_indices_and_order(
     materialized_inputs.rem_nodes,
     materialized_inputs.rem_edge_tail_out,
     materialized_inputs.rem_edge_head_out,
@@ -632,7 +632,7 @@ fn try_build_special_seed_order(
   let mut root_real_name = ""
   let cluster_real_names : Array[String] = []
   for name in base_real {
-    if @ordering.cluster_key_or_empty(cluster_keys, name) == "" {
+    if @order_graph.cluster_key_or_empty(cluster_keys, name) == "" {
       root_real_count = root_real_count + 1
       root_real_name = name
     } else {
@@ -816,7 +816,7 @@ fn collect_remincross_trailing(
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
-    let (tail, head) = @ordering.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @order_graph.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = remincross_cluster_keys.get(tail).unwrap_or_default()
     let head_cluster = remincross_cluster_keys.get(head).unwrap_or_default()
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,

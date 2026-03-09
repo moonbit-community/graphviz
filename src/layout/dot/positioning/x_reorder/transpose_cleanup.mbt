@@ -21,7 +21,7 @@ fn apply_xpos_transpose_cleanup(
   input : XposTransposeCleanupInput,
   max_passes : Int,
 ) -> Unit {
-  let edge_index_data = @ordering.build_edge_index_with_vnodes(
+  let edge_index_data = @order_graph.build_edge_index_with_vnodes(
     input.nodes,
     input.order_edges,
     input.order_edge_tail,

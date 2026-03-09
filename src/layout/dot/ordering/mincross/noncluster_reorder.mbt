@@ -264,7 +264,7 @@ fn run_noncluster_reorder_pass_with_inputs(
     inputs.nlist_order,
     inputs.node_order,
   )
-  let edge_index_data = @ordering.build_edge_index_for_order(
+  let edge_index_data = @order_graph.build_edge_index_for_order(
     inputs.nodes,
     inputs.order_edges,
     inputs.order_edge_tail,
