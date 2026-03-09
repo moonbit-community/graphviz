@@ -120,6 +120,39 @@ fn normalize_id_groups(groups : Array[Array[Int]]) -> Array[Array[Int]] {
 }
 
 ///|
+fn spline_with_start_x(start_x : Double) -> @geom.Spline {
+  {
+    start: None,
+    end: None,
+    points: [
+      @edge_spline.point(start_x, 0.0),
+      @edge_spline.point(start_x + 1.0, 0.0),
+      @edge_spline.point(start_x + 2.0, 0.0),
+      @edge_spline.point(start_x + 3.0, 0.0),
+    ],
+  }
+}
+
+///|
+fn build_layout_edge(
+  edge : @cgraph.Edge,
+  spline_start_x : Double,
+  label_pos? : @geom.Point? = None,
+  head_label_pos? : @geom.Point? = None,
+  tail_label_pos? : @geom.Point? = None,
+  xlabel_pos? : @geom.Point? = None,
+) -> DotLayoutEdge {
+  {
+    edge,
+    splines: [spline_with_start_x(spline_start_x)],
+    label_pos,
+    head_label_pos,
+    tail_label_pos,
+    xlabel_pos,
+  }
+}
+
+///|
 test "edge route type classifies regular flat and self edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
@@ -432,4 +465,124 @@ test "build_parallel_remap_assignments requires complete groups and reverses sou
       "\{edge_3.id()}->\{edge_1.id()}",
     ],
   )
+}
+
+///|
+test "remap_port_label_pos respects attr gating fallback and head-tail spline selection" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let splines = [spline_with_start_x(1.0), spline_with_start_x(9.0)]
+  let fallback = Some(@edge_spline.point(77.0, 0.0))
+
+  assert_eq(
+    remap_port_label_pos({
+      edge,
+      splines,
+      label_attr: "headlabel",
+      is_head: true,
+      fallback,
+      edge_port_label_pos_fn: _ => Some(@edge_spline.point(0.0, 0.0)),
+    }),
+    None,
+  )
+
+  edge.set_attr("headlabel", "h")
+  assert_eq(
+    remap_port_label_pos({
+      edge,
+      splines: [],
+      label_attr: "headlabel",
+      is_head: true,
+      fallback,
+      edge_port_label_pos_fn: _ => Some(@edge_spline.point(0.0, 0.0)),
+    }),
+    fallback,
+  )
+
+  let tail = remap_port_label_pos({
+    edge,
+    splines,
+    label_attr: "headlabel",
+    is_head: false,
+    fallback,
+    edge_port_label_pos_fn: input => Some(input.spline.points[0]),
+  })
+  let head = remap_port_label_pos({
+    edge,
+    splines,
+    label_attr: "headlabel",
+    is_head: true,
+    fallback,
+    edge_port_label_pos_fn: input => Some(input.spline.points[0]),
+  })
+
+  assert_eq(tail, Some(@edge_spline.point(1.0, 0.0)))
+  assert_eq(head, Some(@edge_spline.point(9.0, 0.0)))
+}
+
+///|
+test "remap_parallel_edge_layouts uses a snapshot so reversed remaps do not cascade" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, b)
+  let edge_3 = graph.edge(a, b)
+  let ranks : Map[String, Int] = { "a": 0, "b": 2 }
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  edges_out_by_id[edge_1.id()] = build_layout_edge(edge_1, 1.0)
+  edges_out_by_id[edge_2.id()] = build_layout_edge(edge_2, 20.0)
+  edges_out_by_id[edge_3.id()] = build_layout_edge(edge_3, 40.0)
+
+  remap_parallel_edge_layouts({
+    edges: [edge_1, edge_2, edge_3],
+    ranks,
+    edges_out_by_id,
+    edge_port_label_pos_fn: _ => None,
+  })
+
+  assert_eq(
+    edges_out_by_id
+    .get(edge_1.id())
+    .map(fn(layout) { layout.splines[0].points[0] }),
+    Some(@edge_spline.point(40.0, 0.0)),
+  )
+  assert_eq(
+    edges_out_by_id
+    .get(edge_2.id())
+    .map(fn(layout) { layout.splines[0].points[0] }),
+    Some(@edge_spline.point(20.0, 0.0)),
+  )
+  assert_eq(
+    edges_out_by_id
+    .get(edge_3.id())
+    .map(fn(layout) { layout.splines[0].points[0] }),
+    Some(@edge_spline.point(1.0, 0.0)),
+  )
+}
+
+///|
+test "finalize_routed_edges preserves input order for layouts that remain after remap" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let c = graph.node("c")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, c)
+  let edge_3 = graph.edge(b, c)
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  edges_out_by_id[edge_1.id()] = build_layout_edge(edge_1, 10.0)
+  edges_out_by_id[edge_3.id()] = build_layout_edge(edge_3, 30.0)
+
+  let output = finalize_routed_edges({
+    edges: [edge_2, edge_1, edge_3],
+    ranks: { "a": 0, "b": 1, "c": 2 },
+    edges_out_by_id,
+    edge_port_label_pos_fn: _ => None,
+  })
+
+  assert_eq(output.map(fn(layout) { layout.edge.id() }), [
+    edge_1.id(),
+    edge_3.id(),
+  ])
 }
