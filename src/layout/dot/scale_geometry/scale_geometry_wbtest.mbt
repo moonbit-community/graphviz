@@ -65,6 +65,20 @@ test "ratio_fill_scale_factors handles direct, flipped, clamped, and invalid cas
 }
 
 ///|
+test "ratio_fill_scale_factors normalizes ratio text before RL flip handling" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  graph.set_attr("ratio", " Fill ")
+  graph.set_attr("size", "2,1")
+  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 72.0, ury: 36.0 }
+
+  assert_scale_factors(
+    ratio_fill_scale_factors(graph, bbox, RankDir::RL),
+    1.0,
+    4.0,
+  )
+}
+
+///|
 test "point and map scaling helpers keep expected rounding and axis scaling" {
   let point : @geom.Point = { x: 1.25, y: -2.5 }
   assert_eq(scale_point(point, 2.0, 3.0), { x: 2.5, y: -7.5 })
@@ -169,4 +183,33 @@ test "scale_edge_layout_output and scale_record_port_maps keep nested geometry s
   assert_eq(port.size.width_pt, 20.0)
   assert_eq(port.size.height_pt, 10.0)
   assert_eq(port.sides, 3)
+}
+
+///|
+test "scale_edge_layout_output preserves absent optional geometry while scaling spline points" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let scaled_edges = scale_edge_layout_output(
+    [
+      {
+        edge,
+        splines: [{ start: None, end: None, points: [{ x: 1.0, y: 2.0 }] }],
+        label_pos: None,
+        head_label_pos: None,
+        tail_label_pos: None,
+        xlabel_pos: None,
+      },
+    ],
+    2.0,
+    3.0,
+  )
+
+  let scaled_spline = scaled_edges[0].splines[0]
+  assert_eq(scaled_spline.start, None)
+  assert_eq(scaled_spline.end, None)
+  assert_eq(scaled_spline.points, [{ x: 2.0, y: 6.0 }])
+  assert_eq(scaled_edges[0].label_pos, None)
+  assert_eq(scaled_edges[0].head_label_pos, None)
+  assert_eq(scaled_edges[0].tail_label_pos, None)
+  assert_eq(scaled_edges[0].xlabel_pos, None)
 }
