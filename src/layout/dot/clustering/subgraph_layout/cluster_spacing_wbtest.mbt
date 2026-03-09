@@ -173,16 +173,24 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   }
   let outer_margin = @clustering.cluster_margin_pt(outer)
   guard outer_bb.llx <= inner_bb.llx - outer_margin + 0.1 else {
-    fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - outer_margin}")
+    fail(
+      "outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - outer_margin}",
+    )
   }
   guard outer_bb.lly <= inner_bb.lly - outer_margin + 0.1 else {
-    fail("outer lly too large: \{outer_bb.lly} expected <= \{inner_bb.lly - outer_margin}")
+    fail(
+      "outer lly too large: \{outer_bb.lly} expected <= \{inner_bb.lly - outer_margin}",
+    )
   }
   guard outer_bb.urx >= inner_bb.urx + outer_margin - 0.1 else {
-    fail("outer urx too small: \{outer_bb.urx} expected >= \{inner_bb.urx + outer_margin}")
+    fail(
+      "outer urx too small: \{outer_bb.urx} expected >= \{inner_bb.urx + outer_margin}",
+    )
   }
   guard outer_bb.ury >= inner_bb.ury + outer_margin - 0.1 else {
-    fail("outer ury too small: \{outer_bb.ury} expected >= \{inner_bb.ury + outer_margin}")
+    fail(
+      "outer ury too small: \{outer_bb.ury} expected >= \{inner_bb.ury + outer_margin}",
+    )
   }
 
   let empty_graph = @dot_parser.parse_dot(

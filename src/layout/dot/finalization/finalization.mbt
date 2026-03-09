@@ -1,7 +1,7 @@
 ///|
 /// Stage F finalization package: final layout payload assembly, pre/post-
 /// rotation transforms, and root coordinate writeback.
-type LayoutTree = @shared.LayoutTree
+type LayoutTree = @layout_tree.LayoutTree
 
 ///|
 type LayoutPrep = @layout_prep.LayoutPrep
@@ -16,10 +16,10 @@ type SplinesMode = @layout_prep.SplinesMode
 type NodeSize = @node_primitives.NodeSize
 
 ///|
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair

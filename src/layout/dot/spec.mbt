@@ -31,7 +31,7 @@ pub(all) suberror DotLayoutError {
 ///|
 /// Node layout output.
 /// pos is in points; width/height are in inches.
-pub type DotLayoutNode = @dot_shared.DotLayoutNode
+pub type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
 /// Cluster rank-height pair used by cluster bbox/rank alignment passes.
@@ -39,7 +39,7 @@ pub type DotLayoutNode = @dot_shared.DotLayoutNode
 ///|
 /// Edge layout output.
 /// Splines use points in points; label positions are optional.
-pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
+pub type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 /// Graph layout output.

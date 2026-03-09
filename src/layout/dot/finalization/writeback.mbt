@@ -35,7 +35,7 @@ fn set_edge_label_pos_if_present(
 
 ///|
 fn apply_graph_output_attrs(
-  layout : @shared.LayoutTree,
+  layout : @layout_tree.LayoutTree,
 ) -> @layout_prep.RecordOrientation {
   let graph = layout.graph
   let record_orientation = @layout_prep.record_layout_orientation(
@@ -63,7 +63,7 @@ fn apply_graph_output_attrs(
 
 ///|
 fn apply_node_output_attrs(
-  nodes : Array[@shared.DotLayoutNode],
+  nodes : Array[@layout_tree.DotLayoutNode],
   record_orientation : @layout_prep.RecordOrientation,
 ) -> Unit {
   for node_layout in nodes {
@@ -112,7 +112,7 @@ fn apply_node_output_attrs(
 ///|
 fn apply_edge_output_attrs(
   graph : @cgraph.Graph,
-  edges : Array[@shared.DotLayoutEdge],
+  edges : Array[@layout_tree.DotLayoutEdge],
 ) -> Unit {
   for edge_layout in edges {
     let edge = edge_layout.edge
@@ -161,7 +161,7 @@ fn apply_edge_output_attrs(
 /// Graphviz parity: final writeback preserves Graphviz attribute emission order
 /// for graph/node/edge geometry and label positions.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_layout_tree_writeback(layout : @shared.LayoutTree) -> Unit {
+pub fn apply_layout_tree_writeback(layout : @layout_tree.LayoutTree) -> Unit {
   let record_orientation = apply_graph_output_attrs(layout)
   apply_node_output_attrs(layout.nodes, record_orientation)
   apply_edge_output_attrs(layout.graph, layout.edges)

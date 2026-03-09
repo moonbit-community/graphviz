@@ -1,6 +1,6 @@
 ///|
-/// Internal layout output types shared across dot subpackages so tree-heavy
-/// algorithms can work with one cohesive layout payload.
+/// Internal layout output types used by tree-heavy dot subpackages so they can
+/// work with one cohesive layout payload.
 
 ///|
 /// Node layout output.

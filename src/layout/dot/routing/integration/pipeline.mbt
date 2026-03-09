@@ -16,7 +16,7 @@ type NodeSize = @node_primitives.NodeSize
 type RecordPort = @record_geometry.RecordPort
 
 ///|
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
 type DotLayoutEdge = @routing.DotLayoutEdge

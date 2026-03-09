@@ -1,7 +1,7 @@
 ///|
 /// Cluster subgraph layout tree helpers: recursive cluster layout, subtree bbox
 /// expansion, and routing bbox extraction shared by routing/finalization paths.
-type LayoutTree = @shared.LayoutTree
+type LayoutTree = @layout_tree.LayoutTree
 
 ///|
 type LabelLoc = @graph_label.LabelLoc
@@ -10,10 +10,10 @@ type LabelLoc = @graph_label.LabelLoc
 type LabelJust = @graph_label.LabelJust
 
 ///|
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair

@@ -1,10 +1,10 @@
 ///|
 /// Pure bbox aggregation and dot_compute_bb helpers extracted from the root
 /// dot package so DotLayoutGraph-specific recursion can stay at the boundary.
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 type NodeSize = @node_primitives.NodeSize

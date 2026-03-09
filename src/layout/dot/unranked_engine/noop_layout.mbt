@@ -165,7 +165,7 @@ fn build_noop_layout_tree(
   graph : @cgraph.Graph,
   no_op_level : Int,
   scale : Double,
-) -> Result[@shared.LayoutTree, String] {
+) -> Result[@layout_tree.LayoutTree, String] {
   let geometry = build_engine_geometry_context(graph, scale)
   let node_data = match
     collect_noop_nodes_with_sizes(

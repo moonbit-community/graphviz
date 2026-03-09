@@ -64,7 +64,7 @@ pub fn layout_dot(
 ///|
 /// Bridge between the public root layout type and the internal shared layout
 /// tree used by tree-heavy subpackages.
-type LayoutTree = @dot_shared.LayoutTree
+type LayoutTree = @layout_tree.LayoutTree
 
 ///|
 fn dot_layout_graph_from_layout_tree(layout : LayoutTree) -> DotLayoutGraph {

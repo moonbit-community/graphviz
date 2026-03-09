@@ -5,13 +5,13 @@
 ///|
 /// Dot-package bridge for unranked engine output projection and layout-tree
 /// finalization.
-type LayoutTree = @shared.LayoutTree
+type LayoutTree = @layout_tree.LayoutTree
 
 ///|
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair

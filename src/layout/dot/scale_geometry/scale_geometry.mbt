@@ -6,7 +6,7 @@
 type RankDir = @rankdir.RankDir
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 /// Graphviz parity: ratio=fill scaling aligned to refs/graphviz/lib/dotgen/position.c

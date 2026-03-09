@@ -308,8 +308,8 @@ fn xlabel_make_layout_tree(
   bbox : @geom.Rect,
   nodes? : Array[DotLayoutNode] = [],
   edges? : Array[DotLayoutEdge] = [],
-  subgraphs? : Array[@shared.LayoutTree] = [],
-) -> @shared.LayoutTree {
+  subgraphs? : Array[@layout_tree.LayoutTree] = [],
+) -> @layout_tree.LayoutTree {
   { graph, bbox, label_pos: None, nodes, edges, subgraphs }
 }
 

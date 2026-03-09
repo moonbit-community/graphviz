@@ -122,7 +122,11 @@ pub(all) struct RouteBaseDeps {
     @rankdir.RankDir,
     Double,
   ) -> RouteDynamicPortAnchor
-  port_side_mask_from_anchor : (@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
+  port_side_mask_from_anchor : (
+    @geom.Point,
+    @geom.Point,
+    @node_primitives.NodeSize,
+  ) -> Int
   port_side_for_edge : (
     @cgraph.Port?,
     @geom.Rect?,
@@ -153,7 +157,7 @@ pub(all) struct SelfEdgeRoute {
 }
 
 ///|
-pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
+pub type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 pub(all) struct EdgeLayoutInput {
@@ -180,9 +184,7 @@ pub(all) struct RecoverSlackVnodesInput {
 }
 
 ///|
-pub type RecoverSlackVnodesFn = (
-  RecoverSlackVnodesInput,
-) -> Unit
+pub type RecoverSlackVnodesFn = (RecoverSlackVnodesInput) -> Unit
 
 ///|
 pub(all) struct EdgeLayoutBuildCallbackInput {

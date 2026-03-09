@@ -1,6 +1,6 @@
 import {
   "moonbit-community/graphviz/layout/dot/layout_prep",
-  "moonbit-community/graphviz/layout/dot/shared",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/label_metrics",

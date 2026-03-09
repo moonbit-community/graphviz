@@ -1,5 +1,5 @@
 import {
-  "moonbit-community/graphviz/layout/dot/shared",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",

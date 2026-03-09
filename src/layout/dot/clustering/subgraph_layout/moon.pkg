@@ -1,0 +1,20 @@
+import {
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/graph_label",
+  "moonbit-community/graphviz/layout/dot/clustering",
+  "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
+  "moonbit-community/graphviz/layout/dot/clustering/membership",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/cluster_graph",
+  "moonbit-community/graphviz/layout/dot/label_metrics",
+  "moonbit-community/graphviz/layout/dot/bbox",
+  "moonbit-community/graphviz/layout/dot/edge_identity",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+}
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbit-community/graphviz/layout/dot" @dot_layout,
+  "moonbit-community/graphviz/layout/dot/numeric",
+} for "wbtest"

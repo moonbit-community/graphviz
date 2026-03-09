@@ -1,14 +1,14 @@
 ///|
-type LayoutTree = @shared.LayoutTree
+type LayoutTree = @layout_tree.LayoutTree
 
 ///|
 type SplinesMode = @layout_prep.SplinesMode
 
 ///|
-type DotLayoutNode = @shared.DotLayoutNode
+type DotLayoutNode = @layout_tree.DotLayoutNode
 
 ///|
-type DotLayoutEdge = @shared.DotLayoutEdge
+type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 type RankDir = @rankdir.RankDir

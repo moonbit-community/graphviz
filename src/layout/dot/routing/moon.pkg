@@ -1,0 +1,15 @@
+import {
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing/routesplines" @routesplines,
+  "moonbit-community/graphviz/layout/dot/routing/precompute",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbit-community/graphviz/layout/dot" @dot_layout,
+} for "wbtest"
