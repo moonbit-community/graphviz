@@ -1142,7 +1142,7 @@ pub fn build_seeded_reorder_groups(
     edge_head_port_x=build_context.order_edge_head_port_x,
   )
   if seed_cross > 0 {
-    let transpose_seed_maps = @ordering.build_transpose_seed_maps(
+    let transpose_seed_maps = build_transpose_seed_maps(
       build_context.order_rank_keys,
       seeded_groups,
       build_context.order_edges_out,
