@@ -19,8 +19,16 @@ test "ratio_fill_scale_factors handles direct, flipped, clamped, and invalid cas
   direct.set_attr("ratio", "fill")
   direct.set_attr("size", "2,1")
   let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 72.0, ury: 36.0 }
-  assert_scale_factors(ratio_fill_scale_factors(direct, bbox, RankDir::TB), 2.0, 2.0)
-  assert_scale_factors(ratio_fill_scale_factors(direct, bbox, RankDir::LR), 1.0, 4.0)
+  assert_scale_factors(
+    ratio_fill_scale_factors(direct, bbox, RankDir::TB),
+    2.0,
+    2.0,
+  )
+  assert_scale_factors(
+    ratio_fill_scale_factors(direct, bbox, RankDir::LR),
+    1.0,
+    4.0,
+  )
 
   let clamped = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   clamped.set_attr("ratio", "fill")
@@ -32,9 +40,15 @@ test "ratio_fill_scale_factors handles direct, flipped, clamped, and invalid cas
     8.0,
   )
 
-  let missing_ratio = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let missing_ratio = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    strict=false,
+  )
   missing_ratio.set_attr("size", "2,1")
-  let invalid_size = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let invalid_size = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    strict=false,
+  )
   invalid_size.set_attr("ratio", "fill")
   invalid_size.set_attr("size", "0,1")
   let non_fill = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
@@ -42,7 +56,9 @@ test "ratio_fill_scale_factors handles direct, flipped, clamped, and invalid cas
   non_fill.set_attr("size", "2,1")
   let flat_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 0.0, ury: 10.0 }
 
-  assert_true(ratio_fill_scale_factors(missing_ratio, bbox, RankDir::TB) is None)
+  assert_true(
+    ratio_fill_scale_factors(missing_ratio, bbox, RankDir::TB) is None,
+  )
   assert_true(ratio_fill_scale_factors(invalid_size, bbox, RankDir::TB) is None)
   assert_true(ratio_fill_scale_factors(non_fill, bbox, RankDir::TB) is None)
   assert_true(ratio_fill_scale_factors(direct, flat_bbox, RankDir::TB) is None)
@@ -52,8 +68,14 @@ test "ratio_fill_scale_factors handles direct, flipped, clamped, and invalid cas
 test "point and map scaling helpers keep expected rounding and axis scaling" {
   let point : @geom.Point = { x: 1.25, y: -2.5 }
   assert_eq(scale_point(point, 2.0, 3.0), { x: 2.5, y: -7.5 })
-  assert_eq(scale_point_rounded({ x: 1.4, y: -2.6 }, 2.0, 3.0), { x: 3.0, y: -8.0 })
-  assert_eq(scale_optional_point(Some(point), 2.0, 3.0), Some({ x: 2.5, y: -7.5 }))
+  assert_eq(scale_point_rounded({ x: 1.4, y: -2.6 }, 2.0, 3.0), {
+    x: 3.0,
+    y: -8.0,
+  })
+  assert_eq(
+    scale_optional_point(Some(point), 2.0, 3.0),
+    Some({ x: 2.5, y: -7.5 }),
+  )
   assert_eq(scale_optional_point(None, 2.0, 3.0), None)
 
   let points : Map[String, @geom.Point] = Map::new()
@@ -80,30 +102,37 @@ test "point and map scaling helpers keep expected rounding and axis scaling" {
   let rects : Map[String, @geom.Rect] = Map::new()
   rects["r"] = { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 }
   let scaled_rects = scale_rect_map(rects, 2.0, 5.0)
-  assert_eq(scaled_rects.get("r"), Some({ llx: 2.0, lly: 10.0, urx: 6.0, ury: 20.0 }))
+  assert_eq(
+    scaled_rects.get("r"),
+    Some({ llx: 2.0, lly: 10.0, urx: 6.0, ury: 20.0 }),
+  )
 }
 
 ///|
 test "scale_edge_layout_output and scale_record_port_maps keep nested geometry synchronized" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
-  let edges : Array[DotLayoutEdge] = [{
-    edge,
-    splines: [{
-      start: Some({ x: 1.0, y: 2.0 }),
-      end: Some({ x: 7.0, y: 8.0 }),
-      points: [
-        { x: 1.0, y: 2.0 },
-        { x: 3.0, y: 4.0 },
-        { x: 5.0, y: 6.0 },
-        { x: 7.0, y: 8.0 },
+  let edges : Array[DotLayoutEdge] = [
+    {
+      edge,
+      splines: [
+        {
+          start: Some({ x: 1.0, y: 2.0 }),
+          end: Some({ x: 7.0, y: 8.0 }),
+          points: [
+            { x: 1.0, y: 2.0 },
+            { x: 3.0, y: 4.0 },
+            { x: 5.0, y: 6.0 },
+            { x: 7.0, y: 8.0 },
+          ],
+        },
       ],
-    }],
-    label_pos: Some({ x: 2.0, y: 3.0 }),
-    head_label_pos: Some({ x: 4.0, y: 5.0 }),
-    tail_label_pos: Some({ x: 0.0, y: 1.0 }),
-    xlabel_pos: Some({ x: 6.0, y: 7.0 }),
-  }]
+      label_pos: Some({ x: 2.0, y: 3.0 }),
+      head_label_pos: Some({ x: 4.0, y: 5.0 }),
+      tail_label_pos: Some({ x: 0.0, y: 1.0 }),
+      xlabel_pos: Some({ x: 6.0, y: 7.0 }),
+    },
+  ]
   let scaled_edges = scale_edge_layout_output(edges, 2.0, 3.0)
   let scaled_spline = scaled_edges[0].splines[0]
   assert_eq(scaled_spline.start, Some({ x: 2.0, y: 6.0 }))

@@ -195,7 +195,7 @@ test "apply_layout_tree_writeback writes bbox by graph role and edge label attrs
 
   apply_layout_tree_writeback(layout)
 
-  assert_eq(graph.get_attr("bb"), Some(@shared.format_rect(layout.bbox)))
+  assert_eq(graph.get_attr("bb"), Some(format_rect(layout.bbox)))
   assert_eq(cluster.get_attr("bb"), Some("1,1,2,2"))
   assert_eq(plain.get_attr("bb"), None)
 
@@ -248,17 +248,14 @@ test "apply_layout_tree_writeback writes graph label metrics star node rounding 
   }
   assert_eq(
     graph.get_attr("lwidth"),
-    Some(@shared.format_fixed(graph_metrics.width_pt / 72.0, 2)),
+    Some(format_fixed(graph_metrics.width_pt / 72.0, 2)),
   )
   assert_eq(
     graph.get_attr("lheight"),
-    Some(@shared.format_fixed(graph_metrics.height_pt / 72.0, 2)),
+    Some(format_fixed(graph_metrics.height_pt / 72.0, 2)),
   )
   assert_eq(graph.get_attr("lp"), Some("5,9"))
-  assert_eq(
-    star.get_attr("pos"),
-    Some(@shared.format_point({ x: 10.0, y: 20.0005 })),
-  )
+  assert_eq(star.get_attr("pos"), Some(format_point({ x: 10.0, y: 20.0005 })))
   assert_eq(edge.get_attr("pos"), Some("s,-1,-2 e,12,13 0,0 2,1 4,2 6,3"))
 }
 

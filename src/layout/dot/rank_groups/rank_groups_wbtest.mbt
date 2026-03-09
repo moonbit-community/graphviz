@@ -50,10 +50,7 @@ test "build_x_groups_with_vnodes inserts vnodes by key while preserving base ord
   vnode_order_keys["v3"] = 0.0
 
   let groups = build_x_groups_with_vnodes(
-    ordered_groups,
-    order_index,
-    vnodes_by_rank,
-    vnode_order_keys,
+    ordered_groups, order_index, vnodes_by_rank, vnode_order_keys,
   )
 
   assert_eq(groups.get(0), Some(["a", "v2", "b", "v1"]))

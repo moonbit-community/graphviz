@@ -44,7 +44,7 @@ fn build_order_seed_groups(
   inputs : OrderSeedGroupsInputs,
 ) -> OrderSeedGroupsOutput {
   let order_groups = if inputs.order_with_vnodes {
-    @shared.build_x_groups_with_vnodes(
+    @rank_groups.build_x_groups_with_vnodes(
       inputs.ordering_groups_base,
       inputs.base_order_index,
       inputs.vnodes_by_rank,
@@ -256,8 +256,8 @@ fn apply_rank_same_order_nodes(
 fn build_order_reorder_context(
   inputs : OrderReorderContextInputs,
 ) -> OrderReorderContext {
-  let order_rank_keys = @shared.collect_rank_keys(inputs.order_groups)
-  let order_ranks = @shared.build_node_ranks(inputs.order_groups)
+  let order_rank_keys = @rank_groups.collect_rank_keys(inputs.order_groups)
+  let order_ranks = @rank_groups.build_node_ranks(inputs.order_groups)
   let order_nodes = @order_graph.build_order_nodes_from_groups(
     inputs.order_groups,
     order_rank_keys,
@@ -300,7 +300,7 @@ fn build_order_reorder_context(
       order_node_order[name] = idx
     }
   }
-  let order_index = @shared.build_order_index(inputs.order_groups)
+  let order_index = @rank_groups.build_order_index(inputs.order_groups)
   for name, idx in order_index {
     if order_node_order.get(name) is None {
       order_node_order[name] = idx
@@ -793,4 +793,3 @@ pub fn run_clustered_pre_root_stage_from_sources(
     materialized: materialized_stage.materialized,
   }
 }
-

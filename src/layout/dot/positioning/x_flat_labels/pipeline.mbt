@@ -23,10 +23,7 @@ priv struct XFlatLabelAugmentationInput {
   nodes : Array[@cgraph.Node]
   vnode_ranks : Map[String, Int]
   vnode_clusters : Map[String, String]
-  build_flat_label_vnodes_fn : (
-    Map[String, Bool],
-    Map[Int, Array[String]],
-  ) -> FlatLabelVnodeBuildOutput
+  build_flat_label_vnodes_fn : (Map[String, Bool], Map[Int, Array[String]]) -> FlatLabelVnodeBuildOutput
 }
 
 ///|
@@ -102,8 +99,10 @@ priv struct XFlatLabelPipelineInput {
   augment_from_groups_fn : (Map[Int, Array[String]]) -> XFlatLabelAugmentationOutput
 }
 
+///|
 const CLUSTER_SKELETON_PENALTY : Int = 1000
 
+///|
 const TRANSPOSE_MAX_PASSES : Int = 4
 
 ///|
@@ -127,8 +126,9 @@ fn build_x_flat_label_augmentation(
     for vnode, _ in input.vnode_ranks {
       existing_names[vnode] = true
     }
-    let flat_label_vnodes =
-      (input.build_flat_label_vnodes_fn)(existing_names, next_x_groups)
+    let flat_label_vnodes = (input.build_flat_label_vnodes_fn)(
+      existing_names, next_x_groups,
+    )
     next_x_groups = flat_label_vnodes.x_groups
     flat_label_edges = flat_label_vnodes.flat_label_edges
     flat_label_ranks = flat_label_vnodes.flat_label_ranks
@@ -210,33 +210,31 @@ fn build_positioning_x_flat_label_augmentation(
   sources : XFlatLabelPositioningPipelineSources,
   x_groups : Map[Int, Array[String]],
 ) -> XFlatLabelAugmentationOutput {
-  build_x_flat_label_augmentation(
-    {
-      use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-      x_groups,
-      x_cluster_keys: sources.x_cluster_keys,
-      nodes: sources.nodes,
-      vnode_ranks: sources.vnode_ranks,
-      vnode_clusters: sources.vnode_clusters,
-      build_flat_label_vnodes_fn:
-        (existing_names, x_groups) =>
-          build_flat_label_vnodes_for_positioning(
-            sources.edges,
-            sources.edge_tail,
-            sources.edge_head,
-            sources.ranks,
-            sources.ordered_groups,
-            sources.nodesep_pt,
-            sources.rankdir,
-            sources.x_base_sizes,
-            sources.edge_cluster_keys,
-            sources.cluster_parents,
-            existing_names,
-            sources.vnode_info,
-            x_groups,
-          ),
+  build_x_flat_label_augmentation({
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    x_groups,
+    x_cluster_keys: sources.x_cluster_keys,
+    nodes: sources.nodes,
+    vnode_ranks: sources.vnode_ranks,
+    vnode_clusters: sources.vnode_clusters,
+    build_flat_label_vnodes_fn: (existing_names, x_groups) => {
+      build_flat_label_vnodes_for_positioning(
+        sources.edges,
+        sources.edge_tail,
+        sources.edge_head,
+        sources.ranks,
+        sources.ordered_groups,
+        sources.nodesep_pt,
+        sources.rankdir,
+        sources.x_base_sizes,
+        sources.edge_cluster_keys,
+        sources.cluster_parents,
+        existing_names,
+        sources.vnode_info,
+        x_groups,
+      )
     },
-  )
+  })
 }
 
 ///|
@@ -247,10 +245,7 @@ fn build_positioning_x_flat_label_augmentation(
 fn build_x_flat_label_pipeline(
   input : XFlatLabelPipelineInput,
 ) -> XFlatLabelAugmentationOutput {
-  let x_groups =
-    @x_reorder.build_x_groups_after_reorder(
-      input.reorder_sources,
-    )
+  let x_groups = @x_reorder.build_x_groups_after_reorder(input.reorder_sources)
   (input.augment_from_groups_fn)(x_groups)
 }
 
@@ -262,14 +257,11 @@ fn build_x_flat_label_pipeline(
 pub fn build_positioning_x_flat_label_pipeline(
   sources : XFlatLabelPositioningPipelineSources,
 ) -> XFlatLabelAugmentationOutput {
-  let reorder_sources =
-    build_positioning_x_flat_label_reorder_sources(sources)
-  build_x_flat_label_pipeline(
-    {
-      reorder_sources,
-      augment_from_groups_fn:
-        (x_groups) =>
-          build_positioning_x_flat_label_augmentation(sources, x_groups),
+  let reorder_sources = build_positioning_x_flat_label_reorder_sources(sources)
+  build_x_flat_label_pipeline({
+    reorder_sources,
+    augment_from_groups_fn: x_groups => {
+      build_positioning_x_flat_label_augmentation(sources, x_groups)
     },
-  )
+  })
 }

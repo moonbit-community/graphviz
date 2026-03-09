@@ -499,7 +499,7 @@ fn build_root_rank_reorder_call_data(
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
 ) -> RootRankReorderCallData {
-  let order_rank_keys_for_mincross = @shared.collect_rank_keys(
+  let order_rank_keys_for_mincross = @rank_groups.collect_rank_keys(
     order_groups_for_mincross,
   )
   let order_nodes_for_mincross = @order_graph.build_order_nodes_from_groups(
@@ -620,7 +620,7 @@ fn resolve_root_mincross_input_groups(
     )
   }
   match order_groups_override {
-    Some(override_groups) => @shared.clone_rank_groups(override_groups)
+    Some(override_groups) => @rank_groups.clone_rank_groups(override_groups)
     None => order_groups_for_mincross_base
   }
 }
@@ -912,7 +912,9 @@ pub fn run_clustered_root_phase_stage(
   let root_groups_override_for_root_pass = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
     None
   } else {
-    Some(@shared.clone_rank_groups(root_rank_order_phase_output.ordered_root))
+    Some(
+      @rank_groups.clone_rank_groups(root_rank_order_phase_output.ordered_root),
+    )
   }
   let root_tail_order_override = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
     None
@@ -1250,7 +1252,7 @@ fn apply_root_groups_override(
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let reordered = @shared.clone_rank_groups(groups)
+  let reordered = @rank_groups.clone_rank_groups(groups)
   for rank, override_names in override_groups {
     match reordered.get(rank) {
       Some(names) =>
@@ -1506,7 +1508,9 @@ fn collect_noncluster_components(
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
 ) -> Array[Array[String]] {
-  let order_nodes = @order_graph.build_order_nodes_from_groups(groups, rank_keys)
+  let order_nodes = @order_graph.build_order_nodes_from_groups(
+    groups, rank_keys,
+  )
   if order_nodes.length() == 0 {
     return []
   }
@@ -1657,6 +1661,7 @@ struct RootRankReorderInputs {
   graphviz_in_neighbors : Map[String, Array[String]]
   graphviz_flip : Bool
 }
+
 ///|
 /// Graphviz parity: root ReMincross rank reorder call uses the same
 /// reorder_rank_groups wiring as Graphviz root mincross pass.

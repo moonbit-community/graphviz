@@ -1,5 +1,9 @@
 ///|
-fn make_sizes(names : Array[String], width_pt : Double, height_pt : Double) -> Map[String, @node_primitives.NodeSize] {
+fn make_sizes(
+  names : Array[String],
+  width_pt : Double,
+  height_pt : Double,
+) -> Map[String, @node_primitives.NodeSize] {
   let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   for name in names {
     sizes[name] = @node_primitives.node_size_from_points(width_pt, height_pt)
@@ -23,13 +27,7 @@ fn empty_vnode_info() -> @setup.EdgeVnodeInfo {
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
-  {
-    vnode_ranks,
-    vnode_sizes,
-    vnodes_by_rank,
-    edge_vnodes,
-    vnode_clusters,
-  }
+  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
 }
 
 ///|
@@ -181,14 +179,20 @@ test "non-adjacent flat edge injects a label vnode and splits constraints" {
   assert_eq(result.flat_label_ranks.length(), 1)
   assert_eq(result.flat_label_edges.length(), 2)
 
-  let label_vnode = match result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+  let label_vnode = match
+    result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
     Some(value) => value
     None => fail("expected flat label vnode mapping")
   }
   assert_eq(result.flat_label_ranks.get(label_vnode), Some(-1))
   assert_eq(result.x_groups.get(-1).unwrap_or([]), [label_vnode])
   assert_eq(vnode_info.vnodes_by_rank.get(-1).unwrap_or([]), [label_vnode])
-  assert_eq(vnode_info.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)).unwrap_or([]), [label_vnode])
+  assert_eq(
+    vnode_info.edge_vnodes
+    .get(@edge_identity.edge_vnode_key(edge))
+    .unwrap_or([]),
+    [label_vnode],
+  )
 
   let size = match vnode_info.vnode_sizes.get(label_vnode) {
     Some(value) => value
@@ -252,7 +256,8 @@ test "non-adjacent LR flat edge swaps label width and height for vnode sizing" {
     x_groups,
   )
 
-  let label_vnode = match result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+  let label_vnode = match
+    result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
     Some(value) => value
     None => fail("expected flat label vnode mapping")
   }
@@ -332,7 +337,8 @@ test "non-adjacent flat edge uses half-scale minlen when graph ordering is unset
     x_groups,
   )
 
-  let label_vnode = match result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+  let label_vnode = match
+    result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
     Some(value) => value
     None => fail("expected flat label vnode mapping")
   }

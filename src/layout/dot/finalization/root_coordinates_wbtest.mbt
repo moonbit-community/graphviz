@@ -66,19 +66,16 @@ test "apply_root_cluster_padding shifts content by bottom pad and refreshes the 
     label_pos=Some({ x: -1.0, y: -1.0 }),
     nodes=[make_node_layout(a, { x: 10.0, y: 5.0 }, 1.0, 1.0)],
     edges=[
-      make_edge_layout(
-        edge,
-        {
-          start: Some({ x: 1.0, y: 2.0 }),
-          end: Some({ x: 19.0, y: 18.0 }),
-          points: [
-            { x: 1.0, y: 2.0 },
-            { x: 5.0, y: 6.0 },
-            { x: 12.0, y: 12.0 },
-            { x: 19.0, y: 18.0 },
-          ],
-        },
-      ),
+      make_edge_layout(edge, {
+        start: Some({ x: 1.0, y: 2.0 }),
+        end: Some({ x: 19.0, y: 18.0 }),
+        points: [
+          { x: 1.0, y: 2.0 },
+          { x: 5.0, y: 6.0 },
+          { x: 12.0, y: 12.0 },
+          { x: 19.0, y: 18.0 },
+        ],
+      }),
     ],
   )
   let padded = apply_root_cluster_padding({
@@ -121,7 +118,12 @@ test "finalize_root_coordinates applies root margin then shifts to origin and re
 
   assert_eq(finalized.bbox, expected_bbox)
   assert_eq(finalized.nodes[0].pos, { x: 38.0, y: 5.0 })
-  assert_eq(finalized.subgraphs[0].bbox, { llx: 37.0, lly: 1.0, urx: 41.0, ury: 4.0 })
+  assert_eq(finalized.subgraphs[0].bbox, {
+    llx: 37.0,
+    lly: 1.0,
+    urx: 41.0,
+    ury: 4.0,
+  })
   assert_eq(finalized.subgraphs[0].label_pos, Some({ x: 38.0, y: 2.0 }))
   assert_eq(finalized.label_pos, root_label_pos_for_bbox(root, expected_bbox))
 }

@@ -1,6 +1,12 @@
 ///|
-/// Shared geometry and layout-output scaling helpers used by routing-stage
-/// ratio handling and final postprocess transforms.
+/// Geometry and layout-output scaling helpers used by routing-stage ratio
+/// handling and final postprocess transforms.
+
+///|
+type RankDir = @rankdir.RankDir
+
+///|
+type DotLayoutEdge = @shared.DotLayoutEdge
 
 ///|
 /// Graphviz parity: ratio=fill scaling aligned to refs/graphviz/lib/dotgen/position.c
@@ -130,16 +136,8 @@ pub fn scale_edge_layout_output(
       edge: edge_layout.edge,
       splines,
       label_pos: scale_optional_point(edge_layout.label_pos, sx, sy),
-      head_label_pos: scale_optional_point(
-        edge_layout.head_label_pos,
-        sx,
-        sy,
-      ),
-      tail_label_pos: scale_optional_point(
-        edge_layout.tail_label_pos,
-        sx,
-        sy,
-      ),
+      head_label_pos: scale_optional_point(edge_layout.head_label_pos, sx, sy),
+      tail_label_pos: scale_optional_point(edge_layout.tail_label_pos, sx, sy),
       xlabel_pos: scale_optional_point(edge_layout.xlabel_pos, sx, sy),
     })
   }
@@ -165,7 +163,10 @@ fn scale_node_size_value(
   sx : Double,
   sy : Double,
 ) -> @node_primitives.NodeSize {
-  @node_primitives.node_size_from_points(size.width_pt * sx, size.height_pt * sy)
+  @node_primitives.node_size_from_points(
+    size.width_pt * sx,
+    size.height_pt * sy,
+  )
 }
 
 ///|

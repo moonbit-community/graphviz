@@ -286,7 +286,6 @@ pub fn build_neighbor_rank_groups(
   ordered
 }
 
-
 ///|
 /// Graphviz parity: decompose/build_ranks operate per connected component.
 /// Do not change behavior without updating fixtures/tests.

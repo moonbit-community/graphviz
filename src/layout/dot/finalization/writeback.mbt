@@ -25,7 +25,7 @@ fn set_edge_label_pos_if_present(
       match edge.get_attr(label_attr) {
         Some(text) =>
           if text != "" {
-            edge.set_attr(pos_attr, @shared.format_point(value))
+            edge.set_attr(pos_attr, format_point(value))
           }
         None => ()
       }
@@ -43,25 +43,19 @@ fn apply_graph_output_attrs(
   )
   let write_bb = should_write_bbox(graph)
   if write_bb {
-    graph.set_attr("bb", @shared.format_rect(layout.bbox))
+    graph.set_attr("bb", format_rect(layout.bbox))
   }
   if write_bb {
     match @label_metrics.graph_label_metrics(graph) {
       Some(metrics) => {
-        graph.set_attr(
-          "lwidth",
-          @shared.format_fixed(metrics.width_pt / 72.0, 2),
-        )
-        graph.set_attr(
-          "lheight",
-          @shared.format_fixed(metrics.height_pt / 72.0, 2),
-        )
+        graph.set_attr("lwidth", format_fixed(metrics.width_pt / 72.0, 2))
+        graph.set_attr("lheight", format_fixed(metrics.height_pt / 72.0, 2))
       }
       None => ()
     }
   }
   match layout.label_pos {
-    Some(pos) => graph.set_attr("lp", @shared.format_point(pos))
+    Some(pos) => graph.set_attr("lp", format_point(pos))
     None => ()
   }
   record_orientation
@@ -80,9 +74,9 @@ fn apply_node_output_attrs(
         { x: node_layout.pos.x, y: node_layout.pos.y + 0.0005 }
       _ => node_layout.pos
     }
-    node.set_attr("pos", @shared.format_point(output_pos))
-    node.set_attr("width", @shared.format_dim(node_layout.width_in))
-    node.set_attr("height", @shared.format_dim(node_layout.height_in))
+    node.set_attr("pos", format_point(output_pos))
+    node.set_attr("width", format_dim(node_layout.width_in))
+    node.set_attr("height", format_dim(node_layout.height_in))
     let is_mrecord = match node.get_attr("shape") {
       Some(value) => value.to_lower() == "mrecord"
       None => false
@@ -101,15 +95,15 @@ fn apply_node_output_attrs(
         record_orientation,
       )
       if rects.length() > 0 {
-        node.set_attr("rects", @shared.format_rects(rects))
+        node.set_attr("rects", format_rects(rects))
       }
     }
     match node_layout.label_pos {
-      Some(pos) => node.set_attr("lp", @shared.format_point(pos))
+      Some(pos) => node.set_attr("lp", format_point(pos))
       None => ()
     }
     match node_layout.xlabel_pos {
-      Some(pos) => node.set_attr("xlp", @shared.format_point(pos))
+      Some(pos) => node.set_attr("xlp", format_point(pos))
       None => ()
     }
   }
@@ -130,18 +124,18 @@ fn apply_edge_output_attrs(
       let parts : Array[String] = []
       if include_tail {
         match spline.start {
-          Some(point) => parts.push("s,\{@shared.format_point(point)}")
+          Some(point) => parts.push("s,\{format_point(point)}")
           None => ()
         }
       }
       if include_head {
         match spline.end {
-          Some(point) => parts.push("e,\{@shared.format_point(point)}")
+          Some(point) => parts.push("e,\{format_point(point)}")
           None => ()
         }
       }
       for point in spline.points {
-        parts.push(@shared.format_point(point))
+        parts.push(format_point(point))
       }
       segments.push(parts.join(" "))
     }

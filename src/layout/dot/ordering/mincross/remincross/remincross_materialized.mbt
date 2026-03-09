@@ -64,6 +64,7 @@ fn apply_intercluster_bonus(
   }
   adjusted
 }
+
 ///|
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
@@ -90,7 +91,9 @@ fn collect_intercluster_bonus(
     }
     for idx in indices {
       let edge = edges[idx]
-      let (tail, head) = @order_graph.edge_endpoints_at(edge, idx, edge_tail, edge_head)
+      let (tail, head) = @order_graph.edge_endpoints_at(
+        edge, idx, edge_tail, edge_head,
+      )
       let tail_rank = match ranks.get(tail) {
         Some(value) => value
         None => 0
@@ -370,7 +373,7 @@ fn build_remincross_materialized_arrays(
   cluster_order_index : Map[String, Int],
   materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
-  let rem_ranks = @shared.build_node_ranks(inputs.rem_groups)
+  let rem_ranks = @rank_groups.build_node_ranks(inputs.rem_groups)
   let rem_nlist_order = build_remincross_nlist_order(
     inputs.creation_order,
     materialized_edges.vnode_creation,
@@ -380,7 +383,7 @@ fn build_remincross_materialized_arrays(
     cluster_order_index,
     inputs.root_tail_order_override,
   )
-  let rem_node_order = @shared.build_order_index(inputs.rem_groups)
+  let rem_node_order = @rank_groups.build_order_index(inputs.rem_groups)
   let rem_materialized = @order_graph.collect_order_edges_for_tails(
     rem_nlist_order,
     materialized_edges.order_edges_by_tail,
@@ -462,7 +465,9 @@ fn assign_remincross_clusters(
     if vnodes.length() == 0 {
       continue
     }
-    let (tail, head) = @order_graph.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edge, edge_idx, edge_tail, edge_head,
+    )
     let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
     let head_cluster = intercluster_keys.get(head).unwrap_or_default()
     let vnode_cluster = @membership.cluster_lca(
@@ -582,7 +587,7 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
 fn build_remincross_materialized_inputs(
   inputs : ReMincrossMaterializationInputs,
 ) -> ReMincrossCleanupMaterializedInputs {
-  let rem_ranks = @shared.build_node_ranks(inputs.rem_groups)
+  let rem_ranks = @rank_groups.build_node_ranks(inputs.rem_groups)
   let rem_nodes = @order_graph.build_order_nodes_from_groups(
     inputs.rem_groups,
     inputs.rem_rank_keys,

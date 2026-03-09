@@ -9,7 +9,6 @@ priv struct FlatLabelNodeInfo {
   rank : Int
 }
 
-
 ///|
 pub fn flat_label_adjacent(
   rank : Int,
@@ -56,13 +55,9 @@ fn collect_vnode_out_heads(
   let out_heads : Map[String, Array[String]] = Map::new()
   let mut edge_idx = 0
   for edge in edges {
-    let (tail, head) =
-      @order_graph.edge_endpoints_at(
-        edge,
-        edge_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edge, edge_idx, edge_tail, edge_head,
+    )
     edge_idx = edge_idx + 1
     let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
       Some(list) => list
@@ -235,9 +230,14 @@ fn add_flat_label_vnodes(
   vnode_info : @setup.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeResult {
-  let order_index = @shared.build_order_index(x_groups)
-  let vnode_out_heads =
-    collect_vnode_out_heads(edges, edge_tail, edge_head, ranks, vnode_info.edge_vnodes)
+  let order_index = @rank_groups.build_order_index(x_groups)
+  let vnode_out_heads = collect_vnode_out_heads(
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    vnode_info.edge_vnodes,
+  )
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
   let flat_label_edges : Map[String, String] = Map::new()
   let extra_edges : Array[@x_constraints.ConstraintEdge] = []
@@ -245,8 +245,7 @@ fn add_flat_label_vnodes(
   let insert_at = (names : Array[String], pos : Int, value : String) => {
     let result : Array[String] = []
     let mut idx = 0
-    let insert_pos =
-      if pos < 0 {
+    let insert_pos = if pos < 0 {
       0
     } else if pos > names.length() {
       names.length()
@@ -272,13 +271,9 @@ fn add_flat_label_vnodes(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let (tail, head) =
-      @order_graph.edge_endpoints_at(
-        edge,
-        current_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edge, current_idx, edge_tail, edge_head,
+    )
     if tail == head {
       // Graphviz parity: self-edge labels are handled via node spacing, not flat labels.
       continue
@@ -294,13 +289,13 @@ fn add_flat_label_vnodes(
     if tail_rank != head_rank {
       continue
     }
-    let (metric_width, metric_height) =
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+    let (metric_width, metric_height) = match
+      @edge_label_metrics.edge_mid_label_metrics(edge) {
       Some(value) => (value.width, value.height)
       None => continue
     }
-    let (label_width, label_height) =
-      if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
+    let (label_width, label_height) = if rankdir == @rankdir.RankDir::LR ||
+      rankdir == @rankdir.RankDir::RL {
       (metric_height, metric_width)
     } else {
       (metric_width, metric_height)
@@ -309,26 +304,33 @@ fn add_flat_label_vnodes(
       continue
     }
     let is_adjacent = flat_label_adjacent(tail_rank, tail, head, ordered_groups)
-    let left =
-      match (order_index.get(tail), order_index.get(head)) {
-        (Some(tail_pos), Some(head_pos)) =>
-          if tail_pos <= head_pos { tail } else { head }
-        _ => tail
-      }
+    let left = match (order_index.get(tail), order_index.get(head)) {
+      (Some(tail_pos), Some(head_pos)) =>
+        if tail_pos <= head_pos {
+          tail
+        } else {
+          head
+        }
+      _ => tail
+    }
     let right = if left == tail { head } else { tail }
     let left_right = @node_primitives.node_right_pt(left, sizes)
     let right_left = @node_primitives.node_left_pt(right, sizes)
     let width = left_right + right_left
-    let base_minlen =
-      Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt + width
+    let base_minlen = Double::from_int(@edge_semantics.edge_minlen(edge)) *
+      nodesep_pt +
+      width
     if is_adjacent {
       let label_minlen = width + nodesep_pt + label_width
       // Graphviz parity: LR/RL flat-label adjacency uses integer rounding that
       // yields a +1pt spacing in reference outputs.
-      let minlen_base =
-        if base_minlen > label_minlen { base_minlen } else { label_minlen }
-      let minlen_adjusted =
-        if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
+      let minlen_base = if base_minlen > label_minlen {
+        base_minlen
+      } else {
+        label_minlen
+      }
+      let minlen_adjusted = if rankdir == @rankdir.RankDir::LR ||
+        rankdir == @rankdir.RankDir::RL {
         minlen_base + 1.0
       } else {
         minlen_base
@@ -349,8 +351,9 @@ fn add_flat_label_vnodes(
       Some(list) => list.copy()
       None => []
     }
-    let place =
-      flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
+    let place = flat_limits(
+      names, order_index, flat_label_nodes, vnode_out_heads, tail, head,
+    )
     let name = @edge_identity.unique_virtual_node_name(
       @edge_identity.EDGE_VNODE_PREFIX,
       current_idx,
@@ -359,19 +362,19 @@ fn add_flat_label_vnodes(
     )
     let half_width = label_width / 2.0
     vnode_info.vnode_ranks[name] = label_rank
-    vnode_info.vnode_sizes[name] =
-      @node_primitives.vnode_size_from_widths_with_h(half_width, half_width, label_height)
+    vnode_info.vnode_sizes[name] = @node_primitives.vnode_size_from_widths_with_h(
+      half_width, half_width, label_height,
+    )
     let tail_cluster = @membership.node_cluster_key(edge.tail())
     let head_cluster = @membership.node_cluster_key(edge.head())
-    let vnode_cluster =
-      if tail_cluster != "" || head_cluster != "" {
-        @membership.cluster_lca(tail_cluster, head_cluster, cluster_parents)
-      } else {
-        match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
-          Some(value) => value
-          None => ""
-        }
+    let vnode_cluster = if tail_cluster != "" || head_cluster != "" {
+      @membership.cluster_lca(tail_cluster, head_cluster, cluster_parents)
+    } else {
+      match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
+        Some(value) => value
+        None => ""
       }
+    }
     vnode_info.vnode_clusters[name] = vnode_cluster
     match vnode_info.vnodes_by_rank.get(label_rank) {
       Some(list) => list.push(name)
@@ -380,29 +383,26 @@ fn add_flat_label_vnodes(
     let updated_rank = insert_at(names, place, name)
     x_groups[label_rank] = updated_rank
     rebuild_order(updated_rank)
-    flat_label_nodes[name] = {
-      tail,
-      head,
-      rank: label_rank,
-    }
+    flat_label_nodes[name] = { tail, head, rank: label_rank }
     flat_label_edges[@edge_identity.edge_key(edge)] = name
     let vnode_edge_key = @edge_identity.edge_vnode_key(edge)
     match vnode_info.edge_vnodes.get(vnode_edge_key) {
       Some(list) => list.push(name)
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
     }
-    let graph_ordering =
-      match @membership.root_graph_for_node(edge.tail()).get_attr("ordering") {
+    let graph_ordering = match
+      @membership.root_graph_for_node(edge.tail()).get_attr("ordering") {
       Some(value) => value.to_lower()
       None => ""
     }
-    let m0_scale =
-      if graph_ordering == "out" || graph_ordering == "in" {
+    let m0_scale = if graph_ordering == "out" || graph_ordering == "in" {
       1.0
     } else {
       0.5
     }
-    let m0 = Double::from_int(@edge_semantics.edge_minlen(edge)) * nodesep_pt * m0_scale
+    let m0 = Double::from_int(@edge_semantics.edge_minlen(edge)) *
+      nodesep_pt *
+      m0_scale
     let minlen_left = @numeric.round_int(m0 + left_right + half_width)
     let minlen_right = @numeric.round_int(m0 + half_width + right_left)
     extra_edges.push({
@@ -455,19 +455,8 @@ fn build_flat_label_vnodes_for_positioning(
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    ordered_groups,
-    nodesep_pt,
-    rankdir,
-    x_base_sizes,
-    edge_cluster_keys,
-    cluster_parents,
-    existing_names,
-    vnode_info,
-    x_groups,
+    edges, edge_tail, edge_head, ranks, ordered_groups, nodesep_pt, rankdir, x_base_sizes,
+    edge_cluster_keys, cluster_parents, existing_names, vnode_info, x_groups,
   )
   let flat_label_ranks : Map[String, Int] = Map::new()
   for name, info in flat_label_vnodes.flat_label_nodes {

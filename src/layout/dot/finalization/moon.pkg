@@ -1,5 +1,6 @@
 import {
   "moonbit-community/graphviz/layout/dot/shared",
+  "moonbit-community/graphviz/layout/dot/scale_geometry",
   "moonbit-community/graphviz/layout/dot/graph_label",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/cluster_graph",
@@ -17,6 +18,8 @@ import {
   "moonbit-community/graphviz/layout/dot/routing/integration",
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
+  "moonbitlang/core/math",
+  "moonbitlang/core/strconv",
   "moonbitlang/x/sys",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/edge_semantics",

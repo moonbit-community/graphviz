@@ -241,14 +241,14 @@ fn build_clustered_xpos_seed(
   for name, value in input.node_order {
     order_node_order[name] = value
   }
-  let order_index = @shared.build_order_index(order_groups)
+  let order_index = @rank_groups.build_order_index(order_groups)
   for name, idx in order_index {
     if order_node_order.get(name) is None {
       order_node_order[name] = idx
     }
   }
-  let order_rank_keys = @shared.collect_rank_keys(order_groups)
-  let order_ranks = @shared.build_node_ranks(order_groups)
+  let order_rank_keys = @rank_groups.collect_rank_keys(order_groups)
+  let order_ranks = @rank_groups.build_node_ranks(order_groups)
   let order_nodes : Array[String] = []
   for rank in order_rank_keys {
     let names = order_groups.get(rank).unwrap_or_default()

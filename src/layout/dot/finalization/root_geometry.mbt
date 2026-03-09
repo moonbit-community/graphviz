@@ -121,7 +121,9 @@ pub fn apply_root_port_padding(
 fn root_graph_label_metrics(
   graph : @cgraph.Graph,
 ) -> @graph_label.GraphLabelMetrics? {
-  @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions)
+  @graph_label.graph_label_metrics_with(
+    graph, @label_metrics.label_text_dimensions,
+  )
 }
 
 ///|

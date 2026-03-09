@@ -463,8 +463,8 @@ fn build_xpos_computation_input_from_sources(
   } else {
     sources.x_base_sizes
   }
-  let x_rank_keys = @shared.collect_rank_keys(sources.x_groups)
-  let x_ranks = @shared.build_node_ranks(sources.x_groups)
+  let x_rank_keys = @rank_groups.collect_rank_keys(sources.x_groups)
+  let x_ranks = @rank_groups.build_node_ranks(sources.x_groups)
   let vnode_extra_nodes = if sources.use_vnodes_for_xpos {
     build_vnode_extra_nodes(sources.vnode_creation_order, sources.vnode_ranks)
   } else {
@@ -776,7 +776,7 @@ pub fn compute_x_positions_with_prepared_constraints(
     solve_input.extra_nodes,
     solve_input.flat_label_edges,
   )
-  let order_index = @shared.build_order_index(solve_input.groups)
+  let order_index = @rank_groups.build_order_index(solve_input.groups)
   x_positions_from_simplex({
     graph_root: solve_input.graph,
     nodes: solve_input.nodes,

@@ -250,7 +250,9 @@ fn build_cluster_constraints(
       match cluster_graphs.get(name) {
         Some(cluster_graph) =>
           match
-            @cluster_geometry.cluster_label_width_with_pad_for_layout(cluster_graph) {
+            @cluster_geometry.cluster_label_width_with_pad_for_layout(
+              cluster_graph,
+            ) {
             Some(label_width) => {
               let minlen = @numeric.round_int(label_width)
               if minlen > 0 {

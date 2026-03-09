@@ -101,7 +101,12 @@ pub fn round_to(value : Double, decimals : Int) -> Double {
 }
 
 ///|
-fn format_scientific(abs : Double, exp : Int, precision : Int, sign : String) -> String {
+fn format_scientific(
+  abs : Double,
+  exp : Int,
+  precision : Int,
+  sign : String,
+) -> String {
   let mut exp_mut = exp
   let mantissa = abs / pow10_double(exp_mut)
   let decimals = precision - 1
@@ -111,22 +116,9 @@ fn format_scientific(abs : Double, exp : Int, precision : Int, sign : String) ->
     exp_mut = exp_mut + 1
   }
   let mantissa_str = format_fixed_trim(rounded, decimals)
-  let exp_sign = if exp_mut < 0 {
-    "-"
-  } else {
-    "+"
-  }
-  let exp_abs = if exp_mut < 0 {
-    -exp_mut
-  } else {
-    exp_mut
-  }
-  let exp_str =
-    if exp_abs < 10 {
-    "0\{exp_abs}"
-  } else {
-    "\{exp_abs}"
-  }
+  let exp_sign = if exp_mut < 0 { "-" } else { "+" }
+  let exp_abs = if exp_mut < 0 { -exp_mut } else { exp_mut }
+  let exp_str = if exp_abs < 10 { "0\{exp_abs}" } else { "\{exp_abs}" }
   "\{sign}\{mantissa_str}e\{exp_sign}\{exp_str}"
 }
 
@@ -135,16 +127,8 @@ pub fn format_float(value : Double) -> String {
   if value == 0.0 {
     return "0"
   }
-  let sign = if value < 0.0 {
-    "-"
-  } else {
-    ""
-  }
-  let abs = if value < 0.0 {
-    -value
-  } else {
-    value
-  }
+  let sign = if value < 0.0 { "-" } else { "" }
+  let abs = if value < 0.0 { -value } else { value }
   let precision = 5
   let exp = @math.log10(abs).floor().to_int()
   if exp < -4 || exp >= precision {

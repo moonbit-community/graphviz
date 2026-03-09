@@ -86,7 +86,7 @@ fn reorder_nonclustered_x_groups(
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let tmp_rank_keys = @shared.collect_rank_keys(x_groups)
+  let tmp_rank_keys = @rank_groups.collect_rank_keys(x_groups)
   @reorder.reorder_rank_groups(
     tmp_rank_keys,
     x_groups,

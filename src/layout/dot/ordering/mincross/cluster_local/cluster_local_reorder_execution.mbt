@@ -78,6 +78,7 @@ pub fn run_cluster_local_rank_reorder_call(
     startpass_init_infinite=false,
   )
 }
+
 ///|
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
@@ -218,7 +219,7 @@ fn reorder_cluster_rank_groups(
       dispatch_context,
     )
     expanded_clusters[cluster] = true
-    current_fixed_positions = @shared.order_positions_from_groups(groups)
+    current_fixed_positions = @rank_groups.order_positions_from_groups(groups)
   }
 }
 
@@ -721,7 +722,7 @@ fn build_cluster_local_reorder_context(
     cluster_node_order,
     inputs.source_out_neighbors,
   )
-  let cluster_rank_keys = @shared.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @rank_groups.collect_rank_keys(cluster_groups)
   let cluster_fixed_positions = build_cluster_fixed_positions(
     inputs.fixed_positions,
     cluster_node_set,
@@ -1230,7 +1231,7 @@ fn build_local_rank_groups(
   let out_heads_by_tail = build_cluster_out_heads_by_tail(
     cluster_node_set, source_graphviz_out_neighbors,
   )
-  let cluster_rank_keys = @shared.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @rank_groups.collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
       Some(value) => value
@@ -1357,7 +1358,9 @@ fn normalize_external_neighbor_name(
   intercluster_keys : Map[String, String],
   external_anchor_name : String,
 ) -> String {
-  let other_cluster = @order_graph.cluster_key_or_empty(intercluster_keys, other)
+  let other_cluster = @order_graph.cluster_key_or_empty(
+    intercluster_keys, other,
+  )
   if other_cluster != "" &&
     other_cluster != cluster &&
     expanded_clusters.get(other_cluster) is None {

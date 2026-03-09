@@ -6,6 +6,7 @@ type LayoutPrep = @shared.LayoutPrep
 ///|
 type RankDir = @rankdir.RankDir
 
+///|
 type RecordOrientation = @shared.RecordOrientation
 
 ///|
@@ -17,6 +18,7 @@ type RecordPort = @record_geometry.RecordPort
 ///|
 type DotLayoutNode = @shared.DotLayoutNode
 
+///|
 type RankData = @rank_data.RankData
 
 ///|
@@ -205,7 +207,7 @@ pub fn build_routing_ratio_adjusted_data(
     rank_ht2: positions_state.rank_ht2,
   })
   let (ratio_sx, ratio_sy) = match
-    @shared.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+    @scale_geometry.ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
     Some(scale_factors) =>
       if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
         (scale_factors.sx, scale_factors.sy)
@@ -228,22 +230,25 @@ pub fn build_routing_ratio_adjusted_data(
   }
   let adjusted_positions_state : PositionResult = {
     x_groups: positions_state.x_groups,
-    rank_y: @shared.scale_double_map_rounded(positions_state.rank_y, ratio_sy),
-    positions: @shared.scale_point_map_rounded(
+    rank_y: @scale_geometry.scale_double_map_rounded(
+      positions_state.rank_y,
+      ratio_sy,
+    ),
+    positions: @scale_geometry.scale_point_map_rounded(
       positions_state.positions,
       ratio_sx,
       ratio_sy,
     ),
-    vnode_positions: @shared.scale_point_map_rounded(
+    vnode_positions: @scale_geometry.scale_point_map_rounded(
       positions_state.vnode_positions,
       ratio_sx,
       ratio_sy,
     ),
-    cluster_ln_x: @shared.scale_named_double_map(
+    cluster_ln_x: @scale_geometry.scale_named_double_map(
       positions_state.cluster_ln_x,
       ratio_sx,
     ),
-    cluster_rn_x: @shared.scale_named_double_map(
+    cluster_rn_x: @scale_geometry.scale_named_double_map(
       positions_state.cluster_rn_x,
       ratio_sx,
     ),
@@ -257,17 +262,17 @@ pub fn build_routing_ratio_adjusted_data(
     ratio_sx,
     ratio_sy,
     positions_state: adjusted_positions_state,
-    cluster_bboxes: @shared.scale_rect_map(
+    cluster_bboxes: @scale_geometry.scale_rect_map(
       input.cluster_bboxes,
       ratio_sx,
       ratio_sy,
     ),
-    label_ports_map: @shared.scale_record_port_maps(
+    label_ports_map: @scale_geometry.scale_record_port_maps(
       input.label_ports_map,
       ratio_sx,
       ratio_sy,
     ),
-    label_ports_raw: @shared.scale_record_port_maps(
+    label_ports_raw: @scale_geometry.scale_record_port_maps(
       input.label_ports_raw,
       ratio_sx,
       ratio_sy,

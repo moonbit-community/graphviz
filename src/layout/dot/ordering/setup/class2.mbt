@@ -281,7 +281,7 @@ pub fn build_ordering_reorder_setup_from_sources(
     sources.node_order,
     sources.port_edge_nodes,
   )
-  let base_order_index = @shared.build_order_index(ordering_groups_base)
+  let base_order_index = @rank_groups.build_order_index(ordering_groups_base)
   let vnode_count = sources.vnode_info.vnode_ranks.length()
   let order_with_vnodes = vnode_count > 0
   let order_with_clusters = sources.cluster_has_clusters &&

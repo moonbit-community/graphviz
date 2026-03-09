@@ -16,17 +16,25 @@ fn scale_layout_tree(
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
     let scaled_pos = if round_node_pos {
-      @shared.scale_point_rounded(node_layout.pos, sx, sy)
+      @scale_geometry.scale_point_rounded(node_layout.pos, sx, sy)
     } else {
-      @shared.scale_point(node_layout.pos, sx, sy)
+      @scale_geometry.scale_point(node_layout.pos, sx, sy)
     }
     nodes.push({
       node: node_layout.node,
       pos: scaled_pos,
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
-      label_pos: @shared.scale_optional_point(node_layout.label_pos, sx, sy),
-      xlabel_pos: @shared.scale_optional_point(node_layout.xlabel_pos, sx, sy),
+      label_pos: @scale_geometry.scale_optional_point(
+        node_layout.label_pos,
+        sx,
+        sy,
+      ),
+      xlabel_pos: @scale_geometry.scale_optional_point(
+        node_layout.xlabel_pos,
+        sx,
+        sy,
+      ),
     })
   }
   let subgraphs : Array[LayoutTree] = []
@@ -41,9 +49,9 @@ fn scale_layout_tree(
       urx: layout.bbox.urx * sx,
       ury: layout.bbox.ury * sy,
     },
-    label_pos: @shared.scale_optional_point(layout.label_pos, sx, sy),
+    label_pos: @scale_geometry.scale_optional_point(layout.label_pos, sx, sy),
     nodes,
-    edges: @shared.scale_edge_layout_output(layout.edges, sx, sy),
+    edges: @scale_geometry.scale_edge_layout_output(layout.edges, sx, sy),
     subgraphs,
   }
 }
@@ -142,7 +150,8 @@ fn apply_ratio_fill_scale(
   if !layout.graph.is_root() {
     return layout
   }
-  match @shared.ratio_fill_scale_factors(layout.graph, ratio_bbox, rankdir) {
+  match
+    @scale_geometry.ratio_fill_scale_factors(layout.graph, ratio_bbox, rankdir) {
     Some(scale_factors) =>
       if scale_factors.sx == 1.0 && scale_factors.sy == 1.0 {
         layout

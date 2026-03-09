@@ -33,9 +33,7 @@ priv struct XposVNodeOrderState {
 /// ordered_groups_with_vnodes means vnode order is present; otherwise build
 /// keys from edge-vnode chains and mark presence by non-empty key map.
 /// Do not change behavior without updating fixtures/tests.
-fn build_vnode_order_state(
-  input : XposVNodeOrderInput,
-) -> XposVNodeOrderState {
+fn build_vnode_order_state(input : XposVNodeOrderInput) -> XposVNodeOrderState {
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
@@ -82,21 +80,20 @@ priv struct XInitialGroupsInput {
 fn build_initial_x_groups(
   input : XInitialGroupsInput,
 ) -> Map[Int, Array[String]] {
-  let mut x_groups =
-    if input.use_vnodes_for_xpos {
-      if input.ordered_groups_with_vnodes.length() > 0 {
-        @shared.clone_rank_groups(input.ordered_groups_with_vnodes)
-      } else {
-        @shared.build_x_groups_with_vnodes(
-          input.ordered_groups,
-          input.order_index,
-          input.vnodes_by_rank,
-          input.vnode_order_keys,
-        )
-      }
+  let mut x_groups = if input.use_vnodes_for_xpos {
+    if input.ordered_groups_with_vnodes.length() > 0 {
+      @rank_groups.clone_rank_groups(input.ordered_groups_with_vnodes)
     } else {
-      input.ordered_groups
+      @rank_groups.build_x_groups_with_vnodes(
+        input.ordered_groups,
+        input.order_index,
+        input.vnodes_by_rank,
+        input.vnode_order_keys,
+      )
     }
+  } else {
+    input.ordered_groups
+  }
   if input.has_clusters {
     let cleaned : Map[Int, Array[String]] = Map::new()
     for rank, names in x_groups {
@@ -136,6 +133,7 @@ fn build_x_cluster_keys(
   x_cluster_keys
 }
 
+///|
 /// Graphviz parity: x-stage seed output keeps vnode-order probes, edge-port
 /// samples, and initial x-group/cluster snapshots grouped for downstream
 /// reorder/flat-label stages.
@@ -227,10 +225,7 @@ fn build_x_order_sizes(
   vnode_sizes : Map[String, @node_primitives.NodeSize],
 ) -> Map[String, @node_primitives.NodeSize] {
   if use_vnodes_for_xpos {
-    @shared.merge_sizes_with_vnodes(
-      x_base_sizes,
-      vnode_sizes,
-    )
+    @shared.merge_sizes_with_vnodes(x_base_sizes, vnode_sizes)
   } else {
     x_base_sizes
   }
@@ -245,41 +240,36 @@ fn build_x_order_sizes(
 pub fn build_x_seed_data(
   sources : XSeedPipelineSources,
   build_x_base_sizes : () -> Map[String, @node_primitives.NodeSize],
-  build_port_samples : (
-    Map[String, @node_primitives.NodeSize],
-  ) -> XSeedPortSamples,
+  build_port_samples : (Map[String, @node_primitives.NodeSize]) -> XSeedPortSamples,
 ) -> XPositionSeedData {
   let x_base_sizes = build_x_base_sizes()
-  let x_order_sizes =
-    build_x_order_sizes(
-      sources.use_vnodes_for_xpos,
-      x_base_sizes,
-      sources.vnode_sizes,
-    )
-  let port_samples = build_port_samples(x_order_sizes)
-  build_x_seed_data_from_sources(
-    {
-      use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-      ordered_groups: sources.ordered_groups,
-      ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
-      edges: sources.edges,
-      edge_tail: sources.edge_tail,
-      edge_head: sources.edge_head,
-      edge_reversed: sources.edge_reversed,
-      ranks: sources.ranks,
-      intercluster_keys: sources.intercluster_keys,
-      cluster_parents: sources.cluster_parents,
-      edge_vnodes: sources.edge_vnodes,
-      vnode_ranks: sources.vnode_ranks,
-      x_base_sizes,
-      x_order_sizes,
-      port_samples,
-      vnodes_by_rank: sources.vnodes_by_rank,
-      has_clusters: sources.has_clusters,
-      cluster_keys: sources.cluster_keys,
-      vnode_clusters: sources.vnode_clusters,
-    },
+  let x_order_sizes = build_x_order_sizes(
+    sources.use_vnodes_for_xpos,
+    x_base_sizes,
+    sources.vnode_sizes,
   )
+  let port_samples = build_port_samples(x_order_sizes)
+  build_x_seed_data_from_sources({
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    ordered_groups: sources.ordered_groups,
+    ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
+    edges: sources.edges,
+    edge_tail: sources.edge_tail,
+    edge_head: sources.edge_head,
+    edge_reversed: sources.edge_reversed,
+    ranks: sources.ranks,
+    intercluster_keys: sources.intercluster_keys,
+    cluster_parents: sources.cluster_parents,
+    edge_vnodes: sources.edge_vnodes,
+    vnode_ranks: sources.vnode_ranks,
+    x_base_sizes,
+    x_order_sizes,
+    port_samples,
+    vnodes_by_rank: sources.vnodes_by_rank,
+    has_clusters: sources.has_clusters,
+    cluster_keys: sources.cluster_keys,
+    vnode_clusters: sources.vnode_clusters,
+  })
 }
 
 ///|
@@ -290,42 +280,35 @@ pub fn build_x_seed_data(
 fn build_x_seed_data_from_sources(
   sources : XSeedBuildSources,
 ) -> XPositionSeedData {
-  let order_index = @shared.build_order_index(sources.ordered_groups)
-  let vnode_order_state =
-    build_vnode_order_state(
-      {
-        use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-        ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
-        edges: sources.edges,
-        edge_tail: sources.edge_tail,
-        edge_head: sources.edge_head,
-        edge_reversed: sources.edge_reversed,
-        ranks: sources.ranks,
-        order_index,
-        intercluster_keys: sources.intercluster_keys,
-        cluster_parents: sources.cluster_parents,
-        edge_vnodes: sources.edge_vnodes,
-        vnode_ranks: sources.vnode_ranks,
-      },
-    )
-  let x_groups =
-    build_initial_x_groups(
-      {
-        use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-        ordered_groups: sources.ordered_groups,
-        ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
-        order_index,
-        vnodes_by_rank: sources.vnodes_by_rank,
-        vnode_order_keys: vnode_order_state.vnode_order_keys,
-        has_clusters: sources.has_clusters,
-      },
-    )
-  let x_cluster_keys =
-    build_x_cluster_keys(
-      sources.cluster_keys,
-      sources.use_vnodes_for_xpos,
-      sources.vnode_clusters,
-    )
+  let order_index = @rank_groups.build_order_index(sources.ordered_groups)
+  let vnode_order_state = build_vnode_order_state({
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
+    edges: sources.edges,
+    edge_tail: sources.edge_tail,
+    edge_head: sources.edge_head,
+    edge_reversed: sources.edge_reversed,
+    ranks: sources.ranks,
+    order_index,
+    intercluster_keys: sources.intercluster_keys,
+    cluster_parents: sources.cluster_parents,
+    edge_vnodes: sources.edge_vnodes,
+    vnode_ranks: sources.vnode_ranks,
+  })
+  let x_groups = build_initial_x_groups({
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    ordered_groups: sources.ordered_groups,
+    ordered_groups_with_vnodes: sources.ordered_groups_with_vnodes,
+    order_index,
+    vnodes_by_rank: sources.vnodes_by_rank,
+    vnode_order_keys: vnode_order_state.vnode_order_keys,
+    has_clusters: sources.has_clusters,
+  })
+  let x_cluster_keys = build_x_cluster_keys(
+    sources.cluster_keys,
+    sources.use_vnodes_for_xpos,
+    sources.vnode_clusters,
+  )
   {
     has_vnode_order: vnode_order_state.has_vnode_order,
     x_base_sizes: sources.x_base_sizes,

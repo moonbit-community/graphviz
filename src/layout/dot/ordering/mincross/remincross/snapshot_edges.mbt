@@ -47,7 +47,7 @@ pub fn build_remincross_input_snapshot(
   }
   {
     rank_keys: input.rank_keys.copy(),
-    groups: @shared.clone_rank_groups(input.groups),
+    groups: @rank_groups.clone_rank_groups(input.groups),
     edges: @root.build_ordering_edge_snapshot_entries({
       edges_out: input.edges_out,
       edge_tail_out: input.edge_tail_out,

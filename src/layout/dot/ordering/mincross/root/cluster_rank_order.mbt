@@ -2,6 +2,7 @@
 /// Ordering domain: root-phase cluster-rank-order replay helpers used by the
 /// clustered Stage C root pass and its finalize replay callback.
 
+///|
 /// Graphviz parity: root-anchor transfer only applies on the single-left
 /// cluster hand-off shape from the previous rank map.
 fn select_root_left_anchor(
@@ -180,7 +181,6 @@ fn build_rank_cluster_bucket_order_map(
   }
   order_map
 }
-
 
 ///|
 /// Graphviz parity: cluster-phase rank-order map records first-seen cluster

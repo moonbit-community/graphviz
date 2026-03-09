@@ -1,5 +1,5 @@
 import {
-  "moonbit-community/graphviz/layout/dot/shared",
+  "moonbit-community/graphviz/layout/dot/rank_groups",
   "moonbit-community/graphviz/layout/dot/ordering/order_graph",
   "moonbit-community/graphviz/layout/dot/ordering/vnode_order",
   "moonbit-community/graphviz/layout/dot/rankdir",

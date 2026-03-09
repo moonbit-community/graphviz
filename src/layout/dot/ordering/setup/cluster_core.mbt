@@ -1,3 +1,4 @@
+///|
 pub(all) struct ClusterMembershipMaps {
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
@@ -84,12 +85,11 @@ fn seed_cluster_node_order(
       continue
     }
     let base_order = i
-    let order_value =
-      if graphviz_flip {
-        total_nodes - 1 - base_order
-      } else {
-        base_order
-      }
+    let order_value = if graphviz_flip {
+      total_nodes - 1 - base_order
+    } else {
+      base_order
+    }
     node_order[name] = order_value
   }
 }
@@ -208,23 +208,17 @@ fn build_cluster_core_metadata_for_ordering(
   let intercluster_keys = cluster_membership.intercluster_keys
   seed_cluster_node_order(nodes, cluster_keys, graphviz_flip, node_order)
   let cluster_skeleton = build_cluster_skeleton(groups, cluster_keys)
-  let cluster_rank_bounds =
-    collect_cluster_rank_bounds(nodes, cluster_keys, ranks, node_order)
+  let cluster_rank_bounds = collect_cluster_rank_bounds(
+    nodes, cluster_keys, ranks, node_order,
+  )
   let cluster_min_rank = cluster_rank_bounds.min_rank
   let cluster_max_rank = cluster_rank_bounds.max_rank
   let cluster_first_order = cluster_rank_bounds.first_order
   let cluster_order : Array[String] = []
   @membership.collect_cluster_names_order(graph, cluster_order)
-  let cluster_parents = @cluster_graph
-    .collect_cluster_graph_maps(graph)
-    .cluster_parents
+  let cluster_parents = @cluster_graph.collect_cluster_graph_maps(graph).cluster_parents
   apply_cluster_order_base(
-    nodes,
-    cluster_keys,
-    cluster_min_rank,
-    cluster_first_order,
-    node_order,
-    cluster_order_base_enabled,
+    nodes, cluster_keys, cluster_min_rank, cluster_first_order, node_order, cluster_order_base_enabled,
   )
   {
     has_clusters,

@@ -75,7 +75,9 @@ fn reorder_groups_by_local_cluster(
       let local_order_in_rank : Array[String] = []
       let local_order_index : Map[String, Int] = Map::new()
       for name in outer_nodes {
-        let local_key = @order_graph.cluster_key_or_empty(local_cluster_keys, name)
+        let local_key = @order_graph.cluster_key_or_empty(
+          local_cluster_keys, name,
+        )
         if local_key == "" {
           continue
         }

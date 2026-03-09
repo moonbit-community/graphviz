@@ -99,14 +99,9 @@ fn sample_rank_data(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
 ) -> RankData {
-  let input = @rank_data.make_rank_data_input(
-    graph,
-    nodes,
-    [],
-    false,
-    1,
-    _ => 0.0,
-  )
+  let input = @rank_data.make_rank_data_input(graph, nodes, [], false, 1, _ => {
+    0.0
+  })
   @rank_data.compute_rank_data(input)
 }
 

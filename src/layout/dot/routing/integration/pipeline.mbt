@@ -282,7 +282,7 @@ pub fn compute_dot_routing_stage(
     enable_complex_tuning,
   })
   let edges_out = if ratio_scaled {
-    @shared.scale_edge_layout_output(
+    @scale_geometry.scale_edge_layout_output(
       edges_routed,
       1.0 / ratio_sx,
       1.0 / ratio_sy,

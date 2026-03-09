@@ -54,6 +54,8 @@ struct MincrossOutput {
   case_id : Int
   ranks : Array[Array[Int]]
 }
+
+///|
 fn node_key(id : Int) -> String {
   "n\{id}"
 }
@@ -97,7 +99,9 @@ fn run_mincross_case_with_name_order(
   fixture_name_order : Map[String, Int],
 ) -> Unit raise {
   if input.case_id != output.case_id {
-    fail("mincross case mismatch input=\{input.case_id} output=\{output.case_id}")
+    fail(
+      "mincross case mismatch input=\{input.case_id} output=\{output.case_id}",
+    )
   }
   let graph = @cgraph.Graph::new(
     @cgraph.GraphKind::Directed,

@@ -132,7 +132,9 @@ fn collect_root_vnodes(
   }
   let mut edge_idx = 0
   for edge in edges {
-    let (tail, head) = @order_graph.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edge, edge_idx, edge_tail, edge_head,
+    )
     let tail_cluster = @order_graph.cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = @order_graph.cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
@@ -242,12 +244,12 @@ fn build_root_reorder_groups(
       root_groups_base[rank] = root_names
     }
   }
-  let root_order_index = @shared.build_order_index(root_groups_base)
+  let root_order_index = @rank_groups.build_order_index(root_groups_base)
   let (root_vnodes_by_rank, root_vnode_order_keys) = build_root_vnode_inputs(
     order_with_vnodes, root_vnodes, vnodes_by_rank, vnode_order_keys_for_ordering,
   )
   if order_with_vnodes {
-    @shared.build_x_groups_with_vnodes(
+    @rank_groups.build_x_groups_with_vnodes(
       root_groups_base, root_order_index, root_vnodes_by_rank, root_vnode_order_keys,
     )
   } else {
@@ -359,7 +361,7 @@ fn build_root_reorder_node_order(
       root_node_idx = root_node_idx + 1
     }
   }
-  let root_order_index = @shared.build_order_index(root_groups)
+  let root_order_index = @rank_groups.build_order_index(root_groups)
   for name, idx in root_order_index {
     if root_node_order.get(name) is None {
       root_node_order[name] = idx
@@ -501,10 +503,14 @@ fn build_root_reorder_context(
     sources.vnodes_by_rank,
     sources.vnode_order_keys_for_ordering,
   )
-  let root_rank_keys = @shared.collect_rank_keys(root_groups)
-  let root_ranks = @shared.build_node_ranks(root_groups)
-  let root_nodes = @order_graph.build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let root_graph_output = @order_graph.build_order_graph_and_nodes("order_root", root_nodes)
+  let root_rank_keys = @rank_groups.collect_rank_keys(root_groups)
+  let root_ranks = @rank_groups.build_node_ranks(root_groups)
+  let root_nodes = @order_graph.build_order_nodes_from_groups(
+    root_groups, root_rank_keys,
+  )
+  let root_graph_output = @order_graph.build_order_graph_and_nodes(
+    "order_root", root_nodes,
+  )
   let root_graph = root_graph_output.order_graph
   let root_node_map = root_graph_output.order_node_map
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
@@ -958,7 +964,9 @@ fn build_root_tail_order_override(
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
   for tail in root_reorder_output.root_edge_tail_out {
-    @order_graph.append_creation_name(root_tail_order_override, seen_root_tail, tail)
+    @order_graph.append_creation_name(
+      root_tail_order_override, seen_root_tail, tail,
+    )
   }
   root_tail_order_override
 }

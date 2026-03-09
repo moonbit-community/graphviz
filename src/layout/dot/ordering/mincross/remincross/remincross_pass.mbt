@@ -354,7 +354,7 @@ pub fn run_remincross_pass(
       vnodes_by_rank: context.vnodes_by_rank,
     },
   })
-  let rem_rank_keys = @shared.collect_rank_keys(rem_groups)
+  let rem_rank_keys = @rank_groups.collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
       ordered_groups: base_groups,
@@ -458,6 +458,7 @@ pub(all) struct ReMincrossCleanupReorderInputs {
   rem_flat_constraints : Map[String, Bool]
   graphviz_flip : Bool
 }
+
 ///|
 /// Graphviz parity: clustered ReMincross cleanup reorder executes startpass=2
 /// with coalesced-parallel mode on rematerialized edge arrays.
@@ -783,7 +784,6 @@ pub fn build_seeded_remincross(
   rem_groups
 }
 
-
 ///|
 /// Graphviz parity: intercluster trailing-vnode checks use inclusive overlap
 /// over each cluster's min/max rank bounds with min-rank fallback.
@@ -815,14 +815,18 @@ fn collect_remincross_trailing(
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
-    let (tail, head) = @order_graph.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edge, edge_idx, edge_tail, edge_head,
+    )
     let tail_cluster = remincross_cluster_keys.get(tail).unwrap_or_default()
     let head_cluster = remincross_cluster_keys.get(head).unwrap_or_default()
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
     let internal = tail_cluster != "" &&
       head_cluster != "" &&
-      @vnode_order.edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+      @vnode_order.edge_internal_to_cluster(
+        tail_cluster, head_cluster, cluster_parents,
+      )
     if internal ||
       tail_cluster == head_cluster ||
       tail_cluster == "" ||
@@ -960,15 +964,15 @@ fn build_remincross_vnode_keys(
 pub fn build_remincross_vnode_groups(
   inputs : ReMincrossVnodeGroupInputs,
 ) -> Map[Int, Array[String]] {
-  let rem_base_groups = @shared.clone_rank_groups(inputs.final_groups)
-  let rem_base_order_index = @shared.build_order_index(rem_base_groups)
+  let rem_base_groups = @rank_groups.clone_rank_groups(inputs.final_groups)
+  let rem_base_order_index = @rank_groups.build_order_index(rem_base_groups)
   let rem_vnode_order_keys = if !inputs.order_with_vnodes {
     Map::new()
   } else {
     build_remincross_vnode_keys(inputs, rem_base_order_index)
   }
   if inputs.order_with_vnodes {
-    @shared.build_x_groups_with_vnodes(
+    @rank_groups.build_x_groups_with_vnodes(
       rem_base_groups,
       rem_base_order_index,
       inputs.vnodes_by_rank,

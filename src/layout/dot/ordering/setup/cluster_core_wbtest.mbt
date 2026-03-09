@@ -26,13 +26,7 @@ test "build_cluster_core_metadata_for_ordering seeds orders and collects cluster
   let node_order : Map[String, Int] = Map::new()
 
   let metadata = build_cluster_core_metadata_for_ordering(
-    root,
-    nodes,
-    groups,
-    ranks,
-    node_order,
-    false,
-    true,
+    root, nodes, groups, ranks, node_order, false, true,
   )
 
   assert_true(metadata.has_clusters)
@@ -58,7 +52,10 @@ test "build_cluster_core_metadata_for_ordering seeds orders and collects cluster
   assert_eq(metadata.cluster_order, ["cluster_outer", "cluster_other"])
   assert_eq(metadata.cluster_parents.get("cluster_outer"), Some(None))
   assert_eq(metadata.cluster_parents.get("cluster_other"), Some(None))
-  assert_eq(metadata.cluster_parents.get("cluster_inner"), Some(Some("cluster_outer")))
+  assert_eq(
+    metadata.cluster_parents.get("cluster_inner"),
+    Some(Some("cluster_outer")),
+  )
 
   assert_eq(node_order.get("a"), Some(0))
   assert_eq(node_order.get("b"), Some(1))
@@ -84,13 +81,7 @@ test "build_cluster_core_metadata_for_ordering respects graphviz_flip without cl
   let node_order : Map[String, Int] = Map::new()
 
   let metadata = build_cluster_core_metadata_for_ordering(
-    root,
-    nodes,
-    groups,
-    ranks,
-    node_order,
-    true,
-    false,
+    root, nodes, groups, ranks, node_order, true, false,
   )
 
   assert_true(metadata.has_clusters)
