@@ -4,7 +4,7 @@ fn build_edge_vnodes_for_test(
   ranks : Map[String, Int],
   nodesep_pt : Double,
   rankdir : @rankdir.RankDir,
-) -> @routing.EdgeVnodeInfo {
+) -> EdgeVnodeInfo {
   let nodes = graph.nodes()
   let edges = graph.edges()
   let existing_names : Map[String, Bool] = Map::new()
@@ -31,7 +31,7 @@ fn build_edge_vnodes_for_test(
 
 ///|
 fn edge_vnode_chain_for_test(
-  vnode_info : @routing.EdgeVnodeInfo,
+  vnode_info : EdgeVnodeInfo,
   edge : @cgraph.Edge,
 ) -> Array[String] raise {
   match vnode_info.edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
@@ -42,7 +42,7 @@ fn edge_vnode_chain_for_test(
 
 ///|
 fn vnode_size_for_test(
-  vnode_info : @routing.EdgeVnodeInfo,
+  vnode_info : EdgeVnodeInfo,
   name : String,
 ) -> @node_primitives.NodeSize raise {
   match vnode_info.vnode_sizes.get(name) {

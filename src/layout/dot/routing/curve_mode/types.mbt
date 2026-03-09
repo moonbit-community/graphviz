@@ -8,7 +8,7 @@ type RankDir = @rankdir.RankDir
 type EdgeRouteBase = @routing.EdgeRouteBase
 
 ///|
-type EdgeVnodeInfo = @routing.EdgeVnodeInfo
+type EdgeVnodeInfo = @setup.EdgeVnodeInfo
 
 ///|
 type HeadPortMetrics = @precompute.HeadPortMetrics

@@ -18,7 +18,7 @@ pub(all) struct OrderingRuntimeCore {
 pub(all) struct OrderingRuntimeContext {
   real_nodes : Map[String, Bool]
   edge_cluster_keys : Map[String, String]
-  vnode_info : @routing.EdgeVnodeInfo
+  vnode_info : EdgeVnodeInfo
   port_edge_nodes : Map[String, Bool]
   local_cluster_order : Map[String, Int]
   rank_same_constraints : Map[String, Bool]

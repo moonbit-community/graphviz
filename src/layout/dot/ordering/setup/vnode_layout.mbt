@@ -1,4 +1,15 @@
 ///|
+/// Ordering/setup owner: virtual-node metadata produced by class2 vnode
+/// construction and consumed by later ordering/positioning/routing stages.
+pub(all) struct EdgeVnodeInfo {
+  vnode_ranks : Map[String, Int]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  vnodes_by_rank : Map[Int, Array[String]]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_clusters : Map[String, String]
+}
+
+///|
 /// Graphviz parity: class2 virtual node creation order + sizing.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_edge_vnodes(
@@ -13,7 +24,7 @@ pub fn build_edge_vnodes(
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
-) -> @routing.EdgeVnodeInfo {
+) -> EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()

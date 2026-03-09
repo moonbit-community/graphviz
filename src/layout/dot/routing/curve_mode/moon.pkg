@@ -3,6 +3,7 @@ import {
   "moonbit-community/graphviz/layout/dot/routing/routesplines" @routesplines,
   "moonbit-community/graphviz/layout/dot/routing/edge_spline" @edge_spline,
   "moonbit-community/graphviz/layout/dot/routing",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/routing/precompute",
   "moonbit-community/graphviz/layout/dot/routing/emit",
   "moonbit-community/graphviz/layout/dot/routing/edge_ops",

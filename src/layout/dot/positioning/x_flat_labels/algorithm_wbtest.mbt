@@ -17,7 +17,7 @@ fn make_existing_names(names : Array[String]) -> Map[String, Bool] {
 }
 
 ///|
-fn empty_vnode_info() -> @routing.EdgeVnodeInfo {
+fn empty_vnode_info() -> @setup.EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()

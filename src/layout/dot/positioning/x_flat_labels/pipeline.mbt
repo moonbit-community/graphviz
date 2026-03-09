@@ -90,7 +90,7 @@ pub(all) struct XFlatLabelPositioningPipelineSources {
   rankdir : @rankdir.RankDir
   edge_cluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  vnode_info : @routing.EdgeVnodeInfo
+  vnode_info : @setup.EdgeVnodeInfo
 }
 
 ///|

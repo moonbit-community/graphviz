@@ -10,6 +10,7 @@
       "alias": "routesplines"
     },
     "moonbit-community/graphviz/layout/dot/routing/precompute",
+    "moonbit-community/graphviz/layout/dot/ordering/setup",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"

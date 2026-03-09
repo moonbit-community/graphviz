@@ -418,7 +418,7 @@ pub(all) struct BuildOrderingPipelineContextSources {
 pub(all) struct OrderingResult {
   ordered_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
-  vnode_info : @routing.EdgeVnodeInfo
+  vnode_info : EdgeVnodeInfo
   vnode_count : Int
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]

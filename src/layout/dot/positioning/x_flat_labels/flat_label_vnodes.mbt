@@ -232,7 +232,7 @@ fn add_flat_label_vnodes(
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
-  vnode_info : @routing.EdgeVnodeInfo,
+  vnode_info : @setup.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeResult {
   let order_index = @shared.build_order_index(x_groups)
@@ -451,7 +451,7 @@ fn build_flat_label_vnodes_for_positioning(
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
-  vnode_info : @routing.EdgeVnodeInfo,
+  vnode_info : @setup.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(

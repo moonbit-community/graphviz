@@ -168,7 +168,7 @@ pub(all) struct OrderingReorderSetupSources {
   groups : Map[Int, Array[String]]
   node_order : Map[String, Int]
   port_edge_nodes : Map[String, Bool]
-  vnode_info : @routing.EdgeVnodeInfo
+  vnode_info : EdgeVnodeInfo
   cluster_has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_order : Array[String]

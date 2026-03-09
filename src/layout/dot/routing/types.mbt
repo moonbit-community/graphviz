@@ -156,19 +156,10 @@ pub(all) struct SelfEdgeRoute {
 pub type DotLayoutEdge = @dot_shared.DotLayoutEdge
 
 ///|
-pub(all) struct EdgeVnodeInfo {
-  vnode_ranks : Map[String, Int]
-  vnode_sizes : Map[String, @node_primitives.NodeSize]
-  vnodes_by_rank : Map[Int, Array[String]]
-  edge_vnodes : Map[String, Array[String]]
-  vnode_clusters : Map[String, String]
-}
-
-///|
 pub(all) struct EdgeLayoutInput {
   ranks : Map[String, Int]
   rank_y : Map[Int, Double]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @setup.EdgeVnodeInfo
   vnode_positions : Map[String, @geom.Point]
   has_clusters : Bool
   nodesep_pt : Double
@@ -238,7 +229,7 @@ pub(all) struct RegularPassInput {
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @setup.EdgeVnodeInfo
   rank_y : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
@@ -273,7 +264,7 @@ pub(all) struct RouteEdgesInput {
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @setup.EdgeVnodeInfo
   rank_y : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
@@ -300,7 +291,7 @@ pub(all) struct RouteEdgesPipelineInput {
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @setup.EdgeVnodeInfo
   rank_y : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
