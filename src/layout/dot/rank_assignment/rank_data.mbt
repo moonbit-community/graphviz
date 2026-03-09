@@ -73,7 +73,7 @@ pub fn compute_rank_data(input : RankDataInput) -> RankData {
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
   let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let acyclic_directions = acyclic_edge_directions_with_order(
+  let acyclic_directions = @solver.acyclic_edge_directions_with_order(
     graph, nodes, edges,
   )
   let edge_tail = acyclic_directions.tail

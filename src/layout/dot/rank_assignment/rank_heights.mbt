@@ -33,10 +33,7 @@ pub struct RankHeightsInput {
   has_edge_labels : Bool
   vnode_height_pt : Double
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?
-  cluster_label_padding_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> @clustering.ClusterLabelPadding
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @clustering.ClusterLabelPadding
 }
 
 ///|
@@ -55,10 +52,7 @@ pub fn make_rank_heights_input(
   has_edge_labels : Bool,
   vnode_height_pt : Double,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
-  cluster_label_padding_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> @clustering.ClusterLabelPadding,
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @clustering.ClusterLabelPadding,
 ) -> RankHeightsInput {
   {
     graph,
@@ -110,7 +104,7 @@ fn update_rank_pht_for_label(
     return
   }
   let label_rank = (span.min_rank + span.max_rank) / 2
-  let half_height = match (edge_mid_label_metrics_for)(edge) {
+  let half_height = match edge_mid_label_metrics_for(edge) {
     Some(metrics) =>
       if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
         metrics.width / 2.0
@@ -139,9 +133,7 @@ priv struct BaseRankHalfHeights {
 }
 
 ///|
-fn init_rank_half_heights(
-  all_ranks : Array[Int],
-) -> Map[Int, Double] {
+fn init_rank_half_heights(all_ranks : Array[Int]) -> Map[Int, Double] {
   let rank_pht : Map[Int, Double] = Map::new()
   for rank in all_ranks {
     rank_pht[rank] = 0.0
@@ -161,8 +153,9 @@ fn apply_node_rank_half_heights(
     let names = groups.get(rank).unwrap_or_default()
     let mut max_half = 0.0
     for name in names {
-      let half_height =
-        @y_positions.node_half_height_pt(name, sizes, self_edge_labels)
+      let half_height = @y_positions.node_half_height_pt(
+        name, sizes, self_edge_labels,
+      )
       if half_height > max_half {
         max_half = half_height
       }
@@ -181,11 +174,7 @@ fn apply_edge_label_rank_half_heights(
 ) -> Unit {
   for edge in edges {
     update_rank_pht_for_label(
-      edge,
-      ranks,
-      rank_pht,
-      rankdir,
-      edge_mid_label_metrics_for,
+      edge, ranks, rank_pht, rankdir, edge_mid_label_metrics_for,
     )
   }
 }
@@ -276,27 +265,23 @@ fn build_base_rank_half_heights(
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c
 /// + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-pub fn compute_rank_heights(
-  input : RankHeightsInput,
-) -> RankHeights {
+pub fn compute_rank_heights(input : RankHeightsInput) -> RankHeights {
   let base_half_heights = build_base_rank_half_heights(input)
   let rank_pht = base_half_heights.rank_pht
   let rank_ht1 = base_half_heights.rank_ht1
   let rank_ht2 = base_half_heights.rank_ht2
-  let _ = @clustering.apply_cluster_rank_heights(
-    {
-      graph: input.graph,
-      ranks: input.ranks,
-      sizes: input.sizes,
-      self_edge_labels: input.self_edge_labels,
-      rank_ht1,
-      rank_ht2,
-      rankdir: input.rankdir,
-      cluster_margin_pt_for: @clustering.cluster_margin_pt,
-      cluster_label_padding_for: input.cluster_label_padding_for,
-      node_half_height_pt_for: @y_positions.node_half_height_pt,
-    },
-  )
+  let _ = @clustering.apply_cluster_rank_heights({
+    graph: input.graph,
+    ranks: input.ranks,
+    sizes: input.sizes,
+    self_edge_labels: input.self_edge_labels,
+    rank_ht1,
+    rank_ht2,
+    rankdir: input.rankdir,
+    cluster_margin_pt_for: @clustering.cluster_margin_pt,
+    cluster_label_padding_for: input.cluster_label_padding_for,
+    node_half_height_pt_for: @y_positions.node_half_height_pt,
+  })
   let nodesep_pt = @numeric.round_int(input.nodesep_in * 72.0).to_double()
   let mut ranksep_pt_int = @numeric.round_int(input.ranksep_in * 72.0)
   if input.has_edge_labels {

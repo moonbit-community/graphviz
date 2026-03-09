@@ -16,7 +16,7 @@ pub fn compute_ranks_directed(
       source, nodes, edges, has_edge_labels, back_weight_scale,
     )
   }
-  compute_ranks_directed_base(
+  @solver.compute_ranks_directed_base(
     source, nodes, edges, has_edge_labels, edge_tail, edge_head,
   )
 }
@@ -30,7 +30,7 @@ pub fn compute_ranks_directed_with_clusters(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let acyclic_directions = acyclic_edge_directions_with_order(
+  let acyclic_directions = @solver.acyclic_edge_directions_with_order(
     source, nodes, edges,
   )
   let edge_tail = acyclic_directions.tail
@@ -52,12 +52,12 @@ fn compute_clustered_ranks(
   let cluster_graphs = top_cluster_data.cluster_graphs
   let top_clusters = top_cluster_data.top_clusters
   if top_clusters.length() == 0 {
-    let acyclic_directions = acyclic_edge_directions_with_order(
+    let acyclic_directions = @solver.acyclic_edge_directions_with_order(
       source, nodes, edges,
     )
     let tail = acyclic_directions.tail
     let head = acyclic_directions.head
-    return compute_ranks_directed_base(
+    return @solver.compute_ranks_directed_base(
       source, nodes, edges, has_edge_labels, tail, head,
     )
   }
@@ -73,7 +73,7 @@ fn compute_clustered_ranks(
     cluster_graphs,
     cluster_members,
     (cluster_graph, cluster_nodes, cluster_edges) => {
-      let acyclic_directions = acyclic_edge_directions_with_order(
+      let acyclic_directions = @solver.acyclic_edge_directions_with_order(
         cluster_graph, cluster_nodes, cluster_edges,
       )
       let tail = acyclic_directions.tail
@@ -95,7 +95,7 @@ fn compute_clustered_ranks(
     has_edge_labels,
     back_weight_scale,
     (node_names, edge_tail, edge_head, edge_is_active) => {
-      let directions = acyclic_edge_directions_for_names(
+      let directions = @solver.acyclic_edge_directions_for_names(
         node_names, edge_tail, edge_head, edge_is_active,
       )
       (directions.tail, directions.head, directions.reversed)
