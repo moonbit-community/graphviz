@@ -311,3 +311,46 @@ test "build_nonroot_tail_names replays higher ranks first and rebuckets only the
     "x1", "x2", "i-multi-local", "i-later", "i-earlier", "i-neutral", "unknown",
   ])
 }
+
+///|
+test "build_cluster_tail_buckets groups creation replay by first-seen cluster including skeleton fallback names" {
+  let cluster1_skeleton = @cluster_identity.cluster_skeleton_name("cluster1", 2)
+  let rem_cluster_keys : Map[String, String] = Map::new()
+  rem_cluster_keys["root_a"] = ""
+  rem_cluster_keys["c1_a"] = "cluster1"
+  rem_cluster_keys["c2_a"] = "cluster2"
+  rem_cluster_keys["c1_b"] = "cluster1"
+
+  let buckets = build_cluster_tail_buckets(
+    ["root_a", cluster1_skeleton, "c2_a", "c1_a", "c1_b"],
+    rem_cluster_keys,
+  )
+
+  assert_eq(buckets.cluster_order_seen, ["", "cluster1", "cluster2"])
+  assert_eq(buckets.names_by_cluster.get(""), Some(["root_a"]))
+  assert_eq(
+    buckets.names_by_cluster.get("cluster1"),
+    Some([cluster1_skeleton, "c1_a", "c1_b"]),
+  )
+  assert_eq(buckets.names_by_cluster.get("cluster2"), Some(["c2_a"]))
+  assert_eq(buckets.cluster_first_seen.get(""), Some(0))
+  assert_eq(buckets.cluster_first_seen.get("cluster1"), Some(1))
+  assert_eq(buckets.cluster_first_seen.get("cluster2"), Some(2))
+}
+
+///|
+test "build_cluster_tail_names_for_cluster applies root override only to names present in the root bucket" {
+  let root_names = ["root_a", "root_c", "root_b"]
+  let context : ClusterTailOrderContext = {
+    rem_ranks: Map::new(),
+    heads_by_tail: Map::new(),
+    cluster_order_pos: Map::new(),
+    cluster_order: [""],
+    rem_cluster_keys: Map::new(),
+    root_tail_order_override: Some(["root_b", "missing", "root_a"]),
+  }
+
+  let reordered = build_cluster_tail_names_for_cluster("", root_names, context)
+
+  assert_eq(reordered, ["root_b", "root_a", "root_c"])
+}
