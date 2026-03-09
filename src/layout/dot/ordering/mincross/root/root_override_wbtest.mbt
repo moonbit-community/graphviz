@@ -179,3 +179,71 @@ test "merge_rank_with_attached_skeleton_replacements inserts attached members af
 
   assert_eq(merged, ["root", skel_a, "a0", "a1", "left", "tail"])
 }
+
+///|
+test "merge_root_mincross_groups uses positional merge when one attached member should stay in front of the root-skeleton pair" {
+  let seeded_groups : Map[Int, Array[String]] = Map::new()
+  seeded_groups[0] = ["member", "skel_a", "root", "tail"]
+  seeded_groups[1] = ["untouched"]
+
+  let ordered_mincross : Map[Int, Array[String]] = Map::new()
+  ordered_mincross[0] = ["root", "skel_a"]
+
+  let mincross_nodes : Map[String, Bool] = Map::new()
+  mincross_nodes["root"] = true
+  mincross_nodes["skel_a"] = true
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["member"] = "cluster_a"
+  order_cluster_keys["skel_a"] = "cluster_a"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton["skel_a"] = true
+
+  let merged = merge_root_mincross_groups(
+    [0, 1],
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+
+  assert_eq(merged.get(0), Some(["member", "root", "skel_a", "tail"]))
+  assert_eq(merged.get(1), Some(["untouched"]))
+}
+
+///|
+test "merge_root_mincross_groups uses attached-skeleton merge when a skeleton has multiple attached members" {
+  let seeded_groups : Map[Int, Array[String]] = Map::new()
+  seeded_groups[0] = ["member1", "skel_a", "root", "tail", "member2"]
+
+  let ordered_mincross : Map[Int, Array[String]] = Map::new()
+  ordered_mincross[0] = ["root", "skel_a"]
+
+  let mincross_nodes : Map[String, Bool] = Map::new()
+  mincross_nodes["root"] = true
+  mincross_nodes["skel_a"] = true
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["member1"] = "cluster_a"
+  order_cluster_keys["member2"] = "cluster_a"
+  order_cluster_keys["skel_a"] = "cluster_a"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton["skel_a"] = true
+
+  let merged = merge_root_mincross_groups(
+    [0],
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+
+  assert_eq(
+    merged.get(0),
+    Some(["root", "skel_a", "member1", "member2", "tail"]),
+  )
+}
