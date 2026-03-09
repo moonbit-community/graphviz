@@ -244,7 +244,7 @@ pub fn build_ordering_reorder_setup_from_sources(
   let vnode_order_keys_for_ordering = if vnode_count <= 0 {
     Map::new()
   } else if sources.cluster_has_clusters {
-    @ordering.build_vnode_order_keys(
+    @vnode_order.build_vnode_order_keys(
       sources.edges,
       sources.edge_tail,
       sources.edge_head,
@@ -257,7 +257,7 @@ pub fn build_ordering_reorder_setup_from_sources(
       sources.vnode_info.vnode_ranks,
     )
   } else {
-    @ordering.build_vnode_keys_from_nlist(
+    @vnode_order.build_vnode_keys_from_nlist(
       ordering_groups_base,
       sources.vnode_info.vnodes_by_rank,
       base_order_index,

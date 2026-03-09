@@ -39,7 +39,7 @@ fn build_vnode_order_state(
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
-    vnode_order_keys = @ordering.build_vnode_order_keys(
+    vnode_order_keys = @vnode_order.build_vnode_order_keys(
       input.edges,
       input.edge_tail,
       input.edge_head,

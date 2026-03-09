@@ -823,7 +823,7 @@ fn collect_remincross_trailing(
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
     let internal = tail_cluster != "" &&
       head_cluster != "" &&
-      @ordering.edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+      @vnode_order.edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
     if internal ||
       tail_cluster == head_cluster ||
       tail_cluster == "" ||
@@ -931,7 +931,7 @@ fn build_remincross_vnode_keys(
     inputs.cluster_min_rank,
     inputs.cluster_max_rank,
   )
-  let keys = @ordering.build_vnode_order_keys(
+  let keys = @vnode_order.build_vnode_order_keys(
     inputs.edges,
     inputs.edge_tail,
     inputs.edge_head,
