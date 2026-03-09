@@ -41,3 +41,24 @@ pub fn collect_top_clusters(source : @cgraph.Graph) -> TopClustersCollected {
   }
   { cluster_graphs, top_clusters }
 }
+
+///|
+/// Graphviz parity: each node is assigned to at most one top-level cluster for
+/// clustered rank projection.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_node_cluster_index(
+  top_clusters : Array[String],
+  cluster_members : Map[String, Map[String, Bool]],
+) -> Map[String, String] {
+  let node_cluster : Map[String, String] = Map::new()
+  for cluster_name in top_clusters {
+    match cluster_members.get(cluster_name) {
+      Some(members) =>
+        for name, _ in members {
+          node_cluster[name] = cluster_name
+        }
+      None => ()
+    }
+  }
+  node_cluster
+}
