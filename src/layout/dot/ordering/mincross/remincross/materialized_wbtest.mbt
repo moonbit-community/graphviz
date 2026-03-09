@@ -31,6 +31,49 @@ test "apply_intercluster_bonus adds the bonus only to the first representative o
 }
 
 ///|
+test "collect_intercluster_bonus counts duplicated vnode-tail intercluster segments" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, b)
+  edge_1.set_attr("xpenalty", "2")
+  edge_2.set_attr("xpenalty", "2")
+
+  let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_0"
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
+
+  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  edges_by_tail["a"] = [0, 1]
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a"] = "cluster_left"
+  cluster_keys["b"] = "cluster_right"
+
+  let bonus = collect_intercluster_bonus(
+    ["a"],
+    [edge_1, edge_2],
+    [],
+    [],
+    [],
+    [],
+    { "a": 0, "b": 2 },
+    edge_vnodes,
+    true,
+    true,
+    edges_by_tail,
+    cluster_keys,
+  )
+
+  let bonus_key = @order_graph.order_edge_merge_key(
+    shared_vnode, "b", true, 0.0, 0.5,
+  )
+  assert_eq(bonus.get(bonus_key), Some(1))
+}
+
+///|
 test "build_remincross_cluster_keys rewrites empty root keys and assigns vnode LCAs" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
