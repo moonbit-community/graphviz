@@ -1,4 +1,24 @@
 ///|
+test "record_layout_orientation flips only LR and RL rank directions" {
+  assert_true(
+    record_layout_orientation(@rankdir.RankDir::TB)
+    is RecordOrientation::Horizontal,
+  )
+  assert_true(
+    record_layout_orientation(@rankdir.RankDir::BT)
+    is RecordOrientation::Horizontal,
+  )
+  assert_true(
+    record_layout_orientation(@rankdir.RankDir::LR)
+    is RecordOrientation::Vertical,
+  )
+  assert_true(
+    record_layout_orientation(@rankdir.RankDir::RL)
+    is RecordOrientation::Vertical,
+  )
+}
+
+///|
 test "merge_sizes_with_vnodes overlays vnode sizes without dropping base sizes" {
   let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   sizes["a"] = @node_primitives.node_size_from_points(10.0, 20.0)
