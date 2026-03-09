@@ -23,6 +23,37 @@ priv struct XposComputationInputSources {
 }
 
 ///|
+/// Graphviz parity: preserve vnode insertion order when seeding extra nodes
+/// for xpos constraints (nlist-driven ordering), with map-order fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn build_vnode_extra_nodes(
+  vnode_order : Array[String],
+  vnode_ranks : Map[String, Int],
+) -> Array[@ordering.ExtraConstraintNode] {
+  let extra : Array[@ordering.ExtraConstraintNode] = []
+  let seen : Map[String, Bool] = Map::new()
+  if vnode_order.length() > 0 {
+    for name in vnode_order {
+      match vnode_ranks.get(name) {
+        Some(rank) => {
+          extra.push({ name, rank })
+          seen[name] = true
+        }
+        None => ()
+      }
+    }
+  }
+  if extra.length() < vnode_ranks.length() {
+    for name, rank in vnode_ranks {
+      if seen.get(name) is None {
+        extra.push({ name, rank })
+      }
+    }
+  }
+  extra
+}
+
+///|
 /// Graphviz parity: xpos solver inputs preserve vnode-size merge,
 /// rank-map/key derivation, and vnode-edge/slack toggles.
 /// Do not change behavior without updating fixtures/tests.
@@ -42,7 +73,7 @@ fn build_xpos_computation_input_from_sources(
   let x_ranks = @ordering.build_node_ranks(sources.x_groups)
   let vnode_extra_nodes =
     if sources.use_vnodes_for_xpos {
-      @ordering.build_vnode_extra_nodes(
+      build_vnode_extra_nodes(
         sources.vnode_creation_order,
         sources.vnode_ranks,
       )

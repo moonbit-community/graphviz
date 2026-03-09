@@ -182,6 +182,89 @@ pub(all) struct OrderingReorderSetupSources {
 }
 
 ///|
+/// Graphviz parity: rank=same ordering applies only for unported groups.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_rank_same_order(
+  groups : Map[Int, Array[String]],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let _ = node_order
+  let adjusted : Map[Int, Array[String]] = Map::new()
+  for rank, names in groups {
+    adjusted[rank] = names.copy()
+  }
+  if rank_same_groups.length() == 0 {
+    return adjusted
+  }
+  for _rank, names in adjusted {
+    if names.length() <= 1 {
+      continue
+    }
+    let group_positions : Map[Int, Array[Int]] = Map::new()
+    let group_nodes : Map[Int, Array[String]] = Map::new()
+    let group_has_ported : Map[Int, Bool] = Map::new()
+    for i in 0..<names.length() {
+      let name = names[i]
+      match rank_same_groups.get(name) {
+        Some(group) => {
+          match group_positions.get(group) {
+            Some(list) => list.push(i)
+            None => group_positions[group] = [i]
+          }
+          match group_nodes.get(group) {
+            Some(list) => list.push(name)
+            None => group_nodes[group] = [name]
+          }
+          if port_edge_nodes.get(name) == Some(true) {
+            group_has_ported[group] = true
+          }
+        }
+        None => ()
+      }
+    }
+    for group, positions in group_positions {
+      if group_has_ported.get(group) == Some(true) {
+        continue
+      }
+      let nodes = match group_nodes.get(group) {
+        Some(list) => list
+        None => []
+      }
+      if nodes.length() <= 1 {
+        continue
+      }
+      let sorted = nodes.copy()
+      sorted.sort_by((a, b) => {
+        let a_idx = match rank_same_order.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_idx = match rank_same_order.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      })
+      let mut idx = 0
+      while idx < positions.length() && idx < sorted.length() {
+        names[positions[idx]] = sorted[idx]
+        idx = idx + 1
+      }
+    }
+  }
+  adjusted
+}
+
+///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence from
 /// grouped runtime + cluster sources.
@@ -191,7 +274,7 @@ pub fn build_ordering_reorder_setup_from_sources(
 ) -> OrderingReorderSetup {
   let graphviz_flip = sources.rankdir == @rankdir.RankDir::RL ||
     sources.rankdir == @rankdir.RankDir::LR
-  let ordering_groups_base = @ordering.apply_rank_same_order(
+  let ordering_groups_base = apply_rank_same_order(
     sources.groups,
     sources.rank_same_groups,
     sources.rank_same_order,
