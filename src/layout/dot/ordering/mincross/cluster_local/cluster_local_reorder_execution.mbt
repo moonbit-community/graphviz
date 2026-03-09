@@ -1028,7 +1028,7 @@ fn build_cluster_graph_order(
   if cluster_graphs.length() == 0 {
     return { cluster_graphs, cluster_names }
   }
-  let cluster_index = build_cluster_order_index(cluster_order)
+  let cluster_index = @order_graph.build_cluster_order_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
   for name in cluster_names {
     let _ = cluster_depth_for_order(

@@ -747,7 +747,7 @@ fn run_root_and_cluster_ranks_stage_from_sources(
   let root_cluster_stage = run_root_and_cluster_ranks_with_pass0_capture(
     root_mincross_reorder_inputs, root_and_cluster_inputs, capture_call,
   )
-  run_cluster_local_rank_replay_after_root_from_sources({
+  @cluster_local.run_cluster_local_rank_replay_after_root_from_sources({
     order_with_clusters: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
     groups: root_cluster_stage.ordered,
     graph: sources.graph,

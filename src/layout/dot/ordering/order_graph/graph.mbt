@@ -4,6 +4,17 @@
 type NodeSize = @node_primitives.NodeSize
 
 ///|
+/// Graphviz parity: cluster traversal order index is seeded from Graphviz
+/// cluster_order for cluster tie-breaking in ordering passes.
+pub fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
+  let cluster_index : Map[String, Int] = Map::new()
+  for idx, name in cluster_order {
+    cluster_index[name] = idx
+  }
+  cluster_index
+}
+
+///|
 pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
   let order : Map[String, Int] = Map::new()
   let mut idx = 0
@@ -410,4 +421,3 @@ pub fn build_edge_indices_and_order(
   let edge_order = collect_edge_order(edges_out)
   { parents, children, edge_order }
 }
-

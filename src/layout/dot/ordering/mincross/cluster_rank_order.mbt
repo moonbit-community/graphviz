@@ -2,18 +2,6 @@
 /// Ordering domain: cluster-rank-order replay and rank-group filtering
 /// helpers shared by clustered Stage C root/finalize phases.
 
-///|
-/// Graphviz parity: cluster traversal order index is seeded from Graphviz
-/// cluster_order for cluster tie-breaking in ordering passes.
-pub fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
-  let cluster_index : Map[String, Int] = Map::new()
-  for idx, name in cluster_order {
-    cluster_index[name] = idx
-  }
-  cluster_index
-}
-
-///|
 /// Graphviz parity: root-anchor transfer only applies on the single-left
 /// cluster hand-off shape from the previous rank map.
 fn select_root_left_anchor(

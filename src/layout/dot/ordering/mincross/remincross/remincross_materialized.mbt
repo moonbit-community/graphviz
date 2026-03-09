@@ -592,7 +592,7 @@ fn build_remincross_materialized_inputs(
   )
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
-  let cluster_order_index = @mincross.build_cluster_order_index(
+  let cluster_order_index = @order_graph.build_cluster_order_index(
     inputs.cluster_order,
   )
   // Graphviz parity: ReMincross rematerialization keeps order-edge expansion

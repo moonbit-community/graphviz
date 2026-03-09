@@ -75,7 +75,7 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
 /// Graphviz parity: post-root cluster-local replay gate and payload assembly
 /// are preserved before local mincross execution.
 /// Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_replay_after_root_from_sources(
+pub fn run_cluster_local_rank_replay_after_root_from_sources(
   sources : ClusterLocalRankReplayAfterRootSources,
 ) -> Unit {
   if !sources.order_with_clusters {
