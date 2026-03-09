@@ -2,7 +2,10 @@
 /// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 fn intercluster_alignment_enabled() -> Bool {
-  @runtime_flags.env_flag_enabled(@sys.get_env_var("DOT_INTERCLUSTER_ALIGN"), false)
+  @runtime_flags.env_flag_enabled(
+    @sys.get_env_var("DOT_INTERCLUSTER_ALIGN"),
+    false,
+  )
 }
 
 ///|
@@ -36,9 +39,7 @@ fn cluster_rank_key(cluster : String, rank : Int) -> String {
 ///|
 /// Graphviz parity: dotted-edge intercluster alignment follows dot rules for
 /// same-rank cluster groups that share a single external target.
-fn adjust_intercluster_alignment(
-  input : InterclusterAlignmentInput,
-) -> Unit {
+fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
   let cluster_rank_nodes : Map[String, Array[String]] = Map::new()
   let cluster_rank_value : Map[String, Int] = Map::new()
   for node in input.nodes {
@@ -120,7 +121,11 @@ fn adjust_intercluster_alignment(
       Some(value) => value
       None => continue
     }
-    let shift = @x_constraints.rank_nodesep_pt(rank, input.nodesep_pt, input.has_edge_labels)
+    let shift = @x_constraints.rank_nodesep_pt(
+      rank,
+      input.nodesep_pt,
+      input.has_edge_labels,
+    )
     for name in names {
       match input.x_positions.get(name) {
         Some(value) => input.x_positions[name] = value - shift
@@ -318,62 +323,60 @@ priv struct PositionOutputBuildSources {
 fn build_position_output_maps_from_sources(
   sources : PositionOutputBuildSources,
 ) -> PositionOutputMaps {
-  if sources.has_clusters && sources.has_dotted_edges && intercluster_alignment_enabled() {
-    adjust_intercluster_alignment(
-      {
-        nodes: sources.nodes,
-        edges: sources.edges,
-        ranks: sources.ranks,
-        x_positions: sources.x_positions,
-        cluster_keys: sources.cluster_keys,
-        intercluster_keys: sources.intercluster_keys,
-        nodesep_pt: sources.nodesep_pt,
-        has_edge_labels: sources.has_edge_labels,
-      },
-    )
+  if sources.has_clusters &&
+    sources.has_dotted_edges &&
+    intercluster_alignment_enabled() {
+    adjust_intercluster_alignment({
+      nodes: sources.nodes,
+      edges: sources.edges,
+      ranks: sources.ranks,
+      x_positions: sources.x_positions,
+      cluster_keys: sources.cluster_keys,
+      intercluster_keys: sources.intercluster_keys,
+      nodesep_pt: sources.nodesep_pt,
+      has_edge_labels: sources.has_edge_labels,
+    })
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_names : Map[String, Bool] = Map::new()
   if sources.has_clusters {
     @cluster_graph.collect_cluster_names(sources.graph, cluster_names)
   }
-  let cluster_boundary_x =
-    build_cluster_boundary_x(
-      {
-        has_clusters: sources.has_clusters && cluster_names.length() > 0,
-        x_positions: sources.x_positions,
-        is_cluster_boundary:
-          (name) => @cluster_identity.is_cluster_boundary_name(name),
-        boundary_cluster_key:
-          (name) => @cluster_identity.cluster_key_from_boundary(name, cluster_names),
-        is_left_boundary: (name) => @cluster_identity.is_cluster_left_boundary_name(name),
-      },
-    )
+  let cluster_boundary_x = build_cluster_boundary_x({
+    has_clusters: sources.has_clusters && cluster_names.length() > 0,
+    x_positions: sources.x_positions,
+    is_cluster_boundary: name => {
+      @cluster_identity.is_cluster_boundary_name(name)
+    },
+    boundary_cluster_key: name => {
+      @cluster_identity.cluster_key_from_boundary(name, cluster_names)
+    },
+    is_left_boundary: name => {
+      @cluster_identity.is_cluster_left_boundary_name(name)
+    },
+  })
   // Let the final bounding-box translation handle normalization, matching Graphviz.
-  let vnode_positions =
-    build_vnode_positions(
-      {
-        use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
-        vnode_ranks: sources.vnode_ranks,
-        x_positions: sources.x_positions,
-        rank_y: sources.rank_y,
-        fallback_fn: () =>
-          vnode_positions_from_edges(
-            sources.edges,
-            sources.ranks,
-            sources.vnode_ranks,
-            sources.edge_vnodes,
-            sources.x_positions,
-            sources.rank_y,
-          ),
-      },
-    )
-  let positions =
-    build_node_positions_map(
-      sources.nodes,
-      sources.x_positions,
-      sources.y_positions,
-    )
+  let vnode_positions = build_vnode_positions({
+    use_vnodes_for_xpos: sources.use_vnodes_for_xpos,
+    vnode_ranks: sources.vnode_ranks,
+    x_positions: sources.x_positions,
+    rank_y: sources.rank_y,
+    fallback_fn: () => {
+      vnode_positions_from_edges(
+        sources.edges,
+        sources.ranks,
+        sources.vnode_ranks,
+        sources.edge_vnodes,
+        sources.x_positions,
+        sources.rank_y,
+      )
+    },
+  })
+  let positions = build_node_positions_map(
+    sources.nodes,
+    sources.x_positions,
+    sources.y_positions,
+  )
   {
     positions,
     vnode_positions,
@@ -418,40 +421,34 @@ pub(all) struct PositionOutputPipelineInput {
 pub fn build_position_output_pipeline(
   input : PositionOutputPipelineInput,
 ) -> PositionOutputMaps {
-  let output_maps =
-    build_position_output_maps_from_sources(
-      {
-        has_clusters: input.has_clusters,
-        has_dotted_edges: input.has_dotted_edges,
-        graph: input.graph,
-        nodes: input.nodes,
-        edges: input.edges,
-        ranks: input.ranks,
-        x_positions: input.x_positions,
-        y_positions: input.y_positions,
-        rank_y: input.rank_y,
-        cluster_keys: input.cluster_keys,
-        intercluster_keys: input.intercluster_keys,
-        nodesep_pt: input.nodesep_pt,
-        has_edge_labels: input.has_edge_labels,
-        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        vnode_ranks: input.vnode_ranks,
-        edge_vnodes: input.edge_vnodes,
-      },
-    )
+  let output_maps = build_position_output_maps_from_sources({
+    has_clusters: input.has_clusters,
+    has_dotted_edges: input.has_dotted_edges,
+    graph: input.graph,
+    nodes: input.nodes,
+    edges: input.edges,
+    ranks: input.ranks,
+    x_positions: input.x_positions,
+    y_positions: input.y_positions,
+    rank_y: input.rank_y,
+    cluster_keys: input.cluster_keys,
+    intercluster_keys: input.intercluster_keys,
+    nodesep_pt: input.nodesep_pt,
+    has_edge_labels: input.has_edge_labels,
+    use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+    vnode_ranks: input.vnode_ranks,
+    edge_vnodes: input.edge_vnodes,
+  })
   if input.has_clusters && input.cluster_rounding_enabled {
-    let _ =
-      @cluster_geometry.adjust_cluster_positions(
-        {
-          graph: input.graph,
-          positions: output_maps.positions,
-          vnode_positions: output_maps.vnode_positions,
-          vnode_clusters: input.vnode_clusters,
-          sizes: input.sizes,
-          cluster_margin_pt_for: input.cluster_margin_pt_for,
-          expand_cluster_label_bbox: input.expand_cluster_label_bbox,
-        },
-      )
+    let _ = @cluster_geometry.adjust_cluster_positions({
+      graph: input.graph,
+      positions: output_maps.positions,
+      vnode_positions: output_maps.vnode_positions,
+      vnode_clusters: input.vnode_clusters,
+      sizes: input.sizes,
+      cluster_margin_pt_for: input.cluster_margin_pt_for,
+      expand_cluster_label_bbox: input.expand_cluster_label_bbox,
+    })
   }
   output_maps
 }
