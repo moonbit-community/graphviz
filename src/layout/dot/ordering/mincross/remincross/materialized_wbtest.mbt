@@ -477,3 +477,71 @@ test "build_remincross_materialized_inputs assembles rem nodes edges sizes clust
   assert_eq(materialized.rem_flat_constraints.get("a|b"), Some(false))
   assert_eq(materialized.rem_flat_constraints.get("b|c"), Some(true))
 }
+
+///|
+test "build_remincross_materialized_edges coalesces duplicate chains, applies vnode-tail bonus, and replays edge creation from real tails only" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, b)
+  edge_1.set_attr("xpenalty", "2")
+  edge_2.set_attr("xpenalty", "2")
+
+  let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_0"
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
+
+  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  edges_by_tail["a"] = [0, 1]
+
+  let intercluster_keys : Map[String, String] = Map::new()
+  intercluster_keys["a"] = "cluster_left"
+  intercluster_keys["b"] = "cluster_right"
+
+  let materialized = build_remincross_materialized_edges(
+    {
+      rem_rank_keys: [0, 2],
+      rem_groups: Map::new(),
+      creation_order: ["a"],
+      edges: [edge_1, edge_2],
+      edge_tail: [],
+      edge_head: [],
+      edge_tail_port_x: [],
+      edge_head_port_x: [],
+      edge_tail_port_order: [],
+      edge_head_port_order: [],
+      ranks: { "a": 0, "b": 2 },
+      edge_vnodes,
+      order_with_vnodes: true,
+      intercluster_keys,
+      cluster_order: ["cluster_left", "cluster_right"],
+      order_with_clusters: true,
+      edges_by_tail,
+      root_tail_order_override: None,
+      root_cluster: "__root__",
+      cluster_parents: Map::new(),
+      order_sizes: Map::new(),
+      vnode_sizes: Map::new(),
+      cluster_flat_constraints: Map::new(),
+      rank_same_constraints: Map::new(),
+    },
+    { "cluster_left": 0, "cluster_right": 1 },
+  )
+
+  assert_eq(materialized.vnode_creation.get("a"), Some([shared_vnode]))
+  assert_eq(materialized.edge_creation, [("a", shared_vnode)])
+  assert_eq(
+    materialized.order_edges_by_tail
+    .get("a")
+    .map(fn(entries) { entries.map(materialized_entry_penalty) }),
+    Some([4]),
+  )
+  assert_eq(
+    materialized.order_edges_by_tail
+    .get(shared_vnode)
+    .map(fn(entries) { entries.map(materialized_entry_penalty) }),
+    Some([5]),
+  )
+}
