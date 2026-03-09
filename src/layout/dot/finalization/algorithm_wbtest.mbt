@@ -516,12 +516,12 @@ test "apply_cluster_lr_mirror_after_rotation uses point mirror and refreshes clu
     None => fail("expected cluster label metrics")
   }
   let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
-  let expected_label_pos = @shared.graph_label_pos(
+  let expected_label_pos = @graph_label.graph_label_pos(
     mirrored.subgraphs[0].bbox,
     cluster_metrics.width_pt + pad * 2.0,
     cluster_metrics.height_pt + pad,
-    @shared.graph_label_loc(cluster),
-    @shared.graph_label_just(cluster),
+    @graph_label.graph_label_loc(cluster),
+    @graph_label.graph_label_just(cluster),
   )
 
   assert_eq(mirrored.bbox, rotated.bbox)

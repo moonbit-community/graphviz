@@ -149,17 +149,17 @@ pub fn finalize_unranked_layout_tree(
   if graph.is_root() {
     match @label_metrics.graph_label_metrics(graph) {
       Some(metrics) => {
-        let loc = @shared.graph_label_loc(graph)
-        let just = @shared.graph_label_just(graph)
+        let loc = @graph_label.graph_label_loc(graph)
+        let just = @graph_label.graph_label_just(graph)
         bbox =
-          @shared.expand_bbox_for_label(
+          @graph_label.expand_bbox_for_label(
             bbox,
             metrics.width_pt,
             metrics.height_pt,
             loc,
           )
         label_pos = Some(
-          @shared.graph_label_pos(
+          @graph_label.graph_label_pos(
             bbox,
             metrics.width_pt,
             metrics.height_pt,

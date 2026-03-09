@@ -124,19 +124,19 @@ test "refresh_cluster_labels recomputes labeled cluster anchors and leaves other
     None => fail("expected nested label metrics")
   }
   let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
-  let expected_cluster_label = @shared.graph_label_pos(
+  let expected_cluster_label = @graph_label.graph_label_pos(
     refreshed_cluster.bbox,
     cluster_metrics.width_pt + pad * 2.0,
     cluster_metrics.height_pt + pad,
-    @shared.graph_label_loc(cluster),
-    @shared.graph_label_just(cluster),
+    @graph_label.graph_label_loc(cluster),
+    @graph_label.graph_label_just(cluster),
   )
-  let expected_nested_label = @shared.graph_label_pos(
+  let expected_nested_label = @graph_label.graph_label_pos(
     refreshed_nested.bbox,
     nested_metrics.width_pt + pad * 2.0,
     nested_metrics.height_pt + pad,
-    @shared.graph_label_loc(nested),
-    @shared.graph_label_just(nested),
+    @graph_label.graph_label_loc(nested),
+    @graph_label.graph_label_just(nested),
   )
 
   assert_eq(refreshed_cluster.label_pos, Some(expected_cluster_label))

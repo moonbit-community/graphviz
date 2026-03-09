@@ -4,10 +4,10 @@
 type LayoutTree = @shared.LayoutTree
 
 ///|
-type LabelLoc = @shared.LabelLoc
+type LabelLoc = @graph_label.LabelLoc
 
 ///|
-type LabelJust = @shared.LabelJust
+type LabelJust = @graph_label.LabelJust
 
 ///|
 type DotLayoutNode = @shared.DotLayoutNode
@@ -213,8 +213,8 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       bbox = { llx, lly, urx, ury }
       match @label_metrics.graph_label_metrics(subgraph) {
         Some(metrics) => {
-          let loc = @shared.graph_label_loc(subgraph)
-          let just = @shared.graph_label_just(subgraph)
+          let loc = @graph_label.graph_label_loc(subgraph)
+          let just = @graph_label.graph_label_just(subgraph)
           let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
           let padded_width = metrics.width_pt + pad * 2.0
           let padded_height = metrics.height_pt + pad
@@ -247,7 +247,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
             })
           } else {
             if !use_rank_bbox {
-              bbox = @shared.expand_bbox_for_label(
+              bbox = @graph_label.expand_bbox_for_label(
                 bbox,
                 metrics.width_pt,
                 metrics.height_pt,
@@ -271,7 +271,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       Some(value) =>
         label_pos = Some(
           if value.flipped {
-            @shared.graph_label_pos_flip(
+            @graph_label.graph_label_pos_flip(
               bbox,
               value.width_pt,
               value.height_pt,
@@ -279,7 +279,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
               value.just,
             )
           } else {
-            @shared.graph_label_pos(
+            @graph_label.graph_label_pos(
               bbox,
               value.width_pt,
               value.height_pt,

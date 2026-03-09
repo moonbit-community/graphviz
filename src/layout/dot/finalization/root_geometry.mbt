@@ -2,10 +2,10 @@
 /// Root-graph geometry kernels: cluster/port padding, root label bbox
 /// placement, and root margin expansion. These helpers do not mutate
 /// DotLayoutGraph trees directly.
-type LabelLoc = @shared.LabelLoc
+type LabelLoc = @graph_label.LabelLoc
 
 ///|
-type LabelJust = @shared.LabelJust
+type LabelJust = @graph_label.LabelJust
 
 ///|
 /// Graphviz parity: root cluster padding aligned to refs/graphviz/lib/dotgen/position.c
@@ -120,8 +120,8 @@ pub fn apply_root_port_padding(
 ///|
 fn root_graph_label_metrics(
   graph : @cgraph.Graph,
-) -> @shared.GraphLabelMetrics? {
-  @shared.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions)
+) -> @graph_label.GraphLabelMetrics? {
+  @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions)
 }
 
 ///|
@@ -209,8 +209,8 @@ fn root_label_placement_spec(graph : @cgraph.Graph) -> RootLabelPlacementSpec? {
       Some({
         padded_width: metrics.width_pt + pad * 2.0,
         padded_height: metrics.height_pt + pad,
-        loc: @shared.graph_label_loc(graph),
-        just: @shared.graph_label_just(graph),
+        loc: @graph_label.graph_label_loc(graph),
+        just: @graph_label.graph_label_just(graph),
       })
     }
     None => None
@@ -238,7 +238,7 @@ pub fn apply_root_label_bbox(
         rankdir,
       )
       label_pos = Some(
-        @shared.graph_label_pos(
+        @graph_label.graph_label_pos(
           bbox,
           spec.padded_width,
           spec.padded_height,
@@ -263,7 +263,7 @@ pub fn root_label_pos_for_bbox(
   match root_label_placement_spec(graph) {
     Some(spec) =>
       Some(
-        @shared.graph_label_pos(
+        @graph_label.graph_label_pos(
           bbox,
           spec.padded_width,
           spec.padded_height,

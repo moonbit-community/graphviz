@@ -233,12 +233,12 @@ fn refresh_cluster_labels(layout : LayoutTree) -> LayoutTree {
       Some(metrics) => {
         let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
         Some(
-          @shared.graph_label_pos(
+          @graph_label.graph_label_pos(
             layout.bbox,
             metrics.width_pt + pad * 2.0,
             metrics.height_pt + pad,
-            @shared.graph_label_loc(layout.graph),
-            @shared.graph_label_just(layout.graph),
+            @graph_label.graph_label_loc(layout.graph),
+            @graph_label.graph_label_just(layout.graph),
           ),
         )
       }
