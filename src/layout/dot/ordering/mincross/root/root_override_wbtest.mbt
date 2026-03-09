@@ -63,3 +63,54 @@ test "build_root_override_rank_names reattaches clustered members behind skeleto
     ["root", skel_b, "b1", skel_a, "a1", "loose"],
   )
 }
+
+///|
+test "rebuild_root_override_names keeps orphan clustered names in place and reattaches only clusters with skeletons" {
+  let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
+  let rank_names = ["a1", "orphan", skel_a, "free", "a2"]
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a1"] = "cluster_a"
+  cluster_keys["a2"] = "cluster_a"
+  cluster_keys["orphan"] = "cluster_orphan"
+
+  let rebuilt = rebuild_root_override_names(rank_names, cluster_keys)
+
+  assert_eq(rebuilt, ["orphan", skel_a, "a1", "a2", "free"])
+}
+
+///|
+test "should_merge_root_positions requires a root-then-skeleton pair with exactly one attachment" {
+  let skeletons : Map[String, Bool] = Map::new()
+  skeletons["skel_a"] = true
+  skeletons["skel_b"] = true
+
+  let attached_by_skeleton : Map[String, Array[String]] = Map::new()
+  attached_by_skeleton["skel_a"] = ["a0"]
+  attached_by_skeleton["skel_b"] = ["b0", "b1"]
+
+  assert_true(
+    should_merge_root_positions(
+      ["root_a", "skel_a"],
+      skeletons,
+      attached_by_skeleton,
+    ),
+  )
+  assert_false(
+    should_merge_root_positions(
+      ["skel_a", "root_a"],
+      skeletons,
+      attached_by_skeleton,
+    ),
+  )
+  assert_false(
+    should_merge_root_positions(
+      ["root_b", "skel_b"],
+      skeletons,
+      attached_by_skeleton,
+    ),
+  )
+  assert_false(
+    should_merge_root_positions(["root_only"], skeletons, attached_by_skeleton),
+  )
+}
