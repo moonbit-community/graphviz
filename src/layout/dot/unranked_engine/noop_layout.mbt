@@ -72,7 +72,10 @@ fn parse_edge_pos_segment(
 }
 
 ///|
-pub fn parse_edge_pos(value : String, scale_factor : Double) -> Array[@geom.Spline] {
+pub fn parse_edge_pos(
+  value : String,
+  scale_factor : Double,
+) -> Array[@geom.Spline] {
   let splines : Array[@geom.Spline] = []
   for segment in value.split(";") {
     match parse_edge_pos_segment(segment.to_string(), scale_factor) {
@@ -101,21 +104,13 @@ pub fn noop_edge_splines(
           parsed
         } else {
           straight_line_edge_splines(
-            edge,
-            tail_pos,
-            head_pos,
-            tail_size,
-            head_size,
+            edge, tail_pos, head_pos, tail_size, head_size,
           )
         }
       }
       None =>
         straight_line_edge_splines(
-          edge,
-          tail_pos,
-          head_pos,
-          tail_size,
-          head_size,
+          edge, tail_pos, head_pos, tail_size, head_size,
         )
     }
   } else {
@@ -143,7 +138,7 @@ fn required_scaled_noop_node_pos(
 fn collect_noop_nodes_with_sizes(
   graph : @cgraph.Graph,
   scale_factor : Double,
-  record_orientation : @shared.RecordOrientation,
+  record_orientation : @layout_prep.RecordOrientation,
 ) -> Result[EngineNodeProjectionWithSizes, String] {
   let nodes = graph.nodes()
   let positions : Map[String, @geom.Point] = Map::new()
@@ -156,16 +151,10 @@ fn collect_noop_nodes_with_sizes(
     positions[node.name()] = pos
     sizes[node.name()] = @node_geometry.node_size(node, record_orientation)
   }
-  let nodes_out =
-    build_projected_nodes_from_positions(
-      nodes,
-      positions,
-      node => node_size_with_fallback(sizes, node, record_orientation),
-    )
-  Ok({
-    projection: { positions, nodes_out },
-    sizes,
+  let nodes_out = build_projected_nodes_from_positions(nodes, positions, node => {
+    node_size_with_fallback(sizes, node, record_orientation)
   })
+  Ok({ projection: { positions, nodes_out }, sizes })
 }
 
 ///|
@@ -178,34 +167,35 @@ fn build_noop_layout_tree(
   scale : Double,
 ) -> Result[@shared.LayoutTree, String] {
   let geometry = build_engine_geometry_context(graph, scale)
-  let node_data =
-    match collect_noop_nodes_with_sizes(
+  let node_data = match
+    collect_noop_nodes_with_sizes(
       graph,
       geometry.scale_factor,
       geometry.record_orientation,
     ) {
-      Ok(value) => value
-      Err(message) => return Err(message)
-    }
+    Ok(value) => value
+    Err(message) => return Err(message)
+  }
   let use_edge_pos = no_op_level > 1
-  let node_size_for = (node : @cgraph.Node) =>
+  let node_size_for = (node : @cgraph.Node) => {
     node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
-  let edges_out =
-    build_edges_from_positions(
-      graph,
-      node_data.projection.positions,
-      node_size_for,
-      (edge, tail_pos, head_pos, tail_size, head_size) =>
-        noop_edge_splines(
-          edge,
-          use_edge_pos,
-          geometry.scale_factor,
-          tail_pos,
-          head_pos,
-          tail_size,
-          head_size,
-        ),
-    )
+  }
+  let edges_out = build_edges_from_positions(
+    graph,
+    node_data.projection.positions,
+    node_size_for,
+    (edge, tail_pos, head_pos, tail_size, head_size) => {
+      noop_edge_splines(
+        edge,
+        use_edge_pos,
+        geometry.scale_factor,
+        tail_pos,
+        head_pos,
+        tail_size,
+        head_size,
+      )
+    },
+  )
   Ok(
     finalize_unranked_layout_tree(
       graph,

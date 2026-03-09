@@ -7,8 +7,7 @@ fn assert_close(actual : Double, expected : Double, tol : Double) -> Unit raise 
 }
 
 ///|
-const ALL_PORT_SIDES : Int =
-  @port_geometry.PORT_SIDE_TOP |
+const ALL_PORT_SIDES : Int = @port_geometry.PORT_SIDE_TOP |
   @port_geometry.PORT_SIDE_BOTTOM |
   @port_geometry.PORT_SIDE_LEFT |
   @port_geometry.PORT_SIDE_RIGHT
@@ -34,7 +33,7 @@ fn record_layout_for_node(
 ) -> (@geom.Rect, Array[RecordLayoutNode]) raise {
   reset_record_layout_caches()
   let graph = @dot_parser.parse_dot(source)
-  let orientation = @shared.record_layout_orientation(
+  let orientation = @layout_prep.record_layout_orientation(
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node(node_name)
@@ -172,8 +171,7 @@ test "layout_record_tree assigns group orientation and side masks" {
 
 ///|
 test "layout_record_tree preserves exact geometry for quoted leaf record" {
-  let source =
-    "digraph { node [shape=Mrecord]; other_xprot [label=\"XPROT \\\"crystalizer\\\"\"]; }"
+  let source = "digraph { node [shape=Mrecord]; other_xprot [label=\"XPROT \\\"crystalizer\\\"\"]; }"
   let (inner_rect, layout) = record_layout_for_node(source, "other_xprot")
 
   assert_rect_close(inner_rect, -65.75, -18.0, 65.75, 18.0)
@@ -193,8 +191,7 @@ test "layout_record_tree preserves exact geometry for quoted leaf record" {
 
 ///|
 test "layout_record_tree preserves exact geometry for split record fields" {
-  let source =
-    "digraph { node [shape=Mrecord]; machsrv_xprot_gen [label=\"<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter\"]; }"
+  let source = "digraph { node [shape=Mrecord]; machsrv_xprot_gen [label=\"<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter\"]; }"
   let (inner_rect, layout) = record_layout_for_node(source, "machsrv_xprot_gen")
 
   assert_rect_close(inner_rect, -140.875, -18.0, 140.875, 18.0)
@@ -203,8 +200,18 @@ test "layout_record_tree preserves exact geometry for split record fields" {
   let right = layout[1]
   assert_eq(left.children.length(), 0)
   assert_eq(right.children.length(), 0)
-  assert_eq(left.sides, @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_LEFT)
-  assert_eq(right.sides, @port_geometry.PORT_SIDE_TOP | @port_geometry.PORT_SIDE_BOTTOM | @port_geometry.PORT_SIDE_RIGHT)
+  assert_eq(
+    left.sides,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_LEFT,
+  )
+  assert_eq(
+    right.sides,
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM |
+    @port_geometry.PORT_SIDE_RIGHT,
+  )
   assert_rect_close(left.rect, -140.875, -18.0, -46.875, 18.0)
   assert_rect_close(right.rect, -46.875, -18.0, 140.875, 18.0)
   match left.field {
@@ -225,8 +232,7 @@ test "layout_record_tree preserves exact geometry for split record fields" {
 
 ///|
 test "layout_record_tree preserves exact geometry for compact leaf record" {
-  let source =
-    "digraph { node [shape=Mrecord]; zzz [label=\"ZZZ\"]; }"
+  let source = "digraph { node [shape=Mrecord]; zzz [label=\"ZZZ\"]; }"
   let (inner_rect, layout) = record_layout_for_node(source, "zzz")
 
   assert_rect_close(inner_rect, -27.0, -18.0, 27.0, 18.0)
@@ -246,8 +252,7 @@ test "layout_record_tree preserves exact geometry for compact leaf record" {
 
 ///|
 test "layout_record_tree preserves exact geometry for wrapped worker record" {
-  let source =
-    "digraph { node [shape=Mrecord]; zzz_worker [label=\"{ZZZ Worker}\"]; }"
+  let source = "digraph { node [shape=Mrecord]; zzz_worker [label=\"{ZZZ Worker}\"]; }"
   let (inner_rect, layout) = record_layout_for_node(source, "zzz_worker")
 
   assert_rect_close(inner_rect, -42.5, -18.0, 42.5, 18.0)
@@ -275,8 +280,7 @@ test "layout_record_tree preserves exact geometry for wrapped worker record" {
 
 ///|
 test "layout_record_tree preserves exact geometry for wrapped single-field record" {
-  let source =
-    "digraph { node [shape=Mrecord]; foo_agent [label=\"{Foo Agent}\"]; }"
+  let source = "digraph { node [shape=Mrecord]; foo_agent [label=\"{Foo Agent}\"]; }"
   let (inner_rect, layout) = record_layout_for_node(source, "foo_agent")
 
   assert_rect_close(inner_rect, -36.5, -18.0, 36.5, 18.0)
@@ -308,7 +312,7 @@ test "record_ports include nested port names" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=record]; nested_record [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
-  let record_orientation = @shared.record_layout_orientation(
+  let record_orientation = @layout_prep.record_layout_orientation(
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("nested_record")
@@ -336,7 +340,7 @@ test "record_ports honor rankdir LR field order" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=LR; node [shape=record]; ordered_record [label=\"<left>   |<mid> b |   \"]; }",
   )
-  let record_orientation = @shared.record_layout_orientation(
+  let record_orientation = @layout_prep.record_layout_orientation(
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("ordered_record")
@@ -360,7 +364,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
     "digraph { node [shape=record]; path_box_record [label=\"<left>l|<mid>m|<right>r\"]; sink; path_box_record:left -> sink; path_box_record:right -> sink; }",
   )
   let rankdir = @rankdir.graph_rankdir(graph)
-  let orientation = @shared.record_layout_orientation(rankdir)
+  let orientation = @layout_prep.record_layout_orientation(rankdir)
   let node = graph.node("path_box_record")
   let size = @node_geometry.node_size(node, orientation)
   let ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
@@ -414,7 +418,7 @@ test "record_port_padding_y tracks explicit top and bottom label ports" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=LR; node [shape=record]; padding_record [label=\"<top>t|<mid>m|<bot>b\"]; up; down; up -> padding_record:top; padding_record:bot -> down; }",
   )
-  let orientation = @shared.record_layout_orientation(
+  let orientation = @layout_prep.record_layout_orientation(
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("padding_record")

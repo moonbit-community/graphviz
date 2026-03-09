@@ -17,27 +17,21 @@ test "cluster_containing_point_or_empty requires a named cluster and in-bounds p
   cluster_bboxes["cluster0"] = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 }
 
   assert_eq(
-    cluster_containing_point_or_empty(
-      "cluster0",
-      cluster_bboxes,
-      { x: 5.0, y: 6.0 },
-    ),
+    cluster_containing_point_or_empty("cluster0", cluster_bboxes, {
+      x: 5.0,
+      y: 6.0,
+    }),
     "cluster0",
   )
   assert_eq(
-    cluster_containing_point_or_empty(
-      "cluster0",
-      cluster_bboxes,
-      { x: -1.0, y: 6.0 },
-    ),
+    cluster_containing_point_or_empty("cluster0", cluster_bboxes, {
+      x: -1.0,
+      y: 6.0,
+    }),
     "",
   )
   assert_eq(
-    cluster_containing_point_or_empty(
-      "",
-      cluster_bboxes,
-      { x: 5.0, y: 6.0 },
-    ),
+    cluster_containing_point_or_empty("", cluster_bboxes, { x: 5.0, y: 6.0 }),
     "",
   )
 }
@@ -50,7 +44,9 @@ test "build_path_vnode_clusters prefers tail cluster then falls back to head clu
   let edge = graph.edge(tail, head)
 
   let edge_vnodes : Map[String, Array[String]] = Map::new()
-  edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v_tail", "v_head", "v_none"]
+  edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [
+    "v_tail", "v_head", "v_none",
+  ]
 
   let vnode_positions : Map[String, @geom.Point] = Map::new()
   vnode_positions["v_tail"] = { x: 2.0, y: 2.0 }
@@ -102,7 +98,9 @@ test "prepare_routing_context keeps order maps vnode sizes and detected vnode cl
   pathplan_sizes["head"] = @node_primitives.node_size_from_points(12.0, 10.0)
 
   let vnode_sizes : Map[String, NodeSize] = Map::new()
-  vnode_sizes["v1"] = @node_primitives.vnode_size_from_widths_with_h(3.0, 5.0, 2.0)
+  vnode_sizes["v1"] = @node_primitives.vnode_size_from_widths_with_h(
+    3.0, 5.0, 2.0,
+  )
 
   let vnode_positions : Map[String, @geom.Point] = Map::new()
   vnode_positions["v1"] = { x: 2.0, y: 2.0 }
@@ -136,7 +134,16 @@ test "prepare_routing_context keeps order maps vnode sizes and detected vnode cl
   assert_eq(context.path_order_index.get("head"), Some(0))
   assert_eq(context.path_order_index.get("tail"), Some(1))
   assert_eq(context.path_vnode_clusters.get("v1"), Some("cluster_tail"))
-  assert_eq(context.pathplan_vnode_mval_sizes.get("v1").map(size => size.left_pt), Some(3.0))
-  assert_eq(context.pathplan_vnode_mval_sizes.get("v1").map(size => size.right_pt), Some(5.0))
-  assert_eq(context.cluster_bboxes.get("cluster_tail"), Some({ llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }))
+  assert_eq(
+    context.pathplan_vnode_mval_sizes.get("v1").map(size => size.left_pt),
+    Some(3.0),
+  )
+  assert_eq(
+    context.pathplan_vnode_mval_sizes.get("v1").map(size => size.right_pt),
+    Some(5.0),
+  )
+  assert_eq(
+    context.cluster_bboxes.get("cluster_tail"),
+    Some({ llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }),
+  )
 }

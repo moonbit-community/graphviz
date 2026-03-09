@@ -50,21 +50,11 @@ test "prepare_layout_prep rejects negative spacing overrides" {
   let base_source = "digraph { a; }"
   let cases : Array[(LayoutInputOptions, String)] = [
     (
-      {
-        rankdir: None,
-        nodesep: Some(-1.0),
-        ranksep: None,
-        splines: None,
-      },
+      { rankdir: None, nodesep: Some(-1.0), ranksep: None, splines: None },
       "nodesep must be non-negative",
     ),
     (
-      {
-        rankdir: None,
-        nodesep: None,
-        ranksep: Some(-1.0),
-        splines: None,
-      },
+      { rankdir: None, nodesep: None, ranksep: Some(-1.0), splines: None },
       "ranksep must be non-negative",
     ),
   ]

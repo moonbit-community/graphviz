@@ -27,12 +27,12 @@ pub fn edge_label_pos_from_vnode(
   label_height_pt : Double,
   rankdir : @rankdir.RankDir,
 ) -> @geom.Point {
-  let width =
-    if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
-      label_height_pt
-    } else {
-      label_width_pt
-    }
+  let width = if rankdir == @rankdir.RankDir::LR ||
+    rankdir == @rankdir.RankDir::RL {
+    label_height_pt
+  } else {
+    label_width_pt
+  }
   @edge_spline.point(vnode_pos.x + width / 2.0, vnode_pos.y)
 }
 
@@ -65,18 +65,17 @@ pub fn edge_label_pos_from_input(
       )
       let delta = @edge_spline.point_sub(head_clip, tail_clip)
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
-      let tangent =
-        if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
+      let tangent = if len <= 0.0 {
+        @edge_spline.point(1.0, 0.0)
+      } else {
+        @edge_spline.point_scale(delta, 1.0 / len)
+      }
       make_point_with_tangent(mid, tangent)
     }
   }
   let label_point = match label_rank_y {
     Some(axis) =>
-      match spline_label_pos_at_samples(
-        samples,
-        axis,
-        false,
-      ) {
+      match spline_label_pos_at_samples(samples, axis, false) {
         Some(value) => value
         None => fallback
       }
@@ -84,26 +83,27 @@ pub fn edge_label_pos_from_input(
   }
   let raw_pos = label_point.pos
   let dir = label_point.tangent
-  let base_pos =
-    match (label_rank_x, label_rank_y) {
-      (Some(x_axis), Some(y_axis)) =>
-        match rankdir {
-          @rankdir.RankDir::LR | @rankdir.RankDir::RL => @edge_spline.point(y_axis, x_axis)
-          _ => @edge_spline.point(x_axis, y_axis)
-        }
-      (Some(value), None) =>
-        match rankdir {
-          @rankdir.RankDir::LR | @rankdir.RankDir::RL => @edge_spline.point(raw_pos.x, value)
-          _ => @edge_spline.point(value, raw_pos.y)
-        }
-      _ => raw_pos
-    }
+  let base_pos = match (label_rank_x, label_rank_y) {
+    (Some(x_axis), Some(y_axis)) =>
+      match rankdir {
+        @rankdir.RankDir::LR | @rankdir.RankDir::RL =>
+          @edge_spline.point(y_axis, x_axis)
+        _ => @edge_spline.point(x_axis, y_axis)
+      }
+    (Some(value), None) =>
+      match rankdir {
+        @rankdir.RankDir::LR | @rankdir.RankDir::RL =>
+          @edge_spline.point(raw_pos.x, value)
+        _ => @edge_spline.point(value, raw_pos.y)
+      }
+    _ => raw_pos
+  }
   if @edge_semantics.edge_is_self(edge) {
     return Some(base_pos)
   }
   match label_rank_y {
     Some(_) =>
-      match (edge_mid_label_metrics_for)(edge) {
+      match edge_mid_label_metrics_for(edge) {
         Some(metrics) => {
           let half_extent = match rankdir {
             @rankdir.RankDir::LR | @rankdir.RankDir::RL => metrics.height / 2.0
@@ -123,12 +123,17 @@ pub fn edge_label_pos_from_input(
           } else {
             pad = 0.0
           }
-          Some(@edge_spline.point(base_pos.x + sign * (half_extent + pad), base_pos.y))
+          Some(
+            @edge_spline.point(
+              base_pos.x + sign * (half_extent + pad),
+              base_pos.y,
+            ),
+          )
         }
         None => Some(base_pos)
       }
     None => {
-      let metrics = match (edge_mid_label_metrics_for)(edge) {
+      let metrics = match edge_mid_label_metrics_for(edge) {
         Some(value) => value
         None => return Some(base_pos)
       }
@@ -141,19 +146,23 @@ pub fn edge_label_pos_from_input(
         abs_dy > axis_threshold {
         return Some(base_pos)
       }
-      let offset =
-        if abs_dx <= axis_threshold {
-          metrics.width / 2.0
-        } else if abs_dy <= axis_threshold {
-          metrics.height / 2.0
-        } else {
-          0.0
-        }
+      let offset = if abs_dx <= axis_threshold {
+        metrics.width / 2.0
+      } else if abs_dy <= axis_threshold {
+        metrics.height / 2.0
+      } else {
+        0.0
+      }
       if offset <= 0.0 {
         Some(base_pos)
       } else {
         let pad = label_pad_boost
-        Some(@edge_spline.point_add(base_pos, @edge_spline.point_scale(normal, offset + pad)))
+        Some(
+          @edge_spline.point_add(
+            base_pos,
+            @edge_spline.point_scale(normal, offset + pad),
+          ),
+        )
       }
     }
   }

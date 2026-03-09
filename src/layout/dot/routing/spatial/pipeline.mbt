@@ -1,13 +1,13 @@
 ///|
 /// Routing spatial owner package keeps node/port projection and ratio-adjust
 /// kernels together so Stage E integration can depend on one focused owner.
-type LayoutPrep = @shared.LayoutPrep
+type LayoutPrep = @layout_prep.LayoutPrep
 
 ///|
 type RankDir = @rankdir.RankDir
 
 ///|
-type RecordOrientation = @shared.RecordOrientation
+type RecordOrientation = @layout_prep.RecordOrientation
 
 ///|
 type NodeSize = @node_primitives.NodeSize

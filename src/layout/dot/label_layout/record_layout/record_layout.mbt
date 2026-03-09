@@ -4,7 +4,7 @@
 type RankDir = @rankdir.RankDir
 
 ///|
-type RecordOrientation = @shared.RecordOrientation
+type RecordOrientation = @layout_prep.RecordOrientation
 
 ///|
 type NodeSize = @node_primitives.NodeSize
@@ -14,7 +14,6 @@ type RecordPort = @record_geometry.RecordPort
 
 ///|
 type SizePt = @numeric.GraphSizePt
-
 
 ///|
 priv struct RecordLayoutNode {
@@ -505,7 +504,7 @@ pub fn record_port_path_box(
   if !@record_geometry.is_record_shape(node) {
     return None
   }
-  let orientation = @shared.record_layout_orientation(rankdir)
+  let orientation = @layout_prep.record_layout_orientation(rankdir)
   let raw_ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
   let name = match @port_geometry.resolve_label_port_name(port, raw_ports) {
     Some(value) => value

@@ -1,18 +1,23 @@
 ///|
 /// HTML label parsing, sizing, and port extraction helpers shared by node
 /// geometry and raw label-port preparation.
-
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
+
+///|
 type SizePt = @numeric.GraphSizePt
 
 ///|
-let html_label_cache : Ref[Map[String, @html_label.HtmlLabel]] =
-  @ref.new(Map::new())
+let html_label_cache : Ref[Map[String, @html_label.HtmlLabel]] = @ref.new(
+  Map::new(),
+)
 
 ///|
-let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] =
-  @ref.new(Map::new())
+let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
+  Map::new(),
+)
 
 ///|
 pub fn reset_html_label_caches() -> Unit {
@@ -21,6 +26,7 @@ pub fn reset_html_label_caches() -> Unit {
 }
 
 ///|
+
 ///|
 fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
@@ -29,8 +35,9 @@ fn html_cell_content_size(
 ) -> SizePt {
   match content {
     @html_label.HtmlCellContent::Text(text) => {
-      let (width_pt, height_pt) =
-        @label_metrics.label_text_dimensions(text, font_name, font_size_pt)
+      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
+        text, font_name, font_size_pt,
+      )
       { width_pt, height_pt }
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
@@ -38,13 +45,15 @@ fn html_cell_content_size(
       for span in spans {
         text.write_string(span.text)
       }
-      let (width_pt, height_pt) =
-        @label_metrics.label_text_dimensions(text.to_string(), font_name, font_size_pt)
+      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
+        text.to_string(),
+        font_name,
+        font_size_pt,
+      )
       { width_pt, height_pt }
     }
-    @html_label.HtmlCellContent::Table(table) => {
+    @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, font_name, font_size_pt)
-    }
   }
 }
 
@@ -73,10 +82,12 @@ fn html_cell_size(
     font_size_pt,
   )
   let cell_border_pt = html_table_cell_border_pt(table)
-  let mut width =
-    content_size.width_pt + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
-  let mut height =
-    content_size.height_pt + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
+  let mut width = content_size.width_pt +
+    table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
+  let mut height = content_size.height_pt +
+    table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
     None => ()
@@ -94,11 +105,10 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> SizePt {
-  let (width_pt, height_pt) =
-    @html_label.html_table_size(table, cell => {
-      let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
-      (cell_size.width_pt, cell_size.height_pt)
-    })
+  let (width_pt, height_pt) = @html_label.html_table_size(table, cell => {
+    let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
+    (cell_size.width_pt, cell_size.height_pt)
+  })
   { width_pt, height_pt }
 }
 
@@ -138,8 +148,9 @@ pub fn html_label_size(
 ) -> SizePt {
   match label {
     @html_label.HtmlLabel::Text(text) => {
-      let (width_pt, height_pt) =
-        @label_metrics.label_text_dimensions(text, font_name, font_size_pt)
+      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
+        text, font_name, font_size_pt,
+      )
       { width_pt, height_pt }
     }
     @html_label.HtmlLabel::Table(table) =>
@@ -168,7 +179,10 @@ fn collect_html_ports(
           cell_layout.rect.urx - cell_layout.rect.llx,
           cell_layout.rect.ury - cell_layout.rect.lly,
         )
-        let sides = @port_geometry.port_side_mask_from_rects(cell_layout.rect, node_rect)
+        let sides = @port_geometry.port_side_mask_from_rects(
+          cell_layout.rect,
+          node_rect,
+        )
         ports[name] = { center, size, sides }
       }
       None => ()

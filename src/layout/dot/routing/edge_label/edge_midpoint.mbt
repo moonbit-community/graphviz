@@ -18,7 +18,11 @@ pub fn edge_tail_point_for_layout(edge_layout : DotLayoutEdge) -> @geom.Point? {
       match spline.start {
         Some(point) => Some(point)
         None =>
-          if spline.points.length() > 0 { Some(spline.points[0]) } else { None }
+          if spline.points.length() > 0 {
+            Some(spline.points[0])
+          } else {
+            None
+          }
       }
     None => None
   }
@@ -46,11 +50,12 @@ pub fn edge_head_point_for_layout(edge_layout : DotLayoutEdge) -> @geom.Point? {
 }
 
 ///|
-fn edge_endpoints(
-  edge_layout : DotLayoutEdge,
-) -> EdgeEndpoints? {
-  match (edge_tail_point_for_layout(edge_layout),
-    edge_head_point_for_layout(edge_layout)) {
+fn edge_endpoints(edge_layout : DotLayoutEdge) -> EdgeEndpoints? {
+  match
+    (
+      edge_tail_point_for_layout(edge_layout),
+      edge_head_point_for_layout(edge_layout),
+    ) {
     (Some(tail), Some(head)) => Some({ tail, head })
     _ => None
   }
@@ -206,11 +211,10 @@ pub fn edge_midpoint_for_layout(
         return Some(endpoints.tail)
       }
       if use_spline_midpoint {
-        let mid =
-          @edge_spline.point(
-            (endpoints.tail.x + endpoints.head.x) / 2.0,
-            (endpoints.tail.y + endpoints.head.y) / 2.0,
-          )
+        let mid = @edge_spline.point(
+          (endpoints.tail.x + endpoints.head.x) / 2.0,
+          (endpoints.tail.y + endpoints.head.y) / 2.0,
+        )
         match dotneato_closest_point(edge_layout, mid) {
           Some(value) => Some(value)
           None => polyline_midpoint(edge_layout)

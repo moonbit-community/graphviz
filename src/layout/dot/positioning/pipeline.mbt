@@ -17,7 +17,7 @@ pub(all) struct PositionResult {
 ///|
 /// Positioning owner package keeps Stage D result types plus x/y orchestration
 /// in one focused root file so stage-level flow stays cohesive.
-type LayoutPrep = @shared.LayoutPrep
+type LayoutPrep = @layout_prep.LayoutPrep
 
 ///|
 type RankData = @rank_data.RankData

@@ -22,11 +22,7 @@ pub fn port_label_params(
       if value == "" {
         default_angle_deg
       } else {
-        @numeric.parse_attr_double(
-          value,
-          default_angle_deg,
-          min_angle_deg,
-        )
+        @numeric.parse_attr_double(value, default_angle_deg, min_angle_deg)
       }
     None => default_angle_deg
   }
@@ -51,12 +47,11 @@ pub fn port_label_pos_from_points(
   distance_pt : Double,
   graphviz_pi : Double,
 ) -> @geom.Point {
-  let angle =
-    @edge_spline.libm_fma(
-      angle_deg / 180.0,
-      graphviz_pi,
-      @edge_spline.libm_atan2(pf.y - pe.y, pf.x - pe.x),
-    )
+  let angle = @edge_spline.libm_fma(
+    angle_deg / 180.0,
+    graphviz_pi,
+    @edge_spline.libm_atan2(pf.y - pe.y, pf.x - pe.x),
+  )
   let dist = distance_pt * distance_scale
   @edge_spline.point(
     @edge_spline.libm_fma(dist, @edge_spline.libm_cos(angle), pe.x),
@@ -80,17 +75,16 @@ pub fn edge_port_label_pos(
   let is_head = input.is_head
   // Graphviz parity: map edge dir + arrow attrs to place_portlabel eflag/sflag.
   let graph_kind = edge.tail().graph().kind()
-  let marker_present =
-    if is_head {
-      @edge_semantics.edge_has_head_marker(edge, graph_kind)
-    } else {
-      @edge_semantics.edge_has_tail_marker(edge, graph_kind)
-    }
-  let (angle_deg, distance_scale) =
-    match port_label_params(edge, default_angle_deg, min_angle_deg) {
-      Some(value) => value
-      None => return None
-    }
+  let marker_present = if is_head {
+    @edge_semantics.edge_has_head_marker(edge, graph_kind)
+  } else {
+    @edge_semantics.edge_has_tail_marker(edge, graph_kind)
+  }
+  let (angle_deg, distance_scale) = match
+    port_label_params(edge, default_angle_deg, min_angle_deg) {
+    Some(value) => value
+    None => return None
+  }
   let port_points = match port_label_points(spline, is_head, marker_present) {
     Some(value) => value
     None => return None

@@ -4,7 +4,7 @@ pub type RankDir = @rankdir.RankDir
 
 ///|
 /// Edge routing mode for dot layouts.
-pub type SplinesMode = @dot_shared.SplinesMode
+pub type SplinesMode = @layout_prep.SplinesMode
 
 ///|
 /// Options for dot layout.
@@ -35,6 +35,7 @@ pub type DotLayoutNode = @dot_shared.DotLayoutNode
 
 ///|
 /// Cluster rank-height pair used by cluster bbox/rank alignment passes.
+
 ///|
 /// Edge layout output.
 /// Splines use points in points; label positions are optional.

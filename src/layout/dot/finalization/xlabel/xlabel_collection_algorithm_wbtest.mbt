@@ -135,7 +135,7 @@ test "collect_edge_xlabel_candidates uses anchors for unresolved edge labels and
       straight_spline(),
       label_pos=Some(@edge_spline.point(20.0, 30.0)),
     ),
-    @shared.SplinesMode::Spline,
+    @layout_prep.SplinesMode::Spline,
     false,
     labels,
     objects,
@@ -189,8 +189,12 @@ test "collect_edge_xlabel_candidates flips dimensions for existing and deferred 
   let objects : Array[XObject] = []
   let resolved_mid = @edge_spline.point(20.0, 30.0)
   collect_edge_xlabel_candidates(
-    xlabel_make_edge_layout(edge, straight_spline(), label_pos=Some(resolved_mid)),
-    @shared.SplinesMode::Spline,
+    xlabel_make_edge_layout(
+      edge,
+      straight_spline(),
+      label_pos=Some(resolved_mid),
+    ),
+    @layout_prep.SplinesMode::Spline,
     true,
     labels,
     objects,
@@ -200,19 +204,13 @@ test "collect_edge_xlabel_candidates flips dimensions for existing and deferred 
     Some(value) => value
     None => fail("expected edge mid metrics")
   }
-  let tail_metrics = match @edge_label_metrics.edge_label_metrics_for_attr(
-    edge,
-    "taillabel",
-    true,
-  ) {
+  let tail_metrics = match
+    @edge_label_metrics.edge_label_metrics_for_attr(edge, "taillabel", true) {
     Some(value) => value
     None => fail("expected edge tail metrics")
   }
-  let head_metrics = match @edge_label_metrics.edge_label_metrics_for_attr(
-    edge,
-    "headlabel",
-    true,
-  ) {
+  let head_metrics = match
+    @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
     Some(value) => value
     None => fail("expected edge head metrics")
   }
@@ -294,7 +292,7 @@ test "collect_edge_xlabel_candidates skips deferred labels when spline geometry 
       tail_label_pos: None,
       xlabel_pos: None,
     },
-    @shared.SplinesMode::Spline,
+    @layout_prep.SplinesMode::Spline,
     false,
     labels,
     objects,
@@ -330,14 +328,24 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
     graph,
     { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
     nodes=[
-      xlabel_make_node_layout(a, @edge_spline.point(5.0, 5.0), 1.0, 0.5, xlabel_pos=Some(node_xlabel)),
+      xlabel_make_node_layout(
+        a,
+        @edge_spline.point(5.0, 5.0),
+        1.0,
+        0.5,
+        xlabel_pos=Some(node_xlabel),
+      ),
     ],
     edges=[
-      xlabel_make_edge_layout(edge, straight_spline(), xlabel_pos=Some(edge_xlabel)),
+      xlabel_make_edge_layout(
+        edge,
+        straight_spline(),
+        xlabel_pos=Some(edge_xlabel),
+      ),
     ],
   )
 
-  let updated = apply_xlabels(layout, @shared.SplinesMode::Spline)
+  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
   let node_metrics = match xlabel_metrics_for_node(a) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
@@ -346,16 +354,15 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }
-  let expected_bbox =
+  let expected_bbox = @edge_label.expand_bbox_for_label_pos(
     @edge_label.expand_bbox_for_label_pos(
-      @edge_label.expand_bbox_for_label_pos(
-        layout.bbox,
-        Some(node_xlabel),
-        Some({ width: node_metrics.width, height: node_metrics.height }),
-      ),
-      Some(edge_xlabel),
-      Some({ width: edge_metrics.width, height: edge_metrics.height }),
-    )
+      layout.bbox,
+      Some(node_xlabel),
+      Some({ width: node_metrics.width, height: node_metrics.height }),
+    ),
+    Some(edge_xlabel),
+    Some({ width: edge_metrics.width, height: edge_metrics.height }),
+  )
 
   assert_eq(updated.nodes[0].xlabel_pos, Some(node_xlabel))
   assert_eq(updated.edges[0].xlabel_pos, Some(edge_xlabel))
@@ -371,22 +378,25 @@ test "apply_xlabels places unresolved node xlabels and expands bbox" {
   let layout = xlabel_make_layout_tree(
     graph,
     { llx: 0.0, lly: 0.0, urx: 80.0, ury: 80.0 },
-    nodes=[xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5)],
+    nodes=[
+      xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5),
+    ],
   )
 
-  let updated = apply_xlabels(layout, @shared.SplinesMode::Spline)
+  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
   let metrics = match xlabel_metrics_for_node(node) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }
-  let expected_pos =
-    @edge_spline.point(14.0 - metrics.width / 2.0, 78.0 + metrics.height / 2.0)
-  let expected_bbox =
-    @edge_label.expand_bbox_for_label_pos(
-      layout.bbox,
-      Some(expected_pos),
-      Some({ width: metrics.width, height: metrics.height }),
-    )
+  let expected_pos = @edge_spline.point(
+    14.0 - metrics.width / 2.0,
+    78.0 + metrics.height / 2.0,
+  )
+  let expected_bbox = @edge_label.expand_bbox_for_label_pos(
+    layout.bbox,
+    Some(expected_pos),
+    Some({ width: metrics.width, height: metrics.height }),
+  )
 
   assert_eq(updated.nodes[0].xlabel_pos, Some(expected_pos))
   assert_eq(updated.bbox, expected_bbox)
@@ -410,13 +420,15 @@ test "apply_xlabels writes unresolved edge xlabels back through the edge update 
     edges=[xlabel_make_edge_layout(edge, straight_spline())],
   )
 
-  let updated = apply_xlabels(layout, @shared.SplinesMode::Spline)
+  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
   let metrics = match xlabel_metrics_for_edge(edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }
-  let expected_pos =
-    @edge_spline.point(4.5 - metrics.width / 2.0, metrics.height / 2.0)
+  let expected_pos = @edge_spline.point(
+    4.5 - metrics.width / 2.0,
+    metrics.height / 2.0,
+  )
 
   assert_eq(updated.edges[0].xlabel_pos, Some(expected_pos))
   assert_eq(updated.edges[0].label_pos, None)

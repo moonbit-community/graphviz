@@ -5,7 +5,10 @@ test "html_ports include td port names" {
     "digraph { node [shape=plaintext]; html_ports_node [label=<<TABLE><TR><TD PORT=\\\"p1\\\">one</TD></TR></TABLE>>]; }",
   )
   let node = graph.node("html_ports_node")
-  let size = @node_geometry.node_size(node, @shared.RecordOrientation::Horizontal)
+  let size = @node_geometry.node_size(
+    node,
+    @layout_prep.RecordOrientation::Horizontal,
+  )
   let ports = html_ports(
     node,
     @label_attrs.label_text(node),
@@ -30,7 +33,10 @@ test "html_ports recurse into nested tables and preserve nested cell geometry" {
     "digraph { node [shape=plaintext]; nested_html_node [label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD><TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD PORT=\"inner\">x</TD></TR></TABLE></TD></TR></TABLE>>]; }",
   )
   let node = graph.node("nested_html_node")
-  let size = @node_geometry.node_size(node, @shared.RecordOrientation::Horizontal)
+  let size = @node_geometry.node_size(
+    node,
+    @layout_prep.RecordOrientation::Horizontal,
+  )
   let ports = html_ports(
     node,
     @label_attrs.label_text(node),

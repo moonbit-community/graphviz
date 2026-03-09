@@ -27,6 +27,7 @@ pub const DEFAULT_RANKSEP_IN : Double = 0.5
 /// Do not change behavior without updating fixtures/tests.
 const MIN_RANKSEP_IN : Double = 0.02
 
+///|
 priv struct InputStageInput {
   graph : @cgraph.Graph
   rankdir : RankDir
@@ -35,6 +36,7 @@ priv struct InputStageInput {
   splines : SplinesMode
 }
 
+///|
 priv struct SpacingResolution {
   nodesep_in : Double
   ranksep_in : Double
@@ -94,11 +96,12 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Result[Unit, String] {
   for node in graph.nodes() {
     match node.get_attr("width") {
       Some(value) =>
-        match validate_nonnegative_double_attr(
-          "node \{node.name()}",
-          "width",
-          value,
-        ) {
+        match
+          validate_nonnegative_double_attr(
+            "node \{node.name()}",
+            "width",
+            value,
+          ) {
           Ok(_) => ()
           Err(message) => return Err(message)
         }
@@ -106,11 +109,12 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Result[Unit, String] {
     }
     match node.get_attr("height") {
       Some(value) =>
-        match validate_nonnegative_double_attr(
-          "node \{node.name()}",
-          "height",
-          value,
-        ) {
+        match
+          validate_nonnegative_double_attr(
+            "node \{node.name()}",
+            "height",
+            value,
+          ) {
           Ok(_) => ()
           Err(message) => return Err(message)
         }
@@ -174,10 +178,7 @@ pub fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
-fn resolve_rankdir(
-  graph : @cgraph.Graph,
-  option_rankdir : RankDir?,
-) -> RankDir {
+fn resolve_rankdir(graph : @cgraph.Graph, option_rankdir : RankDir?) -> RankDir {
   match option_rankdir {
     Some(value) => value
     None =>
@@ -223,28 +224,28 @@ fn resolve_spacing(
   option_nodesep : Double?,
   option_ranksep : Double?,
 ) -> Result[SpacingResolution, String] {
-  let nodesep_in =
-    match resolve_spacing_scalar(
+  let nodesep_in = match
+    resolve_spacing_scalar(
       graph,
       option_nodesep,
       "nodesep",
       DEFAULT_NODESEP_IN,
       MIN_NODESEP_IN,
     ) {
-      Ok(value) => value
-      Err(message) => return Err(message)
-    }
-  let ranksep_in =
-    match resolve_spacing_scalar(
+    Ok(value) => value
+    Err(message) => return Err(message)
+  }
+  let ranksep_in = match
+    resolve_spacing_scalar(
       graph,
       option_ranksep,
       "ranksep",
       DEFAULT_RANKSEP_IN,
       MIN_RANKSEP_IN,
     ) {
-      Ok(value) => value
-      Err(message) => return Err(message)
-    }
+    Ok(value) => value
+    Err(message) => return Err(message)
+  }
   Ok({ nodesep_in, ranksep_in })
 }
 
@@ -286,15 +287,12 @@ pub fn prepare_layout_prep(
   }
   let splines = resolve_splines(graph, options.splines)
   Ok(
-    prepare_layout_inputs(
-      {
-        graph,
-        rankdir,
-        nodesep_in: spacing.nodesep_in,
-        ranksep_in: spacing.ranksep_in,
-        splines,
-      },
-    ),
+    prepare_layout_inputs({
+      graph,
+      rankdir,
+      nodesep_in: spacing.nodesep_in,
+      ranksep_in: spacing.ranksep_in,
+      splines,
+    }),
   )
 }
-

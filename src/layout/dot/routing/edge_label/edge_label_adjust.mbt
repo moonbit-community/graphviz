@@ -44,15 +44,10 @@ fn rect_from_center(
 }
 
 ///|
-fn rect_overlap_amount(
-  a : @geom.Rect,
-  b : @geom.Rect,
-) -> RectOverlapAmount? {
-  let overlap_x =
-    (if a.urx < b.urx { a.urx } else { b.urx }) -
+fn rect_overlap_amount(a : @geom.Rect, b : @geom.Rect) -> RectOverlapAmount? {
+  let overlap_x = (if a.urx < b.urx { a.urx } else { b.urx }) -
     (if a.llx > b.llx { a.llx } else { b.llx })
-  let overlap_y =
-    (if a.ury < b.ury { a.ury } else { b.ury }) -
+  let overlap_y = (if a.ury < b.ury { a.ury } else { b.ury }) -
     (if a.lly > b.lly { a.lly } else { b.lly })
   if overlap_x > 0.0 && overlap_y > 0.0 {
     Some({ overlap_x, overlap_y })
@@ -119,11 +114,15 @@ pub fn adjust_edge_label_positions(
     let mut label_pos = edge_layout.label_pos
     match label_pos {
       Some(pos) =>
-        match (edge_mid_label_metrics_for)(edge_layout.edge) {
+        match edge_mid_label_metrics_for(edge_layout.edge) {
           Some(metrics) => {
             let mut current_pos = pos
-            let mut current_rect =
-              rect_from_center(current_pos, metrics.width, metrics.height, pad)
+            let mut current_rect = rect_from_center(
+              current_pos,
+              metrics.width,
+              metrics.height,
+              pad,
+            )
             for rect in label_rects {
               let nudge = nudge_label_rect(
                 current_pos,
@@ -165,7 +164,8 @@ pub fn apply_label_updates_to_edges(
 ) -> Array[DotLayoutEdge] {
   let adjusted : Array[DotLayoutEdge] = []
   for edge_layout in edges {
-    let label_pos = match updates.get(@edge_identity.edge_key(edge_layout.edge)) {
+    let label_pos = match
+      updates.get(@edge_identity.edge_key(edge_layout.edge)) {
       Some(pos) => Some(pos)
       None => edge_layout.label_pos
     }
@@ -201,17 +201,23 @@ pub fn adjust_edge_label_overlaps(
   for edge_layout in edges {
     match edge_layout.label_pos {
       Some(pos) =>
-        match (edge_mid_label_metrics_for)(edge_layout.edge) {
+        match edge_mid_label_metrics_for(edge_layout.edge) {
           Some(metrics) => {
             let pos_axis = if axis_is_x { pos.x } else { pos.y }
-            let tail_axis = match (edge_tail_point_for_layout)(edge_layout) {
+            let tail_axis = match edge_tail_point_for_layout(edge_layout) {
               Some(point) => if axis_is_x { point.x } else { point.y }
               None => pos_axis
             }
-            let base_axis =
-              if tail_axis + tail_pad > pos_axis { tail_axis + tail_pad } else { pos_axis }
-            let half_axis =
-              if axis_is_x { metrics.width / 2.0 } else { metrics.height / 2.0 }
+            let base_axis = if tail_axis + tail_pad > pos_axis {
+              tail_axis + tail_pad
+            } else {
+              pos_axis
+            }
+            let half_axis = if axis_is_x {
+              metrics.width / 2.0
+            } else {
+              metrics.height / 2.0
+            }
             let entry = {
               key: @edge_identity.edge_key(edge_layout.edge),
               pos,
@@ -248,12 +254,11 @@ pub fn adjust_edge_label_overlaps(
           axis_value = min_axis
         }
       }
-      let new_pos : @geom.Point =
-        if axis_is_x {
-          { x: axis_value, y: entry.pos.y }
-        } else {
-          { x: entry.pos.x, y: axis_value }
-        }
+      let new_pos : @geom.Point = if axis_is_x {
+        { x: axis_value, y: entry.pos.y }
+      } else {
+        { x: entry.pos.x, y: axis_value }
+      }
       if new_pos.x != entry.pos.x || new_pos.y != entry.pos.y {
         updates[entry.key] = new_pos
       }
@@ -265,9 +270,6 @@ pub fn adjust_edge_label_overlaps(
   if updates.length() == 0 {
     { edges, updates }
   } else {
-    {
-      edges: apply_label_updates_to_edges(edges, updates),
-      updates,
-    }
+    { edges: apply_label_updates_to_edges(edges, updates), updates }
   }
 }

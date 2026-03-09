@@ -1,13 +1,13 @@
 ///|
 /// Routing integration owner package keeps Stage E orchestration plus dot-specific
 /// bridge assembly, precompute, and final edge-execution wiring.
-type LayoutPrep = @shared.LayoutPrep
+type LayoutPrep = @layout_prep.LayoutPrep
 
 ///|
 type RankDir = @rankdir.RankDir
 
 ///|
-type SplinesMode = @shared.SplinesMode
+type SplinesMode = @layout_prep.SplinesMode
 
 ///|
 type NodeSize = @node_primitives.NodeSize

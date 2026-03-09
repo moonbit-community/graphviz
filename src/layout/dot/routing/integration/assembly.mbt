@@ -8,7 +8,7 @@
 /// Stage E.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_route_base_deps(
-  record_orientation : @shared.RecordOrientation,
+  record_orientation : @layout_prep.RecordOrientation,
   routing_label_ports_map : Map[
     String,
     Map[String, @record_geometry.RecordPort],

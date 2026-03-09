@@ -1,9 +1,12 @@
 ///|
 /// Shared geometry helpers for unranked engines: point parsing/scaling,
 /// straight-line splines, and engine geometry context setup.
-
 type NodeSize = @node_primitives.NodeSize
-type RecordOrientation = @shared.RecordOrientation
+
+///|
+type RecordOrientation = @layout_prep.RecordOrientation
+
+///|
 type RankDir = @rankdir.RankDir
 
 ///|
@@ -130,7 +133,7 @@ pub fn build_engine_geometry_context(
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
   let rankdir = @rankdir.graph_rankdir(graph)
-  let record_orientation = @shared.record_layout_orientation(rankdir)
+  let record_orientation = @layout_prep.record_layout_orientation(rankdir)
   { scale_factor, rankdir, record_orientation }
 }
 

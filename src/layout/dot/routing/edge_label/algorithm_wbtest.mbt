@@ -1,5 +1,9 @@
 ///|
-fn assert_close(actual : Double, expected : Double, eps? : Double = 0.000001) -> Unit raise {
+fn assert_close(
+  actual : Double,
+  expected : Double,
+  eps? : Double = 0.000001,
+) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
   }
@@ -11,8 +15,8 @@ fn assert_point_close(
   expected : @geom.Point,
   eps? : Double = 0.000001,
 ) -> Unit raise {
-  assert_close(actual.x, expected.x, eps=eps)
-  assert_close(actual.y, expected.y, eps=eps)
+  assert_close(actual.x, expected.x, eps~)
+  assert_close(actual.y, expected.y, eps~)
 }
 
 ///|
@@ -102,7 +106,11 @@ test "port_label_points respects marker fallback semantics" {
     "head-bezier",
   )
   assert_point_close(head_bezier.pos, @edge_spline.point(9.0, 0.0))
-  assert_point_close(head_bezier.tangent, @edge_spline.point(8.1, 0.0), eps=0.01)
+  assert_point_close(
+    head_bezier.tangent,
+    @edge_spline.point(8.1, 0.0),
+    eps=0.01,
+  )
 
   let tail_marker = require_point_with_tangent(
     port_label_points(spline, false, true),
@@ -116,7 +124,11 @@ test "port_label_points respects marker fallback semantics" {
     "tail-bezier",
   )
   assert_point_close(tail_bezier.pos, @edge_spline.point(0.0, 0.0))
-  assert_point_close(tail_bezier.tangent, @edge_spline.point(0.9, 0.0), eps=0.01)
+  assert_point_close(
+    tail_bezier.tangent,
+    @edge_spline.point(0.9, 0.0),
+    eps=0.01,
+  )
 }
 
 ///|
@@ -170,11 +182,12 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
 
   let short_edge = graph.edge(a, b)
   short_edge.set_attr("label", "mid")
-  let short_info = match edge_label_rank_info(
-    short_edge,
-    ranks,
-    @edge_label_metrics.edge_mid_label_width_pt(short_edge),
-  ) {
+  let short_info = match
+    edge_label_rank_info(
+      short_edge,
+      ranks,
+      @edge_label_metrics.edge_mid_label_width_pt(short_edge),
+    ) {
     Some(value) => value
     None => fail("expected odd-span label rank info")
   }
@@ -189,7 +202,8 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
       short_edge,
       short_span_ranks,
       @edge_label_metrics.edge_mid_label_width_pt(short_edge),
-    ) is None,
+    )
+    is None,
     true,
   )
 
@@ -200,7 +214,8 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
       short_edge,
       incomplete_ranks,
       @edge_label_metrics.edge_mid_label_width_pt(short_edge),
-    ) is None,
+    )
+    is None,
     true,
   )
 }
@@ -269,8 +284,11 @@ test "expand_bbox_for_label_pos only grows when both center and metrics exist" {
   let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }
   let metrics : LabelExtent = { width: 6.0, height: 4.0 }
 
-  let expanded =
-    expand_bbox_for_label_pos(bbox, Some(@edge_spline.point(12.0, 5.0)), Some(metrics))
+  let expanded = expand_bbox_for_label_pos(
+    bbox,
+    Some(@edge_spline.point(12.0, 5.0)),
+    Some(metrics),
+  )
 
   assert_eq(expanded, { llx: 0.0, lly: 0.0, urx: 15.0, ury: 10.0 })
   assert_eq(expand_bbox_for_label_pos(bbox, None, Some(metrics)), bbox)
@@ -340,11 +358,12 @@ test "edge_label_pos_from_input uses rank axes and width-based pad on ranked lab
     label_pad_boost=1.0,
   )
 
-  let explicit_axis_pos = match edge_label_pos_from_input(
-    input,
-    _ => Some({ width: 8.0, height: 4.0 }),
-    12.0,
-  ) {
+  let explicit_axis_pos = match
+    edge_label_pos_from_input(
+      input,
+      _ => Some({ width: 8.0, height: 4.0 }),
+      12.0,
+    ) {
     Some(value) => value
     None => fail("expected explicit-axis label pos")
   }
@@ -370,11 +389,12 @@ test "edge_label_pos_from_input uses rank axes and width-based pad on ranked lab
     tail_clip=@edge_spline.point(0.0, 0.0),
     head_clip=@edge_spline.point(0.0, 20.0),
   )
-  let padded_pos = match edge_label_pos_from_input(
-    padded_input,
-    _ => Some({ width: 12.0, height: 4.0 }),
-    10.0,
-  ) {
+  let padded_pos = match
+    edge_label_pos_from_input(
+      padded_input,
+      _ => Some({ width: 12.0, height: 4.0 }),
+      10.0,
+    ) {
     Some(value) => value
     None => fail("expected padded label pos")
   }
@@ -395,11 +415,12 @@ test "edge_label_pos_from_input maps axes for LR and skips metric offset on self
     label_pad_boost=5.0,
   )
 
-  let pos = match edge_label_pos_from_input(
-    input,
-    _ => Some({ width: 8.0, height: 4.0 }),
-    12.0,
-  ) {
+  let pos = match
+    edge_label_pos_from_input(
+      input,
+      _ => Some({ width: 8.0, height: 4.0 }),
+      12.0,
+    ) {
     Some(value) => value
     None => fail("expected self-edge label pos")
   }
@@ -418,11 +439,12 @@ test "edge_label_pos_from_input offsets unranked labels along the segment normal
     label_pad_boost=1.5,
   )
 
-  let pos = match edge_label_pos_from_input(
-    input,
-    _ => Some({ width: 8.0, height: 4.0 }),
-    12.0,
-  ) {
+  let pos = match
+    edge_label_pos_from_input(
+      input,
+      _ => Some({ width: 8.0, height: 4.0 }),
+      12.0,
+    ) {
     Some(value) => value
     None => fail("expected unranked label pos")
   }
@@ -515,23 +537,25 @@ test "edge_port_label_pos uses marker endpoints when dir enables both arrow mark
   edge.set_attr("labeldistance", "1.4")
   let spline = straight_spline_with_markers()
 
-  let tail = match edge_port_label_pos(
-    { edge, spline, is_head: false },
-    -25.0,
-    -180.0,
-    10.0,
-    @node_geometry.GRAPHVIZ_PI,
-  ) {
+  let tail = match
+    edge_port_label_pos(
+      { edge, spline, is_head: false },
+      -25.0,
+      -180.0,
+      10.0,
+      @node_geometry.GRAPHVIZ_PI,
+    ) {
     Some(value) => value
     None => fail("expected tail port label pos")
   }
-  let head = match edge_port_label_pos(
-    { edge, spline, is_head: true },
-    -25.0,
-    -180.0,
-    10.0,
-    @node_geometry.GRAPHVIZ_PI,
-  ) {
+  let head = match
+    edge_port_label_pos(
+      { edge, spline, is_head: true },
+      -25.0,
+      -180.0,
+      10.0,
+      @node_geometry.GRAPHVIZ_PI,
+    ) {
     Some(value) => value
     None => fail("expected head port label pos")
   }
@@ -565,11 +589,13 @@ test "edge_port_label_pos_for_dot uses bezier fallback and dot defaults when mar
   edge.set_attr("labeldistance", "2")
   let spline = straight_spline_with_markers()
 
-  let tail = match edge_port_label_pos_for_dot({ edge, spline, is_head: false }) {
+  let tail = match
+    edge_port_label_pos_for_dot({ edge, spline, is_head: false }) {
     Some(value) => value
     None => fail("expected tail port label pos")
   }
-  let head = match edge_port_label_pos_for_dot({ edge, spline, is_head: true }) {
+  let head = match
+    edge_port_label_pos_for_dot({ edge, spline, is_head: true }) {
     Some(value) => value
     None => fail("expected head port label pos")
   }

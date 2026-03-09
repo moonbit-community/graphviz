@@ -17,64 +17,53 @@ pub fn layout_dot(
 ) -> DotLayoutGraph raise DotLayoutError {
   let opts = options
   @label_layout.reset_label_caches()
-  let prep = match @input_stage.prepare_layout_prep(
-    graph,
-    {
+  let prep = match
+    @input_stage.prepare_layout_prep(graph, {
       rankdir: opts.rankdir,
       nodesep: opts.nodesep,
       ranksep: opts.ranksep,
       splines: opts.splines,
-    },
-  ) {
+    }) {
     Ok(value) => value
     Err(message) => raise DotLayoutError::InvalidGraph(message~)
   }
-  let rank_stage_output =
-    @rank_stage.compute_dot_rank_stage({ graph, prep })
+  let rank_stage_output = @rank_stage.compute_dot_rank_stage({ graph, prep })
   let rank_data = rank_stage_output.rank_data
   let rank_heights = rank_stage_output.rank_heights
   let cluster_meta = rank_stage_output.cluster_meta
   let ordering = rank_stage_output.ordering
-  let positions_state =
-    @positioning.compute_positions(
-      {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
-      },
-    )
-  let routing_stage_output =
-    @integration.compute_dot_routing_stage(
-      {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
-        positions_state,
-      },
-    )
+  let positions_state = @positioning.compute_positions({
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+  })
+  let routing_stage_output = @integration.compute_dot_routing_stage({
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    positions_state,
+  })
   dot_layout_graph_from_layout_tree(
-    @finalization.finalize_layout_from_sources(
-      {
-        graph,
-        prep,
-        rank_data,
-        rank_heights,
-        positions_state,
-        routing_stage_output,
-      },
-    ),
+    @finalization.finalize_layout_from_sources({
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      positions_state,
+      routing_stage_output,
+    }),
   )
 }
+
 ///|
 /// Bridge between the public root layout type and the internal shared layout
 /// tree used by tree-heavy subpackages.
-
 type LayoutTree = @dot_shared.LayoutTree
 
 ///|

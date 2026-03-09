@@ -1,16 +1,6 @@
 ///|
-fn make_label(
-  target : XLabelTarget,
-  width : Double,
-  height : Double,
-) -> XLabel {
-  {
-    target,
-    width,
-    height,
-    pos: @edge_spline.point(0.0, 0.0),
-    set: false,
-  }
+fn make_label(target : XLabelTarget, width : Double, height : Double) -> XLabel {
+  { target, width, height, pos: @edge_spline.point(0.0, 0.0), set: false }
 }
 
 ///|
@@ -25,9 +15,7 @@ fn make_object(
 
 ///|
 fn crowded_case() -> (Array[XObject], Array[XLabel]) {
-  let labels : Array[XLabel] = [
-    make_label(XLabelTarget::Node("n"), 6.0, 4.0),
-  ]
+  let labels : Array[XLabel] = [make_label(XLabelTarget::Node("n"), 6.0, 4.0)]
   let objects : Array[XObject] = [
     make_object(@edge_spline.point(10.0, 10.0), 8.0, 4.0, label_index=Some(0)),
     make_object(@edge_spline.point(1.0, 1.0), 40.0, 30.0),
@@ -37,9 +25,7 @@ fn crowded_case() -> (Array[XObject], Array[XLabel]) {
 
 ///|
 test "place_labels uses the top-left candidate when it is immediately collision free" {
-  let labels : Array[XLabel] = [
-    make_label(XLabelTarget::Node("n"), 4.0, 2.0),
-  ]
+  let labels : Array[XLabel] = [make_label(XLabelTarget::Node("n"), 4.0, 2.0)]
   let objects : Array[XObject] = [
     make_object(@edge_spline.point(10.0, 10.0), 6.0, 4.0, label_index=Some(0)),
   ]

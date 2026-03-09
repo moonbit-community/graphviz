@@ -37,10 +37,15 @@ fn snapshot_input_path(case_name : String) -> String raise {
 ///|
 test "snapshot input path resolves representative local and Graphviz cases" {
   assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
-  assert_eq(snapshot_input_path("japanese"), "refs/graphviz/graphs/directed/japanese.gv")
+  assert_eq(
+    snapshot_input_path("japanese"),
+    "refs/graphviz/graphs/directed/japanese.gv",
+  )
 }
 
 //|
+
+///|
 fn extract_numbers(value : String) -> Array[Double] raise {
   let sb = StringBuilder::new()
   for ch in value {
@@ -64,9 +69,11 @@ fn extract_numbers(value : String) -> Array[Double] raise {
 
 ///|
 test "compass ports on plain nodes clip away from node centers" {
-  let graph = try @dot_parser.parse_dot(
-    "digraph { foo:s -> bar:n [dir=both arrowhead=crow arrowtail=crow] }",
-  ) catch {
+  let graph = try
+    @dot_parser.parse_dot(
+      "digraph { foo:s -> bar:n [dir=both arrowhead=crow arrowtail=crow] }",
+    )
+  catch {
     err => fail("parse failed: \{err}")
   } noraise {
     value => value

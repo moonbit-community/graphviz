@@ -1,16 +1,22 @@
+///|
 type LayoutTree = @shared.LayoutTree
-type SplinesMode = @shared.SplinesMode
+
+///|
+type SplinesMode = @layout_prep.SplinesMode
+
+///|
 type DotLayoutNode = @shared.DotLayoutNode
+
+///|
 type DotLayoutEdge = @shared.DotLayoutEdge
+
+///|
 type RankDir = @rankdir.RankDir
 
 ///|
 /// Graphviz parity: exterior label placement aligned to refs/graphviz/lib/label/xlabels.c
 /// + lib/common/postproc.c (addXLabels/edgeMidpoint).
 /// Do not change behavior without updating fixtures/tests.
-
-
-
 priv struct XLabelUpdateMaps {
   node_updates : Map[String, @geom.Point]
   edge_mid_updates : Map[String, @geom.Point]
@@ -59,14 +65,16 @@ fn expand_bbox_for_existing_xlabel(
     Some(value) =>
       match metrics {
         Some(label_metrics) => {
-          let dims =
-            maybe_flip_dims(label_metrics.width, label_metrics.height, flip)
-          expanded =
-            @edge_label.expand_bbox_for_label_pos(
-              expanded,
-              Some(value),
-              Some({ width: dims.width, height: dims.height }),
-            )
+          let dims = maybe_flip_dims(
+            label_metrics.width,
+            label_metrics.height,
+            flip,
+          )
+          expanded = @edge_label.expand_bbox_for_label_pos(
+            expanded,
+            Some(value),
+            Some({ width: dims.width, height: dims.height }),
+          )
         }
         None => ()
       }
@@ -83,13 +91,12 @@ fn expand_bbox_for_existing_node_xlabels(
 ) -> @geom.Rect {
   let mut expanded = bbox
   for node_layout in nodes {
-    expanded =
-      expand_bbox_for_existing_xlabel(
-        expanded,
-        node_layout.xlabel_pos,
-        xlabel_metrics_for_node(node_layout.node),
-        flip,
-      )
+    expanded = expand_bbox_for_existing_xlabel(
+      expanded,
+      node_layout.xlabel_pos,
+      xlabel_metrics_for_node(node_layout.node),
+      flip,
+    )
   }
   expanded
 }
@@ -102,21 +109,18 @@ fn expand_bbox_for_existing_edge_xlabels(
 ) -> @geom.Rect {
   let mut expanded = bbox
   for edge_layout in edges {
-    expanded =
-      expand_bbox_for_existing_xlabel(
-        expanded,
-        edge_layout.xlabel_pos,
-        xlabel_metrics_for_edge(edge_layout.edge),
-        flip,
-      )
+    expanded = expand_bbox_for_existing_xlabel(
+      expanded,
+      edge_layout.xlabel_pos,
+      xlabel_metrics_for_edge(edge_layout.edge),
+      flip,
+    )
   }
   expanded
 }
 
-pub fn apply_xlabels(
-  layout : LayoutTree,
-  splines : SplinesMode,
-) -> LayoutTree {
+///|
+pub fn apply_xlabels(layout : LayoutTree, splines : SplinesMode) -> LayoutTree {
   let rankdir = @rankdir.graph_rankdir(layout.graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let labels : Array[XLabel] = []
@@ -129,20 +133,22 @@ pub fn apply_xlabels(
   }
   finalize_xlabels(layout, labels, flip)
 }
+
 ///|
 /// Xlabel finalization: merge existing/new xlabel positions into layout output
 /// and expand the graph bbox accordingly.
-
 fn finalize_xlabels(
   layout : LayoutTree,
   labels : Array[XLabel],
   flip : Bool,
 ) -> LayoutTree {
   let updates = make_xlabel_update_maps()
-  let mut bbox =
-    expand_bbox_for_existing_node_xlabels(layout.bbox, layout.nodes, flip)
-  bbox =
-    expand_bbox_for_existing_edge_xlabels(bbox, layout.edges, flip)
+  let mut bbox = expand_bbox_for_existing_node_xlabels(
+    layout.bbox,
+    layout.nodes,
+    flip,
+  )
+  bbox = expand_bbox_for_existing_edge_xlabels(bbox, layout.edges, flip)
   for label in labels {
     if !label.set {
       continue
@@ -155,11 +161,7 @@ fn finalize_xlabels(
     )
     record_xlabel_update(updates, label.target, center)
   }
-  let updated =
-    apply_xlabel_updates(
-      layout,
-      updates,
-    )
+  let updated = apply_xlabel_updates(layout, updates)
   {
     graph: updated.graph,
     bbox,
@@ -172,7 +174,6 @@ fn finalize_xlabels(
 
 ///|
 /// Xlabel layout update and cluster-label obstacle collection helpers.
-
 fn parse_int_prefix(value : String) -> Int? {
   let mut acc = 0
   let mut seen = false
@@ -191,6 +192,7 @@ fn parse_int_prefix(value : String) -> Int? {
   }
 }
 
+///|
 fn parse_bool_attr(value : String, default_value : Bool) -> Bool {
   if value == "" {
     return default_value
@@ -216,6 +218,7 @@ fn parse_bool_attr(value : String, default_value : Bool) -> Bool {
   }
 }
 
+///|
 fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
   match graph.get_attr("forcelabels") {
     None => true
@@ -228,24 +231,23 @@ fn apply_xlabel_updates(
   layout : LayoutTree,
   updates : XLabelUpdateMaps,
 ) -> LayoutTree {
-  let update_or_fallback =
-    (
-      update_map : Map[String, @geom.Point],
-      key : String,
-      fallback : @geom.Point?,
-    ) =>
-      match update_map.get(key) {
-        Some(pos) => Some(pos)
-        None => fallback
-      }
+  let update_or_fallback = (
+    update_map : Map[String, @geom.Point],
+    key : String,
+    fallback : @geom.Point?,
+  ) => {
+    match update_map.get(key) {
+      Some(pos) => Some(pos)
+      None => fallback
+    }
+  }
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
-    let xlabel_pos =
-      update_or_fallback(
-        updates.node_updates,
-        node_layout.node.name(),
-        node_layout.xlabel_pos,
-      )
+    let xlabel_pos = update_or_fallback(
+      updates.node_updates,
+      node_layout.node.name(),
+      node_layout.xlabel_pos,
+    )
     nodes.push({
       node: node_layout.node,
       pos: node_layout.pos,
@@ -258,30 +260,26 @@ fn apply_xlabel_updates(
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
     let key = @edge_identity.edge_key(edge_layout.edge)
-    let label_pos =
-      update_or_fallback(
-        updates.edge_mid_updates,
-        key,
-        edge_layout.label_pos,
-      )
-    let head_label_pos =
-      update_or_fallback(
-        updates.edge_head_updates,
-        key,
-        edge_layout.head_label_pos,
-      )
-    let tail_label_pos =
-      update_or_fallback(
-        updates.edge_tail_updates,
-        key,
-        edge_layout.tail_label_pos,
-      )
-    let xlabel_pos =
-      update_or_fallback(
-        updates.edge_xlabel_updates,
-        key,
-        edge_layout.xlabel_pos,
-      )
+    let label_pos = update_or_fallback(
+      updates.edge_mid_updates,
+      key,
+      edge_layout.label_pos,
+    )
+    let head_label_pos = update_or_fallback(
+      updates.edge_head_updates,
+      key,
+      edge_layout.head_label_pos,
+    )
+    let tail_label_pos = update_or_fallback(
+      updates.edge_tail_updates,
+      key,
+      edge_layout.tail_label_pos,
+    )
+    let xlabel_pos = update_or_fallback(
+      updates.edge_xlabel_updates,
+      key,
+      edge_layout.xlabel_pos,
+    )
     edges.push({
       edge: edge_layout.edge,
       splines: edge_layout.splines,
@@ -293,12 +291,7 @@ fn apply_xlabel_updates(
   }
   let subgraphs : Array[LayoutTree] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(
-      apply_xlabel_updates(
-        subgraph,
-        updates,
-      ),
-    )
+    subgraphs.push(apply_xlabel_updates(subgraph, updates))
   }
   {
     graph: layout.graph,
@@ -310,6 +303,7 @@ fn apply_xlabel_updates(
   }
 }
 
+///|
 fn collect_cluster_label_objects(
   layout : LayoutTree,
   objects : Array[XObject],
@@ -320,8 +314,11 @@ fn collect_cluster_label_objects(
       Some(pos) =>
         match @label_metrics.graph_label_metrics(subgraph.graph) {
           Some(metrics) => {
-            let dims =
-              maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)
+            let dims = maybe_flip_dims(
+              metrics.width_pt,
+              metrics.height_pt,
+              flip,
+            )
             let llx = pos.x - dims.width / 2.0
             let lly = pos.y - dims.height / 2.0
             objects.push({
@@ -338,6 +335,8 @@ fn collect_cluster_label_objects(
     collect_cluster_label_objects(subgraph, objects, flip)
   }
 }
+
+///|
 fn collect_xlabel_candidates(
   layout : LayoutTree,
   splines : SplinesMode,
@@ -348,12 +347,7 @@ fn collect_xlabel_candidates(
   let edges_by_tail = build_edges_by_tail(layout.edges)
   for node_layout in layout.nodes {
     objects.push(
-      build_node_obstacle_with_xlabel_slot(
-        node_layout,
-        flip,
-        labels,
-        objects,
-      ),
+      build_node_obstacle_with_xlabel_slot(node_layout, flip, labels, objects),
     )
 
     let edges_for_node = match edges_by_tail.get(node_layout.node.name()) {
@@ -361,7 +355,9 @@ fn collect_xlabel_candidates(
       None => []
     }
     for edge_layout in edges_for_node {
-      collect_edge_xlabel_candidates(edge_layout, splines, flip, labels, objects)
+      collect_edge_xlabel_candidates(
+        edge_layout, splines, flip, labels, objects,
+      )
     }
   }
 }

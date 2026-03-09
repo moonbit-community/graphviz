@@ -21,12 +21,7 @@ fn build_neato_layout_tree(
   let node_state = build_neato_initial_node_state(nodes, spacing)
   let positions = node_state.positions
   let pinned = node_state.pinned
-  let edges = build_neato_edges(
-    graph,
-    sizing.indices,
-    sizing.radii,
-    nodesep_pt,
-  )
+  let edges = build_neato_edges(graph, sizing.indices, sizing.radii, nodesep_pt)
   if node_count > 1 {
     relax_positions(
       positions,
@@ -38,23 +33,22 @@ fn build_neato_layout_tree(
       100,
     )
   }
-  let node_data =
-    project_scaled_nodes_with_sizes(
-      nodes,
-      positions,
-      geometry.scale_factor,
-      sizing.sizes,
-      geometry.record_orientation,
-    )
-  let node_size_for = (node : @cgraph.Node) =>
+  let node_data = project_scaled_nodes_with_sizes(
+    nodes,
+    positions,
+    geometry.scale_factor,
+    sizing.sizes,
+    geometry.record_orientation,
+  )
+  let node_size_for = (node : @cgraph.Node) => {
     node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
-  let edges_out =
-    build_edges_from_positions(
-      graph,
-      node_data.projection.positions,
-      node_size_for,
-      straight_line_edge_splines,
-    )
+  }
+  let edges_out = build_edges_from_positions(
+    graph,
+    node_data.projection.positions,
+    node_size_for,
+    straight_line_edge_splines,
+  )
   finalize_unranked_layout_tree(
     graph,
     geometry.rankdir,
@@ -80,6 +74,7 @@ fn pos_is_pinned(value : String) -> Bool {
   last == '!'
 }
 
+///|
 priv struct NodePosHint {
   pos : @geom.Point?
   is_pinned : Bool
@@ -379,13 +374,7 @@ pub fn relax_positions(
     let disp_x = zero_double_array(node_count)
     let disp_y = zero_double_array(node_count)
     accumulate_repulsive_forces(
-      positions,
-      radii,
-      spacing,
-      nodesep_pt,
-      eps,
-      disp_x,
-      disp_y,
+      positions, radii, spacing, nodesep_pt, eps, disp_x, disp_y,
     )
     accumulate_spring_forces(positions, edges, eps, disp_x, disp_y)
     apply_displacements(positions, pinned, temperature, disp_x, disp_y)

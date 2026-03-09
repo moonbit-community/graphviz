@@ -5,10 +5,15 @@
 ///|
 /// Dot-package bridge for unranked engine output projection and layout-tree
 /// finalization.
-
 type LayoutTree = @shared.LayoutTree
+
+///|
 type DotLayoutNode = @shared.DotLayoutNode
+
+///|
 type DotLayoutEdge = @shared.DotLayoutEdge
+
+///|
 type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair
 
 ///|
@@ -61,16 +66,10 @@ pub fn project_scaled_nodes_with_sizes(
     let node = nodes[i]
     positions_map[node.name()] = scale_point(positions[i], scale_factor)
   }
-  let nodes_out =
-    build_projected_nodes_from_positions(
-      nodes,
-      positions_map,
-      node => node_size_with_fallback(sizes, node, record_orientation),
-    )
-  {
-    projection: { positions: positions_map, nodes_out },
-    sizes,
-  }
+  let nodes_out = build_projected_nodes_from_positions(nodes, positions_map, node => {
+    node_size_with_fallback(sizes, node, record_orientation)
+  })
+  { projection: { positions: positions_map, nodes_out }, sizes }
 }
 
 ///|
@@ -78,8 +77,13 @@ pub fn build_edges_from_positions(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
   node_size_for : (@cgraph.Node) -> NodeSize,
-  edge_splines_for :
-    (@cgraph.Edge, @geom.Point, @geom.Point, NodeSize, NodeSize) -> Array[@geom.Spline],
+  edge_splines_for : (
+    @cgraph.Edge,
+    @geom.Point,
+    @geom.Point,
+    NodeSize,
+    NodeSize,
+  ) -> Array[@geom.Spline],
 ) -> Array[DotLayoutEdge] {
   let edges_out : Array[DotLayoutEdge] = []
   for edge in graph.edges() {
@@ -124,22 +128,19 @@ pub fn finalize_unranked_layout_tree(
   let empty_rank_y : Map[Int, Double] = Map::new()
   let empty_rank_ht1 : Map[Int, Double] = Map::new()
   let empty_rank_ht2 : Map[Int, Double] = Map::new()
-  let subgraphs =
-    @subgraph_layout.layout_subgraphs(
-      {
-        graph,
-        nodes_out,
-        edges_out,
-        cluster_ln_x: empty_cluster_ln_x,
-        cluster_rn_x: empty_cluster_rn_x,
-        cluster_bbox_heights: empty_cluster_bbox_heights,
-        rankdir,
-        ranks: empty_ranks,
-        rank_y: empty_rank_y,
-        rank_ht1: empty_rank_ht1,
-        rank_ht2: empty_rank_ht2,
-      },
-    )
+  let subgraphs = @subgraph_layout.layout_subgraphs({
+    graph,
+    nodes_out,
+    edges_out,
+    cluster_ln_x: empty_cluster_ln_x,
+    cluster_rn_x: empty_cluster_rn_x,
+    cluster_bbox_heights: empty_cluster_bbox_heights,
+    rankdir,
+    ranks: empty_ranks,
+    rank_y: empty_rank_y,
+    rank_ht1: empty_rank_ht1,
+    rank_ht2: empty_rank_ht2,
+  })
   let mut bbox = if subgraphs.length() > 0 {
     @subgraph_layout.expand_bbox_with_subgraphs(base_bbox, subgraphs)
   } else {
@@ -151,13 +152,12 @@ pub fn finalize_unranked_layout_tree(
       Some(metrics) => {
         let loc = @graph_label.graph_label_loc(graph)
         let just = @graph_label.graph_label_just(graph)
-        bbox =
-          @graph_label.expand_bbox_for_label(
-            bbox,
-            metrics.width_pt,
-            metrics.height_pt,
-            loc,
-          )
+        bbox = @graph_label.expand_bbox_for_label(
+          bbox,
+          metrics.width_pt,
+          metrics.height_pt,
+          loc,
+        )
         label_pos = Some(
           @graph_label.graph_label_pos(
             bbox,
@@ -171,12 +171,5 @@ pub fn finalize_unranked_layout_tree(
       None => ()
     }
   }
-  {
-    graph,
-    bbox,
-    label_pos,
-    nodes: nodes_out,
-    edges: edges_out,
-    subgraphs,
-  }
+  { graph, bbox, label_pos, nodes: nodes_out, edges: edges_out, subgraphs }
 }

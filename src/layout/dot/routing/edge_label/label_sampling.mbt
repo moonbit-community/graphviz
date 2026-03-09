@@ -34,11 +34,7 @@ fn bezier_point(
 /// Graphviz parity: linear interpolation aligned to refs/graphviz/lib/common/utils.c
 /// (Bezier helper, uses fused multiply-add to match Graphviz compiler output).
 /// Do not change behavior without updating fixtures/tests.
-fn point_lerp_fma(
-  a : @geom.Point,
-  b : @geom.Point,
-  t : Double,
-) -> @geom.Point {
+fn point_lerp_fma(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   let mt = 1.0 - t
   let x = @edge_spline.libm_fma(mt, a.x, t * b.x)
   let y = @edge_spline.libm_fma(mt, a.y, t * b.y)
@@ -103,7 +99,7 @@ pub fn sample_spline_points(
     let p1 = points[index + 1]
     let p2 = points[index + 2]
     let p3 = points[index + 3]
-    for step in 1..=steps {
+    for step in 1..<=steps {
       let t = step.to_double() / step_count
       samples.push(bezier_point(p0, p1, p2, p3, t))
     }
@@ -146,8 +142,11 @@ fn polyline_point_with_dir(
       let pos = @edge_spline.point_lerp(a, b, t)
       let delta = @edge_spline.point_sub(b, a)
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
-      let dir =
-        if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
+      let dir = if len <= 0.0 {
+        @edge_spline.point(1.0, 0.0)
+      } else {
+        @edge_spline.point_scale(delta, 1.0 / len)
+      }
       return Some({ pos, tangent: dir })
     }
     remaining = remaining - seg_len
@@ -187,17 +186,19 @@ fn polyline_point_at_axis(
       continue
     }
     let delta_axis = b_axis - a_axis
-    let t =
-      if Double::abs(delta_axis) <= epsilon {
-        0.5
-      } else {
-        (axis_value - a_axis) / delta_axis
-      }
+    let t = if Double::abs(delta_axis) <= epsilon {
+      0.5
+    } else {
+      (axis_value - a_axis) / delta_axis
+    }
     let pos = @edge_spline.point_lerp(a, b, t)
     let delta = @edge_spline.point_sub(b, a)
     let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
-    let dir =
-      if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
+    let dir = if len <= 0.0 {
+      @edge_spline.point(1.0, 0.0)
+    } else {
+      @edge_spline.point_scale(delta, 1.0 / len)
+    }
     let cross_len = traveled + seg_len * t
     let dist = Double::abs(cross_len - target)
     if best_pos is None || dist < best_dist {
@@ -274,7 +275,8 @@ pub fn port_label_points(
       return Some(head_bezier_sample())
     }
     match spline.end {
-      Some(end_point) => Some({ pos: end_point, tangent: points[points.length() - 1] })
+      Some(end_point) =>
+        Some({ pos: end_point, tangent: points[points.length() - 1] })
       None => Some(head_bezier_sample())
     }
   } else {

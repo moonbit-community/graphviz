@@ -4,7 +4,7 @@
 type RankDir = @rankdir.RankDir
 
 ///|
-type RecordOrientation = @shared.RecordOrientation
+type RecordOrientation = @layout_prep.RecordOrientation
 
 ///|
 type NodeSize = @node_primitives.NodeSize
@@ -24,11 +24,11 @@ pub fn port_offsets_for_nodes(
     nodes,
     output_sizes,
     (node, rankdir) => {
-      let record_orientation = @shared.record_layout_orientation(rankdir)
+      let record_orientation = @layout_prep.record_layout_orientation(rankdir)
       @node_geometry.node_size(node, record_orientation)
     },
     (node, origin, base_size, rankdir) => {
-      let record_orientation = @shared.record_layout_orientation(rankdir)
+      let record_orientation = @layout_prep.record_layout_orientation(rankdir)
       @label_layout.raw_label_ports_for_node(
         node, origin, base_size, record_orientation,
       )

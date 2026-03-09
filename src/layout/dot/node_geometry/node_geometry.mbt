@@ -1,8 +1,12 @@
 ///|
 /// Node-size and shape-geometry kernels shared across dot stages, routing,
 /// engines, and dot layout postprocess.
-type RecordOrientation = @dot_shared.RecordOrientation
+type RecordOrientation = @layout_prep.RecordOrientation
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 priv struct SizePt {
   width_pt : Double
   height_pt : Double
@@ -44,6 +48,7 @@ fn apply_label_padding_for_shape(
     { width_pt: width_pt + pad_x_pt, height_pt: height_pt + pad_y_pt }
   }
 }
+
 ///|
 /// Node-size computation for plain/html/record/polygon shapes, aligned with
 /// Graphviz shapes.c behavior and dot layout sizing invariants.
@@ -58,8 +63,7 @@ pub fn node_size(
     Some(value) => value.to_lower()
     None => ""
   }
-  let regular_shape =
-    shape == "msquare" ||
+  let regular_shape = shape == "msquare" ||
     shape == "mcircle" ||
     shape == "circle" ||
     shape == "doublecircle"
@@ -85,12 +89,18 @@ pub fn node_size(
     _ => true
   }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
-    (@node_primitives.default_point_size_in(), @node_primitives.default_point_size_in())
+    (
+      @node_primitives.default_point_size_in(),
+      @node_primitives.default_point_size_in(),
+    )
   } else if regular_shape {
     let height = @node_primitives.default_node_height_in()
     (height, height)
   } else {
-    (@node_primitives.default_node_width_in(), @node_primitives.default_node_height_in())
+    (
+      @node_primitives.default_node_width_in(),
+      @node_primitives.default_node_height_in(),
+    )
   }
   let base_width_in = match node.get_attr("width") {
     Some(value) => @numeric.parse_double_or(value, fallback_width)
@@ -114,7 +124,10 @@ pub fn node_size(
           None => fallback_width
         }
     }
-    return @node_primitives.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
+    return @node_primitives.node_size_from_points(
+      point_size_in * 72.0,
+      point_size_in * 72.0,
+    )
   }
   let label = @label_attrs.label_text(node)
   if @html_label.is_html_label_text(label) {
@@ -123,40 +136,41 @@ pub fn node_size(
         let html_dims = @html_layout.html_label_size(
           html_label, font, font_size_pt,
         )
-        let padded_dims =
-          apply_label_padding_for_shape(
-            shape,
-            html_dims.width_pt,
-            html_dims.height_pt,
-            padding.pad_x_pt,
-            padding.pad_y_pt,
-          )
+        let padded_dims = apply_label_padding_for_shape(
+          shape,
+          html_dims.width_pt,
+          html_dims.height_pt,
+          padding.pad_x_pt,
+          padding.pad_y_pt,
+        )
         let (width_pt, height_pt) = match fixedsize_mode {
           NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
-          NodeFixedSizeMode::Shape => (
-            if padded_dims.width_pt > base_width_pt {
-              padded_dims.width_pt
-            } else {
-              base_width_pt
-            },
-            if padded_dims.height_pt > base_height_pt {
-              padded_dims.height_pt
-            } else {
-              base_height_pt
-            },
-          )
-          NodeFixedSizeMode::None => (
-            if padded_dims.width_pt > base_width_pt {
-              padded_dims.width_pt
-            } else {
-              base_width_pt
-            },
-            if padded_dims.height_pt > base_height_pt {
-              padded_dims.height_pt
-            } else {
-              base_height_pt
-            },
-          )
+          NodeFixedSizeMode::Shape =>
+            (
+              if padded_dims.width_pt > base_width_pt {
+                padded_dims.width_pt
+              } else {
+                base_width_pt
+              },
+              if padded_dims.height_pt > base_height_pt {
+                padded_dims.height_pt
+              } else {
+                base_height_pt
+              },
+            )
+          NodeFixedSizeMode::None =>
+            (
+              if padded_dims.width_pt > base_width_pt {
+                padded_dims.width_pt
+              } else {
+                base_width_pt
+              },
+              if padded_dims.height_pt > base_height_pt {
+                padded_dims.height_pt
+              } else {
+                base_height_pt
+              },
+            )
         }
         return @node_primitives.node_size_from_points(width_pt, height_pt)
       }
@@ -175,30 +189,32 @@ pub fn node_size(
     )
     let (width_pt, height_pt) = match fixedsize_mode {
       NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
-      NodeFixedSizeMode::Shape => (
-        if record_size.width_pt > base_width_pt {
-          record_size.width_pt
-        } else {
-          base_width_pt
-        },
-        if record_size.height_pt > base_height_pt {
-          record_size.height_pt
-        } else {
-          base_height_pt
-        },
-      )
-      NodeFixedSizeMode::None => (
-        if record_size.width_pt > base_width_pt {
-          record_size.width_pt
-        } else {
-          base_width_pt
-        },
-        if record_size.height_pt > base_height_pt {
-          record_size.height_pt
-        } else {
-          base_height_pt
-        },
-      )
+      NodeFixedSizeMode::Shape =>
+        (
+          if record_size.width_pt > base_width_pt {
+            record_size.width_pt
+          } else {
+            base_width_pt
+          },
+          if record_size.height_pt > base_height_pt {
+            record_size.height_pt
+          } else {
+            base_height_pt
+          },
+        )
+      NodeFixedSizeMode::None =>
+        (
+          if record_size.width_pt > base_width_pt {
+            record_size.width_pt
+          } else {
+            base_width_pt
+          },
+          if record_size.height_pt > base_height_pt {
+            record_size.height_pt
+          } else {
+            base_height_pt
+          },
+        )
     }
     let bordered_height = height_pt + @record_geometry.RECORD_BORDER_PT * 2.0
     return @node_primitives.node_size_from_points(width_pt, bordered_height)
@@ -207,39 +223,42 @@ pub fn node_size(
     label, font, font_size_pt,
   )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
-  let label_dims =
-    if has_label {
-      apply_label_padding_for_shape(
-        shape,
-        text_width_pt,
-        text_height_pt,
-        padding.pad_x_pt,
-        padding.pad_y_pt,
-      )
-    } else {
-      { width_pt: 0.0, height_pt: 0.0 }
+  let label_dims = if has_label {
+    apply_label_padding_for_shape(
+      shape,
+      text_width_pt,
+      text_height_pt,
+      padding.pad_x_pt,
+      padding.pad_y_pt,
+    )
+  } else {
+    { width_pt: 0.0, height_pt: 0.0 }
   }
   let polygon_shape = match builtin_polygon_attrs(node, shape) {
     Some(attrs) => Some(attrs)
-    None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
+    None =>
+      if shape == "polygon" {
+        Some(polygon_shape_attrs(node))
+      } else {
+        None
+      }
   }
   let mut scaled_label_width_pt = label_dims.width_pt
   let mut scaled_label_height_pt = label_dims.height_pt
   if fixedsize_mode == NodeFixedSizeMode::None {
     if polygon_shape is Some(_) && has_label {
-      let polygon_attrs =
-        match polygon_shape {
-          Some(values) => values
-          None =>
-            {
-              sides: 4,
-              peripheries: 1,
-              orientation: 0.0,
-              distortion: 0.0,
-              skew: 0.0,
-              regular: false,
-            }
-        }
+      let polygon_attrs = match polygon_shape {
+        Some(values) => values
+        None =>
+          {
+            sides: 4,
+            peripheries: 1,
+            orientation: 0.0,
+            distortion: 0.0,
+            skew: 0.0,
+            regular: false,
+          }
+      }
       let is_box = shape != "diamond" &&
         polygon_is_box_like(
           polygon_attrs.sides,
@@ -247,14 +266,13 @@ pub fn node_size(
           polygon_attrs.distortion,
           polygon_attrs.skew,
         )
-      let scaled_bbox =
-        polygon_scaled_label_bbox(
-          label_dims.width_pt,
-          label_dims.height_pt,
-          base_height_pt,
-          polygon_attrs.sides,
-          is_box,
-        )
+      let scaled_bbox = polygon_scaled_label_bbox(
+        label_dims.width_pt,
+        label_dims.height_pt,
+        base_height_pt,
+        polygon_attrs.sides,
+        is_box,
+      )
       scaled_label_width_pt = scaled_bbox.width_pt
       scaled_label_height_pt = scaled_bbox.height_pt
     } else if shape == "mdiamond" && has_label {
@@ -336,24 +354,24 @@ pub fn node_size(
   }
   if fixedsize_mode != NodeFixedSizeMode::Shape {
     match polygon_shape {
-    Some(attrs) => {
-      if attrs.regular {
-        let size_in = if width_in > height_in { width_in } else { height_in }
-        width_in = size_in
-        height_in = size_in
-      }
-      let mut polygon_width_pt = width_in * 72.0
-      let mut polygon_height_pt = height_in * 72.0
-      if attrs.sides < 3 {
-        if attrs.peripheries > 1 {
-          let extra =
-            PERIPHERY_GAP_PT * 2.0 * Double::from_int(attrs.peripheries - 1)
-          polygon_width_pt = polygon_width_pt + extra
-          polygon_height_pt = polygon_height_pt + extra
+      Some(attrs) => {
+        if attrs.regular {
+          let size_in = if width_in > height_in { width_in } else { height_in }
+          width_in = size_in
+          height_in = size_in
         }
-      } else {
-        let polygon_vertices =
-          polygon_vertices_for_size(
+        let mut polygon_width_pt = width_in * 72.0
+        let mut polygon_height_pt = height_in * 72.0
+        if attrs.sides < 3 {
+          if attrs.peripheries > 1 {
+            let extra = PERIPHERY_GAP_PT *
+              2.0 *
+              Double::from_int(attrs.peripheries - 1)
+            polygon_width_pt = polygon_width_pt + extra
+            polygon_height_pt = polygon_height_pt + extra
+          }
+        } else {
+          let polygon_vertices = polygon_vertices_for_size(
             polygon_width_pt,
             polygon_height_pt,
             attrs.sides,
@@ -361,32 +379,34 @@ pub fn node_size(
             attrs.distortion,
             attrs.skew,
           )
-        polygon_width_pt = polygon_vertices.bbox_width_pt
-        polygon_height_pt = polygon_vertices.bbox_height_pt
-        if attrs.peripheries > 1 && polygon_vertices.vertices.length() > 0 {
-          let outline_pad_pt =
-            PERIPHERY_GAP_PT * Double::from_int(attrs.peripheries - 1)
-          let expanded_vertices =
-            polygon_outline_for_size(polygon_vertices.vertices, outline_pad_pt)
-          let mut max_x = polygon_width_pt / 2.0
-          let mut max_y = polygon_height_pt / 2.0
-          for vertex in expanded_vertices {
-            if Double::abs(vertex.x) > max_x {
-              max_x = Double::abs(vertex.x)
+          polygon_width_pt = polygon_vertices.bbox_width_pt
+          polygon_height_pt = polygon_vertices.bbox_height_pt
+          if attrs.peripheries > 1 && polygon_vertices.vertices.length() > 0 {
+            let outline_pad_pt = PERIPHERY_GAP_PT *
+              Double::from_int(attrs.peripheries - 1)
+            let expanded_vertices = polygon_outline_for_size(
+              polygon_vertices.vertices,
+              outline_pad_pt,
+            )
+            let mut max_x = polygon_width_pt / 2.0
+            let mut max_y = polygon_height_pt / 2.0
+            for vertex in expanded_vertices {
+              if Double::abs(vertex.x) > max_x {
+                max_x = Double::abs(vertex.x)
+              }
+              if Double::abs(vertex.y) > max_y {
+                max_y = Double::abs(vertex.y)
+              }
             }
-            if Double::abs(vertex.y) > max_y {
-              max_y = Double::abs(vertex.y)
-            }
+            polygon_width_pt = max_x * 2.0
+            polygon_height_pt = max_y * 2.0
           }
-          polygon_width_pt = max_x * 2.0
-          polygon_height_pt = max_y * 2.0
         }
+        width_in = polygon_width_pt / 72.0
+        height_in = polygon_height_pt / 72.0
       }
-      width_in = polygon_width_pt / 72.0
-      height_in = polygon_height_pt / 72.0
+      None => ()
     }
-    None => ()
-  }
   }
   if shape == "parallelogram" && fixedsize_mode != NodeFixedSizeMode::Shape {
     // Graphviz parity: skewed quad bbox in shapes.c poly_init widens by a
@@ -401,8 +421,10 @@ pub fn node_size(
     if peripheries > 1 {
       // Graphviz parity: extra box peripheries expand the node bbox by GAP on
       // both axes for each additional periphery (shapes.c poly_init).
-      let gap_in =
-        PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1) / 72.0
+      let gap_in = PERIPHERY_GAP_PT *
+        2.0 *
+        Double::from_int(peripheries - 1) /
+        72.0
       width_in = width_in + gap_in
       height_in = height_in + gap_in
     }
@@ -414,13 +436,17 @@ pub fn node_size(
     shape == "mcircle" ||
     shape == "doublecircle" {
     let default_peripheries = if shape == "doublecircle" { 2 } else { 1 }
-    let mut peripheries = polygon_attr_int(node, "peripheries", default_peripheries)
+    let mut peripheries = polygon_attr_int(
+      node, "peripheries", default_peripheries,
+    )
     if peripheries < 0 {
       peripheries = 0
     }
     if peripheries > 1 {
-      let gap_in =
-        PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1) / 72.0
+      let gap_in = PERIPHERY_GAP_PT *
+        2.0 *
+        Double::from_int(peripheries - 1) /
+        72.0
       width_in = width_in + gap_in
       height_in = height_in + gap_in
     }
@@ -436,10 +462,10 @@ pub fn node_size(
     right_pt: half,
   }
 }
-///|
 
 ///|
 
+///|
 
 ///|
 /// Graphviz parity: output-size lookup prefers precomputed output sizes and
@@ -456,7 +482,7 @@ pub fn resolve_node_output_size(
   }
 }
 
-
+///|
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|

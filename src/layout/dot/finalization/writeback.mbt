@@ -36,9 +36,9 @@ fn set_edge_label_pos_if_present(
 ///|
 fn apply_graph_output_attrs(
   layout : @shared.LayoutTree,
-) -> @shared.RecordOrientation {
+) -> @layout_prep.RecordOrientation {
   let graph = layout.graph
-  let record_orientation = @shared.record_layout_orientation(
+  let record_orientation = @layout_prep.record_layout_orientation(
     @rankdir.graph_rankdir(graph),
   )
   let write_bb = should_write_bbox(graph)
@@ -64,7 +64,7 @@ fn apply_graph_output_attrs(
 ///|
 fn apply_node_output_attrs(
   nodes : Array[@shared.DotLayoutNode],
-  record_orientation : @shared.RecordOrientation,
+  record_orientation : @layout_prep.RecordOrientation,
 ) -> Unit {
   for node_layout in nodes {
     let node = node_layout.node

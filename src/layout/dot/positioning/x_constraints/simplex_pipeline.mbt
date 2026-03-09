@@ -459,7 +459,10 @@ fn build_xpos_computation_input_from_sources(
   sources : XposComputationInputSources,
 ) -> XposComputationInput {
   let x_sizes = if sources.use_vnodes_for_xpos {
-    @shared.merge_sizes_with_vnodes(sources.x_base_sizes, sources.vnode_sizes)
+    @layout_prep.merge_sizes_with_vnodes(
+      sources.x_base_sizes,
+      sources.vnode_sizes,
+    )
   } else {
     sources.x_base_sizes
   }

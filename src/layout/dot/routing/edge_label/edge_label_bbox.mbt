@@ -17,7 +17,6 @@ pub(all) struct ExpandEdgeLabelBboxInput {
   rankdir : @rankdir.RankDir
 }
 
-
 ///|
 priv struct FlatEdgeLabelFlags {
   is_flat : Bool
@@ -40,10 +39,26 @@ pub fn expand_bbox_for_label_pos(
       let min_y = center.y - half_h
       let max_y = center.y + half_h
       {
-        llx: if min_x < bbox.llx { min_x } else { bbox.llx },
-        lly: if min_y < bbox.lly { min_y } else { bbox.lly },
-        urx: if max_x > bbox.urx { max_x } else { bbox.urx },
-        ury: if max_y > bbox.ury { max_y } else { bbox.ury },
+        llx: if min_x < bbox.llx {
+          min_x
+        } else {
+          bbox.llx
+        },
+        lly: if min_y < bbox.lly {
+          min_y
+        } else {
+          bbox.lly
+        },
+        urx: if max_x > bbox.urx {
+          max_x
+        } else {
+          bbox.urx
+        },
+        ury: if max_y > bbox.ury {
+          max_y
+        } else {
+          bbox.ury
+        },
       }
     }
     _ => bbox
@@ -74,16 +89,15 @@ fn classify_flat_edge_label(
 ) -> FlatEdgeLabelFlags {
   let tail = edge.tail().name()
   let head = edge.head().name()
-  let is_flat =
-    match (ranks.get(tail), ranks.get(head)) {
-      (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
-      _ => false
-    }
-  let has_flat_label_vnode =
-    match flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
-      Some(_) => true
-      None => false
-    }
+  let is_flat = match (ranks.get(tail), ranks.get(head)) {
+    (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
+    _ => false
+  }
+  let has_flat_label_vnode = match
+    flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+    Some(_) => true
+    None => false
+  }
   // Graphviz parity: adjacent flat-edge labels do not update BB
   // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
   // Graphviz parity: self-edge labels still update BB via dotsplines.
@@ -100,13 +114,18 @@ fn expand_bbox_for_edge_mid_label(
 ) -> @geom.Rect {
   expand_bbox_for_label_pos(
     bbox,
-    if flags.skip_mid_label { None } else { edge_layout.label_pos },
+    if flags.skip_mid_label {
+      None
+    } else {
+      edge_layout.label_pos
+    },
     if flags.skip_mid_label {
       None
     } else {
       edge_label_extent_for_rankdir(
         match @edge_label_metrics.edge_mid_label_metrics(edge_layout.edge) {
-          Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+          Some(metrics) =>
+            Some({ width: metrics.width, height: metrics.height })
           None => None
         },
         flip,
@@ -131,10 +150,16 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
   }
   match edge_layout.label_pos {
     Some(center) => {
-      let orientation = @shared.record_layout_orientation(rankdir)
-      let tail_half = @node_geometry.node_size(edge.tail(), orientation).height_pt / 2.0
-      let head_half = @node_geometry.node_size(edge.head(), orientation).height_pt / 2.0
-      let half_height = if tail_half > head_half { tail_half } else { head_half }
+      let orientation = @layout_prep.record_layout_orientation(rankdir)
+      let tail_half = @node_geometry.node_size(edge.tail(), orientation).height_pt /
+        2.0
+      let head_half = @node_geometry.node_size(edge.head(), orientation).height_pt /
+        2.0
+      let half_height = if tail_half > head_half {
+        tail_half
+      } else {
+        head_half
+      }
       let top = center.y + half_height
       if top > bbox.ury {
         { llx: bbox.llx, lly: bbox.lly, urx: bbox.urx, ury: top }
@@ -158,7 +183,12 @@ fn expand_bbox_for_edge_endpoint_label(
     bbox,
     label_pos,
     edge_label_extent_for_rankdir(
-      match @edge_label_metrics.edge_label_metrics_for_attr(edge_layout.edge, label_attr, true) {
+      match
+        @edge_label_metrics.edge_label_metrics_for_attr(
+          edge_layout.edge,
+          label_attr,
+          true,
+        ) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height })
         None => None
       },
@@ -176,49 +206,37 @@ pub fn expand_bbox_for_edge_labels(
 ) -> @geom.Rect {
   // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
   // dimensions in pre-rotation space to match compute_bb.
-  let flip =
-    input.rankdir == @rankdir.RankDir::LR ||
+  let flip = input.rankdir == @rankdir.RankDir::LR ||
     input.rankdir == @rankdir.RankDir::RL
   let mut bbox = input.bbox
   for edge_layout in input.edges {
-    let flags =
-      classify_flat_edge_label(
-        edge_layout.edge,
-        input.ranks,
-        input.flat_label_edge_vnodes,
-      )
-    bbox =
-      expand_bbox_for_edge_mid_label(
-        bbox,
-        edge_layout,
-        flags,
-        flip,
-      )
-    bbox =
-      maybe_raise_flat_edge_vnode_bbox_top(
-        bbox,
-        edge_layout,
-        flags,
-        input.rankdir,
-        flip,
-
-      )
-    bbox =
-      expand_bbox_for_edge_endpoint_label(
-        bbox,
-        edge_layout,
-        edge_layout.head_label_pos,
-        "headlabel",
-        flip,
-      )
-    bbox =
-      expand_bbox_for_edge_endpoint_label(
-        bbox,
-        edge_layout,
-        edge_layout.tail_label_pos,
-        "taillabel",
-        flip,
-      )
+    let flags = classify_flat_edge_label(
+      edge_layout.edge,
+      input.ranks,
+      input.flat_label_edge_vnodes,
+    )
+    bbox = expand_bbox_for_edge_mid_label(bbox, edge_layout, flags, flip)
+    bbox = maybe_raise_flat_edge_vnode_bbox_top(
+      bbox,
+      edge_layout,
+      flags,
+      input.rankdir,
+      flip,
+    )
+    bbox = expand_bbox_for_edge_endpoint_label(
+      bbox,
+      edge_layout,
+      edge_layout.head_label_pos,
+      "headlabel",
+      flip,
+    )
+    bbox = expand_bbox_for_edge_endpoint_label(
+      bbox,
+      edge_layout,
+      edge_layout.tail_label_pos,
+      "taillabel",
+      flip,
+    )
   }
   bbox
 }

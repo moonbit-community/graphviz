@@ -2,22 +2,21 @@
 /// Xlabel candidate collection kernels: label metrics, rankdir-aware
 /// dimensions, obstacle construction, and edge-anchor candidate assembly.
 
-
 ///|
 /// Xlabel dimension metrics and rankdir-flip helpers shared by candidate,
 /// update, and finalization stages.
-
 pub struct XLabelMetrics {
   width : Double
   height : Double
 }
 
+///|
 pub struct LabelDims {
   width : Double
   height : Double
 }
 
-
+///|
 pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
   match node.get_attr("xlabel") {
     Some(text) =>
@@ -26,13 +25,16 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
       } else {
         let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
         let font = @attrs.font_name(node.get_attr("fontname"))
-        let (width, height) = @label_metrics.label_text_dimensions(text, font, font_size_pt)
+        let (width, height) = @label_metrics.label_text_dimensions(
+          text, font, font_size_pt,
+        )
         Some({ width, height })
       }
     None => None
   }
 }
 
+///|
 pub fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
   match @edge_label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
@@ -40,6 +42,7 @@ pub fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
   }
 }
 
+///|
 pub fn maybe_flip_dims(
   width : Double,
   height : Double,
@@ -51,10 +54,10 @@ pub fn maybe_flip_dims(
     { width, height }
   }
 }
+
 ///|
 /// Xlabel candidate collection from node/edge geometry and existing label
 /// placements before running xlabels.c-style search.
-
 pub fn build_edges_by_tail(
   edges : Array[DotLayoutEdge],
 ) -> Map[String, Array[DotLayoutEdge]] {
@@ -71,6 +74,7 @@ pub fn build_edges_by_tail(
   edges_by_tail
 }
 
+///|
 fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
   match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height })
@@ -78,6 +82,7 @@ fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
   }
 }
 
+///|
 fn edge_attr_metrics_for_xlabel(
   edge : @cgraph.Edge,
   key : String,
@@ -88,19 +93,18 @@ fn edge_attr_metrics_for_xlabel(
   }
 }
 
+///|
 fn push_existing_label_object(
   pos : @geom.Point,
   metrics : XLabelMetrics,
   flip : Bool,
   objects : Array[XObject],
 ) -> Unit {
-  let label_dims =
-    maybe_flip_dims(metrics.width, metrics.height, flip)
-  let pos_ll =
-    @edge_spline.point(
-      pos.x - label_dims.width / 2.0,
-      pos.y - label_dims.height / 2.0,
-    )
+  let label_dims = maybe_flip_dims(metrics.width, metrics.height, flip)
+  let pos_ll = @edge_spline.point(
+    pos.x - label_dims.width / 2.0,
+    pos.y - label_dims.height / 2.0,
+  )
   objects.push({
     pos: pos_ll,
     width: label_dims.width,
@@ -109,14 +113,14 @@ fn push_existing_label_object(
   })
 }
 
+///|
 fn push_unset_xlabel_label(
   target : XLabelTarget,
   metrics : XLabelMetrics,
   flip : Bool,
   labels : Array[XLabel],
 ) -> Int {
-  let label_dims =
-    maybe_flip_dims(metrics.width, metrics.height, flip)
+  let label_dims = maybe_flip_dims(metrics.width, metrics.height, flip)
   let idx = labels.length()
   labels.push({
     target,
@@ -128,6 +132,7 @@ fn push_unset_xlabel_label(
   idx
 }
 
+///|
 fn push_deferred_label_anchor(
   target : XLabelTarget,
   metrics : XLabelMetrics,
@@ -136,16 +141,11 @@ fn push_deferred_label_anchor(
   labels : Array[XLabel],
   objects : Array[XObject],
 ) -> Unit {
-  let idx =
-    push_unset_xlabel_label(target, metrics, flip, labels)
-  objects.push({
-    pos: anchor,
-    width: 0.0,
-    height: 0.0,
-    label_index: Some(idx),
-  })
+  let idx = push_unset_xlabel_label(target, metrics, flip, labels)
+  objects.push({ pos: anchor, width: 0.0, height: 0.0, label_index: Some(idx) })
 }
 
+///|
 fn collect_edge_label_candidate(
   target : XLabelTarget,
   current_pos : @geom.Point?,
@@ -167,12 +167,7 @@ fn collect_edge_label_candidate(
         match (metrics, anchor) {
           (Some(value), Some(point)) =>
             push_deferred_label_anchor(
-              target,
-              value,
-              point,
-              flip,
-              labels,
-              objects,
+              target, value, point, flip, labels, objects,
             )
           _ => ()
         }
@@ -205,8 +200,7 @@ pub fn build_node_obstacle_with_xlabel_slot(
   match xlabel_metrics_for_node(node) {
     Some(metrics) =>
       match node_layout.xlabel_pos {
-        Some(pos) =>
-          push_existing_label_object(pos, metrics, flip, objects)
+        Some(pos) => push_existing_label_object(pos, metrics, flip, objects)
         None =>
           label_index = Some(
             push_unset_xlabel_label(
@@ -241,11 +235,13 @@ fn collect_edge_label_anchors(
       head_anchor: None,
     }
   }
-  let use_spline_midpoint =
-    splines == SplinesMode::Spline || splines == SplinesMode::Curved
+  let use_spline_midpoint = splines == SplinesMode::Spline ||
+    splines == SplinesMode::Curved
   {
     has_geometry,
-    mid_anchor: @edge_label.edge_midpoint_for_layout(edge_layout, use_spline_midpoint),
+    mid_anchor: @edge_label.edge_midpoint_for_layout(
+      edge_layout, use_spline_midpoint,
+    ),
     tail_anchor: @edge_label.edge_tail_point_for_layout(edge_layout),
     head_anchor: @edge_label.edge_head_point_for_layout(edge_layout),
   }
@@ -303,4 +299,3 @@ pub fn collect_edge_xlabel_candidates(
     objects,
   )
 }
-

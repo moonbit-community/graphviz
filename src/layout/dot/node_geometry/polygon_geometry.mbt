@@ -17,7 +17,8 @@ fn attr_bool_true(value : String?) -> Bool {
 ///|
 fn polygon_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
   match node.get_attr(key) {
-    Some(value) => @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
+    Some(value) =>
+      @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
     None => fallback
   }
 }
@@ -35,9 +36,7 @@ fn polygon_attr_double(
 }
 
 ///|
-fn polygon_shape_attrs(
-  node : @cgraph.Node,
-) -> PolygonShapeAttrs {
+fn polygon_shape_attrs(node : @cgraph.Node) -> PolygonShapeAttrs {
   // Graphviz parity (poly_init): polygon shape accepts explicit sides=0 which
   // keeps ellipse behavior; missing sides falls back to 4.
   let mut sides = match node.get_attr("sides") {
@@ -54,7 +53,8 @@ fn polygon_shape_attrs(
   let orientation = polygon_attr_double(node, "orientation", 0.0)
   let skew = polygon_attr_double(node, "skew", 0.0)
   let distortion = polygon_attr_double(node, "distortion", 0.0)
-  if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+  if sides <= 2 &&
+    (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
     // Graphviz parity: skew/distort forces polygon fallback from ellipse to
     // high-side polygon (poly_init sides=120).
     sides = 120
@@ -65,82 +65,89 @@ fn polygon_shape_attrs(
 
 ///|
 /// Graphviz parity: built-in polygon shape defaults mirror shapes.c polygon_t.
-fn builtin_polygon_shape_attrs(
-  shape : String,
-) -> PolygonShapeAttrs? {
+fn builtin_polygon_shape_attrs(shape : String) -> PolygonShapeAttrs? {
   match shape {
-    "diamond" => Some({
-      sides: 4,
-      peripheries: 1,
-      orientation: 0.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "triangle" => Some({
-      sides: 3,
-      peripheries: 1,
-      orientation: 0.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "invtriangle" => Some({
-      sides: 3,
-      peripheries: 1,
-      orientation: 180.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "egg" => Some({
-      sides: 120,
-      peripheries: 1,
-      orientation: 0.0,
-      distortion: -0.3,
-      skew: 0.0,
-      regular: false,
-    })
-    "octagon" => Some({
-      sides: 8,
-      peripheries: 1,
-      orientation: 0.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "doubleoctagon" => Some({
-      sides: 8,
-      peripheries: 2,
-      orientation: 0.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "tripleoctagon" => Some({
-      sides: 8,
-      peripheries: 3,
-      orientation: 0.0,
-      distortion: 0.0,
-      skew: 0.0,
-      regular: false,
-    })
-    "house" => Some({
-      sides: 5,
-      peripheries: 1,
-      orientation: 0.0,
-      distortion: -0.64,
-      skew: 0.0,
-      regular: false,
-    })
-    "invhouse" => Some({
-      sides: 5,
-      peripheries: 1,
-      orientation: 180.0,
-      distortion: -0.64,
-      skew: 0.0,
-      regular: false,
-    })
+    "diamond" =>
+      Some({
+        sides: 4,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "triangle" =>
+      Some({
+        sides: 3,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "invtriangle" =>
+      Some({
+        sides: 3,
+        peripheries: 1,
+        orientation: 180.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "egg" =>
+      Some({
+        sides: 120,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: -0.3,
+        skew: 0.0,
+        regular: false,
+      })
+    "octagon" =>
+      Some({
+        sides: 8,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "doubleoctagon" =>
+      Some({
+        sides: 8,
+        peripheries: 2,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "tripleoctagon" =>
+      Some({
+        sides: 8,
+        peripheries: 3,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "house" =>
+      Some({
+        sides: 5,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: -0.64,
+        skew: 0.0,
+        regular: false,
+      })
+    "invhouse" =>
+      Some({
+        sides: 5,
+        peripheries: 1,
+        orientation: 180.0,
+        distortion: -0.64,
+        skew: 0.0,
+        regular: false,
+      })
     _ => None
   }
 }
@@ -154,13 +161,16 @@ fn builtin_polygon_attrs(
 ) -> PolygonShapeAttrs? {
   match builtin_polygon_shape_attrs(shape) {
     Some(base) => {
-      let mut peripheries =
-        polygon_attr_int(node, "peripheries", base.peripheries)
+      let mut peripheries = polygon_attr_int(
+        node,
+        "peripheries",
+        base.peripheries,
+      )
       if peripheries < 0 {
         peripheries = 0
       }
-      let orientation =
-        base.orientation + polygon_attr_double(node, "orientation", 0.0)
+      let orientation = base.orientation +
+        polygon_attr_double(node, "orientation", 0.0)
       let regular = base.regular || attr_bool_true(node.get_attr("regular"))
       Some({
         sides: base.sides,
@@ -182,7 +192,9 @@ fn polygon_is_box_like(
   distortion : Double,
   skew : Double,
 ) -> Bool {
-  if sides != 4 || Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001 {
+  if sides != 4 ||
+    Double::abs(distortion) > 0.0000001 ||
+    Double::abs(skew) > 0.0000001 {
     return false
   }
   let nearest = (orientation / 90.0).round() * 90.0
@@ -205,7 +217,11 @@ fn polygon_scaled_label_bbox(
   let mut bb_height = label_height_pt
   let temp = bb_height * sqrt2
   if base_height_pt > temp {
-    let ratio = if base_height_pt > 0.0 { bb_height / base_height_pt } else { 0.0 }
+    let ratio = if base_height_pt > 0.0 {
+      bb_height / base_height_pt
+    } else {
+      0.0
+    }
     let denom = 1.0 - ratio * ratio
     if denom > 0.0 {
       bb_width = bb_width * Double::sqrt(1.0 / denom)
@@ -319,11 +335,7 @@ fn polygon_vertices_for_size(
   for vertex in base {
     out.push(@edge_spline.point(vertex.x * scale_x, vertex.y * scale_y))
   }
-  {
-    bbox_width_pt: bbox_width,
-    bbox_height_pt: bbox_height,
-    vertices: out,
-  }
+  { bbox_width_pt: bbox_width, bbox_height_pt: bbox_height, vertices: out }
 }
 
 ///|
@@ -341,7 +353,7 @@ fn polygon_outline_for_size(
   }
   let sides = base.length()
   let mut prev = base[sides - 1]
-  for j in 1..=sides {
+  for j in 1..<=sides {
     let candidate = base[(sides - j) % sides]
     if !points_nearly_equal(candidate, base[0]) {
       prev = candidate
@@ -384,6 +396,7 @@ fn polygon_outline_for_size(
   }
   out
 }
+
 ///|
 /// Shape-aware compass clipping policy for dot endpoint sampling.
 pub fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
@@ -409,8 +422,7 @@ pub fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
     | "septagon"
     | "octagon"
     | "doubleoctagon"
-    | "tripleoctagon" =>
-      true
+    | "tripleoctagon" => true
     "polygon" => {
       let attrs = polygon_shape_attrs(node)
       if attrs.sides < 3 {

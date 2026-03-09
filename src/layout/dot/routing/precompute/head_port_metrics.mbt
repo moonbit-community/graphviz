@@ -140,7 +140,7 @@ fn build_head_port_metrics_from_geometry(
 
 ///|
 /// Dot-specific head-port metric assembly for routing precompute.
-type RecordOrientation = @dot_shared.RecordOrientation
+type RecordOrientation = @layout_prep.RecordOrientation
 
 ///|
 type RecordPort = @record_geometry.RecordPort

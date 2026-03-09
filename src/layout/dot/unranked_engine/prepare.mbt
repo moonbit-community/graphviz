@@ -3,7 +3,6 @@
 /// cloning, neato validation, and the public neato/noop prepare entry points.
 /// Geometry parsing, neato solve, and layout-tree assembly live in
 /// package-local owner files.
-
 fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
   let nodes = graph.nodes()
   let degree : Map[String, Int] = Map::new()
@@ -116,30 +115,15 @@ fn clone_edge_with_optional_name_ports(
             head_port=head_value,
           )
         (Some(tail_value), None) =>
-          graph.edge(
-            tail,
-            head,
-            name=label,
-            tail_port=tail_value,
-          )
+          graph.edge(tail, head, name=label, tail_port=tail_value)
         (None, Some(head_value)) =>
-          graph.edge(
-            tail,
-            head,
-            name=label,
-            head_port=head_value,
-          )
+          graph.edge(tail, head, name=label, head_port=head_value)
         (None, None) => graph.edge(tail, head, name=label)
       }
     None =>
       match (tail_port, head_port) {
         (Some(tail_value), Some(head_value)) =>
-          graph.edge(
-            tail,
-            head,
-            tail_port=tail_value,
-            head_port=head_value,
-          )
+          graph.edge(tail, head, tail_port=tail_value, head_port=head_value)
         (Some(tail_value), None) => graph.edge(tail, head, tail_port=tail_value)
         (None, Some(head_value)) => graph.edge(tail, head, head_port=head_value)
         (None, None) => graph.edge(tail, head)
@@ -202,15 +186,14 @@ fn clone_pruned_graph(
     }
     let new_tail = cloned.node(tail_name)
     let new_head = cloned.node(head_name)
-    let new_edge =
-      clone_edge_with_optional_name_ports(
-        cloned,
-        new_tail,
-        new_head,
-        edge.name(),
-        edge.tail_port(),
-        edge.head_port(),
-      )
+    let new_edge = clone_edge_with_optional_name_ports(
+      cloned,
+      new_tail,
+      new_head,
+      edge.name(),
+      edge.tail_port(),
+      edge.head_port(),
+    )
     for pair in edge.attrs() {
       let (key, value) = pair
       new_edge.set_attr(key, value)
@@ -220,10 +203,7 @@ fn clone_pruned_graph(
 }
 
 ///|
-fn active_graph_for_prune(
-  graph : @cgraph.Graph,
-  prune : Bool,
-) -> @cgraph.Graph {
+fn active_graph_for_prune(graph : @cgraph.Graph, prune : Bool) -> @cgraph.Graph {
   if prune {
     let keep = prune_keep_set(graph)
     clone_pruned_graph(graph, keep)
@@ -235,7 +215,8 @@ fn active_graph_for_prune(
 ///|
 fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
   let nodesep_in = match graph.get_attr("nodesep") {
-    Some(value) => @numeric.parse_double_or(value, @input_stage.DEFAULT_NODESEP_IN)
+    Some(value) =>
+      @numeric.parse_double_or(value, @input_stage.DEFAULT_NODESEP_IN)
     None => @input_stage.DEFAULT_NODESEP_IN
   }
   nodesep_in * 72.0
@@ -275,9 +256,10 @@ pub fn prepare_neato_layout_tree(
     Ok(_) => ()
     Err(message) => return Err(message)
   }
-  Ok(build_neato_layout_tree(active_graph, scale, neato_nodesep_pt(active_graph)))
+  Ok(
+    build_neato_layout_tree(active_graph, scale, neato_nodesep_pt(active_graph)),
+  )
 }
-
 
 ///|
 /// Graphviz parity: noop entry prep keeps prune handling with the owning
@@ -291,4 +273,3 @@ pub fn prepare_noop_layout_tree(
   let active_graph = active_graph_for_prune(graph, prune)
   build_noop_layout_tree(active_graph, no_op_level, scale)
 }
-

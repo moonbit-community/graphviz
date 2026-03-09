@@ -1,0 +1,16 @@
+import {
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing/edge_spline" @edge_spline,
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/edge_identity",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbit-community/graphviz/layout/dot/node_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
+} for "wbtest"

@@ -1,6 +1,6 @@
 ///|
 /// Dot-owned bridge logic for Stage B rank/order pipeline assembly.
-type LayoutPrep = @shared.LayoutPrep
+type LayoutPrep = @layout_prep.LayoutPrep
 
 ///|
 type RankData = @rank_data.RankData
@@ -41,10 +41,7 @@ fn edge_mid_label_metrics_for_rank_heights(
   match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) =>
       Some(
-        @rank_heights.make_edge_mid_label_metrics(
-          metrics.width,
-          metrics.height,
-        ),
+        @rank_heights.make_edge_mid_label_metrics(metrics.width, metrics.height),
       )
     None => None
   }

@@ -18,6 +18,7 @@ pub(all) struct XLabel {
   set : Bool
 }
 
+///|
 pub(all) struct XObject {
   pos : @geom.Point
   width : Double
@@ -25,26 +26,44 @@ pub(all) struct XObject {
   label_index : Int?
 }
 
+///|
 pub fn xlabel_center(label : XLabel) -> @geom.Point {
-  @edge_spline.point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
+  @edge_spline.point(
+    label.pos.x + label.width / 2.0,
+    label.pos.y + label.height / 2.0,
+  )
 }
 
 ///|
 /// Exterior-label placement core: xlabel metrics, overlap scoring, candidate
 /// search, and xlabels.c-style candidate selection.
-
 const XLXDENOM : Double = 8.0
 
 ///|
 const XLYDENOM : Double = 2.0
 
+///|
 const XLPXPY : Int = 0
+
+///|
 const XLCXPY : Int = 1
+
+///|
 const XLNXPY : Int = 2
+
+///|
 const XLPXCY : Int = 3
+
+///|
 const XLNXCY : Int = 5
+
+///|
 const XLPXNY : Int = 6
+
+///|
 const XLCXNY : Int = 7
+
+///|
 const XLNXNY : Int = 8
 
 ///|
@@ -54,6 +73,7 @@ priv struct XBestPos {
   pos : @geom.Point
 }
 
+///|
 fn rect_overlap_area(a : @geom.Rect, b : @geom.Rect) -> Double {
   let min_x = if a.llx > b.llx { a.llx } else { b.llx }
   let max_x = if a.urx < b.urx { a.urx } else { b.urx }
@@ -66,6 +86,7 @@ fn rect_overlap_area(a : @geom.Rect, b : @geom.Rect) -> Double {
   }
 }
 
+///|
 fn rect_from_object(obj : XObject) -> @geom.Rect {
   let llx = obj.pos.x.round()
   let lly = obj.pos.y.round()
@@ -74,6 +95,7 @@ fn rect_from_object(obj : XObject) -> @geom.Rect {
   { llx, lly, urx, ury }
 }
 
+///|
 fn rect_from_label(label : XLabel) -> @geom.Rect {
   let llx = label.pos.x.round()
   let lly = label.pos.y.round()
@@ -82,20 +104,18 @@ fn rect_from_label(label : XLabel) -> @geom.Rect {
   { llx, lly, urx, ury }
 }
 
+///|
 fn label_encloses_point(label : XLabel, point_obj : XObject) -> Bool {
   let px = point_obj.pos.x
   let py = point_obj.pos.y
   px > label.pos.x &&
-    px < label.pos.x + label.width &&
-    py > label.pos.y &&
-    py < label.pos.y + label.height
+  px < label.pos.x + label.width &&
+  py > label.pos.y &&
+  py < label.pos.y + label.height
 }
 
-fn get_intrsx_index(
-  op : XObject,
-  cp : XObject,
-  labels : Array[XLabel],
-) -> Int {
+///|
+fn get_intrsx_index(op : XObject, cp : XObject, labels : Array[XLabel]) -> Int {
   let op_set = match op.label_index {
     Some(idx) => labels[idx].set
     None => false
@@ -138,6 +158,7 @@ fn get_intrsx_index(
   -1
 }
 
+///|
 fn record_intersection_slot(
   objs : Array[XObject],
   labels : Array[XLabel],
@@ -186,6 +207,7 @@ fn record_intersection_slot(
   }
 }
 
+///|
 fn xlintersections(
   objs : Array[XObject],
   labels : Array[XLabel],
@@ -221,8 +243,9 @@ fn xlintersections(
     let srect = rect_from_object(other)
     let overlap = rect_overlap_area(rect, srect)
     if overlap > 0.0 {
-      let ra =
-        record_intersection_slot(objs, labels, obj_idx, i, rect, overlap, intrsx)
+      let ra = record_intersection_slot(
+        objs, labels, obj_idx, i, rect, overlap, intrsx,
+      )
       count = count + 1
       area = area + ra
     }
@@ -233,16 +256,9 @@ fn xlintersections(
           let srect = rect_from_label(other_label)
           let overlap = rect_overlap_area(rect, srect)
           if overlap > 0.0 {
-            let ra =
-              record_intersection_slot(
-                objs,
-                labels,
-                obj_idx,
-                i,
-                rect,
-                overlap,
-                intrsx,
-              )
+            let ra = record_intersection_slot(
+              objs, labels, obj_idx, i, rect, overlap, intrsx,
+            )
             count = count + 1
             area = area + ra
           }
@@ -254,6 +270,7 @@ fn xlintersections(
   { n: count, area, pos: label.pos }
 }
 
+///|
 fn xladjust(
   objs : Array[XObject],
   labels : Array[XLabel],
@@ -297,7 +314,9 @@ fn xladjust(
     best = candidate
   }
   // bottom
-  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y - label.height))
+  set_label(
+    @edge_spline.point(obj.pos.x - label.width, obj.pos.y - label.height),
+  )
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -428,6 +447,7 @@ fn xladjust(
   best
 }
 
+///|
 pub fn place_labels(
   objs : Array[XObject],
   labels : Array[XLabel],

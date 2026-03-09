@@ -9,11 +9,11 @@ pub fn layout_neato(
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   @label_layout.reset_label_caches()
-  let layout_tree =
-    match @unranked_engine.prepare_neato_layout_tree(graph, scale, prune) {
-      Ok(value) => value
-      Err(message) => raise DotLayoutError::InvalidGraph(message~)
-    }
+  let layout_tree = match
+    @unranked_engine.prepare_neato_layout_tree(graph, scale, prune) {
+    Ok(value) => value
+    Err(message) => raise DotLayoutError::InvalidGraph(message~)
+  }
   dot_layout_graph_from_layout_tree(layout_tree)
 }
 
@@ -25,16 +25,11 @@ pub fn layout_neato_noop(
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   @label_layout.reset_label_caches()
-  let layout_tree =
-    match @unranked_engine.prepare_noop_layout_tree(
-      graph,
-      no_op_level,
-      scale,
-      prune,
-    ) {
-      Ok(value) => value
-      Err(message) => raise DotLayoutError::InvalidGraph(message~)
-    }
+  let layout_tree = match
+    @unranked_engine.prepare_noop_layout_tree(graph, no_op_level, scale, prune) {
+    Ok(value) => value
+    Err(message) => raise DotLayoutError::InvalidGraph(message~)
+  }
   dot_layout_graph_from_layout_tree(layout_tree)
 }
 
@@ -45,10 +40,5 @@ pub fn layout_dot_noop(
   scale? : Double = 72.0,
   prune? : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
-  layout_neato_noop(
-    graph,
-    no_op_level=no_op_level,
-    scale=scale,
-    prune=prune,
-  )
+  layout_neato_noop(graph, no_op_level~, scale~, prune~)
 }

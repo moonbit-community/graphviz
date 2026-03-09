@@ -1,13 +1,19 @@
 ///|
 /// Port geometry, side-mask, and dynamic label-port anchor helpers for
 /// record/html endpoint handling in dot layout.
-
 type RankDir = @rankdir.RankDir
+
+///|
 type NodeSize = @node_primitives.NodeSize
+
+///|
 type RecordPort = @record_geometry.RecordPort
 
 ///|
-pub fn layout_port_offset(offset : @geom.Point, rankdir : RankDir) -> @geom.Point {
+pub fn layout_port_offset(
+  offset : @geom.Point,
+  rankdir : RankDir,
+) -> @geom.Point {
   match rankdir {
     RankDir::TB => offset
     RankDir::BT => { x: offset.x, y: -offset.y }
@@ -40,15 +46,21 @@ pub fn layout_ports_from_final(
 
 ///|
 pub const PORT_SIDE_BOTTOM : Int = 1
+
 ///|
 pub const PORT_SIDE_RIGHT : Int = 2
+
 ///|
 pub const PORT_SIDE_TOP : Int = 4
+
 ///|
 pub const PORT_SIDE_LEFT : Int = 8
+
 ///|
-pub const PORT_SIDE_ALL : Int =
-  PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
+pub const PORT_SIDE_ALL : Int = PORT_SIDE_BOTTOM |
+  PORT_SIDE_RIGHT |
+  PORT_SIDE_TOP |
+  PORT_SIDE_LEFT
 
 ///|
 fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
@@ -63,11 +75,7 @@ fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
 ///|
 fn invflip_side(side : Int, rankdir : RankDir) -> Int {
   let mut out = 0
-  let add = (from : Int, to : Int) => {
-    if (side & from) != 0 {
-      out = out | to
-    }
-  }
+  let add = (from : Int, to : Int) => if (side & from) != 0 { out = out | to }
   match rankdir {
     RankDir::TB => side
     RankDir::BT => {
@@ -191,6 +199,7 @@ fn resolve_dynamic_port_anchor(
   { anchor: Some(anchor), side: invflip_side(best_side, rankdir) }
 }
 
+///|
 fn compass_port_name(compass : @cgraph.Compass) -> String {
   match compass {
     @cgraph.Compass::N => "n"
@@ -264,6 +273,7 @@ fn resolve_label_port_for_graph(
 }
 
 ///|
+
 ///|
 pub fn dynamic_port_anchor_for_edge(
   port : @cgraph.Port?,
@@ -274,8 +284,9 @@ pub fn dynamic_port_anchor_for_edge(
   rankdir : RankDir,
   record_border_adjust : Double,
 ) -> DynamicPortAnchorForEdge {
-  let resolved_port =
-    resolve_label_port_for_graph(node_name, port, raw_ports_map)
+  let resolved_port = resolve_label_port_for_graph(
+    node_name, port, raw_ports_map,
+  )
   if resolved_port.effective_compass is Some(_) {
     return { anchor: None, side: 0, is_dynamic: false }
   }
@@ -287,13 +298,9 @@ pub fn dynamic_port_anchor_for_edge(
     Some(raw_ports) =>
       match raw_ports.get(port_name) {
         Some(raw_port) => {
-          let resolved_anchor =
-            resolve_dynamic_port_anchor(
-              raw_port,
-              node_pos,
-              other_pos,
-              rankdir,
-            )
+          let resolved_anchor = resolve_dynamic_port_anchor(
+            raw_port, node_pos, other_pos, rankdir,
+          )
           // Graphviz parity: keep resolvePort side in all rankdirs.
           // beginpath/endpath rely on this side to build record_path boxes.
           let effective_side = resolved_anchor.side
@@ -302,11 +309,7 @@ pub fn dynamic_port_anchor_for_edge(
           // and extra record-border shifts introduce 0.5pt drift in structs/records.
           let adjusted_anchor = resolved_anchor.anchor
           ignore(record_border_adjust)
-          {
-            anchor: adjusted_anchor,
-            side: effective_side,
-            is_dynamic: true,
-          }
+          { anchor: adjusted_anchor, side: effective_side, is_dynamic: true }
         }
         None => { anchor: None, side: 0, is_dynamic: false }
       }
@@ -374,8 +377,10 @@ pub fn port_side_for_edge(
   node_size : NodeSize,
   side_anchor : @geom.Point?,
 ) -> Int {
-  let all_sides =
-    PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
+  let all_sides = PORT_SIDE_BOTTOM |
+    PORT_SIDE_RIGHT |
+    PORT_SIDE_TOP |
+    PORT_SIDE_LEFT
   let base_sides = match port_rect {
     Some(rect) => port_side_mask_from_rect(rect, node_pos, node_size)
     None => all_sides
@@ -386,7 +391,8 @@ pub fn port_side_for_edge(
         Some(compass) => base_sides & compass_side_mask(compass)
         None =>
           match side_anchor {
-            Some(anchor) => port_side_mask_from_anchor(anchor, node_pos, node_size)
+            Some(anchor) =>
+              port_side_mask_from_anchor(anchor, node_pos, node_size)
             None => 0
           }
       }
@@ -409,9 +415,8 @@ pub fn port_rect_from_geometry(
   } else {
     0.01
   }
-  let is_port_rect =
-    Double::abs(size.width_pt - node_size.width_pt) > eps ||
-      Double::abs(size.height_pt - node_size.height_pt) > eps
+  let is_port_rect = Double::abs(size.width_pt - node_size.width_pt) > eps ||
+    Double::abs(size.height_pt - node_size.height_pt) > eps
   if !is_port_rect {
     return None
   }
@@ -433,8 +438,9 @@ pub fn port_geometry(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> PortGeometry {
-  let resolved_port =
-    resolve_label_port_for_graph(node_name, port, label_ports_map)
+  let resolved_port = resolve_label_port_for_graph(
+    node_name, port, label_ports_map,
+  )
   let name = match resolved_port.name {
     Some(value) => value
     None => return { center: node_pos, size: node_size }
@@ -463,7 +469,8 @@ pub fn port_is_label_port(
   port : @cgraph.Port?,
   label_ports_raw : Map[String, Map[String, RecordPort]],
 ) -> Bool {
-  let resolved_port =
-    resolve_label_port_for_graph(node_name, port, label_ports_raw)
+  let resolved_port = resolve_label_port_for_graph(
+    node_name, port, label_ports_raw,
+  )
   resolved_port.name is Some(_)
 }

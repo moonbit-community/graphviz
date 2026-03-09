@@ -1,0 +1,23 @@
+import {
+  "moonbit-community/graphviz/layout/dot/label_layout",
+  "moonbit-community/graphviz/layout/dot/unranked_engine",
+  "moonbit-community/graphviz/layout/dot/finalization",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/shared" @dot_shared,
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/ordering/rank_stage",
+  "moonbit-community/graphviz/layout/dot/input_stage",
+  "moonbit-community/graphviz/layout/dot/positioning",
+  "moonbit-community/graphviz/layout/dot/routing/integration",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/math",
+  "moonbitlang/core/ref",
+  "moonbitlang/core/strconv",
+}
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbitlang/x/fs",
+  "moonbitlang/core/strconv",
+} for "test"

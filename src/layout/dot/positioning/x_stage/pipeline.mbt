@@ -1,7 +1,6 @@
 ///|
 /// Positioning X-stage owner: mode-flag gating, X seed and flat-label
 /// augmentation, solve-input assembly, and xpos simplex invocation.
-
 type NodeSize = @node_primitives.NodeSize
 
 ///|
@@ -13,7 +12,7 @@ type RankDir = @rankdir.RankDir
 ///|
 pub(all) struct XStageInput {
   graph : @cgraph.Graph
-  prep : @shared.LayoutPrep
+  prep : @layout_prep.LayoutPrep
   rank_data : @rank_data.RankData
   rank_heights : @rank_heights.RankHeights
   cluster_meta : @setup.DotClusterMetadata
@@ -118,9 +117,7 @@ fn compute_layout_x_positions(
 /// reorder/transpose, and flat-label augmentation in Graphviz-aligned order
 /// and wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_with_flat_labels(
-  pipeline : XStageInput,
-) -> XWithFlatLabelData {
+fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
   let mode_flags = build_position_mode_flags({
     has_edge_labels: pipeline.prep.has_edge_labels,
     has_port_edges: pipeline.prep.has_port_edges,

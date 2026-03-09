@@ -49,14 +49,14 @@ fn sample_layout_prep(
     rankdir,
     nodesep_in: 0.25,
     ranksep_in: 0.5,
-    splines: @shared.SplinesMode::Spline,
+    splines: @layout_prep.SplinesMode::Spline,
     nodes,
     edges,
     has_dotted_edges: false,
     has_port_edges,
     has_edge_labels: false,
     node_order: Map::new(),
-    record_orientation: @shared.record_layout_orientation(rankdir),
+    record_orientation: @layout_prep.record_layout_orientation(rankdir),
     output_sizes,
     order_sizes: output_sizes,
     sizes,
@@ -148,7 +148,7 @@ test "build_routing_port_layout_maps gates on port edges and rotates record port
   node.set_attr("shape", "record")
   node.set_attr("label", "<left>l|<right>r")
   let rankdir = RankDir::LR
-  let orientation = @shared.record_layout_orientation(rankdir)
+  let orientation = @layout_prep.record_layout_orientation(rankdir)
   let size = @node_geometry.node_size(node, orientation)
   let nodes_out : Array[DotLayoutNode] = [
     {

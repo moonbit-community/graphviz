@@ -4,8 +4,9 @@ test "layout_ports_from_final rotates record ports into LR layout coordinates" {
   let graph = @dot_parser.parse_dot(
     "digraph { rankdir=LR; node [shape=record]; rotated_record [label=\"<left>   |<mid> b |   \"]; }",
   )
-  let record_orientation =
-    @shared.record_layout_orientation(@rankdir.graph_rankdir(graph))
+  let record_orientation = @layout_prep.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
   let node = graph.node("rotated_record")
   let size = @node_geometry.node_size(node, record_orientation)
   let ports = @record_layout.record_ports(

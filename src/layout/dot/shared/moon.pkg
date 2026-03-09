@@ -1,6 +1,4 @@
 import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
-  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-  "moonbit-community/graphviz/layout/dot/rankdir",
 }

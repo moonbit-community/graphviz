@@ -178,9 +178,7 @@ fn run_clustered_root_phase(
       vnode_clusters: runtime_context.vnode_info.vnode_clusters,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     },
-    @root.build_root_snapshot_capture_callback(
-      @edge_semantics.edge_xpenalty,
-    ),
+    @root.build_root_snapshot_capture_callback(@edge_semantics.edge_xpenalty),
   )
 }
 
