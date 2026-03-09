@@ -71,7 +71,7 @@ fn run_nonclustered_ordering_dispatch(
   let input = dispatch_context.input
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
-  let ordered_groups = @mincross.run_noncluster_reorder_pass({
+  let ordered_groups = @noncluster.run_noncluster_reorder_pass({
     nodes: input.nodes,
     edges: input.edges,
     edge_head: input.edge_head,
