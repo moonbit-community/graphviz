@@ -59,6 +59,46 @@ test "build_x_groups_with_vnodes inserts vnodes by key while preserving base ord
 }
 
 ///|
+test "build_x_groups_with_vnodes treats epsilon-close vnode keys as stable ties" {
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "b"]
+
+  let order_index : Map[String, Int] = Map::new()
+  order_index["a"] = 0
+  order_index["b"] = 1
+
+  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  vnodes_by_rank[0] = ["v_eps"]
+
+  let vnode_order_keys : Map[String, Double] = Map::new()
+  vnode_order_keys["v_eps"] = 0.9999995
+
+  let groups = build_x_groups_with_vnodes(
+    ordered_groups, order_index, vnodes_by_rank, vnode_order_keys,
+  )
+
+  assert_eq(groups.get(0), Some(["a", "b", "v_eps"]))
+}
+
+///|
+test "build_x_groups_with_vnodes falls back to source order when keys are missing" {
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "b"]
+
+  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  vnodes_by_rank[0] = ["v_missing"]
+
+  let groups = build_x_groups_with_vnodes(
+    ordered_groups,
+    Map::new(),
+    vnodes_by_rank,
+    Map::new(),
+  )
+
+  assert_eq(groups.get(0), Some(["a", "v_missing", "b"]))
+}
+
+///|
 test "clone_rank_groups and order_positions_from_groups keep detached local order maps" {
   let groups : Map[Int, Array[String]] = Map::new()
   groups[0] = ["a", "b"]
