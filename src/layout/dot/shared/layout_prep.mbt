@@ -1,4 +1,5 @@
 type RankDir = @rankdir.RankDir
+type NodeSize = @node_primitives.NodeSize
 
 ///|
 /// Edge routing mode for dot layouts.
@@ -30,6 +31,21 @@ pub fn record_layout_orientation(rankdir : RankDir) -> RecordOrientation {
 }
 
 ///|
+pub fn merge_sizes_with_vnodes(
+  sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+) -> Map[String, NodeSize] {
+  let merged : Map[String, NodeSize] = Map::new()
+  for name, size in sizes {
+    merged[name] = size
+  }
+  for name, size in vnode_sizes {
+    merged[name] = size
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: prepared layout inputs keep canonicalized graph attributes,
 /// node/edge snapshots, and derived geometry maps grouped for downstream
 /// stages.
@@ -51,4 +67,3 @@ pub(all) struct LayoutPrep {
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
 }
-

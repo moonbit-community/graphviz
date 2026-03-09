@@ -1,25 +1,7 @@
 ///|
-type NodeSize = @node_primitives.NodeSize
-
-///|
 pub(all) struct ExtraConstraintNode {
   name : String
   rank : Int
-}
-
-///|
-pub fn merge_sizes_with_vnodes(
-  sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-) -> Map[String, NodeSize] {
-  let merged : Map[String, NodeSize] = Map::new()
-  for name, size in sizes {
-    merged[name] = size
-  }
-  for name, size in vnode_sizes {
-    merged[name] = size
-  }
-  merged
 }
 
 ///|

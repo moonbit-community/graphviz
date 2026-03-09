@@ -227,7 +227,7 @@ fn build_x_order_sizes(
   vnode_sizes : Map[String, @node_primitives.NodeSize],
 ) -> Map[String, @node_primitives.NodeSize] {
   if use_vnodes_for_xpos {
-    @ordering.merge_sizes_with_vnodes(
+    @shared.merge_sizes_with_vnodes(
       x_base_sizes,
       vnode_sizes,
     )

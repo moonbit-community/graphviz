@@ -1,4 +1,3 @@
 import {
   "moonbitlang/core/math",
-  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
 }
