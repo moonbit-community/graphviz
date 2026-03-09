@@ -12,6 +12,41 @@ pub(all) struct HeadPortMetrics {
 }
 
 ///|
+/// Graphviz parity: head-port metric aggregation mirrors dotsplines
+/// count/min/max accumulation for complex tuning.
+pub fn build_head_port_metrics(
+  edges : Array[@cgraph.Edge],
+  enable_complex_tuning : Bool,
+  edge_metric_sample : (@cgraph.Edge) -> (String, Double)?,
+) -> HeadPortMetrics {
+  let head_port_counts : Map[String, Int] = Map::new()
+  let head_port_min_dist : Map[String, Double] = Map::new()
+  let head_port_max_dist : Map[String, Double] = Map::new()
+  if enable_complex_tuning {
+    for edge in edges {
+      match edge_metric_sample(edge) {
+        Some((key, dist)) => {
+          let current = head_port_counts.get(key).unwrap_or_default()
+          head_port_counts[key] = current + 1
+          let mut min_dist = head_port_min_dist.get(key).unwrap_or(dist)
+          let mut max_dist = head_port_max_dist.get(key).unwrap_or(dist)
+          if dist < min_dist {
+            min_dist = dist
+          }
+          if dist > max_dist {
+            max_dist = dist
+          }
+          head_port_min_dist[key] = min_dist
+          head_port_max_dist[key] = max_dist
+        }
+        None => ()
+      }
+    }
+  }
+  { head_port_counts, head_port_min_dist, head_port_max_dist }
+}
+
+///|
 /// Graphviz parity: complex head-port tuning keys match dotsplines behavior:
 /// explicit port key when present, otherwise record-shape node key.
 fn head_metric_key_for_edge(
