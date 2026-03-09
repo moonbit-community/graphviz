@@ -594,19 +594,15 @@ priv struct RootRankOrderPhaseContext {
 }
 
 ///|
-/// Graphviz parity: clustered root rank-order base keeps one static source
-/// payload plus one static rank-order context reused across root/finalize
-/// callers, with only rank groups varying per pass.
+/// Graphviz parity: clustered finalize replay keeps only the root-rank replay
+/// capability needed to rebuild cluster-rank order from one root phase output.
 /// Do not change behavior without updating fixtures/tests.
-struct RootRankOrderPhaseBase {
-  order_with_clusters : Bool
-  root_reorder_sources_base : RootReorderBuildSources
-  root_rank_order_context : RootRankOrderPhaseContext
-  order_edges_by_tail_root : Map[
-    String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ]
-}
+pub type ClusterRankOrderReplay = (
+  RootAndClusterRanksOutput,
+  Map[String, String],
+  Map[String, Bool],
+  Map[String, Bool],
+) -> Map[Int, Map[String, Int]]
 
 ///|
 /// Graphviz parity: root rank-order phase source bundle keeps pre-root
@@ -636,12 +632,27 @@ priv struct RootRankOrderPhaseBaseBuildSources {
 }
 
 ///|
-/// Graphviz parity: root rank-order phase base is assembled directly from one
-/// source snapshot and reused by both root pass and finalize replay.
+/// Graphviz parity: root rank-order replay state keeps one static source
+/// payload plus one static rank-order context reused across root/finalize
+/// callers, with only rank groups varying per pass.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_phase_base_from_sources(
+priv struct RootRankOrderReplayState {
+  order_with_clusters : Bool
+  root_reorder_sources_base : RootReorderBuildSources
+  root_rank_order_context : RootRankOrderPhaseContext
+  order_edges_by_tail_root : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ]
+}
+
+///|
+/// Graphviz parity: root rank-order replay state is assembled directly from
+/// one source snapshot and reused by both root pass and finalize replay.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_rank_order_replay_state_from_sources(
   sources : RootRankOrderPhaseBaseBuildSources,
-) -> RootRankOrderPhaseBase {
+) -> RootRankOrderReplayState {
   let root_reorder_sources_base : RootReorderBuildSources = {
     order_with_vnodes: sources.reorder_setup.order_with_vnodes,
     order_rank_keys: sources.order_rank_keys,
@@ -893,50 +904,49 @@ fn run_root_rank_order_phase(
 /// Graphviz parity: clustered root rank-order pass reuses one static base
 /// snapshot and only swaps rank groups before root reorder/rank-order run.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_reorder_and_rank_order_from_base(
-  phase_base : RootRankOrderPhaseBase,
+fn run_root_reorder_and_rank_order_from_replay_state(
+  replay_state : RootRankOrderReplayState,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
   let root_reorder_sources = with_root_reorder_groups(
-    phase_base.root_reorder_sources_base,
+    replay_state.root_reorder_sources_base,
     order_groups_for_mincross,
   )
   let root_reorder_output = build_root_reorder_inputs(
     root_reorder_sources,
-    phase_base.order_edges_by_tail_root,
+    replay_state.order_edges_by_tail_root,
   )
   let root_rank_order_phase_output = run_root_rank_order_phase(
     root_reorder_output,
-    phase_base.root_rank_order_context,
+    replay_state.root_rank_order_context,
   )
   (root_reorder_output, root_rank_order_phase_output)
 }
 
 ///|
-/// Graphviz parity: cluster-phase rank-order map is derived from root pass
-/// outputs and root-only replay inputs without mutating source snapshots.
+/// Graphviz parity: cluster-rank replay closure is assembled from one root
+/// phase source snapshot and replays cluster-rank order without exposing
+/// internal root-reorder state across packages.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_from_root_phase(
-  phase_base : RootRankOrderPhaseBase,
-  root_cluster_stage : RootAndClusterRanksOutput,
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  if !phase_base.order_with_clusters {
-    return Map::new()
+fn build_cluster_rank_order_replay_from_state(
+  replay_state : RootRankOrderReplayState,
+) -> ClusterRankOrderReplay {
+  (root_cluster_stage, order_cluster_keys, order_cluster_skeleton, real_nodes) => {
+    if !replay_state.order_with_clusters {
+      return Map::new()
+    }
+    let (_root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_replay_state(
+      replay_state,
+      root_cluster_stage.order_groups_for_mincross,
+    )
+    build_cluster_order_from_root(
+      root_rank_order_phase_output.root_rank_keys,
+      root_rank_order_phase_output.ordered_root,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      real_nodes,
+    )
   }
-  let (_root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_base(
-    phase_base,
-    root_cluster_stage.order_groups_for_mincross,
-  )
-  build_cluster_order_from_root(
-    root_rank_order_phase_output.root_rank_keys,
-    root_rank_order_phase_output.ordered_root,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    real_nodes,
-  )
 }
 
 ///|

@@ -592,7 +592,9 @@ fn build_remincross_materialized_inputs(
   )
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
-  let cluster_order_index = build_cluster_order_index(inputs.cluster_order)
+  let cluster_order_index = @mincross.build_cluster_order_index(
+    inputs.cluster_order,
+  )
   // Graphviz parity: ReMincross rematerialization keeps order-edge expansion
   // and order-graph array materialization on one shared context snapshot.
   let materialized_edges = build_remincross_materialized_edges(
@@ -788,7 +790,8 @@ fn build_cluster_tail_names_for_cluster(
     // Graphviz parity: root cluster tail order can apply a temporary
     // override snapshot before replaying root names into GD_nlist.
     return match context.root_tail_order_override {
-      Some(override_names) => reorder_names_by_override(names, override_names)
+      Some(override_names) =>
+        @mincross.reorder_names_by_override(names, override_names)
       None => names
     }
   }

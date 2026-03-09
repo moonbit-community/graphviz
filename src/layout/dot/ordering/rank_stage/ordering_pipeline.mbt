@@ -198,9 +198,9 @@ fn run_clustered_finalize_phase(
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
   let edge_port_data = pipeline_context.edge_port_data
-  let finalize_output = @mincross.run_clustered_finalize_stage(
+  let finalize_output = @remincross.run_clustered_finalize_stage(
     {
-      phase_base: root_phase_output.root_rank_order_phase_base,
+      cluster_rank_order_replay: root_phase_output.cluster_rank_order_replay,
       root_cluster_stage: root_phase_output.root_cluster_stage,
       root_tail_order_override: root_phase_output.root_tail_order_override,
       pre_root_stage,
@@ -238,10 +238,10 @@ fn run_clustered_finalize_phase(
       port_order_positions: input.port_order_positions,
       port_order_contrib: input.port_order_contrib,
     },
-    @mincross.build_remincross_snapshot_capture_callback(
+    @remincross.build_remincross_snapshot_capture_callback(
       @edge_semantics.edge_xpenalty,
     ),
-    @mincross.run_remincross_cleanup_reorder,
+    @remincross.run_remincross_cleanup_reorder,
   )
   {
     ordered_groups: finalize_output.ordered_groups,

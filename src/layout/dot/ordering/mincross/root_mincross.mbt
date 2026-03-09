@@ -783,13 +783,13 @@ fn run_root_and_cluster_ranks_stage_from_sources(
 
 ///|
 /// Graphviz parity: root-phase stage output keeps root+cluster rank groups,
-/// tail-order replay override, and shared root-rank-order phase base grouped
-/// for clustered finalize replay.
+/// tail-order replay override, and the root replay capability used by
+/// clustered finalize replay grouped together.
 /// Do not change behavior without updating fixtures/tests.
 pub struct ClusteredRootPhaseStageOutput {
   root_cluster_stage : RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  root_rank_order_phase_base : RootRankOrderPhaseBase
+  cluster_rank_order_replay : ClusterRankOrderReplay
 }
 
 ///|
@@ -899,11 +899,14 @@ pub fn run_clustered_root_phase_stage(
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> ClusteredRootPhaseStageOutput {
   let sources = build_clustered_root_phase_stage_sources(build_sources)
-  let root_rank_order_phase_base = build_root_rank_order_phase_base_from_sources(
+  let root_rank_order_replay_state = build_root_rank_order_replay_state_from_sources(
     sources.root_rank_order_phase_base_sources,
   )
-  let (root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_base(
-    root_rank_order_phase_base,
+  let cluster_rank_order_replay = build_cluster_rank_order_replay_from_state(
+    root_rank_order_replay_state,
+  )
+  let (root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_replay_state(
+    root_rank_order_replay_state,
     sources.order_groups_for_root_phase,
   )
   let root_groups_override_for_root_pass = if !sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters {
@@ -919,7 +922,7 @@ pub fn run_clustered_root_phase_stage(
   let root_cluster_stage = run_root_and_cluster_ranks_stage_from_sources(
     sources, root_groups_override_for_root_pass, capture_call,
   )
-  { root_cluster_stage, root_tail_order_override, root_rank_order_phase_base }
+  { root_cluster_stage, root_tail_order_override, cluster_rank_order_replay }
 }
 
 ///|

@@ -5,7 +5,7 @@
 ///|
 /// Graphviz parity: cluster traversal order index is seeded from Graphviz
 /// cluster_order for cluster tie-breaking in ordering passes.
-fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
+pub fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
   let cluster_index : Map[String, Int] = Map::new()
   for idx, name in cluster_order {
     cluster_index[name] = idx
@@ -576,7 +576,7 @@ fn should_skip_cluster_rank_bucket_reorder(
 /// optionally apply cluster-rank bucket reorder, then apply local-cluster
 /// ordering before final ReMincross.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_finalize_groups(
+pub fn build_clustered_finalize_groups(
   cleaned_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],

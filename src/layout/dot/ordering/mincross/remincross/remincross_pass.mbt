@@ -73,8 +73,8 @@ priv struct ClusteredFinalizeInputs {
 /// one finalize stage run.
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusteredFinalizeStageRootSources {
-  phase_base : RootRankOrderPhaseBase
-  root_cluster_stage : RootAndClusterRanksOutput
+  cluster_rank_order_replay : @mincross.ClusterRankOrderReplay
+  root_cluster_stage : @mincross.RootAndClusterRanksOutput
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   real_nodes : Map[String, Bool]
@@ -89,10 +89,10 @@ priv struct ClusteredFinalizeStageRootSources {
 /// deterministic finalize run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredFinalizeStageBuildSources {
-  phase_base : RootRankOrderPhaseBase
-  root_cluster_stage : RootAndClusterRanksOutput
+  cluster_rank_order_replay : @mincross.ClusterRankOrderReplay
+  root_cluster_stage : @mincross.RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  pre_root_stage : ClusteredPreRootStageOutput
+  pre_root_stage : @mincross.ClusteredPreRootStageOutput
   real_nodes : Map[String, Bool]
   ratio : String
   edges : Array[@cgraph.Edge]
@@ -187,7 +187,7 @@ fn build_clustered_finalize_stage_from_sources(
   sources : ClusteredFinalizeStageBuildSources,
 ) -> ClusteredFinalizeStageRootSources {
   {
-    phase_base: sources.phase_base,
+    cluster_rank_order_replay: sources.cluster_rank_order_replay,
     root_cluster_stage: sources.root_cluster_stage,
     order_cluster_keys: sources.pre_root_stage.order_cluster_keys,
     order_cluster_skeleton: sources.pre_root_stage.order_cluster_skeleton,
@@ -208,8 +208,7 @@ fn build_clustered_finalize_stage_from_sources(
 fn build_clustered_finalize_inputs_from_root_phase_stage_sources(
   sources : ClusteredFinalizeStageRootSources,
 ) -> ClusteredFinalizeInputs {
-  let cluster_rank_order = build_cluster_rank_order_from_root_phase(
-    sources.phase_base,
+  let cluster_rank_order = (sources.cluster_rank_order_replay)(
     sources.root_cluster_stage,
     sources.order_cluster_keys,
     sources.order_cluster_skeleton,
@@ -296,7 +295,7 @@ fn run_clustered_finalize_order_groups(
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
-  let cleaned_groups = collect_real_only_rank_groups(
+  let cleaned_groups = @mincross.collect_real_only_rank_groups(
     inputs.order_rank_keys,
     inputs.ordered,
     inputs.remincross_context.real_nodes,
@@ -307,7 +306,7 @@ fn run_clustered_finalize_order_groups(
       ordered_with_vnodes: inputs.remincross_context.ordered_with_vnodes,
     }
   }
-  let final_groups = build_clustered_finalize_groups(
+  let final_groups = @mincross.build_clustered_finalize_groups(
     cleaned_groups,
     inputs.cluster_rank_order,
     inputs.remincross_context.cluster_keys,
@@ -406,7 +405,7 @@ pub fn run_remincross_pass(
       capture_call,
       reorder_call,
     )
-    let rem_cleaned = collect_real_only_rank_groups(
+    let rem_cleaned = @mincross.collect_real_only_rank_groups(
       rem_rank_keys,
       rem_ordered,
       context.real_nodes,
