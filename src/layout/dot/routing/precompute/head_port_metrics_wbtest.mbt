@@ -112,6 +112,56 @@ test "build_head_port_metrics_from_geometry aggregates only keyed edges" {
 }
 
 ///|
+test "build_dot_head_port_metrics uses explicit label-port geometry and record fallback centers" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let tail_port = graph.node("tail_port")
+  let tail_plain = graph.node("tail_plain")
+  let record_head = graph.node("record_head")
+  record_head.set_attr("shape", "record")
+
+  let explicit = graph.edge(tail_port, record_head, head_port={
+    name: Some("p"),
+    compass: None,
+  })
+  let fallback = graph.edge(tail_plain, record_head, name="fallback")
+
+  let positions : Map[String, @geom.Point] = Map::new()
+  positions["tail_port"] = { x: 0.0, y: 0.0 }
+  positions["tail_plain"] = { x: 0.0, y: 0.0 }
+  positions["record_head"] = { x: 6.0, y: 8.0 }
+
+  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  sizes["tail_port"] = @node_primitives.node_size_from_points(10.0, 10.0)
+  sizes["tail_plain"] = @node_primitives.node_size_from_points(10.0, 10.0)
+  sizes["record_head"] = @node_primitives.node_size_from_points(12.0, 12.0)
+
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
+  label_ports_map["record_head"] = {
+    "p": {
+      center: { x: 3.0, y: 4.0 },
+      size: @node_primitives.node_size_from_points(2.0, 2.0),
+      sides: 0,
+    },
+  }
+
+  let metrics = build_dot_head_port_metrics(
+    [explicit, fallback],
+    true,
+    positions,
+    sizes,
+    @layout_prep.RecordOrientation::Horizontal,
+    label_ports_map,
+  )
+
+  assert_eq(metrics.head_port_counts.get("record_head:p"), Some(1))
+  assert_eq(metrics.head_port_min_dist.get("record_head:p"), Some(5.0))
+  assert_eq(metrics.head_port_max_dist.get("record_head:p"), Some(5.0))
+  assert_eq(metrics.head_port_counts.get("record_head"), Some(1))
+  assert_eq(metrics.head_port_min_dist.get("record_head"), Some(10.0))
+  assert_eq(metrics.head_port_max_dist.get("record_head"), Some(10.0))
+}
+
+///|
 test "build_head_port_metrics accumulates count and distance envelope per key" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
