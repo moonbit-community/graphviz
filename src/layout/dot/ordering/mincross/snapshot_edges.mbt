@@ -251,7 +251,7 @@ pub fn build_root_mincross_input_snapshot(
   )
   {
     rank_keys: input.rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(input.groups),
+    groups: @shared.clone_rank_groups(input.groups),
     edges,
     cluster_keys: clone_string_map(input.cluster_keys),
     cluster_skeleton: clone_bool_map(input.cluster_skeleton),
@@ -267,7 +267,7 @@ pub fn build_remincross_input_snapshot(
 ) -> RemincrossInputSnapshot {
   {
     rank_keys: input.rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(input.groups),
+    groups: @shared.clone_rank_groups(input.groups),
     edges: build_ordering_edge_snapshot_entries({
       edges_out: input.edges_out,
       edge_tail_out: input.edge_tail_out,

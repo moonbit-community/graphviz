@@ -370,7 +370,7 @@ fn build_remincross_materialized_arrays(
   cluster_order_index : Map[String, Int],
   materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
-  let rem_ranks = @ordering.build_node_ranks(inputs.rem_groups)
+  let rem_ranks = @shared.build_node_ranks(inputs.rem_groups)
   let rem_nlist_order = build_remincross_nlist_order(
     inputs.creation_order,
     materialized_edges.vnode_creation,
@@ -380,7 +380,7 @@ fn build_remincross_materialized_arrays(
     cluster_order_index,
     inputs.root_tail_order_override,
   )
-  let rem_node_order = @ordering.build_order_index(inputs.rem_groups)
+  let rem_node_order = @shared.build_order_index(inputs.rem_groups)
   let rem_materialized = @order_graph.collect_order_edges_for_tails(
     rem_nlist_order,
     materialized_edges.order_edges_by_tail,
@@ -582,7 +582,7 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
 fn build_remincross_materialized_inputs(
   inputs : ReMincrossMaterializationInputs,
 ) -> ReMincrossCleanupMaterializedInputs {
-  let rem_ranks = @ordering.build_node_ranks(inputs.rem_groups)
+  let rem_ranks = @shared.build_node_ranks(inputs.rem_groups)
   let rem_nodes = @order_graph.build_order_nodes_from_groups(
     inputs.rem_groups,
     inputs.rem_rank_keys,

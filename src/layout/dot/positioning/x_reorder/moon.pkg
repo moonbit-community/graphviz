@@ -1,5 +1,5 @@
 import {
-  "moonbit-community/graphviz/layout/dot/ordering",
+  "moonbit-community/graphviz/layout/dot/shared",
   "moonbit-community/graphviz/layout/dot/ordering/reorder",
   "moonbit-community/graphviz/layout/dot/ordering/order_graph",
   "moonbit-community/graphviz/layout/dot/edge_semantics",

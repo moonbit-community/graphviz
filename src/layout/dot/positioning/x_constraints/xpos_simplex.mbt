@@ -13,7 +13,7 @@ priv struct XposSimplexSolveInput {
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]

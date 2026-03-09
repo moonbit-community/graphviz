@@ -5,7 +5,7 @@ pub struct XposComputationInput {
   x_sizes : Map[String, @node_primitives.NodeSize]
   x_rank_keys : Array[Int]
   x_ranks : Map[String, Int]
-  x_extra_nodes : Array[@ordering.ExtraConstraintNode]
+  x_extra_nodes : Array[ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
 }
 
@@ -29,8 +29,8 @@ priv struct XposComputationInputSources {
 fn build_vnode_extra_nodes(
   vnode_order : Array[String],
   vnode_ranks : Map[String, Int],
-) -> Array[@ordering.ExtraConstraintNode] {
-  let extra : Array[@ordering.ExtraConstraintNode] = []
+) -> Array[ExtraConstraintNode] {
+  let extra : Array[ExtraConstraintNode] = []
   let seen : Map[String, Bool] = Map::new()
   if vnode_order.length() > 0 {
     for name in vnode_order {
@@ -69,8 +69,8 @@ fn build_xpos_computation_input_from_sources(
     } else {
       sources.x_base_sizes
     }
-  let x_rank_keys = @ordering.collect_rank_keys(sources.x_groups)
-  let x_ranks = @ordering.build_node_ranks(sources.x_groups)
+  let x_rank_keys = @shared.collect_rank_keys(sources.x_groups)
+  let x_ranks = @shared.build_node_ranks(sources.x_groups)
   let vnode_extra_nodes =
     if sources.use_vnodes_for_xpos {
       build_vnode_extra_nodes(
@@ -110,7 +110,7 @@ pub(all) struct XPositionSolveInput {
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   flat_label_edges : Array[ConstraintEdge]
   edge_vnodes : Map[String, Array[String]]
 }

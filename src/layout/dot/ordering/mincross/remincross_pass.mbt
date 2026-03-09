@@ -355,7 +355,7 @@ pub fn run_remincross_pass(
       vnodes_by_rank: context.vnodes_by_rank,
     },
   })
-  let rem_rank_keys = @ordering.collect_rank_keys(rem_groups)
+  let rem_rank_keys = @shared.collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
       ordered_groups: base_groups,
@@ -961,15 +961,15 @@ fn build_remincross_vnode_keys(
 pub fn build_remincross_vnode_groups(
   inputs : ReMincrossVnodeGroupInputs,
 ) -> Map[Int, Array[String]] {
-  let rem_base_groups = @ordering.clone_rank_groups(inputs.final_groups)
-  let rem_base_order_index = @ordering.build_order_index(rem_base_groups)
+  let rem_base_groups = @shared.clone_rank_groups(inputs.final_groups)
+  let rem_base_order_index = @shared.build_order_index(rem_base_groups)
   let rem_vnode_order_keys = if !inputs.order_with_vnodes {
     Map::new()
   } else {
     build_remincross_vnode_keys(inputs, rem_base_order_index)
   }
   if inputs.order_with_vnodes {
-    @ordering.build_x_groups_with_vnodes(
+    @shared.build_x_groups_with_vnodes(
       rem_base_groups,
       rem_base_order_index,
       inputs.vnodes_by_rank,

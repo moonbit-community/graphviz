@@ -3,7 +3,7 @@
 
 ///|
 pub(all) struct PreparedXposConstraintInputs {
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
@@ -23,7 +23,7 @@ fn prepare_xpos_constraint_inputs(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
-  base_extra_nodes : Array[@ordering.ExtraConstraintNode],
+  base_extra_nodes : Array[ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints =

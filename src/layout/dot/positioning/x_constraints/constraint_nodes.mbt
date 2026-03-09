@@ -1,17 +1,23 @@
 ///|
+pub(all) struct ExtraConstraintNode {
+  name : String
+  rank : Int
+}
+
+///|
 priv struct ConstraintNodeSeed {
   real_by_name : Map[String, @cgraph.Node]
   extra_rank : Map[String, Int]
-  late_extra_nodes : Array[@ordering.ExtraConstraintNode]
+  late_extra_nodes : Array[ExtraConstraintNode]
 }
 
 ///|
 fn build_constraint_node_seed(
   nodes : Array[@cgraph.Node],
-  extra_nodes : Array[@ordering.ExtraConstraintNode],
+  extra_nodes : Array[ExtraConstraintNode],
 ) -> ConstraintNodeSeed {
-  let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
-  let late_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
+  let early_extra_nodes : Array[ExtraConstraintNode] = []
+  let late_extra_nodes : Array[ExtraConstraintNode] = []
   for extra_node in extra_nodes {
     if @cluster_identity.is_cluster_boundary_name(extra_node.name) {
       late_extra_nodes.push(extra_node)
@@ -111,7 +117,7 @@ fn add_ordered_constraint_nodes(
 pub(all) struct ConstraintNodesSetupInput {
   graph : @network_simplex.NsGraph
   nodes : Array[@cgraph.Node]
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   nlist_order : Array[String]
   base_positions : Map[String, Double]
 }
@@ -122,7 +128,7 @@ pub(all) struct ConstraintNodesSetupInput {
 pub(all) struct ConstraintNodesSetupOutput {
   index : Map[String, Int]
   real_by_name : Map[String, @cgraph.Node]
-  late_extra_nodes : Array[@ordering.ExtraConstraintNode]
+  late_extra_nodes : Array[ExtraConstraintNode]
 }
 
 ///|
@@ -157,7 +163,7 @@ fn build_constraint_nodes_setup(
 pub(all) struct LateConstraintNodesInput {
   graph : @network_simplex.NsGraph
   index : Map[String, Int]
-  late_extra_nodes : Array[@ordering.ExtraConstraintNode]
+  late_extra_nodes : Array[ExtraConstraintNode]
 }
 
 ///|

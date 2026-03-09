@@ -70,7 +70,7 @@ pub fn count_crossings(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> Int {
-  let order = @ordering.build_order_index(groups)
+  let order = @shared.build_order_index(groups)
   let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
@@ -279,7 +279,7 @@ pub fn count_crossings_port_aware(
   edge_head_port_x? : Array[Double] = [],
   fixed_order? : Map[String, Int] = Map::new(),
 ) -> Int {
-  let order = @ordering.build_order_index(groups)
+  let order = @shared.build_order_index(groups)
   let rank_keys : Array[Int] = []
   for rank, _ in groups {
     rank_keys.push(rank)

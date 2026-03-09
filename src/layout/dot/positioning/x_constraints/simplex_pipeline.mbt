@@ -16,7 +16,7 @@ priv struct XSimplexInput {
   cluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]
@@ -114,7 +114,7 @@ pub fn compute_x_positions_with_prepared_constraints(
       solve_input.extra_nodes,
       solve_input.flat_label_edges,
     )
-  let order_index = @ordering.build_order_index(solve_input.groups)
+  let order_index = @shared.build_order_index(solve_input.groups)
   x_positions_from_simplex(
     {
       graph_root: solve_input.graph,

@@ -3,7 +3,7 @@
 
 ///|
 pub(all) struct ClusterConstraintBuild {
-  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  extra_nodes : Array[ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
@@ -141,7 +141,7 @@ fn build_cluster_constraints(
   let cluster_border_right : Map[String, Double] = Map::new()
   let cluster_min_rank : Map[String, Int] = Map::new()
   let cluster_max_rank : Map[String, Int] = Map::new()
-  let extra_nodes : Array[@ordering.ExtraConstraintNode] = []
+  let extra_nodes : Array[ExtraConstraintNode] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)

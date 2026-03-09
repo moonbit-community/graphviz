@@ -1,8 +1,5 @@
 ///|
-pub(all) struct ExtraConstraintNode {
-  name : String
-  rank : Int
-}
+/// Shared rank/group helpers used by ordering and positioning subpackages.
 
 ///|
 fn sort_rank_items(items : Array[(Double, Int, String)]) -> Array[String] {

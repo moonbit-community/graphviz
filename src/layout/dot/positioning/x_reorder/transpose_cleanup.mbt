@@ -32,8 +32,8 @@ fn apply_xpos_transpose_cleanup(
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let tmp_rank_keys = @ordering.collect_rank_keys(x_groups)
-  let tmp_ranks = @ordering.build_node_ranks(x_groups)
+  let tmp_rank_keys = @shared.collect_rank_keys(x_groups)
+  let tmp_ranks = @shared.build_node_ranks(x_groups)
   let _ = @reorder.transpose_rank_groups_limited(
     tmp_rank_keys, x_groups, parents, children, tmp_ranks, false, max_passes,
   )

@@ -148,7 +148,7 @@ fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
   if cluster_graphs.length() == 0 {
     return ()
   }
-  let fixed_positions = @ordering.order_positions_from_groups(input.groups)
+  let fixed_positions = @shared.order_positions_from_groups(input.groups)
   let fixed_ranks = merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.

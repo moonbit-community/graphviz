@@ -242,12 +242,12 @@ fn build_root_reorder_groups(
       root_groups_base[rank] = root_names
     }
   }
-  let root_order_index = @ordering.build_order_index(root_groups_base)
+  let root_order_index = @shared.build_order_index(root_groups_base)
   let (root_vnodes_by_rank, root_vnode_order_keys) = build_root_vnode_inputs(
     order_with_vnodes, root_vnodes, vnodes_by_rank, vnode_order_keys_for_ordering,
   )
   if order_with_vnodes {
-    @ordering.build_x_groups_with_vnodes(
+    @shared.build_x_groups_with_vnodes(
       root_groups_base, root_order_index, root_vnodes_by_rank, root_vnode_order_keys,
     )
   } else {
@@ -359,7 +359,7 @@ fn build_root_reorder_node_order(
       root_node_idx = root_node_idx + 1
     }
   }
-  let root_order_index = @ordering.build_order_index(root_groups)
+  let root_order_index = @shared.build_order_index(root_groups)
   for name, idx in root_order_index {
     if root_node_order.get(name) is None {
       root_node_order[name] = idx
@@ -501,8 +501,8 @@ fn build_root_reorder_context(
     sources.vnodes_by_rank,
     sources.vnode_order_keys_for_ordering,
   )
-  let root_rank_keys = @ordering.collect_rank_keys(root_groups)
-  let root_ranks = @ordering.build_node_ranks(root_groups)
+  let root_rank_keys = @shared.collect_rank_keys(root_groups)
+  let root_ranks = @shared.build_node_ranks(root_groups)
   let root_nodes = @order_graph.build_order_nodes_from_groups(root_groups, root_rank_keys)
   let root_graph_output = @order_graph.build_order_graph_and_nodes("order_root", root_nodes)
   let root_graph = root_graph_output.order_graph

@@ -1,7 +1,5 @@
 {
-  "import": [
-    "moonbit-community/graphviz/layout/dot/ordering",
-    "moonbit-community/graphviz/layout/dot/shared",
+  "import": [    "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/ordering/order_graph",
     "moonbit-community/graphviz/layout/dot/clustering",
     "moonbit-community/graphviz/layout/dot/cluster_graph",

@@ -85,9 +85,9 @@ fn build_initial_x_groups(
   let mut x_groups =
     if input.use_vnodes_for_xpos {
       if input.ordered_groups_with_vnodes.length() > 0 {
-        @ordering.clone_rank_groups(input.ordered_groups_with_vnodes)
+        @shared.clone_rank_groups(input.ordered_groups_with_vnodes)
       } else {
-        @ordering.build_x_groups_with_vnodes(
+        @shared.build_x_groups_with_vnodes(
           input.ordered_groups,
           input.order_index,
           input.vnodes_by_rank,
@@ -290,7 +290,7 @@ pub fn build_x_seed_data(
 fn build_x_seed_data_from_sources(
   sources : XSeedBuildSources,
 ) -> XPositionSeedData {
-  let order_index = @ordering.build_order_index(sources.ordered_groups)
+  let order_index = @shared.build_order_index(sources.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state(
       {

@@ -218,7 +218,7 @@ fn reorder_cluster_rank_groups(
       dispatch_context,
     )
     expanded_clusters[cluster] = true
-    current_fixed_positions = @ordering.order_positions_from_groups(groups)
+    current_fixed_positions = @shared.order_positions_from_groups(groups)
   }
 }
 
@@ -721,7 +721,7 @@ fn build_cluster_local_reorder_context(
     cluster_node_order,
     inputs.source_out_neighbors,
   )
-  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @shared.collect_rank_keys(cluster_groups)
   let cluster_fixed_positions = build_cluster_fixed_positions(
     inputs.fixed_positions,
     cluster_node_set,
@@ -1230,7 +1230,7 @@ fn build_local_rank_groups(
   let out_heads_by_tail = build_cluster_out_heads_by_tail(
     cluster_node_set, source_graphviz_out_neighbors,
   )
-  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @shared.collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
       Some(value) => value
