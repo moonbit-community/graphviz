@@ -98,6 +98,28 @@ test "sample_spline_points and spline label helpers follow arc length" {
 }
 
 ///|
+test "spline_label_pos_at_samples picks the y-axis crossing nearest the arc midpoint" {
+  let samples = [
+    @edge_spline.point(0.0, 0.0),
+    @edge_spline.point(4.0, 4.0),
+    @edge_spline.point(8.0, 0.0),
+    @edge_spline.point(12.0, 4.0),
+  ]
+
+  let axis_hit = require_point_with_tangent(
+    spline_label_pos_at_samples(samples, 2.0, false),
+    "y-axis-hit",
+  )
+
+  assert_point_close(axis_hit.pos, @edge_spline.point(6.0, 2.0), eps=0.001)
+  assert_point_close(
+    axis_hit.tangent,
+    @edge_spline.point(0.70710678, -0.70710678),
+    eps=0.001,
+  )
+}
+
+///|
 test "port_label_points respects marker fallback semantics" {
   let spline = straight_spline_with_markers()
 
@@ -139,6 +161,25 @@ test "port_label_points respects marker fallback semantics" {
 }
 
 ///|
+test "port_label_points falls back to bezier samples when markers are requested but missing" {
+  let spline = straight_spline()
+
+  let head = require_point_with_tangent(
+    port_label_points(spline, true, true),
+    "head-fallback",
+  )
+  assert_point_close(head.pos, @edge_spline.point(9.0, 0.0))
+  assert_point_close(head.tangent, @edge_spline.point(8.1, 0.0), eps=0.01)
+
+  let tail = require_point_with_tangent(
+    port_label_points(spline, false, true),
+    "tail-fallback",
+  )
+  assert_point_close(tail.pos, @edge_spline.point(0.0, 0.0))
+  assert_point_close(tail.tangent, @edge_spline.point(0.9, 0.0), eps=0.01)
+}
+
+///|
 test "port_label_params applies defaults parse fallback and min clamp" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
@@ -154,6 +195,23 @@ test "port_label_params applies defaults parse fallback and min clamp" {
   edge.set_attr("labelangle", "oops")
   edge.set_attr("labeldistance", "oops")
   assert_eq(port_label_params(edge, -25.0, -180.0), Some((-25.0, 1.0)))
+}
+
+///|
+test "port_label_params treats empty attrs as explicit defaults only when the other attr is present" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+
+  edge.set_attr("labelangle", "")
+  edge.set_attr("labeldistance", "")
+  assert_eq(port_label_params(edge, -25.0, -180.0), None)
+
+  edge.set_attr("labeldistance", "2")
+  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-25.0, 2.0)))
+
+  edge.set_attr("labelangle", "-30")
+  edge.set_attr("labeldistance", "")
+  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-30.0, 1.0)))
 }
 
 ///|
