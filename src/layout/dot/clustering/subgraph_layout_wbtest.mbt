@@ -108,7 +108,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
     Some(value) => value
     None => fail("expected cluster label metrics")
   }
-  let pad = CLUSTER_LABEL_PAD_PT
+  let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
   let expected_label_pos = @shared.graph_label_pos(
     layouts[0].bbox,
     metrics.width_pt + pad * 2.0,

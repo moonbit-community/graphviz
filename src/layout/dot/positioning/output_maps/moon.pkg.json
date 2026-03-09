@@ -1,6 +1,6 @@
 {
   "import": [
-    "moonbit-community/graphviz/layout/dot/clustering",
+    "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
     "moonbit-community/graphviz/layout/dot/cluster_graph",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/cgraph",

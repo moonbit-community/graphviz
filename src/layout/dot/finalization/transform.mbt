@@ -231,7 +231,7 @@ fn refresh_cluster_labels(layout : LayoutTree) -> LayoutTree {
   let label_pos = if @cluster_graph.is_cluster_graph(layout.graph) {
     match @label_metrics.graph_label_metrics(layout.graph) {
       Some(metrics) => {
-        let pad = @clustering.CLUSTER_LABEL_PAD_PT
+        let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
         Some(
           @shared.graph_label_pos(
             layout.bbox,

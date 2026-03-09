@@ -11,7 +11,7 @@ pub(all) struct PositionResult {
   flat_label_edge_vnodes : Map[String, String]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
-  cluster_bbox_heights : Map[String, @clustering.ClusterBboxHeightPair]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
 }
 
 ///|
@@ -83,9 +83,9 @@ fn build_projection_result(
     flat_label_ranks: x_stage_output.flat_label_ranks,
     vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
     cluster_margin_pt_for: @clustering.cluster_margin_pt,
-    cluster_label_padding_for: @clustering.cluster_label_padding_for_layout,
+    cluster_label_padding_for: @cluster_geometry.cluster_label_padding_for_layout,
     node_half_height_pt_for: @y_positions.node_half_height_pt,
-    cluster_label_width_pt_for: @clustering.cluster_label_width_with_pad_for_layout,
+    cluster_label_width_pt_for: @cluster_geometry.cluster_label_width_with_pad_for_layout,
   })
   let position_output_maps = @output_maps.build_position_output_pipeline({
     has_clusters: pipeline.cluster_meta.has_clusters,
@@ -108,7 +108,7 @@ fn build_projection_result(
     vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
     sizes: pipeline.prep.sizes,
     cluster_margin_pt_for: @clustering.cluster_margin_pt,
-    expand_cluster_label_bbox: @clustering.expand_cluster_label_bbox_for_position_stage,
+    expand_cluster_label_bbox: @cluster_geometry.expand_cluster_label_bbox_for_position_stage,
   })
   {
     x_groups: x_stage_output.x_groups,

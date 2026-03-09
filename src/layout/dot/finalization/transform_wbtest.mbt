@@ -123,7 +123,7 @@ test "refresh_cluster_labels recomputes labeled cluster anchors and leaves other
     Some(value) => value
     None => fail("expected nested label metrics")
   }
-  let pad = @clustering.CLUSTER_LABEL_PAD_PT
+  let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
   let expected_cluster_label = @shared.graph_label_pos(
     refreshed_cluster.bbox,
     cluster_metrics.width_pt + pad * 2.0,

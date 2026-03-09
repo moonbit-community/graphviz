@@ -146,7 +146,7 @@ fn build_cluster_constraints(
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
-    let (left_border, right_border) = @clustering.cluster_label_borders_for_xpos_constraints(
+    let (left_border, right_border) = @cluster_geometry.cluster_label_borders_for_xpos_constraints(
       cluster_graph, rankdir,
     )
     cluster_border_left[name] = left_border
@@ -250,7 +250,7 @@ fn build_cluster_constraints(
       match cluster_graphs.get(name) {
         Some(cluster_graph) =>
           match
-            @clustering.cluster_label_width_with_pad_for_layout(cluster_graph) {
+            @cluster_geometry.cluster_label_width_with_pad_for_layout(cluster_graph) {
             Some(label_width) => {
               let minlen = @numeric.round_int(label_width)
               if minlen > 0 {

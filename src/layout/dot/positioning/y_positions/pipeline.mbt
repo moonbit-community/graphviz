@@ -86,7 +86,7 @@ priv struct YPositionsWithFlipInput {
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
   ranksep_pt : Double
-  cluster_bbox_heights : Map[String, @clustering.ClusterBboxHeightPair]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
   y_all_ranks : Array[Int]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
@@ -129,7 +129,7 @@ fn build_y_positions_with_flip(
       } else {
         0
       }
-    if @clustering.adjust_flip_rank_heights(
+    if @cluster_geometry.adjust_flip_rank_heights(
       {
         graph: input.graph,
         ranks: input.ranks,
@@ -176,7 +176,7 @@ pub(all) struct YPositionPipelineInput {
   cluster_label_padding_for : (
     @cgraph.Graph,
     @rankdir.RankDir,
-  ) -> @clustering.ClusterLabelPadding
+  ) -> @cluster_geometry.ClusterLabelPadding
   node_half_height_pt_for : (
     String,
     Map[String, @node_primitives.NodeSize],
@@ -189,7 +189,7 @@ pub(all) struct YPositionPipelineInput {
 pub(all) struct YPositionPipelineOutput {
   y_positions : Map[String, Double]
   rank_y : Map[Int, Double]
-  cluster_bbox_heights : Map[String, @clustering.ClusterBboxHeightPair]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
 }
 
 ///|
@@ -232,7 +232,7 @@ pub fn build_y_position_pipeline(
 ) -> YPositionPipelineOutput {
   let cluster_bbox_heights =
     if input.has_clusters {
-      @clustering.compute_cluster_bbox_heights(
+      @cluster_geometry.compute_cluster_bbox_heights(
         {
           graph: input.graph,
           ranks: input.ranks,

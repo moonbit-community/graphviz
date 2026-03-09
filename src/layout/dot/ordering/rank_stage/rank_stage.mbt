@@ -83,7 +83,7 @@ pub fn compute_dot_rank_stage(input : RankStageInput) -> RankStageOutput {
       prep.has_edge_labels,
       @node_primitives.VNODE_HEIGHT_PT,
       edge_mid_label_metrics_for_rank_heights,
-      @clustering.cluster_label_padding_for_layout,
+      @cluster_geometry.cluster_label_padding_for_layout,
     ),
   )
   let ordering_pipeline_output = compute_ordering_pipeline({

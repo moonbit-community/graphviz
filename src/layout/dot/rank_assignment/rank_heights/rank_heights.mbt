@@ -33,7 +33,7 @@ pub struct RankHeightsInput {
   has_edge_labels : Bool
   vnode_height_pt : Double
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?
-  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @clustering.ClusterLabelPadding
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
 }
 
 ///|
@@ -52,7 +52,7 @@ pub fn make_rank_heights_input(
   has_edge_labels : Bool,
   vnode_height_pt : Double,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
-  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @clustering.ClusterLabelPadding,
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding,
 ) -> RankHeightsInput {
   {
     graph,
@@ -270,7 +270,7 @@ pub fn compute_rank_heights(input : RankHeightsInput) -> RankHeights {
   let rank_pht = base_half_heights.rank_pht
   let rank_ht1 = base_half_heights.rank_ht1
   let rank_ht2 = base_half_heights.rank_ht2
-  let _ = @clustering.apply_cluster_rank_heights({
+  let _ = @cluster_geometry.apply_cluster_rank_heights({
     graph: input.graph,
     ranks: input.ranks,
     sizes: input.sizes,

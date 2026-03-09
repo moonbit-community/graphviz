@@ -77,10 +77,7 @@ fn sample_position_result(
 ) -> PositionResult {
   let empty_x_groups : Map[Int, Array[String]] = Map::new()
   let empty_flat_label_edge_vnodes : Map[String, String] = Map::new()
-  let empty_cluster_bbox_heights : Map[
-    String,
-    @clustering.ClusterBboxHeightPair,
-  ] = Map::new()
+  let empty_cluster_bbox_heights = Map::new()
   {
     x_groups: empty_x_groups,
     rank_y,

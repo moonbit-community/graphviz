@@ -515,7 +515,7 @@ test "apply_cluster_lr_mirror_after_rotation uses point mirror and refreshes clu
     Some(value) => value
     None => fail("expected cluster label metrics")
   }
-  let pad = @clustering.CLUSTER_LABEL_PAD_PT
+  let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
   let expected_label_pos = @shared.graph_label_pos(
     mirrored.subgraphs[0].bbox,
     cluster_metrics.width_pt + pad * 2.0,

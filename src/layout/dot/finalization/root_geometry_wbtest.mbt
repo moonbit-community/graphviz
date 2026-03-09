@@ -60,8 +60,8 @@ test "apply_root_label_bbox expands the root bbox and places the requested label
     Some(value) => value
     None => fail("expected root label metrics")
   }
-  let padded_width = metrics.width_pt + @clustering.CLUSTER_LABEL_PAD_PT * 2.0
-  let padded_height = metrics.height_pt + @clustering.CLUSTER_LABEL_PAD_PT
+  let padded_width = metrics.width_pt + @cluster_geometry.CLUSTER_LABEL_PAD_PT * 2.0
+  let padded_height = metrics.height_pt + @cluster_geometry.CLUSTER_LABEL_PAD_PT
   let width_diff = if padded_width > 10.0 {
     (padded_width - 10.0) / 2.0
   } else {

@@ -16,6 +16,12 @@ type DotLayoutNode = @shared.DotLayoutNode
 type DotLayoutEdge = @shared.DotLayoutEdge
 
 ///|
+type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair
+
+///|
+type RankDir = @rankdir.RankDir
+
+///|
 priv struct ClusterLabelPlacementInfo {
   width_pt : Double
   height_pt : Double
@@ -209,7 +215,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
         Some(metrics) => {
           let loc = @shared.graph_label_loc(subgraph)
           let just = @shared.graph_label_just(subgraph)
-          let pad = CLUSTER_LABEL_PAD_PT
+          let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
           let padded_width = metrics.width_pt + pad * 2.0
           let padded_height = metrics.height_pt + pad
           if flip {

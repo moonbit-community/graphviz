@@ -142,7 +142,7 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
     height_pt / 2.0 +
     margin +
     label_height +
-    CLUSTER_LABEL_PAD_PT
+    @cluster_geometry.CLUSTER_LABEL_PAD_PT
   guard bbox.llx <= expected_left + 0.1 else {
     fail("cluster llx too large: \{bbox.llx} expected <= \{expected_left}")
   }

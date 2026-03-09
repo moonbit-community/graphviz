@@ -2,7 +2,7 @@
 fn zero_cluster_label_padding(
   graph : @cgraph.Graph,
   rankdir : @rankdir.RankDir,
-) -> @clustering.ClusterLabelPadding {
+) -> @cluster_geometry.ClusterLabelPadding {
   ignore(graph)
   ignore(rankdir)
   { top: 0.0, bottom: 0.0 }

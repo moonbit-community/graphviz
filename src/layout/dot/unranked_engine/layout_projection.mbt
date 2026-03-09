@@ -9,7 +9,7 @@
 type LayoutTree = @shared.LayoutTree
 type DotLayoutNode = @shared.DotLayoutNode
 type DotLayoutEdge = @shared.DotLayoutEdge
-type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
+type ClusterBboxHeightPair = @cluster_geometry.ClusterBboxHeightPair
 
 ///|
 pub(all) struct EngineNodeProjection {

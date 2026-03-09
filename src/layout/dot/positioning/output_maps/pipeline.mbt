@@ -441,7 +441,7 @@ pub fn build_position_output_pipeline(
     )
   if input.has_clusters && input.cluster_rounding_enabled {
     let _ =
-      @clustering.adjust_cluster_positions(
+      @cluster_geometry.adjust_cluster_positions(
         {
           graph: input.graph,
           positions: output_maps.positions,
