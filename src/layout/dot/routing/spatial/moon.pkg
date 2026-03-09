@@ -1,0 +1,15 @@
+import {
+  "moonbit-community/graphviz/layout/dot/shared",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/positioning",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/clustering/subgraph_layout",
+  "moonbit-community/graphviz/layout/dot/bbox",
+  "moonbit-community/graphviz/layout/dot/label_layout",
+  "moonbit-community/graphviz/layout/dot/label_layout/port_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}

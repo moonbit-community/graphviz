@@ -49,7 +49,7 @@ fn sample_layout_prep(
     rankdir,
     nodesep_in: 0.25,
     ranksep_in: 0.5,
-    splines: SplinesMode::Spline,
+    splines: @shared.SplinesMode::Spline,
     nodes,
     edges,
     has_dotted_edges: false,
