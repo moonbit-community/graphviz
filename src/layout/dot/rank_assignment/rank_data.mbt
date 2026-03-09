@@ -2,6 +2,23 @@
 pub const CL_BACK : Int = 10
 
 ///|
+fn build_rank_groups(
+  nodes : Array[@cgraph.Node],
+  ranks : Map[String, Int],
+) -> Map[Int, Array[String]] {
+  let groups : Map[Int, Array[String]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let rank = ranks.get(name).unwrap_or_default()
+    match groups.get(rank) {
+      Some(list) => list.push(name)
+      None => groups[rank] = [name]
+    }
+  }
+  groups
+}
+
+///|
 /// Graphviz parity: rank-data payload keeps Stage-B rank inputs grouped so
 /// edge direction/orientation wiring remains explicit and stable.
 pub struct RankDataInput {
@@ -49,17 +66,16 @@ pub struct RankData {
 /// Graphviz parity: rank direction + acyclic edge directions aligned to
 /// refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-pub fn compute_rank_data(
-  input : RankDataInput,
-) -> RankData {
+pub fn compute_rank_data(input : RankDataInput) -> RankData {
   let graph = input.graph
   let nodes = input.nodes
   let edges = input.edges
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
   let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let acyclic_directions =
-    acyclic_edge_directions_with_order(graph, nodes, edges)
+  let acyclic_directions = acyclic_edge_directions_with_order(
+    graph, nodes, edges,
+  )
   let edge_tail = acyclic_directions.tail
   let edge_head = acyclic_directions.head
   let edge_reversed = acyclic_directions.reversed
@@ -77,7 +93,7 @@ pub fn compute_rank_data(
     edge_head,
     input.back_weight_scale,
   )
-  let groups = @ordering.build_rank_groups(nodes, ranks)
+  let groups = build_rank_groups(nodes, ranks)
   let rank_keys : Array[Int] = []
   for key, _ in groups {
     rank_keys.push(key)
@@ -86,11 +102,10 @@ pub fn compute_rank_data(
   // Graphviz parity: rank sweep iterates the closed min..max rank interval
   // from sorted rank keys, including missing intermediate ranks.
   let all_ranks = @y_positions.build_all_ranks_with_overlays(rank_keys, [])
-  let self_edge_labels =
-    @y_positions.self_edge_label_half_heights(
-      edges,
-      input.edge_label_height_pt_for,
-    )
+  let self_edge_labels = @y_positions.self_edge_label_half_heights(
+    edges,
+    input.edge_label_height_pt_for,
+  )
   {
     edge_tail,
     edge_head,
