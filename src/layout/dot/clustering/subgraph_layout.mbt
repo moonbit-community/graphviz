@@ -1,11 +1,18 @@
 ///|
 /// Cluster subgraph layout tree helpers: recursive cluster layout, subtree bbox
 /// expansion, and routing bbox extraction shared by routing/finalization paths.
-
 type LayoutTree = @shared.LayoutTree
+
+///|
 type LabelLoc = @shared.LabelLoc
+
+///|
 type LabelJust = @shared.LabelJust
+
+///|
 type DotLayoutNode = @shared.DotLayoutNode
+
+///|
 type DotLayoutEdge = @shared.DotLayoutEdge
 
 ///|
@@ -38,9 +45,7 @@ pub(all) struct LayoutSubgraphsInput {
 /// Graphviz parity: cluster bbox + label placement aligned to refs/graphviz/lib/common/postproc.c
 /// (place_graph_label) + lib/common/input.c (cluster label borders) + dotgen/position.c (cluster margins).
 /// Do not change behavior without updating fixtures/tests.
-pub fn layout_subgraphs(
-  input : LayoutSubgraphsInput,
-) -> Array[LayoutTree] {
+pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
   let graph = input.graph
   let nodes_out = input.nodes_out
   let edges_out = input.edges_out
@@ -85,22 +90,19 @@ pub fn layout_subgraphs(
     let mut bbox = @bbox.compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
     let mut label_info : ClusterLabelPlacementInfo? = None
-    let sub_subgraphs =
-      layout_subgraphs(
-        {
-          graph: subgraph,
-          nodes_out,
-          edges_out,
-          cluster_ln_x,
-          cluster_rn_x,
-          cluster_bbox_heights,
-          rankdir,
-          ranks,
-          rank_y,
-          rank_ht1,
-          rank_ht2,
-        },
-      )
+    let sub_subgraphs = layout_subgraphs({
+      graph: subgraph,
+      nodes_out,
+      edges_out,
+      cluster_ln_x,
+      cluster_rn_x,
+      cluster_bbox_heights,
+      rankdir,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+    })
     if @cluster_graph.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
       let cluster_nodes : Map[String, Bool] = Map::new()
@@ -167,8 +169,12 @@ pub fn layout_subgraphs(
               }
             None => ()
           }
-          bbox =
-            { llx: bbox.llx, lly: max_rank_y - ht1, urx: bbox.urx, ury: min_rank_y + ht2 }
+          bbox = {
+            llx: bbox.llx,
+            lly: max_rank_y - ht1,
+            urx: bbox.urx,
+            ury: min_rank_y + ht2,
+          }
           pad_y = 0.0
           use_rank_bbox = true
         }
@@ -235,13 +241,12 @@ pub fn layout_subgraphs(
             })
           } else {
             if !use_rank_bbox {
-              bbox =
-                @shared.expand_bbox_for_label(
-                  bbox,
-                  metrics.width_pt,
-                  metrics.height_pt,
-                  loc,
-                )
+              bbox = @shared.expand_bbox_for_label(
+                bbox,
+                metrics.width_pt,
+                metrics.height_pt,
+                loc,
+              )
             }
             label_info = Some({
               width_pt: padded_width,
@@ -258,26 +263,25 @@ pub fn layout_subgraphs(
     }
     match label_info {
       Some(value) =>
-        label_pos =
-          Some(
-            if value.flipped {
-              @shared.graph_label_pos_flip(
-                bbox,
-                value.width_pt,
-                value.height_pt,
-                value.loc,
-                value.just,
-              )
-            } else {
-              @shared.graph_label_pos(
-                bbox,
-                value.width_pt,
-                value.height_pt,
-                value.loc,
-                value.just,
-              )
-            },
-          )
+        label_pos = Some(
+          if value.flipped {
+            @shared.graph_label_pos_flip(
+              bbox,
+              value.width_pt,
+              value.height_pt,
+              value.loc,
+              value.just,
+            )
+          } else {
+            @shared.graph_label_pos(
+              bbox,
+              value.width_pt,
+              value.height_pt,
+              value.loc,
+              value.just,
+            )
+          },
+        )
       None => ()
     }
     result.push({
@@ -291,7 +295,6 @@ pub fn layout_subgraphs(
   }
   result
 }
-
 
 ///|
 pub fn expand_bbox_with_subgraphs(
@@ -334,4 +337,57 @@ pub fn expand_bbox_with_clusters(
     }
   }
   result
+}
+
+///|
+fn collect_cluster_route_bboxes(
+  subgraphs : Array[LayoutTree],
+  out : Map[String, @geom.Rect],
+) -> Unit {
+  for layout in subgraphs {
+    if @cluster_graph.is_cluster_graph(layout.graph) {
+      match layout.graph.name() {
+        Some(name) => out[name] = layout.bbox
+        None => ()
+      }
+    }
+    if layout.subgraphs.length() > 0 {
+      collect_cluster_route_bboxes(layout.subgraphs, out)
+    }
+  }
+}
+
+///|
+/// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
+pub fn compute_cluster_route_bboxes(
+  graph : @cgraph.Graph,
+  nodes_out : Array[DotLayoutNode],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> Map[String, @geom.Rect] {
+  let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
+  if @cluster_graph.graph_has_cluster(graph) {
+    let cluster_layouts = layout_subgraphs({
+      graph,
+      nodes_out,
+      edges_out: [],
+      cluster_ln_x,
+      cluster_rn_x,
+      cluster_bbox_heights,
+      rankdir,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+    })
+    collect_cluster_route_bboxes(cluster_layouts, cluster_bboxes)
+  }
+  cluster_bboxes
 }

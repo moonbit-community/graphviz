@@ -1,4 +1,3 @@
-
 ///|
 fn cluster_test_node_layout(
   node : @cgraph.Node,
@@ -26,31 +25,39 @@ test "expand_bbox_with_subgraphs and expand_bbox_with_clusters recurse by respon
   let nested_cluster = plain.subgraph(name="cluster_1")
 
   let subgraphs = [
-    cluster_test_layout_tree(
-      cluster,
-      { llx: 20.0, lly: 5.0, urx: 30.0, ury: 15.0 },
-    ),
+    cluster_test_layout_tree(cluster, {
+      llx: 20.0,
+      lly: 5.0,
+      urx: 30.0,
+      ury: 15.0,
+    }),
     cluster_test_layout_tree(
       plain,
       { llx: -5.0, lly: 2.0, urx: -1.0, ury: 4.0 },
       subgraphs=[
-        cluster_test_layout_tree(
-          nested_cluster,
-          { llx: 50.0, lly: 1.0, urx: 60.0, ury: 9.0 },
-        ),
+        cluster_test_layout_tree(nested_cluster, {
+          llx: 50.0,
+          lly: 1.0,
+          urx: 60.0,
+          ury: 9.0,
+        }),
       ],
     ),
   ]
   let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }
 
-  assert_eq(
-    expand_bbox_with_subgraphs(bbox, subgraphs),
-    { llx: -5.0, lly: 0.0, urx: 60.0, ury: 15.0 },
-  )
-  assert_eq(
-    expand_bbox_with_clusters(bbox, subgraphs),
-    { llx: 0.0, lly: 0.0, urx: 68.0, ury: 15.0 },
-  )
+  assert_eq(expand_bbox_with_subgraphs(bbox, subgraphs), {
+    llx: -5.0,
+    lly: 0.0,
+    urx: 60.0,
+    ury: 15.0,
+  })
+  assert_eq(expand_bbox_with_clusters(bbox, subgraphs), {
+    llx: 0.0,
+    lly: 0.0,
+    urx: 68.0,
+    ury: 15.0,
+  })
 }
 
 ///|
@@ -63,9 +70,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   let a = cluster.node("a")
   ignore(a)
 
-  let nodes_out = [
-    cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0),
-  ]
+  let nodes_out = [cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0)]
   let ranks : Map[String, Int] = Map::new()
   ranks["a"] = 1
   let rank_y : Map[Int, Double] = Map::new()
@@ -112,4 +117,58 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
     @shared.graph_label_just(cluster),
   )
   assert_eq(layouts[0].label_pos, Some(expected_label_pos))
+}
+
+///|
+test "compute_cluster_route_bboxes collects nested cluster bounds from layout_subgraphs" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster0 = root.subgraph(name="cluster_0")
+  let plain = root.subgraph(name="group_0")
+  let cluster1 = plain.subgraph(name="cluster_1")
+  let a = cluster0.node("a")
+  let b = cluster1.node("b")
+
+  let nodes_out = [
+    cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0),
+    cluster_test_node_layout(b, { x: 30.0, y: 40.0 }, 1.0, 1.0),
+  ]
+  let ranks : Map[String, Int] = { "a": 1, "b": 2 }
+  let rank_y : Map[Int, Double] = { 1: 100.0, 2: 200.0 }
+  let rank_ht1 : Map[Int, Double] = { 1: 5.0, 2: 7.0 }
+  let rank_ht2 : Map[Int, Double] = { 1: 6.0, 2: 8.0 }
+  let cluster_ln_x : Map[String, Double] = {
+    "cluster_0": 2.0,
+    "cluster_1": 25.0,
+  }
+  let cluster_rn_x : Map[String, Double] = {
+    "cluster_0": 18.0,
+    "cluster_1": 35.0,
+  }
+  let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = {
+    "cluster_0": { ht1: 9.0, ht2: 11.0 },
+    "cluster_1": { ht1: 12.0, ht2: 14.0 },
+  }
+
+  let cluster_bboxes = compute_cluster_route_bboxes(
+    root,
+    nodes_out,
+    cluster_ln_x,
+    cluster_rn_x,
+    cluster_bbox_heights,
+    @rankdir.RankDir::TB,
+    ranks,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+  )
+
+  assert_eq(cluster_bboxes.length(), 2)
+  assert_eq(
+    cluster_bboxes.get("cluster_0"),
+    Some({ llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0 }),
+  )
+  assert_eq(
+    cluster_bboxes.get("cluster_1"),
+    Some({ llx: 25.0, lly: 188.0, urx: 35.0, ury: 214.0 }),
+  )
 }
