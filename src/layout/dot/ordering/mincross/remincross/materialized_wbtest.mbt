@@ -223,3 +223,91 @@ test "build_remincross_order uses first-seen order to break equal cluster priori
   assert_eq(order.cluster_order_pos.get("cluster_c"), Some(2))
   assert_eq(order.cluster_order_pos.get(""), Some(3))
 }
+
+///|
+test "build_nonroot_ordered_names keeps forward order only when every tail has no outgoing edges" {
+  let rank_names = ["a", "b", "c"]
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  heads_by_tail["b"] = ["x"]
+
+  assert_eq(build_nonroot_ordered_names(rank_names, Map::new()), rank_names)
+  assert_eq(build_nonroot_ordered_names(rank_names, heads_by_tail), [
+    "c", "b", "a",
+  ])
+}
+
+///|
+test "rebucket_input_like_order groups minimum-rank inputs by local fanout then later then earlier then neutral" {
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  heads_by_tail["i-neutral"] = ["same_1"]
+  heads_by_tail["i-earlier"] = ["earlier_head"]
+  heads_by_tail["i-later"] = ["later_head"]
+  heads_by_tail["i-multi-local"] = ["same_1", "same_2"]
+
+  let cluster_order_pos : Map[String, Int] = Map::new()
+  cluster_order_pos["cluster_prev"] = 0
+  cluster_order_pos["cluster_cur"] = 1
+  cluster_order_pos["cluster_next"] = 2
+
+  let rem_cluster_keys : Map[String, String] = Map::new()
+  rem_cluster_keys["same_1"] = "cluster_cur"
+  rem_cluster_keys["same_2"] = "cluster_cur"
+  rem_cluster_keys["earlier_head"] = "cluster_prev"
+  rem_cluster_keys["later_head"] = "cluster_next"
+
+  let reordered = rebucket_input_like_order(
+    "cluster_cur",
+    ["i-neutral", "i-earlier", "i-later", "i-multi-local"],
+    heads_by_tail,
+    cluster_order_pos,
+    ["cluster_prev", "cluster_cur", "cluster_next"],
+    rem_cluster_keys,
+  )
+
+  assert_eq(reordered, ["i-multi-local", "i-later", "i-earlier", "i-neutral"])
+}
+
+///|
+test "build_nonroot_tail_names replays higher ranks first and rebuckets only the minimum non-negative input-like rank" {
+  let names = [
+    "unknown", "i-neutral", "i-earlier", "i-later", "i-multi-local", "x1", "x2",
+  ]
+  let rem_ranks : Map[String, Int] = Map::new()
+  rem_ranks["i-neutral"] = 0
+  rem_ranks["i-earlier"] = 0
+  rem_ranks["i-later"] = 0
+  rem_ranks["i-multi-local"] = 0
+  rem_ranks["x1"] = 1
+  rem_ranks["x2"] = 1
+
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  heads_by_tail["i-neutral"] = ["same_1"]
+  heads_by_tail["i-earlier"] = ["earlier_head"]
+  heads_by_tail["i-later"] = ["later_head"]
+  heads_by_tail["i-multi-local"] = ["same_1", "same_2"]
+
+  let cluster_order_pos : Map[String, Int] = Map::new()
+  cluster_order_pos["cluster_prev"] = 0
+  cluster_order_pos["cluster_cur"] = 1
+  cluster_order_pos["cluster_next"] = 2
+
+  let rem_cluster_keys : Map[String, String] = Map::new()
+  rem_cluster_keys["same_1"] = "cluster_cur"
+  rem_cluster_keys["same_2"] = "cluster_cur"
+  rem_cluster_keys["earlier_head"] = "cluster_prev"
+  rem_cluster_keys["later_head"] = "cluster_next"
+
+  let ordered = build_nonroot_tail_names(
+    "cluster_cur",
+    names,
+    rem_ranks,
+    heads_by_tail,
+    cluster_order_pos,
+    ["cluster_prev", "cluster_cur", "cluster_next"],
+    rem_cluster_keys,
+  )
+
+  assert_eq(ordered, [
+    "x1", "x2", "i-multi-local", "i-later", "i-earlier", "i-neutral", "unknown",
+  ])
+}
