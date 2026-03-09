@@ -98,7 +98,7 @@ fn run_nonclustered_ordering_dispatch(
 
 ///|
 /// Stage C clustered owner helpers: pre-root, root, snapshot, and finalize.
-type ClusteredPreRootData = @mincross.ClusteredPreRootStageOutput
+type ClusteredPreRootData = @pre_root.ClusteredPreRootStageOutput
 
 ///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
@@ -111,7 +111,7 @@ fn build_clustered_pre_root(
   let cluster_meta = dispatch_context.cluster_meta
   let runtime_context = dispatch_context.pipeline_context.runtime_context
   let reorder_setup = dispatch_context.pipeline_context.reorder_setup
-  @mincross.run_clustered_pre_root_stage_from_sources({
+  @pre_root.run_clustered_pre_root_stage_from_sources({
     reorder_setup,
     cluster_keys: cluster_meta.cluster_keys,
     cluster_order: cluster_meta.cluster_order,

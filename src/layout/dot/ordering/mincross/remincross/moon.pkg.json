@@ -2,6 +2,7 @@
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/ordering/mincross",
+    "moonbit-community/graphviz/layout/dot/ordering/mincross/pre_root",
     "moonbit-community/graphviz/layout/dot/ordering/setup",
     "moonbit-community/graphviz/layout/dot/ordering/reorder",
     "moonbit-community/graphviz/layout/dot/ordering/order_graph",

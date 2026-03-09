@@ -92,7 +92,7 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   cluster_rank_order_replay : @mincross.ClusterRankOrderReplay
   root_cluster_stage : @mincross.RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  pre_root_stage : @mincross.ClusteredPreRootStageOutput
+  pre_root_stage : @pre_root.ClusteredPreRootStageOutput
   real_nodes : Map[String, Bool]
   ratio : String
   edges : Array[@cgraph.Edge]

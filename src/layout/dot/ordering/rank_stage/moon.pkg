@@ -5,6 +5,7 @@ import {
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/ordering/mincross",
   "moonbit-community/graphviz/layout/dot/ordering/mincross/noncluster",
+  "moonbit-community/graphviz/layout/dot/ordering/mincross/pre_root",
   "moonbit-community/graphviz/layout/dot/ordering/mincross/remincross",
   "moonbit-community/graphviz/layout/dot/positioning/ports",
   "moonbit-community/graphviz/layout/dot/edge_label_metrics",
