@@ -114,3 +114,68 @@ test "should_merge_root_positions requires a root-then-skeleton pair with exactl
     should_merge_root_positions(["root_only"], skeletons, attached_by_skeleton),
   )
 }
+
+///|
+test "build_rank_attached_by_skeleton attaches non-mincross clustered members to the last skeleton of that cluster" {
+  let skel_a_0 = "skel_a_0"
+  let skel_a_1 = "skel_a_1"
+  let names = ["a0", skel_a_0, "root", "a1", skel_a_1, "b0", "loose"]
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["a0"] = "cluster_a"
+  order_cluster_keys["a1"] = "cluster_a"
+  order_cluster_keys[skel_a_0] = "cluster_a"
+  order_cluster_keys[skel_a_1] = "cluster_a"
+  order_cluster_keys["b0"] = "cluster_b"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton[skel_a_0] = true
+  order_cluster_skeleton[skel_a_1] = true
+
+  let mincross_nodes : Map[String, Bool] = Map::new()
+  mincross_nodes[skel_a_0] = true
+  mincross_nodes[skel_a_1] = true
+  mincross_nodes["root"] = true
+
+  let attached = build_rank_attached_by_skeleton(
+    names, order_cluster_keys, order_cluster_skeleton, mincross_nodes,
+  )
+
+  assert_eq(attached.get(skel_a_1), Some(["a0", "a1"]))
+  assert_eq(attached.get(skel_a_0), None)
+  assert_eq(attached.get("cluster_b"), None)
+}
+
+///|
+test "merge_rank_with_positional_replacements rewrites only mincross member slots" {
+  let mincross_nodes : Map[String, Bool] = Map::new()
+  mincross_nodes["cluster_a"] = true
+  mincross_nodes["root"] = true
+
+  let merged = merge_rank_with_positional_replacements(
+    ["left", "cluster_a", "middle", "root", "right"],
+    ["root", "cluster_a"],
+    mincross_nodes,
+  )
+
+  assert_eq(merged, ["left", "root", "middle", "cluster_a", "right"])
+}
+
+///|
+test "merge_rank_with_attached_skeleton_replacements inserts attached members after skeleton replacements before replaying remaining names" {
+  let skel_a = "skel_a"
+  let names = ["left", "a0", skel_a, "tail", "a1"]
+  let replacements = ["root", skel_a]
+
+  let attached_by_skeleton : Map[String, Array[String]] = Map::new()
+  attached_by_skeleton[skel_a] = ["a0", "a1"]
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton[skel_a] = true
+
+  let merged = merge_rank_with_attached_skeleton_replacements(
+    names, replacements, attached_by_skeleton, order_cluster_skeleton,
+  )
+
+  assert_eq(merged, ["root", skel_a, "a0", "a1", "left", "tail"])
+}
