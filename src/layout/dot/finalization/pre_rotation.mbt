@@ -73,7 +73,7 @@ priv struct RootPaddedLayoutData {
 /// layout to layout_subgraphs, then applies root cluster-bbox expansion.
 /// Do not change behavior without updating fixtures/tests.
 fn build_subgraphs_and_bbox(input : SubgraphsAndBBoxInput) -> SubgraphsAndBBox {
-  let subgraphs = @clustering.layout_subgraphs({
+  let subgraphs = @subgraph_layout.layout_subgraphs({
     graph: input.graph,
     nodes_out: input.nodes,
     edges_out: input.edges,
@@ -87,7 +87,7 @@ fn build_subgraphs_and_bbox(input : SubgraphsAndBBoxInput) -> SubgraphsAndBBox {
     rank_ht2: input.rank_ht2,
   })
   let expanded = if subgraphs.length() > 0 {
-    @clustering.expand_bbox_with_clusters(input.bbox, subgraphs)
+    @subgraph_layout.expand_bbox_with_clusters(input.bbox, subgraphs)
   } else {
     input.bbox
   }

@@ -6,7 +6,7 @@ import {
   "moonbit-community/graphviz/layout/dot/positioning",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
-  "moonbit-community/graphviz/layout/dot/clustering",
+  "moonbit-community/graphviz/layout/dot/clustering/subgraph_layout",
   "moonbit-community/graphviz/layout/dot/clustering/membership",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/layout/dot/routing/precompute",

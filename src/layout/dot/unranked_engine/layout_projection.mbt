@@ -125,7 +125,7 @@ pub fn finalize_unranked_layout_tree(
   let empty_rank_ht1 : Map[Int, Double] = Map::new()
   let empty_rank_ht2 : Map[Int, Double] = Map::new()
   let subgraphs =
-    @clustering.layout_subgraphs(
+    @subgraph_layout.layout_subgraphs(
       {
         graph,
         nodes_out,
@@ -141,7 +141,7 @@ pub fn finalize_unranked_layout_tree(
       },
     )
   let mut bbox = if subgraphs.length() > 0 {
-    @clustering.expand_bbox_with_subgraphs(base_bbox, subgraphs)
+    @subgraph_layout.expand_bbox_with_subgraphs(base_bbox, subgraphs)
   } else {
     base_bbox
   }

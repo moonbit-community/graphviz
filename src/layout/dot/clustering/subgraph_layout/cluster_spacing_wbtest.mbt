@@ -130,7 +130,7 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   let bbox = spacing_parse_rect(bb_text)
   let pos = spacing_node_pos(single_cluster, "a")
   let (width_pt, height_pt) = spacing_node_size_pt(single_cluster, "a")
-  let margin = cluster_margin_pt(cluster)
+  let margin = @clustering.cluster_margin_pt(cluster)
   let label_height = match @label_metrics.graph_label_metrics(cluster) {
     Some(metrics) => metrics.height_pt
     None => 0.0
@@ -171,7 +171,7 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
     Some(value) => spacing_parse_rect(value)
     None => fail("missing inner cluster bb")
   }
-  let outer_margin = cluster_margin_pt(outer)
+  let outer_margin = @clustering.cluster_margin_pt(outer)
   guard outer_bb.llx <= inner_bb.llx - outer_margin + 0.1 else {
     fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - outer_margin}")
   }

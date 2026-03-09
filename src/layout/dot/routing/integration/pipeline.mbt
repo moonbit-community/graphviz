@@ -157,7 +157,7 @@ pub fn build_routing_spatial_data(
     prep.rankdir,
     prep.has_port_edges,
   )
-  let cluster_bboxes = @clustering.compute_cluster_route_bboxes(
+  let cluster_bboxes = @subgraph_layout.compute_cluster_route_bboxes(
     input.graph,
     nodes_out,
     positions_state.cluster_ln_x,

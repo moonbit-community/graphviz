@@ -121,7 +121,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
     if @cluster_graph.is_cluster_graph(subgraph) {
-      let pad = cluster_margin_pt(subgraph)
+      let pad = @clustering.cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
       let mut pad_y = pad
@@ -331,9 +331,9 @@ pub fn expand_bbox_with_clusters(
       // Graphviz parity: dot_compute_bb expands root bbox by CL_OFFSET for
       // cluster subgraphs in x direction.
       let padded : @geom.Rect = {
-        llx: subgraph.bbox.llx - CLUSTER_MARGIN_PT,
+        llx: subgraph.bbox.llx - @clustering.CLUSTER_MARGIN_PT,
         lly: subgraph.bbox.lly,
-        urx: subgraph.bbox.urx + CLUSTER_MARGIN_PT,
+        urx: subgraph.bbox.urx + @clustering.CLUSTER_MARGIN_PT,
         ury: subgraph.bbox.ury,
       }
       result = @bbox.merge_bbox(result, padded)
