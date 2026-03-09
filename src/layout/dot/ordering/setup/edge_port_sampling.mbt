@@ -115,3 +115,111 @@ pub fn build_edge_port_sample_bundle(
     head_port_order: order_samples.head_values,
   }
 }
+
+///|
+pub(all) struct DedupOrderingEdgesOutput {
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+}
+
+///|
+fn dedup_ordering_edges(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> DedupOrderingEdgesOutput {
+  let seen : Map[String, Bool] = Map::new()
+  let out_edges : Array[@cgraph.Edge] = []
+  let out_tail : Array[String] = []
+  let out_head : Array[String] = []
+  for i in 0..<edges.length() {
+    let (tail, head) = @order_graph.edge_endpoints_at(
+      edges[i],
+      i,
+      edge_tail,
+      edge_head,
+    )
+    let key = "\{tail}|\{head}"
+    if seen.get(key) is Some(_) {
+      continue
+    }
+    seen[key] = true
+    out_edges.push(edges[i])
+    out_tail.push(tail)
+    out_head.push(head)
+  }
+  {
+    order_edges: out_edges,
+    order_edge_tail: out_tail,
+    order_edge_head: out_head,
+  }
+}
+
+///|
+/// Ordering domain: edge-port sampling outputs used by class2 preprocessing.
+
+///|
+pub(all) struct OrderingEdgePortData {
+  edge_order : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
+/// Graphviz parity: edge-port sampling source bundle keeps full-edge and
+/// endpoint-name snapshots grouped before dedup/order-edge replay.
+pub(all) struct OrderingEdgePortDataSources {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+}
+
+///|
+/// Graphviz parity: ordering edge-port data keeps dedup ordering-edge
+/// extraction and endpoint port samples in Graphviz-compatible construction
+/// order from grouped sources.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_ordering_edge_port_data_from_sources(
+  sources : OrderingEdgePortDataSources,
+  build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
+) -> OrderingEdgePortData {
+  let edge_port_samples = build_port_sample_bundle(
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+  )
+  let dedup_order_edges = dedup_ordering_edges(
+    sources.edges,
+    sources.edge_tail,
+    sources.edge_head,
+  )
+  let order_edge_port_samples = build_port_sample_bundle(
+    dedup_order_edges.order_edges,
+    dedup_order_edges.order_edge_tail,
+    dedup_order_edges.order_edge_head,
+  )
+  {
+    edge_order: @order_graph.collect_edge_order(sources.edges),
+    edge_tail_port_x: edge_port_samples.tail_port_x,
+    edge_head_port_x: edge_port_samples.head_port_x,
+    edge_tail_port_order: edge_port_samples.tail_port_order,
+    edge_head_port_order: edge_port_samples.head_port_order,
+    order_edges: dedup_order_edges.order_edges,
+    order_edge_tail: dedup_order_edges.order_edge_tail,
+    order_edge_head: dedup_order_edges.order_edge_head,
+    order_edge_tail_port_x: order_edge_port_samples.tail_port_x,
+    order_edge_head_port_x: order_edge_port_samples.head_port_x,
+    order_edge_tail_port_order: order_edge_port_samples.tail_port_order,
+    order_edge_head_port_order: order_edge_port_samples.head_port_order,
+  }
+}
