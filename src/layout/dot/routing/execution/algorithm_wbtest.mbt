@@ -157,6 +157,64 @@ fn build_layout_edge(
 }
 
 ///|
+fn straight_bezier_points() -> Array[@geom.Point] {
+  [
+    @edge_spline.point(0.0, 0.0),
+    @edge_spline.point(10.0, 0.0),
+    @edge_spline.point(20.0, 0.0),
+    @edge_spline.point(30.0, 0.0),
+  ]
+}
+
+///|
+fn sample_regular_pass_input(
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_sizes : Map[String, @node_primitives.NodeSize],
+  rank_y : Map[Int, Double],
+) -> RegularPassInput {
+  {
+    spline_mode: 0,
+    ranks,
+    sizes: Map::new(),
+    positions: Map::new(),
+    vnode_positions,
+    vnode_info: {
+      vnode_ranks,
+      vnode_sizes,
+      vnodes_by_rank: Map::new(),
+      edge_vnodes: Map::new(),
+      vnode_clusters: Map::new(),
+    },
+    rank_y,
+    rank_ht1: Map::new(),
+    rank_ht2: Map::new(),
+    x_groups: Map::new(),
+    nodesep_pt: 0.0,
+    ranksep_pt: 0.0,
+    label_edge_counts: Map::new(),
+    head_port_metrics: {
+      head_port_counts: Map::new(),
+      head_port_min_dist: Map::new(),
+      head_port_max_dist: Map::new(),
+    },
+    routing_context: {
+      order_index: Map::new(),
+      path_order_index: Map::new(),
+      path_adjacency: @routesplines.build_path_adjacency([], Map::new(), [], []),
+      pathplan_sizes: Map::new(),
+      pathplan_vnode_mval_sizes: Map::new(),
+      path_cluster_keys: Map::new(),
+      path_vnode_clusters: Map::new(),
+      parallel_offsets: Map::new(),
+      cluster_bboxes: Map::new(),
+    },
+    enable_complex_tuning: false,
+  }
+}
+
+///|
 test "edge route type classifies regular flat and self edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
@@ -472,6 +530,79 @@ test "build_parallel_remap_assignments requires complete groups and reverses sou
 }
 
 ///|
+test "recover_pathplan_slack consumes segment vnodes in rank direction and only recovers once per key" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let base = build_route_base(edge, tail_rank=3, head_rank=1, has_vnodes=true)
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = {
+    "v1": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 4.0),
+    "v2": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 4.0),
+  }
+  let input = sample_regular_pass_input(
+    { "a": 3, "b": 1 },
+    { "v1": 2, "v2": 1 },
+    Map::new(),
+    vnode_sizes,
+    { 2: 20.0, 1: 10.0 },
+  )
+  let spline_result : EdgeSplineResult = {
+    spline: { start: None, end: None, points: [] },
+    label_pad_boost: 0.0,
+    using_pathplan: true,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier: [],
+    pathplan_segments: [
+      {
+        points: [],
+        barriers: [],
+        boxes: [{ llx: 0.0, lly: 0.0, urx: 10.0, ury: 4.0 }],
+        vnodes: ["v1", "v2"],
+      },
+    ],
+    apply_dotted_adjustment: false,
+  }
+  let recover_key = recover_slack_key_for_edge(edge)
+  let recover_edge_id_by_key : Map[String, Int] = Map::new()
+  recover_edge_id_by_key[recover_key] = edge.id()
+  let recovered_slack_keys : Map[String, Bool] = Map::new()
+  let recovered_orders : Array[String] = []
+  let callbacks : RoutingCallbacks = {
+    recover_slack_vnodes_fn: recover_input => {
+      recovered_orders.push(recover_input.ordered_vnodes.join(","))
+    },
+    build_edge_layout_fn: layout_input => {
+      build_layout_edge(layout_input.base.edge, 0.0)
+    },
+    self_edge_label_height_fn: (_edge, _rankdir) => 0.0,
+    self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
+    edge_port_label_pos_fn: _ => None,
+  }
+
+  recover_pathplan_slack({
+    edge,
+    base,
+    spline_result,
+    input,
+    recover_edge_id_by_key,
+    recovered_slack_keys,
+    callbacks,
+  })
+  recover_pathplan_slack({
+    edge,
+    base,
+    spline_result,
+    input,
+    recover_edge_id_by_key,
+    recovered_slack_keys,
+    callbacks,
+  })
+
+  assert_eq(recovered_orders, ["v2,v1"])
+  assert_eq(recovered_slack_keys.get(recover_key), Some(true))
+}
+
+///|
 test "remap_port_label_pos respects attr gating fallback and head-tail spline selection" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
@@ -522,6 +653,102 @@ test "remap_port_label_pos respects attr gating fallback and head-tail spline se
 
   assert_eq(tail, Some(@edge_spline.point(1.0, 0.0)))
   assert_eq(head, Some(@edge_spline.point(9.0, 0.0)))
+}
+
+///|
+test "collect_parallel_reuse_siblings only expands from the first grouped edge with a bezier" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, b)
+  let edge_3 = graph.edge(a, b)
+  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  regular_parallel_groups[@edge_identity.edge_vnode_key(edge_1)] = [
+    edge_1, edge_2, edge_3,
+  ]
+
+  let leader_siblings = collect_parallel_reuse_siblings(
+    edge_1,
+    straight_bezier_points(),
+    regular_parallel_groups,
+  )
+  let follower_siblings = collect_parallel_reuse_siblings(
+    edge_2,
+    straight_bezier_points(),
+    regular_parallel_groups,
+  )
+  let empty_bezier_siblings = collect_parallel_reuse_siblings(
+    edge_1,
+    [],
+    regular_parallel_groups,
+  )
+
+  assert_eq(leader_siblings.map(fn(edge) { edge.id() }), [
+    edge_2.id(),
+    edge_3.id(),
+  ])
+  assert_eq(follower_siblings.length(), 0)
+  assert_eq(empty_bezier_siblings.length(), 0)
+}
+
+///|
+test "apply_regular_parallel_reuse_layouts writes sibling layouts only when their bases exist" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_1 = graph.edge(a, b)
+  let edge_2 = graph.edge(a, b)
+  let edge_3 = graph.edge(a, b)
+  let shared = @emit.edge_spline_result_for_bezier(
+    spline_with_start_x(12.0),
+    straight_bezier_points(),
+    0.0,
+    false,
+  )
+  let regular_layout : RegularSplineLayoutResult = {
+    edge_layout: build_layout_edge(edge_1, 12.0),
+    spline_result: shared,
+  }
+  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  regular_parallel_groups[@edge_identity.edge_vnode_key(edge_1)] = [
+    edge_1, edge_2, edge_3,
+  ]
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let edge_2_base = build_route_base(edge_2)
+  base_cache[edge_2.id()] = edge_2_base
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let callbacks : RoutingCallbacks = {
+    recover_slack_vnodes_fn: _ => (),
+    build_edge_layout_fn: layout_input => {
+      build_layout_edge(layout_input.base.edge, layout_input.spline.points[0].x)
+    },
+    self_edge_label_height_fn: (_edge, _rankdir) => 0.0,
+    self_edge_label_width_fn: (_edge, _rankdir) => 0.0,
+    edge_port_label_pos_fn: _ => None,
+  }
+  let expected_layout = @emit.build_regular_bezier_layout(
+    edge_2_base,
+    shared,
+    callbacks.build_edge_layout_fn,
+  )
+
+  apply_regular_parallel_reuse_layouts({
+    edge: edge_1,
+    regular_layout,
+    regular_parallel_groups,
+    base_cache,
+    edges_out_by_id,
+    callbacks,
+  })
+
+  assert_eq(
+    edges_out_by_id
+    .get(edge_2.id())
+    .map(fn(layout) { layout.splines[0].points[0].x }),
+    Some(expected_layout.splines[0].points[0].x),
+  )
+  assert_true(edges_out_by_id.get(edge_3.id()) is None)
 }
 
 ///|
