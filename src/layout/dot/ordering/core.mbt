@@ -23,24 +23,6 @@ pub fn merge_sizes_with_vnodes(
 }
 
 ///|
-/// Graphviz parity: vnode rank overlays replace base-node ranks for vnode
-/// names while preserving all existing base rank entries.
-/// Do not change behavior without updating fixtures/tests.
-pub fn merge_ranks_with_vnodes(
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> Map[String, Int] {
-  let merged : Map[String, Int] = Map::new()
-  for name, rank in ranks {
-    merged[name] = rank
-  }
-  for name, rank in vnode_ranks {
-    merged[name] = rank
-  }
-  merged
-}
-
-///|
 fn sort_rank_items(items : Array[(Double, Int, String)]) -> Array[String] {
   let sorted = items.copy()
   if sorted.length() > 1 {

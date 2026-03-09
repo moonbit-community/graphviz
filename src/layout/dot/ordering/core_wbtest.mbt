@@ -1,5 +1,3 @@
-
-
 ///|
 test "collect_rank_keys returns sorted ranks" {
   let groups : Map[Int, Array[String]] = Map::new()

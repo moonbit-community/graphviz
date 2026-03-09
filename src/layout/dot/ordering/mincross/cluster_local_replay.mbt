@@ -114,6 +114,24 @@ fn run_cluster_local_rank_replay_after_root_from_sources(
 }
 
 ///|
+/// Graphviz parity: vnode rank overlays replace base-node ranks for vnode
+/// names while preserving all existing base rank entries.
+/// Do not change behavior without updating fixtures/tests.
+fn merge_ranks_with_vnodes(
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+) -> Map[String, Int] {
+  let merged : Map[String, Int] = Map::new()
+  for name, rank in ranks {
+    merged[name] = rank
+  }
+  for name, rank in vnode_ranks {
+    merged[name] = rank
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
@@ -131,7 +149,7 @@ fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
     return ()
   }
   let fixed_positions = @ordering.order_positions_from_groups(input.groups)
-  let fixed_ranks = @ordering.merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
+  let fixed_ranks = merge_ranks_with_vnodes(input.ranks, input.vnode_ranks)
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
   let neighbor_sources = build_cluster_local_neighbor_sources(
