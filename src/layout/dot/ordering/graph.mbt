@@ -221,7 +221,6 @@ pub fn edge_head_port_for_name(
   }
 }
 
-
 ///|
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.

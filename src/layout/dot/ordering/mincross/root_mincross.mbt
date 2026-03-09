@@ -379,7 +379,7 @@ priv struct RootMincrossReorderBuildContext {
 fn build_root_mincross_reorder_inputs_from_stage_sources(
   sources : ClusteredRootPhaseStageSources,
 ) -> RootMincrossReorderInputs {
-  let seeded_context : @ordering.SeededReorderBuildContext = {
+  let seeded_context : @reorder.SeededReorderBuildContext = {
     order_rank_keys: sources.reorder_context.order_rank_keys,
     order_groups: sources.order_groups_for_root_phase,
     order_edge_tail_out: sources.materialized.order_edge_tail_out,
@@ -397,7 +397,7 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
     order_edge_head_port_x: sources.materialized.order_edge_head_port_x,
     flat_rank_constraints: sources.root_rank_order_phase_base_sources.reorder_setup.flat_rank_constraints,
   }
-  let seeded_groups = @ordering.build_seeded_reorder_groups(seeded_context)
+  let seeded_groups = @reorder.build_seeded_reorder_groups(seeded_context)
   let root_reorder_context : RootMincrossReorderBuildContext = {
     order_with_clusters: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_clusters,
     order_with_vnodes: sources.root_rank_order_phase_base_sources.reorder_setup.order_with_vnodes,
@@ -690,7 +690,7 @@ fn run_root_mincross_reorder_with_pass0_capture(
   order_groups_override : Map[Int, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootMincrossReorderResult {
-  let result = @ordering.run_with_pass0_flat_seed_capture(() => {
+  let result = @reorder.run_with_pass0_flat_seed_capture(() => {
     run_root_mincross_reorder(inputs, order_groups_override)
   })
   capture_call(result, inputs)
@@ -1662,7 +1662,7 @@ pub fn run_root_rank_reorder_call(
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     reorder_inputs.order_rank_keys_for_mincross,
     reorder_inputs.order_groups_for_mincross,
     reorder_inputs.order_edges_out_mincross,

@@ -785,7 +785,7 @@ pub fn run_root_rank_order_reorder(
   call_inputs : RootRankOrderCallInputs,
   root_graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     call_inputs.root_rank_keys,
     call_inputs.root_groups,
     call_inputs.root_edges_out,

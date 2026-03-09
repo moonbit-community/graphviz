@@ -465,7 +465,7 @@ pub(all) struct ReMincrossCleanupReorderInputs {
 pub fn run_remincross_cleanup_reorder(
   reorder_inputs : ReMincrossCleanupReorderInputs,
 ) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     reorder_inputs.rem_rank_keys,
     reorder_inputs.rem_groups,
     reorder_inputs.rem_edges_out,

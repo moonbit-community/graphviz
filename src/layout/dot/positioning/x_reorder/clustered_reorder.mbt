@@ -129,7 +129,7 @@ fn apply_clustered_xpos_reorder(
   let parents = edge_index_data.parents
   let children = edge_index_data.children
   let edge_order = @ordering.collect_edge_order(input.order_edges_out)
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     input.order_rank_keys,
     input.order_groups,
     input.order_edges_out,

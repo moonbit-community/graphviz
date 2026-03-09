@@ -171,7 +171,7 @@ fn build_noncluster_order_node_order(
 pub fn run_noncluster_rank_reorder(
   call_inputs : NonclusterRankReorderInputs,
 ) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     call_inputs.rank_keys,
     call_inputs.groups,
     call_inputs.order_edges,

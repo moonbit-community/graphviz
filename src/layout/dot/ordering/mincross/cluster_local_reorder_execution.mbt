@@ -40,7 +40,7 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
 pub fn run_cluster_local_rank_reorder_call(
   call_inputs : ClusterLocalRankReorderCallInputs,
 ) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
+  @reorder.reorder_rank_groups(
     call_inputs.cluster_rank_keys,
     call_inputs.seeded_cluster_groups,
     call_inputs.cluster_edges,
@@ -914,7 +914,7 @@ fn build_cluster_rank_seeded_groups(
     input_phase_output.children,
   )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
-  @ordering.flat_reorder_rank_groups(
+  @reorder.flat_reorder_rank_groups(
     local_context.cluster_rank_keys,
     seeded_by_vnode_interp,
     fixed_ranks,
