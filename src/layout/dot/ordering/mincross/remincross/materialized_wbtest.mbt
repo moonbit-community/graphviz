@@ -149,3 +149,77 @@ test "build_cluster_tail_order sorts non-root clusters by order index and keeps 
 
   assert_eq(order, ["c2_only", "c1_high", "c1_low", "root_b", "root_a"])
 }
+
+///|
+test "build_remincross_nlist_order reverses deduped creation replay for single-cluster materialization" {
+  let rem_vnode_creation : Map[String, Array[String]] = Map::new()
+  rem_vnode_creation["tail_a"] = ["v_shared", "v_shared"]
+  rem_vnode_creation["tail_b"] = ["v_shared", "v_tail_b"]
+
+  let order = build_remincross_nlist_order(
+    ["tail_a", "tail_b"],
+    rem_vnode_creation,
+    [],
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    None,
+  )
+
+  assert_eq(order, ["v_tail_b", "tail_b", "v_shared", "tail_a"])
+}
+
+///|
+test "build_remincross_flat_constraints merges rank-same locks only for non-cluster replay" {
+  let flat_constraints = build_remincross_flat_constraints({
+    order_with_clusters: false,
+    cluster_flat_constraints: { "a|b": false, "b|c": true },
+    rank_same_constraints: { "a|b": false, "c|d": false },
+  })
+  let clustered_constraints = build_remincross_flat_constraints({
+    order_with_clusters: true,
+    cluster_flat_constraints: { "a|b": false },
+    rank_same_constraints: { "c|d": false },
+  })
+
+  assert_eq(flat_constraints.get("a|b"), Some(true))
+  assert_eq(flat_constraints.get("b|c"), Some(true))
+  assert_eq(flat_constraints.get("c|d"), Some(true))
+  assert_eq(flat_constraints.length(), 3)
+  assert_eq(clustered_constraints.length(), 0)
+}
+
+///|
+test "cluster_key_for_tail_name prefers explicit keys and only falls back for rank-qualified skeleton names" {
+  let skeleton = @cluster_identity.cluster_skeleton_name("parsed_cluster", 2)
+  let explicit_keys : Map[String, String] = Map::new()
+  explicit_keys[skeleton] = "explicit_cluster"
+
+  assert_eq(
+    cluster_key_for_tail_name(explicit_keys, skeleton),
+    "explicit_cluster",
+  )
+  assert_eq(cluster_key_for_tail_name(Map::new(), skeleton), "parsed_cluster")
+  assert_eq(
+    cluster_key_for_tail_name(
+      Map::new(),
+      "\{@cluster_identity.CLUSTER_SKELETON_PREFIX}parsed_cluster",
+    ),
+    "",
+  )
+}
+
+///|
+test "build_remincross_order uses first-seen order to break equal cluster priorities and keeps root last" {
+  let order = build_remincross_order(
+    ["cluster_b", "", "cluster_a", "cluster_c"],
+    { "cluster_b": 0, "": 1, "cluster_a": 2, "cluster_c": 3 },
+    { "cluster_a": 5, "cluster_b": 5, "cluster_c": 1 },
+  )
+
+  assert_eq(order.cluster_order, ["cluster_b", "cluster_a", "cluster_c", ""])
+  assert_eq(order.cluster_order_pos.get("cluster_b"), Some(0))
+  assert_eq(order.cluster_order_pos.get("cluster_a"), Some(1))
+  assert_eq(order.cluster_order_pos.get("cluster_c"), Some(2))
+  assert_eq(order.cluster_order_pos.get(""), Some(3))
+}
