@@ -278,7 +278,7 @@ fn collect_cluster_rank_heights(
         // Graphviz parity: external ranksets can delete cluster membership
         // for a node while the cluster rank span still reflects subgraph
         // structure (node_induce + mark_clusters behavior).
-        if graph_contains_node(input.graph, node) {
+        if @membership.graph_contains_node(input.graph, node) {
           let half_height =
             (input.node_half_height_pt_for)(name, input.sizes, input.self_edge_labels)
           let current = match input.rank_heights.get(rank) {

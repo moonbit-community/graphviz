@@ -3,10 +3,10 @@
 type LayoutPrep = @shared.LayoutPrep
 
 ///|
-type RankData = @rank_assignment.RankData
+type RankData = @rank_data.RankData
 
 ///|
-type RankHeights = @rank_assignment.RankHeights
+type RankHeights = @rank_heights.RankHeights
 
 ///|
 type ClusterMetadata = @setup.DotClusterMetadata
@@ -37,11 +37,11 @@ pub(all) struct RankStageOutput {
 /// width/height inputs as node geometry to preserve midpoint label spacing.
 fn edge_mid_label_metrics_for_rank_heights(
   edge : @cgraph.Edge,
-) -> @rank_assignment.EdgeMidLabelMetrics? {
+) -> @rank_heights.EdgeMidLabelMetrics? {
   match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(metrics) =>
       Some(
-        @rank_assignment.make_edge_mid_label_metrics(
+        @rank_heights.make_edge_mid_label_metrics(
           metrics.width,
           metrics.height,
         ),
@@ -57,18 +57,18 @@ fn edge_mid_label_metrics_for_rank_heights(
 pub fn compute_dot_rank_stage(input : RankStageInput) -> RankStageOutput {
   let graph = input.graph
   let prep = input.prep
-  let rank_data = @rank_assignment.compute_rank_data(
-    @rank_assignment.make_rank_data_input(
+  let rank_data = @rank_data.compute_rank_data(
+    @rank_data.make_rank_data_input(
       graph,
       prep.nodes,
       prep.edges,
       prep.has_edge_labels,
-      @rank_assignment.CL_BACK,
+      @rank_data.CL_BACK,
       @edge_label_metrics.edge_label_height_pt,
     ),
   )
-  let rank_heights = @rank_assignment.compute_rank_heights(
-    @rank_assignment.make_rank_heights_input(
+  let rank_heights = @rank_heights.compute_rank_heights(
+    @rank_heights.make_rank_heights_input(
       graph,
       prep.edges,
       rank_data.ranks,

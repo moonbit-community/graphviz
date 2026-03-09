@@ -361,11 +361,11 @@ fn add_flat_label_vnodes(
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
       @node_primitives.vnode_size_from_widths_with_h(half_width, half_width, label_height)
-    let tail_cluster = @clustering.node_cluster_key(edge.tail())
-    let head_cluster = @clustering.node_cluster_key(edge.head())
+    let tail_cluster = @membership.node_cluster_key(edge.tail())
+    let head_cluster = @membership.node_cluster_key(edge.head())
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
-        @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
+        @membership.cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
         match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
           Some(value) => value
@@ -392,7 +392,7 @@ fn add_flat_label_vnodes(
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
     }
     let graph_ordering =
-      match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
+      match @membership.root_graph_for_node(edge.tail()).get_attr("ordering") {
       Some(value) => value.to_lower()
       None => ""
     }

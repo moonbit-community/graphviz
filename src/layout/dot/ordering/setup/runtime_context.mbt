@@ -167,7 +167,7 @@ fn build_ordering_runtime_core_from_sources(
   let real_nodes = node_name_sets.real_nodes
   let existing_names = node_name_sets.existing_names
   let edge_cluster_keys : Map[String, String] = Map::new()
-  @clustering.collect_edge_cluster_keys(sources.graph, edge_cluster_keys)
+  @membership.collect_edge_cluster_keys(sources.graph, edge_cluster_keys)
   let port_edge_nodes = build_port_edge_nodes_for_ordering(
     sources.edges,
     sources.edge_tail,

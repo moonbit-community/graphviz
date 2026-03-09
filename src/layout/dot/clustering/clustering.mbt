@@ -31,8 +31,8 @@ fn build_cluster_membership_maps(
   let intercluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     let name = node.name()
-    cluster_keys[name] = node_cluster_key(node)
-    intercluster_keys[name] = node_local_cluster_key(node)
+    cluster_keys[name] = @membership.node_cluster_key(node)
+    intercluster_keys[name] = @membership.node_local_cluster_key(node)
   }
   { cluster_keys, intercluster_keys }
 }
@@ -230,9 +230,11 @@ pub fn build_cluster_core_metadata_for_ordering(
   let cluster_min_rank = cluster_rank_bounds.min_rank
   let cluster_max_rank = cluster_rank_bounds.max_rank
   let cluster_first_order = cluster_rank_bounds.first_order
-  let cluster_traversal_metadata = collect_cluster_traversal_metadata(graph)
-  let cluster_order = cluster_traversal_metadata.cluster_order
-  let cluster_parents = cluster_traversal_metadata.cluster_parents
+  let cluster_order : Array[String] = []
+  @membership.collect_cluster_names_order(graph, cluster_order)
+  let cluster_parents = @cluster_graph
+    .collect_cluster_graph_maps(graph)
+    .cluster_parents
   apply_cluster_order_base(
     nodes,
     cluster_keys,

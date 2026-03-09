@@ -62,7 +62,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
   for subgraph in graph.subgraphs() {
     let node_set : Map[String, Bool] = Map::new()
     for node in subgraph.nodes() {
-      if graph_contains_node(subgraph, node) {
+      if @membership.graph_contains_node(subgraph, node) {
         node_set[node.name()] = true
       }
     }

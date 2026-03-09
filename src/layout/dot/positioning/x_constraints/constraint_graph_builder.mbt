@@ -433,7 +433,7 @@ fn scaled_segment_edge_weight(
 
 ///|
 fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
-  match @clustering.root_graph_for_node(edge.tail()).get_attr("ordering") {
+  match @membership.root_graph_for_node(edge.tail()).get_attr("ordering") {
     Some(value) => {
       let lower = value.to_lower()
       lower == "out" || lower == "in"

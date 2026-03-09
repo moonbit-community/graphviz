@@ -61,8 +61,8 @@ pub fn build_edge_vnodes(
     let (tail, head) = @order_graph.edge_endpoints_at(
       edge, idx, edge_tail, edge_head,
     )
-    let tail_cluster = @clustering.node_cluster_key(edge.tail())
-    let head_cluster = @clustering.node_cluster_key(edge.head())
+    let tail_cluster = @membership.node_cluster_key(edge.tail())
+    let head_cluster = @membership.node_cluster_key(edge.head())
     // Graphviz parity: cluster-local parallel chains do not widen class2 vnodes.
     let use_cluster_plain = tail_cluster != "" && tail_cluster == head_cluster
     let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
@@ -120,7 +120,7 @@ pub fn build_edge_vnodes(
     // Graphviz parity: cluster-local vnodes use the virtual_node default width.
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster = if tail_cluster != "" || head_cluster != "" {
-      @clustering.cluster_lca(tail_cluster, head_cluster, cluster_parents)
+      @membership.cluster_lca(tail_cluster, head_cluster, cluster_parents)
     } else {
       match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
         Some(value) => value

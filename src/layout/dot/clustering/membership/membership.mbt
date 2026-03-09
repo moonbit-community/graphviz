@@ -320,25 +320,3 @@ pub fn collect_cluster_names_order(
     }
   }
 }
-
-///|
-pub(all) struct ClusterTraversalMetadata {
-  cluster_order : Array[String]
-  cluster_parents : Map[String, String?]
-}
-
-///|
-/// Graphviz parity: cluster order traversal and parent mapping are collected
-/// before clustered ordering stages with Graphviz traversal order unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_cluster_traversal_metadata(
-  graph : @cgraph.Graph,
-) -> ClusterTraversalMetadata {
-  let cluster_order : Array[String] = []
-  collect_cluster_names_order(graph, cluster_order)
-  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
-  {
-    cluster_order,
-    cluster_parents: cluster_maps.cluster_parents,
-  }
-}

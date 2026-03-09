@@ -465,7 +465,7 @@ fn assign_remincross_clusters(
     let (tail, head) = @order_graph.edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
     let head_cluster = intercluster_keys.get(head).unwrap_or_default()
-    let vnode_cluster = @clustering.cluster_lca(
+    let vnode_cluster = @membership.cluster_lca(
       tail_cluster, head_cluster, cluster_parents,
     )
     let rem_cluster = if vnode_cluster == "" {

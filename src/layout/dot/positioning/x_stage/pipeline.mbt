@@ -14,8 +14,8 @@ type RankDir = @rankdir.RankDir
 pub(all) struct XStageInput {
   graph : @cgraph.Graph
   prep : @shared.LayoutPrep
-  rank_data : @rank_assignment.RankData
-  rank_heights : @rank_assignment.RankHeights
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
   cluster_meta : @setup.DotClusterMetadata
   ordering : @setup.OrderingResult
 }

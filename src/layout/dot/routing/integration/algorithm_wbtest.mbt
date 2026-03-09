@@ -102,7 +102,7 @@ fn sample_rank_data(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
 ) -> RankData {
-  let input = @rank_assignment.make_rank_data_input(
+  let input = @rank_data.make_rank_data_input(
     graph,
     nodes,
     [],
@@ -110,7 +110,7 @@ fn sample_rank_data(
     1,
     _ => 0.0,
   )
-  @rank_assignment.compute_rank_data(input)
+  @rank_data.compute_rank_data(input)
 }
 
 ///|

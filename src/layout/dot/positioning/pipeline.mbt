@@ -20,10 +20,10 @@ pub(all) struct PositionResult {
 type LayoutPrep = @shared.LayoutPrep
 
 ///|
-type RankData = @rank_assignment.RankData
+type RankData = @rank_data.RankData
 
 ///|
-type RankHeights = @rank_assignment.RankHeights
+type RankHeights = @rank_heights.RankHeights
 
 ///|
 type ClusterMetadata = @setup.DotClusterMetadata

@@ -34,7 +34,7 @@ pub fn compute_root_cluster_padding(
     let mut cluster_at_min = false
     let mut cluster_at_max = false
     for node in nodes {
-      let cluster_key = @clustering.node_local_cluster_key(node)
+      let cluster_key = @membership.node_local_cluster_key(node)
       if cluster_key == "" {
         continue
       }

@@ -3,7 +3,7 @@
     "moonbit-community/graphviz/layout/dot/shared",
     "moonbit-community/graphviz/layout/dot/ordering/order_graph",
     "moonbit-community/graphviz/layout/dot/ordering/setup",
-    "moonbit-community/graphviz/layout/dot/clustering",
+    "moonbit-community/graphviz/layout/dot/clustering/membership",
     "moonbit-community/graphviz/layout/dot/edge_semantics",
     "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
     "moonbit-community/graphviz/layout/dot/positioning/x_reorder",

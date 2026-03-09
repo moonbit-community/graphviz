@@ -46,7 +46,7 @@ fn build_cluster_constraints(
       root_rn_targets: [],
     }
   }
-  let cluster_members = @clustering.collect_cluster_members(cluster_graphs)
+  let cluster_members = @membership.collect_cluster_members(cluster_graphs)
   if cluster_members.length() == 0 {
     return {
       extra_nodes: [],

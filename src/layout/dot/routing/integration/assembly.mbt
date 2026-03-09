@@ -96,8 +96,8 @@ pub fn build_dot_route_base_deps(
       )
     },
     layout_port_offset: @port_geometry.layout_port_offset,
-    node_cluster_key: @clustering.node_cluster_key,
-    node_local_cluster_key: @clustering.node_local_cluster_key,
+    node_cluster_key: @membership.node_cluster_key,
+    node_local_cluster_key: @membership.node_local_cluster_key,
   }
 }
 

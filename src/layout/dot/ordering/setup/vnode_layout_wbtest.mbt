@@ -12,7 +12,7 @@ fn build_edge_vnodes_for_test(
     existing_names[node.name()] = true
   }
   let edge_cluster_keys : Map[String, String] = Map::new()
-  @clustering.collect_edge_cluster_keys(graph, edge_cluster_keys)
+  @membership.collect_edge_cluster_keys(graph, edge_cluster_keys)
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   build_edge_vnodes(
     nodes,

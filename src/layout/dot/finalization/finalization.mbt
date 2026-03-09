@@ -25,10 +25,10 @@ type DotLayoutEdge = @shared.DotLayoutEdge
 type ClusterBboxHeightPair = @clustering.ClusterBboxHeightPair
 
 ///|
-type RankData = @rank_assignment.RankData
+type RankData = @rank_data.RankData
 
 ///|
-type RankHeights = @rank_assignment.RankHeights
+type RankHeights = @rank_heights.RankHeights
 
 ///|
 type PositionResult = @positioning.PositionResult
