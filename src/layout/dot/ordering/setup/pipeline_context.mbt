@@ -348,7 +348,7 @@ fn build_dot_cluster_metadata(
   sources : DotClusterMetadataSources,
   graphviz_flip : Bool,
 ) -> DotClusterMetadata {
-  let cluster_core = @clustering.build_cluster_core_metadata_for_ordering(
+  let cluster_core = build_cluster_core_metadata_for_ordering(
     sources.graph,
     sources.nodes,
     sources.groups,
