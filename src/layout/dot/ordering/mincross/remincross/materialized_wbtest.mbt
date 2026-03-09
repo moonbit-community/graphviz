@@ -354,3 +354,126 @@ test "build_cluster_tail_names_for_cluster applies root override only to names p
 
   assert_eq(reordered, ["root_b", "root_a", "root_c"])
 }
+
+///|
+test "build_remincross_materialized_arrays replays materialized tail buckets in rem_nlist order" {
+  let rem_groups : Map[Int, Array[String]] = Map::new()
+  rem_groups[0] = ["a"]
+  rem_groups[1] = ["v1", "b"]
+  let rem_nodes = @order_graph.build_order_nodes_from_groups(rem_groups, [0, 1])
+  let rem_graph_output = @order_graph.build_order_graph_and_nodes(
+    "rem_test", rem_nodes,
+  )
+
+  let materialized_edges : ReMincrossMaterializedOrderEdges = {
+    order_edges_by_tail: {
+      "a": [("a", "v1", 5, true, 1.0, 2.0, 0.1, 0.2)],
+      "v1": [("v1", "b", 6, true, 3.0, 4.0, 0.3, 0.4)],
+    },
+    vnode_creation: { "a": ["v1"] },
+    edge_creation: [("a", "v1"), ("v1", "b")],
+  }
+
+  let arrays = build_remincross_materialized_arrays(
+    {
+      rem_rank_keys: [0, 1],
+      rem_groups,
+      creation_order: ["a"],
+      edges: [],
+      edge_tail: [],
+      edge_head: [],
+      edge_tail_port_x: [],
+      edge_head_port_x: [],
+      edge_tail_port_order: [],
+      edge_head_port_order: [],
+      ranks: Map::new(),
+      edge_vnodes: Map::new(),
+      order_with_vnodes: true,
+      intercluster_keys: Map::new(),
+      cluster_order: [],
+      order_with_clusters: false,
+      edges_by_tail: Map::new(),
+      root_tail_order_override: None,
+      root_cluster: "__root__",
+      cluster_parents: Map::new(),
+      order_sizes: Map::new(),
+      vnode_sizes: Map::new(),
+      cluster_flat_constraints: Map::new(),
+      rank_same_constraints: Map::new(),
+    },
+    rem_graph_output.order_graph,
+    rem_graph_output.order_node_map,
+    Map::new(),
+    materialized_edges,
+  )
+
+  assert_eq(arrays.node_order.get("a"), Some(0))
+  assert_eq(arrays.node_order.get("v1"), Some(0))
+  assert_eq(arrays.node_order.get("b"), Some(1))
+  assert_eq(arrays.edge_tail_out, ["v1", "a"])
+  assert_eq(arrays.edge_head_out, ["b", "v1"])
+  assert_eq(arrays.edge_tail_port_order, [0.3, 0.1])
+  assert_eq(arrays.edge_head_port_order, [0.4, 0.2])
+}
+
+///|
+test "build_remincross_materialized_inputs assembles rem nodes edges sizes cluster keys and flat constraints" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge_ab = graph.edge(a, b)
+
+  let rem_groups : Map[Int, Array[String]] = Map::new()
+  rem_groups[0] = ["a"]
+  rem_groups[1] = ["b"]
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
+  order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
+
+  let materialized = build_remincross_materialized_inputs({
+    rem_rank_keys: [0, 1],
+    rem_groups,
+    creation_order: ["a"],
+    edges: [edge_ab],
+    edge_tail: [],
+    edge_head: [],
+    edge_tail_port_x: [],
+    edge_head_port_x: [],
+    edge_tail_port_order: [],
+    edge_head_port_order: [],
+    ranks: { "a": 0, "b": 1 },
+    edge_vnodes: Map::new(),
+    order_with_vnodes: false,
+    intercluster_keys: { "a": "", "b": "" },
+    cluster_order: [],
+    order_with_clusters: false,
+    edges_by_tail: { "a": [0] },
+    root_tail_order_override: None,
+    root_cluster: "__root__",
+    cluster_parents: Map::new(),
+    order_sizes,
+    vnode_sizes: Map::new(),
+    cluster_flat_constraints: { "a|b": false },
+    rank_same_constraints: { "b|c": false },
+  })
+
+  assert_eq(materialized.rem_nodes, ["a", "b"])
+  assert_eq(materialized.rem_ranks.get("a"), Some(0))
+  assert_eq(materialized.rem_ranks.get("b"), Some(1))
+  assert_eq(materialized.rem_node_order.get("a"), Some(0))
+  assert_eq(materialized.rem_node_order.get("b"), Some(0))
+  assert_eq(materialized.rem_edge_tail_out, ["a"])
+  assert_eq(materialized.rem_edge_head_out, ["b"])
+  assert_eq(materialized.rem_cluster_keys.get("a"), Some("__root__"))
+  assert_eq(materialized.rem_cluster_keys.get("b"), Some("__root__"))
+  assert_eq(
+    materialized.rem_sizes.get("a").map(fn(size) { size.width_pt }),
+    Some(10.0),
+  )
+  assert_eq(
+    materialized.rem_sizes.get("b").map(fn(size) { size.height_pt }),
+    Some(9.0),
+  )
+  assert_eq(materialized.rem_flat_constraints.get("a|b"), Some(false))
+  assert_eq(materialized.rem_flat_constraints.get("b|c"), Some(true))
+}
