@@ -15,18 +15,16 @@ fn edge_is_reversed_by_endpoints(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> Bool {
-  let tail_name =
-    if edge_idx < edge_tail.length() {
-      edge_tail[edge_idx]
-    } else {
-      edge.tail().name()
-    }
-  let head_name =
-    if edge_idx < edge_head.length() {
-      edge_head[edge_idx]
-    } else {
-      edge.head().name()
-    }
+  let tail_name = if edge_idx < edge_tail.length() {
+    edge_tail[edge_idx]
+  } else {
+    edge.tail().name()
+  }
+  let head_name = if edge_idx < edge_head.length() {
+    edge_head[edge_idx]
+  } else {
+    edge.head().name()
+  }
   @order_graph.edge_orientation_is_reversed(edge, tail_name, head_name)
 }
 
@@ -62,13 +60,12 @@ fn build_reverse_merge_metadata(
     if (input.edge_excluded_from_reverse_merge)(edge) {
       continue
     }
-    let is_reversed =
-      edge_is_reversed_by_endpoints(
-        edge_idx,
-        edge,
-        input.edge_tail,
-        input.edge_head,
-      )
+    let is_reversed = edge_is_reversed_by_endpoints(
+      edge_idx,
+      edge,
+      input.edge_tail,
+      input.edge_head,
+    )
     if is_reversed {
       continue
     }
@@ -87,13 +84,12 @@ fn build_reverse_merge_metadata(
     if (input.edge_excluded_from_reverse_merge)(edge) {
       continue
     }
-    let is_reversed =
-      edge_is_reversed_by_endpoints(
-        edge_idx,
-        edge,
-        input.edge_tail,
-        input.edge_head,
-      )
+    let is_reversed = edge_is_reversed_by_endpoints(
+      edge_idx,
+      edge,
+      input.edge_tail,
+      input.edge_head,
+    )
     if !is_reversed {
       continue
     }
@@ -109,8 +105,11 @@ fn build_reverse_merge_metadata(
           continue
         }
         merged_edge_skip[edge_idx] = true
-        let prev_bonus = merged_edge_weight_bonus.get(rep_idx).unwrap_or_default()
-        merged_edge_weight_bonus[rep_idx] = prev_bonus + @edge_semantics.edge_weight(edge)
+        let prev_bonus = merged_edge_weight_bonus
+          .get(rep_idx)
+          .unwrap_or_default()
+        merged_edge_weight_bonus[rep_idx] = prev_bonus +
+          @edge_semantics.edge_weight(edge)
       }
       None => ()
     }

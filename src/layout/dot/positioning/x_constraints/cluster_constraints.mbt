@@ -9,6 +9,7 @@ pub(all) struct ClusterConstraintBuild {
   root_rn_targets : Array[String]
 }
 
+///|
 const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 ///|
@@ -145,8 +146,9 @@ fn build_cluster_constraints(
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
-    let (left_border, right_border) =
-      @clustering.cluster_label_borders_for_xpos_constraints(cluster_graph, rankdir)
+    let (left_border, right_border) = @clustering.cluster_label_borders_for_xpos_constraints(
+      cluster_graph, rankdir,
+    )
     cluster_border_left[name] = left_border
     cluster_border_right[name] = right_border
   }
@@ -247,7 +249,8 @@ fn build_cluster_constraints(
     if !flip {
       match cluster_graphs.get(name) {
         Some(cluster_graph) =>
-          match @clustering.cluster_label_width_with_pad_for_layout(cluster_graph) {
+          match
+            @clustering.cluster_label_width_with_pad_for_layout(cluster_graph) {
             Some(label_width) => {
               let minlen = @numeric.round_int(label_width)
               if minlen > 0 {
@@ -318,7 +321,9 @@ fn build_cluster_constraints(
           let left_name = names[left_idx]
           let right_name = names[right_idx]
           let left_minlen = @numeric.round_int(
-            @node_primitives.node_left_pt(left_name, sizes) + margin + left_border,
+            @node_primitives.node_left_pt(left_name, sizes) +
+            margin +
+            left_border,
           )
           extra_edges.push({
             tail: ln_name,
@@ -329,7 +334,9 @@ fn build_cluster_constraints(
             head_port: None,
           })
           let right_minlen = @numeric.round_int(
-            @node_primitives.node_right_pt(right_name, sizes) + margin + right_border,
+            @node_primitives.node_right_pt(right_name, sizes) +
+            margin +
+            right_border,
           )
           extra_edges.push({
             tail: right_name,
@@ -400,11 +407,13 @@ fn build_cluster_constraints(
                   Some(value) => value
                   None => CLUSTER_MARGIN_PT
                 }
-                let parent_left_border = match cluster_border_left.get(parent_name) {
+                let parent_left_border = match
+                  cluster_border_left.get(parent_name) {
                   Some(value) => value
                   None => 0.0
                 }
-                let parent_right_border = match cluster_border_right.get(parent_name) {
+                let parent_right_border = match
+                  cluster_border_right.get(parent_name) {
                   Some(value) => value
                   None => 0.0
                 }
@@ -526,7 +535,9 @@ fn build_cluster_constraints(
                                     while idx < names.length() &&
                                           (first_i < 0 || first_j < 0) {
                                       let node_name = names[idx]
-                                      if @cluster_identity.cluster_key_from_skeleton(node_name)
+                                      if @cluster_identity.cluster_key_from_skeleton(
+                                          node_name,
+                                        )
                                         is Some(_) {
                                         idx = idx + 1
                                         continue
@@ -569,7 +580,9 @@ fn build_cluster_constraints(
                                           Some(right_pair) => {
                                             let left_rn = left_pair.right_node
                                             let right_ln = right_pair.left_node
-                                            let minlen = @numeric.round_int(margin)
+                                            let minlen = @numeric.round_int(
+                                              margin,
+                                            )
                                             extra_edges.push({
                                               tail: left_rn,
                                               head: right_ln,
@@ -609,10 +622,5 @@ fn build_cluster_constraints(
       }
     }
   }
-  {
-    extra_nodes,
-    extra_edges,
-    root_ln_targets,
-    root_rn_targets,
-  }
+  { extra_nodes, extra_edges, root_ln_targets, root_rn_targets }
 }
