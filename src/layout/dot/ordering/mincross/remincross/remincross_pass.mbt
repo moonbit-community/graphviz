@@ -73,8 +73,8 @@ priv struct ClusteredFinalizeInputs {
 /// one finalize stage run.
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusteredFinalizeStageRootSources {
-  cluster_rank_order_replay : @mincross.ClusterRankOrderReplay
-  root_cluster_stage : @mincross.RootAndClusterRanksOutput
+  cluster_rank_order_replay : @root.ClusterRankOrderReplay
+  root_cluster_stage : @root.RootAndClusterRanksOutput
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   real_nodes : Map[String, Bool]
@@ -89,8 +89,8 @@ priv struct ClusteredFinalizeStageRootSources {
 /// deterministic finalize run.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusteredFinalizeStageBuildSources {
-  cluster_rank_order_replay : @mincross.ClusterRankOrderReplay
-  root_cluster_stage : @mincross.RootAndClusterRanksOutput
+  cluster_rank_order_replay : @root.ClusterRankOrderReplay
+  root_cluster_stage : @root.RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
   pre_root_stage : @pre_root.ClusteredPreRootStageOutput
   real_nodes : Map[String, Bool]
@@ -295,7 +295,7 @@ fn run_clustered_finalize_order_groups(
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
 ) -> ReMincrossPassOutput {
-  let cleaned_groups = @mincross.collect_real_only_rank_groups(
+  let cleaned_groups = collect_real_only_rank_groups(
     inputs.order_rank_keys,
     inputs.ordered,
     inputs.remincross_context.real_nodes,
@@ -306,7 +306,7 @@ fn run_clustered_finalize_order_groups(
       ordered_with_vnodes: inputs.remincross_context.ordered_with_vnodes,
     }
   }
-  let final_groups = @mincross.build_clustered_finalize_groups(
+  let final_groups = build_clustered_finalize_groups(
     cleaned_groups,
     inputs.cluster_rank_order,
     inputs.remincross_context.cluster_keys,
@@ -405,7 +405,7 @@ pub fn run_remincross_pass(
       capture_call,
       reorder_call,
     )
-    let rem_cleaned = @mincross.collect_real_only_rank_groups(
+    let rem_cleaned = collect_real_only_rank_groups(
       rem_rank_keys,
       rem_ordered,
       context.real_nodes,

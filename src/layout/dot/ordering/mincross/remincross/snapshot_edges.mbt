@@ -8,7 +8,7 @@
 pub(all) struct RemincrossInputSnapshot {
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
-  edges : Array[@mincross.OrderingEdgeSnapshotEntry]
+  edges : Array[@root.OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
 }
 
@@ -48,7 +48,7 @@ pub fn build_remincross_input_snapshot(
   {
     rank_keys: input.rank_keys.copy(),
     groups: @shared.clone_rank_groups(input.groups),
-    edges: @mincross.build_ordering_edge_snapshot_entries({
+    edges: @root.build_ordering_edge_snapshot_entries({
       edges_out: input.edges_out,
       edge_tail_out: input.edge_tail_out,
       edge_head_out: input.edge_head_out,
@@ -70,7 +70,7 @@ pub fn build_remincross_snapshot_capture_callback(
   edge_xpenalty_for : (@cgraph.Edge) -> Int,
 ) -> (ReMincrossCleanupCaptureInputs) -> Unit {
   capture_inputs => {
-    if !@mincross.should_capture_ordering_inputs() {
+    if !@root.should_capture_ordering_inputs() {
       return
     }
     let snapshot = build_remincross_input_snapshot({

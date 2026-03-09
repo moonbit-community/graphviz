@@ -1,13 +1,13 @@
 ///|
-fn snapshot_edge_summary(edge : @mincross.OrderingEdgeSnapshotEntry) -> String {
+fn snapshot_edge_summary(edge : @root.OrderingEdgeSnapshotEntry) -> String {
   "\{edge.tail}->\{edge.head} pen=\{edge.xpenalty} tpx=\{edge.tail_port_x} hpx=\{edge.head_port_x} tpo=\{edge.tail_port_order} hpo=\{edge.head_port_order}"
 }
 
 ///|
 fn assert_snapshot_edge_eq(
   label : String,
-  actual : @mincross.OrderingEdgeSnapshotEntry,
-  expected : @mincross.OrderingEdgeSnapshotEntry,
+  actual : @root.OrderingEdgeSnapshotEntry,
+  expected : @root.OrderingEdgeSnapshotEntry,
 ) -> Unit raise {
   if actual.tail != expected.tail ||
     actual.head != expected.head ||
@@ -25,8 +25,8 @@ fn assert_snapshot_edge_eq(
 ///|
 fn assert_snapshot_entries_eq(
   label : String,
-  actual : Array[@mincross.OrderingEdgeSnapshotEntry],
-  expected : Array[@mincross.OrderingEdgeSnapshotEntry],
+  actual : Array[@root.OrderingEdgeSnapshotEntry],
+  expected : Array[@root.OrderingEdgeSnapshotEntry],
 ) -> Unit raise {
   assert_eq(actual.length(), expected.length())
   for i in 0..<expected.length() {

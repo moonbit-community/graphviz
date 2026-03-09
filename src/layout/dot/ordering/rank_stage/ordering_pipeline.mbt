@@ -138,7 +138,7 @@ fn build_clustered_pre_root(
 }
 
 ///|
-type ClusteredRootPhaseOutput = @mincross.ClusteredRootPhaseStageOutput
+type ClusteredRootPhaseOutput = @root.ClusteredRootPhaseStageOutput
 
 ///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
@@ -152,7 +152,7 @@ fn run_clustered_root_phase(
   let cluster_meta = dispatch_context.cluster_meta
   let pipeline_context = dispatch_context.pipeline_context
   let runtime_context = pipeline_context.runtime_context
-  @mincross.run_clustered_root_phase_stage(
+  @root.run_clustered_root_phase_stage(
     {
       reorder_setup: pipeline_context.reorder_setup,
       pre_root_stage,
@@ -178,7 +178,7 @@ fn run_clustered_root_phase(
       vnode_clusters: runtime_context.vnode_info.vnode_clusters,
       vnode_sizes: runtime_context.vnode_info.vnode_sizes,
     },
-    @mincross.build_root_snapshot_capture_callback(
+    @root.build_root_snapshot_capture_callback(
       @edge_semantics.edge_xpenalty,
     ),
   )

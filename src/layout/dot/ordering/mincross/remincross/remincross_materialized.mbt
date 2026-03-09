@@ -791,7 +791,7 @@ fn build_cluster_tail_names_for_cluster(
     // override snapshot before replaying root names into GD_nlist.
     return match context.root_tail_order_override {
       Some(override_names) =>
-        @mincross.reorder_names_by_override(names, override_names)
+        @root.reorder_names_by_override(names, override_names)
       None => names
     }
   }
