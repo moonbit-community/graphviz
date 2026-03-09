@@ -1,7 +1,4 @@
 import {
-  "moonbit-community/graphviz/layout/dot/edge_semantics",
-  "moonbit-community/graphviz/cgraph",
   "moonbitlang/core/math",
-  "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
 }
