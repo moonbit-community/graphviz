@@ -1,28 +1,4 @@
 ///|
-test "collect_rank_extremes descends nested subgraphs" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  ignore(graph.node("a"))
-  ignore(graph.node("b"))
-  ignore(graph.node("c"))
-  let nested = graph.subgraph(name="nested")
-  let source = nested.subgraph(name="source")
-  source.set_attr("rank", "source")
-  ignore(source.node("a"))
-  let sink = graph.subgraph(name="sink")
-  sink.set_attr("rank", "sink")
-  ignore(sink.node("b"))
-
-  let min_nodes : Map[String, Bool] = Map::new()
-  let max_nodes : Map[String, Bool] = Map::new()
-  collect_rank_extremes(graph, min_nodes, max_nodes)
-
-  assert_eq(min_nodes.get("a"), Some(true))
-  assert_eq(max_nodes.get("b"), Some(true))
-  assert_eq(min_nodes.get("c"), None)
-  assert_eq(max_nodes.get("c"), None)
-}
-
-///|
 test "cluster rank projection combines leader and local ranks then normalizes" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
@@ -182,4 +158,54 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
 
   assert_eq(leader_ranks.get("a0"), Some(1))
   assert_eq(leader_ranks.get("b0"), Some(0))
+}
+
+///|
+fn base_recursive_ranks(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+  back_weight_scale : Int,
+) -> Map[String, Int] {
+  ignore(back_weight_scale)
+  let directions = @solver.acyclic_edge_directions_with_order(
+    graph, nodes, edges,
+  )
+  @solver.compute_ranks_directed_base(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+    directions.tail,
+    directions.head,
+  )
+}
+
+///|
+test "compute_clustered_ranks projects local cluster ranks into the outer solve" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster = graph.subgraph(name="cluster0")
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let c = graph.node("c")
+  ignore(cluster.node("a"))
+  ignore(cluster.node("b"))
+  let ab = graph.edge(a, b)
+  ab.set_attr("minlen", "1")
+  let ac = graph.edge(a, c)
+  ac.set_attr("minlen", "1")
+
+  let ranks = compute_clustered_ranks(
+    graph,
+    [a, b, c],
+    [ab, ac],
+    false,
+    10,
+    base_recursive_ranks,
+  )
+
+  assert_eq(ranks.get("a"), Some(0))
+  assert_eq(ranks.get("b"), Some(1))
+  assert_eq(ranks.get("c"), Some(1))
 }

@@ -1,6 +1,7 @@
 ///|
 /// Rank domain: acyclic edge-direction preprocessing helpers.
 
+///|
 /// Graphviz parity: adjacency removal uses zapinlist (swap with last), not stable delete.
 fn remove_edge_at(list : Array[Int], idx : Int) -> Unit {
   let last = list.length() - 1
@@ -40,7 +41,8 @@ fn edge_pair_lookup(
 ) -> Int? {
   match edge_by_pair.get(key) {
     Some(idx) =>
-      if idx >= 0 && idx < edge_tail.length() &&
+      if idx >= 0 &&
+        idx < edge_tail.length() &&
         idx < edge_head.length() &&
         idx < edge_active.length() &&
         edge_active[idx] &&
@@ -157,7 +159,9 @@ fn acyclic_dfs_fast(
       continue
     }
     let edge_idx = out_edges[node_idx][edge_pos]
-    if edge_idx < 0 || edge_idx >= edge_active.length() || !edge_active[edge_idx] {
+    if edge_idx < 0 ||
+      edge_idx >= edge_active.length() ||
+      !edge_active[edge_idx] {
       stack[top_idx] = (node_idx, edge_pos + 1)
       continue
     }
@@ -185,13 +189,10 @@ fn acyclic_dfs_fast(
       }
       remove_edge_at(out_edges[node_idx], edge_pos)
       let reverse_key = edge_pair_key(old_head, old_tail)
-      match edge_pair_lookup(
-        edge_by_pair,
-        edge_tail,
-        edge_head,
-        edge_active,
-        reverse_key,
-      ) {
+      match
+        edge_pair_lookup(
+          edge_by_pair, edge_tail, edge_head, edge_active, reverse_key,
+        ) {
         Some(existing_idx) => {
           // Merge into existing opposite edge (merge_oneway).
           edge_active[edge_idx] = false
@@ -222,6 +223,7 @@ fn acyclic_dfs_fast(
   }
 }
 
+///|
 pub struct AcyclicDirectionsWithOrder {
   tail : Array[String]
   head : Array[String]
@@ -277,15 +279,11 @@ pub fn acyclic_edge_directions_with_order(
     edge_is_active.push(active)
     let edge_idx = edge_tail_orig.length() - 1
     match node_index.get(tail) {
-      Some(idx) => {
-        out_edges_all_orig[idx].push(edge_idx)
-      }
+      Some(idx) => out_edges_all_orig[idx].push(edge_idx)
       None => ()
     }
     match node_index.get(head) {
-      Some(idx) => {
-        in_edges_all_orig[idx].push(edge_idx)
-      }
+      Some(idx) => in_edges_all_orig[idx].push(edge_idx)
       None => ()
     }
   }
@@ -389,9 +387,7 @@ pub fn acyclic_edge_directions_with_order(
       }
       let key = edge_pair_key(tail_rep, head_rep)
       match fast_edge_by_pair.get(key) {
-        Some(existing) => {
-          fast_edge_members[existing].push(edge_idx)
-        }
+        Some(existing) => fast_edge_members[existing].push(edge_idx)
         None => {
           let id = fast_edge_tail.length()
           fast_edge_tail.push(tail_rep)
@@ -431,20 +427,11 @@ pub fn acyclic_edge_directions_with_order(
     match rep_index.get(name) {
       Some(i) =>
         if !marked[i] {
-        acyclic_dfs_fast(
-          i,
-          rep_index,
-          fast_out_edges,
-          fast_edge_tail,
-          fast_edge_head,
-          fast_edge_members,
-          fast_edge_active,
-          fast_edge_by_pair,
-          edge_reversed,
-          marked,
-          onstack,
-        )
-      }
+          acyclic_dfs_fast(
+            i, rep_index, fast_out_edges, fast_edge_tail, fast_edge_head, fast_edge_members,
+            fast_edge_active, fast_edge_by_pair, edge_reversed, marked, onstack,
+          )
+        }
       None => ()
     }
   }
@@ -523,17 +510,8 @@ pub fn acyclic_edge_directions_for_names(
   for i in 0..<node_names.length() {
     if !marked[i] {
       acyclic_dfs(
-        i,
-        node_index,
-        out_edges,
-        out_edges_all,
-        in_edges_all,
-        edge_is_active,
-        tail,
-        head,
-        edge_reversed,
-        marked,
-        onstack,
+        i, node_index, out_edges, out_edges_all, in_edges_all, edge_is_active, tail,
+        head, edge_reversed, marked, onstack,
       )
     }
   }

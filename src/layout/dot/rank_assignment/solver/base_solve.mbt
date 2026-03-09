@@ -383,7 +383,7 @@ pub fn compute_ranks_directed_base(
   }
   let min_nodes : Map[String, Bool] = Map::new()
   let max_nodes : Map[String, Bool] = Map::new()
-  @cluster_ranks.collect_rank_extremes(source, min_nodes, max_nodes)
-  @cluster_ranks.apply_rank_extremes(ranks, min_nodes, max_nodes)
+  collect_rank_extremes(source, min_nodes, max_nodes)
+  apply_rank_extremes(ranks, min_nodes, max_nodes)
   ranks
 }
