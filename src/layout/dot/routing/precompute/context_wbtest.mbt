@@ -1,17 +1,4 @@
 ///|
-test "build_order_index flattens each rank into local order positions" {
-  let groups : Map[Int, Array[String]] = Map::new()
-  groups[0] = ["a", "b"]
-  groups[2] = ["x"]
-
-  let order = build_order_index(groups)
-
-  assert_eq(order.get("a"), Some(0))
-  assert_eq(order.get("b"), Some(1))
-  assert_eq(order.get("x"), Some(0))
-}
-
-///|
 test "cluster_containing_point_or_empty requires a named cluster and in-bounds point" {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
   cluster_bboxes["cluster0"] = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 }

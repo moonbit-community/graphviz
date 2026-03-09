@@ -15,17 +15,6 @@ pub(all) struct RoutingContext {
 }
 
 ///|
-fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
-  let order : Map[String, Int] = Map::new()
-  for _rank, names in groups {
-    for i in 0..<names.length() {
-      order[names[i]] = i
-    }
-  }
-  order
-}
-
-///|
 fn cluster_containing_point_or_empty(
   cluster_name : String,
   cluster_bboxes : Map[String, @geom.Rect],
@@ -125,8 +114,8 @@ pub(all) struct PrepareRoutingContextInput {
 pub fn prepare_routing_context(
   input : PrepareRoutingContextInput,
 ) -> RoutingContext {
-  let order_index = build_order_index(input.ordered_groups)
-  let path_order_index = build_order_index(input.x_groups)
+  let order_index = @rank_groups.build_order_index(input.ordered_groups)
+  let path_order_index = @rank_groups.build_order_index(input.x_groups)
   let path_adjacency = @routesplines.build_path_adjacency(
     input.edges,
     input.edge_vnodes,
