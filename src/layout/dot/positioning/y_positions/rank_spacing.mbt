@@ -37,7 +37,7 @@ pub fn self_edge_label_half_heights(
       continue
     }
     let tail = edge.tail().name()
-    let half_height = (edge_label_height_pt_for)(edge) / 2.0
+    let half_height = edge_label_height_pt_for(edge) / 2.0
     let current = match heights.get(tail) {
       Some(value) => value
       None => 0.0
@@ -65,9 +65,7 @@ pub(all) struct FillRankPositionsInput {
 }
 
 ///|
-pub fn fill_rank_positions(
-  input : FillRankPositionsInput,
-) -> Unit {
+pub fn fill_rank_positions(input : FillRankPositionsInput) -> Unit {
   if input.all_ranks.length() == 0 {
     return ()
   }

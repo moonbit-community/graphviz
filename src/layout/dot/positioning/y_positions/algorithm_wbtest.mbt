@@ -1,5 +1,8 @@
 ///|
-fn sample_node_size(width_pt : Double, height_pt : Double) -> @node_primitives.NodeSize {
+fn sample_node_size(
+  width_pt : Double,
+  height_pt : Double,
+) -> @node_primitives.NodeSize {
   let half = width_pt / 2.0
   {
     width_in: width_pt / 72.0,
@@ -33,7 +36,11 @@ test "node_half_height_pt prefers larger self-edge label half height" {
 
 ///|
 test "self_edge_label_half_heights keeps the maximum per tail and ignores non-self edges" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="g", strict=false)
+  let graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    name="g",
+    strict=false,
+  )
   let a = graph.node("a")
   let b = graph.node("b")
   let aa_1 = graph.edge(a, a)
@@ -45,16 +52,14 @@ test "self_edge_label_half_heights keeps the maximum per tail and ignores non-se
   let bb = graph.edge(b, b)
   bb.set_attr("fixture_id", "bb")
 
-  let heights = self_edge_label_half_heights(
-    [aa_1, ab, aa_2, bb],
-    (edge) =>
-      match edge.get_attr("fixture_id") {
-        Some("aa_1") => 10.0
-        Some("aa_2") => 18.0
-        Some("bb") => 14.0
-        _ => 30.0
-      },
-  )
+  let heights = self_edge_label_half_heights([aa_1, ab, aa_2, bb], edge => {
+    match edge.get_attr("fixture_id") {
+      Some("aa_1") => 10.0
+      Some("aa_2") => 18.0
+      Some("bb") => 14.0
+      _ => 30.0
+    }
+  })
 
   assert_eq(heights.get("a"), Some(9.0))
   assert_eq(heights.get("b"), Some(7.0))
@@ -85,19 +90,17 @@ test "fill_rank_positions uses the larger of ranksep spacing and cluster margin 
 
   let y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
-  fill_rank_positions(
-    {
-      rank_keys: [0, 1, 2],
-      groups,
-      all_ranks: [0, 1, 2],
-      rank_pht,
-      rank_ht1,
-      rank_ht2,
-      ranksep_pt: 5.0,
-      y_positions,
-      rank_y,
-    },
-  )
+  fill_rank_positions({
+    rank_keys: [0, 1, 2],
+    groups,
+    all_ranks: [0, 1, 2],
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+    ranksep_pt: 5.0,
+    y_positions,
+    rank_y,
+  })
 
   assert_eq(rank_y.get(2), Some(5.0))
   assert_eq(rank_y.get(1), Some(18.0))
@@ -105,4 +108,96 @@ test "fill_rank_positions uses the larger of ranksep spacing and cluster margin 
   assert_eq(y_positions.get("high"), Some(5.0))
   assert_eq(y_positions.get("mid"), Some(18.0))
   assert_eq(y_positions.get("low"), Some(36.0))
+}
+
+///|
+test "apply_rank_half_heights raises all rank height maps only where overlay is larger" {
+  let rank_pht : Map[Int, Double] = Map::new()
+  rank_pht[0] = 4.0
+  rank_pht[1] = 6.0
+
+  let rank_ht1 : Map[Int, Double] = Map::new()
+  rank_ht1[0] = 3.0
+  rank_ht1[1] = 7.0
+
+  let rank_ht2 : Map[Int, Double] = Map::new()
+  rank_ht2[0] = 5.0
+  rank_ht2[1] = 2.0
+
+  let overlays : Map[Int, Double] = Map::new()
+  overlays[0] = 6.0
+  overlays[1] = 4.0
+  overlays[2] = 8.0
+
+  apply_rank_half_heights(overlays, rank_pht, rank_ht1, rank_ht2)
+
+  assert_eq(rank_pht.get(0), Some(6.0))
+  assert_eq(rank_ht1.get(0), Some(6.0))
+  assert_eq(rank_ht2.get(0), Some(6.0))
+
+  assert_eq(rank_pht.get(1), Some(6.0))
+  assert_eq(rank_ht1.get(1), Some(7.0))
+  assert_eq(rank_ht2.get(1), Some(4.0))
+
+  assert_eq(rank_pht.get(2), Some(8.0))
+  assert_eq(rank_ht1.get(2), Some(8.0))
+  assert_eq(rank_ht2.get(2), Some(8.0))
+}
+
+///|
+test "apply_flat_label_rank_heights ignores missing vnode sizes and keeps max half height per rank" {
+  let flat_label_ranks : Map[String, Int] = Map::new()
+  flat_label_ranks["v0_small"] = 0
+  flat_label_ranks["v0_large"] = 0
+  flat_label_ranks["v1"] = 1
+  flat_label_ranks["missing"] = 2
+
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  vnode_sizes["v0_small"] = sample_node_size(10.0, 8.0)
+  vnode_sizes["v0_large"] = sample_node_size(10.0, 20.0)
+  vnode_sizes["v1"] = sample_node_size(10.0, 12.0)
+
+  let rank_pht : Map[Int, Double] = Map::new()
+  rank_pht[0] = 4.0
+  rank_pht[1] = 7.0
+
+  let rank_ht1 : Map[Int, Double] = Map::new()
+  rank_ht1[0] = 3.0
+  rank_ht1[1] = 5.0
+
+  let rank_ht2 : Map[Int, Double] = Map::new()
+  rank_ht2[0] = 1.0
+  rank_ht2[1] = 8.0
+
+  let overlay_ranks = apply_flat_label_rank_heights(
+    flat_label_ranks, vnode_sizes, rank_pht, rank_ht1, rank_ht2,
+  )
+
+  assert_eq(rank_pht.get(0), Some(10.0))
+  assert_eq(rank_ht1.get(0), Some(10.0))
+  assert_eq(rank_ht2.get(0), Some(10.0))
+
+  assert_eq(rank_pht.get(1), Some(7.0))
+  assert_eq(rank_ht1.get(1), Some(6.0))
+  assert_eq(rank_ht2.get(1), Some(8.0))
+
+  assert_eq(rank_pht.get(2), None)
+  assert_eq(overlay_ranks, [0, 0, 1])
+}
+
+///|
+test "build_y_positions_from_rank_groups rebuilds node positions from updated rank y values" {
+  let groups : Map[Int, Array[String]] = Map::new()
+  groups[0] = ["low_a", "low_b"]
+  groups[2] = ["high"]
+
+  let rank_y : Map[Int, Double] = Map::new()
+  rank_y[0] = 30.0
+  rank_y[2] = 5.0
+
+  let y_positions = build_y_positions_from_rank_groups([2, 0], groups, rank_y)
+
+  assert_eq(y_positions.get("high"), Some(5.0))
+  assert_eq(y_positions.get("low_a"), Some(30.0))
+  assert_eq(y_positions.get("low_b"), Some(30.0))
 }

@@ -48,7 +48,7 @@ pub fn build_all_ranks_with_overlays(
       max_rank = rank
     }
   }
-  for rank in min_rank..=max_rank {
+  for rank in min_rank..<=max_rank {
     all_ranks.push(rank)
   }
   all_ranks
@@ -107,30 +107,26 @@ fn build_y_positions_with_flip(
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
-  fill_rank_positions(
-    {
-      rank_keys: input.rank_keys,
-      groups: input.groups,
-      all_ranks: input.y_all_ranks,
-      rank_pht: input.rank_pht,
-      rank_ht1: input.rank_ht1,
-      rank_ht2: input.rank_ht2,
-      ranksep_pt: input.ranksep_pt,
-      y_positions,
-      rank_y,
-    },
-  )
-  let graphviz_flip =
-    input.rankdir == @rankdir.RankDir::LR || input.rankdir == @rankdir.RankDir::RL
+  fill_rank_positions({
+    rank_keys: input.rank_keys,
+    groups: input.groups,
+    all_ranks: input.y_all_ranks,
+    rank_pht: input.rank_pht,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    ranksep_pt: input.ranksep_pt,
+    y_positions,
+    rank_y,
+  })
+  let graphviz_flip = input.rankdir == @rankdir.RankDir::LR ||
+    input.rankdir == @rankdir.RankDir::RL
   if graphviz_flip && @cluster_graph.graph_has_cluster(input.graph) {
-    let min_root_rank =
-      if input.y_all_ranks.length() > 0 {
-        input.y_all_ranks[0]
-      } else {
-        0
-      }
-    if @cluster_geometry.adjust_flip_rank_heights(
-      {
+    let min_root_rank = if input.y_all_ranks.length() > 0 {
+      input.y_all_ranks[0]
+    } else {
+      0
+    }
+    if @cluster_geometry.adjust_flip_rank_heights({
         graph: input.graph,
         ranks: input.ranks,
         rank_y,
@@ -141,14 +137,12 @@ fn build_y_positions_with_flip(
         margin_total: 0.0,
         cluster_margin_pt_for: input.cluster_margin_pt_for,
         cluster_label_width_pt_for: input.cluster_label_width_pt_for,
-      },
-    ) {
-      y_positions =
-        build_y_positions_from_rank_groups(
-          input.rank_keys,
-          input.groups,
-          rank_y,
-        )
+      }) {
+      y_positions = build_y_positions_from_rank_groups(
+        input.rank_keys,
+        input.groups,
+        rank_y,
+      )
     }
   }
   { y_positions, rank_y }
@@ -173,10 +167,7 @@ pub(all) struct YPositionPipelineInput {
   flat_label_ranks : Map[String, Int]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
-  cluster_label_padding_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> @cluster_geometry.ClusterLabelPadding
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
   node_half_height_pt_for : (
     String,
     Map[String, @node_primitives.NodeSize],
@@ -214,12 +205,7 @@ fn apply_flat_label_rank_heights(
     }
     overlay_ranks.push(rank)
   }
-  apply_rank_half_heights(
-    half_heights_by_rank,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-  )
+  apply_rank_half_heights(half_heights_by_rank, rank_pht, rank_ht1, rank_ht2)
   overlay_ranks
 }
 
@@ -230,54 +216,46 @@ fn apply_flat_label_rank_heights(
 pub fn build_y_position_pipeline(
   input : YPositionPipelineInput,
 ) -> YPositionPipelineOutput {
-  let cluster_bbox_heights =
-    if input.has_clusters {
-      @cluster_geometry.compute_cluster_bbox_heights(
-        {
-          graph: input.graph,
-          ranks: input.ranks,
-          sizes: input.sizes,
-          self_edge_labels: input.self_edge_labels,
-          rankdir: input.rankdir,
-          cluster_margin_pt_for: input.cluster_margin_pt_for,
-          cluster_label_padding_for: input.cluster_label_padding_for,
-          node_half_height_pt_for: input.node_half_height_pt_for,
-        },
-      )
-    } else {
-      Map::new()
-    }
-  let overlay_ranks =
-    apply_flat_label_rank_heights(
-      input.flat_label_ranks,
-      input.vnode_sizes,
-      input.rank_pht,
-      input.rank_ht1,
-      input.rank_ht2,
-    )
-  let y_all_ranks =
-    build_all_ranks_with_overlays(
-      input.rank_keys,
-      overlay_ranks,
-    )
-  let y_position_output =
-    build_y_positions_with_flip(
-      {
-        graph: input.graph,
-        rankdir: input.rankdir,
-        rank_keys: input.rank_keys,
-        groups: input.groups,
-        ranks: input.ranks,
-        rank_pht: input.rank_pht,
-        rank_ht1: input.rank_ht1,
-        rank_ht2: input.rank_ht2,
-        ranksep_pt: input.ranksep_pt,
-        cluster_bbox_heights,
-        y_all_ranks,
-        cluster_margin_pt_for: input.cluster_margin_pt_for,
-        cluster_label_width_pt_for: input.cluster_label_width_pt_for,
-      },
-    )
+  let cluster_bbox_heights = if input.has_clusters {
+    @cluster_geometry.compute_cluster_bbox_heights({
+      graph: input.graph,
+      ranks: input.ranks,
+      sizes: input.sizes,
+      self_edge_labels: input.self_edge_labels,
+      rankdir: input.rankdir,
+      cluster_margin_pt_for: input.cluster_margin_pt_for,
+      cluster_label_padding_for: input.cluster_label_padding_for,
+      node_half_height_pt_for: input.node_half_height_pt_for,
+    })
+  } else {
+    Map::new()
+  }
+  let overlay_ranks = apply_flat_label_rank_heights(
+    input.flat_label_ranks,
+    input.vnode_sizes,
+    input.rank_pht,
+    input.rank_ht1,
+    input.rank_ht2,
+  )
+  let y_all_ranks = build_all_ranks_with_overlays(
+    input.rank_keys,
+    overlay_ranks,
+  )
+  let y_position_output = build_y_positions_with_flip({
+    graph: input.graph,
+    rankdir: input.rankdir,
+    rank_keys: input.rank_keys,
+    groups: input.groups,
+    ranks: input.ranks,
+    rank_pht: input.rank_pht,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    ranksep_pt: input.ranksep_pt,
+    cluster_bbox_heights,
+    y_all_ranks,
+    cluster_margin_pt_for: input.cluster_margin_pt_for,
+    cluster_label_width_pt_for: input.cluster_label_width_pt_for,
+  })
   {
     y_positions: y_position_output.y_positions,
     rank_y: y_position_output.rank_y,
