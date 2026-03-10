@@ -268,6 +268,74 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
 }
 
 ///|
+test "build_constraint_segment_pass reverses descending vnode chains and scales sparse segment weights" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let edge = graph.edge(a, b)
+  edge.set_attr("weight", "3")
+
+  let vnode0 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_0"
+  let vnode1 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_1"
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  edge_out_order["a"] = [0]
+  let ranks : Map[String, Int] = { "a": 2, "b": 0 }
+  ranks[vnode0] = 1
+  ranks[vnode1] = 1
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode0, vnode1]
+
+  let output = build_constraint_segment_pass({
+    edges: [edge],
+    edge_tail: [],
+    edge_head: [],
+    edge_out_order,
+    nlist_order: ["a", vnode0, vnode1, "b"],
+    ranks,
+    cluster_keys: Map::new(),
+    edge_vnodes,
+    order_in_rank: Map::new(),
+    nodesep_pt: 10.0,
+    sizes: build_base_sizes(),
+    skip_intercluster: false,
+    rank_adj_constraints: Map::new(),
+    edge_has_mid_label: _ => false,
+    edge_degree_increment: _ => 1,
+  })
+
+  let first_segments = match output.segments_by_tail.get("a") {
+    Some(value) => value
+    None => fail("missing first descending segment")
+  }
+  let middle_segments = match output.segments_by_tail.get(vnode1) {
+    Some(value) => value
+    None => fail("missing middle descending segment")
+  }
+  let last_segments = match output.segments_by_tail.get(vnode0) {
+    Some(value) => value
+    None => fail("missing last descending segment")
+  }
+
+  assert_eq(output.flat_minlen_constraints.length(), 0)
+  assert_eq(output.segments_by_tail.length(), 3)
+
+  assert_eq(first_segments.length(), 1)
+  assert_eq(first_segments[0].tail, "a")
+  assert_eq(first_segments[0].head, vnode1)
+  assert_eq(first_segments[0].weight, 6)
+
+  assert_eq(middle_segments.length(), 1)
+  assert_eq(middle_segments[0].tail, vnode1)
+  assert_eq(middle_segments[0].head, vnode0)
+  assert_eq(middle_segments[0].weight, 12)
+
+  assert_eq(last_segments.length(), 1)
+  assert_eq(last_segments[0].tail, vnode0)
+  assert_eq(last_segments[0].head, "b")
+  assert_eq(last_segments[0].weight, 6)
+}
+
+///|
 test "constraint node setup delays cluster boundaries and seeds base positions" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
@@ -605,6 +673,32 @@ test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback"
 
   assert_eq(lr_order, ["a", "b", "v", "x"])
   assert_eq(source_fallback, ["m", "n"])
+}
+
+///|
+test "build_xpos_nlist_order processes multiple clusters from reversed source discovery before unclustered leftovers" {
+  let vnode_a = "\{@edge_identity.EDGE_VNODE_PREFIX}a"
+  let vnode_b = "\{@edge_identity.EDGE_VNODE_PREFIX}b"
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a1"] = "clusterA"
+  cluster_keys[vnode_a] = "clusterA"
+  cluster_keys["b1"] = "clusterB"
+  cluster_keys[vnode_b] = "clusterB"
+
+  let groups : Map[Int, Array[String]] = Map::new()
+  groups[0] = ["a1", "b1", "u"]
+  groups[1] = [vnode_a, vnode_b]
+
+  let order = build_xpos_nlist_order({
+    rankdir: @rankdir.RankDir::TB,
+    nlist_order: ["unused"],
+    gdnlist_order: ["a1", "u", vnode_a, "b1", vnode_b],
+    cluster_keys,
+    rank_keys: [0, 1],
+    groups,
+  })
+
+  assert_eq(order, [vnode_b, "b1", vnode_a, "a1", "u"])
 }
 
 ///|
