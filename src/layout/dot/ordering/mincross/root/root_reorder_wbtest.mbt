@@ -135,6 +135,34 @@ test "build_root_reorder_node_order prefers nlist order for materialized nodes a
 }
 
 ///|
+test "build_root_nlist_order seeds from skeletonized tail order, replays edge creation, and appends missing root nodes" {
+  let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
+  let root_nodes = [skeleton_0, "root_b", "root_a", "v_cross"]
+  let graph_output = @order_graph.build_order_graph_and_nodes(
+    "root_nlist_order", root_nodes,
+  )
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["cluster_member"] = "cluster_x"
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["cluster_member"] = 0
+
+  let root_nlist_order = build_root_nlist_order(
+    ["cluster_member", "root_b", "root_a"],
+    cluster_keys,
+    ranks,
+    root_nodes,
+    graph_output.order_node_map,
+    [(skeleton_0, "root_b")],
+    [("root_b", "root_a")],
+    Map::new(),
+  )
+
+  assert_eq(root_nlist_order, [skeleton_0, "root_b", "root_a", "v_cross"])
+}
+
+///|
 test "has_multiple_non_empty_cluster_keys ignores empties and duplicates and detects when two real clusters are present" {
   assert_false(
     has_multiple_non_empty_cluster_keys({
@@ -293,4 +321,84 @@ test "build_root_reorder_edge_data replays root tails in nlist order and normali
   assert_eq(edge_data.root_parents.get("root"), Some([]))
   assert_eq(edge_data.root_parents.get(vnode), Some([]))
   assert_eq(edge_data.root_parents.get("leaf"), Some([vnode]))
+}
+
+///|
+test "build_root_reorder_context assembles filtered root groups ranks nodes nlist and fallback node order together" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let root_a = graph.node("root_a")
+  let cluster_member = graph.node("cluster_member")
+  let cluster_peer = graph.node("cluster_peer")
+  let edge_cross = graph.edge(root_a, cluster_member)
+  let edge_local = graph.edge(cluster_member, cluster_peer)
+
+  let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
+
+  let order_groups_for_mincross : Map[Int, Array[String]] = Map::new()
+  order_groups_for_mincross[0] = ["root_a", skeleton_0, "cluster_member"]
+  order_groups_for_mincross[1] = ["cluster_peer", "root_b"]
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys[skeleton_0] = "cluster_x"
+  order_cluster_keys["cluster_member"] = "cluster_x"
+  order_cluster_keys["cluster_peer"] = "cluster_x"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton[skeleton_0] = true
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["cluster_member"] = "cluster_x"
+  cluster_keys["cluster_peer"] = "cluster_x"
+
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = ["v_cross"]
+  edge_vnodes[@edge_identity.edge_vnode_key(edge_local)] = ["v_local"]
+
+  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  vnodes_by_rank[0] = ["v_cross", "v_local"]
+
+  let vnode_order_keys_for_ordering : Map[String, Double] = Map::new()
+  vnode_order_keys_for_ordering["v_cross"] = 0.5
+  vnode_order_keys_for_ordering["v_local"] = 0.25
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["cluster_member"] = 0
+  ranks["cluster_peer"] = 1
+
+  let context = build_root_reorder_context({
+    order_with_vnodes: true,
+    order_rank_keys: [0, 1],
+    order_groups_for_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    edges: [edge_cross, edge_local],
+    edge_tail: [],
+    edge_head: [],
+    cluster_keys,
+    edge_vnodes,
+    vnodes_by_rank,
+    vnode_order_keys_for_ordering,
+    nlist_order: ["cluster_member", "root_b", "root_a"],
+    ranks,
+    skeleton_edge_creation: [(skeleton_0, "root_b")],
+    root_edge_creation: [("root_b", "root_a")],
+    flat_rank_constraints: Map::new(),
+  })
+
+  assert_eq(context.root_groups.get(0), Some(["root_a", "v_cross", skeleton_0]))
+  assert_eq(context.root_groups.get(1), Some(["root_b"]))
+  assert_eq(context.root_rank_keys, [0, 1])
+  assert_eq(context.root_ranks.get("root_a"), Some(0))
+  assert_eq(context.root_ranks.get("v_cross"), Some(0))
+  assert_eq(context.root_ranks.get(skeleton_0), Some(0))
+  assert_eq(context.root_ranks.get("root_b"), Some(1))
+  assert_eq(context.root_nodes, ["root_a", "v_cross", skeleton_0, "root_b"])
+  assert_true(context.root_node_map.get("v_cross") is Some(_))
+  assert_eq(context.root_nlist_order, [
+    skeleton_0, "root_b", "root_a", "v_cross",
+  ])
+  assert_eq(context.root_node_order.get(skeleton_0), Some(0))
+  assert_eq(context.root_node_order.get("root_b"), Some(1))
+  assert_eq(context.root_node_order.get("root_a"), Some(2))
+  assert_eq(context.root_node_order.get("v_cross"), Some(3))
 }
