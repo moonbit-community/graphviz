@@ -851,7 +851,6 @@ fn transpose_rank_port_tiebreak(
   rank : Int,
   ranks : Map[String, Int],
   names : Array[String],
-  order : Map[String, Int],
   incident_edges : RankIncidentEdgeLists,
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
@@ -915,8 +914,6 @@ fn transpose_rank_port_tiebreak(
       let tmp_node_index = constraint_state.node_indices[i]
       constraint_state.node_indices[i] = constraint_state.node_indices[i + 1]
       constraint_state.node_indices[i + 1] = tmp_node_index
-      order[left] = i + 1
-      order[right] = i
       refresh_edge_endpoint_orders_for_node(
         left_incident_in,
         left_incident_out,
@@ -961,11 +958,11 @@ pub fn transpose_rank_groups_port(
   let mut passes = 0
   let rank_len = rank_keys.length()
   let candidate = Array::make(rank_len, true)
-  let order = @rank_groups.build_order_index(ordered)
+  let initial_order = @rank_groups.build_order_index(ordered)
   let edge_endpoint_orders = build_edge_endpoint_orders(
     edge_tail,
     edge_head,
-    order,
+    initial_order,
     fixed_order,
   )
   let rank_incident_edges : Array[RankIncidentEdgeLists] = []
@@ -1014,7 +1011,6 @@ pub fn transpose_rank_groups_port(
         rank,
         ranks,
         names,
-        order,
         rank_incident_edges[idx],
         edge_endpoint_orders,
         edge_tail_port_x,
