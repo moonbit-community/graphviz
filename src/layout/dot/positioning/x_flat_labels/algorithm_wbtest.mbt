@@ -362,6 +362,55 @@ test "flat_limits shifts insertion right when an earlier flat label occupies the
 }
 
 ///|
+test "flat_limits shifts away from existing vnode fanouts on either side" {
+  let left_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}left"
+  let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+
+  let left_order_index : Map[String, Int] = Map::new()
+  left_order_index[left_vnode] = 0
+  left_order_index["slot1"] = 1
+  left_order_index["slot2"] = 2
+  left_order_index["a"] = 1
+  left_order_index["b"] = 2
+  left_order_index["x"] = 0
+  let left_vnode_out_heads : Map[String, Array[String]] = Map::new()
+  left_vnode_out_heads[left_vnode] = ["x"]
+  assert_eq(
+    flat_limits(
+      [left_vnode, "slot1", "slot2"],
+      left_order_index,
+      flat_label_nodes,
+      left_vnode_out_heads,
+      "a",
+      "b",
+    ),
+    2,
+  )
+
+  let right_order_index : Map[String, Int] = Map::new()
+  right_order_index["slot0"] = 0
+  right_order_index["slot1"] = 1
+  right_order_index[right_vnode] = 2
+  right_order_index["a"] = 0
+  right_order_index["b"] = 1
+  right_order_index["y"] = 2
+  let right_vnode_out_heads : Map[String, Array[String]] = Map::new()
+  right_vnode_out_heads[right_vnode] = ["y"]
+  assert_eq(
+    flat_limits(
+      ["slot0", "slot1", right_vnode],
+      right_order_index,
+      flat_label_nodes,
+      right_vnode_out_heads,
+      "a",
+      "b",
+    ),
+    0,
+  )
+}
+
+///|
 test "non-adjacent flat edge uses half-scale minlen when graph ordering is unset" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
