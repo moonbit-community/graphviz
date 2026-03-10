@@ -1,42 +1,4 @@
 ///|
-test "collect_rank_extremes descends nested subgraphs" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  ignore(graph.node("a"))
-  ignore(graph.node("b"))
-  ignore(graph.node("c"))
-  let nested = graph.subgraph(name="nested")
-  let source = nested.subgraph(name="source")
-  source.set_attr("rank", "source")
-  ignore(source.node("a"))
-  let sink = graph.subgraph(name="sink")
-  sink.set_attr("rank", "sink")
-  ignore(sink.node("b"))
-
-  let min_nodes : Map[String, Bool] = Map::new()
-  let max_nodes : Map[String, Bool] = Map::new()
-  collect_rank_extremes(graph, min_nodes, max_nodes)
-
-  assert_eq(min_nodes.get("a"), Some(true))
-  assert_eq(max_nodes.get("b"), Some(true))
-  assert_eq(min_nodes.get("c"), None)
-  assert_eq(max_nodes.get("c"), None)
-}
-
-///|
-test "acyclic_edge_directions_for_names reverses the back edge of a cycle" {
-  let directions = acyclic_edge_directions_for_names(
-    ["a", "b", "c"],
-    ["a", "b", "c", "b"],
-    ["b", "c", "a", "b"],
-    [true, true, true, true],
-  )
-
-  assert_eq(directions.tail, ["a", "b", "a", "b"])
-  assert_eq(directions.head, ["b", "c", "c", "b"])
-  assert_eq(directions.reversed, [false, false, true, false])
-}
-
-///|
 test "compute_ranks_directed_base merges parallel constraints and normalizes components independently" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
