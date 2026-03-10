@@ -8,6 +8,12 @@ priv struct RankConstraintState {
 }
 
 ///|
+priv struct RankDesiredState {
+  has_values : Array[Bool]
+  values : Array[Double]
+}
+
+///|
 fn build_rank_constraint_state(
   names : Array[String],
   cluster_keys : Map[String, String],
@@ -20,6 +26,28 @@ fn build_rank_constraint_state(
     skeletons.push(cluster_skeleton.get(name) == Some(true))
   }
   { clusters, skeletons }
+}
+
+///|
+fn build_rank_desired_state(
+  names : Array[String],
+  desired : Map[String, Double],
+) -> RankDesiredState {
+  let has_values : Array[Bool] = []
+  let values : Array[Double] = []
+  for name in names {
+    match desired.get(name) {
+      Some(value) => {
+        has_values.push(true)
+        values.push(value)
+      }
+      None => {
+        has_values.push(false)
+        values.push(-1.0)
+      }
+    }
+  }
+  { has_values, values }
 }
 
 ///|
@@ -165,12 +193,13 @@ pub fn reorder_by_medians(
     return sorted
   }
   let constraint_state = build_rank_constraint_state(sorted, cluster_keys, cluster_skeleton)
+  let desired_state = build_rank_desired_state(sorted, desired)
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
     let mut lp = 0
     while lp < ep {
-      while lp < ep && desired.get(sorted[lp]) is None {
+      while lp < ep && !desired_state.has_values[lp] {
         lp = lp + 1
       }
       if lp >= ep {
@@ -198,7 +227,7 @@ pub fn reorder_by_medians(
           muststay = true
           break
         }
-        if desired.get(sorted[rp]) is Some(_) {
+        if desired_state.has_values[rp] {
           break
         }
         if rp_cluster != "" {
@@ -210,18 +239,18 @@ pub fn reorder_by_medians(
         break
       }
       if !muststay {
-        let p1 = match desired.get(sorted[lp]) {
-          Some(value) => value
-          None => -1.0
-        }
-        let p2 = match desired.get(sorted[rp]) {
-          Some(value) => value
-          None => -1.0
-        }
+        let p1 = desired_state.values[lp]
+        let p2 = desired_state.values[rp]
         if p1 > p2 || (p1 >= p2 && reverse) {
           let tmp = sorted[lp]
           sorted[lp] = sorted[rp]
           sorted[rp] = tmp
+          let tmp_has_value = desired_state.has_values[lp]
+          desired_state.has_values[lp] = desired_state.has_values[rp]
+          desired_state.has_values[rp] = tmp_has_value
+          let tmp_value = desired_state.values[lp]
+          desired_state.values[lp] = desired_state.values[rp]
+          desired_state.values[rp] = tmp_value
           let tmp_cluster = constraint_state.clusters[lp]
           constraint_state.clusters[lp] = constraint_state.clusters[rp]
           constraint_state.clusters[rp] = tmp_cluster
