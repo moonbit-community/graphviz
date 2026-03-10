@@ -735,6 +735,40 @@ test "remap_port_label_pos respects attr gating fallback and head-tail spline se
 }
 
 ///|
+test "remap_edge_layout_edge keeps only attrs present on the target edge and falls back per endpoint label" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let source_edge = graph.edge(graph.node("a"), graph.node("b"))
+  let target_edge = graph.edge(graph.node("a"), graph.node("b"), name="target")
+  target_edge.set_attr("headlabel", "head")
+  target_edge.set_attr("taillabel", "tail")
+  target_edge.set_attr("xlabel", "x")
+
+  let layout = build_layout_edge(
+    source_edge,
+    12.0,
+    label_pos=Some(@edge_spline.point(1.0, 1.0)),
+    head_label_pos=Some(@edge_spline.point(2.0, 2.0)),
+    tail_label_pos=Some(@edge_spline.point(3.0, 3.0)),
+    xlabel_pos=Some(@edge_spline.point(4.0, 4.0)),
+  )
+
+  let remapped = remap_edge_layout_edge(target_edge, layout, input => {
+    if input.is_head {
+      Some(@edge_spline.point(100.0, input.spline.points[0].x))
+    } else {
+      None
+    }
+  })
+
+  assert_eq(remapped.edge.id(), target_edge.id())
+  assert_eq(remapped.splines, layout.splines)
+  assert_eq(remapped.label_pos, None)
+  assert_eq(remapped.head_label_pos, Some(@edge_spline.point(100.0, 12.0)))
+  assert_eq(remapped.tail_label_pos, layout.tail_label_pos)
+  assert_eq(remapped.xlabel_pos, layout.xlabel_pos)
+}
+
+///|
 test "collect_parallel_reuse_siblings only expands from the first grouped edge with a bezier" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
