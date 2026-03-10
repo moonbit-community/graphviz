@@ -2,6 +2,27 @@
 type NodeSize = @node_primitives.NodeSize
 
 ///|
+priv struct RankConstraintState {
+  clusters : Array[String]
+  skeletons : Array[Bool]
+}
+
+///|
+fn build_rank_constraint_state(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+  cluster_skeleton : Map[String, Bool],
+) -> RankConstraintState {
+  let clusters : Array[String] = []
+  let skeletons : Array[Bool] = []
+  for name in names {
+    clusters.push(cluster_keys.get(name).unwrap_or_default())
+    skeletons.push(cluster_skeleton.get(name) == Some(true))
+  }
+  { clusters, skeletons }
+}
+
+///|
 pub fn order_rank_by_cluster(
   names : Array[String],
   desired : Map[String, Double],
@@ -143,6 +164,7 @@ pub fn reorder_by_medians(
   if sorted.length() < 2 {
     return sorted
   }
+  let constraint_state = build_rank_constraint_state(sorted, cluster_keys, cluster_skeleton)
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
@@ -158,22 +180,20 @@ pub fn reorder_by_medians(
       let mut muststay = false
       let mut sawclust = false
       while rp < ep {
-        let mut rp_cluster = ""
-        match cluster_keys.get(sorted[rp]) {
-          Some(value) => rp_cluster = value
-          None => ()
-        }
+        let rp_cluster = constraint_state.clusters[rp]
         if sawclust && rp_cluster != "" {
           rp = rp + 1
           continue
         }
-        if left2right_constraint(
+        if left2right_constraint_resolved(
             sorted[lp],
             sorted[rp],
-            cluster_keys,
-            cluster_skeleton,
+            constraint_state.clusters[lp],
+            rp_cluster,
+            constraint_state.skeletons[lp],
+            constraint_state.skeletons[rp],
             flat_constraints,
-            remincross_mode~,
+            remincross_mode,
           ) {
           muststay = true
           break
@@ -202,6 +222,12 @@ pub fn reorder_by_medians(
           let tmp = sorted[lp]
           sorted[lp] = sorted[rp]
           sorted[rp] = tmp
+          let tmp_cluster = constraint_state.clusters[lp]
+          constraint_state.clusters[lp] = constraint_state.clusters[rp]
+          constraint_state.clusters[rp] = tmp_cluster
+          let tmp_skeleton = constraint_state.skeletons[lp]
+          constraint_state.skeletons[lp] = constraint_state.skeletons[rp]
+          constraint_state.skeletons[rp] = tmp_skeleton
         }
       }
       lp = rp
@@ -381,67 +407,89 @@ pub fn transpose_rank_groups_limited(
 }
 
 ///|
-/// Graphviz parity: port x tie-break matches mincross.c in_cross.
-fn in_cross_port_tiebreak(
-  left : String,
-  right : String,
-  rank : Int,
-  ranks : Map[String, Int],
+priv struct PortTiebreakOrders {
+  in_orders : Array[Array[(Int, Double, Int)]]
+  out_orders : Array[Array[(Int, Double, Int)]]
+}
+
+///|
+fn resolve_port_tiebreak_order(
+  name : String,
+  order : Map[String, Int],
+  fixed_order : Map[String, Int],
+) -> Int {
+  match order.get(name) {
+    Some(value) => value
+    None => fixed_order.get(name).unwrap_or_default()
+  }
+}
+
+///|
+fn build_rank_port_tiebreak_orders(
+  names : Array[String],
   order : Map[String, Int],
   fixed_order : Map[String, Int],
   edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
+  edge_head : Array[String],
   edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
-) -> Int {
-  let _ = rank
-  let _ = ranks
-  let right_in = match edge_in.get(right) {
-    Some(value) => value
-    None => []
-  }
-  let left_in = match edge_in.get(left) {
-    Some(value) => value
-    None => []
-  }
-  let mut cross = 0
-  for edge_idx in right_in {
-    let cnt = edge_penalty[edge_idx]
-    if cnt <= 0 {
-      continue
-    }
-    let inv = match order.get(edge_tail[edge_idx]) {
-      Some(value) => value
-      None =>
-        match fixed_order.get(edge_tail[edge_idx]) {
-          Some(value) => value
-          None => 0
-        }
-    }
-    let inv_port = if edge_idx < edge_tail_port_x.length() {
-      edge_tail_port_x[edge_idx]
-    } else {
-      0.0
-    }
-    for edge_idx2 in left_in {
-      let weight = edge_penalty[edge_idx2]
-      if weight <= 0 {
+) -> PortTiebreakOrders {
+  let in_orders : Array[Array[(Int, Double, Int)]] = []
+  let out_orders : Array[Array[(Int, Double, Int)]] = []
+  for name in names {
+    let incoming : Array[(Int, Double, Int)] = []
+    for edge_idx in edge_in.get(name).unwrap_or_default() {
+      let penalty = edge_penalty[edge_idx]
+      if penalty <= 0 {
         continue
       }
-      let tail_order = match order.get(edge_tail[edge_idx2]) {
-        Some(value) => value
-        None =>
-          match fixed_order.get(edge_tail[edge_idx2]) {
-            Some(value) => value
-            None => 0
-          }
+      incoming.push((
+        resolve_port_tiebreak_order(edge_tail[edge_idx], order, fixed_order),
+        if edge_idx < edge_tail_port_x.length() {
+          edge_tail_port_x[edge_idx]
+        } else {
+          0.0
+        },
+        penalty,
+      ))
+    }
+    in_orders.push(incoming)
+    let outgoing : Array[(Int, Double, Int)] = []
+    for edge_idx in edge_out.get(name).unwrap_or_default() {
+      let penalty = edge_penalty[edge_idx]
+      if penalty <= 0 {
+        continue
       }
+      outgoing.push((
+        resolve_port_tiebreak_order(edge_head[edge_idx], order, fixed_order),
+        if edge_idx < edge_head_port_x.length() {
+          edge_head_port_x[edge_idx]
+        } else {
+          0.0
+        },
+        penalty,
+      ))
+    }
+    out_orders.push(outgoing)
+  }
+  { in_orders, out_orders }
+}
+
+///|
+/// Graphviz parity: port x tie-break matches mincross.c in_cross.
+fn in_cross_port_tiebreak(
+  left_in : Array[(Int, Double, Int)],
+  right_in : Array[(Int, Double, Int)],
+) -> Int {
+  let mut cross = 0
+  for right_entry in right_in {
+    let (inv, inv_port, cnt) = right_entry
+    for left_entry in left_in {
+      let (tail_order, tail_port, weight) = left_entry
       let t = tail_order - inv
-      let tail_port = if edge_idx2 < edge_tail_port_x.length() {
-        edge_tail_port_x[edge_idx2]
-      } else {
-        0.0
-      }
       if t > 0 || (t == 0 && tail_port > inv_port) {
         cross = cross + weight * cnt
       }
@@ -453,65 +501,15 @@ fn in_cross_port_tiebreak(
 ///|
 /// Graphviz parity: port x tie-break matches mincross.c out_cross.
 fn out_cross_port_tiebreak(
-  left : String,
-  right : String,
-  rank : Int,
-  ranks : Map[String, Int],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_out : Map[String, Array[Int]],
-  edge_head : Array[String],
-  edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
+  left_out : Array[(Int, Double, Int)],
+  right_out : Array[(Int, Double, Int)],
 ) -> Int {
-  let _ = rank
-  let _ = ranks
-  let right_out = match edge_out.get(right) {
-    Some(value) => value
-    None => []
-  }
-  let left_out = match edge_out.get(left) {
-    Some(value) => value
-    None => []
-  }
   let mut cross = 0
-  for edge_idx in right_out {
-    let cnt = edge_penalty[edge_idx]
-    if cnt <= 0 {
-      continue
-    }
-    let inv = match order.get(edge_head[edge_idx]) {
-      Some(value) => value
-      None =>
-        match fixed_order.get(edge_head[edge_idx]) {
-          Some(value) => value
-          None => 0
-        }
-    }
-    let inv_port = if edge_idx < edge_head_port_x.length() {
-      edge_head_port_x[edge_idx]
-    } else {
-      0.0
-    }
-    for edge_idx2 in left_out {
-      let weight = edge_penalty[edge_idx2]
-      if weight <= 0 {
-        continue
-      }
-      let head_order = match order.get(edge_head[edge_idx2]) {
-        Some(value) => value
-        None =>
-          match fixed_order.get(edge_head[edge_idx2]) {
-            Some(value) => value
-            None => 0
-          }
-      }
+  for right_entry in right_out {
+    let (inv, inv_port, cnt) = right_entry
+    for left_entry in left_out {
+      let (head_order, head_port, weight) = left_entry
       let t = head_order - inv
-      let head_port = if edge_idx2 < edge_head_port_x.length() {
-        edge_head_port_x[edge_idx2]
-      } else {
-        0.0
-      }
       if t > 0 || (t == 0 && head_port > inv_port) {
         cross = cross + weight * cnt
       }
@@ -534,27 +532,33 @@ pub fn count_rank_crossings_port(
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
 ) -> Int {
+  let _ = rank
+  let _ = ranks
   let order : Map[String, Int] = Map::new()
   for i, name in names {
     order[name] = i
   }
+  let port_orders = build_rank_port_tiebreak_orders(
+    names,
+    order,
+    fixed_order,
+    edge_in,
+    edge_out,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_penalty,
+  )
   let mut cross = 0
   let mut left_idx = 0
   while left_idx + 1 < names.length() {
-    let left = names[left_idx]
     let mut right_idx = left_idx + 1
     while right_idx < names.length() {
-      let right = names[right_idx]
       cross = cross +
-        in_cross_port_tiebreak(
-          left, right, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
-          edge_penalty,
-        )
+        in_cross_port_tiebreak(port_orders.in_orders[left_idx], port_orders.in_orders[right_idx])
       cross = cross +
-        out_cross_port_tiebreak(
-          left, right, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
-          edge_penalty,
-        )
+        out_cross_port_tiebreak(port_orders.out_orders[left_idx], port_orders.out_orders[right_idx])
       right_idx = right_idx + 1
     }
     left_idx = left_idx + 1
@@ -654,48 +658,63 @@ fn transpose_rank_port_tiebreak(
   reverse : Bool,
   remincross_mode : Bool,
 ) -> TransposeRankResult {
+  let _ = rank
+  let _ = ranks
+  let port_orders = build_rank_port_tiebreak_orders(
+    names,
+    order,
+    fixed_order,
+    edge_in,
+    edge_out,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_penalty,
+  )
+  let constraint_state = build_rank_constraint_state(names, cluster_keys, cluster_skeleton)
   let mut changed = false
   let mut delta = 0
   let mut i = 0
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    if left2right_constraint(
+    if left2right_constraint_resolved(
         left,
         right,
-        cluster_keys,
-        cluster_skeleton,
+        constraint_state.clusters[i],
+        constraint_state.clusters[i + 1],
+        constraint_state.skeletons[i],
+        constraint_state.skeletons[i + 1],
         flat_constraints,
-        remincross_mode~,
+        remincross_mode,
       ) {
       i = i + 1
       continue
     }
     let mut c0 = 0
     let mut c1 = 0
-    c0 = c0 +
-      in_cross_port_tiebreak(
-        left, right, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
-        edge_penalty,
-      )
-    c1 = c1 +
-      in_cross_port_tiebreak(
-        right, left, rank, ranks, order, fixed_order, edge_in, edge_tail, edge_tail_port_x,
-        edge_penalty,
-      )
-    c0 = c0 +
-      out_cross_port_tiebreak(
-        left, right, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
-        edge_penalty,
-      )
-    c1 = c1 +
-      out_cross_port_tiebreak(
-        right, left, rank, ranks, order, fixed_order, edge_out, edge_head, edge_head_port_x,
-        edge_penalty,
-      )
+    let left_in = port_orders.in_orders[i]
+    let right_in = port_orders.in_orders[i + 1]
+    let left_out = port_orders.out_orders[i]
+    let right_out = port_orders.out_orders[i + 1]
+    c0 = c0 + in_cross_port_tiebreak(left_in, right_in)
+    c1 = c1 + in_cross_port_tiebreak(right_in, left_in)
+    c0 = c0 + out_cross_port_tiebreak(left_out, right_out)
+    c1 = c1 + out_cross_port_tiebreak(right_out, left_out)
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
+      port_orders.in_orders[i] = right_in
+      port_orders.in_orders[i + 1] = left_in
+      port_orders.out_orders[i] = right_out
+      port_orders.out_orders[i + 1] = left_out
+      let tmp_cluster = constraint_state.clusters[i]
+      constraint_state.clusters[i] = constraint_state.clusters[i + 1]
+      constraint_state.clusters[i + 1] = tmp_cluster
+      let tmp_skeleton = constraint_state.skeletons[i]
+      constraint_state.skeletons[i] = constraint_state.skeletons[i + 1]
+      constraint_state.skeletons[i + 1] = tmp_skeleton
       order[left] = i + 1
       order[right] = i
       changed = true

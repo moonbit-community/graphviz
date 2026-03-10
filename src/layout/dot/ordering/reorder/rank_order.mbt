@@ -691,6 +691,32 @@ pub fn median_value_mc_scale(values : Array[Double]) -> Double? {
 }
 
 ///|
+fn left2right_constraint_resolved(
+  left : String,
+  right : String,
+  left_cluster : String,
+  right_cluster : String,
+  left_skel : Bool,
+  right_skel : Bool,
+  flat_constraints : Map[String, Bool],
+  remincross_mode : Bool,
+) -> Bool {
+  if remincross_mode {
+    // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
+    if left_cluster != right_cluster {
+      return true
+    }
+  }
+  if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
+    if !left_skel && !right_skel {
+      return true
+    }
+  }
+  let key = "\{left}|\{right}"
+  flat_constraints.get(key) == Some(true)
+}
+
+///|
 pub fn left2right_constraint(
   left : String,
   right : String,
@@ -707,19 +733,14 @@ pub fn left2right_constraint(
     Some(value) => value
     None => ""
   }
-  if remincross_mode {
-    // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
-    if left_cluster != right_cluster {
-      return true
-    }
-  }
-  if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
-    let left_skel = cluster_skeleton.get(left) == Some(true)
-    let right_skel = cluster_skeleton.get(right) == Some(true)
-    if !left_skel && !right_skel {
-      return true
-    }
-  }
-  let key = "\{left}|\{right}"
-  flat_constraints.get(key) == Some(true)
+  left2right_constraint_resolved(
+    left,
+    right,
+    left_cluster,
+    right_cluster,
+    cluster_skeleton.get(left) == Some(true),
+    cluster_skeleton.get(right) == Some(true),
+    flat_constraints,
+    remincross_mode,
+  )
 }

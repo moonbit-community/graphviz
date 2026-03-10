@@ -199,6 +199,86 @@ test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
 }
 
 ///|
+test "count_rank_crossings_port respects fixed external endpoint slots" {
+  let ranks : Map[String, Int] = Map::new()
+  ranks["x"] = 1
+  ranks["y"] = 1
+  ranks["a"] = 0
+  ranks["b"] = 0
+
+  let fixed_order : Map[String, Int] = Map::new()
+  fixed_order["a"] = 0
+  fixed_order["b"] = 1
+
+  let edge_in : Map[String, Array[Int]] = Map::new()
+  edge_in["x"] = [1]
+  edge_in["y"] = [0]
+
+  let edge_out : Map[String, Array[Int]] = Map::new()
+
+  let crossings = count_rank_crossings_port(
+    1,
+    ["x", "y"],
+    ranks,
+    fixed_order,
+    edge_in,
+    edge_out,
+    ["a", "b"],
+    ["y", "x"],
+    [],
+    [],
+    [1, 1],
+  )
+
+  assert_eq(crossings, 1)
+}
+
+///|
+test "transpose_rank_groups_port reorders rank using fixed external anchors" {
+  let rank_keys = [1]
+  let ordered : Map[Int, Array[String]] = Map::new()
+  ordered[1] = ["x", "y"]
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["x"] = 1
+  ranks["y"] = 1
+  ranks["a"] = 0
+  ranks["b"] = 0
+
+  let fixed_order : Map[String, Int] = Map::new()
+  fixed_order["a"] = 0
+  fixed_order["b"] = 1
+
+  let edge_in : Map[String, Array[Int]] = Map::new()
+  edge_in["x"] = [1]
+  edge_in["y"] = [0]
+
+  let edge_out : Map[String, Array[Int]] = Map::new()
+
+  let changed = transpose_rank_groups_port(
+    rank_keys,
+    ordered,
+    ranks,
+    fixed_order~,
+    edge_in,
+    edge_out,
+    ["a", "b"],
+    ["y", "x"],
+    [],
+    [],
+    [1, 1],
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    false,
+    0,
+  )
+
+  assert_true(changed)
+  assert_eq(ordered.get(1), Some(["y", "x"]))
+}
+
+///|
 test "flat_reorder_rank_groups topologically reorders constrained ranks" {
   let groups : Map[Int, Array[String]] = Map::new()
   groups[0] = ["a", "b", "c", "d"]
