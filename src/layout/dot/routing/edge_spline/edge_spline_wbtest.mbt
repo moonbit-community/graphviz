@@ -157,3 +157,75 @@ test "edge_spline_for_polyline falls back to standard orthogonal midpoint routin
     point(10.0, -10.0),
   ])
 }
+
+///|
+test "edge_spline_for_line linearizes unlabeled degenerate cubics but preserves labeled ones" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let tail = graph.node("tail")
+  let head = graph.node("head")
+  let plain = graph.edge(tail, head)
+  let labeled = graph.edge(tail, head, name="labeled")
+  labeled.set_attr("label", "mid")
+
+  let anchor_size = @node_primitives.node_size_from_points(10.0, 10.0)
+  let plain_spline = edge_spline_for_line(
+    plain,
+    point(0.0, 0.0),
+    point(9.0, 0.0),
+    point(0.0, 0.0),
+    point(9.0, 0.0),
+    anchor_size,
+    anchor_size,
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    false,
+    false,
+    tail_clip_enabled=false,
+    head_clip_enabled=false,
+    @rankdir.RankDir::TB,
+    0.0,
+    1.0,
+    arrow_len_override=None,
+    tail_cluster_bbox=None,
+    head_cluster_bbox=None,
+  )
+  let labeled_spline = edge_spline_for_line(
+    labeled,
+    point(0.0, 0.0),
+    point(9.0, 0.0),
+    point(0.0, 0.0),
+    point(9.0, 0.0),
+    anchor_size,
+    anchor_size,
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    false,
+    false,
+    tail_clip_enabled=false,
+    head_clip_enabled=false,
+    @rankdir.RankDir::TB,
+    0.0,
+    1.0,
+    arrow_len_override=None,
+    tail_cluster_bbox=None,
+    head_cluster_bbox=None,
+  )
+
+  assert_eq(plain_spline.start, None)
+  assert_eq(plain_spline.end, None)
+  assert_eq(plain_spline.points, [
+    point(0.0, 0.0),
+    point(3.0, 0.0),
+    point(6.0, 0.0),
+    point(9.0, 0.0),
+  ])
+
+  assert_eq(labeled_spline.start, None)
+  assert_eq(labeled_spline.end, None)
+  assert_eq(labeled_spline.points, [
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(9.0, 0.0),
+    point(9.0, 0.0),
+  ])
+}
