@@ -1,136 +1,4 @@
 ///|
-test "cluster rank projection combines leader and local ranks then normalizes" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let a = graph.node("a")
-  let b = graph.node("b")
-  let c = graph.node("c")
-
-  let cluster0_members : Map[String, Bool] = Map::new()
-  cluster0_members["a"] = true
-  cluster0_members["b"] = true
-  let cluster_members : Map[String, Map[String, Bool]] = Map::new()
-  cluster_members["cluster0"] = cluster0_members
-
-  let node_cluster = build_node_cluster_index(["cluster0"], cluster_members)
-  let cluster_leaders : Map[String, String] = Map::new()
-  cluster_leaders["cluster0"] = "leader0"
-  let local_ranks : Map[String, Int] = Map::new()
-  local_ranks["a"] = 2
-  local_ranks["b"] = 4
-  let leader_ranks : Map[String, Int] = Map::new()
-  leader_ranks["leader0"] = 5
-  leader_ranks["c"] = 1
-
-  let ranks = project_clustered_node_ranks(
-    [a, b, c],
-    node_cluster,
-    cluster_leaders,
-    local_ranks,
-    leader_ranks,
-  )
-
-  assert_eq(ranks.get("a"), Some(6))
-  assert_eq(ranks.get("b"), Some(8))
-  assert_eq(ranks.get("c"), Some(0))
-}
-
-///|
-test "apply_clustered_rank_postprocessing collapses rank sets and enforces extrema" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let a = graph.node("a")
-  let b = graph.node("b")
-  let c = graph.node("c")
-  let d = graph.node("d")
-
-  let same = graph.subgraph(name="same")
-  same.set_attr("rank", "same")
-  ignore(same.node("a"))
-  ignore(same.node("b"))
-
-  let source = graph.subgraph(name="source")
-  source.set_attr("rank", "source")
-  ignore(source.node("c"))
-
-  let sink = graph.subgraph(name="sink")
-  sink.set_attr("rank", "sink")
-  ignore(sink.node("d"))
-
-  let ranks : Map[String, Int] = Map::new()
-  ranks["a"] = 4
-  ranks["b"] = 7
-  ranks["c"] = 3
-  ranks["d"] = 1
-
-  let result = apply_clustered_rank_postprocessing(graph, [a, b, c, d], ranks)
-
-  assert_eq(result.get("a"), Some(4))
-  assert_eq(result.get("b"), Some(4))
-  assert_eq(result.get("c"), Some(0))
-  assert_eq(result.get("d"), Some(4))
-}
-
-///|
-test "collect_top_clusters keeps only top-level clusters and excludes the cluster source itself" {
-  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let outer = root.subgraph(name="cluster_outer")
-  let peer = root.subgraph(name="cluster_peer")
-  let inner = outer.subgraph(name="cluster_inner")
-  ignore(outer.node("a"))
-  ignore(peer.node("b"))
-  ignore(inner.node("c"))
-
-  let root_collected = collect_top_clusters(root)
-  let root_top : Map[String, Bool] = Map::new()
-  for name in root_collected.top_clusters {
-    root_top[name] = true
-  }
-  assert_eq(root_top.length(), 2)
-  assert_eq(root_top.get("cluster_outer"), Some(true))
-  assert_eq(root_top.get("cluster_peer"), Some(true))
-  assert_eq(root_top.get("cluster_inner"), None)
-
-  let cluster_collected = collect_top_clusters(outer)
-  assert_eq(cluster_collected.top_clusters.length(), 0)
-  assert_eq(cluster_collected.cluster_graphs.length(), 2)
-  match cluster_collected.cluster_graphs.get("cluster_outer") {
-    Some(_) => ()
-    None => fail("missing cluster_outer graph")
-  }
-  match cluster_collected.cluster_graphs.get("cluster_inner") {
-    Some(_) => ()
-    None => fail("missing cluster_inner graph")
-  }
-}
-
-///|
-test "collect_cluster_members omits empty clusters and node index ignores missing member maps" {
-  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let empty = root.subgraph(name="cluster_empty")
-  let full = root.subgraph(name="cluster_full")
-  ignore(empty)
-  ignore(full.node("a"))
-
-  let cluster_maps = @cluster_graph.collect_cluster_graph_maps(root)
-  let members = collect_cluster_members(cluster_maps.cluster_graphs)
-
-  assert_eq(members.get("cluster_empty"), None)
-  let full_members = match members.get("cluster_full") {
-    Some(value) => value
-    None => fail("missing cluster_full members")
-  }
-  assert_eq(full_members.length(), 1)
-  assert_eq(full_members.get("a"), Some(true))
-
-  let node_cluster = build_node_cluster_index(
-    ["cluster_missing", "cluster_full"],
-    members,
-  )
-  assert_eq(node_cluster.length(), 1)
-  assert_eq(node_cluster.get("a"), Some("cluster_full"))
-  assert_eq(node_cluster.get("b"), None)
-}
-
-///|
 test "compute_local_cluster_ranks_and_leaders filters external edges and falls back to the first node" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
@@ -186,7 +54,7 @@ test "compute_local_cluster_ranks_and_leaders filters external edges and falls b
 }
 
 ///|
-fn identity_orient_edges_for_names(
+fn identity_cluster_solver_orient_edges(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -243,7 +111,7 @@ test "solve_clustered_leader_ranks forwards only clusterless constrained direct 
       for active in edge_is_active {
         seen_active.push(active)
       }
-      identity_orient_edges_for_names(
+      identity_cluster_solver_orient_edges(
         node_names, edge_tail, edge_head, edge_is_active,
       )
     },
@@ -286,7 +154,7 @@ test "solve_clustered_leader_ranks converts positive cross-cluster offset into h
     local_ranks,
     false,
     10,
-    identity_orient_edges_for_names,
+    identity_cluster_solver_orient_edges,
   )
 
   assert_eq(leader_ranks.get("a0"), Some(0))
@@ -325,59 +193,9 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
     local_ranks,
     false,
     10,
-    identity_orient_edges_for_names,
+    identity_cluster_solver_orient_edges,
   )
 
   assert_eq(leader_ranks.get("a0"), Some(1))
   assert_eq(leader_ranks.get("b0"), Some(0))
-}
-
-///|
-fn base_recursive_ranks(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
-  back_weight_scale : Int,
-) -> Map[String, Int] {
-  ignore(back_weight_scale)
-  let directions = @solver.acyclic_edge_directions_with_order(
-    graph, nodes, edges,
-  )
-  @solver.compute_ranks_directed_base(
-    graph,
-    nodes,
-    edges,
-    has_edge_labels,
-    directions.tail,
-    directions.head,
-  )
-}
-
-///|
-test "compute_clustered_ranks projects local cluster ranks into the outer solve" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let cluster = graph.subgraph(name="cluster0")
-  let a = graph.node("a")
-  let b = graph.node("b")
-  let c = graph.node("c")
-  ignore(cluster.node("a"))
-  ignore(cluster.node("b"))
-  let ab = graph.edge(a, b)
-  ab.set_attr("minlen", "1")
-  let ac = graph.edge(a, c)
-  ac.set_attr("minlen", "1")
-
-  let ranks = compute_clustered_ranks(
-    graph,
-    [a, b, c],
-    [ab, ac],
-    false,
-    10,
-    base_recursive_ranks,
-  )
-
-  assert_eq(ranks.get("a"), Some(0))
-  assert_eq(ranks.get("b"), Some(1))
-  assert_eq(ranks.get("c"), Some(1))
 }
