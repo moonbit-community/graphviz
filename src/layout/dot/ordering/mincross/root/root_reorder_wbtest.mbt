@@ -133,3 +133,107 @@ test "build_root_reorder_node_order prefers nlist order for materialized nodes a
   assert_eq(node_order.get("b"), Some(1))
   assert_eq(node_order.get("c"), Some(1))
 }
+
+///|
+test "has_multiple_non_empty_cluster_keys ignores empties and duplicates and detects when two real clusters are present" {
+  assert_false(
+    has_multiple_non_empty_cluster_keys({
+      "root": "",
+      "member_a": "cluster_a",
+      "member_a_dup": "cluster_a",
+    }),
+  )
+  assert_true(
+    has_multiple_non_empty_cluster_keys({
+      "member_a": "cluster_a",
+      "member_b": "cluster_b",
+      "root": "",
+    }),
+  )
+}
+
+///|
+test "should_enable_root_flip requires graphviz_flip and allows fixture mode to bypass cluster-count gating" {
+  let env_key = "DOT_CAPTURE_ORDERING_FIXTURE_MODE"
+  let original = @sys.get_env_var(env_key)
+  let one_cluster = { "member_a": "cluster_a", "root": "" }
+  let two_clusters = { "member_a": "cluster_a", "member_b": "cluster_b" }
+
+  @sys.unset_env_var(env_key)
+  let disabled = should_enable_root_flip(false, two_clusters)
+  let gated_off = should_enable_root_flip(true, one_cluster)
+  let gated_on = should_enable_root_flip(true, two_clusters)
+
+  @sys.set_env_var(env_key, "1")
+  let forced_on = should_enable_root_flip(true, one_cluster)
+
+  match original {
+    Some(value) => @sys.set_env_var(env_key, value)
+    None => @sys.unset_env_var(env_key)
+  }
+
+  assert_false(disabled)
+  assert_false(gated_off)
+  assert_true(gated_on)
+  assert_true(forced_on)
+}
+
+///|
+test "finalize_root_rank_order_phase_output merges flip output back into seeded groups only when graphviz_flip is enabled" {
+  let root_groups : Map[Int, Array[String]] = Map::new()
+  root_groups[0] = ["member", "skel_a", "root", "tail"]
+
+  let ordered_root : Map[Int, Array[String]] = Map::new()
+  ordered_root[0] = ["root", "skel_a"]
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["member"] = "cluster_a"
+  order_cluster_keys["skel_a"] = "cluster_a"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton["skel_a"] = true
+
+  let without_flip = finalize_root_rank_order_phase_output(
+    [0],
+    root_groups,
+    ordered_root,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    false,
+  )
+  let with_flip = finalize_root_rank_order_phase_output(
+    [0],
+    root_groups,
+    ordered_root,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    true,
+  )
+
+  assert_eq(without_flip.ordered_root.get(0), Some(["root", "skel_a"]))
+  assert_eq(
+    with_flip.ordered_root.get(0),
+    Some(["member", "root", "skel_a", "tail"]),
+  )
+}
+
+///|
+test "build_root_tail_order_override keeps first-seen tails only" {
+  let tail_override = build_root_tail_order_override({
+    root_groups: Map::new(),
+    root_rank_keys: [],
+    root_edges_out: [],
+    root_edge_tail_out: ["a", "b", "a", "c", "b"],
+    root_edge_head_out: [],
+    root_edge_tail_port_x: [],
+    root_edge_head_port_x: [],
+    root_edge_tail_port_order: [],
+    root_edge_head_port_order: [],
+    root_parents: Map::new(),
+    root_children: Map::new(),
+    root_edge_order: Map::new(),
+    root_node_order: Map::new(),
+  })
+
+  assert_eq(tail_override, ["a", "b", "c"])
+}
