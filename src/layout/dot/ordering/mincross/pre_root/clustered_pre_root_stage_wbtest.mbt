@@ -346,3 +346,81 @@ test "build_order_materialization_data replays mapped and unmapped tails in nlis
   assert_eq(materialized.graphviz_in_neighbors.get("c"), Some(["a", "b"]))
   assert_eq(materialized.order_flat_constraints, { "a|b": true })
 }
+
+///|
+test "apply_unconstrained_order_overrides resets isolated real nodes to gdnlist order while leaving constrained and rank-same nodes untouched" {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  graphviz_out_neighbors["connected"] = ["sink"]
+
+  let order_node_order : Map[String, Int] = Map::new()
+  order_node_order["connected"] = 90
+  order_node_order["isolated_b"] = 91
+  order_node_order["isolated_a"] = 92
+  order_node_order["rank_locked"] = 93
+
+  let nodes : Array[@cgraph.Node] = []
+
+  apply_unconstrained_order_overrides(
+    ["connected", "isolated_b", "isolated_a", "rank_locked"],
+    {
+      "connected": true,
+      "isolated_b": true,
+      "isolated_a": true,
+      "rank_locked": true,
+    },
+    ["connected", "isolated_b", "isolated_a", "rank_locked"],
+    graphviz_out_neighbors,
+    Map::new(),
+    { "rank_locked": 1 },
+    [],
+    [],
+    nodes,
+    Map::new(),
+    order_node_order,
+  )
+
+  assert_eq(order_node_order.get("connected"), Some(90))
+  assert_eq(order_node_order.get("isolated_b"), Some(1))
+  assert_eq(order_node_order.get("isolated_a"), Some(2))
+  assert_eq(order_node_order.get("rank_locked"), Some(93))
+}
+
+///|
+test "apply_unconstrained_order_overrides reassigns incoming-only local cluster nodes by first incoming edge order" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let local_a = graph.node("local_a")
+  let local_b = graph.node("local_b")
+
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  graphviz_out_neighbors["local_a"] = []
+  graphviz_out_neighbors["local_b"] = []
+
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  graphviz_in_neighbors["local_a"] = []
+  graphviz_in_neighbors["local_b"] = []
+
+  let intercluster_keys : Map[String, String] = Map::new()
+  intercluster_keys["local_a"] = "cluster_local"
+  intercluster_keys["local_b"] = "cluster_local"
+
+  let order_node_order : Map[String, Int] = Map::new()
+  order_node_order["local_a"] = 10
+  order_node_order["local_b"] = 20
+
+  apply_unconstrained_order_overrides(
+    [],
+    Map::new(),
+    ["local_a", "local_b"],
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    Map::new(),
+    ["tail_to_b", "tail_to_a"],
+    ["local_b", "local_a"],
+    [local_a, local_b],
+    intercluster_keys,
+    order_node_order,
+  )
+
+  assert_eq(order_node_order.get("local_b"), Some(10))
+  assert_eq(order_node_order.get("local_a"), Some(20))
+}
