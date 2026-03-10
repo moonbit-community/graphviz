@@ -701,53 +701,20 @@ fn point_in_convex_polygon(
 }
 
 ///|
-/// Graphviz parity: poly_inside rotates test points by rankdir, and for LR/RL
-/// applies width/height normalization before face tests.
-fn point_inside_polygon(
-  pt : @geom.Point,
+/// Graphviz parity: polygon outline geometry is fixed for a given
+/// shape/size/rankdir tuple, so repeated inside tests in one clip pass can
+/// reuse the same outline vertices.
+fn build_point_inside_shape_fn(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
   rankdir_quadrant : Int,
   outline_pad_pt : Double,
-) -> Bool {
-  match polygon_shape_params(shape) {
-    Some(params) => {
-      let rel = point(pt.x - center.x, pt.y - center.y)
-      let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
-      let polygon_size = if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
-        // Graphviz parity: poly_inside tests in unflipped shape space.
-        @node_primitives.node_size_from_points(size.height_pt, size.width_pt)
-      } else {
-        size
-      }
-      let vertices = polygon_outline_vertices_for_shape(
-        polygon_size,
-        params.sides,
-        params.orientation_deg,
-        params.distortion,
-        params.skew,
-        params.peripheries,
-        outline_pad_pt,
-      )
-      point_in_convex_polygon(probe, vertices)
-    }
-    None => false
-  }
-}
-
-///|
-fn point_inside_shape(
-  point : @geom.Point,
-  center : @geom.Point,
-  size : NodeSize,
-  shape : ClipShape,
-  rankdir_quadrant : Int,
-  outline_pad_pt : Double,
-) -> Bool {
+) -> (@geom.Point) -> Bool {
   match shape {
-    ClipShape::Rect => point_inside_rect(point, center, size)
-    ClipShape::Ellipse => point_inside_ellipse(point, center, size)
+    ClipShape::Rect => (probe_point) => point_inside_rect(probe_point, center, size)
+    ClipShape::Ellipse =>
+      (probe_point) => point_inside_ellipse(probe_point, center, size)
     ClipShape::Trapezium
     | ClipShape::InvTrapezium
     | ClipShape::Parallelogram
@@ -756,10 +723,34 @@ fn point_inside_shape(
     | ClipShape::DoubleOctagon
     | ClipShape::TripleOctagon
     | ClipShape::Polygon(_, _, _, _, _) =>
-      point_inside_polygon(
-        point, center, size, shape, rankdir_quadrant, outline_pad_pt,
-      )
-    ClipShape::None => false
+      match polygon_shape_params(shape) {
+        Some(params) => {
+          let polygon_size = if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
+            @node_primitives.node_size_from_points(size.height_pt, size.width_pt)
+          } else {
+            size
+          }
+          let vertices = polygon_outline_vertices_for_shape(
+            polygon_size,
+            params.sides,
+            params.orientation_deg,
+            params.distortion,
+            params.skew,
+            params.peripheries,
+            outline_pad_pt,
+          )
+          (probe_point) => {
+            let rel = point(
+              probe_point.x - center.x,
+              probe_point.y - center.y,
+            )
+            let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
+            point_in_convex_polygon(probe, vertices)
+          }
+        }
+        None => (_point) => false
+      }
+    ClipShape::None => (_point) => false
   }
 }
 
@@ -779,9 +770,13 @@ fn clip_spline_start(
     ClipShape::None => return points
     _ => ()
   }
-  let inside = (p : @geom.Point) => {
-    point_inside_shape(p, center, size, shape, rankdir_quadrant, outline_pad_pt)
-  }
+  let inside = build_point_inside_shape_fn(
+    center,
+    size,
+    shape,
+    rankdir_quadrant,
+    outline_pad_pt,
+  )
   let mut start = 0
   while start + 3 < points.length() && inside(points[start + 3]) {
     start += 3
@@ -826,9 +821,13 @@ fn clip_spline_end(
     ClipShape::None => return points
     _ => ()
   }
-  let inside = (p : @geom.Point) => {
-    point_inside_shape(p, center, size, shape, rankdir_quadrant, outline_pad_pt)
-  }
+  let inside = build_point_inside_shape_fn(
+    center,
+    size,
+    shape,
+    rankdir_quadrant,
+    outline_pad_pt,
+  )
   let mut end = points.length() - 4
   while end > 0 && inside(points[end]) {
     end -= 3
@@ -1190,16 +1189,13 @@ pub fn compass_port_point_on_shape(
     ClipShape::Rect => clip_line_to_rect(center, clip_size, target)
     ClipShape::None => center
     _ => {
-      let inside = (p : @geom.Point) => {
-        point_inside_shape(
-          p,
-          center,
-          clip_size,
-          shape,
-          rankdir_to_quadrant(rankdir),
-          outline_pad,
-        )
-      }
+      let inside = build_point_inside_shape_fn(
+        center,
+        clip_size,
+        shape,
+        rankdir_to_quadrant(rankdir),
+        outline_pad,
+      )
       let curve : Array[@geom.Point] = [center, center, target, target]
       let clipped = bezier_clip(curve, inside, true)
       clipped[0]
