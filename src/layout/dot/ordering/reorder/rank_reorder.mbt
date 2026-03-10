@@ -2,9 +2,18 @@
 type NodeSize = @node_primitives.NodeSize
 
 ///|
-priv struct RankConstraintState {
+priv struct RankConstraintLookup {
   clusters : Array[String]
   skeletons : Array[Bool]
+  name_index : Map[String, Int]
+  flat_left_to_right : Array[Array[Bool]]
+  has_clusters : Bool
+  has_flat_constraints : Bool
+}
+
+///|
+priv struct RankConstraintState {
+  node_indices : Array[Int]
 }
 
 ///|
@@ -14,18 +23,105 @@ priv struct RankDesiredState {
 }
 
 ///|
-fn build_rank_constraint_state(
+fn build_rank_constraint_lookup(
   names : Array[String],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
-) -> RankConstraintState {
+  flat_constraints : Map[String, Bool],
+) -> RankConstraintLookup {
   let clusters : Array[String] = []
   let skeletons : Array[Bool] = []
-  for name in names {
-    clusters.push(cluster_keys.get(name).unwrap_or_default())
+  let name_index : Map[String, Int] = Map::new()
+  let flat_left_to_right : Array[Array[Bool]] = []
+  let mut has_clusters = false
+  for i, name in names {
+    let cluster = cluster_keys.get(name).unwrap_or_default()
+    if cluster != "" {
+      has_clusters = true
+    }
+    clusters.push(cluster)
     skeletons.push(cluster_skeleton.get(name) == Some(true))
+    name_index[name] = i
+    flat_left_to_right.push(Array::make(names.length(), false))
   }
-  { clusters, skeletons }
+  let mut has_flat_constraints = false
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match @rank_constraints.parse_flat_constraint_key(key) {
+      Some((tail, head)) =>
+        match name_index.get(tail) {
+          Some(tail_idx) =>
+            match name_index.get(head) {
+              Some(head_idx) => {
+                flat_left_to_right[tail_idx][head_idx] = true
+                has_flat_constraints = true
+              }
+              None => ()
+            }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  {
+    clusters,
+    skeletons,
+    name_index,
+    flat_left_to_right,
+    has_clusters,
+    has_flat_constraints,
+  }
+}
+
+///|
+fn build_rank_constraint_state(
+  names : Array[String],
+  constraint_lookup : RankConstraintLookup,
+) -> RankConstraintState {
+  let node_indices : Array[Int] = []
+  for name in names {
+    match constraint_lookup.name_index.get(name) {
+      Some(index) => node_indices.push(index)
+      None => node_indices.push(-1)
+    }
+  }
+  { node_indices, }
+}
+
+///|
+fn rank_left2right_constraint_resolved(
+  constraint_lookup : RankConstraintLookup,
+  constraint_state : RankConstraintState,
+  left_pos : Int,
+  right_pos : Int,
+  remincross_mode : Bool,
+) -> Bool {
+  if !constraint_lookup.has_clusters && !constraint_lookup.has_flat_constraints {
+    return false
+  }
+  let left_idx = constraint_state.node_indices[left_pos]
+  let right_idx = constraint_state.node_indices[right_pos]
+  if left_idx < 0 || right_idx < 0 {
+    return false
+  }
+  let left_cluster = constraint_lookup.clusters[left_idx]
+  let right_cluster = constraint_lookup.clusters[right_idx]
+  if remincross_mode {
+    // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
+    if left_cluster != right_cluster {
+      return true
+    }
+  }
+  if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
+    let left_skel = constraint_lookup.skeletons[left_idx]
+    let right_skel = constraint_lookup.skeletons[right_idx]
+    if !left_skel && !right_skel {
+      return true
+    }
+  }
+  constraint_lookup.flat_left_to_right[left_idx][right_idx]
 }
 
 ///|
@@ -188,11 +284,36 @@ pub fn reorder_by_medians(
   flat_constraints : Map[String, Bool],
   remincross_mode? : Bool = false,
 ) -> Array[String] {
+  let constraint_lookup = build_rank_constraint_lookup(
+    names,
+    cluster_keys,
+    cluster_skeleton,
+    flat_constraints,
+  )
+  reorder_by_medians_with_lookup(
+    names,
+    desired,
+    reverse,
+    hasfixed,
+    constraint_lookup,
+    remincross_mode~,
+  )
+}
+
+///|
+fn reorder_by_medians_with_lookup(
+  names : Array[String],
+  desired : Map[String, Double],
+  reverse : Bool,
+  hasfixed : Bool,
+  constraint_lookup : RankConstraintLookup,
+  remincross_mode? : Bool = false,
+) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
     return sorted
   }
-  let constraint_state = build_rank_constraint_state(sorted, cluster_keys, cluster_skeleton)
+  let constraint_state = build_rank_constraint_state(sorted, constraint_lookup)
   let desired_state = build_rank_desired_state(sorted, desired)
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
@@ -209,19 +330,21 @@ pub fn reorder_by_medians(
       let mut muststay = false
       let mut sawclust = false
       while rp < ep {
-        let rp_cluster = constraint_state.clusters[rp]
+        let rp_idx = constraint_state.node_indices[rp]
+        let rp_cluster = if rp_idx >= 0 {
+          constraint_lookup.clusters[rp_idx]
+        } else {
+          ""
+        }
         if sawclust && rp_cluster != "" {
           rp = rp + 1
           continue
         }
-        if left2right_constraint_resolved(
-            sorted[lp],
-            sorted[rp],
-            constraint_state.clusters[lp],
-            rp_cluster,
-            constraint_state.skeletons[lp],
-            constraint_state.skeletons[rp],
-            flat_constraints,
+        if rank_left2right_constraint_resolved(
+            constraint_lookup,
+            constraint_state,
+            lp,
+            rp,
             remincross_mode,
           ) {
           muststay = true
@@ -245,18 +368,15 @@ pub fn reorder_by_medians(
           let tmp = sorted[lp]
           sorted[lp] = sorted[rp]
           sorted[rp] = tmp
+          let tmp_node_index = constraint_state.node_indices[lp]
+          constraint_state.node_indices[lp] = constraint_state.node_indices[rp]
+          constraint_state.node_indices[rp] = tmp_node_index
           let tmp_has_value = desired_state.has_values[lp]
           desired_state.has_values[lp] = desired_state.has_values[rp]
           desired_state.has_values[rp] = tmp_has_value
           let tmp_value = desired_state.values[lp]
           desired_state.values[lp] = desired_state.values[rp]
           desired_state.values[rp] = tmp_value
-          let tmp_cluster = constraint_state.clusters[lp]
-          constraint_state.clusters[lp] = constraint_state.clusters[rp]
-          constraint_state.clusters[rp] = tmp_cluster
-          let tmp_skeleton = constraint_state.skeletons[lp]
-          constraint_state.skeletons[lp] = constraint_state.skeletons[rp]
-          constraint_state.skeletons[rp] = tmp_skeleton
         }
       }
       lp = rp
@@ -737,8 +857,8 @@ fn transpose_rank_port_tiebreak(
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
+  constraint_lookup : RankConstraintLookup,
   constraint_state : RankConstraintState,
-  flat_constraints : Map[String, Bool],
   reverse : Bool,
   remincross_mode : Bool,
 ) -> TransposeRankResult {
@@ -757,14 +877,11 @@ fn transpose_rank_port_tiebreak(
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    if left2right_constraint_resolved(
-        left,
-        right,
-        constraint_state.clusters[i],
-        constraint_state.clusters[i + 1],
-        constraint_state.skeletons[i],
-        constraint_state.skeletons[i + 1],
-        flat_constraints,
+    if rank_left2right_constraint_resolved(
+        constraint_lookup,
+        constraint_state,
+        i,
+        i + 1,
         remincross_mode,
       ) {
       i = i + 1
@@ -795,12 +912,9 @@ fn transpose_rank_port_tiebreak(
       port_orders.in_orders[i + 1] = left_in
       port_orders.out_orders[i] = right_out
       port_orders.out_orders[i + 1] = left_out
-      let tmp_cluster = constraint_state.clusters[i]
-      constraint_state.clusters[i] = constraint_state.clusters[i + 1]
-      constraint_state.clusters[i + 1] = tmp_cluster
-      let tmp_skeleton = constraint_state.skeletons[i]
-      constraint_state.skeletons[i] = constraint_state.skeletons[i + 1]
-      constraint_state.skeletons[i + 1] = tmp_skeleton
+      let tmp_node_index = constraint_state.node_indices[i]
+      constraint_state.node_indices[i] = constraint_state.node_indices[i + 1]
+      constraint_state.node_indices[i + 1] = tmp_node_index
       order[left] = i + 1
       order[right] = i
       refresh_edge_endpoint_orders_for_node(
@@ -855,6 +969,7 @@ pub fn transpose_rank_groups_port(
     fixed_order,
   )
   let rank_incident_edges : Array[RankIncidentEdgeLists] = []
+  let rank_constraint_lookups : Array[RankConstraintLookup] = []
   let rank_constraint_states : Array[RankConstraintState] = []
   for rank in rank_keys {
     let names = match ordered.get(rank) {
@@ -862,8 +977,15 @@ pub fn transpose_rank_groups_port(
       None => []
     }
     rank_incident_edges.push(build_rank_incident_edge_lists(names, edge_in, edge_out))
+    let constraint_lookup = build_rank_constraint_lookup(
+      names,
+      cluster_keys,
+      cluster_skeleton,
+      flat_constraints,
+    )
+    rank_constraint_lookups.push(constraint_lookup)
     rank_constraint_states.push(
-      build_rank_constraint_state(names, cluster_keys, cluster_skeleton),
+      build_rank_constraint_state(names, constraint_lookup),
     )
   }
   while true {
@@ -898,8 +1020,8 @@ pub fn transpose_rank_groups_port(
         edge_tail_port_x,
         edge_head_port_x,
         edge_penalty,
+        rank_constraint_lookups[idx],
         rank_constraint_states[idx],
-        flat_constraints,
         reverse,
         remincross_mode,
       )
