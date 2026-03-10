@@ -110,3 +110,50 @@ test "edge_spline_for_polyline uses TB cardinal corner routing when ports are im
     point(10.0, -10.0),
   ])
 }
+
+///|
+test "edge_spline_for_polyline falls back to standard orthogonal midpoint routing when a port is explicit" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let tail = graph.node("tail")
+  let head = graph.node("head")
+  let edge = graph.edge(tail, head, head_port={
+    name: Some("p"),
+    compass: Some(@cgraph.Compass::E),
+  })
+
+  let anchor_size = @node_primitives.node_size_from_points(10.0, 10.0)
+  let spline = edge_spline_for_polyline(
+    edge,
+    point(0.0, 0.0),
+    point(10.0, -10.0),
+    anchor_size,
+    anchor_size,
+    point(0.0, 0.0),
+    point(10.0, -10.0),
+    @rankdir.RankDir::TB,
+    true,
+    false,
+    false,
+    tail_clip_enabled=false,
+    head_clip_enabled=false,
+    arrow_len_override=None,
+    tail_cluster_bbox=None,
+    head_cluster_bbox=None,
+  )
+
+  assert_eq(spline.start, None)
+  assert_eq(spline.end, None)
+  assert_eq(spline.points.length(), 10)
+  assert_eq(spline.points, [
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, -5.0),
+    point(0.0, -5.0),
+    point(0.0, -5.0),
+    point(10.0, -5.0),
+    point(10.0, -5.0),
+    point(10.0, -5.0),
+    point(10.0, -10.0),
+    point(10.0, -10.0),
+  ])
+}
