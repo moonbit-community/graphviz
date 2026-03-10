@@ -62,3 +62,33 @@ test "build_noncluster_graphviz_neighbors follows edge out order and node iterat
   assert_eq(in_c, ["a", "b", "d"])
   assert_eq(in_a, [])
 }
+
+///|
+test "build_noncluster_graphviz_neighbors preserves parallel edges and ignores tails omitted from edge_out_order" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let c = graph.node("c")
+  let d = graph.node("d")
+  let ac1 = graph.edge(a, c)
+  let ac2 = graph.edge(a, c)
+  let bc = graph.edge(b, c)
+  let da = graph.edge(d, a)
+
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  edge_out_order["a"] = [1, 0]
+  edge_out_order["b"] = [2]
+
+  let neighbors = build_noncluster_graphviz_neighbors(
+    [a, b, c, d],
+    [ac1, ac2, bc, da],
+    ["c"],
+    edge_out_order,
+  )
+
+  assert_eq(neighbors.out_neighbors.get("a"), Some(["c", "c"]))
+  assert_eq(neighbors.out_neighbors.get("b"), Some(["c"]))
+  assert_eq(neighbors.out_neighbors.get("d"), Some([]))
+  assert_eq(neighbors.in_neighbors.get("c"), Some(["a", "a", "b"]))
+  assert_eq(neighbors.in_neighbors.get("a"), Some([]))
+}
