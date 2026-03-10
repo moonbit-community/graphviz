@@ -24,10 +24,10 @@ test "bottom_single_arrow_line_endpoints snaps both ends to the lower node botto
     head_clip_size: head_size,
   })
 
-  assert_eq(preferred, (
-    @edge_spline.point(1.0, 12.0),
-    @edge_spline.point(9.0, 12.0),
-  ))
+  assert_eq(
+    preferred,
+    (@edge_spline.point(1.0, 12.0), @edge_spline.point(9.0, 12.0)),
+  )
   assert_eq(unchanged, (line_start, line_end))
 }
 
@@ -48,7 +48,10 @@ test "pathplan_line_points_or_endpoints falls back only when fewer than two poin
 
   assert_eq(pathplan_line_points_or_endpoints([], start, end), [start, end])
   assert_eq(pathplan_line_points_or_endpoints([start], start, end), [start, end])
-  assert_eq(pathplan_line_points_or_endpoints(actual_points, start, end), actual_points)
+  assert_eq(
+    pathplan_line_points_or_endpoints(actual_points, start, end),
+    actual_points,
+  )
 }
 
 ///|
