@@ -61,6 +61,51 @@ test "reorder_groups_by_local_cluster reorders within one outer cluster and keep
 }
 
 ///|
+test "order_rank_names_by_cluster_buckets groups by first-seen cluster and reorders buckets by root order map with stable intra-bucket order" {
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a1"] = "cluster_a"
+  cluster_keys["a2"] = "cluster_a"
+  cluster_keys["b1"] = "cluster_b"
+  cluster_keys["c1"] = "cluster_c"
+
+  let order_map : Map[String, Int] = Map::new()
+  order_map["cluster_b"] = 0
+  order_map["cluster_a"] = 1
+
+  let ordered = order_rank_names_by_cluster_buckets(
+    ["a1", "root", "b1", "a2", "c1"],
+    order_map,
+    cluster_keys,
+  )
+
+  assert_eq(ordered, ["b1", "a1", "a2", "root", "c1"])
+}
+
+///|
+test "reorder_groups_by_cluster applies per-rank cluster bucket order independently" {
+  let final_groups : Map[Int, Array[String]] = Map::new()
+  final_groups[0] = ["a0", "b0", "root0"]
+  final_groups[1] = ["c1", "root1", "d1"]
+
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  cluster_rank_order[0] = { "cluster_b": 0, "cluster_a": 1 }
+  cluster_rank_order[1] = { "cluster_d": 0, "cluster_c": 1 }
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a0"] = "cluster_a"
+  cluster_keys["b0"] = "cluster_b"
+  cluster_keys["c1"] = "cluster_c"
+  cluster_keys["d1"] = "cluster_d"
+
+  let reordered = reorder_groups_by_cluster(
+    final_groups, cluster_rank_order, cluster_keys,
+  )
+
+  assert_eq(reordered.get(0), Some(["b0", "a0", "root0"]))
+  assert_eq(reordered.get(1), Some(["d1", "c1", "root1"]))
+}
+
+///|
 test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-node-per-rank layouts" {
   let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let only_cluster : Map[String, Int] = Map::new()
@@ -101,4 +146,34 @@ test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-nod
       multi_cluster_rank_order, one_per_rank, cluster_keys,
     ),
   )
+}
+
+///|
+test "build_clustered_finalize_groups reorders outer cluster buckets then reapplies local cluster order within each outer cluster" {
+  let cleaned_groups : Map[Int, Array[String]] = Map::new()
+  cleaned_groups[0] = ["a2", "b1", "a1", "root"]
+
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  cluster_rank_order[0] = { "outer_b": 0, "outer_a": 1 }
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a1"] = "outer_a"
+  cluster_keys["a2"] = "outer_a"
+  cluster_keys["b1"] = "outer_b"
+
+  let local_cluster_keys : Map[String, String] = Map::new()
+  local_cluster_keys["a1"] = "local_a"
+  local_cluster_keys["a2"] = "local_b"
+  local_cluster_keys["b1"] = "local_root"
+
+  let local_cluster_order : Map[String, Int] = Map::new()
+  local_cluster_order["local_root"] = 0
+  local_cluster_order["local_a"] = 1
+  local_cluster_order["local_b"] = 2
+
+  let finalized = build_clustered_finalize_groups(
+    cleaned_groups, cluster_rank_order, cluster_keys, local_cluster_keys, local_cluster_order,
+  )
+
+  assert_eq(finalized.get(0), Some(["b1", "a1", "a2", "root"]))
 }
