@@ -90,11 +90,7 @@ fn edge_pathplan_polyline_core(
   path_tail_rank : Int,
   path_head_rank : Int,
   ordered : Array[String],
-  positions : Map[String, @geom.Point],
   vnode_ranks : Map[String, Int],
-  vnode_positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  mval_sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
@@ -116,10 +112,6 @@ fn edge_pathplan_polyline_core(
   left_bound : Double,
   right_bound : Double,
 ) -> PathplanCoreResult? {
-  let _ = positions
-  let _ = vnode_positions
-  let _ = sizes
-  let _ = mval_sizes
   let tail_cluster = cluster_key_for_name(
     path_tail_name, cluster_keys, vnode_clusters,
   )
@@ -393,8 +385,7 @@ pub fn edge_pathplan_polyline(
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  mval_sizes : Map[String, NodeSize],
-  vnode_mval_sizes : Map[String, NodeSize],
+  mval_route_sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
@@ -441,7 +432,6 @@ pub fn edge_pathplan_polyline(
   let ordered = vnodes
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
-  let mval_route_sizes = merge_sizes(mval_sizes, vnode_mval_sizes)
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (@numeric.round_int(nodesep_pt) / 4).to_double()
   let straight_eps = 0.01
@@ -450,12 +440,12 @@ pub fn edge_pathplan_polyline(
     if start_idx + 1 >= names.length() {
       0
     } else {
-      match vnode_positions.get(names[start_idx]) {
+      match merged_positions.get(names[start_idx]) {
         Some(base) => {
           let mut count = 0
           let mut idx = start_idx + 1
           while idx < names.length() {
-            let pos = match vnode_positions.get(names[idx]) {
+            let pos = match merged_positions.get(names[idx]) {
               Some(value) => value
               None => break
             }
@@ -560,11 +550,7 @@ pub fn edge_pathplan_polyline(
               current_tail_rank,
               seg1_head_rank,
               seg1_core_vnodes,
-              positions,
               vnode_ranks,
-              vnode_positions,
-              sizes,
-              mval_sizes,
               vnode_sizes,
               cluster_keys,
               vnode_clusters,
@@ -621,8 +607,8 @@ pub fn edge_pathplan_polyline(
             edge_pathplan_polyline_core(
               current_tail_name, path_head_name, current_tail_anchor, path_head_anchor,
               current_tail_side, path_head_side, current_tail_port_box, path_head_port_box,
-              current_tail_rank, path_head_rank, current_vnodes, positions, vnode_ranks,
-              vnode_positions, sizes, mval_sizes, vnode_sizes, cluster_keys, vnode_clusters,
+              current_tail_rank, path_head_rank, current_vnodes, vnode_ranks, vnode_sizes,
+              cluster_keys, vnode_clusters,
               cluster_bboxes, x_groups, order_index, path_out_edges, path_in_edges,
               rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir, merged_positions,
               route_sizes, mval_route_sizes, splinesep_pt, left_bound, right_bound,
@@ -694,8 +680,8 @@ pub fn edge_pathplan_polyline(
     edge_pathplan_polyline_core(
       path_tail_name, path_head_name, path_tail_anchor, path_head_anchor, path_tail_side,
       path_head_side, path_tail_port_box, path_head_port_box, path_tail_rank, path_head_rank,
-      ordered, positions, vnode_ranks, vnode_positions, sizes, mval_sizes, vnode_sizes,
-      cluster_keys, vnode_clusters, cluster_bboxes, x_groups, order_index, path_out_edges,
+      ordered, vnode_ranks, vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups,
+      order_index, path_out_edges,
       path_in_edges, rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
       merged_positions, route_sizes, mval_route_sizes, splinesep_pt, left_bound,
       right_bound,

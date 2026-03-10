@@ -6,8 +6,8 @@ pub(all) struct RoutingContext {
   order_index : Map[String, Int]
   path_order_index : Map[String, Int]
   path_adjacency : @routesplines.PathAdjacency
+  pathplan_mval_route_sizes : Map[String, NodeSize]
   pathplan_sizes : Map[String, NodeSize]
-  pathplan_vnode_mval_sizes : Map[String, NodeSize]
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
   parallel_offsets : Map[Int, Double]
@@ -122,10 +122,12 @@ pub fn prepare_routing_context(
     input.edge_tail,
     input.edge_head,
   )
-  // Graphviz parity: preserve original vnode widths for ND_mval usage.
-  let pathplan_vnode_mval_sizes : Map[String, NodeSize] = Map::new()
+  let pathplan_mval_route_sizes : Map[String, NodeSize] = Map::new()
+  for name, size in input.pathplan_sizes {
+    pathplan_mval_route_sizes[name] = size
+  }
   for name, size in input.vnode_sizes {
-    pathplan_vnode_mval_sizes[name] = size
+    pathplan_mval_route_sizes[name] = size
   }
   let path_vnode_clusters = build_path_vnode_clusters({
     edges: input.edges,
@@ -151,8 +153,8 @@ pub fn prepare_routing_context(
     order_index,
     path_order_index,
     path_adjacency,
+    pathplan_mval_route_sizes,
     pathplan_sizes: input.pathplan_sizes,
-    pathplan_vnode_mval_sizes,
     path_cluster_keys: input.path_cluster_keys,
     path_vnode_clusters,
     parallel_offsets,

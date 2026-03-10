@@ -74,22 +74,6 @@ fn merge_positions(
   merged
 }
 
-///|
-fn merge_sizes(
-  sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-) -> Map[String, NodeSize] {
-  let merged : Map[String, NodeSize] = Map::new()
-  for name, size in sizes {
-    merged[name] = size
-  }
-  for name, size in vnode_sizes {
-    merged[name] = size
-  }
-  merged
-}
-
-///|
 fn pathplan_sizes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
