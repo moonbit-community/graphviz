@@ -135,6 +135,55 @@ test "adjacent flat edge adds one direct constraint without injecting a vnode" {
 }
 
 ///|
+test "adjacent flat edge keeps base minlen when it already exceeds label spacing" {
+  let (_graph, edge) = single_edge_graph("wide-gap")
+  edge.set_attr("minlen", "5")
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 0
+  ranks["b"] = 0
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "b"]
+  let x_groups : Map[Int, Array[String]] = Map::new()
+  x_groups[0] = ["a", "b"]
+  let sizes = make_sizes(["a", "b"], 10.0, 10.0)
+  let vnode_info = empty_vnode_info()
+  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+    Some(value) => value
+    None => fail("expected edge label metrics")
+  }
+
+  let result = build_flat_label_vnodes_for_positioning(
+    [edge],
+    ["a"],
+    ["b"],
+    ranks,
+    ordered_groups,
+    20.0,
+    @rankdir.RankDir::TB,
+    sizes,
+    Map::new(),
+    Map::new(),
+    make_existing_names(["a", "b"]),
+    vnode_info,
+    x_groups,
+  )
+
+  assert_eq(result.flat_label_ranks.length(), 0)
+  assert_eq(result.flat_label_edge_vnodes.length(), 0)
+  assert_eq(result.flat_label_edges.length(), 1)
+
+  let actual = result.flat_label_edges[0]
+  let label_minlen = @numeric.round_int(10.0 + 20.0 + metrics.width)
+  let base_minlen = @numeric.round_int(5.0 * 20.0 + 10.0)
+  assert_true(base_minlen > label_minlen)
+  assert_eq(actual.tail, "a")
+  assert_eq(actual.head, "b")
+  assert_eq(actual.minlen, base_minlen)
+  assert_eq(actual.weight, 1)
+}
+
+///|
 test "non-adjacent flat edge injects a label vnode and splits constraints" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   graph.set_attr("ordering", "out")
