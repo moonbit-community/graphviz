@@ -511,8 +511,3 @@ test "network_simplex LR matches exact yours_truly xpos fixture ranks" {
     807, 892, 1089, 957,
   ])
 }
-
-///|
-/// Graphviz parity: this densest remaining LR mixed-node feedback scaffold is
-/// still fully algorithmic. Keep exact feasible-tree, pre-balance, and final
-/// rank coverage owner-locally so rank fixture replay can retire entirely.

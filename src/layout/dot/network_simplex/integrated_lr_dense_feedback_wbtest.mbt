@@ -1,4 +1,7 @@
 ///|
+/// Graphviz parity: this densest remaining LR mixed-node feedback scaffold is
+/// still fully algorithmic. Keep exact feasible-tree, pre-balance, and final
+/// rank coverage owner-locally so rank fixture replay can retire entirely.
 fn build_dense_lr_mixed_feedback_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
   let slack_ranks : Array[Int] = [
