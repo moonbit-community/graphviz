@@ -237,3 +237,60 @@ test "build_root_tail_order_override keeps first-seen tails only" {
 
   assert_eq(tail_override, ["a", "b", "c"])
 }
+
+///|
+test "build_root_reorder_edge_data replays root tails in nlist order and normalizes synthetic vnode defaults" {
+  let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
+  let root_nodes = ["root", vnode, "leaf"]
+  let root_groups : Map[Int, Array[String]] = Map::new()
+  root_groups[0] = ["root", vnode]
+  root_groups[1] = ["leaf"]
+
+  let root_ranks : Map[String, Int] = Map::new()
+  root_ranks["root"] = 0
+  root_ranks[vnode] = 0
+  root_ranks["leaf"] = 1
+
+  let graph_output = @order_graph.build_order_graph_and_nodes(
+    "root_edge_data", root_nodes,
+  )
+
+  let order_edges_by_tail_root : Map[
+    String,
+    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  ] = Map::new()
+  order_edges_by_tail_root["root"] = [
+    ("root", vnode, 5, true, 1.0, 2.0, 0.1, 0.2),
+  ]
+  order_edges_by_tail_root[vnode] = [
+    (vnode, "leaf", 6, true, 0.0, 0.5, 0.0, 0.0),
+  ]
+
+  let edge_data = build_root_reorder_edge_data(
+    {
+      root_groups,
+      root_rank_keys: [0, 1],
+      root_ranks,
+      root_nodes,
+      root_graph: graph_output.order_graph,
+      root_node_map: graph_output.order_node_map,
+      root_nlist_order: ["root", vnode, "missing"],
+      root_node_order: Map::new(),
+    },
+    order_edges_by_tail_root,
+  )
+
+  assert_eq(edge_data.root_edges_out.length(), 2)
+  assert_eq(edge_data.root_edge_tail_out, ["root", vnode])
+  assert_eq(edge_data.root_edge_head_out, [vnode, "leaf"])
+  assert_eq(edge_data.root_edge_tail_port_x, [1.0, 0.0])
+  assert_eq(edge_data.root_edge_head_port_x, [2.0, 0.0])
+  assert_eq(edge_data.root_edge_tail_port_order, [0.1, 0.0])
+  assert_eq(edge_data.root_edge_head_port_order, [0.2, 0.0])
+  assert_eq(edge_data.root_children.get("root"), Some([]))
+  assert_eq(edge_data.root_children.get(vnode), Some(["leaf"]))
+  assert_eq(edge_data.root_children.get("leaf"), Some([]))
+  assert_eq(edge_data.root_parents.get("root"), Some([]))
+  assert_eq(edge_data.root_parents.get(vnode), Some([]))
+  assert_eq(edge_data.root_parents.get("leaf"), Some([vnode]))
+}
