@@ -329,6 +329,51 @@ test "apply_layout_tree_writeback writes graph label metrics star node rounding 
 }
 
 ///|
+test "apply_layout_tree_writeback omits disabled arrow markers independently" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let tail_disabled = graph.edge(a, b)
+  let head_disabled = graph.edge(a, b, name="head_disabled")
+  tail_disabled.set_attr("dir", "both")
+  tail_disabled.set_attr("arrowtail", "none")
+  head_disabled.set_attr("dir", "both")
+  head_disabled.set_attr("arrowhead", "none")
+
+  let layout = make_layout_tree(
+    graph,
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    edges=[
+      make_edge_layout(tail_disabled, {
+        start: Some({ x: -1.0, y: -2.0 }),
+        end: Some({ x: 12.0, y: 13.0 }),
+        points: [
+          { x: 0.0, y: 0.0 },
+          { x: 2.0, y: 1.0 },
+          { x: 4.0, y: 2.0 },
+          { x: 6.0, y: 3.0 },
+        ],
+      }),
+      make_edge_layout(head_disabled, {
+        start: Some({ x: -3.0, y: -4.0 }),
+        end: Some({ x: 14.0, y: 15.0 }),
+        points: [
+          { x: 1.0, y: 0.0 },
+          { x: 3.0, y: 1.0 },
+          { x: 5.0, y: 2.0 },
+          { x: 7.0, y: 3.0 },
+        ],
+      }),
+    ],
+  )
+
+  apply_layout_tree_writeback(layout)
+
+  assert_eq(tail_disabled.get_attr("pos"), Some("e,12,13 0,0 2,1 4,2 6,3"))
+  assert_eq(head_disabled.get_attr("pos"), Some("s,-3,-4 1,0 3,1 5,2 7,3"))
+}
+
+///|
 test "shift_layout_graph shifts nodes edges labels and subgraphs recursively" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let cluster = graph.subgraph(name="cluster_0")
