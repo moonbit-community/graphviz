@@ -512,6 +512,39 @@ test "flat_limits shifts away from existing vnode fanouts on either side" {
 }
 
 ///|
+test "flat_limits falls back to midpoint when left and right vnode fanouts exhaust the primary slot window" {
+  let left_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}left"
+  let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+
+  let order_index : Map[String, Int] = Map::new()
+  order_index["x"] = 0
+  order_index[right_vnode] = 1
+  order_index["a"] = 1
+  order_index[left_vnode] = 2
+  order_index["b"] = 2
+  order_index["slot0"] = 0
+  order_index["slot1"] = 3
+  order_index["y"] = 3
+
+  let vnode_out_heads : Map[String, Array[String]] = Map::new()
+  vnode_out_heads[left_vnode] = ["x"]
+  vnode_out_heads[right_vnode] = ["y"]
+
+  assert_eq(
+    flat_limits(
+      [right_vnode, "slot0", "slot1", left_vnode],
+      order_index,
+      flat_label_nodes,
+      vnode_out_heads,
+      "a",
+      "b",
+    ),
+    2,
+  )
+}
+
+///|
 test "non-adjacent flat edge uses half-scale minlen when graph ordering is unset" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
