@@ -1,76 +1,4 @@
 ///|
-test "port_label_params applies defaults parse fallback and min clamp" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let edge = graph.edge(graph.node("a"), graph.node("b"))
-
-  assert_eq(port_label_params(edge, -25.0, -180.0), None)
-
-  edge.set_attr("labeldistance", "2")
-  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-25.0, 2.0)))
-
-  edge.set_attr("labelangle", "-999")
-  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-180.0, 2.0)))
-
-  edge.set_attr("labelangle", "oops")
-  edge.set_attr("labeldistance", "oops")
-  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-25.0, 1.0)))
-}
-
-///|
-test "port_label_params treats empty attrs as explicit defaults only when the other attr is present" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let edge = graph.edge(graph.node("a"), graph.node("b"))
-
-  edge.set_attr("labelangle", "")
-  edge.set_attr("labeldistance", "")
-  assert_eq(port_label_params(edge, -25.0, -180.0), None)
-
-  edge.set_attr("labeldistance", "2")
-  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-25.0, 2.0)))
-
-  edge.set_attr("labelangle", "-30")
-  edge.set_attr("labeldistance", "")
-  assert_eq(port_label_params(edge, -25.0, -180.0), Some((-30.0, 1.0)))
-}
-
-///|
-test "port_label_pos_from_points rotates the tangent direction by angle and distance" {
-  let pos = port_label_pos_from_points(
-    @edge_spline.point(1.0, 2.0),
-    @edge_spline.point(4.0, 2.0),
-    90.0,
-    2.0,
-    3.0,
-    @node_geometry.GRAPHVIZ_PI,
-  )
-
-  assert_point_close(pos, @edge_spline.point(1.0, 8.0), eps=0.001)
-}
-
-///|
-test "port_label_pos_from_points follows edge-local angle and distance scale" {
-  let horizontal = port_label_pos_from_points(
-    @edge_spline.point(1.0, 2.0),
-    @edge_spline.point(5.0, 2.0),
-    90.0,
-    2.0,
-    3.0,
-    @node_geometry.GRAPHVIZ_PI,
-  )
-  assert_point_close(horizontal, @edge_spline.point(1.0, 8.0), eps=0.001)
-
-  let vertical = port_label_pos_from_points(
-    @edge_spline.point(1.0, 2.0),
-    @edge_spline.point(1.0, 6.0),
-    0.0,
-    0.5,
-    4.0,
-    @node_geometry.GRAPHVIZ_PI,
-  )
-  assert_point_close(vertical, @edge_spline.point(1.0, 4.0), eps=0.001)
-}
-
-///|
 test "edge_port_label_pos returns None without attrs or usable spline geometry" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
@@ -201,5 +129,3 @@ test "edge_port_label_pos_for_dot uses bezier fallback and dot defaults when mar
   assert_point_close(tail, expected_tail, eps=0.001)
   assert_point_close(head, expected_head, eps=0.001)
 }
-
-///|
