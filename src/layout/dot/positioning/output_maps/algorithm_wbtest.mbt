@@ -203,6 +203,50 @@ test "adjust_intercluster_alignment keeps positions when no node is already alig
 }
 
 ///|
+test "adjust_intercluster_alignment uses inclusive epsilon and odd-rank label spacing" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let target = graph.node("target")
+  let a_to_target = graph.edge(a, target)
+  let b_to_target = graph.edge(b, target)
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 1
+  ranks["b"] = 1
+  ranks["target"] = 2
+
+  let x_positions : Map[String, Double] = Map::new()
+  x_positions["a"] = 100.009
+  x_positions["b"] = 120.0
+  x_positions["target"] = 100.0
+
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a"] = "cluster0"
+  cluster_keys["b"] = "cluster0"
+
+  let intercluster_keys : Map[String, String] = Map::new()
+  intercluster_keys["a"] = "cluster0"
+  intercluster_keys["b"] = "cluster0"
+  intercluster_keys["target"] = "cluster1"
+
+  adjust_intercluster_alignment({
+    nodes: [a, b, target],
+    edges: [a_to_target, b_to_target],
+    ranks,
+    x_positions,
+    cluster_keys,
+    intercluster_keys,
+    nodesep_pt: 12.0,
+    has_edge_labels: true,
+  })
+
+  assert_eq(x_positions.get("a"), Some(95.009))
+  assert_eq(x_positions.get("b"), Some(115.0))
+  assert_eq(x_positions.get("target"), Some(100.0))
+}
+
+///|
 test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
   let vnode_ranks : Map[String, Int] = Map::new()
   vnode_ranks["v1"] = 1
