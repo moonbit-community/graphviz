@@ -234,6 +234,69 @@ test "count_rank_crossings_port respects fixed external endpoint slots" {
 }
 
 ///|
+test "live port tie-break helpers match materialized port-order tuples" {
+  let incident_edges : RankIncidentEdgeLists = {
+    in_edges: [[0, 1], [2, 4]],
+    out_edges: [[5], [6, 8]],
+  }
+  let edge_endpoint_orders : EdgeEndpointOrders = {
+    tail_orders: [3, 1, 2, 0, 4, 2, 1, 3, 0],
+    head_orders: [0, 0, 0, 0, 0, 4, 2, 1, 3],
+  }
+  let edge_tail_port_x = [2.0, 1.0, 3.0]
+  let edge_head_port_x = [4.0, 2.0, 1.0, 3.0, 0.0, 5.0, 1.0]
+  let edge_penalty = [2, 1, 3, 0, 2, 1, 2, 0, 4]
+  let port_orders = build_rank_port_tiebreak_orders(
+    incident_edges,
+    edge_endpoint_orders,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_penalty,
+  )
+
+  assert_eq(
+    in_cross_port_tiebreak_live(
+      incident_edges.in_edges[0],
+      incident_edges.in_edges[1],
+      edge_endpoint_orders,
+      edge_tail_port_x,
+      edge_penalty,
+    ),
+    in_cross_port_tiebreak(port_orders.in_orders[0], port_orders.in_orders[1]),
+  )
+  assert_eq(
+    in_cross_port_tiebreak_live(
+      incident_edges.in_edges[1],
+      incident_edges.in_edges[0],
+      edge_endpoint_orders,
+      edge_tail_port_x,
+      edge_penalty,
+    ),
+    in_cross_port_tiebreak(port_orders.in_orders[1], port_orders.in_orders[0]),
+  )
+  assert_eq(
+    out_cross_port_tiebreak_live(
+      incident_edges.out_edges[0],
+      incident_edges.out_edges[1],
+      edge_endpoint_orders,
+      edge_head_port_x,
+      edge_penalty,
+    ),
+    out_cross_port_tiebreak(port_orders.out_orders[0], port_orders.out_orders[1]),
+  )
+  assert_eq(
+    out_cross_port_tiebreak_live(
+      incident_edges.out_edges[1],
+      incident_edges.out_edges[0],
+      edge_endpoint_orders,
+      edge_head_port_x,
+      edge_penalty,
+    ),
+    out_cross_port_tiebreak(port_orders.out_orders[1], port_orders.out_orders[0]),
+  )
+}
+
+///|
 test "transpose_rank_groups_port reorders rank using fixed external anchors" {
   let rank_keys = [1]
   let ordered : Map[Int, Array[String]] = Map::new()
