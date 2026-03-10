@@ -413,6 +413,12 @@ priv struct PortTiebreakOrders {
 }
 
 ///|
+priv struct RankIncidentEdgeLists {
+  in_edges : Array[Array[Int]]
+  out_edges : Array[Array[Int]]
+}
+
+///|
 priv struct EdgeEndpointOrders {
   tail_orders : Array[Int]
   head_orders : Array[Int]
@@ -450,25 +456,37 @@ fn build_edge_endpoint_orders(
 
 ///|
 fn refresh_edge_endpoint_orders_for_node(
-  name : String,
+  incident_in : Array[Int],
+  incident_out : Array[Int],
   new_order : Int,
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> Unit {
-  for edge_idx in edge_out.get(name).unwrap_or_default() {
+  for edge_idx in incident_out {
     edge_endpoint_orders.tail_orders[edge_idx] = new_order
   }
-  for edge_idx in edge_in.get(name).unwrap_or_default() {
+  for edge_idx in incident_in {
     edge_endpoint_orders.head_orders[edge_idx] = new_order
   }
 }
 
 ///|
-fn build_rank_port_tiebreak_orders(
+fn build_rank_incident_edge_lists(
   names : Array[String],
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
+) -> RankIncidentEdgeLists {
+  let in_edges : Array[Array[Int]] = []
+  let out_edges : Array[Array[Int]] = []
+  for name in names {
+    in_edges.push(edge_in.get(name).unwrap_or_default())
+    out_edges.push(edge_out.get(name).unwrap_or_default())
+  }
+  { in_edges, out_edges }
+}
+
+///|
+fn build_rank_port_tiebreak_orders(
+  incident_edges : RankIncidentEdgeLists,
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
@@ -476,9 +494,9 @@ fn build_rank_port_tiebreak_orders(
 ) -> PortTiebreakOrders {
   let in_orders : Array[Array[(Int, Double, Int)]] = []
   let out_orders : Array[Array[(Int, Double, Int)]] = []
-  for name in names {
+  for edge_indices in incident_edges.in_edges {
     let incoming : Array[(Int, Double, Int)] = []
-    for edge_idx in edge_in.get(name).unwrap_or_default() {
+    for edge_idx in edge_indices {
       let penalty = edge_penalty[edge_idx]
       if penalty <= 0 {
         continue
@@ -494,8 +512,10 @@ fn build_rank_port_tiebreak_orders(
       ))
     }
     in_orders.push(incoming)
+  }
+  for edge_indices in incident_edges.out_edges {
     let outgoing : Array[(Int, Double, Int)] = []
-    for edge_idx in edge_out.get(name).unwrap_or_default() {
+    for edge_idx in edge_indices {
       let penalty = edge_penalty[edge_idx]
       if penalty <= 0 {
         continue
@@ -581,10 +601,9 @@ pub fn count_rank_crossings_port(
     order,
     fixed_order,
   )
+  let incident_edges = build_rank_incident_edge_lists(names, edge_in, edge_out)
   let port_orders = build_rank_port_tiebreak_orders(
-    names,
-    edge_in,
-    edge_out,
+    incident_edges,
     edge_endpoint_orders,
     edge_tail_port_x,
     edge_head_port_x,
@@ -684,14 +703,12 @@ fn transpose_rank_port_tiebreak(
   ranks : Map[String, Int],
   names : Array[String],
   order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+  incident_edges : RankIncidentEdgeLists,
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
-  cluster_keys : Map[String, String],
-  cluster_skeleton : Map[String, Bool],
+  constraint_state : RankConstraintState,
   flat_constraints : Map[String, Bool],
   reverse : Bool,
   remincross_mode : Bool,
@@ -699,15 +716,12 @@ fn transpose_rank_port_tiebreak(
   let _ = rank
   let _ = ranks
   let port_orders = build_rank_port_tiebreak_orders(
-    names,
-    edge_in,
-    edge_out,
+    incident_edges,
     edge_endpoint_orders,
     edge_tail_port_x,
     edge_head_port_x,
     edge_penalty,
   )
-  let constraint_state = build_rank_constraint_state(names, cluster_keys, cluster_skeleton)
   let mut changed = false
   let mut delta = 0
   let mut i = 0
@@ -733,6 +747,10 @@ fn transpose_rank_port_tiebreak(
     let right_in = port_orders.in_orders[i + 1]
     let left_out = port_orders.out_orders[i]
     let right_out = port_orders.out_orders[i + 1]
+    let left_incident_in = incident_edges.in_edges[i]
+    let right_incident_in = incident_edges.in_edges[i + 1]
+    let left_incident_out = incident_edges.out_edges[i]
+    let right_incident_out = incident_edges.out_edges[i + 1]
     c0 = c0 + in_cross_port_tiebreak(left_in, right_in)
     c1 = c1 + in_cross_port_tiebreak(right_in, left_in)
     c0 = c0 + out_cross_port_tiebreak(left_out, right_out)
@@ -740,6 +758,10 @@ fn transpose_rank_port_tiebreak(
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
+      incident_edges.in_edges[i] = right_incident_in
+      incident_edges.in_edges[i + 1] = left_incident_in
+      incident_edges.out_edges[i] = right_incident_out
+      incident_edges.out_edges[i + 1] = left_incident_out
       port_orders.in_orders[i] = right_in
       port_orders.in_orders[i + 1] = left_in
       port_orders.out_orders[i] = right_out
@@ -753,17 +775,15 @@ fn transpose_rank_port_tiebreak(
       order[left] = i + 1
       order[right] = i
       refresh_edge_endpoint_orders_for_node(
-        left,
+        left_incident_in,
+        left_incident_out,
         i + 1,
-        edge_in,
-        edge_out,
         edge_endpoint_orders,
       )
       refresh_edge_endpoint_orders_for_node(
-        right,
+        right_incident_in,
+        right_incident_out,
         i,
-        edge_in,
-        edge_out,
         edge_endpoint_orders,
       )
       changed = true
@@ -798,18 +818,30 @@ pub fn transpose_rank_groups_port(
   let mut passes = 0
   let rank_len = rank_keys.length()
   let candidate = Array::make(rank_len, true)
+  let order = @rank_groups.build_order_index(ordered)
+  let edge_endpoint_orders = build_edge_endpoint_orders(
+    edge_tail,
+    edge_head,
+    order,
+    fixed_order,
+  )
+  let rank_incident_edges : Array[RankIncidentEdgeLists] = []
+  let rank_constraint_states : Array[RankConstraintState] = []
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    rank_incident_edges.push(build_rank_incident_edge_lists(names, edge_in, edge_out))
+    rank_constraint_states.push(
+      build_rank_constraint_state(names, cluster_keys, cluster_skeleton),
+    )
+  }
   while true {
     if max_passes > 0 && passes >= max_passes {
       break
     }
     passes = passes + 1
-    let order = @rank_groups.build_order_index(ordered)
-    let edge_endpoint_orders = build_edge_endpoint_orders(
-      edge_tail,
-      edge_head,
-      order,
-      fixed_order,
-    )
     let mut delta = 0
     let mut idx = 0
     while idx < rank_len {
@@ -832,14 +864,12 @@ pub fn transpose_rank_groups_port(
         ranks,
         names,
         order,
-        edge_in,
-        edge_out,
+        rank_incident_edges[idx],
         edge_endpoint_orders,
         edge_tail_port_x,
         edge_head_port_x,
         edge_penalty,
-        cluster_keys,
-        cluster_skeleton,
+        rank_constraint_states[idx],
         flat_constraints,
         reverse,
         remincross_mode,
