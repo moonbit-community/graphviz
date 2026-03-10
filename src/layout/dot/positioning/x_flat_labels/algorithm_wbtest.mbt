@@ -337,6 +337,58 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
 }
 
 ///|
+test "non-adjacent flat edge prefers endpoint cluster membership over edge cluster fallback" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster = graph.subgraph(name="cluster_0")
+  let a = cluster.node("a")
+  let b = cluster.node("b")
+  let c = graph.node("c")
+  ignore(c)
+  let edge = graph.edge(a, b)
+  edge.set_attr("label", "cluster-membership")
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 0
+  ranks["b"] = 0
+  ranks["c"] = 0
+
+  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  ordered_groups[0] = ["a", "c", "b"]
+  let x_groups : Map[Int, Array[String]] = Map::new()
+  x_groups[0] = ["a", "c", "b"]
+  let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
+
+  let vnode_info = empty_vnode_info()
+  let edge_cluster_keys : Map[String, String] = Map::new()
+  edge_cluster_keys[@edge_identity.edge_key(edge)] = "wrong_cluster"
+
+  let result = build_flat_label_vnodes_for_positioning(
+    [edge],
+    ["a"],
+    ["b"],
+    ranks,
+    ordered_groups,
+    20.0,
+    @rankdir.RankDir::TB,
+    sizes,
+    edge_cluster_keys,
+    Map::new(),
+    make_existing_names(["a", "b", "c"]),
+    vnode_info,
+    x_groups,
+  )
+
+  let label_vnode = match
+    result.flat_label_edge_vnodes.get(@edge_identity.edge_key(edge)) {
+    Some(value) => value
+    None => fail("expected flat label vnode mapping")
+  }
+
+  assert_eq(result.flat_label_ranks.get(label_vnode), Some(-1))
+  assert_eq(vnode_info.vnode_clusters.get(label_vnode), Some("cluster_0"))
+}
+
+///|
 test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
   let order_index : Map[String, Int] = Map::new()
   order_index["x"] = 0
