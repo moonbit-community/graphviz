@@ -1,4 +1,48 @@
 ///|
+pub(all) struct PortAwareCrossingInputs {
+  edge_penalty : Array[Int]
+  edge_in : Map[String, Array[Int]]
+  edge_out : Map[String, Array[Int]]
+}
+
+///|
+fn build_port_aware_crossing_inputs(
+  groups : Map[Int, Array[String]],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> PortAwareCrossingInputs {
+  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map::new()
+  for _rank, names in groups {
+    for name in names {
+      edge_out[name] = []
+      edge_in[name] = []
+    }
+  }
+  let edge_penalty : Array[Int] = []
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let penalty = @edge_semantics.edge_xpenalty(edge)
+    edge_penalty.push(penalty)
+    if !@edge_semantics.edge_is_constraint(edge) || penalty <= 0 {
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    match edge_out.get(tail) {
+      Some(list) => list.push(edge_idx)
+      None => edge_out[tail] = [edge_idx]
+    }
+    let head = edge_head[edge_idx]
+    match edge_in.get(head) {
+      Some(list) => list.push(edge_idx)
+      None => edge_in[head] = [edge_idx]
+    }
+  }
+  { edge_penalty, edge_in, edge_out }
+}
+
+///|
 fn count_inversions(values : Array[Int]) -> Int {
   let n = values.length()
   if n < 2 {
@@ -269,59 +313,24 @@ fn local_cross_in_port_aware(
 ///|
 /// Graphviz parity: rcross-style crossing count with local port-order ties.
 /// Do not change behavior without updating fixtures/tests.
-pub fn count_crossings_port_aware(
+fn count_crossings_port_aware_with_inputs(
+  rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
-  edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  inputs : PortAwareCrossingInputs,
   edge_tail_port_x? : Array[Double] = [],
   edge_head_port_x? : Array[Double] = [],
   fixed_order? : Map[String, Int] = Map::new(),
 ) -> Int {
   let order = @rank_groups.build_order_index(groups)
-  let rank_keys : Array[Int] = []
-  for rank, _ in groups {
-    rank_keys.push(rank)
-  }
   if rank_keys.length() == 0 {
     return 0
   }
-  rank_keys.sort()
-  let edge_out : Map[String, Array[Int]] = Map::new()
-  let edge_in : Map[String, Array[Int]] = Map::new()
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for name in names {
-      edge_out[name] = []
-      edge_in[name] = []
-    }
-  }
-  let edge_penalty : Array[Int] = []
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let penalty = @edge_semantics.edge_xpenalty(edge)
-    edge_penalty.push(penalty)
-    if !@edge_semantics.edge_is_constraint(edge) {
-      continue
-    }
-    if penalty <= 0 {
-      continue
-    }
-    let tail = edge_tail[edge_idx]
-    match edge_out.get(tail) {
-      Some(list) => list.push(edge_idx)
-      None => edge_out[tail] = [edge_idx]
-    }
-    let head = edge_head[edge_idx]
-    match edge_in.get(head) {
-      Some(list) => list.push(edge_idx)
-      None => edge_in[head] = [edge_idx]
-    }
-  }
+  let edge_penalty = inputs.edge_penalty
+  let edge_in = inputs.edge_in
+  let edge_out = inputs.edge_out
   let include_ports = edge_tail_port_x.length() > 0 ||
     edge_head_port_x.length() > 0
   let mut crossings = 0
@@ -451,6 +460,38 @@ pub fn count_crossings_port_aware(
     idx = idx + 1
   }
   crossings
+}
+
+///|
+/// Graphviz parity: rcross-style crossing count with local port-order ties.
+/// Do not change behavior without updating fixtures/tests.
+pub fn count_crossings_port_aware(
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x? : Array[Double] = [],
+  edge_head_port_x? : Array[Double] = [],
+  fixed_order? : Map[String, Int] = Map::new(),
+) -> Int {
+  let rank_keys : Array[Int] = []
+  for rank, _ in groups {
+    rank_keys.push(rank)
+  }
+  rank_keys.sort()
+  let inputs = build_port_aware_crossing_inputs(groups, edges, edge_tail, edge_head)
+  count_crossings_port_aware_with_inputs(
+    rank_keys,
+    groups,
+    ranks,
+    edge_tail,
+    edge_head,
+    inputs,
+    edge_tail_port_x~,
+    edge_head_port_x~,
+    fixed_order~,
+  )
 }
 
 ///|

@@ -413,6 +413,12 @@ priv struct PortTiebreakOrders {
 }
 
 ///|
+priv struct EdgeEndpointOrders {
+  tail_orders : Array[Int]
+  head_orders : Array[Int]
+}
+
+///|
 fn resolve_port_tiebreak_order(
   name : String,
   order : Map[String, Int],
@@ -425,14 +431,45 @@ fn resolve_port_tiebreak_order(
 }
 
 ///|
-fn build_rank_port_tiebreak_orders(
-  names : Array[String],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+fn build_edge_endpoint_orders(
   edge_tail : Array[String],
   edge_head : Array[String],
+  order : Map[String, Int],
+  fixed_order : Map[String, Int],
+) -> EdgeEndpointOrders {
+  let tail_orders : Array[Int] = []
+  for tail in edge_tail {
+    tail_orders.push(resolve_port_tiebreak_order(tail, order, fixed_order))
+  }
+  let head_orders : Array[Int] = []
+  for head in edge_head {
+    head_orders.push(resolve_port_tiebreak_order(head, order, fixed_order))
+  }
+  { tail_orders, head_orders }
+}
+
+///|
+fn refresh_edge_endpoint_orders_for_node(
+  name : String,
+  new_order : Int,
+  edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
+  edge_endpoint_orders : EdgeEndpointOrders,
+) -> Unit {
+  for edge_idx in edge_out.get(name).unwrap_or_default() {
+    edge_endpoint_orders.tail_orders[edge_idx] = new_order
+  }
+  for edge_idx in edge_in.get(name).unwrap_or_default() {
+    edge_endpoint_orders.head_orders[edge_idx] = new_order
+  }
+}
+
+///|
+fn build_rank_port_tiebreak_orders(
+  names : Array[String],
+  edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
+  edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
@@ -447,7 +484,7 @@ fn build_rank_port_tiebreak_orders(
         continue
       }
       incoming.push((
-        resolve_port_tiebreak_order(edge_tail[edge_idx], order, fixed_order),
+        edge_endpoint_orders.tail_orders[edge_idx],
         if edge_idx < edge_tail_port_x.length() {
           edge_tail_port_x[edge_idx]
         } else {
@@ -464,7 +501,7 @@ fn build_rank_port_tiebreak_orders(
         continue
       }
       outgoing.push((
-        resolve_port_tiebreak_order(edge_head[edge_idx], order, fixed_order),
+        edge_endpoint_orders.head_orders[edge_idx],
         if edge_idx < edge_head_port_x.length() {
           edge_head_port_x[edge_idx]
         } else {
@@ -538,14 +575,17 @@ pub fn count_rank_crossings_port(
   for i, name in names {
     order[name] = i
   }
-  let port_orders = build_rank_port_tiebreak_orders(
-    names,
-    order,
-    fixed_order,
-    edge_in,
-    edge_out,
+  let edge_endpoint_orders = build_edge_endpoint_orders(
     edge_tail,
     edge_head,
+    order,
+    fixed_order,
+  )
+  let port_orders = build_rank_port_tiebreak_orders(
+    names,
+    edge_in,
+    edge_out,
+    edge_endpoint_orders,
     edge_tail_port_x,
     edge_head_port_x,
     edge_penalty,
@@ -644,11 +684,9 @@ fn transpose_rank_port_tiebreak(
   ranks : Map[String, Int],
   names : Array[String],
   order : Map[String, Int],
-  fixed_order : Map[String, Int],
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
-  edge_tail : Array[String],
-  edge_head : Array[String],
+  edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
@@ -662,12 +700,9 @@ fn transpose_rank_port_tiebreak(
   let _ = ranks
   let port_orders = build_rank_port_tiebreak_orders(
     names,
-    order,
-    fixed_order,
     edge_in,
     edge_out,
-    edge_tail,
-    edge_head,
+    edge_endpoint_orders,
     edge_tail_port_x,
     edge_head_port_x,
     edge_penalty,
@@ -717,6 +752,20 @@ fn transpose_rank_port_tiebreak(
       constraint_state.skeletons[i + 1] = tmp_skeleton
       order[left] = i + 1
       order[right] = i
+      refresh_edge_endpoint_orders_for_node(
+        left,
+        i + 1,
+        edge_in,
+        edge_out,
+        edge_endpoint_orders,
+      )
+      refresh_edge_endpoint_orders_for_node(
+        right,
+        i,
+        edge_in,
+        edge_out,
+        edge_endpoint_orders,
+      )
       changed = true
       delta = delta + (c0 - c1)
     }
@@ -755,6 +804,12 @@ pub fn transpose_rank_groups_port(
     }
     passes = passes + 1
     let order = @rank_groups.build_order_index(ordered)
+    let edge_endpoint_orders = build_edge_endpoint_orders(
+      edge_tail,
+      edge_head,
+      order,
+      fixed_order,
+    )
     let mut delta = 0
     let mut idx = 0
     while idx < rank_len {
@@ -773,9 +828,21 @@ pub fn transpose_rank_groups_port(
         continue
       }
       let transpose_result = transpose_rank_port_tiebreak(
-        rank, ranks, names, order, fixed_order, edge_in, edge_out, edge_tail, edge_head,
-        edge_tail_port_x, edge_head_port_x, edge_penalty, cluster_keys, cluster_skeleton,
-        flat_constraints, reverse, remincross_mode,
+        rank,
+        ranks,
+        names,
+        order,
+        edge_in,
+        edge_out,
+        edge_endpoint_orders,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_penalty,
+        cluster_keys,
+        cluster_skeleton,
+        flat_constraints,
+        reverse,
+        remincross_mode,
       )
       if transpose_result.changed {
         ordered[rank] = names
@@ -1345,6 +1412,12 @@ pub fn reorder_rank_groups(
       node_ranks[name] = rank
     }
   }
+  let port_crossing_inputs = build_port_aware_crossing_inputs(
+    ordered,
+    edges,
+    edge_tail,
+    edge_head,
+  )
   let mut best_ordered = @rank_groups.clone_rank_groups(ordered)
   let mut order_positions = @rank_groups.order_positions_from_groups(ordered)
   let fixed_order : Map[String, Int] = Map::new()
@@ -1557,12 +1630,13 @@ pub fn reorder_rank_groups(
   } else if graphviz_style && startpass <= 1 {
     2147483647
   } else if graphviz_style {
-    count_crossings_port_aware(
+    count_crossings_port_aware_with_inputs(
+      rank_keys,
       ordered,
       node_ranks,
-      edges,
       edge_tail,
       edge_head,
+      port_crossing_inputs,
       edge_tail_port_x~,
       edge_head_port_x~,
       fixed_order~,
@@ -1592,13 +1666,7 @@ pub fn reorder_rank_groups(
     order_positions = @rank_groups.order_positions_from_groups(ordered)
     merge_fixed_positions()
     let seed_cross = count_crossings_port_aware(
-      ordered,
-      node_ranks,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x~,
-      edge_head_port_x~,
+      ordered, node_ranks, edges, edge_tail, edge_head, edge_tail_port_x~, edge_head_port_x~,
       fixed_order~,
     )
     if seed_cross > 0 {
@@ -1893,12 +1961,13 @@ pub fn reorder_rank_groups(
         )
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
-        let seed_cross = count_crossings_port_aware(
+        let seed_cross = count_crossings_port_aware_with_inputs(
+          rank_keys,
           ordered,
           node_ranks,
-          edges,
           edge_tail,
           edge_head,
+          port_crossing_inputs,
           edge_tail_port_x~,
           edge_head_port_x~,
           fixed_order~,
@@ -1930,12 +1999,13 @@ pub fn reorder_rank_groups(
         maybe_capture_seed_groups(pass, rank_keys, ordered)
         order_positions = @rank_groups.order_positions_from_groups(ordered)
         merge_fixed_positions()
-        cur_cross = count_crossings_port_aware(
+        cur_cross = count_crossings_port_aware_with_inputs(
+          rank_keys,
           ordered,
           node_ranks,
-          edges,
           edge_tail,
           edge_head,
+          port_crossing_inputs,
           edge_tail_port_x~,
           edge_head_port_x~,
           fixed_order~,
@@ -2092,12 +2162,13 @@ pub fn reorder_rank_groups(
         )
         order_positions = @rank_groups.order_positions_from_groups(ordered)
         merge_fixed_positions()
-        cur_cross = count_crossings_port_aware(
+        cur_cross = count_crossings_port_aware_with_inputs(
+          rank_keys,
           ordered,
           node_ranks,
-          edges,
           edge_tail,
           edge_head,
+          port_crossing_inputs,
           edge_tail_port_x~,
           edge_head_port_x~,
           fixed_order~,
@@ -2243,12 +2314,13 @@ pub fn reorder_rank_groups(
           order_positions = @rank_groups.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
-        let cross = count_crossings_port_aware(
+        let cross = count_crossings_port_aware_with_inputs(
+          rank_keys,
           ordered,
           node_ranks,
-          edges,
           edge_tail,
           edge_head,
+          port_crossing_inputs,
           edge_tail_port_x~,
           edge_head_port_x~,
           fixed_order~,
