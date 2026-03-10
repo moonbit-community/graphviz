@@ -164,3 +164,86 @@ test "build_order_seed_groups keeps only real-node metadata when vnode and clust
     Some(10.0),
   )
 }
+
+///|
+test "build_order_reorder_context assembles rank keys graphs creation order and node-order fallbacks on noncluster path" {
+  let order_groups : Map[Int, Array[String]] = Map::new()
+  order_groups[0] = ["a", "b", "v0"]
+  order_groups[1] = ["d"]
+
+  let context = build_order_reorder_context({
+    order_groups,
+    nlist_order: ["a", "v0"],
+    gdnlist_order: ["a", "b"],
+    node_order: { "c": 7 },
+    real_nodes: {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": true,
+      "extra_real": true,
+    },
+    has_clusters: false,
+    base_order_index: { "extra_real": 11, "a": 99 },
+    rank_same_groups: { "a": 1, "b": 1 },
+    rank_same_order: { "b": 0, "a": 1 },
+    port_edge_nodes: Map::new(),
+  })
+
+  assert_eq(context.order_rank_keys, [0, 1])
+  assert_eq(context.order_ranks.get("a"), Some(0))
+  assert_eq(context.order_ranks.get("b"), Some(0))
+  assert_eq(context.order_ranks.get("v0"), Some(0))
+  assert_eq(context.order_ranks.get("d"), Some(1))
+  assert_eq(context.order_nodes, ["a", "b", "v0", "d"])
+  assert_eq(context.creation_order, ["v0", "a"])
+  assert_true(context.order_node_map.get("a") is Some(_))
+  assert_true(context.order_node_map_unmapped.get("d") is Some(_))
+  assert_true(context.order_node_map.get("extra_real") is None)
+  assert_eq(context.order_node_order.get("a"), Some(0))
+  assert_eq(context.order_node_order.get("b"), Some(1))
+  assert_eq(context.order_node_order.get("v0"), Some(2))
+  assert_eq(context.order_node_order.get("c"), Some(7))
+  assert_eq(context.order_node_order.get("d"), Some(0))
+  assert_eq(context.order_node_order.get("extra_real"), Some(11))
+}
+
+///|
+test "build_order_reorder_context applies rank-same normalization only when clusters are enabled" {
+  let order_groups : Map[Int, Array[String]] = Map::new()
+  order_groups[0] = ["a", "b"]
+  let empty_nlist : Array[String] = []
+  let empty_node_order : Map[String, Int] = Map::new()
+  let empty_base_order_index : Map[String, Int] = Map::new()
+  let empty_port_edge_nodes : Map[String, Bool] = Map::new()
+
+  let nonclustered = build_order_reorder_context({
+    order_groups,
+    nlist_order: empty_nlist,
+    gdnlist_order: ["a", "b"],
+    node_order: empty_node_order,
+    real_nodes: { "a": true, "b": true },
+    has_clusters: false,
+    base_order_index: empty_base_order_index,
+    rank_same_groups: { "a": 1, "b": 1 },
+    rank_same_order: { "b": 0, "a": 1 },
+    port_edge_nodes: empty_port_edge_nodes,
+  })
+  let clustered = build_order_reorder_context({
+    order_groups,
+    nlist_order: empty_nlist,
+    gdnlist_order: ["a", "b"],
+    node_order: empty_node_order,
+    real_nodes: { "a": true, "b": true },
+    has_clusters: true,
+    base_order_index: empty_base_order_index,
+    rank_same_groups: { "a": 1, "b": 1 },
+    rank_same_order: { "b": 0, "a": 1 },
+    port_edge_nodes: empty_port_edge_nodes,
+  })
+
+  assert_eq(nonclustered.order_node_order.get("a"), Some(0))
+  assert_eq(nonclustered.order_node_order.get("b"), Some(1))
+  assert_eq(clustered.order_node_order.get("b"), Some(0))
+  assert_eq(clustered.order_node_order.get("a"), Some(1))
+}
