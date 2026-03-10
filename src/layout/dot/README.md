@@ -10,8 +10,6 @@ Manual regeneration:
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_dot_snapshots.sh` (refreshes `tests/layout/dot/*.gv.dot`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_xdot_snapshots.sh` (refreshes `tests/render/xdot/*.xdot` from `tests/render/xdot/cases.txt`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_svg_snapshots.sh` (refreshes `tests/render/svg/*.svg` from `tests/render/svg/cases.txt`; requires Graphviz build or `dot` on PATH).
-- `bash scripts/capture_graphviz_label_vnodes.sh` (updates `tests/fixtures/graphviz/label_vnode.jsonl`; requires Graphviz build).
-- `bash scripts/capture_graphviz_edge_label_pos.sh` (updates `tests/fixtures/graphviz/edge_label_pos.jsonl`; requires Graphviz build).
 
 Graphviz source map (layout/dot parity)
 - Rank assignment / network simplex
