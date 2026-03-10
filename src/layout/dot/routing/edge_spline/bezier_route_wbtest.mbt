@@ -1,5 +1,9 @@
 ///|
-fn assert_close(actual : Double, expected : Double, eps? : Double = 0.000001) -> Unit raise {
+fn assert_close(
+  actual : Double,
+  expected : Double,
+  eps? : Double = 0.000001,
+) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
   }
@@ -11,8 +15,8 @@ fn assert_point_close(
   expected : @geom.Point,
   eps? : Double = 0.000001,
 ) -> Unit raise {
-  assert_close(actual.x, expected.x, eps=eps)
-  assert_close(actual.y, expected.y, eps=eps)
+  assert_close(actual.x, expected.x, eps~)
+  assert_close(actual.y, expected.y, eps~)
 }
 
 ///|
@@ -25,7 +29,7 @@ fn assert_points_close(
     fail("expected point count \{expected.length()} got \{actual.length()}")
   }
   for i in 0..<expected.length() {
-    assert_point_close(actual[i], expected[i], eps=eps)
+    assert_point_close(actual[i], expected[i], eps~)
   }
 }
 
@@ -52,10 +56,12 @@ test "route_polyline_to_bezier keeps unconstrained straight segments as degenera
     0.0,
   )
 
-  assert_eq(
-    bezier,
-    [point(0.0, 12.0), point(0.0, 12.0), point(0.0, 0.0), point(0.0, 0.0)],
-  )
+  assert_eq(bezier, [
+    point(0.0, 12.0),
+    point(0.0, 12.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+  ])
 }
 
 ///|
@@ -69,15 +75,12 @@ test "route_polyline_to_bezier honors a constrained head tangent on a straight s
     0.0,
   )
 
-  assert_points_close(
-    bezier,
-    [
-      point(0.0, 12.0),
-      point(0.0, 12.0),
-      point(0.0, 16.0 / 3.0),
-      point(0.0, 0.0),
-    ],
-  )
+  assert_points_close(bezier, [
+    point(0.0, 12.0),
+    point(0.0, 12.0),
+    point(0.0, 16.0 / 3.0),
+    point(0.0, 0.0),
+  ])
 }
 
 ///|
@@ -106,10 +109,12 @@ test "route_polyline_to_bezier matches Graphviz simple straight corridor fixture
     route_barriers=bezier_test_polygon_edges(polygon),
   )
 
-  assert_eq(
-    bezier,
-    [point(47.0, 107.0), point(47.0, 107.0), point(47.0, 27.0), point(47.0, 27.0)],
-  )
+  assert_eq(bezier, [
+    point(47.0, 107.0),
+    point(47.0, 107.0),
+    point(47.0, 27.0),
+    point(47.0, 27.0),
+  ])
 }
 
 ///|
@@ -146,15 +151,12 @@ test "route_polyline_to_bezier matches Graphviz long straight corridor fixture" 
     route_barriers=bezier_test_polygon_edges(polygon),
   )
 
-  assert_eq(
-    bezier,
-    [
-      point(824.0, 482.5),
-      point(824.0, 482.5),
-      point(824.0, 410.5),
-      point(824.0, 410.5),
-    ],
-  )
+  assert_eq(bezier, [
+    point(824.0, 482.5),
+    point(824.0, 482.5),
+    point(824.0, 410.5),
+    point(824.0, 410.5),
+  ])
 }
 
 ///|
@@ -419,7 +421,7 @@ test "route_polyline_to_bezier reproduces the barrier-aware bend fit from Graphv
     true,
     1.0,
     0.0,
-    route_barriers=route_barriers,
+    route_barriers~,
   )
 
   assert_points_close(
@@ -564,16 +566,13 @@ test "compact_polyline removes straight runs but preserves reversals" {
 
   let compacted = compact_polyline(points)
 
-  assert_eq(
-    compacted,
-    [
-      point(0.0, 0.0),
-      point(5.0, 0.0),
-      point(5.0, 6.0),
-      point(3.0, 6.0),
-      point(5.0, 6.0),
-    ],
-  )
+  assert_eq(compacted, [
+    point(0.0, 0.0),
+    point(5.0, 0.0),
+    point(5.0, 6.0),
+    point(3.0, 6.0),
+    point(5.0, 6.0),
+  ])
 }
 
 ///|
@@ -601,10 +600,7 @@ test "route_polyline_to_bezier matches Graphviz constrained vertical head tangen
     point(333.0, 590.5),
   ]
   let bezier = route_polyline_to_bezier(
-    [
-      point(408.0, 589.5),
-      point(256.8798828125, 502.5),
-    ],
+    [point(408.0, 589.5), point(256.8798828125, 502.5)],
     point(0.0, 0.0),
     point(0.0, -1.0),
     true,
@@ -628,10 +624,7 @@ test "route_polyline_to_bezier matches Graphviz constrained vertical head tangen
 ///|
 test "route_polyline_to_bezier matches Graphviz constrained horizontal head tangent" {
   let bezier = route_polyline_to_bezier(
-    [
-      point(79.0, 589.5),
-      point(208.02978515625, 483.5),
-    ],
+    [point(79.0, 589.5), point(208.02978515625, 483.5)],
     point(0.0, 0.0),
     point(1.0, 0.0),
     true,

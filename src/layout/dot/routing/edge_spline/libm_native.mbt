@@ -20,5 +20,4 @@ pub extern "C" fn libm_cos(x : Double) -> Double = "cos"
 pub extern "C" fn libm_sin(x : Double) -> Double = "sin"
 
 ///|
-pub extern "C" fn libm_fma(x : Double, y : Double, z : Double) -> Double =
-  "fma"
+pub extern "C" fn libm_fma(x : Double, y : Double, z : Double) -> Double = "fma"

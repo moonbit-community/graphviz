@@ -23,6 +23,7 @@ const PORT_SIDE_TOP : Int = 4
 ///|
 const PORT_SIDE_LEFT : Int = 8
 
+///|
 fn apply_parallel_offset(
   points : Array[@geom.Point],
   offset : Double,
@@ -41,7 +42,7 @@ fn apply_parallel_offset(
   out
 }
 
-
+///|
 pub fn edge_spline_for_polyline(
   edge : @cgraph.Edge,
   tail_clip_center : @geom.Point,
@@ -69,57 +70,47 @@ pub fn edge_spline_for_polyline(
     (tail_clip, head_clip)
   }
   let raw_points = if orthogonal {
-    match orthogonal_polyline_points_cardinal(
-      edge,
-      tail_clip_center,
-      head_clip_center,
-      rankdir,
-    ) {
+    match
+      orthogonal_polyline_points_cardinal(
+        edge, tail_clip_center, head_clip_center, rankdir,
+      ) {
       Some(points) => points
       None => orthogonal_polyline_points(tail, head, rankdir)
     }
   } else {
     [tail, head]
   }
-  let arrow_lengths =
-    if include_tail || include_head {
-      arrow_length_for_edge_oriented(
-        edge,
-        include_tail,
-        include_head,
-        arrow_len_override,
-        arrow_swapped,
-      )
-    } else {
-      { tail: 0.0, head: 0.0 }
-    }
-  let polyline = compact_polyline(raw_points)
-  let bezier_points =
-    if orthogonal {
-      polyline_to_bezier_make_polyline(compact_polyline(polyline))
-    } else {
-      polyline_to_bezier(compact_polyline(polyline))
-    }
-  let bezier = apply_parallel_offset(bezier_points, parallel_offset)
-  let clipped =
-    clip_spline_to_nodes(
-      edge,
-      bezier,
-      tail_clip_center,
-      tail_anchor_size,
-      head_clip_center,
-      head_anchor_size,
-      tail_clip_enabled_override=Some(tail_clip_enabled),
-      head_clip_enabled_override=Some(head_clip_enabled),
-      tail_cluster_bbox=tail_cluster_bbox,
-      head_cluster_bbox=head_cluster_bbox,
-      clip_swapped=clip_swapped,
+  let arrow_lengths = if include_tail || include_head {
+    arrow_length_for_edge_oriented(
+      edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
+  } else {
+    { tail: 0.0, head: 0.0 }
+  }
+  let polyline = compact_polyline(raw_points)
+  let bezier_points = if orthogonal {
+    polyline_to_bezier_make_polyline(compact_polyline(polyline))
+  } else {
+    polyline_to_bezier(compact_polyline(polyline))
+  }
+  let bezier = apply_parallel_offset(bezier_points, parallel_offset)
+  let clipped = clip_spline_to_nodes(
+    edge,
+    bezier,
+    tail_clip_center,
+    tail_anchor_size,
+    head_clip_center,
+    head_anchor_size,
+    tail_clip_enabled_override=Some(tail_clip_enabled),
+    head_clip_enabled_override=Some(head_clip_enabled),
+    tail_cluster_bbox~,
+    head_cluster_bbox~,
+    clip_swapped~,
+  )
   let trimmed = trim_degenerate_spline_segments(clipped)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let arrow_clipped =
-    if include_tail || include_head {
+  let arrow_clipped = if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
       arrow_lengths.tail,
@@ -127,19 +118,18 @@ pub fn edge_spline_for_polyline(
       include_tail,
       include_head,
       arrow_clip_eps,
-      orthogonal=orthogonal,
+      orthogonal~,
     )
   } else {
     { points: trimmed, start_point: None, end_point: None }
   }
-  let points =
-    adjust_tail_cluster_compound_segment(
-      arrow_clipped.points,
-      arrow_clipped.end_point,
-      include_tail,
-      include_head,
-      tail_cluster_bbox,
-    )
+  let points = adjust_tail_cluster_compound_segment(
+    arrow_clipped.points,
+    arrow_clipped.end_point,
+    include_tail,
+    include_head,
+    tail_cluster_bbox,
+  )
   { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points }
 }
 
@@ -173,50 +163,38 @@ pub fn edge_spline_for_points(
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let arrow_lengths =
-    if include_tail || include_head {
-      arrow_length_for_edge_oriented(
-        edge,
-        include_tail,
-        include_head,
-        arrow_len_override,
-        arrow_swapped,
-      )
-    } else {
-      { tail: 0.0, head: 0.0 }
-    }
-  let bezier =
-    apply_parallel_offset(
-      route_bezier_points(
-        points,
-        tail_slope,
-        head_slope,
-        force_segmented,
-        route_barriers,
-      ),
-      parallel_offset,
+  let arrow_lengths = if include_tail || include_head {
+    arrow_length_for_edge_oriented(
+      edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
-  let spline_points =
-    clip_spline_to_nodes(
-      edge,
-      bezier,
-      tail_clip_center,
-      tail_anchor_size,
-      head_clip_center,
-      head_anchor_size,
-      tail_clip_enabled_override=Some(tail_clip_enabled),
-      head_clip_enabled_override=Some(head_clip_enabled),
-      tail_port_side=tail_port_side,
-      head_port_side=head_port_side,
-      tail_cluster_bbox=tail_cluster_bbox,
-      head_cluster_bbox=head_cluster_bbox,
-      clip_swapped=clip_swapped,
-    )
+  } else {
+    { tail: 0.0, head: 0.0 }
+  }
+  let bezier = apply_parallel_offset(
+    route_bezier_points(
+      points, tail_slope, head_slope, force_segmented, route_barriers,
+    ),
+    parallel_offset,
+  )
+  let spline_points = clip_spline_to_nodes(
+    edge,
+    bezier,
+    tail_clip_center,
+    tail_anchor_size,
+    head_clip_center,
+    head_anchor_size,
+    tail_clip_enabled_override=Some(tail_clip_enabled),
+    head_clip_enabled_override=Some(head_clip_enabled),
+    tail_port_side~,
+    head_port_side~,
+    tail_cluster_bbox~,
+    head_cluster_bbox~,
+    clip_swapped~,
+  )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let arrow_clipped =
-    if include_tail || include_head {
+  let arrow_clipped = if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
       arrow_lengths.tail,
@@ -228,14 +206,13 @@ pub fn edge_spline_for_points(
   } else {
     { points: trimmed, start_point: None, end_point: None }
   }
-  let clipped =
-    adjust_tail_cluster_compound_segment(
-      arrow_clipped.points,
-      arrow_clipped.end_point,
-      include_tail,
-      include_head,
-      tail_cluster_bbox,
-    )
+  let clipped = adjust_tail_cluster_compound_segment(
+    arrow_clipped.points,
+    arrow_clipped.end_point,
+    include_tail,
+    include_head,
+    tail_cluster_bbox,
+  )
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -276,43 +253,35 @@ pub fn edge_spline_for_bezier_points(
   if bezier.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let arrow_lengths =
-    if include_tail || include_head {
-      arrow_length_for_edge_oriented(
-        edge,
-        include_tail,
-        include_head,
-        arrow_len_override,
-        arrow_swapped,
-      )
-    } else {
-      { tail: 0.0, head: 0.0 }
-    }
-  let bezier_points =
-    if parallel_offset != 0.0 {
+  let arrow_lengths = if include_tail || include_head {
+    arrow_length_for_edge_oriented(
+      edge, include_tail, include_head, arrow_len_override, arrow_swapped,
+    )
+  } else {
+    { tail: 0.0, head: 0.0 }
+  }
+  let bezier_points = if parallel_offset != 0.0 {
     apply_parallel_offset(bezier, parallel_offset)
   } else {
     bezier
   }
-  let spline_points =
-    clip_spline_to_nodes(
-      edge,
-      bezier_points,
-      tail_clip_center,
-      tail_anchor_size,
-      head_clip_center,
-      head_anchor_size,
-      tail_clip_enabled_override=Some(tail_clip_enabled),
-      head_clip_enabled_override=Some(head_clip_enabled),
-      tail_cluster_bbox=tail_cluster_bbox,
-      head_cluster_bbox=head_cluster_bbox,
-      clip_swapped=clip_swapped,
-    )
+  let spline_points = clip_spline_to_nodes(
+    edge,
+    bezier_points,
+    tail_clip_center,
+    tail_anchor_size,
+    head_clip_center,
+    head_anchor_size,
+    tail_clip_enabled_override=Some(tail_clip_enabled),
+    head_clip_enabled_override=Some(head_clip_enabled),
+    tail_cluster_bbox~,
+    head_cluster_bbox~,
+    clip_swapped~,
+  )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let arrow_clipped =
-    if include_tail || include_head {
+  let arrow_clipped = if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
       arrow_lengths.tail,
@@ -324,14 +293,13 @@ pub fn edge_spline_for_bezier_points(
   } else {
     { points: trimmed, start_point: None, end_point: None }
   }
-  let clipped =
-    adjust_tail_cluster_compound_segment(
-      arrow_clipped.points,
-      arrow_clipped.end_point,
-      include_tail,
-      include_head,
-      tail_cluster_bbox,
-    )
+  let clipped = adjust_tail_cluster_compound_segment(
+    arrow_clipped.points,
+    arrow_clipped.end_point,
+    include_tail,
+    include_head,
+    tail_cluster_bbox,
+  )
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -356,11 +324,7 @@ pub fn edge_spline_raw_for_points(
   route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
 ) -> Array[@geom.Point] {
   route_bezier_points(
-    points,
-    tail_slope,
-    head_slope,
-    force_segmented,
-    route_barriers,
+    points, tail_slope, head_slope, force_segmented, route_barriers,
   )
 }
 
@@ -379,16 +343,8 @@ pub fn edge_spline_raw_for_line(
   head_cluster_bbox~ : @geom.Rect?,
 ) -> Array[@geom.Point] {
   line_bezier_points(
-    tail_center,
-    head_center,
-    tail_slope,
-    head_slope,
-    rankdir,
-    curve_offset,
-    curve_skew,
-    tail_cluster_bbox,
-    head_cluster_bbox,
-    false,
+    tail_center, head_center, tail_slope, head_slope, rankdir, curve_offset, curve_skew,
+    tail_cluster_bbox, head_cluster_bbox, false,
   )
 }
 
@@ -418,31 +374,17 @@ pub fn edge_spline_for_line(
   clip_swapped? : Bool = false,
   arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
-  let arrow_lengths =
-    if include_tail || include_head {
-      arrow_length_for_edge_oriented(
-        edge,
-        include_tail,
-        include_head,
-        arrow_len_override,
-        arrow_swapped,
-      )
-    } else {
-      { tail: 0.0, head: 0.0 }
-    }
-  let mut points =
-    line_bezier_points(
-      tail_center,
-      head_center,
-      tail_slope,
-      head_slope,
-      rankdir,
-      curve_offset,
-      curve_skew,
-      tail_cluster_bbox,
-      head_cluster_bbox,
-      prefer_linear,
+  let arrow_lengths = if include_tail || include_head {
+    arrow_length_for_edge_oriented(
+      edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
+  } else {
+    { tail: 0.0, head: 0.0 }
+  }
+  let mut points = line_bezier_points(
+    tail_center, head_center, tail_slope, head_slope, rankdir, curve_offset, curve_skew,
+    tail_cluster_bbox, head_cluster_bbox, prefer_linear,
+  )
   let has_mid_label = match edge.get_attr("label") {
     Some(value) => value != ""
     None => false
@@ -454,47 +396,40 @@ pub fn edge_spline_for_line(
     points = linear_bezier(points[0], points[3])
   }
   points = apply_parallel_offset(points, parallel_offset)
-  points =
-    clip_spline_to_nodes(
-      edge,
-      points,
-      tail_clip_center,
-      tail_anchor_size,
-      head_clip_center,
-      head_anchor_size,
-      tail_clip_enabled_override=Some(tail_clip_enabled),
-      head_clip_enabled_override=Some(head_clip_enabled),
-      tail_cluster_bbox=tail_cluster_bbox,
-      head_cluster_bbox=head_cluster_bbox,
-      clip_swapped=clip_swapped,
-    )
+  points = clip_spline_to_nodes(
+    edge,
+    points,
+    tail_clip_center,
+    tail_anchor_size,
+    head_clip_center,
+    head_anchor_size,
+    tail_clip_enabled_override=Some(tail_clip_enabled),
+    head_clip_enabled_override=Some(head_clip_enabled),
+    tail_cluster_bbox~,
+    head_cluster_bbox~,
+    clip_swapped~,
+  )
   points = trim_degenerate_spline_segments(points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let arrow_clipped =
-    if include_tail || include_head {
-      clip_spline_arrows(
-        points,
-        arrow_lengths.tail,
-        arrow_lengths.head,
-        include_tail,
-        include_head,
-        arrow_clip_eps,
-      )
-    } else {
-      { points, start_point: None, end_point: None }
-    }
-  points =
-    adjust_tail_cluster_compound_segment(
-      arrow_clipped.points,
-      arrow_clipped.end_point,
+  let arrow_clipped = if include_tail || include_head {
+    clip_spline_arrows(
+      points,
+      arrow_lengths.tail,
+      arrow_lengths.head,
       include_tail,
       include_head,
-      tail_cluster_bbox,
+      arrow_clip_eps,
     )
-  {
-    start: arrow_clipped.start_point,
-    end: arrow_clipped.end_point,
-    points,
+  } else {
+    { points, start_point: None, end_point: None }
   }
+  points = adjust_tail_cluster_compound_segment(
+    arrow_clipped.points,
+    arrow_clipped.end_point,
+    include_tail,
+    include_head,
+    tail_cluster_bbox,
+  )
+  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points }
 }

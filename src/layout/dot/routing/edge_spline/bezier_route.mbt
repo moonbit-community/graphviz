@@ -1,7 +1,6 @@
 ///|
 /// Bezier route domain for edge splines: polyline normalization,
 /// route-to-bezier fitting, and line/polyline raw point generation.
-
 fn straight_bezier(
   tail : @geom.Point,
   head : @geom.Point,
@@ -10,25 +9,20 @@ fn straight_bezier(
 }
 
 ///|
-fn linear_bezier(
-  tail : @geom.Point,
-  head : @geom.Point,
-) -> Array[@geom.Point] {
+fn linear_bezier(tail : @geom.Point, head : @geom.Point) -> Array[@geom.Point] {
   let c1 = point_lerp(tail, head, 1.0 / 3.0)
   let c2 = point_lerp(tail, head, 2.0 / 3.0)
   [tail, c1, c2, head]
 }
 
+///|
 priv struct TailHeadPoints {
   tail : @geom.Point
   head : @geom.Point
 }
 
 ///|
-fn nudge_endpoints(
-  tail : @geom.Point,
-  head : @geom.Point,
-) -> TailHeadPoints {
+fn nudge_endpoints(tail : @geom.Point, head : @geom.Point) -> TailHeadPoints {
   if head.y < tail.y {
     { tail: point(tail.x, tail.y - 1.0), head: point(head.x, head.y + 1.0) }
   } else if head.y > tail.y {
@@ -143,9 +137,16 @@ fn compact_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
       let bcx = point.x - b.x
       let bcy = point.y - b.y
       let cross = abx * bcy - aby * bcx
-      let same_dir =
-        (abx * bcx >= 0.0 || Double::abs(abx) <= collinear_eps || Double::abs(bcx) <= collinear_eps) &&
-        (aby * bcy >= 0.0 || Double::abs(aby) <= collinear_eps || Double::abs(bcy) <= collinear_eps)
+      let same_dir = (
+          abx * bcx >= 0.0 ||
+          Double::abs(abx) <= collinear_eps ||
+          Double::abs(bcx) <= collinear_eps
+        ) &&
+        (
+          aby * bcy >= 0.0 ||
+          Double::abs(aby) <= collinear_eps ||
+          Double::abs(bcy) <= collinear_eps
+        )
       if Double::abs(cross) <= collinear_eps && same_dir {
         ignore(result.pop())
       }
@@ -190,7 +191,9 @@ pub fn polyline_length(points : Array[@geom.Point]) -> Double {
 }
 
 ///|
+
 ///|
+
 ///|
 fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
@@ -212,7 +215,9 @@ fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
 
 ///|
 /// Graphviz parity: make_polyline duplication in refs/graphviz/lib/pathplan/util.c.
-fn polyline_to_bezier_make_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
+fn polyline_to_bezier_make_polyline(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
   if points.length() < 2 {
     return out
@@ -239,6 +244,7 @@ fn point_dot(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
+
 ///|
 fn point_norm(a : @geom.Point) -> @geom.Point {
   let d = a.x * a.x + a.y * a.y
@@ -267,14 +273,7 @@ fn point_segment_distance(
     return point_dist(pt, a)
   }
   let t = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / (dx * dx + dy * dy)
-  let clamped =
-    if t < 0.0 {
-    0.0
-  } else if t > 1.0 {
-    1.0
-  } else {
-    t
-  }
+  let clamped = if t < 0.0 { 0.0 } else if t > 1.0 { 1.0 } else { t }
   let proj = point(a.x + dx * clamped, a.y + dy * clamped)
   point_dist(pt, proj)
 }
@@ -316,8 +315,7 @@ fn bezier_within_polyline(
     return true
   }
   let inpn = end - start
-  let samples =
-    if inpn <= 2 {
+  let samples = if inpn <= 2 {
     [0.25, 0.5, 0.75]
   } else if inpn <= 4 {
     [0.2, 0.4, 0.6, 0.8]
@@ -334,8 +332,11 @@ fn bezier_within_polyline(
 }
 
 ///|
+
 ///|
+
 ///|
+
 ///|
 fn bezier_b0(t : Double) -> Double {
   let tmp = 1.0 - t
@@ -575,8 +576,8 @@ fn spline_intersects_line(
       let tv = xroots[i]
       if tv >= 0.0 && tv <= 1.0 {
         points_to_coeff(p0.y, c1.y, c2.y, p3.y, scoeff)
-        let mut sv =
-          scoeff[0] + tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
+        let mut sv = scoeff[0] +
+          tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
         sv = (sv - ycoeff0) / ycoeff1
         if sv >= 0.0 && sv <= 1.0 {
           rootn = add_root(tv, roots, rootn)
@@ -604,8 +605,8 @@ fn spline_intersects_line(
     let tv = xroots[i]
     if tv >= 0.0 && tv <= 1.0 {
       points_to_coeff(p0.x, c1.x, c2.x, p3.x, scoeff)
-      let mut sv =
-        scoeff[0] + tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
+      let mut sv = scoeff[0] +
+        tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
       sv = (sv - xcoeff0) / xcoeff1
       if sv >= 0.0 && sv <= 1.0 {
         rootn = add_root(tv, roots, rootn)
@@ -748,14 +749,8 @@ fn route_spline_recursive_range(
     let mut a = 4.0
     let mut first = true
     while true {
-      let c1_try = point(
-        p0.x + (a * v0.x) / 3.0,
-        p0.y + (a * v0.y) / 3.0,
-      )
-      let c2_try = point(
-        p3.x - (a * v1.x) / 3.0,
-        p3.y - (a * v1.y) / 3.0,
-      )
+      let c1_try = point(p0.x + a * v0.x / 3.0, p0.y + a * v0.y / 3.0)
+      let c2_try = point(p3.x - a * v1.x / 3.0, p3.y - a * v1.y / 3.0)
       let control_len = polyline_length([p0, c1_try, c2_try, p3])
       if first && control_len < input_len - shortcut_eps {
         break
@@ -776,8 +771,7 @@ fn route_spline_recursive_range(
           return true
         }
         if !has_barriers {
-          let mut bounds_ok =
-            c1_try.x >= min_x - bound_eps &&
+          let mut bounds_ok = c1_try.x >= min_x - bound_eps &&
             c1_try.x <= max_x + bound_eps &&
             c1_try.y >= min_y - bound_eps &&
             c1_try.y <= max_y + bound_eps &&
@@ -793,14 +787,7 @@ fn route_spline_recursive_range(
             }
             if bounds_ok &&
               !bezier_within_polyline(
-                p0,
-                c1_try,
-                c2_try,
-                p3,
-                points,
-                start,
-                end,
-                bound_eps,
+                p0, c1_try, c2_try, p3, points, start, end, bound_eps,
               ) {
               bounds_ok = false
             }
@@ -862,31 +849,23 @@ fn route_spline_recursive_range(
   let splitv2 = point_norm(point_sub(points[split_idx + 1], points[split_idx]))
   let splitv = point_norm(point_add(splitv1, splitv2))
   if !route_spline_recursive_range(
-    points,
-    start,
-    split_idx + 1,
-    ev0,
-    splitv,
-    out,
-    allow_spline_fit,
-    min_len_ratio,
-    bound_eps,
-    route_barriers,
-  ) {
+      points,
+      start,
+      split_idx + 1,
+      ev0,
+      splitv,
+      out,
+      allow_spline_fit,
+      min_len_ratio,
+      bound_eps,
+      route_barriers,
+    ) {
     return false
   }
   if !route_spline_recursive_range(
-    points,
-    split_idx,
-    end,
-    splitv,
-    ev1,
-    out,
-    allow_spline_fit,
-    min_len_ratio,
-    bound_eps,
-    route_barriers,
-  ) {
+      points, split_idx, end, splitv, ev1, out, allow_spline_fit, min_len_ratio,
+      bound_eps, route_barriers,
+    ) {
     return false
   }
   true
@@ -916,6 +895,7 @@ fn route_spline_recursive(
     route_barriers,
   )
 }
+
 ///|
 fn route_polyline_to_bezier(
   points : Array[@geom.Point],
@@ -933,21 +913,14 @@ fn route_polyline_to_bezier(
   out.push(points[0])
   let ev0 = point_norm(start_slope)
   let ev1 = point_norm(end_slope)
-  let _ok =
-    route_spline_recursive(
-      points,
-      ev0,
-      ev1,
-      out,
-      allow_spline_fit,
-      min_len_ratio,
-      bound_eps,
-      route_barriers,
-    )
+  let _ok = route_spline_recursive(
+    points, ev0, ev1, out, allow_spline_fit, min_len_ratio, bound_eps, route_barriers,
+  )
   out
 }
 
 ///|
+
 ///|
 /// Graphviz parity: segmented route spline matches refs/graphviz/lib/pathplan/route.c + lib/dotgen/dotsplines.c straight_path joins.
 /// Do not change behavior without updating fixtures/tests.
@@ -959,14 +932,12 @@ fn route_bezier_points(
   route_barriers : Array[(@geom.Point, @geom.Point)],
 ) -> Array[@geom.Point] {
   let allow_spline_fit = !force_segmented
-  let tail_dir =
-    if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
+  let tail_dir = if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
     point(0.0, 0.0)
   } else {
     tail_slope
   }
-  let head_dir =
-    if head_slope.x == 0.0 && head_slope.y == 0.0 {
+  let head_dir = if head_slope.x == 0.0 && head_slope.y == 0.0 {
     point(0.0, 0.0)
   } else {
     head_slope
@@ -1042,16 +1013,15 @@ fn route_bezier_points(
         Some(dir) => dir
         None => head_dir
       }
-      let seg_bezier =
-        route_polyline_to_bezier(
-          seg,
-          seg_tail_dir,
-          seg_head_dir,
-          allow_spline_fit,
-          1.0,
-          0.0,
-          route_barriers=route_barriers,
-        )
+      let seg_bezier = route_polyline_to_bezier(
+        seg,
+        seg_tail_dir,
+        seg_head_dir,
+        allow_spline_fit,
+        1.0,
+        0.0,
+        route_barriers~,
+      )
       if seg_bezier.length() == 0 {
         continue
       }
@@ -1087,10 +1057,11 @@ fn route_bezier_points(
     allow_spline_fit,
     1.0,
     0.0,
-    route_barriers=route_barriers,
+    route_barriers~,
   )
 }
 
+///|
 fn line_bezier_points(
   tail_center : @geom.Point,
   head_center : @geom.Point,
@@ -1103,8 +1074,7 @@ fn line_bezier_points(
   head_cluster_bbox : @geom.Rect?,
   prefer_linear : Bool,
 ) -> Array[@geom.Point] {
-  let endpoint_base =
-    if point_dist(tail_center, head_center) <= 0.000001 {
+  let endpoint_base = if point_dist(tail_center, head_center) <= 0.000001 {
     nudge_endpoints(tail_center, head_center)
   } else {
     { tail: tail_center, head: head_center }
@@ -1121,52 +1091,60 @@ fn line_bezier_points(
       let inv = 1.0 / dist
       let perp_a = point(-dy * inv, dx * inv)
       let perp_b = point(dy * inv, -dx * inv)
-      let perp =
+      let perp = match rankdir {
+        RankDir::TB | RankDir::BT =>
+          if dx < 0.0 {
+            if perp_a.y >= perp_b.y {
+              perp_a
+            } else {
+              perp_b
+            }
+          } else if perp_a.y <= perp_b.y {
+            perp_a
+          } else {
+            perp_b
+          }
+        RankDir::LR | RankDir::RL =>
+          if dy < 0.0 {
+            if perp_a.x >= perp_b.x {
+              perp_a
+            } else {
+              perp_b
+            }
+          } else if perp_a.x <= perp_b.x {
+            perp_a
+          } else {
+            perp_b
+          }
+      }
+      let perp = if curve_skew != 1.0 {
         match rankdir {
           RankDir::TB | RankDir::BT => {
-            if dx < 0.0 {
-              if perp_a.y >= perp_b.y { perp_a } else { perp_b }
+            let adjusted = point(perp.x, perp.y * curve_skew)
+            let len = Double::sqrt(
+              adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+            )
+            if len <= 0.0 {
+              perp
             } else {
-              if perp_a.y <= perp_b.y { perp_a } else { perp_b }
+              point(adjusted.x / len, adjusted.y / len)
             }
           }
           RankDir::LR | RankDir::RL => {
-            if dy < 0.0 {
-              if perp_a.x >= perp_b.x { perp_a } else { perp_b }
+            let adjusted = point(perp.x * curve_skew, perp.y)
+            let len = Double::sqrt(
+              adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+            )
+            if len <= 0.0 {
+              perp
             } else {
-              if perp_a.x <= perp_b.x { perp_a } else { perp_b }
+              point(adjusted.x / len, adjusted.y / len)
             }
           }
         }
-      let perp =
-        if curve_skew != 1.0 {
-          match rankdir {
-            RankDir::TB | RankDir::BT => {
-              let adjusted = point(perp.x, perp.y * curve_skew)
-              let len = Double::sqrt(
-                adjusted.x * adjusted.x + adjusted.y * adjusted.y,
-              )
-              if len <= 0.0 {
-                perp
-              } else {
-                point(adjusted.x / len, adjusted.y / len)
-              }
-            }
-            RankDir::LR | RankDir::RL => {
-              let adjusted = point(perp.x * curve_skew, perp.y)
-              let len = Double::sqrt(
-                adjusted.x * adjusted.x + adjusted.y * adjusted.y,
-              )
-              if len <= 0.0 {
-                perp
-              } else {
-                point(adjusted.x / len, adjusted.y / len)
-              }
-            }
-          }
-        } else {
-          perp
-        }
+      } else {
+        perp
+      }
       let offset = point(perp.x * curve_offset, perp.y * curve_offset)
       let tail_shift = point_add(tail_seed, offset)
       let head_shift = point_add(head_seed, offset)
@@ -1175,22 +1153,20 @@ fn line_bezier_points(
   } else {
     // Graphviz parity: selected flat/invisible edges bypass route.c fitting and
     // keep linear control points.
-    let use_linear =
-      prefer_linear ||
+    let use_linear = prefer_linear ||
       tail_cluster_bbox is Some(_) ||
       head_cluster_bbox is Some(_)
     if use_linear {
       linear_bezier(tail_seed, head_seed)
     } else {
-      let spline =
-        route_polyline_to_bezier(
-          [tail_seed, head_seed],
-          tail_slope,
-          head_slope,
-          false,
-          1.0,
-          4.0,
-        )
+      let spline = route_polyline_to_bezier(
+        [tail_seed, head_seed],
+        tail_slope,
+        head_slope,
+        false,
+        1.0,
+        4.0,
+      )
       if spline.length() > 0 {
         spline
       } else {

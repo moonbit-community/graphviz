@@ -121,7 +121,7 @@ fn fma_round(mag : @bigint.BigInt, exp : Int, sign : Int) -> Double {
   let mut mant = if shift > 0 {
     round_bigint(mag, shift)
   } else if shift < 0 {
-    mag << (-shift)
+    mag << -shift
   } else {
     mag
   }
@@ -151,8 +151,8 @@ pub fn libm_fma(x : Double, y : Double, z : Double) -> Double {
   if tx.special || ty.special || tz.special {
     return x * y + z
   }
-  let prod_sig =
-    @bigint.BigInt::from_uint64(tx.sig) * @bigint.BigInt::from_uint64(ty.sig)
+  let prod_sig = @bigint.BigInt::from_uint64(tx.sig) *
+    @bigint.BigInt::from_uint64(ty.sig)
   let prod_exp = tx.exp + ty.exp
   let prod_sign = tx.sign * ty.sign
   let z_sig = @bigint.BigInt::from_uint64(tz.sig)

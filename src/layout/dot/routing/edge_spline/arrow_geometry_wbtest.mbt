@@ -2,10 +2,9 @@
 test "parse_arrow_flags handles defaults synonyms and invalid values" {
   assert_eq(parse_arrow_flags(None), [ARR_TYPE_NORM])
   assert_eq(parse_arrow_flags(Some("")), [ARR_TYPE_NORM])
-  assert_eq(
-    parse_arrow_flags(Some("invempty")),
-    [ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN],
-  )
+  assert_eq(parse_arrow_flags(Some("invempty")), [
+    ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN,
+  ])
   assert_eq(parse_arrow_flags(Some("crowtee")), [ARR_TYPE_CROW, ARR_TYPE_TEE])
   assert_eq(parse_arrow_flags(Some("l")), [ARR_TYPE_NORM | ARR_MOD_LEFT])
   assert_eq(parse_arrow_flags(Some("bogus")), [])

@@ -1,7 +1,6 @@
 ///|
 /// Arrow domain for edge splines: marker flag parsing, arrow polygons,
 /// and clip-length calculation.
-
 const ARROW_LENGTH : Double = 10.0
 
 ///|
@@ -253,8 +252,9 @@ fn arrow_type_crow0(
       let toe_base_left = point_add(point_sub(m, q), w)
       let toe_base_right = origin
       let toe_p = point_sub(v, u)
-      let toe_line_join_shape =
-        miter_shape(toe_base_left, toe_p, toe_base_right, penwidth)
+      let toe_line_join_shape = miter_shape(
+        toe_base_left, toe_p, toe_base_right, penwidth,
+      )
       let p1 = toe_line_join_shape.p1
       let dx = p1.x - toe_p.x
       let dy = p1.y - toe_p.y
@@ -390,9 +390,7 @@ fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
 
 ///|
 fn arrow_synonyms() -> Array[(String, Int)] {
-  [
-    ("invempty", ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN),
-  ]
+  [("invempty", ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN)]
 }
 
 ///|
@@ -450,24 +448,26 @@ fn arrow_match_name_frag(
 ///|
 fn arrow_match_shape(value : String, start : Int) -> ArrowMatchResult {
   let type_mask = (1 << BITS_PER_ARROW_TYPE) - 1
-  let syn_match =
-    arrow_match_name_frag(value, start, arrow_synonyms(), ARR_TYPE_NONE)
+  let syn_match = arrow_match_name_frag(
+    value,
+    start,
+    arrow_synonyms(),
+    ARR_TYPE_NONE,
+  )
   if syn_match.next != start {
     return syn_match
   }
   let mut rest = start
   let mut flag = ARR_TYPE_NONE
   while true {
-    let next_match =
-      arrow_match_name_frag(value, rest, arrow_mods(), flag)
+    let next_match = arrow_match_name_frag(value, rest, arrow_mods(), flag)
     if next_match.next == rest {
       break
     }
     rest = next_match.next
     flag = next_match.flag
   }
-  let name_match =
-    arrow_match_name_frag(value, rest, arrow_names(), flag)
+  let name_match = arrow_match_name_frag(value, rest, arrow_names(), flag)
   flag = name_match.flag
   rest = name_match.next
   if flag != ARR_TYPE_NONE && (flag & type_mask) == 0 {
@@ -498,7 +498,9 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
     if flag == ARR_TYPE_GAP && flags.length() == NUMB_OF_ARROW_HEADS - 1 {
       flag = ARR_TYPE_NONE
     }
-    if flag == ARR_TYPE_GAP && flags.length() == 0 && matched.next >= text.length() {
+    if flag == ARR_TYPE_GAP &&
+      flags.length() == 0 &&
+      matched.next >= text.length() {
       flag = ARR_TYPE_NONE
     }
     if flag != ARR_TYPE_NONE {
@@ -531,13 +533,13 @@ fn arrow_length_tee(
   ignore(flag)
   let nominal_length = lenfact * arrowsize * ARROW_LENGTH
   let mut length = nominal_length
-  let polygon_extend_over_polyline_at_start =
-    penwidth / 2.0 - (1.0 - 0.6) * nominal_length
+  let polygon_extend_over_polyline_at_start = penwidth / 2.0 -
+    (1.0 - 0.6) * nominal_length
   if polygon_extend_over_polyline_at_start > 0.0 {
     length = length + polygon_extend_over_polyline_at_start
   }
-  let polygon_extend_over_polyline_at_end =
-    penwidth / 2.0 - 0.2 * nominal_length
+  let polygon_extend_over_polyline_at_end = penwidth / 2.0 -
+    0.2 * nominal_length
   if polygon_extend_over_polyline_at_start > 0.0 {
     length = length + polygon_extend_over_polyline_at_end
   }
@@ -572,8 +574,7 @@ fn arrow_length_diamond(
   let nominal_length = Double::abs(base1.x - tip.x)
   let nominal_base_width = base2.y - base1.y
   let full_base_width = nominal_base_width * full_length / nominal_length
-  let length_where_width_is_penwidth =
-    full_length * penwidth / full_base_width
+  let length_where_width_is_penwidth = full_length * penwidth / full_base_width
   let overlap_at_tip = length_where_width_is_penwidth
   let overlap = overlap_at_tip
   2.0 * full_length - overlap
@@ -619,11 +620,13 @@ fn arrow_length_crow(
   let full_length_without_shaft = full_length - (base1.x - shaft1.x)
   let nominal_length = Double::abs(base1.x - tip.x)
   let nominal_base_width = base2.y - base1.y
-  let full_base_width =
-    nominal_base_width * full_length_without_shaft / nominal_length
+  let full_base_width = nominal_base_width *
+    full_length_without_shaft /
+    nominal_length
   let overlap_at_base = penwidth / 2.0
-  let length_where_width_is_penwidth =
-    full_length_without_shaft * penwidth / full_base_width
+  let length_where_width_is_penwidth = full_length_without_shaft *
+    penwidth /
+    full_base_width
   let overlap_at_tip = length_where_width_is_penwidth
   let overlap = if (flag & ARR_MOD_INV) != 0 {
     overlap_at_base
@@ -694,16 +697,12 @@ fn arrow_length_for_attr(
 ///|
 fn arrow_len_with_override(base : Double, override_len : Double?) -> Double {
   match override_len {
-    Some(value) =>
-      if value > 0.0 && value < base {
-      value
-    } else {
-      base
-    }
+    Some(value) => if value > 0.0 && value < base { value } else { base }
     None => base
   }
 }
 
+///|
 pub struct ArrowLengthPair {
   tail : Double
   head : Double
@@ -718,24 +717,22 @@ pub fn arrow_length_for_edge(
   include_head : Bool,
   arrow_len_override : Double?,
 ) -> ArrowLengthPair {
-  let tail_len =
-    if include_tail {
-      arrow_len_with_override(
-        arrow_length_for_attr(edge, "arrowtail", [ARR_TYPE_NORM]),
-        arrow_len_override,
-      )
-    } else {
-      0.0
-    }
-  let head_len =
-    if include_head {
-      arrow_len_with_override(
-        arrow_length_for_attr(edge, "arrowhead", [ARR_TYPE_NORM]),
-        arrow_len_override,
-      )
-    } else {
-      0.0
-    }
+  let tail_len = if include_tail {
+    arrow_len_with_override(
+      arrow_length_for_attr(edge, "arrowtail", [ARR_TYPE_NORM]),
+      arrow_len_override,
+    )
+  } else {
+    0.0
+  }
+  let head_len = if include_head {
+    arrow_len_with_override(
+      arrow_length_for_attr(edge, "arrowhead", [ARR_TYPE_NORM]),
+      arrow_len_override,
+    )
+  } else {
+    0.0
+  }
   { tail: tail_len, head: head_len }
 }
 
@@ -751,29 +748,24 @@ fn arrow_length_for_edge_oriented(
 ) -> ArrowLengthPair {
   if !swapped {
     return arrow_length_for_edge(
-      edge,
-      include_tail,
-      include_head,
-      arrow_len_override,
+      edge, include_tail, include_head, arrow_len_override,
     )
   }
-  let tail_len =
-    if include_tail {
-      arrow_len_with_override(
-        arrow_length_for_attr(edge, "arrowhead", [ARR_TYPE_NORM]),
-        arrow_len_override,
-      )
-    } else {
-      0.0
-    }
-  let head_len =
-    if include_head {
-      arrow_len_with_override(
-        arrow_length_for_attr(edge, "arrowtail", [ARR_TYPE_NORM]),
-        arrow_len_override,
-      )
-    } else {
-      0.0
-    }
+  let tail_len = if include_tail {
+    arrow_len_with_override(
+      arrow_length_for_attr(edge, "arrowhead", [ARR_TYPE_NORM]),
+      arrow_len_override,
+    )
+  } else {
+    0.0
+  }
+  let head_len = if include_head {
+    arrow_len_with_override(
+      arrow_length_for_attr(edge, "arrowtail", [ARR_TYPE_NORM]),
+      arrow_len_override,
+    )
+  } else {
+    0.0
+  }
   { tail: tail_len, head: head_len }
 }

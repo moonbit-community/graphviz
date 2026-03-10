@@ -1,7 +1,6 @@
 ///|
 /// Arrow spline clipping owner: trim degenerate Bezier segments and clip
 /// spline endpoints so installed arrow markers do not overlap the curve.
-
 fn approx_eq_point(a : @geom.Point, b : @geom.Point, eps : Double) -> Bool {
   Double::abs(a.x - b.x) <= eps && Double::abs(a.y - b.y) <= eps
 }
@@ -18,7 +17,7 @@ fn trim_degenerate_spline_segments(
   let mut start = 0
   let mut end = points.length() - 4
   while start < points.length() - 4 &&
-    approx_eq_point(points[start], points[start + 3], MILLIPOINT) {
+        approx_eq_point(points[start], points[start + 3], MILLIPOINT) {
     start += 3
   }
   while end > 0 && approx_eq_point(points[end], points[end + 3], MILLIPOINT) {
@@ -40,12 +39,14 @@ fn trim_degenerate_spline_segments(
   out
 }
 
+///|
 priv struct SegmentClipResult {
   points : Array[@geom.Point]
   idx : Int
   anchor : @geom.Point
 }
 
+///|
 priv struct SplineArrowClipResult {
   points : Array[@geom.Point]
   start_point : @geom.Point?
@@ -213,11 +214,7 @@ fn clip_spline_arrows(
 ) -> SplineArrowClipResult {
   if orthogonal {
     return clip_spline_arrows_ortho(
-      points,
-      tail_len,
-      head_len,
-      include_tail,
-      include_head,
+      points, tail_len, head_len, include_tail, include_head,
     )
   }
   let mut out = points
@@ -226,15 +223,17 @@ fn clip_spline_arrows(
   let mut start_point : @geom.Point? = None
   let mut end_point : @geom.Point? = None
   if include_tail {
-    let start_clip =
-      arrow_clip_start_segment(out, tail_len, eps, start_idx, end_idx)
+    let start_clip = arrow_clip_start_segment(
+      out, tail_len, eps, start_idx, end_idx,
+    )
     out = start_clip.points
     start_idx = start_clip.idx
     start_point = Some(start_clip.anchor)
   }
   if include_head {
-    let end_clip =
-      arrow_clip_end_segment(out, head_len, eps, start_idx, end_idx)
+    let end_clip = arrow_clip_end_segment(
+      out, head_len, eps, start_idx, end_idx,
+    )
     out = end_clip.points
     end_idx = end_clip.idx
     end_point = Some(end_clip.anchor)
@@ -270,8 +269,12 @@ fn arrow_end_clip(
   }
   let sp = [end_point, points[2], points[1], points[0]]
   let len2 = arrow_len * arrow_len
-  let clipped =
-    bezier_clip_eps(sp, p => point_dist2(p, end_point) <= len2, true, eps)
+  let clipped = bezier_clip_eps(
+    sp,
+    p => point_dist2(p, end_point) <= len2,
+    true,
+    eps,
+  )
   let new_points : Array[@geom.Point] = [
     clipped[3],
     clipped[2],
@@ -293,8 +296,12 @@ fn arrow_start_clip(
   }
   let sp = [points[3], points[2], points[1], start_point]
   let len2 = arrow_len * arrow_len
-  let clipped =
-    bezier_clip_eps(sp, p => point_dist2(p, start_point) <= len2, false, eps)
+  let clipped = bezier_clip_eps(
+    sp,
+    p => point_dist2(p, start_point) <= len2,
+    false,
+    eps,
+  )
   let new_points : Array[@geom.Point] = [
     clipped[3],
     clipped[2],

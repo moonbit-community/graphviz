@@ -1,7 +1,6 @@
 ///|
 /// Anchor geometry domain for edge splines: compass vectors, exposed port
 /// sides, and endpoint slope resolution for routed splines.
-
 fn compass_angle(compass : @cgraph.Compass) -> Double? {
   match compass {
     @cgraph.Compass::N => Some(@math.PI * 0.5)
@@ -22,7 +21,7 @@ fn invflip_angle(angle : Double, rankdir : RankDir) -> Double {
     RankDir::TB => angle
     RankDir::BT => -angle
     RankDir::LR => angle - @math.PI * 0.5
-    RankDir::RL => {
+    RankDir::RL =>
       if angle == @math.PI {
         -@math.PI * 0.5
       } else if angle == @math.PI * 0.75 {
@@ -38,7 +37,6 @@ fn invflip_angle(angle : Double, rankdir : RankDir) -> Double {
       } else {
         angle
       }
-    }
   }
 }
 
@@ -69,10 +67,7 @@ fn axis_direction(dir : @geom.Point) -> @geom.Point {
 }
 
 ///|
-fn rotate_dir_for_rankdir(
-  dir : @geom.Point,
-  rankdir : RankDir,
-) -> @geom.Point {
+fn rotate_dir_for_rankdir(dir : @geom.Point, rankdir : RankDir) -> @geom.Point {
   match rankdir {
     RankDir::TB => dir
     RankDir::BT => point(dir.x, -dir.y)
@@ -92,11 +87,7 @@ fn port_side_direction(
 ) -> @geom.Point? {
   let mid_x = (port_rect.llx + port_rect.urx) / 2.0
   let mid_y = (port_rect.lly + port_rect.ury) / 2.0
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
-  } else {
-    0.01
-  }
+  let eps = if RECORD_BORDER_PT > 0.01 { RECORD_BORDER_PT + 0.01 } else { 0.01 }
   let node_rect = port_side_rect(node_pos, node_size)
   let candidates : Array[(@geom.Point, @geom.Point)] = []
   if Double::abs(port_rect.llx - node_rect.llx) <= eps {
@@ -130,7 +121,11 @@ fn port_side_direction(
       seen = true
     }
   }
-  if seen { Some(best_dir) } else { None }
+  if seen {
+    Some(best_dir)
+  } else {
+    None
+  }
 }
 
 ///|
@@ -154,11 +149,7 @@ pub fn port_side_count(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> Int {
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
-  } else {
-    0.01
-  }
+  let eps = if RECORD_BORDER_PT > 0.01 { RECORD_BORDER_PT + 0.01 } else { 0.01 }
   let node_rect = port_side_rect(node_pos, node_size)
   let mut count = 0
   if Double::abs(port_rect.llx - node_rect.llx) <= eps {
@@ -177,6 +168,7 @@ pub fn port_side_count(
 }
 
 ///|
+
 ///|
 pub fn endpoint_slope_for_anchor(
   port : @cgraph.Port?,
@@ -217,14 +209,10 @@ pub fn endpoint_slope_for_anchor(
           }
           match port_rect {
             Some(rect) =>
-              match port_side_direction(
-                rect,
-                anchor,
-                node_pos,
-                node_size,
-                target,
-                rankdir,
-              ) {
+              match
+                port_side_direction(
+                  rect, anchor, node_pos, node_size, target, rankdir,
+                ) {
                 Some(dir) =>
                   return if tail { dir } else { point(-dir.x, -dir.y) }
                 None => {
@@ -257,7 +245,11 @@ pub fn endpoint_slope_for_anchor(
           } else {
             dir = axis_direction(point_sub(target, anchor))
           }
-          if tail { dir } else { point(-dir.x, -dir.y) }
+          if tail {
+            dir
+          } else {
+            point(-dir.x, -dir.y)
+          }
         }
       }
     None => point(0.0, 0.0)

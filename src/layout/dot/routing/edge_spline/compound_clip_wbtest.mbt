@@ -1,5 +1,9 @@
 ///|
-fn assert_bbox_close(actual : Double, expected : Double, eps? : Double = 0.000001) -> Unit raise {
+fn assert_bbox_close(
+  actual : Double,
+  expected : Double,
+  eps? : Double = 0.000001,
+) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
   }
@@ -11,8 +15,8 @@ fn assert_bbox_point_close(
   expected : @geom.Point,
   eps? : Double = 0.000001,
 ) -> Unit raise {
-  assert_bbox_close(actual.x, expected.x, eps=eps)
-  assert_bbox_close(actual.y, expected.y, eps=eps)
+  assert_bbox_close(actual.x, expected.x, eps~)
+  assert_bbox_close(actual.y, expected.y, eps~)
 }
 
 ///|

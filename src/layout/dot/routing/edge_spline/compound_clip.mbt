@@ -1,7 +1,6 @@
 ///|
 /// Compound and bbox clipping owner for edge splines: intersect Bezier
 /// segments with cluster boxes and adjust short compound exits.
-
 fn cmp_double(a : Double, b : Double) -> Int {
   if a < b {
     -1
@@ -19,7 +18,7 @@ fn count_vert_cross(points : Array[@geom.Point], xcoord : Double) -> Int {
   if sign == 0 {
     crossings = crossings + 1
   }
-  for i in 1..=3 {
+  for i in 1..<=3 {
     let old_sign = sign
     sign = cmp_double(points[i].x, xcoord)
     if sign != old_sign && old_sign != 0 {
@@ -36,7 +35,7 @@ fn count_horz_cross(points : Array[@geom.Point], ycoord : Double) -> Int {
   if sign == 0 {
     crossings = crossings + 1
   }
-  for i in 1..=3 {
+  for i in 1..<=3 {
     let old_sign = sign
     sign = cmp_double(points[i].y, ycoord)
     if sign != old_sign && old_sign != 0 {
@@ -194,8 +193,10 @@ fn clip_spline_start_to_bbox(
 
 ///|
 fn point_in_rect(point : @geom.Point, rect : @geom.Rect) -> Bool {
-  point.x >= rect.llx && point.x <= rect.urx &&
-  point.y >= rect.lly && point.y <= rect.ury
+  point.x >= rect.llx &&
+  point.x <= rect.urx &&
+  point.y >= rect.lly &&
+  point.y <= rect.ury
 }
 
 ///|
@@ -204,53 +205,41 @@ fn line_rect_intersection_from_inside(
   outside : @geom.Point,
   rect : @geom.Rect,
 ) -> @geom.Point {
-  let c_round =
-    (value : Double) =>
-      if value >= 0.0 {
-        (value + 0.5).floor()
-      } else {
-        (value - 0.5).ceil()
-      }
+  let c_round = (value : Double) => {
+    if value >= 0.0 {
+      (value + 0.5).floor()
+    } else {
+      (value - 0.5).ceil()
+    }
+  }
   if outside.x < rect.llx {
     let x = rect.llx
-    let y =
-      inside.y +
-      c_round(
-        (x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x),
-      )
+    let y = inside.y +
+      c_round((x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x))
     if y >= rect.lly && y <= rect.ury {
       return @geom.Point::{ x, y }
     }
   }
   if outside.x > rect.urx {
     let x = rect.urx
-    let y =
-      inside.y +
-      c_round(
-        (x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x),
-      )
+    let y = inside.y +
+      c_round((x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x))
     if y >= rect.lly && y <= rect.ury {
       return @geom.Point::{ x, y }
     }
   }
   if outside.y < rect.lly {
     let y = rect.lly
-    let x =
-      inside.x +
-      c_round(
-        (y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y),
-      )
+    let x = inside.x +
+      c_round((y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y))
     if x >= rect.llx && x <= rect.urx {
       return @geom.Point::{ x, y }
     }
   }
   if outside.y > rect.ury {
     let y = rect.ury
-    let x =
-      inside.x +
-      c_round(
-        (y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y),
-      )
+    let x = inside.x +
+      c_round((y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y))
     if x >= rect.llx && x <= rect.urx {
       return @geom.Point::{ x, y }
     }
@@ -287,24 +276,13 @@ fn adjust_tail_cluster_compound_segment(
   if point_dist(p0, p3) > 7.0 {
     return points
   }
-  let p =
-    if point_in_rect(p3, tail_rect) {
-      line_rect_intersection_from_inside(p3, ep, tail_rect)
-    } else {
-      p0
-    }
-  let c2 : @geom.Point = {
-    x: (p.x + ep.x) / 2.0,
-    y: (p.y + ep.y) / 2.0,
+  let p = if point_in_rect(p3, tail_rect) {
+    line_rect_intersection_from_inside(p3, ep, tail_rect)
+  } else {
+    p0
   }
-  let c3 : @geom.Point = {
-    x: (c2.x + ep.x) / 2.0,
-    y: (c2.y + ep.y) / 2.0,
-  }
-  let c1 : @geom.Point = {
-    x: (c2.x + p.x) / 2.0,
-    y: (c2.y + p.y) / 2.0,
-  }
+  let c2 : @geom.Point = { x: (p.x + ep.x) / 2.0, y: (p.y + ep.y) / 2.0 }
+  let c3 : @geom.Point = { x: (c2.x + ep.x) / 2.0, y: (c2.y + ep.y) / 2.0 }
+  let c1 : @geom.Point = { x: (c2.x + p.x) / 2.0, y: (c2.y + p.y) / 2.0 }
   [p, c1, c2, c3]
 }
-

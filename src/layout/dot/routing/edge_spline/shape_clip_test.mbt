@@ -5,23 +5,21 @@ test "compass_port_point_on_shape clips box compass anchors" {
   box.set_attr("shape", "box")
   box.set_attr("penwidth", "0")
 
-  let east_anchor =
-    compass_port_point_on_shape(
-      box,
-      point(0.0, 0.0),
-      @node_primitives.node_size_from_points(100.0, 60.0),
-      @cgraph.Compass::E,
-      @rankdir.RankDir::TB,
-    )
+  let east_anchor = compass_port_point_on_shape(
+    box,
+    point(0.0, 0.0),
+    @node_primitives.node_size_from_points(100.0, 60.0),
+    @cgraph.Compass::E,
+    @rankdir.RankDir::TB,
+  )
   assert_eq(east_anchor, point(50.0, 0.0))
 
-  let north_anchor =
-    compass_port_point_on_shape(
-      box,
-      point(0.0, 0.0),
-      @node_primitives.node_size_from_points(100.0, 60.0),
-      @cgraph.Compass::N,
-      @rankdir.RankDir::TB,
-    )
+  let north_anchor = compass_port_point_on_shape(
+    box,
+    point(0.0, 0.0),
+    @node_primitives.node_size_from_points(100.0, 60.0),
+    @cgraph.Compass::N,
+    @rankdir.RankDir::TB,
+  )
   assert_eq(north_anchor, point(0.0, 30.0))
 }

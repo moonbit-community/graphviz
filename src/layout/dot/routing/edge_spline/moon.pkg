@@ -1,0 +1,18 @@
+import {
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/math",
+  "moonbitlang/core/bigint",
+  "moonbit-community/graphviz/layout/dot/edge_identity",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/numeric",
+}
+
+options(
+  targets: {
+    "libm_native.mbt": [ "native" ],
+    "libm_non_native.mbt": [ "not", "native" ],
+  },
+)

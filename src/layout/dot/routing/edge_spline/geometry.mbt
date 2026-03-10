@@ -14,7 +14,6 @@ const MILLIPOINT : Double = 0.001
 ///|
 const ARROW_CLIP_EPS : Double = 0.5
 
-
 ///|
 priv struct Triangle {
   p0 : @geom.Point
@@ -50,6 +49,7 @@ pub fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
+
 ///|
 priv struct BezierSplitResult {
   point : @geom.Point
@@ -58,17 +58,16 @@ priv struct BezierSplitResult {
 }
 
 ///|
+
 ///|
 pub fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   point_add(a, point_scale(point_sub(b, a), t))
 }
 
 ///|
+
 ///|
-fn bezier_split(
-  points : Array[@geom.Point],
-  t : Double,
-) -> BezierSplitResult {
+fn bezier_split(points : Array[@geom.Point], t : Double) -> BezierSplitResult {
   let p0 = points[0]
   let p1 = points[1]
   let p2 = points[2]
