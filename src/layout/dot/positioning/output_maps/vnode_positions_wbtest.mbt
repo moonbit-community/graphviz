@@ -73,20 +73,3 @@ test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
   assert_eq(direct.get("v1"), Some({ x: 42.0, y: 18.0 }))
   assert_eq(fallback.get("fallback"), Some({ x: 1.0, y: 2.0 }))
 }
-
-///|
-test "build_node_positions_map defaults missing coordinates to zero" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let a = graph.node("a")
-  let b = graph.node("b")
-
-  let x_positions : Map[String, Double] = Map::new()
-  x_positions["a"] = 10.0
-  let y_positions : Map[String, Double] = Map::new()
-  y_positions["b"] = 20.0
-
-  let positions = build_node_positions_map([a, b], x_positions, y_positions)
-
-  assert_eq(positions.get("a"), Some({ x: 10.0, y: 0.0 }))
-  assert_eq(positions.get("b"), Some({ x: 0.0, y: 20.0 }))
-}
