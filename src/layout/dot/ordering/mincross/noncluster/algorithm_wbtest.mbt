@@ -92,3 +92,28 @@ test "build_noncluster_graphviz_neighbors preserves parallel edges and ignores t
   assert_eq(neighbors.in_neighbors.get("c"), Some(["a", "a", "b"]))
   assert_eq(neighbors.in_neighbors.get("a"), Some([]))
 }
+
+///|
+test "build_noncluster_graphviz_neighbors trusts in-range edge_head snapshots and only falls back to live edge heads out of range" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let c = graph.node("c")
+  let ab = graph.edge(a, b)
+  let ac = graph.edge(a, c)
+
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  edge_out_order["a"] = [0, 1]
+
+  let neighbors = build_noncluster_graphviz_neighbors(
+    [a, b, c],
+    [ab, ac],
+    ["shadow_head"],
+    edge_out_order,
+  )
+
+  assert_eq(neighbors.out_neighbors.get("a"), Some(["shadow_head", "c"]))
+  assert_eq(neighbors.in_neighbors.get("shadow_head"), Some(["a"]))
+  assert_eq(neighbors.in_neighbors.get("c"), Some(["a"]))
+  assert_eq(neighbors.in_neighbors.get("b"), Some([]))
+}
