@@ -359,3 +359,253 @@ fn run_mincross_case_with_name_order(
   }
   assert_rank_groups(input.case_id, input.graph, actual, output.ranks)
 }
+
+///|
+fn run_fixed_rank_reorder_case(
+  input : MincrossInput,
+  output : MincrossOutput,
+) -> Unit raise {
+  let graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    name=input.graph,
+    strict=false,
+  )
+  let id_to_name : Map[Int, String] = Map::new()
+  let name_to_id : Map[String, Int] = Map::new()
+  let name_to_rank : Map[String, Int] = Map::new()
+  let name_to_node : Map[String, @cgraph.Node] = Map::new()
+  let name_to_order : Map[String, Int] = Map::new()
+  let sizes : Map[String, NodeSize] = Map::new()
+  let nodes : Array[@cgraph.Node] = []
+  let default_size = @node_primitives.node_size_from_points(
+    @node_primitives.default_node_width_in() * 72.0,
+    @node_primitives.default_node_height_in() * 72.0,
+  )
+
+  for node in input.nodes {
+    let name = node_key(node.id)
+    id_to_name[node.id] = name
+    name_to_id[name] = node.id
+    name_to_rank[name] = node.rank
+    name_to_order[name] = node.order
+    let cnode = graph.node(name)
+    name_to_node[name] = cnode
+    nodes.push(cnode)
+    sizes[name] = default_size
+  }
+
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for node in input.nodes {
+    let name = node_key(node.id)
+    let out_names : Array[String] = []
+    for neighbor_id in node.out_neighbors {
+      match id_to_name.get(neighbor_id) {
+        Some(value) => out_names.push(value)
+        None =>
+          fail("case \{input.case_id} missing out neighbor id \{neighbor_id}")
+      }
+    }
+    let in_names : Array[String] = []
+    for neighbor_id in node.in_neighbors {
+      match id_to_name.get(neighbor_id) {
+        Some(value) => in_names.push(value)
+        None =>
+          fail("case \{input.case_id} missing in neighbor id \{neighbor_id}")
+      }
+    }
+    graphviz_out_neighbors[name] = out_names
+    graphviz_in_neighbors[name] = in_names
+  }
+
+  let edges : Array[@cgraph.Edge] = []
+  let edge_tail : Array[String] = []
+  let edge_head : Array[String] = []
+  let edge_tail_port_x : Array[Double] = []
+  let edge_head_port_x : Array[Double] = []
+  let edge_tail_port_order : Array[Double] = []
+  let edge_head_port_order : Array[Double] = []
+  for edge in input.edges {
+    let tail_name = match id_to_name.get(edge.tail) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing tail id \{edge.tail}")
+    }
+    let head_name = match id_to_name.get(edge.head) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing head id \{edge.head}")
+    }
+    let tail_node = match name_to_node.get(tail_name) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing tail node \{tail_name}")
+    }
+    let head_node = match name_to_node.get(head_name) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing head node \{head_name}")
+    }
+    let edge_obj = graph.edge(tail_node, head_node)
+    edge_obj.set_attr("xpenalty", "\{edge.xpenalty}")
+    edges.push(edge_obj)
+    edge_tail.push(tail_name)
+    edge_head.push(head_name)
+    edge_tail_port_x.push(edge.tail_port_x)
+    edge_head_port_x.push(edge.head_port_x)
+    edge_tail_port_order.push(edge.tail_port_order)
+    edge_head_port_order.push(edge.head_port_order)
+  }
+
+  let rank_keys : Array[Int] = []
+  for rank in input.minrank..<=input.maxrank {
+    rank_keys.push(rank)
+  }
+  let groups : Map[Int, Array[String]] = Map::new()
+  let mut rank = input.minrank
+  for rank_nodes in input.ranks {
+    let names : Array[String] = []
+    for node_id in rank_nodes {
+      match id_to_name.get(node_id) {
+        Some(value) => names.push(value)
+        None => fail("case \{input.case_id} missing node id \{node_id}")
+      }
+    }
+    groups[rank] = names
+    rank = rank + 1
+  }
+
+  let edge_index_data = @order_graph.build_edge_index_for_order(
+    nodes, edges, edge_tail, edge_head, name_to_rank,
+  )
+  let edge_order = @order_graph.collect_edge_order(edges)
+  let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
+  let ordered = reorder_rank_groups(
+    rank_keys,
+    groups,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    edge_index_data.parents,
+    edge_index_data.children,
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    edge_order,
+    name_to_order,
+    sizes,
+    nodesep_pt,
+    false,
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    graphviz_out_neighbors~,
+    graphviz_in_neighbors~,
+    graphviz_flip=input.flip,
+    coalesce_parallel_edges=input.startpass > 1,
+    startpass=input.startpass,
+  )
+
+  let actual : Array[Array[Int]] = []
+  for rank_key in rank_keys {
+    let names = match ordered.get(rank_key) {
+      Some(list) => list
+      None => []
+    }
+    let ids : Array[Int] = []
+    for name in names {
+      match name_to_id.get(name) {
+        Some(value) => ids.push(value)
+        None => fail("case \{input.case_id} missing name \{name}")
+      }
+    }
+    actual.push(ids)
+  }
+
+  assert_eq(actual, output.ranks)
+}
+
+///|
+/// Exact integrated reorder cases sometimes need Graphviz neighbor-list order
+/// that differs from raw edge sequence. Keep those overrides explicit so the
+/// test data only carries the non-derivable signal.
+fn build_exact_layered_rank_reorder_case(
+  case_id : Int,
+  graph : String,
+  startpass : Int,
+  flip : Bool,
+  minrank : Int,
+  input_ranks : Array[Array[Int]],
+  output_ranks : Array[Array[Int]],
+  node_names : Array[String?],
+  node_clusters : Array[String?],
+  node_cluster_skeleton : Array[Bool],
+  edges : Array[MincrossEdge],
+  out_neighbor_overrides : Map[Int, Array[Int]],
+  in_neighbor_overrides : Map[Int, Array[Int]],
+) -> (MincrossInput, MincrossOutput) {
+  let out_neighbors : Map[Int, Array[Int]] = Map::new()
+  let in_neighbors : Map[Int, Array[Int]] = Map::new()
+  let node_rank_by_id : Map[Int, Int] = Map::new()
+  let node_order_by_id : Map[Int, Int] = Map::new()
+  for rank_offset, rank_nodes in input_ranks {
+    let rank = minrank + rank_offset
+    for order, id in rank_nodes {
+      out_neighbors[id] = []
+      in_neighbors[id] = []
+      node_rank_by_id[id] = rank
+      node_order_by_id[id] = order
+    }
+  }
+  for edge in edges {
+    out_neighbors[edge.tail].push(edge.head)
+    in_neighbors[edge.head].push(edge.tail)
+  }
+  let nodes : Array[MincrossNode] = []
+  for id in 0..<node_names.length() {
+    let rank = match node_rank_by_id.get(id) {
+      Some(value) => value
+      None => abort("missing rank for node \{id}")
+    }
+    let order = match node_order_by_id.get(id) {
+      Some(value) => value
+      None => abort("missing order for node \{id}")
+    }
+    let exact_out_neighbors = match out_neighbor_overrides.get(id) {
+      Some(value) => value
+      None => out_neighbors.get(id).unwrap_or_default()
+    }
+    let exact_in_neighbors = match in_neighbor_overrides.get(id) {
+      Some(value) => value
+      None => in_neighbors.get(id).unwrap_or_default()
+    }
+    nodes.push({
+      id,
+      name: node_names[id],
+      rank,
+      order,
+      cluster: node_clusters[id],
+      cluster_skeleton: node_cluster_skeleton[id],
+      out_neighbors: exact_out_neighbors,
+      in_neighbors: exact_in_neighbors,
+      out_all_neighbors: [],
+      in_all_neighbors: [],
+    })
+  }
+  let input : MincrossInput = {
+    case_id,
+    graph,
+    startpass,
+    flip,
+    minrank,
+    maxrank: minrank + input_ranks.length() - 1,
+    nodes,
+    edges,
+    flat_edges: [],
+    ranks: input_ranks,
+  }
+  let output : MincrossOutput = { case_id, ranks: output_ranks }
+  (input, output)
+}
