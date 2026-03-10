@@ -64,7 +64,7 @@ pub fn add_node(
 ) -> Int {
   let idx = graph.nodes.length()
   graph.nodes.push({
-    kind: kind,
+    kind,
     rank: 0,
     in_edges: [],
     out_edges: [],
@@ -480,7 +480,9 @@ fn inter_tree_edge_search(
     Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
     None => ()
   }
-  let stack : Array[InterTreeState] = [{ node: v, parent: from, out_i: 0, in_i: 0 }]
+  let stack : Array[InterTreeState] = [
+    { node: v, parent: from, out_i: 0, in_i: 0 },
+  ]
   while stack.length() > 0 {
     let last = stack.length() - 1
     let state = stack[last]
@@ -1211,7 +1213,6 @@ fn update(graph : NsGraph, leaving : Int, entering : Int) -> Unit {
   graph.edges[leaving].cutvalue = 0
   exchange_tree_edges(graph, leaving, entering)
   let _ = dfs_range(graph, lca, graph.nodes[lca].par_edge, lca_low)
-
 }
 
 ///|
@@ -1426,7 +1427,10 @@ fn tb_adjust_sibling_ties(
       for j in (i + 1)..<siblings.length() {
         let a = siblings[i]
         let b = siblings[j]
-        if a < 0 || a >= initial_ranks.length() || b < 0 || b >= initial_ranks.length() {
+        if a < 0 ||
+          a >= initial_ranks.length() ||
+          b < 0 ||
+          b >= initial_ranks.length() {
           continue
         }
         if initial_ranks[a] != initial_ranks[b] {
@@ -1434,12 +1438,11 @@ fn tb_adjust_sibling_ties(
         }
         let rank_a = graph.nodes[a].rank
         let rank_b = graph.nodes[b].rank
-        let rank_delta =
-          if rank_a > rank_b {
-            rank_a - rank_b
-          } else {
-            rank_b - rank_a
-          }
+        let rank_delta = if rank_a > rank_b {
+          rank_a - rank_b
+        } else {
+          rank_b - rank_a
+        }
         if rank_delta != 1 {
           continue
         }
@@ -1452,12 +1455,11 @@ fn tb_adjust_sibling_ties(
         if bounds_a.low != bounds_b.low || bounds_a.high == bounds_b.high {
           continue
         }
-        let should_swap =
-          if bounds_a.high < bounds_b.high {
-            rank_a > rank_b
-          } else {
-            rank_b > rank_a
-          }
+        let should_swap = if bounds_a.high < bounds_b.high {
+          rank_a > rank_b
+        } else {
+          rank_b > rank_a
+        }
         if !should_swap {
           continue
         }
