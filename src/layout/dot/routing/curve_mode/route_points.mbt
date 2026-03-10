@@ -166,10 +166,7 @@ fn sameport_path_port_box(
 priv struct PathplanRoutePointsInput {
   base : EdgeRouteBase
   ranks : Map[String, Int]
-  positions : Map[String, @geom.Point]
-  vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo
-  sizes : Map[String, NodeSize]
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
@@ -239,9 +236,8 @@ fn compute_pathplan_route_points(
         input.ranks,
         input.vnode_info.vnode_ranks,
         input.vnode_info.edge_vnodes,
-        input.positions,
-        input.vnode_positions,
-        input.sizes,
+        input.routing_context.merged_positions,
+        input.routing_context.pathplan_route_sizes,
         input.routing_context.pathplan_mval_route_sizes,
         input.vnode_info.vnode_sizes,
         input.routing_context.path_cluster_keys,

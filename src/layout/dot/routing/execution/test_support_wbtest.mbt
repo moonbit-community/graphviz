@@ -204,6 +204,8 @@ fn sample_regular_pass_input(
       order_index: Map::new(),
       path_order_index: Map::new(),
       path_adjacency: @routesplines.build_path_adjacency([], Map::new(), [], []),
+      merged_positions: Map::new(),
+      pathplan_route_sizes: Map::new(),
       pathplan_mval_route_sizes: Map::new(),
       pathplan_sizes: Map::new(),
       path_cluster_keys: Map::new(),

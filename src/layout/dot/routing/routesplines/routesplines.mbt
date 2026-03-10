@@ -382,9 +382,8 @@ pub fn edge_pathplan_polyline(
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
   edge_vnodes : Map[String, Array[String]],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
+  merged_positions : Map[String, @geom.Point],
+  route_sizes : Map[String, NodeSize],
   mval_route_sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
@@ -430,8 +429,6 @@ pub fn edge_pathplan_polyline(
   let path_tail_port_box = if swap_path { head_port_box } else { tail_port_box }
   let path_head_port_box = if swap_path { tail_port_box } else { head_port_box }
   let ordered = vnodes
-  let merged_positions = merge_positions(positions, vnode_positions)
-  let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (@numeric.round_int(nodesep_pt) / 4).to_double()
   let straight_eps = 0.01

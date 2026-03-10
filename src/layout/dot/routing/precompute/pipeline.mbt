@@ -65,6 +65,7 @@ pub fn resolve_routing_port_padding(
 /// snapshots grouped before Stage E edge solve.
 pub(all) struct RoutingPrecomputePipelineInput {
   edges : Array[@cgraph.Edge]
+  positions : Map[String, @geom.Point]
   x_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   ordered_groups : Map[Int, Array[String]]
@@ -75,6 +76,7 @@ pub(all) struct RoutingPrecomputePipelineInput {
   edge_head : Array[String]
   ranks : Map[String, Int]
   nodesep_pt : Double
+  sizes : Map[String, @node_primitives.NodeSize]
   edge_vnodes : Map[String, Array[String]]
   pathplan_sizes : Map[String, @node_primitives.NodeSize]
   path_cluster_keys : Map[String, String]
@@ -111,9 +113,11 @@ pub fn build_routing_precompute_pipeline(
     edge_tail: input.edge_tail,
     edge_head: input.edge_head,
     ranks: input.ranks,
+    positions: input.positions,
     ordered_groups: input.ordered_groups,
     x_groups: path_groups,
     nodesep_pt: input.nodesep_pt,
+    sizes: input.sizes,
     edge_vnodes: input.edge_vnodes,
     pathplan_sizes: input.pathplan_sizes,
     path_cluster_keys: input.path_cluster_keys,

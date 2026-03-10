@@ -180,6 +180,8 @@ pub(all) struct RecoverSlackVnodesInput {
   rank_y : Map[Int, Double]
   vnode_positions : Map[String, @geom.Point]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
+  merged_positions : Map[String, @geom.Point]
+  pathplan_route_sizes : Map[String, @node_primitives.NodeSize]
   adjacency : @routesplines.PathAdjacency
 }
 

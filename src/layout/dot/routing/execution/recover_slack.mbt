@@ -45,6 +45,8 @@ pub fn recover_slack_vnodes(
   let rank_y = input.rank_y
   let vnode_positions = input.vnode_positions
   let vnode_sizes = input.vnode_sizes
+  let merged_positions = input.merged_positions
+  let pathplan_route_sizes = input.pathplan_route_sizes
   let adjacency = input.adjacency
   if ordered_vnodes.length() == 0 || boxes.length() == 0 {
     return ()
@@ -83,21 +85,29 @@ pub fn recover_slack_vnodes(
     if vnode_rank == label_rank {
       let new_x = box.urx
       let left = new_x - box.llx
-      vnode_positions[vnode] = { x: new_x, y: vnode_y }
-      vnode_sizes[vnode] = @node_primitives.vnode_size_from_widths_with_h(
+      let new_pos : @geom.Point = { x: new_x, y: vnode_y }
+      let new_size = @node_primitives.vnode_size_from_widths_with_h(
         left,
         size.right_pt,
         size.height_pt,
       )
+      vnode_positions[vnode] = new_pos
+      vnode_sizes[vnode] = new_size
+      merged_positions[vnode] = new_pos
+      pathplan_route_sizes[vnode] = new_size
     } else {
       let new_x = (box.llx + box.urx) / 2.0
       let half = (box.urx - box.llx) / 2.0
-      vnode_positions[vnode] = { x: new_x, y: vnode_y }
-      vnode_sizes[vnode] = @node_primitives.vnode_size_from_widths_with_h(
+      let new_pos : @geom.Point = { x: new_x, y: vnode_y }
+      let new_size = @node_primitives.vnode_size_from_widths_with_h(
         half,
         half,
         size.height_pt,
       )
+      vnode_positions[vnode] = new_pos
+      vnode_sizes[vnode] = new_size
+      merged_positions[vnode] = new_pos
+      pathplan_route_sizes[vnode] = new_size
     }
   }
 }

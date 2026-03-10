@@ -6,6 +6,8 @@ pub(all) struct RoutingContext {
   order_index : Map[String, Int]
   path_order_index : Map[String, Int]
   path_adjacency : @routesplines.PathAdjacency
+  merged_positions : Map[String, @geom.Point]
+  pathplan_route_sizes : Map[String, NodeSize]
   pathplan_mval_route_sizes : Map[String, NodeSize]
   pathplan_sizes : Map[String, NodeSize]
   path_cluster_keys : Map[String, String]
@@ -96,9 +98,11 @@ pub(all) struct PrepareRoutingContextInput {
   edge_tail : Array[String]
   edge_head : Array[String]
   ranks : Map[String, Int]
+  positions : Map[String, @geom.Point]
   ordered_groups : Map[Int, Array[String]]
   x_groups : Map[Int, Array[String]]
   nodesep_pt : Double
+  sizes : Map[String, NodeSize]
   edge_vnodes : Map[String, Array[String]]
   pathplan_sizes : Map[String, NodeSize]
   path_cluster_keys : Map[String, String]
@@ -122,6 +126,20 @@ pub fn prepare_routing_context(
     input.edge_tail,
     input.edge_head,
   )
+  let merged_positions : Map[String, @geom.Point] = Map::new()
+  for name, pos in input.positions {
+    merged_positions[name] = pos
+  }
+  for name, pos in input.vnode_positions {
+    merged_positions[name] = pos
+  }
+  let pathplan_route_sizes : Map[String, NodeSize] = Map::new()
+  for name, size in input.sizes {
+    pathplan_route_sizes[name] = size
+  }
+  for name, size in input.vnode_sizes {
+    pathplan_route_sizes[name] = size
+  }
   let pathplan_mval_route_sizes : Map[String, NodeSize] = Map::new()
   for name, size in input.pathplan_sizes {
     pathplan_mval_route_sizes[name] = size
@@ -153,6 +171,8 @@ pub fn prepare_routing_context(
     order_index,
     path_order_index,
     path_adjacency,
+    merged_positions,
+    pathplan_route_sizes,
     pathplan_mval_route_sizes,
     pathplan_sizes: input.pathplan_sizes,
     path_cluster_keys: input.path_cluster_keys,

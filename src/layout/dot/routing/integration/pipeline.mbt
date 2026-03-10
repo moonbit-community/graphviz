@@ -94,6 +94,7 @@ pub fn build_routing_precompute_data(
   )
   @precompute.build_routing_precompute_pipeline({
     edges: prep.edges,
+    positions: input.positions_state.positions,
     x_groups: input.positions_state.x_groups,
     ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
     ordered_groups: input.ordering.ordered_groups,
@@ -104,6 +105,7 @@ pub fn build_routing_precompute_data(
     edge_head: input.rank_data.edge_head,
     ranks: input.rank_data.ranks,
     nodesep_pt: input.rank_heights.nodesep_pt,
+    sizes: input.sizes,
     edge_vnodes: input.ordering.vnode_info.edge_vnodes,
     pathplan_sizes,
     path_cluster_keys: input.cluster_meta.intercluster_keys,

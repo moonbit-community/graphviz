@@ -94,10 +94,7 @@ fn prepare_edge_curve_mode_route(
   let route_state = compute_pathplan_route_points({
     base: input.base,
     ranks: input.ranks,
-    positions: input.positions,
-    vnode_positions: input.vnode_positions,
     vnode_info: input.vnode_info,
-    sizes: input.sizes,
     x_groups: input.x_groups,
     rank_y: input.rank_y,
     rank_ht1: input.rank_ht1,

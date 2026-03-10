@@ -84,6 +84,8 @@ fn recover_pathplan_slack(recover_input : PathplanSlackRecoverInput) -> Unit {
         rank_y: recover_input.input.rank_y,
         vnode_positions: recover_input.input.vnode_positions,
         vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+        merged_positions: recover_input.input.routing_context.merged_positions,
+        pathplan_route_sizes: recover_input.input.routing_context.pathplan_route_sizes,
         adjacency: recover_input.input.routing_context.path_adjacency,
       })
       did_recover = true
@@ -112,6 +114,8 @@ fn recover_pathplan_slack(recover_input : PathplanSlackRecoverInput) -> Unit {
     rank_y: recover_input.input.rank_y,
     vnode_positions: recover_input.input.vnode_positions,
     vnode_sizes: recover_input.input.vnode_info.vnode_sizes,
+    merged_positions: recover_input.input.routing_context.merged_positions,
+    pathplan_route_sizes: recover_input.input.routing_context.pathplan_route_sizes,
     adjacency: recover_input.input.routing_context.path_adjacency,
   })
   recover_input.recovered_slack_keys[recover_key] = true
