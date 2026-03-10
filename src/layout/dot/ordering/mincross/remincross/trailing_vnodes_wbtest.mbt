@@ -133,3 +133,39 @@ test "apply_remincross_floor raises selected trailing vnodes behind the last rea
   assert_eq(keys.get("v_floor"), Some(2.0))
   assert_eq(keys.get("v_keep"), Some(5.0))
 }
+
+///|
+test "build_remincross_vnode_keys applies trailing floor to disjoint cross-cluster vnode chains" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let tail = graph.node("tail")
+  let head = graph.node("head")
+  let edge = graph.edge(tail, head)
+
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v_floor"]
+
+  let inputs : ReMincrossVnodeGroupInputs = {
+    final_groups: { 0: ["tail"], 1: ["mid_real"], 2: ["head"] },
+    order_with_vnodes: true,
+    edges: [edge],
+    edge_tail: [],
+    edge_head: [],
+    edge_reversed: [false],
+    ranks: { "tail": 0, "mid_real": 1, "head": 2 },
+    intercluster_keys: { "tail": "cluster_left", "head": "cluster_right" },
+    cluster_parents: { "cluster_left": None, "cluster_right": None },
+    cluster_min_rank: { "cluster_left": 0, "cluster_right": 2 },
+    cluster_max_rank: { "cluster_left": 0, "cluster_right": 2 },
+    edge_vnodes,
+    vnode_ranks: { "v_floor": 1 },
+    vnodes_by_rank: { 1: ["v_floor"] },
+  }
+
+  let keys = build_remincross_vnode_keys(inputs, {
+    "tail": 0,
+    "mid_real": 0,
+    "head": 0,
+  })
+
+  assert_eq(keys.get("v_floor"), Some(1.0))
+}
