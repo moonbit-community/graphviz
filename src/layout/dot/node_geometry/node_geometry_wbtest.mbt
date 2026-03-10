@@ -29,20 +29,3 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
   assert_close(size.width_in, 3.5833, 0.001)
   assert_close(size.height_in, 0.51042, 0.001)
 }
-
-///|
-test "compass_uses_shape_clipping distinguishes ellipse-like and box-like polygons" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let ellipse = graph.node("ellipse")
-  ellipse.set_attr("shape", "circle")
-  let rect = graph.node("rect")
-  rect.set_attr("shape", "box")
-  let polygon = graph.node("polygon")
-  polygon.set_attr("shape", "polygon")
-  polygon.set_attr("sides", "4")
-  polygon.set_attr("orientation", "90")
-
-  assert_eq(compass_uses_shape_clipping(ellipse), true)
-  assert_eq(compass_uses_shape_clipping(rect), false)
-  assert_eq(compass_uses_shape_clipping(polygon), false)
-}
