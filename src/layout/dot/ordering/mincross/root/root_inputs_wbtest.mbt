@@ -93,6 +93,124 @@ test "filter_root_mincross_seeded_groups_for_clusters keeps only root and skelet
 }
 
 ///|
+test "collect_mincross_order_edges keeps only filtered endpoints and normalizes synthetic vnode defaults" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let root = graph.node("root")
+  let leaf = graph.node("leaf")
+  let cluster_member = graph.node("cluster_member")
+  let vnode_name = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
+  let vnode = graph.node(vnode_name)
+
+  let edge_root_leaf = graph.edge(root, leaf)
+  let edge_cluster_leaf = graph.edge(cluster_member, leaf)
+  let edge_vnode_leaf = graph.edge(vnode, leaf)
+
+  let mincross_nodes = build_node_membership_set(["root", vnode_name, "leaf"])
+
+  let filtered = collect_mincross_order_edges(
+    mincross_nodes,
+    [edge_root_leaf, edge_cluster_leaf, edge_vnode_leaf],
+    ["root", "cluster_member", vnode_name],
+    ["leaf", "leaf", "leaf"],
+    [1.5, 8.0, 0.0],
+    [2.5, 9.0, 0.5],
+    [0.1, 0.2, 0.0],
+    [0.4, 0.5, 0.0],
+  )
+
+  assert_eq(filtered.order_edges_out_mincross.length(), 2)
+  assert_eq(filtered.order_edge_tail_out_mincross, ["root", vnode_name])
+  assert_eq(filtered.order_edge_head_out_mincross, ["leaf", "leaf"])
+  assert_eq(filtered.order_edge_tail_port_x_mincross, [1.5, 0.0])
+  assert_eq(filtered.order_edge_head_port_x_mincross, [2.5, 0.0])
+  assert_eq(filtered.order_edge_tail_port_order_mincross, [0.1, 0.0])
+  assert_eq(filtered.order_edge_head_port_order_mincross, [0.4, 0.0])
+}
+
+///|
+test "resolve_root_mincross_input_groups filters cluster-internal nodes when enabled and clones override groups when provided" {
+  let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
+
+  let seeded_groups : Map[Int, Array[String]] = Map::new()
+  seeded_groups[0] = ["root", "member", skel_a]
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["member"] = "cluster_a"
+  order_cluster_keys[skel_a] = "cluster_a"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton[skel_a] = true
+
+  let filtered = resolve_root_mincross_input_groups(
+    true,
+    seeded_groups,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    None,
+  )
+
+  let override_groups : Map[Int, Array[String]] = Map::new()
+  override_groups[0] = ["override_only"]
+  let overridden = resolve_root_mincross_input_groups(
+    true,
+    seeded_groups,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    Some(override_groups),
+  )
+
+  match override_groups.get(0) {
+    Some(list) => list.push("mutated")
+    None => fail("missing override rank")
+  }
+
+  assert_eq(filtered.get(0), Some(["root", skel_a]))
+  assert_eq(overridden.get(0), Some(["override_only"]))
+}
+
+///|
+test "finalize_root_mincross_ordered_groups returns raw root ordering without clusters and merges back into seeded groups with clusters" {
+  let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
+
+  let seeded_groups : Map[Int, Array[String]] = Map::new()
+  seeded_groups[0] = ["member", skel_a, "root", "tail"]
+
+  let ordered_mincross : Map[Int, Array[String]] = Map::new()
+  ordered_mincross[0] = ["root", skel_a]
+
+  let mincross_nodes = build_node_membership_set(["root", skel_a])
+
+  let order_cluster_keys : Map[String, String] = Map::new()
+  order_cluster_keys["member"] = "cluster_a"
+  order_cluster_keys[skel_a] = "cluster_a"
+
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  order_cluster_skeleton[skel_a] = true
+
+  let nonclustered = finalize_root_mincross_ordered_groups(
+    false,
+    [0],
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+  let clustered = finalize_root_mincross_ordered_groups(
+    true,
+    [0],
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+
+  assert_eq(nonclustered.get(0), Some(["root", skel_a]))
+  assert_eq(clustered.get(0), Some(["member", "root", skel_a, "tail"]))
+}
+
+///|
 test "build_root_rank_reorder_call_data filters root mincross edges, normalizes synthetic ports, and forwards only vnode preferred positions" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let root = graph.node("root")
