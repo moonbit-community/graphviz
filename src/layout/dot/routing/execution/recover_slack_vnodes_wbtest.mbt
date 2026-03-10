@@ -7,6 +7,8 @@ test "recover_slack_vnodes centers normal vnodes and right-aligns the label rank
     "v2": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 4.0),
   }
   let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let merged_positions : Map[String, @geom.Point] = Map::new()
+  let pathplan_route_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
   let empty_edge_vnodes : Map[String, Array[String]] = Map::new()
   let adjacency = @routesplines.build_path_adjacency(
     [],
@@ -28,6 +30,8 @@ test "recover_slack_vnodes centers normal vnodes and right-aligns the label rank
       rank_y: { 1: 5.0, 2: 1.0 },
       vnode_positions,
       vnode_sizes,
+      merged_positions,
+      pathplan_route_sizes,
       adjacency,
     },
     (_edge, _ranks) => Some(2),
@@ -35,8 +39,17 @@ test "recover_slack_vnodes centers normal vnodes and right-aligns the label rank
 
   assert_eq(vnode_positions.get("v1"), Some(@edge_spline.point(5.0, 5.0)))
   assert_eq(vnode_positions.get("v2"), Some(@edge_spline.point(8.0, 1.0)))
+  assert_eq(merged_positions.get("v1"), Some(@edge_spline.point(5.0, 5.0)))
+  assert_eq(merged_positions.get("v2"), Some(@edge_spline.point(8.0, 1.0)))
   assert_eq(vnode_sizes.get("v1").map(fn(size) { size.left_pt }), Some(5.0))
   assert_eq(vnode_sizes.get("v1").map(fn(size) { size.right_pt }), Some(5.0))
   assert_eq(vnode_sizes.get("v2").map(fn(size) { size.left_pt }), Some(6.0))
   assert_eq(vnode_sizes.get("v2").map(fn(size) { size.right_pt }), Some(1.0))
+  assert_eq(pathplan_route_sizes.get("v1").map(fn(size) { size.left_pt }), Some(5.0))
+  assert_eq(
+    pathplan_route_sizes.get("v1").map(fn(size) { size.right_pt }),
+    Some(5.0),
+  )
+  assert_eq(pathplan_route_sizes.get("v2").map(fn(size) { size.left_pt }), Some(6.0))
+  assert_eq(pathplan_route_sizes.get("v2").map(fn(size) { size.right_pt }), Some(1.0))
 }
