@@ -1,7 +1,6 @@
 ///|
 /// Routesplines corridor-box owner: rank-neighbor analysis, maximal node
 /// boxes, rank gap boxes, and endpoint corridor construction.
-
 priv struct RankNeighbors {
   left : String?
   right : String?
@@ -13,12 +12,15 @@ priv struct EndpathResult {
   endpoint : @geom.Point
 }
 
+///|
 fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   vnode_sizes.get(name) is Some(_)
 }
 
 ///|
-///| Graphviz parity: label vnodes are virtual nodes with label height (> @node_primitives.VNODE_HEIGHT_PT).
+
+///|
+/// Graphviz parity: label vnodes are virtual nodes with label height (> @node_primitives.VNODE_HEIGHT_PT).
 fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   match vnode_sizes.get(name) {
     Some(size) => size.height_pt > @node_primitives.VNODE_HEIGHT_PT
@@ -56,41 +58,42 @@ fn pathscross(
   if out0.length() != 1 && out1.length() != 1 {
     return false
   }
-  let order = order_for(candidate, order_index) > order_for(current, order_index)
+  let order = order_for(candidate, order_index) >
+    order_for(current, order_index)
   match path_next {
     Some(next) =>
       if out0.length() == 1 {
-      let mut e0_head = out0[0]
-      let mut e1_head = next
-      let mut cnt = 0
-      while cnt < 2 {
-        if e0_head == e1_head {
-          break
+        let mut e0_head = out0[0]
+        let mut e1_head = next
+        let mut cnt = 0
+        while cnt < 2 {
+          if e0_head == e1_head {
+            break
+          }
+          let order_head = order_for(e0_head, order_index) >
+            order_for(e1_head, order_index)
+          if order != order_head {
+            return true
+          }
+          let e0_out = match out_edges.get(e0_head) {
+            Some(list) => list
+            None => []
+          }
+          if e0_out.length() != 1 || !is_virtual_node(e0_head, vnode_sizes) {
+            break
+          }
+          let e1_out = match out_edges.get(e1_head) {
+            Some(list) => list
+            None => []
+          }
+          if e1_out.length() != 1 || !is_virtual_node(e1_head, vnode_sizes) {
+            break
+          }
+          e0_head = e0_out[0]
+          e1_head = e1_out[0]
+          cnt = cnt + 1
         }
-        let order_head =
-          order_for(e0_head, order_index) > order_for(e1_head, order_index)
-        if order != order_head {
-          return true
-        }
-        let e0_out = match out_edges.get(e0_head) {
-          Some(list) => list
-          None => []
-        }
-        if e0_out.length() != 1 || !is_virtual_node(e0_head, vnode_sizes) {
-          break
-        }
-        let e1_out = match out_edges.get(e1_head) {
-          Some(list) => list
-          None => []
-        }
-        if e1_out.length() != 1 || !is_virtual_node(e1_head, vnode_sizes) {
-          break
-        }
-        e0_head = e0_out[0]
-        e1_head = e1_out[0]
-        cnt = cnt + 1
       }
-    }
     None => ()
   }
   let in0 = match in_edges.get(candidate) {
@@ -100,37 +103,37 @@ fn pathscross(
   match path_prev {
     Some(prev) =>
       if in0.length() == 1 {
-      let mut e0_tail = in0[0]
-      let mut e1_tail = prev
-      let mut cnt = 0
-      while cnt < 2 {
-        if e0_tail == e1_tail {
-          break
+        let mut e0_tail = in0[0]
+        let mut e1_tail = prev
+        let mut cnt = 0
+        while cnt < 2 {
+          if e0_tail == e1_tail {
+            break
+          }
+          let order_tail = order_for(e0_tail, order_index) >
+            order_for(e1_tail, order_index)
+          if order != order_tail {
+            return true
+          }
+          let e0_in = match in_edges.get(e0_tail) {
+            Some(list) => list
+            None => []
+          }
+          if e0_in.length() != 1 || !is_virtual_node(e0_tail, vnode_sizes) {
+            break
+          }
+          let e1_in = match in_edges.get(e1_tail) {
+            Some(list) => list
+            None => []
+          }
+          if e1_in.length() != 1 || !is_virtual_node(e1_tail, vnode_sizes) {
+            break
+          }
+          e0_tail = e0_in[0]
+          e1_tail = e1_in[0]
+          cnt = cnt + 1
         }
-        let order_tail =
-          order_for(e0_tail, order_index) > order_for(e1_tail, order_index)
-        if order != order_tail {
-          return true
-        }
-        let e0_in = match in_edges.get(e0_tail) {
-          Some(list) => list
-          None => []
-        }
-        if e0_in.length() != 1 || !is_virtual_node(e0_tail, vnode_sizes) {
-          break
-        }
-        let e1_in = match in_edges.get(e1_tail) {
-          Some(list) => list
-          None => []
-        }
-        if e1_in.length() != 1 || !is_virtual_node(e1_tail, vnode_sizes) {
-          break
-        }
-        e0_tail = e0_in[0]
-        e1_tail = e1_in[0]
-        cnt = cnt + 1
       }
-    }
     None => ()
   }
   false
@@ -166,15 +169,9 @@ fn neighbor_names_for_rank(
               break
             }
             if !pathscross(
-              candidate,
-              name,
-              path_prev,
-              path_next,
-              out_edges,
-              in_edges,
-              order_index,
-              vnode_sizes,
-            ) {
+                candidate, name, path_prev, path_next, out_edges, in_edges, order_index,
+                vnode_sizes,
+              ) {
               left = Some(candidate)
               break
             }
@@ -193,15 +190,9 @@ fn neighbor_names_for_rank(
               break
             }
             if !pathscross(
-              candidate,
-              name,
-              path_prev,
-              path_next,
-              out_edges,
-              in_edges,
-              order_index,
-              vnode_sizes,
-            ) {
+                candidate, name, path_prev, path_next, out_edges, in_edges, order_index,
+                vnode_sizes,
+              ) {
               right = Some(candidate)
               break
             }
@@ -254,7 +245,9 @@ fn vnode_inside_cluster(
 ) -> Bool {
   match (positions.get(name), cluster_bboxes.get(cluster_key)) {
     (Some(pos), Some(rect)) =>
-      pos.x >= rect.llx && pos.x <= rect.urx && pos.y >= rect.lly &&
+      pos.x >= rect.llx &&
+      pos.x <= rect.urx &&
+      pos.y >= rect.lly &&
       pos.y <= rect.ury
     _ => false
   }
@@ -298,40 +291,36 @@ fn maximal_bbox_for_name(
   let block_cluster_a = if is_virtual { tail_cluster } else { vn_cluster }
   let block_cluster_b = if is_virtual { head_cluster } else { vn_cluster }
   let rank_neighbors = neighbor_names_for_rank(
-    name,
-    rank,
-    x_groups,
-    vnode_sizes,
-    out_edges,
-    in_edges,
-    order_index,
-    path_prev,
+    name, rank, x_groups, vnode_sizes, out_edges, in_edges, order_index, path_prev,
     path_next,
   )
   let left_neighbor = rank_neighbors.left
   let right_neighbor = rank_neighbors.right
   let neighbor_sep = (neighbor : String, neighbor_size : NodeSize) => {
-    let is_virtual =
-      vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
-    if is_virtual { splinesep_pt } else { nodesep_pt / 2.0 }
+    let is_virtual = vnode_sizes.get(neighbor) is Some(_) ||
+      neighbor_size.height_pt <= 0.0
+    if is_virtual {
+      splinesep_pt
+    } else {
+      nodesep_pt / 2.0
+    }
   }
   let is_label_vnode = is_label_virtual(name, vnode_sizes)
   let mut b = pos.x - size.left_pt - ROUTE_FUDGE
   match left_neighbor {
     Some(neighbor) => {
-      let neighbor_cluster =
-        cluster_key_for_name(neighbor, cluster_keys, vnode_clusters)
-      let use_cluster =
-        neighbor_cluster != "" &&
-          neighbor_cluster != block_cluster_a &&
-          neighbor_cluster != block_cluster_b &&
-          (!is_virtual_node(neighbor, vnode_sizes) ||
-            vnode_inside_cluster(
-              neighbor,
-              neighbor_cluster,
-              positions,
-              cluster_bboxes,
-            ))
+      let neighbor_cluster = cluster_key_for_name(
+        neighbor, cluster_keys, vnode_clusters,
+      )
+      let use_cluster = neighbor_cluster != "" &&
+        neighbor_cluster != block_cluster_a &&
+        neighbor_cluster != block_cluster_b &&
+        (
+          !is_virtual_node(neighbor, vnode_sizes) ||
+          vnode_inside_cluster(
+            neighbor, neighbor_cluster, positions, cluster_bboxes,
+          )
+        )
       if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
@@ -349,8 +338,8 @@ fn maximal_bbox_for_name(
             // Graphviz parity: left neighbor uses ND_mval (original right width),
             // even after recover_slack updates ND_rw.
             let neighbor_right = size_for_name(neighbor, mval_sizes).right_pt
-            let nb =
-              neighbor_pos.x + neighbor_right +
+            let nb = neighbor_pos.x +
+              neighbor_right +
               neighbor_sep(neighbor, neighbor_size)
             if nb < b {
               b = nb
@@ -366,23 +355,25 @@ fn maximal_bbox_for_name(
   if left_neighbor is None {
     llx = min_double(llx, left_bound)
   }
-  let mut br =
-    if is_label_vnode { pos.x + ROUTE_LABEL_PAD } else { pos.x + size.right_pt + ROUTE_FUDGE }
+  let mut br = if is_label_vnode {
+    pos.x + ROUTE_LABEL_PAD
+  } else {
+    pos.x + size.right_pt + ROUTE_FUDGE
+  }
   match right_neighbor {
     Some(neighbor) => {
-      let neighbor_cluster =
-        cluster_key_for_name(neighbor, cluster_keys, vnode_clusters)
-      let use_cluster =
-        neighbor_cluster != "" &&
-          neighbor_cluster != block_cluster_a &&
-          neighbor_cluster != block_cluster_b &&
-          (!is_virtual_node(neighbor, vnode_sizes) ||
-            vnode_inside_cluster(
-              neighbor,
-              neighbor_cluster,
-              positions,
-              cluster_bboxes,
-            ))
+      let neighbor_cluster = cluster_key_for_name(
+        neighbor, cluster_keys, vnode_clusters,
+      )
+      let use_cluster = neighbor_cluster != "" &&
+        neighbor_cluster != block_cluster_a &&
+        neighbor_cluster != block_cluster_b &&
+        (
+          !is_virtual_node(neighbor, vnode_sizes) ||
+          vnode_inside_cluster(
+            neighbor, neighbor_cluster, positions, cluster_bboxes,
+          )
+        )
       if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
@@ -397,8 +388,8 @@ fn maximal_bbox_for_name(
         match positions.get(neighbor) {
           Some(neighbor_pos) => {
             let neighbor_size = size_for_name(neighbor, sizes)
-            let nb =
-              neighbor_pos.x - neighbor_size.left_pt -
+            let nb = neighbor_pos.x -
+              neighbor_size.left_pt -
               neighbor_sep(neighbor, neighbor_size)
             if nb > br {
               br = nb
@@ -511,50 +502,45 @@ fn beginpath_boxes_regular(
   if side != 0 {
     if (side & SIDE_TOP) != 0 {
       if start.x < node_pos.x {
-        let b0 =
-          rect(
-            base_box.llx - 1.0,
-            start.y,
-            base_box.urx,
-            node_top + ranksep_pt / 2.0,
-          )
-        let b =
-          rect(
-            base_box.llx - 1.0,
-            node_bottom,
-            node_left - fudge,
-            start.y,
-          )
+        let b0 = rect(
+          base_box.llx - 1.0,
+          start.y,
+          base_box.urx,
+          node_top + ranksep_pt / 2.0,
+        )
+        let b = rect(
+          base_box.llx - 1.0,
+          node_bottom,
+          node_left - fudge,
+          start.y,
+        )
         boxes.push(b0)
         boxes.push(b)
       } else {
-        let b0 =
-          rect(
-            base_box.llx,
-            start.y,
-            base_box.urx + 1.0,
-            node_top + ranksep_pt / 2.0,
-          )
-        let b =
-          rect(
-            node_right + fudge,
-            node_bottom,
-            base_box.urx + 1.0,
-            start.y,
-          )
+        let b0 = rect(
+          base_box.llx,
+          start.y,
+          base_box.urx + 1.0,
+          node_top + ranksep_pt / 2.0,
+        )
+        let b = rect(
+          node_right + fudge,
+          node_bottom,
+          base_box.urx + 1.0,
+          start.y,
+        )
         boxes.push(b0)
         boxes.push(b)
       }
       start = { x: start.x, y: start.y + 1.0 }
       return { boxes, endpoint: start }
     } else if (side & SIDE_BOTTOM) != 0 {
-      let b =
-        rect(
-          base_box.llx,
-          base_box.lly,
-          base_box.urx,
-          max_double(base_box.ury, start.y),
-        )
+      let b = rect(
+        base_box.llx,
+        base_box.lly,
+        base_box.urx,
+        max_double(base_box.ury, start.y),
+      )
       boxes.push(b)
       start = { x: start.x, y: start.y - 1.0 }
       return { boxes, endpoint: start }
@@ -601,49 +587,34 @@ fn endpath_boxes_regular(
   let fudge = 0.0
   if side != 0 {
     if (side & SIDE_TOP) != 0 {
-      let b =
-        rect(
-          base_box.llx,
-          min_double(base_box.lly, end.y),
-          base_box.urx,
-          base_box.ury,
-        )
+      let b = rect(
+        base_box.llx,
+        min_double(base_box.lly, end.y),
+        base_box.urx,
+        base_box.ury,
+      )
       boxes.push(b)
       end = { x: end.x, y: end.y + 1.0 }
       return { boxes, endpoint: end }
     } else if (side & SIDE_BOTTOM) != 0 {
       if end.x < node_pos.x {
-        let b0 =
-          rect(
-            base_box.llx - 1.0,
-            node_bottom - ranksep_pt / 2.0,
-            base_box.urx,
-            end.y,
-          )
-        let b =
-          rect(
-            base_box.llx - 1.0,
-            end.y,
-            node_left - fudge,
-            node_top,
-          )
+        let b0 = rect(
+          base_box.llx - 1.0,
+          node_bottom - ranksep_pt / 2.0,
+          base_box.urx,
+          end.y,
+        )
+        let b = rect(base_box.llx - 1.0, end.y, node_left - fudge, node_top)
         boxes.push(b0)
         boxes.push(b)
       } else {
-        let b0 =
-          rect(
-            base_box.llx,
-            node_bottom - ranksep_pt / 2.0,
-            base_box.urx + 1.0,
-            end.y,
-          )
-        let b =
-          rect(
-            node_right + fudge,
-            end.y,
-            base_box.urx + 1.0,
-            node_top,
-          )
+        let b0 = rect(
+          base_box.llx,
+          node_bottom - ranksep_pt / 2.0,
+          base_box.urx + 1.0,
+          end.y,
+        )
+        let b = rect(node_right + fudge, end.y, base_box.urx + 1.0, node_top)
         boxes.push(b0)
         boxes.push(b)
       }
@@ -672,4 +643,3 @@ fn endpath_boxes_regular(
   end = { x: end.x, y: end.y + 1.0 }
   { boxes, endpoint: end }
 }
-

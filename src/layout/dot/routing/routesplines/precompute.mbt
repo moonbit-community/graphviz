@@ -26,13 +26,7 @@ pub fn build_path_adjacency(
       Some(list) => list
       None => []
     }
-    let (tail, head) =
-      edge_endpoints_at(
-        edge,
-        edge_idx,
-        edge_tail,
-        edge_head,
-      )
+    let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let path_nodes : Array[String] = []
     path_nodes.push(tail)
     for name in vnodes {
@@ -65,6 +59,7 @@ pub fn build_path_adjacency(
   { out_edges, in_edges }
 }
 
+///|
 fn merge_positions(
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
@@ -110,6 +105,7 @@ fn pathplan_sizes(
   adjusted
 }
 
+///|
 pub(all) struct PathplanBounds {
   left : Double
   right : Double
@@ -144,27 +140,33 @@ fn compute_horizontal_bounds(
     match x_groups.get(rank) {
       Some(names) =>
         if names.length() > 0 {
-        let left_name = names[0]
-        let right_name = names[names.length() - 1]
-        let left_pos = match positions.get(left_name) {
-          Some(value) => value
-          None => { rank = rank + 1; continue }
+          let left_name = names[0]
+          let right_name = names[names.length() - 1]
+          let left_pos = match positions.get(left_name) {
+            Some(value) => value
+            None => {
+              rank = rank + 1
+              continue
+            }
+          }
+          let right_pos = match positions.get(right_name) {
+            Some(value) => value
+            None => {
+              rank = rank + 1
+              continue
+            }
+          }
+          let left_size = size_for_name(left_name, sizes)
+          let right_size = size_for_name(right_name, sizes)
+          let left = left_pos.x - left_size.left_pt
+          let right = right_pos.x + right_size.right_pt
+          if left < left_bound {
+            left_bound = left
+          }
+          if right > right_bound {
+            right_bound = right
+          }
         }
-        let right_pos = match positions.get(right_name) {
-          Some(value) => value
-          None => { rank = rank + 1; continue }
-        }
-        let left_size = size_for_name(left_name, sizes)
-        let right_size = size_for_name(right_name, sizes)
-        let left = left_pos.x - left_size.left_pt
-        let right = right_pos.x + right_size.right_pt
-        if left < left_bound {
-          left_bound = left
-        }
-        if right > right_bound {
-          right_bound = right
-        }
-      }
       None => ()
     }
     left_bound = left_bound - ROUTE_MIN_WIDTH
@@ -189,6 +191,7 @@ pub fn pathplan_bounds(
   compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
 }
 
+///|
 fn push_unique_string(list : Array[String], value : String) -> Unit {
   for item in list {
     if item == value {
@@ -205,13 +208,15 @@ fn edge_endpoints_at(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {
-  let tail =
-    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
-    }
-  let head =
-    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
+  let tail = if edge_idx < edge_tail.length() {
+    edge_tail[edge_idx]
+  } else {
+    edge.tail().name()
+  }
+  let head = if edge_idx < edge_head.length() {
+    edge_head[edge_idx]
+  } else {
+    edge.head().name()
+  }
   (tail, head)
 }

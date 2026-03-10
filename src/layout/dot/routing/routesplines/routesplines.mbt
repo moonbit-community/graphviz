@@ -10,12 +10,20 @@ type RankDir = @rankdir.RankDir
 
 ///|
 fn min_double(a : Double, b : Double) -> Double {
-  if a < b { a } else { b }
+  if a < b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {
-  if a > b { a } else { b }
+  if a > b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
@@ -23,6 +31,7 @@ fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
   { llx, lly, urx, ury }
 }
 
+///|
 const ROUTE_FUDGE : Double = 4.0
 
 ///|
@@ -33,10 +42,13 @@ const ROUTE_MIN_WIDTH : Double = 16.0
 
 ///|
 const SIDE_BOTTOM : Int = 1
+
 ///|
 const SIDE_RIGHT : Int = 2
+
 ///|
 const SIDE_TOP : Int = 4
+
 ///|
 const SIDE_LEFT : Int = 8
 
@@ -58,12 +70,14 @@ pub(all) struct PathplanResult {
   segments : Array[PathplanSegment]
 }
 
+///|
 priv struct PathplanCoreResult {
   points : Array[@geom.Point]
   barriers : Array[(@geom.Point, @geom.Point)]
   boxes : Array[@geom.Rect]
 }
 
+///|
 fn edge_pathplan_polyline_core(
   path_tail_name : String,
   path_head_name : String,
@@ -106,12 +120,17 @@ fn edge_pathplan_polyline_core(
   let _ = vnode_positions
   let _ = sizes
   let _ = mval_sizes
-  let tail_cluster =
-    cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
-  let head_cluster =
-    cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
-  let tail_next =
-    if ordered.length() > 0 { Some(ordered[0]) } else { Some(path_head_name) }
+  let tail_cluster = cluster_key_for_name(
+    path_tail_name, cluster_keys, vnode_clusters,
+  )
+  let head_cluster = cluster_key_for_name(
+    path_head_name, cluster_keys, vnode_clusters,
+  )
+  let tail_next = if ordered.length() > 0 {
+    Some(ordered[0])
+  } else {
+    Some(path_head_name)
+  }
   let path_boxes : Array[@geom.Rect] = []
   let tail_rank_y = match rank_y.get(path_tail_rank) {
     Some(value) => value
@@ -129,39 +148,39 @@ fn edge_pathplan_polyline_core(
     Some(value) => value
     None => 0.0
   }
-  let tail_max_box = match maximal_bbox_for_name(
-    path_tail_name,
-    path_tail_rank,
-    merged_positions,
-    route_sizes,
-    mval_route_sizes,
-    vnode_sizes,
-    cluster_keys,
-    vnode_clusters,
-    cluster_bboxes,
-    x_groups,
-    nodesep_pt,
-    splinesep_pt,
-    left_bound,
-    right_bound,
-    rank_ht1,
-    rank_ht2,
-    tail_cluster,
-    head_cluster,
-    path_out_edges,
-    path_in_edges,
-    order_index,
-    None,
-    tail_next,
-  ) {
+  let tail_max_box = match
+    maximal_bbox_for_name(
+      path_tail_name,
+      path_tail_rank,
+      merged_positions,
+      route_sizes,
+      mval_route_sizes,
+      vnode_sizes,
+      cluster_keys,
+      vnode_clusters,
+      cluster_bboxes,
+      x_groups,
+      nodesep_pt,
+      splinesep_pt,
+      left_bound,
+      right_bound,
+      rank_ht1,
+      rank_ht2,
+      tail_cluster,
+      head_cluster,
+      path_out_edges,
+      path_in_edges,
+      order_index,
+      None,
+      tail_next,
+    ) {
     Some(box) => box
     None => return None
   }
-  let tail_box =
-    match path_tail_port_box {
-      Some(box) => if path_tail_side == 0 { box } else { tail_max_box }
-      None => tail_max_box
-    }
+  let tail_box = match path_tail_port_box {
+    Some(box) => if path_tail_side == 0 { box } else { tail_max_box }
+    None => tail_max_box
+  }
   let path_tail_pos = match merged_positions.get(path_tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
@@ -175,12 +194,7 @@ fn edge_pathplan_polyline_core(
   let use_tail_port_box = path_tail_port_box is Some(_) && path_tail_side == 0
   let use_head_port_box = path_head_port_box is Some(_) && path_head_side == 0
   let tail_endpath = beginpath_boxes_regular(
-    tail_box,
-    path_tail_pos,
-    path_tail_size,
-    path_tail_anchor,
-    path_tail_side,
-    use_tail_port_box,
+    tail_box, path_tail_pos, path_tail_size, path_tail_anchor, path_tail_side, use_tail_port_box,
     ranksep_pt,
   )
   let tail_boxes = tail_endpath.boxes
@@ -210,27 +224,70 @@ fn edge_pathplan_polyline_core(
   for i in 0..<ordered.length() {
     let vnode = ordered[i]
     let prev_node = if i == 0 { path_tail_name } else { ordered[i - 1] }
-    let next_node =
-      if i + 1 < ordered.length() { ordered[i + 1] } else { path_head_name }
+    let next_node = if i + 1 < ordered.length() {
+      ordered[i + 1]
+    } else {
+      path_head_name
+    }
     let vnode_rank = match vnode_ranks.get(vnode) {
       Some(value) => value
       None => continue
     }
-    match rank_gap_box(
-      current_rank,
-      vnode_rank,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      left_bound,
-      right_bound,
-    ) {
+    match
+      rank_gap_box(
+        current_rank, vnode_rank, rank_y, rank_ht1, rank_ht2, left_bound, right_bound,
+      ) {
       Some(box) => path_boxes.push(box)
       None => ()
     }
-    match maximal_bbox_for_name(
-      vnode,
-      vnode_rank,
+    match
+      maximal_bbox_for_name(
+        vnode,
+        vnode_rank,
+        merged_positions,
+        route_sizes,
+        mval_route_sizes,
+        vnode_sizes,
+        cluster_keys,
+        vnode_clusters,
+        cluster_bboxes,
+        x_groups,
+        nodesep_pt,
+        splinesep_pt,
+        left_bound,
+        right_bound,
+        rank_ht1,
+        rank_ht2,
+        tail_cluster,
+        head_cluster,
+        path_out_edges,
+        path_in_edges,
+        order_index,
+        Some(prev_node),
+        Some(next_node),
+      ) {
+      Some(box) => path_boxes.push(box)
+      None => ()
+    }
+    current_rank = vnode_rank
+  }
+  // Graphviz parity: insert rank gap box before the head (rank_box).
+  match
+    rank_gap_box(
+      current_rank, path_head_rank, rank_y, rank_ht1, rank_ht2, left_bound, right_bound,
+    ) {
+    Some(box) => path_boxes.push(box)
+    None => ()
+  }
+  let head_prev = if ordered.length() > 0 {
+    Some(ordered[ordered.length() - 1])
+  } else {
+    Some(path_tail_name)
+  }
+  let head_max_box = match
+    maximal_bbox_for_name(
+      path_head_name,
+      path_head_rank,
       merged_positions,
       route_sizes,
       mval_route_sizes,
@@ -250,73 +307,18 @@ fn edge_pathplan_polyline_core(
       path_out_edges,
       path_in_edges,
       order_index,
-      Some(prev_node),
-      Some(next_node),
+      head_prev,
+      None,
     ) {
-      Some(box) => path_boxes.push(box)
-      None => ()
-    }
-    current_rank = vnode_rank
-  }
-  // Graphviz parity: insert rank gap box before the head (rank_box).
-  match rank_gap_box(
-    current_rank,
-    path_head_rank,
-    rank_y,
-    rank_ht1,
-    rank_ht2,
-    left_bound,
-    right_bound,
-  ) {
-    Some(box) => path_boxes.push(box)
-    None => ()
-  }
-  let head_prev =
-    if ordered.length() > 0 {
-    Some(ordered[ordered.length() - 1])
-  } else {
-    Some(path_tail_name)
-  }
-  let head_max_box = match maximal_bbox_for_name(
-    path_head_name,
-    path_head_rank,
-    merged_positions,
-    route_sizes,
-    mval_route_sizes,
-    vnode_sizes,
-    cluster_keys,
-    vnode_clusters,
-    cluster_bboxes,
-    x_groups,
-    nodesep_pt,
-    splinesep_pt,
-    left_bound,
-    right_bound,
-    rank_ht1,
-    rank_ht2,
-    tail_cluster,
-    head_cluster,
-    path_out_edges,
-    path_in_edges,
-    order_index,
-    head_prev,
-    None,
-  ) {
     Some(box) => box
     None => return None
   }
-  let head_box =
-    match path_head_port_box {
-      Some(box) => if path_head_side == 0 { box } else { head_max_box }
-      None => head_max_box
-    }
+  let head_box = match path_head_port_box {
+    Some(box) => if path_head_side == 0 { box } else { head_max_box }
+    None => head_max_box
+  }
   let head_endpath = endpath_boxes_regular(
-    head_box,
-    path_head_pos,
-    path_head_size,
-    path_head_anchor,
-    path_head_side,
-    use_head_port_box,
+    head_box, path_head_pos, path_head_size, path_head_anchor, path_head_side, use_head_port_box,
     ranksep_pt,
   )
   let head_boxes = head_endpath.boxes
@@ -359,11 +361,7 @@ fn edge_pathplan_polyline_core(
   let lb = fb + path_boxes.length() - 3
   let adjusted_boxes = adjust_regular_path(boxes, fb, lb)
   let normalized_boxes = adjusted_boxes
-  match route_pathplan_from_boxes(
-    normalized_boxes,
-    route_start,
-    route_end,
-  ) {
+  match route_pathplan_from_boxes(normalized_boxes, route_start, route_end) {
     Some(route) =>
       Some({
         points: dedupe_polyline_points(route.points),
@@ -549,44 +547,45 @@ pub fn edge_pathplan_polyline(
           // Graphviz parity: straight-chain split leaves virtual endpoints
           // unconstrained (beginpath/endpath ignore sides for virtual nodes).
           let seg1_head_side = 0
-          match edge_pathplan_polyline_core(
-            current_tail_name,
-            seg1_head,
-            current_tail_anchor,
-            seg1_head_pos,
-            current_tail_side,
-            seg1_head_side,
-            current_tail_port_box,
-            None,
-            current_tail_rank,
-            seg1_head_rank,
-            seg1_core_vnodes,
-            positions,
-            vnode_ranks,
-            vnode_positions,
-            sizes,
-            mval_sizes,
-            vnode_sizes,
-            cluster_keys,
-            vnode_clusters,
-            cluster_bboxes,
-            x_groups,
-            order_index,
-            path_out_edges,
-            path_in_edges,
-            rank_y,
-            rank_ht1,
-            rank_ht2,
-            nodesep_pt,
-            ranksep_pt,
-            rankdir,
-            merged_positions,
-            route_sizes,
-            mval_route_sizes,
-            splinesep_pt,
-            left_bound,
-            right_bound,
-          ) {
+          match
+            edge_pathplan_polyline_core(
+              current_tail_name,
+              seg1_head,
+              current_tail_anchor,
+              seg1_head_pos,
+              current_tail_side,
+              seg1_head_side,
+              current_tail_port_box,
+              None,
+              current_tail_rank,
+              seg1_head_rank,
+              seg1_core_vnodes,
+              positions,
+              vnode_ranks,
+              vnode_positions,
+              sizes,
+              mval_sizes,
+              vnode_sizes,
+              cluster_keys,
+              vnode_clusters,
+              cluster_bboxes,
+              x_groups,
+              order_index,
+              path_out_edges,
+              path_in_edges,
+              rank_y,
+              rank_ht1,
+              rank_ht2,
+              nodesep_pt,
+              ranksep_pt,
+              rankdir,
+              merged_positions,
+              route_sizes,
+              mval_route_sizes,
+              splinesep_pt,
+              left_bound,
+              right_bound,
+            ) {
             Some(core_result) => {
               let seg1_recover_vnodes : Array[String] = []
               if is_virtual_node(current_tail_name, vnode_sizes) {
@@ -618,44 +617,16 @@ pub fn edge_pathplan_polyline(
           current_vnodes = next_vnodes
         }
         None => {
-          match edge_pathplan_polyline_core(
-            current_tail_name,
-            path_head_name,
-            current_tail_anchor,
-            path_head_anchor,
-            current_tail_side,
-            path_head_side,
-            current_tail_port_box,
-            path_head_port_box,
-            current_tail_rank,
-            path_head_rank,
-            current_vnodes,
-            positions,
-            vnode_ranks,
-            vnode_positions,
-            sizes,
-            mval_sizes,
-            vnode_sizes,
-            cluster_keys,
-            vnode_clusters,
-            cluster_bboxes,
-            x_groups,
-            order_index,
-            path_out_edges,
-            path_in_edges,
-            rank_y,
-            rank_ht1,
-            rank_ht2,
-            nodesep_pt,
-            ranksep_pt,
-            rankdir,
-            merged_positions,
-            route_sizes,
-            mval_route_sizes,
-            splinesep_pt,
-            left_bound,
-            right_bound,
-          ) {
+          match
+            edge_pathplan_polyline_core(
+              current_tail_name, path_head_name, current_tail_anchor, path_head_anchor,
+              current_tail_side, path_head_side, current_tail_port_box, path_head_port_box,
+              current_tail_rank, path_head_rank, current_vnodes, positions, vnode_ranks,
+              vnode_positions, sizes, mval_sizes, vnode_sizes, cluster_keys, vnode_clusters,
+              cluster_bboxes, x_groups, order_index, path_out_edges, path_in_edges,
+              rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir, merged_positions,
+              route_sizes, mval_route_sizes, splinesep_pt, left_bound, right_bound,
+            ) {
             Some(core_result) => {
               let final_recover_vnodes : Array[String] = []
               if is_virtual_node(current_tail_name, vnode_sizes) {
@@ -678,100 +649,70 @@ pub fn edge_pathplan_polyline(
       }
     }
     if !split_failed && segments.length() > 0 {
-        let combined : Array[@geom.Point] = []
-        let all_barriers : Array[(@geom.Point, @geom.Point)] = []
-        let all_boxes : Array[@geom.Rect] = []
-        for segment in segments {
-          if segment.points.length() > 0 {
-            if combined.length() > 0 {
-              // Graphviz parity: straight_path duplicates the last point twice.
-              let last = combined[combined.length() - 1]
-              combined.push(last)
-              combined.push(last)
-            }
-            for point in segment.points {
-              combined.push(point)
-            }
+      let combined : Array[@geom.Point] = []
+      let all_barriers : Array[(@geom.Point, @geom.Point)] = []
+      let all_boxes : Array[@geom.Rect] = []
+      for segment in segments {
+        if segment.points.length() > 0 {
+          if combined.length() > 0 {
+            // Graphviz parity: straight_path duplicates the last point twice.
+            let last = combined[combined.length() - 1]
+            combined.push(last)
+            combined.push(last)
           }
-          for barrier in segment.barriers {
-            all_barriers.push(barrier)
-          }
-          for box in segment.boxes {
-            all_boxes.push(box)
+          for point in segment.points {
+            combined.push(point)
           }
         }
-        let out_points =
-          if swap_path {
-            let reversed : Array[@geom.Point] = []
-            let mut idx = combined.length()
-            while idx > 0 {
-              idx = idx - 1
-              reversed.push(combined[idx])
-            }
-            reversed
-          } else {
-            combined
-          }
-        return Some({
-          points: out_points,
-          barriers: all_barriers,
-          boxes: all_boxes,
-          segments,
-        })
+        for barrier in segment.barriers {
+          all_barriers.push(barrier)
+        }
+        for box in segment.boxes {
+          all_boxes.push(box)
+        }
       }
+      let out_points = if swap_path {
+        let reversed : Array[@geom.Point] = []
+        let mut idx = combined.length()
+        while idx > 0 {
+          idx = idx - 1
+          reversed.push(combined[idx])
+        }
+        reversed
+      } else {
+        combined
+      }
+      return Some({
+        points: out_points,
+        barriers: all_barriers,
+        boxes: all_boxes,
+        segments,
+      })
     }
-  match edge_pathplan_polyline_core(
-    path_tail_name,
-    path_head_name,
-    path_tail_anchor,
-    path_head_anchor,
-    path_tail_side,
-    path_head_side,
-    path_tail_port_box,
-    path_head_port_box,
-    path_tail_rank,
-    path_head_rank,
-    ordered,
-    positions,
-    vnode_ranks,
-    vnode_positions,
-    sizes,
-    mval_sizes,
-    vnode_sizes,
-    cluster_keys,
-    vnode_clusters,
-    cluster_bboxes,
-    x_groups,
-    order_index,
-    path_out_edges,
-    path_in_edges,
-    rank_y,
-    rank_ht1,
-    rank_ht2,
-    nodesep_pt,
-    ranksep_pt,
-    rankdir,
-    merged_positions,
-    route_sizes,
-    mval_route_sizes,
-    splinesep_pt,
-    left_bound,
-    right_bound,
-  ) {
+  }
+  match
+    edge_pathplan_polyline_core(
+      path_tail_name, path_head_name, path_tail_anchor, path_head_anchor, path_tail_side,
+      path_head_side, path_tail_port_box, path_head_port_box, path_tail_rank, path_head_rank,
+      ordered, positions, vnode_ranks, vnode_positions, sizes, mval_sizes, vnode_sizes,
+      cluster_keys, vnode_clusters, cluster_bboxes, x_groups, order_index, path_out_edges,
+      path_in_edges, rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
+      merged_positions, route_sizes, mval_route_sizes, splinesep_pt, left_bound,
+      right_bound,
+    ) {
     Some(core_result) => {
       let points = core_result.points
-      let out_points =
-        if swap_path {
-          let reversed : Array[@geom.Point] = []
-          let mut idx = points.length()
-          while idx > 0 {
-            idx = idx - 1
-            reversed.push(points[idx])
-          }
-          reversed
-        } else {
-          points
+      let out_points = if swap_path {
+        let reversed : Array[@geom.Point] = []
+        let mut idx = points.length()
+        while idx > 0 {
+          idx = idx - 1
+          reversed.push(points[idx])
         }
+        reversed
+      } else {
+        points
+      }
       Some({
         points: out_points,
         barriers: core_result.barriers,

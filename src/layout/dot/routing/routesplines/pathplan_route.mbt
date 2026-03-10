@@ -1,12 +1,12 @@
 ///|
 /// Routesplines pathplan-route owner: corridor polygon conversion, route
 /// solving through boxes, and spline box limiting.
-
 priv struct PathplanRouteResult {
   points : Array[@geom.Point]
   polygon : Array[@geom.Point]
 }
 
+///|
 fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
   if boxes.length() == 0 {
     return []
@@ -130,7 +130,6 @@ fn dedupe_polyline_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
-
 fn route_pathplan_from_boxes(
   boxes : Array[@geom.Rect],
   start : @geom.Point,
@@ -224,12 +223,20 @@ fn adjust_regular_path(
       if (i - fb) % 2 == 0 {
         if box.llx >= box.urx {
           let mid = (box.llx + box.urx) / 2.0
-          box = { llx: mid - ROUTE_MIN_WIDTH / 2.0, lly: box.lly, urx: mid + ROUTE_MIN_WIDTH / 2.0, ury: box.ury }
+          box = {
+            llx: mid - ROUTE_MIN_WIDTH / 2.0,
+            lly: box.lly,
+            urx: mid + ROUTE_MIN_WIDTH / 2.0,
+            ury: box.ury,
+          }
         }
-      } else {
-        if box.llx + ROUTE_MIN_WIDTH > box.urx {
-          let mid = (box.llx + box.urx) / 2.0
-          box = { llx: mid - ROUTE_MIN_WIDTH / 2.0, lly: box.lly, urx: mid + ROUTE_MIN_WIDTH / 2.0, ury: box.ury }
+      } else if box.llx + ROUTE_MIN_WIDTH > box.urx {
+        let mid = (box.llx + box.urx) / 2.0
+        box = {
+          llx: mid - ROUTE_MIN_WIDTH / 2.0,
+          lly: box.lly,
+          urx: mid + ROUTE_MIN_WIDTH / 2.0,
+          ury: box.ury,
         }
       }
       adjusted[i] = box
@@ -242,20 +249,40 @@ fn adjust_regular_path(
       let mut right = adjusted[i + 1]
       let left = adjusted[i]
       if left.llx + ROUTE_MIN_WIDTH > right.urx {
-        right = { llx: right.llx, lly: right.lly, urx: left.llx + ROUTE_MIN_WIDTH, ury: right.ury }
+        right = {
+          llx: right.llx,
+          lly: right.lly,
+          urx: left.llx + ROUTE_MIN_WIDTH,
+          ury: right.ury,
+        }
       }
       if left.urx - ROUTE_MIN_WIDTH < right.llx {
-        right = { llx: left.urx - ROUTE_MIN_WIDTH, lly: right.lly, urx: right.urx, ury: right.ury }
+        right = {
+          llx: left.urx - ROUTE_MIN_WIDTH,
+          lly: right.lly,
+          urx: right.urx,
+          ury: right.ury,
+        }
       }
       adjusted[i + 1] = right
     } else if i + 1 >= fb && i < lb && (i + 1 - fb) % 2 == 0 {
       let mut left = adjusted[i]
       let right = adjusted[i + 1]
       if left.llx + ROUTE_MIN_WIDTH > right.urx {
-        left = { llx: right.urx - ROUTE_MIN_WIDTH, lly: left.lly, urx: left.urx, ury: left.ury }
+        left = {
+          llx: right.urx - ROUTE_MIN_WIDTH,
+          lly: left.lly,
+          urx: left.urx,
+          ury: left.ury,
+        }
       }
       if left.urx - ROUTE_MIN_WIDTH < right.llx {
-        left = { llx: left.llx, lly: left.lly, urx: right.llx + ROUTE_MIN_WIDTH, ury: left.ury }
+        left = {
+          llx: left.llx,
+          lly: left.lly,
+          urx: right.llx + ROUTE_MIN_WIDTH,
+          ury: left.ury,
+        }
       }
       adjusted[i] = left
     }
@@ -265,9 +292,7 @@ fn adjust_regular_path(
 }
 
 ///|
-fn polyline_to_spline_points(
-  points : Array[@geom.Point],
-) -> Array[@geom.Point] {
+fn polyline_to_spline_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
   if points.length() < 2 {
     return []
   }
@@ -366,7 +391,12 @@ pub fn limit_boxes_for_spline(
   let mut i = 0
   while i < limited.length() {
     let box = limited[i]
-    limited[i] = { llx: initial_llx, lly: box.lly, urx: initial_urx, ury: box.ury }
+    limited[i] = {
+      llx: initial_llx,
+      lly: box.lly,
+      urx: initial_urx,
+      ury: box.ury,
+    }
     i = i + 1
   }
   if spline_points.length() == 0 {
