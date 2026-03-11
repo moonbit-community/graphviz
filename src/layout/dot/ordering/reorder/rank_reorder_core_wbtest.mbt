@@ -337,6 +337,25 @@ test "live port tie-break helpers match materialized port-order tuples" {
 }
 
 ///|
+test "active incident edge maps filter non-positive penalties once" {
+  let edge_in : Map[String, Array[Int]] = Map::new()
+  edge_in["x"] = [0, 1, 2]
+  edge_in["y"] = [3]
+
+  let edge_out : Map[String, Array[Int]] = Map::new()
+  edge_out["a"] = [0, 3]
+  edge_out["b"] = [1, 2]
+
+  let active = build_active_incident_edge_maps(edge_in, edge_out, [2, 0, -1, 3])
+  let incident = build_rank_incident_edge_lists(["x", "y", "z"], active)
+
+  assert_eq(incident.in_edges, [[0], [3], []])
+  assert_eq(incident.out_edges, [[], [], []])
+  assert_eq(active.out_edges.get("a"), Some([0, 3]))
+  assert_eq(active.out_edges.get("b"), Some([]))
+}
+
+///|
 test "transpose_rank_groups_port reorders rank using fixed external anchors" {
   let rank_keys = [1]
   let ordered : Map[Int, Array[String]] = Map::new()

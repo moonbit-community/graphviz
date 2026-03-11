@@ -597,6 +597,12 @@ priv struct RankIncidentEdgeLists {
 }
 
 ///|
+priv struct ActiveIncidentEdgeMaps {
+  in_edges : Map[String, Array[Int]]
+  out_edges : Map[String, Array[Int]]
+}
+
+///|
 priv struct EdgeEndpointOrders {
   tail_orders : Array[Int]
   head_orders : Array[Int]
@@ -654,29 +660,44 @@ fn refresh_edge_endpoint_orders_for_node(
 }
 
 ///|
-fn build_rank_incident_edge_lists(
-  names : Array[String],
+fn build_active_incident_edge_maps(
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
   edge_penalty : Array[Int],
+) -> ActiveIncidentEdgeMaps {
+  let active_in_edges : Map[String, Array[Int]] = Map::new()
+  let active_out_edges : Map[String, Array[Int]] = Map::new()
+  for name, incident in edge_in {
+    let filtered : Array[Int] = []
+    for edge_idx in incident {
+      if edge_penalty[edge_idx] > 0 {
+        filtered.push(edge_idx)
+      }
+    }
+    active_in_edges[name] = filtered
+  }
+  for name, incident in edge_out {
+    let filtered : Array[Int] = []
+    for edge_idx in incident {
+      if edge_penalty[edge_idx] > 0 {
+        filtered.push(edge_idx)
+      }
+    }
+    active_out_edges[name] = filtered
+  }
+  { in_edges: active_in_edges, out_edges: active_out_edges }
+}
+
+///|
+fn build_rank_incident_edge_lists(
+  names : Array[String],
+  active_incident_edges : ActiveIncidentEdgeMaps,
 ) -> RankIncidentEdgeLists {
   let in_edges : Array[Array[Int]] = []
   let out_edges : Array[Array[Int]] = []
   for name in names {
-    let incoming : Array[Int] = []
-    for edge_idx in edge_in.get(name).unwrap_or_default() {
-      if edge_penalty[edge_idx] > 0 {
-        incoming.push(edge_idx)
-      }
-    }
-    in_edges.push(incoming)
-    let outgoing : Array[Int] = []
-    for edge_idx in edge_out.get(name).unwrap_or_default() {
-      if edge_penalty[edge_idx] > 0 {
-        outgoing.push(edge_idx)
-      }
-    }
-    out_edges.push(outgoing)
+    in_edges.push(active_incident_edges.in_edges.get(name).unwrap_or_default())
+    out_edges.push(active_incident_edges.out_edges.get(name).unwrap_or_default())
   }
   { in_edges, out_edges }
 }
@@ -876,11 +897,14 @@ pub fn count_rank_crossings_port(
     order,
     fixed_order,
   )
-  let incident_edges = build_rank_incident_edge_lists(
-    names,
+  let active_incident_edges = build_active_incident_edge_maps(
     edge_in,
     edge_out,
     edge_penalty,
+  )
+  let incident_edges = build_rank_incident_edge_lists(
+    names,
+    active_incident_edges,
   )
   let port_orders = build_rank_port_tiebreak_orders(
     incident_edges,
@@ -1090,6 +1114,11 @@ pub fn transpose_rank_groups_port(
   let candidate = Array::make(rank_len, true)
   let initial_order = @rank_groups.build_order_index(ordered)
   let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
+  let active_incident_edges = build_active_incident_edge_maps(
+    edge_in,
+    edge_out,
+    edge_penalty,
+  )
   let edge_endpoint_orders = build_edge_endpoint_orders(
     edge_tail,
     edge_head,
@@ -1105,7 +1134,7 @@ pub fn transpose_rank_groups_port(
       None => []
     }
     rank_incident_edges.push(
-      build_rank_incident_edge_lists(names, edge_in, edge_out, edge_penalty),
+      build_rank_incident_edge_lists(names, active_incident_edges),
     )
     let constraint_lookup = build_rank_constraint_lookup(
       names,
