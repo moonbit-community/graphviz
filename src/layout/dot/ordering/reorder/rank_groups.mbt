@@ -102,23 +102,16 @@ pub fn build_neighbor_rank_groups(
     ordered[rank] = []
   }
   let nodes = collect_rank_group_nodes(rank_keys, groups)
-  let fallback_order : Map[String, Int] = Map::new()
-  for i, name in nodes {
-    fallback_order[name] = i
-  }
-  let nlist = nodes.copy()
-  if nlist.length() > 1 {
-    nlist.sort_by((a, b) => {
-      let a_idx = resolve_component_order_index(a, node_order, fallback_order)
-      let b_idx = resolve_component_order_index(b, node_order, fallback_order)
-      if a_idx < b_idx {
-        -1
-      } else if a_idx > b_idx {
-        1
-      } else {
-        0
-      }
-    })
+  let order_data = build_component_order(nodes, node_order)
+  let fallback_order = order_data.fallback_order
+  let nlist = order_data.ordered_nodes
+  let resolved_order : Map[String, Int] = Map::new()
+  for name in nodes {
+    resolved_order[name] = resolve_component_order_index(
+      name,
+      node_order,
+      fallback_order,
+    )
   }
   let neighbors = create_empty_neighbors(nlist)
   let out_neighbors = neighbors.out_neighbors
@@ -159,29 +152,7 @@ pub fn build_neighbor_rank_groups(
   }
   for _key, list in cluster_nodes {
     if list.length() > 1 {
-      list.sort_by((a, b) => {
-        let a_rank = node_ranks.get(a).unwrap_or_default()
-        let b_rank = node_ranks.get(b).unwrap_or_default()
-        if a_rank < b_rank {
-          -1
-        } else if a_rank > b_rank {
-          1
-        } else {
-          let a_idx = resolve_component_order_index(
-            a, node_order, fallback_order,
-          )
-          let b_idx = resolve_component_order_index(
-            b, node_order, fallback_order,
-          )
-          if a_idx < b_idx {
-            -1
-          } else if a_idx > b_idx {
-            1
-          } else {
-            0
-          }
-        }
-      })
+      rewrite_names_by_rank_and_order(list, node_ranks, resolved_order)
     }
   }
   let installed : Map[String, Bool] = Map::new()
@@ -393,6 +364,41 @@ fn resolve_component_order_index(
 }
 
 ///|
+fn rewrite_names_by_rank_and_order(
+  names : Array[String],
+  node_ranks : Map[String, Int],
+  resolved_order : Map[String, Int],
+) -> Unit {
+  let entries : Array[(String, Int, Int)] = []
+  for name in names {
+    entries.push((
+      name,
+      node_ranks.get(name).unwrap_or_default(),
+      resolved_order.get(name).unwrap_or_default(),
+    ))
+  }
+  entries.sort_by((a, b) => {
+    let (_, a_rank, a_idx) = a
+    let (_, b_rank, b_idx) = b
+    if a_rank < b_rank {
+      -1
+    } else if a_rank > b_rank {
+      1
+    } else if a_idx < b_idx {
+      -1
+    } else if a_idx > b_idx {
+      1
+    } else {
+      0
+    }
+  })
+  for i in 0..<entries.length() {
+    let (name, _, _) = entries[i]
+    names[i] = name
+  }
+}
+
+///|
 fn build_component_order(
   nodes : Array[String],
   node_order : Map[String, Int],
@@ -480,37 +486,17 @@ fn collect_component_skeletons(
       }
     }
   }
+  let resolved_order : Map[String, Int] = Map::new()
+  for name in ordered_nodes {
+    resolved_order[name] = resolve_component_order_index(
+      name,
+      node_order,
+      fallback_order,
+    )
+  }
   for _key, list in cluster_skeleton_nodes {
     if list.length() > 1 {
-      list.sort_by((a, b) => {
-        let a_rank = match node_ranks.get(a) {
-          Some(value) => value
-          None => 0
-        }
-        let b_rank = match node_ranks.get(b) {
-          Some(value) => value
-          None => 0
-        }
-        if a_rank < b_rank {
-          -1
-        } else if a_rank > b_rank {
-          1
-        } else {
-          let a_idx = resolve_component_order_index(
-            a, node_order, fallback_order,
-          )
-          let b_idx = resolve_component_order_index(
-            b, node_order, fallback_order,
-          )
-          if a_idx < b_idx {
-            -1
-          } else if a_idx > b_idx {
-            1
-          } else {
-            0
-          }
-        }
-      })
+      rewrite_names_by_rank_and_order(list, node_ranks, resolved_order)
     }
   }
   cluster_skeleton_nodes
