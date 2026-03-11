@@ -153,6 +153,33 @@ fn builtin_polygon_shape_attrs(shape : String) -> PolygonShapeAttrs? {
         skew: 0.0,
         regular: false,
       })
+    "pentagon" =>
+      Some({
+        sides: 5,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "hexagon" =>
+      Some({
+        sides: 6,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
+    "septagon" =>
+      Some({
+        sides: 7,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: false,
+      })
     _ => None
   }
 }
