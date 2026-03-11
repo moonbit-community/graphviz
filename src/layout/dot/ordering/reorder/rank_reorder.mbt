@@ -399,36 +399,39 @@ fn reorder_by_medians_unconstrained(
   reverse : Bool,
   hasfixed : Bool,
 ) -> Array[String] {
+  // Hot path: loop guards keep indices within the original rank length.
+  let has_values = desired_state.has_values
+  let values = desired_state.values
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
     let mut lp = 0
     while lp < ep {
-      while lp < ep && !desired_state.has_values[lp] {
+      while lp < ep && !Array::unsafe_get(has_values, lp) {
         lp = lp + 1
       }
       if lp >= ep {
         break
       }
       let mut rp = lp + 1
-      while rp < ep && !desired_state.has_values[rp] {
+      while rp < ep && !Array::unsafe_get(has_values, rp) {
         rp = rp + 1
       }
       if rp >= ep {
         break
       }
-      let p1 = desired_state.values[lp]
-      let p2 = desired_state.values[rp]
+      let p1 = Array::unsafe_get(values, lp)
+      let p2 = Array::unsafe_get(values, rp)
       if p1 > p2 || (p1 >= p2 && reverse) {
-        let tmp = sorted[lp]
-        sorted[lp] = sorted[rp]
-        sorted[rp] = tmp
-        let tmp_has_value = desired_state.has_values[lp]
-        desired_state.has_values[lp] = desired_state.has_values[rp]
-        desired_state.has_values[rp] = tmp_has_value
-        let tmp_value = desired_state.values[lp]
-        desired_state.values[lp] = desired_state.values[rp]
-        desired_state.values[rp] = tmp_value
+        let tmp = Array::unsafe_get(sorted, lp)
+        Array::unsafe_set(sorted, lp, Array::unsafe_get(sorted, rp))
+        Array::unsafe_set(sorted, rp, tmp)
+        let tmp_has_value = Array::unsafe_get(has_values, lp)
+        Array::unsafe_set(has_values, lp, Array::unsafe_get(has_values, rp))
+        Array::unsafe_set(has_values, rp, tmp_has_value)
+        let tmp_value = Array::unsafe_get(values, lp)
+        Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
+        Array::unsafe_set(values, rp, tmp_value)
       }
       lp = rp
     }
@@ -450,12 +453,17 @@ fn reorder_by_medians_constrained(
   constraint_state : RankConstraintState,
   remincross_mode? : Bool = false,
 ) -> Array[String] {
+  // Hot path: loop guards and stored node indices keep accesses in bounds.
+  let has_values = desired_state.has_values
+  let values = desired_state.values
+  let node_indices = constraint_state.node_indices
+  let cluster_ids = constraint_lookup.cluster_ids
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
     let mut lp = 0
     while lp < ep {
-      while lp < ep && !desired_state.has_values[lp] {
+      while lp < ep && !Array::unsafe_get(has_values, lp) {
         lp = lp + 1
       }
       if lp >= ep {
@@ -465,9 +473,9 @@ fn reorder_by_medians_constrained(
       let mut muststay = false
       let mut sawclust = false
       while rp < ep {
-        let rp_idx = constraint_state.node_indices[rp]
+        let rp_idx = Array::unsafe_get(node_indices, rp)
         let rp_cluster = if rp_idx >= 0 {
-          constraint_lookup.cluster_ids[rp_idx]
+          Array::unsafe_get(cluster_ids, rp_idx)
         } else {
           0
         }
@@ -485,7 +493,7 @@ fn reorder_by_medians_constrained(
           muststay = true
           break
         }
-        if desired_state.has_values[rp] {
+        if Array::unsafe_get(has_values, rp) {
           break
         }
         if rp_cluster != 0 {
@@ -497,21 +505,21 @@ fn reorder_by_medians_constrained(
         break
       }
       if !muststay {
-        let p1 = desired_state.values[lp]
-        let p2 = desired_state.values[rp]
+        let p1 = Array::unsafe_get(values, lp)
+        let p2 = Array::unsafe_get(values, rp)
         if p1 > p2 || (p1 >= p2 && reverse) {
-          let tmp = sorted[lp]
-          sorted[lp] = sorted[rp]
-          sorted[rp] = tmp
-          let tmp_node_index = constraint_state.node_indices[lp]
-          constraint_state.node_indices[lp] = constraint_state.node_indices[rp]
-          constraint_state.node_indices[rp] = tmp_node_index
-          let tmp_has_value = desired_state.has_values[lp]
-          desired_state.has_values[lp] = desired_state.has_values[rp]
-          desired_state.has_values[rp] = tmp_has_value
-          let tmp_value = desired_state.values[lp]
-          desired_state.values[lp] = desired_state.values[rp]
-          desired_state.values[rp] = tmp_value
+          let tmp = Array::unsafe_get(sorted, lp)
+          Array::unsafe_set(sorted, lp, Array::unsafe_get(sorted, rp))
+          Array::unsafe_set(sorted, rp, tmp)
+          let tmp_node_index = Array::unsafe_get(node_indices, lp)
+          Array::unsafe_set(node_indices, lp, Array::unsafe_get(node_indices, rp))
+          Array::unsafe_set(node_indices, rp, tmp_node_index)
+          let tmp_has_value = Array::unsafe_get(has_values, lp)
+          Array::unsafe_set(has_values, lp, Array::unsafe_get(has_values, rp))
+          Array::unsafe_set(has_values, rp, tmp_has_value)
+          let tmp_value = Array::unsafe_get(values, lp)
+          Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
+          Array::unsafe_set(values, rp, tmp_value)
         }
       }
       lp = rp
@@ -919,24 +927,34 @@ fn in_cross_pair_tiebreak_live(
   right_in_edges : Array[PortIncidentEdge],
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> CrossPairCounts {
+  if left_in_edges.length() == 0 || right_in_edges.length() == 0 {
+    return { forward: 0, reverse: 0 }
+  }
   let tail_orders = edge_endpoint_orders.tail_orders
   let mut forward = 0
   let mut reverse = 0
-  for right_edge in right_in_edges {
+  let left_len = left_in_edges.length()
+  let right_len = right_in_edges.length()
+  let mut right_idx = 0
+  while right_idx < right_len {
+    let right_edge = Array::unsafe_get(right_in_edges, right_idx)
     let cnt = right_edge.penalty
-    let inv = tail_orders[right_edge.edge_idx]
+    let inv = Array::unsafe_get(tail_orders, right_edge.edge_idx)
     let inv_port = right_edge.port_x
-    for left_edge in left_in_edges {
+    let mut left_idx = 0
+    while left_idx < left_len {
+      let left_edge = Array::unsafe_get(left_in_edges, left_idx)
       let weight = left_edge.penalty
-      let tail_order = tail_orders[left_edge.edge_idx]
+      let tail_order = Array::unsafe_get(tail_orders, left_edge.edge_idx)
       let tail_port = left_edge.port_x
-      let t = tail_order - inv
-      if t > 0 || (t == 0 && tail_port > inv_port) {
+      if tail_order > inv || (tail_order == inv && tail_port > inv_port) {
         forward = forward + weight * cnt
-      } else if t < 0 || (t == 0 && tail_port < inv_port) {
+      } else if tail_order < inv || (tail_order == inv && tail_port < inv_port) {
         reverse = reverse + weight * cnt
       }
+      left_idx = left_idx + 1
     }
+    right_idx = right_idx + 1
   }
   { forward, reverse }
 }
@@ -968,24 +986,34 @@ fn out_cross_pair_tiebreak_live(
   right_out_edges : Array[PortIncidentEdge],
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> CrossPairCounts {
+  if left_out_edges.length() == 0 || right_out_edges.length() == 0 {
+    return { forward: 0, reverse: 0 }
+  }
   let head_orders = edge_endpoint_orders.head_orders
   let mut forward = 0
   let mut reverse = 0
-  for right_edge in right_out_edges {
+  let left_len = left_out_edges.length()
+  let right_len = right_out_edges.length()
+  let mut right_idx = 0
+  while right_idx < right_len {
+    let right_edge = Array::unsafe_get(right_out_edges, right_idx)
     let cnt = right_edge.penalty
-    let inv = head_orders[right_edge.edge_idx]
+    let inv = Array::unsafe_get(head_orders, right_edge.edge_idx)
     let inv_port = right_edge.port_x
-    for left_edge in left_out_edges {
+    let mut left_idx = 0
+    while left_idx < left_len {
+      let left_edge = Array::unsafe_get(left_out_edges, left_idx)
       let weight = left_edge.penalty
-      let head_order = head_orders[left_edge.edge_idx]
+      let head_order = Array::unsafe_get(head_orders, left_edge.edge_idx)
       let head_port = left_edge.port_x
-      let t = head_order - inv
-      if t > 0 || (t == 0 && head_port > inv_port) {
+      if head_order > inv || (head_order == inv && head_port > inv_port) {
         forward = forward + weight * cnt
-      } else if t < 0 || (t == 0 && head_port < inv_port) {
+      } else if head_order < inv || (head_order == inv && head_port < inv_port) {
         reverse = reverse + weight * cnt
       }
+      left_idx = left_idx + 1
     }
+    right_idx = right_idx + 1
   }
   { forward, reverse }
 }
@@ -1176,20 +1204,24 @@ fn transpose_rank_port_tiebreak(
     let right_incident_in = incident_edges.in_edges[i + 1]
     let left_incident_out = incident_edges.out_edges[i]
     let right_incident_out = incident_edges.out_edges[i + 1]
-    let in_cross_pair = in_cross_pair_tiebreak_live(
-      left_incident_in,
-      right_incident_in,
-      edge_endpoint_orders,
-    )
-    c0 = c0 + in_cross_pair.forward
-    c1 = c1 + in_cross_pair.reverse
-    let out_cross_pair = out_cross_pair_tiebreak_live(
-      left_incident_out,
-      right_incident_out,
-      edge_endpoint_orders,
-    )
-    c0 = c0 + out_cross_pair.forward
-    c1 = c1 + out_cross_pair.reverse
+    if left_incident_in.length() > 0 && right_incident_in.length() > 0 {
+      let in_cross_pair = in_cross_pair_tiebreak_live(
+        left_incident_in,
+        right_incident_in,
+        edge_endpoint_orders,
+      )
+      c0 = c0 + in_cross_pair.forward
+      c1 = c1 + in_cross_pair.reverse
+    }
+    if left_incident_out.length() > 0 && right_incident_out.length() > 0 {
+      let out_cross_pair = out_cross_pair_tiebreak_live(
+        left_incident_out,
+        right_incident_out,
+        edge_endpoint_orders,
+      )
+      c0 = c0 + out_cross_pair.forward
+      c1 = c1 + out_cross_pair.reverse
+    }
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
