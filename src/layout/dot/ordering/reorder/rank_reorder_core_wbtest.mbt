@@ -279,6 +279,12 @@ test "live port tie-break helpers match materialized port-order tuples" {
   active_incident_edges.in_edges["right"] = incident_edges.in_edges[1]
   active_incident_edges.out_edges["left"] = incident_edges.out_edges[0]
   active_incident_edges.out_edges["right"] = incident_edges.out_edges[1]
+  let edge_in : Map[String, Array[Int]] = Map::new()
+  edge_in["left"] = incident_edges.in_edges[0]
+  edge_in["right"] = incident_edges.in_edges[1]
+  let edge_out : Map[String, Array[Int]] = Map::new()
+  edge_out["left"] = incident_edges.out_edges[0]
+  edge_out["right"] = incident_edges.out_edges[1]
   let edge_endpoint_orders : EdgeEndpointOrders = {
     tail_orders: [3, 1, 2, 0, 4, 2, 1, 3, 0],
     head_orders: [0, 0, 0, 0, 0, 4, 2, 1, 3],
@@ -288,7 +294,8 @@ test "live port tie-break helpers match materialized port-order tuples" {
   let edge_penalty = [2, 1, 3, 0, 2, 1, 2, 0, 4]
   let port_incident_edges = build_rank_port_incident_edge_lists(
     ["left", "right"],
-    active_incident_edges,
+    edge_in,
+    edge_out,
     edge_tail_port_x,
     edge_head_port_x,
     edge_penalty,

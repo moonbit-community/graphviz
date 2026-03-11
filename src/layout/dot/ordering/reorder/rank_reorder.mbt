@@ -861,10 +861,10 @@ fn build_rank_incident_edge_lists(
   { in_edges, out_edges }
 }
 
-///|
 fn build_rank_port_incident_edge_lists(
   names : Array[String],
-  active_incident_edges : ActiveIncidentEdgeMaps,
+  edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
@@ -873,7 +873,11 @@ fn build_rank_port_incident_edge_lists(
   let out_edges : Array[Array[PortIncidentEdge]] = []
   for name in names {
     let incoming : Array[PortIncidentEdge] = []
-    for edge_idx in active_incident_edges.in_edges.get(name).unwrap_or_default() {
+    for edge_idx in edge_in.get(name).unwrap_or_default() {
+      let penalty = edge_penalty[edge_idx]
+      if penalty <= 0 {
+        continue
+      }
       incoming.push({
         edge_idx,
         port_x: if edge_idx < edge_tail_port_x.length() {
@@ -881,12 +885,16 @@ fn build_rank_port_incident_edge_lists(
         } else {
           0.0
         },
-        penalty: edge_penalty[edge_idx],
+        penalty,
       })
     }
     in_edges.push(incoming)
     let outgoing : Array[PortIncidentEdge] = []
-    for edge_idx in active_incident_edges.out_edges.get(name).unwrap_or_default() {
+    for edge_idx in edge_out.get(name).unwrap_or_default() {
+      let penalty = edge_penalty[edge_idx]
+      if penalty <= 0 {
+        continue
+      }
       outgoing.push({
         edge_idx,
         port_x: if edge_idx < edge_head_port_x.length() {
@@ -894,7 +902,7 @@ fn build_rank_port_incident_edge_lists(
         } else {
           0.0
         },
-        penalty: edge_penalty[edge_idx],
+        penalty,
       })
     }
     out_edges.push(outgoing)
@@ -1334,11 +1342,6 @@ pub fn transpose_rank_groups_port(
   let candidate = Array::make(rank_len, true)
   let initial_order = @rank_groups.build_order_index(ordered)
   let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
-  let active_incident_edges = build_active_incident_edge_maps(
-    edge_in,
-    edge_out,
-    edge_penalty,
-  )
   let edge_endpoint_orders = build_edge_endpoint_orders(
     edge_tail,
     edge_head,
@@ -1356,7 +1359,8 @@ pub fn transpose_rank_groups_port(
     rank_incident_edges.push(
       build_rank_port_incident_edge_lists(
         names,
-        active_incident_edges,
+        edge_in,
+        edge_out,
         edge_tail_port_x,
         edge_head_port_x,
         edge_penalty,
