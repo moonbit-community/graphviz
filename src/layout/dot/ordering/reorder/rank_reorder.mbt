@@ -63,6 +63,7 @@ fn build_rank_constraint_lookup(
   let skeletons : Array[Bool] = []
   let name_index : Map[String, Int] = Map::new()
   let flat_left_to_right : Array[Array[Int]] = []
+  let build_flat_lookup = flat_constraints.has_enabled_constraints
   let mut has_clusters = false
   for i, name in names {
     let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -73,11 +74,13 @@ fn build_rank_constraint_lookup(
       skeletons.push(false)
     }
     clusters.push(cluster)
-    name_index[name] = i
+    if build_flat_lookup {
+      name_index[name] = i
+    }
     flat_left_to_right.push([])
   }
   let mut has_flat_constraints = false
-  if flat_constraints.has_enabled_constraints {
+  if build_flat_lookup {
     for i, name in names {
       for head in flat_constraints.heads_by_tail.get(name).unwrap_or_default() {
         match name_index.get(head) {
@@ -106,6 +109,12 @@ fn build_rank_constraint_state(
   constraint_lookup : RankConstraintLookup,
 ) -> RankConstraintState {
   let node_indices : Array[Int] = []
+  if !constraint_lookup.has_flat_constraints {
+    for i in 0..<names.length() {
+      node_indices.push(i)
+    }
+    return { node_indices, }
+  }
   for name in names {
     match constraint_lookup.name_index.get(name) {
       Some(index) => node_indices.push(index)
