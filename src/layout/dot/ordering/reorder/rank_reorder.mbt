@@ -1218,6 +1218,8 @@ fn transpose_rank_port_tiebreak(
   let in_edges_by_node = incident_edges.in_edges
   let out_edges_by_node = incident_edges.out_edges
   let node_indices = constraint_state.node_indices
+  let has_constraints = constraint_lookup.has_clusters ||
+    constraint_lookup.has_flat_constraints
   let len = names.length()
   let mut changed = false
   let mut delta = 0
@@ -1225,7 +1227,7 @@ fn transpose_rank_port_tiebreak(
   while i + 1 < len {
     let left = Array::unsafe_get(names, i)
     let right = Array::unsafe_get(names, i + 1)
-    if rank_left2right_constraint_resolved(
+    if has_constraints && rank_left2right_constraint_resolved(
         constraint_lookup,
         constraint_state,
         i,
@@ -1266,9 +1268,11 @@ fn transpose_rank_port_tiebreak(
       Array::unsafe_set(in_edges_by_node, i + 1, left_incident_in)
       Array::unsafe_set(out_edges_by_node, i, right_incident_out)
       Array::unsafe_set(out_edges_by_node, i + 1, left_incident_out)
-      let tmp_node_index = Array::unsafe_get(node_indices, i)
-      Array::unsafe_set(node_indices, i, Array::unsafe_get(node_indices, i + 1))
-      Array::unsafe_set(node_indices, i + 1, tmp_node_index)
+      if has_constraints {
+        let tmp_node_index = Array::unsafe_get(node_indices, i)
+        Array::unsafe_set(node_indices, i, Array::unsafe_get(node_indices, i + 1))
+        Array::unsafe_set(node_indices, i + 1, tmp_node_index)
+      }
       refresh_port_incident_edge_orders_for_node(
         left_incident_in,
         left_incident_out,
