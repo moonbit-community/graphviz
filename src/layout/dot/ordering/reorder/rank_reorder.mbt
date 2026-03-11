@@ -1839,6 +1839,10 @@ pub fn reorder_rank_groups(
       }
     }
   }
+  let sync_rank_positions = (names : Array[String]) => {
+    @rank_groups.update_order_positions_for_rank(order_positions, names)
+    merge_fixed_positions()
+  }
   merge_fixed_positions()
   let mut has_port_order = false
   for _name, _ in port_order_positions {
@@ -2230,7 +2234,7 @@ pub fn reorder_rank_groups(
           let hasfixed = apply_flat_mvals(
             names, desired, edge_in, edge_out, flat_constraints,
           )
-          ordered[rank] = reorder_by_medians(
+          let reordered = reorder_by_medians(
             names,
             desired,
             reverse,
@@ -2240,8 +2244,8 @@ pub fn reorder_rank_groups(
             flat_constraints,
             remincross_mode~,
           )
-          order_positions = @rank_groups.order_positions_from_groups(ordered)
-          merge_fixed_positions()
+          ordered[rank] = reordered
+          sync_rank_positions(reordered)
         }
         let _ = transpose_rank_groups_port(
           rank_keys,
@@ -2467,7 +2471,7 @@ pub fn reorder_rank_groups(
               let hasfixed = apply_flat_mvals(
                 names, desired, edge_in, edge_out, flat_constraints,
               )
-              ordered[rank] = reorder_by_medians(
+              let reordered = reorder_by_medians(
                 names,
                 desired,
                 reverse,
@@ -2477,11 +2481,9 @@ pub fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode~,
               )
+              ordered[rank] = reordered
               if !use_sweep_snapshot {
-                order_positions = @rank_groups.order_positions_from_groups(
-                  ordered,
-                )
-                merge_fixed_positions()
+                sync_rank_positions(reordered)
               }
             }
             idx = idx + 1
@@ -2510,7 +2512,7 @@ pub fn reorder_rank_groups(
               let hasfixed = apply_flat_mvals(
                 names, desired, edge_in, edge_out, flat_constraints,
               )
-              ordered[rank] = reorder_by_medians(
+              let reordered = reorder_by_medians(
                 names,
                 desired,
                 reverse,
@@ -2520,11 +2522,9 @@ pub fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode~,
               )
+              ordered[rank] = reordered
               if !use_sweep_snapshot {
-                order_positions = @rank_groups.order_positions_from_groups(
-                  ordered,
-                )
-                merge_fixed_positions()
+                sync_rank_positions(reordered)
               }
             }
             if idx == 0 {
@@ -2639,7 +2639,7 @@ pub fn reorder_rank_groups(
               let desired = compute_scaled_medians(
                 names, median_parents, order_positions,
               )
-              ordered[rank] = reorder_by_medians(
+              let reordered = reorder_by_medians(
                 names,
                 desired,
                 reverse_ties,
@@ -2649,10 +2649,8 @@ pub fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode~,
               )
-              order_positions = @rank_groups.order_positions_from_groups(
-                ordered,
-              )
-              merge_fixed_positions()
+              ordered[rank] = reordered
+              sync_rank_positions(reordered)
             }
             idx = idx + 1
           }
@@ -2668,7 +2666,7 @@ pub fn reorder_rank_groups(
               let desired = compute_scaled_medians(
                 names, median_children, order_positions,
               )
-              ordered[rank] = reorder_by_medians(
+              let reordered = reorder_by_medians(
                 names,
                 desired,
                 reverse_ties,
@@ -2678,10 +2676,8 @@ pub fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode~,
               )
-              order_positions = @rank_groups.order_positions_from_groups(
-                ordered,
-              )
-              merge_fixed_positions()
+              ordered[rank] = reordered
+              sync_rank_positions(reordered)
             }
             if idx == 0 {
               break

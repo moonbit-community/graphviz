@@ -148,3 +148,13 @@ pub fn order_positions_from_groups(
   }
   positions
 }
+
+///|
+pub fn update_order_positions_for_rank(
+  positions : Map[String, Double],
+  names : Array[String],
+) -> Unit {
+  for i in 0..<names.length() {
+    positions[names[i]] = i.to_double()
+  }
+}
