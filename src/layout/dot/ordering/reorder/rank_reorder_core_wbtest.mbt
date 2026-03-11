@@ -167,6 +167,38 @@ test "reorder_by_medians keeps left-to-right constrained pairs pinned" {
 }
 
 ///|
+test "build_rank_constraint_lookup keeps only enabled flat constraints inside the rank" {
+  let cluster_keys : Map[String, String] = Map::new()
+  cluster_keys["a"] = "cluster_a"
+  cluster_keys["b"] = "cluster_b"
+  cluster_keys["skeleton"] = "cluster_b"
+
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  cluster_skeleton["skeleton"] = true
+
+  let flat_constraints : Map[String, Bool] = Map::new()
+  flat_constraints["a|b"] = true
+  flat_constraints["a|outside"] = true
+  flat_constraints["disabled|pair"] = false
+  flat_constraints["bad_key"] = true
+
+  let lookup = build_rank_constraint_lookup(
+    ["a", "b", "skeleton"],
+    cluster_keys,
+    cluster_skeleton,
+    build_parsed_flat_constraints(flat_constraints),
+  )
+  let state = build_rank_constraint_state(["a", "b", "skeleton"], lookup)
+
+  assert_true(
+    rank_left2right_constraint_resolved(lookup, state, 0, 1, false),
+  )
+  assert_false(
+    rank_left2right_constraint_resolved(lookup, state, 0, 2, false),
+  )
+}
+
+///|
 test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
   let ranks : Map[String, Int] = Map::new()
   ranks["p"] = 0
@@ -254,46 +286,54 @@ test "live port tie-break helpers match materialized port-order tuples" {
     edge_penalty,
   )
 
+  let in_pair = in_cross_pair_tiebreak_live(
+    incident_edges.in_edges[0],
+    incident_edges.in_edges[1],
+    edge_endpoint_orders,
+    edge_tail_port_x,
+    edge_penalty,
+  )
   assert_eq(
-    in_cross_port_tiebreak_live(
-      incident_edges.in_edges[0],
-      incident_edges.in_edges[1],
-      edge_endpoint_orders,
-      edge_tail_port_x,
-      edge_penalty,
-    ),
+    in_pair.forward,
     in_cross_port_tiebreak(port_orders.in_orders[0], port_orders.in_orders[1]),
   )
   assert_eq(
-    in_cross_port_tiebreak_live(
-      incident_edges.in_edges[1],
-      incident_edges.in_edges[0],
-      edge_endpoint_orders,
-      edge_tail_port_x,
-      edge_penalty,
-    ),
+    in_pair.reverse,
     in_cross_port_tiebreak(port_orders.in_orders[1], port_orders.in_orders[0]),
   )
+  let reversed_in_pair = in_cross_pair_tiebreak_live(
+    incident_edges.in_edges[1],
+    incident_edges.in_edges[0],
+    edge_endpoint_orders,
+    edge_tail_port_x,
+    edge_penalty,
+  )
+  assert_eq(reversed_in_pair.forward, in_pair.reverse)
+  assert_eq(reversed_in_pair.reverse, in_pair.forward)
+  let out_pair = out_cross_pair_tiebreak_live(
+    incident_edges.out_edges[0],
+    incident_edges.out_edges[1],
+    edge_endpoint_orders,
+    edge_head_port_x,
+    edge_penalty,
+  )
   assert_eq(
-    out_cross_port_tiebreak_live(
-      incident_edges.out_edges[0],
-      incident_edges.out_edges[1],
-      edge_endpoint_orders,
-      edge_head_port_x,
-      edge_penalty,
-    ),
+    out_pair.forward,
     out_cross_port_tiebreak(port_orders.out_orders[0], port_orders.out_orders[1]),
   )
   assert_eq(
-    out_cross_port_tiebreak_live(
-      incident_edges.out_edges[1],
-      incident_edges.out_edges[0],
-      edge_endpoint_orders,
-      edge_head_port_x,
-      edge_penalty,
-    ),
+    out_pair.reverse,
     out_cross_port_tiebreak(port_orders.out_orders[1], port_orders.out_orders[0]),
   )
+  let reversed_out_pair = out_cross_pair_tiebreak_live(
+    incident_edges.out_edges[1],
+    incident_edges.out_edges[0],
+    edge_endpoint_orders,
+    edge_head_port_x,
+    edge_penalty,
+  )
+  assert_eq(reversed_out_pair.forward, out_pair.reverse)
+  assert_eq(reversed_out_pair.reverse, out_pair.forward)
 }
 
 ///|

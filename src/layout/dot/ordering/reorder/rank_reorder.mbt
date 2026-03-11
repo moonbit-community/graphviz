@@ -6,9 +6,15 @@ priv struct RankConstraintLookup {
   clusters : Array[String]
   skeletons : Array[Bool]
   name_index : Map[String, Int]
-  flat_left_to_right : Array[Array[Bool]]
+  flat_left_to_right : Array[Array[Int]]
   has_clusters : Bool
   has_flat_constraints : Bool
+}
+
+///|
+priv struct ParsedFlatConstraints {
+  heads_by_tail : Map[String, Array[String]]
+  has_enabled_constraints : Bool
 }
 
 ///|
@@ -23,16 +29,40 @@ priv struct RankDesiredState {
 }
 
 ///|
+fn build_parsed_flat_constraints(
+  flat_constraints : Map[String, Bool],
+) -> ParsedFlatConstraints {
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  let mut has_enabled_constraints = false
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match @rank_constraints.parse_flat_constraint_key(key) {
+      Some((tail, head)) if tail != "" && head != "" => {
+        match heads_by_tail.get(tail) {
+          Some(heads) => heads.push(head)
+          None => heads_by_tail[tail] = [head]
+        }
+        has_enabled_constraints = true
+      }
+      _ => ()
+    }
+  }
+  { heads_by_tail, has_enabled_constraints }
+}
+
+///|
 fn build_rank_constraint_lookup(
   names : Array[String],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
+  flat_constraints : ParsedFlatConstraints,
 ) -> RankConstraintLookup {
   let clusters : Array[String] = []
   let skeletons : Array[Bool] = []
   let name_index : Map[String, Int] = Map::new()
-  let flat_left_to_right : Array[Array[Bool]] = []
+  let flat_left_to_right : Array[Array[Int]] = []
   let mut has_clusters = false
   for i, name in names {
     let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -42,27 +72,20 @@ fn build_rank_constraint_lookup(
     clusters.push(cluster)
     skeletons.push(cluster_skeleton.get(name) == Some(true))
     name_index[name] = i
-    flat_left_to_right.push(Array::make(names.length(), false))
+    flat_left_to_right.push([])
   }
   let mut has_flat_constraints = false
-  for key, enabled in flat_constraints {
-    if !enabled {
-      continue
-    }
-    match @rank_constraints.parse_flat_constraint_key(key) {
-      Some((tail, head)) =>
-        match name_index.get(tail) {
-          Some(tail_idx) =>
-            match name_index.get(head) {
-              Some(head_idx) => {
-                flat_left_to_right[tail_idx][head_idx] = true
-                has_flat_constraints = true
-              }
-              None => ()
-            }
+  if flat_constraints.has_enabled_constraints {
+    for i, name in names {
+      for head in flat_constraints.heads_by_tail.get(name).unwrap_or_default() {
+        match name_index.get(head) {
+          Some(head_idx) => {
+            flat_left_to_right[i].push(head_idx)
+            has_flat_constraints = true
+          }
           None => ()
         }
-      None => ()
+      }
     }
   }
   {
@@ -121,7 +144,12 @@ fn rank_left2right_constraint_resolved(
       return true
     }
   }
-  constraint_lookup.flat_left_to_right[left_idx][right_idx]
+  for constrained_right_idx in constraint_lookup.flat_left_to_right[left_idx] {
+    if constrained_right_idx == right_idx {
+      return true
+    }
+  }
+  false
 }
 
 ///|
@@ -284,11 +312,12 @@ pub fn reorder_by_medians(
   flat_constraints : Map[String, Bool],
   remincross_mode? : Bool = false,
 ) -> Array[String] {
+  let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
   let constraint_lookup = build_rank_constraint_lookup(
     names,
     cluster_keys,
     cluster_skeleton,
-    flat_constraints,
+    parsed_flat_constraints,
   )
   reorder_by_medians_with_lookup(
     names,
@@ -574,6 +603,12 @@ priv struct EdgeEndpointOrders {
 }
 
 ///|
+priv struct CrossPairCounts {
+  forward : Int
+  reverse : Int
+}
+
+///|
 fn resolve_port_tiebreak_order(
   name : String,
   order : Map[String, Int],
@@ -717,14 +752,15 @@ fn head_port_x_or_zero(edge_idx : Int, edge_head_port_x : Array[Double]) -> Doub
 
 ///|
 /// Graphviz parity: direct port x tie-break matches mincross.c in_cross.
-fn in_cross_port_tiebreak_live(
+fn in_cross_pair_tiebreak_live(
   left_in_edges : Array[Int],
   right_in_edges : Array[Int],
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_penalty : Array[Int],
-) -> Int {
-  let mut cross = 0
+) -> CrossPairCounts {
+  let mut forward = 0
+  let mut reverse = 0
   for right_edge_idx in right_in_edges {
     let cnt = edge_penalty[right_edge_idx]
     let inv = edge_endpoint_orders.tail_orders[right_edge_idx]
@@ -735,11 +771,13 @@ fn in_cross_port_tiebreak_live(
       let tail_port = tail_port_x_or_zero(left_edge_idx, edge_tail_port_x)
       let t = tail_order - inv
       if t > 0 || (t == 0 && tail_port > inv_port) {
-        cross = cross + weight * cnt
+        forward = forward + weight * cnt
+      } else if t < 0 || (t == 0 && tail_port < inv_port) {
+        reverse = reverse + weight * cnt
       }
     }
   }
-  cross
+  { forward, reverse }
 }
 
 ///|
@@ -764,14 +802,15 @@ fn in_cross_port_tiebreak(
 
 ///|
 /// Graphviz parity: direct port x tie-break matches mincross.c out_cross.
-fn out_cross_port_tiebreak_live(
+fn out_cross_pair_tiebreak_live(
   left_out_edges : Array[Int],
   right_out_edges : Array[Int],
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
-) -> Int {
-  let mut cross = 0
+) -> CrossPairCounts {
+  let mut forward = 0
+  let mut reverse = 0
   for right_edge_idx in right_out_edges {
     let cnt = edge_penalty[right_edge_idx]
     let inv = edge_endpoint_orders.head_orders[right_edge_idx]
@@ -782,11 +821,13 @@ fn out_cross_port_tiebreak_live(
       let head_port = head_port_x_or_zero(left_edge_idx, edge_head_port_x)
       let t = head_order - inv
       if t > 0 || (t == 0 && head_port > inv_port) {
-        cross = cross + weight * cnt
+        forward = forward + weight * cnt
+      } else if t < 0 || (t == 0 && head_port < inv_port) {
+        reverse = reverse + weight * cnt
       }
     }
   }
-  cross
+  { forward, reverse }
 }
 
 ///|
@@ -975,34 +1016,24 @@ fn transpose_rank_port_tiebreak(
     let right_incident_in = incident_edges.in_edges[i + 1]
     let left_incident_out = incident_edges.out_edges[i]
     let right_incident_out = incident_edges.out_edges[i + 1]
-    c0 = c0 + in_cross_port_tiebreak_live(
+    let in_cross_pair = in_cross_pair_tiebreak_live(
       left_incident_in,
       right_incident_in,
       edge_endpoint_orders,
       edge_tail_port_x,
       edge_penalty,
     )
-    c1 = c1 + in_cross_port_tiebreak_live(
-      right_incident_in,
-      left_incident_in,
-      edge_endpoint_orders,
-      edge_tail_port_x,
-      edge_penalty,
-    )
-    c0 = c0 + out_cross_port_tiebreak_live(
+    c0 = c0 + in_cross_pair.forward
+    c1 = c1 + in_cross_pair.reverse
+    let out_cross_pair = out_cross_pair_tiebreak_live(
       left_incident_out,
       right_incident_out,
       edge_endpoint_orders,
       edge_head_port_x,
       edge_penalty,
     )
-    c1 = c1 + out_cross_port_tiebreak_live(
-      right_incident_out,
-      left_incident_out,
-      edge_endpoint_orders,
-      edge_head_port_x,
-      edge_penalty,
-    )
+    c0 = c0 + out_cross_pair.forward
+    c1 = c1 + out_cross_pair.reverse
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
@@ -1058,6 +1089,7 @@ pub fn transpose_rank_groups_port(
   let rank_len = rank_keys.length()
   let candidate = Array::make(rank_len, true)
   let initial_order = @rank_groups.build_order_index(ordered)
+  let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
   let edge_endpoint_orders = build_edge_endpoint_orders(
     edge_tail,
     edge_head,
@@ -1079,7 +1111,7 @@ pub fn transpose_rank_groups_port(
       names,
       cluster_keys,
       cluster_skeleton,
-      flat_constraints,
+      parsed_flat_constraints,
     )
     rank_constraint_lookups.push(constraint_lookup)
     rank_constraint_states.push(
