@@ -1076,21 +1076,24 @@ fn dfs_enter_outedge(
   low : Int,
   lim : Int,
 ) -> Int? {
+  let nodes = graph.nodes
+  let edges = graph.edges
   let mut best_edge : Int? = None
   let mut best_slack = 0x7fffffff
   let stack : Array[Int] = [start]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
-    for edge_idx in graph.nodes[v].out_edges {
-      let head = graph.edges[edge_idx].head
+    let node_lim = nodes[v].lim
+    for edge_idx in nodes[v].out_edges {
+      let head = edges[edge_idx].head
       if is_tree_edge(graph, edge_idx) {
-        if graph.nodes[head].lim < graph.nodes[v].lim {
+        if nodes[head].lim < node_lim {
           stack.push(head)
         }
         continue
       }
-      if seq(low, graph.nodes[head].lim, lim) {
+      if seq(low, nodes[head].lim, lim) {
         continue
       }
       let slack = edge_slack(graph, edge_idx)
@@ -1100,9 +1103,9 @@ fn dfs_enter_outedge(
       }
     }
     if best_slack > 0 {
-      for edge_idx in graph.nodes[v].tree_in {
-        let tail = graph.edges[edge_idx].tail
-        if graph.nodes[tail].lim < graph.nodes[v].lim {
+      for edge_idx in nodes[v].tree_in {
+        let tail = edges[edge_idx].tail
+        if nodes[tail].lim < node_lim {
           stack.push(tail)
         }
       }
@@ -1113,21 +1116,24 @@ fn dfs_enter_outedge(
 
 ///|
 fn dfs_enter_inedge(graph : NsGraph, start : Int, low : Int, lim : Int) -> Int? {
+  let nodes = graph.nodes
+  let edges = graph.edges
   let mut best_edge : Int? = None
   let mut best_slack = 0x7fffffff
   let stack : Array[Int] = [start]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
-    for edge_idx in graph.nodes[v].in_edges {
-      let tail = graph.edges[edge_idx].tail
+    let node_lim = nodes[v].lim
+    for edge_idx in nodes[v].in_edges {
+      let tail = edges[edge_idx].tail
       if is_tree_edge(graph, edge_idx) {
-        if graph.nodes[tail].lim < graph.nodes[v].lim {
+        if nodes[tail].lim < node_lim {
           stack.push(tail)
         }
         continue
       }
-      if seq(low, graph.nodes[tail].lim, lim) {
+      if seq(low, nodes[tail].lim, lim) {
         continue
       }
       let slack = edge_slack(graph, edge_idx)
@@ -1137,9 +1143,9 @@ fn dfs_enter_inedge(graph : NsGraph, start : Int, low : Int, lim : Int) -> Int? 
       }
     }
     if best_slack > 0 {
-      for edge_idx in graph.nodes[v].tree_out {
-        let head = graph.edges[edge_idx].head
-        if graph.nodes[head].lim < graph.nodes[v].lim {
+      for edge_idx in nodes[v].tree_out {
+        let head = edges[edge_idx].head
+        if nodes[head].lim < node_lim {
           stack.push(head)
         }
       }
