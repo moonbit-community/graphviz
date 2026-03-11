@@ -184,6 +184,7 @@ lsunix2
 lsunix3
 mike
 mrecord
+multi
 Mrecord
 Msquare
 NaN
@@ -251,6 +252,7 @@ rowcolsep_dot
 rowcolsep_dot1
 rowe
 round
+root
 rootlabel
 rpromoter
 russian
@@ -830,6 +832,7 @@ ZapfChancery
 Helvetica
 Symbol
 ZapfDingbats
+b102
 b106
 b124
 b135
@@ -917,4 +920,5 @@ val_inv
 val_nul
 val_val
 viewport
+xx
 xlabels
