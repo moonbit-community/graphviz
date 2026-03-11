@@ -1367,18 +1367,18 @@ fn build_component_traversal_starts(
   order_node_order : Map[String, Int],
 ) -> ComponentTraversalStarts {
   let fallback_order : Map[String, Int] = Map::new()
+  let start_entries : Array[(String, Int)] = []
   for i, name in order_nodes {
     fallback_order[name] = i
+    start_entries.push((
+      name,
+      resolve_root_component_order_index(name, order_node_order, fallback_order),
+    ))
   }
-  let start_nodes = order_nodes.copy()
-  if start_nodes.length() > 1 {
-    start_nodes.sort_by((a, b) => {
-      let a_idx = resolve_root_component_order_index(
-        a, order_node_order, fallback_order,
-      )
-      let b_idx = resolve_root_component_order_index(
-        b, order_node_order, fallback_order,
-      )
+  if start_entries.length() > 1 {
+    start_entries.sort_by((a, b) => {
+      let (_, a_idx) = a
+      let (_, b_idx) = b
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -1387,6 +1387,11 @@ fn build_component_traversal_starts(
         0
       }
     })
+  }
+  let start_nodes : Array[String] = []
+  for entry in start_entries {
+    let (name, _) = entry
+    start_nodes.push(name)
   }
   let preferred_start_nodes : Array[String] = []
   for name in start_nodes {

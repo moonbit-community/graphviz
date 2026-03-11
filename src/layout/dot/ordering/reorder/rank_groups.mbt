@@ -398,14 +398,15 @@ fn build_component_order(
   node_order : Map[String, Int],
 ) -> ComponentOrderData {
   let fallback_order : Map[String, Int] = Map::new()
+  let ordered_entries : Array[(String, Int)] = []
   for i, name in nodes {
     fallback_order[name] = i
+    ordered_entries.push((name, node_order.get(name).unwrap_or(i)))
   }
-  let ordered_nodes = nodes.copy()
-  if ordered_nodes.length() > 1 {
-    ordered_nodes.sort_by((a, b) => {
-      let a_idx = resolve_component_order_index(a, node_order, fallback_order)
-      let b_idx = resolve_component_order_index(b, node_order, fallback_order)
+  if ordered_entries.length() > 1 {
+    ordered_entries.sort_by((a, b) => {
+      let (_, a_idx) = a
+      let (_, b_idx) = b
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -414,6 +415,11 @@ fn build_component_order(
         0
       }
     })
+  }
+  let ordered_nodes : Array[String] = []
+  for entry in ordered_entries {
+    let (name, _) = entry
+    ordered_nodes.push(name)
   }
   { ordered_nodes, fallback_order }
 }
