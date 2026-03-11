@@ -51,7 +51,7 @@ fn Parser::advance(self : Parser) -> Unit raise DotParseError {
 ///|
 fn Parser::is_keyword(self : Parser, keyword : String) -> Bool {
   match self.current.token {
-    Id(value) => value == keyword
+    Id(value) => value.to_lower() == keyword
     _ => false
   }
 }

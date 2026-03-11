@@ -29,6 +29,21 @@ test "parse_dot requires graph or digraph" {
 }
 
 ///|
+test "parse_dot accepts case-insensitive graph keywords" {
+  let directed = try @dot.parse_dot("diGraph G { a -> b; }") catch {
+    err => fail("unexpected parse failure: \{err}")
+  }
+  assert_eq(directed.kind(), @cgraph.GraphKind::Directed)
+  assert_eq(directed.name(), Some("G"))
+
+  let undirected = try @dot.parse_dot("GrApH H { a -- b; }") catch {
+    err => fail("unexpected parse failure: \{err}")
+  }
+  assert_eq(undirected.kind(), @cgraph.GraphKind::Undirected)
+  assert_eq(undirected.name(), Some("H"))
+}
+
+///|
 test "parse_dot rejects undirected edges in digraph" {
   let result : Result[@cgraph.Graph, DotParseError] =
     try? @dot.parse_dot("digraph { a -- b; }")
