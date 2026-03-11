@@ -653,8 +653,10 @@ fn feasible_tree(graph : NsGraph) -> Bool {
 
 ///|
 fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
-  graph.nodes[root].par_edge = NONE_EDGE
-  graph.nodes[root].low = 1
+  let nodes = graph.nodes
+  let edges = graph.edges
+  nodes[root].par_edge = NONE_EDGE
+  nodes[root].low = 1
   let stack : Array[DfsState] = [
     { node: root, par_edge: NONE_EDGE, lim: 1, tree_out_i: 0, tree_in_i: 0 },
   ]
@@ -662,14 +664,17 @@ fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
   while stack.length() > 0 {
     let last = stack.length() - 1
     let state = stack[last]
+    let node_idx = state.node
+    let tree_out = nodes[node_idx].tree_out
+    let tree_in = nodes[node_idx].tree_in
     let mut pushed = false
-    while state.tree_out_i < graph.nodes[state.node].tree_out.length() {
-      let edge_idx = graph.nodes[state.node].tree_out[state.tree_out_i]
+    while state.tree_out_i < tree_out.length() {
+      let edge_idx = tree_out[state.tree_out_i]
       state.tree_out_i = state.tree_out_i + 1
       if edge_idx != state.par_edge {
-        let head = graph.edges[edge_idx].head
-        graph.nodes[head].par_edge = edge_idx
-        graph.nodes[head].low = state.lim
+        let head = edges[edge_idx].head
+        nodes[head].par_edge = edge_idx
+        nodes[head].low = state.lim
         stack[last] = state
         stack.push({
           node: head,
@@ -685,13 +690,13 @@ fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
     if pushed {
       continue
     }
-    while state.tree_in_i < graph.nodes[state.node].tree_in.length() {
-      let edge_idx = graph.nodes[state.node].tree_in[state.tree_in_i]
+    while state.tree_in_i < tree_in.length() {
+      let edge_idx = tree_in[state.tree_in_i]
       state.tree_in_i = state.tree_in_i + 1
       if edge_idx != state.par_edge {
-        let tail = graph.edges[edge_idx].tail
-        graph.nodes[tail].par_edge = edge_idx
-        graph.nodes[tail].low = state.lim
+        let tail = edges[edge_idx].tail
+        nodes[tail].par_edge = edge_idx
+        nodes[tail].low = state.lim
         stack[last] = state
         stack.push({
           node: tail,
@@ -707,7 +712,7 @@ fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
     if pushed {
       continue
     }
-    graph.nodes[state.node].lim = state.lim
+    nodes[node_idx].lim = state.lim
     lim = state.lim
     let _ = stack.pop()
     if stack.length() > 0 {
@@ -727,12 +732,14 @@ fn dfs_range(
   parent_edge : Int,
   low : Int,
 ) -> Int {
-  if graph.nodes[node_idx].par_edge == parent_edge &&
-    graph.nodes[node_idx].low == low {
-    return graph.nodes[node_idx].lim + 1
+  let nodes = graph.nodes
+  let edges = graph.edges
+  if nodes[node_idx].par_edge == parent_edge &&
+    nodes[node_idx].low == low {
+    return nodes[node_idx].lim + 1
   }
-  graph.nodes[node_idx].par_edge = parent_edge
-  graph.nodes[node_idx].low = low
+  nodes[node_idx].par_edge = parent_edge
+  nodes[node_idx].low = low
   let stack : Array[DfsState] = [
     {
       node: node_idx,
@@ -746,19 +753,22 @@ fn dfs_range(
   while stack.length() > 0 {
     let last = stack.length() - 1
     let state = stack[last]
+    let current = state.node
+    let tree_out = nodes[current].tree_out
+    let tree_in = nodes[current].tree_in
     let mut processed = false
-    while state.tree_out_i < graph.nodes[state.node].tree_out.length() {
-      let edge_idx = graph.nodes[state.node].tree_out[state.tree_out_i]
+    while state.tree_out_i < tree_out.length() {
+      let edge_idx = tree_out[state.tree_out_i]
       state.tree_out_i = state.tree_out_i + 1
       if edge_idx != state.par_edge {
-        let head = graph.edges[edge_idx].head
-        if graph.nodes[head].par_edge == edge_idx &&
-          graph.nodes[head].low == state.lim {
-          state.lim = graph.nodes[head].lim + 1
+        let head = edges[edge_idx].head
+        if nodes[head].par_edge == edge_idx &&
+          nodes[head].low == state.lim {
+          state.lim = nodes[head].lim + 1
           stack[last] = state
         } else {
-          graph.nodes[head].par_edge = edge_idx
-          graph.nodes[head].low = state.lim
+          nodes[head].par_edge = edge_idx
+          nodes[head].low = state.lim
           stack[last] = state
           stack.push({
             node: head,
@@ -775,18 +785,18 @@ fn dfs_range(
     if processed {
       continue
     }
-    while state.tree_in_i < graph.nodes[state.node].tree_in.length() {
-      let edge_idx = graph.nodes[state.node].tree_in[state.tree_in_i]
+    while state.tree_in_i < tree_in.length() {
+      let edge_idx = tree_in[state.tree_in_i]
       state.tree_in_i = state.tree_in_i + 1
       if edge_idx != state.par_edge {
-        let tail = graph.edges[edge_idx].tail
-        if graph.nodes[tail].par_edge == edge_idx &&
-          graph.nodes[tail].low == state.lim {
-          state.lim = graph.nodes[tail].lim + 1
+        let tail = edges[edge_idx].tail
+        if nodes[tail].par_edge == edge_idx &&
+          nodes[tail].low == state.lim {
+          state.lim = nodes[tail].lim + 1
           stack[last] = state
         } else {
-          graph.nodes[tail].par_edge = edge_idx
-          graph.nodes[tail].low = state.lim
+          nodes[tail].par_edge = edge_idx
+          nodes[tail].low = state.lim
           stack[last] = state
           stack.push({
             node: tail,
@@ -803,7 +813,7 @@ fn dfs_range(
     if processed {
       continue
     }
-    graph.nodes[state.node].lim = state.lim
+    nodes[current].lim = state.lim
     lim = state.lim
     let _ = stack.pop()
     if stack.length() > 0 {
@@ -1160,23 +1170,27 @@ fn enter_edge(graph : NsGraph, leaving : Int) -> Int? {
 
 ///|
 fn rerank(graph : NsGraph, node_idx : Int, delta : Int) -> Unit {
+  let nodes = graph.nodes
+  let edges = graph.edges
   let stack : Array[Int] = [node_idx]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
-    graph.nodes[v].rank = graph.nodes[v].rank - delta
-    let parent_edge = graph.nodes[v].par_edge
-    for edge_idx in graph.nodes[v].tree_out {
+    nodes[v].rank = nodes[v].rank - delta
+    let parent_edge = nodes[v].par_edge
+    let tree_out = nodes[v].tree_out
+    for edge_idx in tree_out {
       if edge_idx == parent_edge {
         continue
       }
-      stack.push(graph.edges[edge_idx].head)
+      stack.push(edges[edge_idx].head)
     }
-    for edge_idx in graph.nodes[v].tree_in {
+    let tree_in = nodes[v].tree_in
+    for edge_idx in tree_in {
       if edge_idx == parent_edge {
         continue
       }
-      stack.push(graph.edges[edge_idx].tail)
+      stack.push(edges[edge_idx].tail)
     }
   }
 }
