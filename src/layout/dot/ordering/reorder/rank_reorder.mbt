@@ -68,9 +68,11 @@ fn build_rank_constraint_lookup(
     let cluster = cluster_keys.get(name).unwrap_or_default()
     if cluster != "" {
       has_clusters = true
+      skeletons.push(cluster_skeleton.get(name) == Some(true))
+    } else {
+      skeletons.push(false)
     }
     clusters.push(cluster)
-    skeletons.push(cluster_skeleton.get(name) == Some(true))
     name_index[name] = i
     flat_left_to_right.push([])
   }
@@ -129,20 +131,25 @@ fn rank_left2right_constraint_resolved(
   if left_idx < 0 || right_idx < 0 {
     return false
   }
-  let left_cluster = constraint_lookup.clusters[left_idx]
-  let right_cluster = constraint_lookup.clusters[right_idx]
-  if remincross_mode {
-    // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
-    if left_cluster != right_cluster {
-      return true
+  if constraint_lookup.has_clusters {
+    let left_cluster = constraint_lookup.clusters[left_idx]
+    let right_cluster = constraint_lookup.clusters[right_idx]
+    if remincross_mode {
+      // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
+      if left_cluster != right_cluster {
+        return true
+      }
+    }
+    if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
+      let left_skel = constraint_lookup.skeletons[left_idx]
+      let right_skel = constraint_lookup.skeletons[right_idx]
+      if !left_skel && !right_skel {
+        return true
+      }
     }
   }
-  if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
-    let left_skel = constraint_lookup.skeletons[left_idx]
-    let right_skel = constraint_lookup.skeletons[right_idx]
-    if !left_skel && !right_skel {
-      return true
-    }
+  if !constraint_lookup.has_flat_constraints {
+    return false
   }
   for constrained_right_idx in constraint_lookup.flat_left_to_right[left_idx] {
     if constrained_right_idx == right_idx {
