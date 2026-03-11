@@ -9,6 +9,9 @@ import sys
 from pathlib import Path
 
 
+EXPECTED_FIXTURE_GRAPHVIZ_VERSION = "14.1.1"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Scan all uncovered cases and add those that pass.",
@@ -75,20 +78,35 @@ def get_all_input_cases(repo_root: Path) -> list[str]:
 
 
 def ensure_dot_bin(repo_root: Path, dot_bin: Path | None) -> Path:
-    """Ensure dot binary exists, build if needed."""
-    default_bin = repo_root / "_build/native/debug/build/cmd/dot/dot.exe"
-    dot_bin = dot_bin.resolve() if dot_bin else default_bin
-    if dot_bin.exists():
-        return dot_bin
-    print(f"Building dot binary: {dot_bin}", file=sys.stderr)
-    subprocess.run(
-        ["moon", "build", "src/cmd/dot", "--target", "native"],
-        cwd=repo_root,
-        check=True,
+    """Resolve the upstream Graphviz dot binary used to author fixtures."""
+    default_candidates = [
+        Path("/opt/homebrew/opt/graphviz@14.1.1/bin/dot"),
+        Path("/usr/local/opt/graphviz@14.1.1/bin/dot"),
+    ]
+    dot_bin = dot_bin.resolve() if dot_bin else None
+    candidates = [dot_bin] if dot_bin is not None else []
+    candidates.extend(default_candidates)
+    for candidate in candidates:
+        if candidate is None or not candidate.exists():
+            continue
+        proc = subprocess.run(
+            [str(candidate), "-V"],
+            cwd=repo_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        version_text = f"{proc.stdout}\n{proc.stderr}"
+        if EXPECTED_FIXTURE_GRAPHVIZ_VERSION in version_text:
+            return candidate
+    searched = "\n".join(f"  - {path}" for path in default_candidates)
+    raise FileNotFoundError(
+        "Upstream Graphviz 14.1.1 dot binary is required to author strict parity fixtures.\n"
+        "Checked:\n"
+        f"{searched}\n"
+        "Pass --dot-bin explicitly if your Graphviz 14.1.1 binary lives elsewhere."
     )
-    if not dot_bin.exists():
-        raise FileNotFoundError(f"dot binary missing after build: {dot_bin}")
-    return dot_bin
 
 
 def test_case(

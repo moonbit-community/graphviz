@@ -2,6 +2,17 @@
 
 This repository aims for strict Graphviz parity (`dot` / `xdot` / `svg`) using byte-for-byte fixtures.
 
+## Fixture Source of Truth (Mandatory)
+
+Strict parity fixtures are reference artifacts, not self-generated expectations.
+
+- The fixture reference version is upstream Graphviz `14.1.1`.
+- Generate or refresh `dot` / `xdot` / `svg` fixtures with an external Graphviz `14.1.1` binary, preferably a Homebrew-installed `graphviz@14.1.1` binary such as `/opt/homebrew/opt/graphviz@14.1.1/bin/dot` or `/usr/local/opt/graphviz@14.1.1/bin/dot`.
+- Treat `refs/graphviz` primarily as source/input corpus and upstream code reference, not as the default fixture-authoring binary. Its checked-out revision may drift for other repository needs and must not silently redefine fixture expectations.
+- Do **not** generate or refresh parity fixtures with this repository's own `dot.exe`. Using the implementation under test to author its own expected outputs makes the parity check meaningless.
+- The repository `dot.exe` remains the subject of `scripts/check_strict_parity.py`; the fixture corpus must come from upstream Graphviz outputs.
+- If the fixture reference version is intentionally changed in the future, treat that as a reference-version migration: regenerate the affected fixtures from upstream, rerun parity checks, and validate the broader corpus before committing.
+
 ## Commit Guard Rules (Mandatory)
 
 Before pushing a no-regression milestone, run the full local guard and ensure it passes:
