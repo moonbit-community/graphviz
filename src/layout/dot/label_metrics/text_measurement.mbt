@@ -66,6 +66,8 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
   let lower = font_name.to_lower()
   if lower.contains("palatino") {
     1.125
+  } else if lower.contains("helvetica") || lower.contains("doxfont") {
+    1.125
   } else if lower.contains("times") {
     let min_size = 10.0
     let max_size = 14.0

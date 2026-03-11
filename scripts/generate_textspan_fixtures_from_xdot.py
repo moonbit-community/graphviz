@@ -175,6 +175,8 @@ def line_height_scale(font_name: str, font_size: float) -> float:
     lower = font_name.lower()
     if "palatino" in lower:
         return 1.125
+    if "helvetica" in lower or "doxfont" in lower:
+        return 1.125
     if "times" in lower:
         min_size = 10.0
         max_size = 14.0
