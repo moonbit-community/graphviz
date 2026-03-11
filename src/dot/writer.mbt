@@ -322,6 +322,7 @@ fn graph_attr_rank(name : String) -> Int {
 fn node_attr_rank(name : String) -> Int {
   match name {
     "URL" | "url" | "href" => -1
+    "area" => 1
     "class" => 0
     "_draw_" => 0
     "_ldraw_" => 1
