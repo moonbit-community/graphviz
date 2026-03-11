@@ -3,10 +3,10 @@ type NodeSize = @node_primitives.NodeSize
 
 ///|
 priv struct RankConstraintLookup {
-  clusters : Array[String]
+  cluster_ids : Array[Int]
   skeletons : Array[Bool]
   name_index : Map[String, Int]
-  flat_left_to_right : Array[Array[Int]]
+  flat_left_to_right : Array[Map[Int, Bool]]
   has_clusters : Bool
   has_flat_constraints : Bool
 }
@@ -59,42 +59,60 @@ fn build_rank_constraint_lookup(
   cluster_skeleton : Map[String, Bool],
   flat_constraints : ParsedFlatConstraints,
 ) -> RankConstraintLookup {
-  let clusters : Array[String] = []
+  let cluster_ids : Array[Int] = []
   let skeletons : Array[Bool] = []
   let name_index : Map[String, Int] = Map::new()
-  let flat_left_to_right : Array[Array[Int]] = []
+  let flat_left_to_right : Array[Map[Int, Bool]] = []
+  let cluster_id_by_name : Map[String, Int] = Map::new()
   let build_flat_lookup = flat_constraints.has_enabled_constraints
   let mut has_clusters = false
+  let mut next_cluster_id = 1
   for i, name in names {
     let cluster = cluster_keys.get(name).unwrap_or_default()
     if cluster != "" {
       has_clusters = true
+      let cluster_id = match cluster_id_by_name.get(cluster) {
+        Some(id) => id
+        None => {
+          let id = next_cluster_id
+          next_cluster_id += 1
+          cluster_id_by_name[cluster] = id
+          id
+        }
+      }
+      cluster_ids.push(cluster_id)
       skeletons.push(cluster_skeleton.get(name) == Some(true))
     } else {
+      cluster_ids.push(0)
       skeletons.push(false)
     }
-    clusters.push(cluster)
     if build_flat_lookup {
       name_index[name] = i
     }
-    flat_left_to_right.push([])
+    flat_left_to_right.push(Map::new())
   }
   let mut has_flat_constraints = false
   if build_flat_lookup {
-    for i, name in names {
-      for head in flat_constraints.heads_by_tail.get(name).unwrap_or_default() {
-        match name_index.get(head) {
-          Some(head_idx) => {
-            flat_left_to_right[i].push(head_idx)
-            has_flat_constraints = true
+    for tail, heads in flat_constraints.heads_by_tail {
+      match name_index.get(tail) {
+        Some(tail_idx) => {
+          let constrained = flat_left_to_right[tail_idx]
+          for head in heads {
+            match name_index.get(head) {
+              Some(head_idx) => {
+                constrained[head_idx] = true
+                has_flat_constraints = true
+              }
+              None => ()
+            }
           }
-          None => ()
         }
+        None => ()
       }
     }
   }
   {
-    clusters,
+    cluster_ids,
     skeletons,
     name_index,
     flat_left_to_right,
@@ -141,15 +159,15 @@ fn rank_left2right_constraint_resolved(
     return false
   }
   if constraint_lookup.has_clusters {
-    let left_cluster = constraint_lookup.clusters[left_idx]
-    let right_cluster = constraint_lookup.clusters[right_idx]
+    let left_cluster = constraint_lookup.cluster_ids[left_idx]
+    let right_cluster = constraint_lookup.cluster_ids[right_idx]
     if remincross_mode {
       // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
       if left_cluster != right_cluster {
         return true
       }
     }
-    if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
+    if left_cluster != 0 && right_cluster != 0 && left_cluster != right_cluster {
       let left_skel = constraint_lookup.skeletons[left_idx]
       let right_skel = constraint_lookup.skeletons[right_idx]
       if !left_skel && !right_skel {
@@ -160,12 +178,7 @@ fn rank_left2right_constraint_resolved(
   if !constraint_lookup.has_flat_constraints {
     return false
   }
-  for constrained_right_idx in constraint_lookup.flat_left_to_right[left_idx] {
-    if constrained_right_idx == right_idx {
-      return true
-    }
-  }
-  false
+  constraint_lookup.flat_left_to_right[left_idx].get(right_idx) == Some(true)
 }
 
 ///|
@@ -377,11 +390,11 @@ fn reorder_by_medians_with_lookup(
       while rp < ep {
         let rp_idx = constraint_state.node_indices[rp]
         let rp_cluster = if rp_idx >= 0 {
-          constraint_lookup.clusters[rp_idx]
+          constraint_lookup.cluster_ids[rp_idx]
         } else {
-          ""
+          0
         }
-        if sawclust && rp_cluster != "" {
+        if sawclust && rp_cluster != 0 {
           rp = rp + 1
           continue
         }
@@ -398,7 +411,7 @@ fn reorder_by_medians_with_lookup(
         if desired_state.has_values[rp] {
           break
         }
-        if rp_cluster != "" {
+        if rp_cluster != 0 {
           sawclust = true
         }
         rp = rp + 1
