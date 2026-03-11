@@ -402,6 +402,39 @@ fn reorder_by_medians_unconstrained(
   // Hot path: loop guards keep indices within the original rank length.
   let has_values = desired_state.has_values
   let values = desired_state.values
+  let mut all_have_values = true
+  for has_value in has_values {
+    if !has_value {
+      all_have_values = false
+      break
+    }
+  }
+  if all_have_values {
+    let mut ep = sorted.length()
+    let mut nelt = sorted.length() - 1
+    while nelt >= 0 {
+      let mut lp = 0
+      while lp + 1 < ep {
+        let rp = lp + 1
+        let p1 = Array::unsafe_get(values, lp)
+        let p2 = Array::unsafe_get(values, rp)
+        if p1 > p2 || (p1 >= p2 && reverse) {
+          let tmp = Array::unsafe_get(sorted, lp)
+          Array::unsafe_set(sorted, lp, Array::unsafe_get(sorted, rp))
+          Array::unsafe_set(sorted, rp, tmp)
+          let tmp_value = Array::unsafe_get(values, lp)
+          Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
+          Array::unsafe_set(values, rp, tmp_value)
+        }
+        lp = rp
+      }
+      if !hasfixed && !reverse {
+        ep = ep - 1
+      }
+      nelt = nelt - 1
+    }
+    return sorted
+  }
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
