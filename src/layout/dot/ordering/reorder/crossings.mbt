@@ -3,6 +3,8 @@ pub(all) struct PortAwareCrossingInputs {
   edge_penalty : Array[Int]
   edge_in : Map[String, Array[Int]]
   edge_out : Map[String, Array[Int]]
+  edge_tail_rank : Array[Int]
+  edge_head_rank : Array[Int]
 }
 
 ///|
@@ -11,6 +13,7 @@ fn build_port_aware_crossing_inputs(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  ranks? : Map[String, Int] = Map::new(),
 ) -> PortAwareCrossingInputs {
   let edge_out : Map[String, Array[Int]] = Map::new()
   let edge_in : Map[String, Array[Int]] = Map::new()
@@ -21,10 +24,14 @@ fn build_port_aware_crossing_inputs(
     }
   }
   let edge_penalty : Array[Int] = []
+  let edge_tail_rank : Array[Int] = []
+  let edge_head_rank : Array[Int] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let penalty = @edge_semantics.edge_xpenalty(edge)
     edge_penalty.push(penalty)
+    edge_tail_rank.push(ranks.get(edge_tail[edge_idx]).unwrap_or(-1))
+    edge_head_rank.push(ranks.get(edge_head[edge_idx]).unwrap_or(-1))
     if !@edge_semantics.edge_is_constraint(edge) || penalty <= 0 {
       continue
     }
@@ -39,7 +46,7 @@ fn build_port_aware_crossing_inputs(
       None => edge_in[head] = [edge_idx]
     }
   }
-  { edge_penalty, edge_in, edge_out }
+  { edge_penalty, edge_in, edge_out, edge_tail_rank, edge_head_rank }
 }
 
 ///|
@@ -178,52 +185,20 @@ pub fn count_crossings(
 
 ///|
 
+priv struct RankPairProjectedCrossings {
+  crossing_slots_by_top : Array[Array[(Int, Int)]]
+  local_out_by_top : Array[Array[(Int, Double, Int)]]
+  local_in_by_bottom : Array[Array[(Int, Double, Int)]]
+  max_slot : Int
+}
+
 ///|
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
 /// Do not change behavior without updating fixtures/tests.
-fn local_cross_out_port_aware(
-  node : String,
-  next_rank : Int,
-  ranks : Map[String, Int],
-  order : Map[String, Int],
-  edge_out : Map[String, Array[Int]],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_penalty : Array[Int],
+fn count_local_port_crossings(
+  items : Array[(Int, Double, Int)],
 ) -> Int {
-  let outs = match edge_out.get(node) {
-    Some(list) => list
-    None => []
-  }
-  if outs.length() < 2 {
-    return 0
-  }
-  let items : Array[(Int, Double, Int)] = []
-  for edge_idx in outs {
-    let head = edge_head[edge_idx]
-    if ranks.get(head) != Some(next_rank) {
-      continue
-    }
-    let head_order = match order.get(head) {
-      Some(value) => value
-      None => continue
-    }
-    let penalty = if edge_idx < edge_penalty.length() {
-      edge_penalty[edge_idx]
-    } else {
-      0
-    }
-    if penalty <= 0 {
-      continue
-    }
-    let port_x = if edge_idx < edge_tail_port_x.length() {
-      edge_tail_port_x[edge_idx]
-    } else {
-      0.0
-    }
-    items.push((head_order, port_x, penalty))
-  }
   if items.length() < 2 {
     return 0
   }
@@ -245,69 +220,80 @@ fn local_cross_out_port_aware(
 }
 
 ///|
-/// Graphviz parity: include local port-order crossings
-/// (mincross.c rcross/local_cross).
-/// Do not change behavior without updating fixtures/tests.
-fn local_cross_in_port_aware(
-  node : String,
-  prev_rank : Int,
-  ranks : Map[String, Int],
+fn project_rank_pair_crossings(
+  top_nodes : Array[String],
+  next_nodes : Array[String],
+  next_rank : Int,
   order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_tail : Array[String],
+  fixed_order : Map[String, Int],
+  inputs : PortAwareCrossingInputs,
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-) -> Int {
-  let ins = match edge_in.get(node) {
-    Some(list) => list
-    None => []
+) -> RankPairProjectedCrossings {
+  let crossing_slots_by_top : Array[Array[(Int, Int)]] = []
+  let local_out_by_top : Array[Array[(Int, Double, Int)]] = []
+  let local_in_by_bottom : Array[Array[(Int, Double, Int)]] = []
+  for _ in top_nodes {
+    crossing_slots_by_top.push([])
+    local_out_by_top.push([])
   }
-  if ins.length() < 2 {
-    return 0
+  for _ in next_nodes {
+    local_in_by_bottom.push([])
   }
-  let items : Array[(Int, Double, Int)] = []
-  for edge_idx in ins {
-    let tail = edge_tail[edge_idx]
-    if ranks.get(tail) != Some(prev_rank) {
-      continue
-    }
-    let tail_order = match order.get(tail) {
-      Some(value) => value
-      None => continue
-    }
-    let penalty = if edge_idx < edge_penalty.length() {
-      edge_penalty[edge_idx]
-    } else {
-      0
-    }
-    if penalty <= 0 {
-      continue
-    }
-    let port_x = if edge_idx < edge_head_port_x.length() {
-      edge_head_port_x[edge_idx]
-    } else {
-      0.0
-    }
-    items.push((tail_order, port_x, penalty))
-  }
-  if items.length() < 2 {
-    return 0
-  }
-  let mut cross = 0
-  let mut i = 0
-  while i + 1 < items.length() {
-    let (order_i, port_i, pen_i) = items[i]
-    let mut j = i + 1
-    while j < items.length() {
-      let (order_j, port_j, pen_j) = items[j]
-      if (order_j - order_i).to_double() * (port_j - port_i) < 0.0 {
-        cross = cross + pen_i * pen_j
+  let include_tail_ports = edge_tail_port_x.length() > 0
+  let include_head_ports = edge_head_port_x.length() > 0
+  let mut max_slot = next_nodes.length()
+  for top_idx, top in top_nodes {
+    for edge_idx in inputs.edge_out.get(top).unwrap_or_default() {
+      if inputs.edge_head_rank[edge_idx] != next_rank {
+        continue
       }
-      j = j + 1
+      let penalty = inputs.edge_penalty[edge_idx]
+      if penalty <= 0 {
+        continue
+      }
+      let head = edge_head[edge_idx]
+      match order.get(head) {
+        Some(head_order) => {
+          crossing_slots_by_top[top_idx].push((head_order, penalty))
+          if head_order > max_slot {
+            max_slot = head_order
+          }
+          if include_tail_ports {
+            let tail_port_x = if edge_idx < edge_tail_port_x.length() {
+              edge_tail_port_x[edge_idx]
+            } else {
+              0.0
+            }
+            local_out_by_top[top_idx].push((head_order, tail_port_x, penalty))
+          }
+          if include_head_ports {
+            let head_port_x = if edge_idx < edge_head_port_x.length() {
+              edge_head_port_x[edge_idx]
+            } else {
+              0.0
+            }
+            local_in_by_bottom[head_order].push((top_idx, head_port_x, penalty))
+          }
+        }
+        None =>
+          match fixed_order.get(head) {
+            Some(slot) => {
+              if slot < 0 {
+                continue
+              }
+              crossing_slots_by_top[top_idx].push((slot, penalty))
+              if slot > max_slot {
+                max_slot = slot
+              }
+            }
+            None => ()
+          }
+      }
     }
-    i = i + 1
   }
-  cross
+  { crossing_slots_by_top, local_out_by_top, local_in_by_bottom, max_slot }
 }
 
 ///|
@@ -324,13 +310,12 @@ fn count_crossings_port_aware_with_inputs(
   edge_head_port_x? : Array[Double] = [],
   fixed_order? : Map[String, Int] = Map::new(),
 ) -> Int {
+  let _ = ranks
+  let _ = edge_tail
   let order = @rank_groups.build_order_index(groups)
   if rank_keys.length() == 0 {
     return 0
   }
-  let edge_penalty = inputs.edge_penalty
-  let edge_in = inputs.edge_in
-  let edge_out = inputs.edge_out
   let include_ports = edge_tail_port_x.length() > 0 ||
     edge_head_port_x.length() > 0
   let mut crossings = 0
@@ -347,67 +332,25 @@ fn count_crossings_port_aware_with_inputs(
       Some(list) => list
       None => []
     }
-    let mut max_slot = next_nodes.length()
-    for top in top_nodes {
-      let outs = match edge_out.get(top) {
-        Some(list) => list
-        None => []
-      }
-      for edge_idx in outs {
-        let head = edge_head[edge_idx]
-        if ranks.get(head) != Some(next_rank) {
-          continue
-        }
-        let penalty = edge_penalty[edge_idx]
-        if penalty <= 0 {
-          continue
-        }
-        let inv = match order.get(head) {
-          Some(value) => value
-          None =>
-            match fixed_order.get(head) {
-              Some(value) => value
-              None => continue
-            }
-        }
-        if inv < 0 {
-          continue
-        }
-        if inv > max_slot {
-          max_slot = inv
-        }
-      }
-    }
+    let projected = project_rank_pair_crossings(
+      top_nodes,
+      next_nodes,
+      next_rank,
+      order,
+      fixed_order,
+      inputs,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+    )
     // Graphviz parity with fixed external slots: local rank slices may carry
     // sparse slot indices, so the counting array must follow max slot.
-    let count = Array::make(max_slot + 1, 0)
+    let count = Array::make(projected.max_slot + 1, 0)
     let mut max_order = 0
-    for top in top_nodes {
-      let outs = match edge_out.get(top) {
-        Some(list) => list
-        None => []
-      }
+    for projected_slots in projected.crossing_slots_by_top {
       if max_order > 0 {
-        for edge_idx in outs {
-          let head = edge_head[edge_idx]
-          if ranks.get(head) != Some(next_rank) {
-            continue
-          }
-          let inv = match order.get(head) {
-            Some(value) => value
-            None =>
-              match fixed_order.get(head) {
-                Some(value) => value
-                None => continue
-              }
-          }
-          if inv < 0 {
-            continue
-          }
-          let penalty = edge_penalty[edge_idx]
-          if penalty <= 0 {
-            continue
-          }
+        for projected_slot in projected_slots {
+          let (inv, penalty) = projected_slot
           let mut k = inv + 1
           while k <= max_order {
             rank_cross = rank_cross + count[k] * penalty
@@ -415,26 +358,8 @@ fn count_crossings_port_aware_with_inputs(
           }
         }
       }
-      for edge_idx in outs {
-        let head = edge_head[edge_idx]
-        if ranks.get(head) != Some(next_rank) {
-          continue
-        }
-        let inv = match order.get(head) {
-          Some(value) => value
-          None =>
-            match fixed_order.get(head) {
-              Some(value) => value
-              None => continue
-            }
-        }
-        if inv < 0 {
-          continue
-        }
-        let penalty = edge_penalty[edge_idx]
-        if penalty <= 0 {
-          continue
-        }
+      for projected_slot in projected_slots {
+        let (inv, penalty) = projected_slot
         if inv > max_order {
           max_order = inv
         }
@@ -442,18 +367,11 @@ fn count_crossings_port_aware_with_inputs(
       }
     }
     if include_ports {
-      for top in top_nodes {
-        rank_cross = rank_cross +
-          local_cross_out_port_aware(
-            top, next_rank, ranks, order, edge_out, edge_head, edge_tail_port_x,
-            edge_penalty,
-          )
+      for local_out_items in projected.local_out_by_top {
+        rank_cross = rank_cross + count_local_port_crossings(local_out_items)
       }
-      for bottom in next_nodes {
-        rank_cross = rank_cross +
-          local_cross_in_port_aware(
-            bottom, rank, ranks, order, edge_in, edge_tail, edge_head_port_x, edge_penalty,
-          )
+      for local_in_items in projected.local_in_by_bottom {
+        rank_cross = rank_cross + count_local_port_crossings(local_in_items)
       }
     }
     crossings = crossings + rank_cross
@@ -480,7 +398,13 @@ pub fn count_crossings_port_aware(
     rank_keys.push(rank)
   }
   rank_keys.sort()
-  let inputs = build_port_aware_crossing_inputs(groups, edges, edge_tail, edge_head)
+  let inputs = build_port_aware_crossing_inputs(
+    groups,
+    edges,
+    edge_tail,
+    edge_head,
+    ranks=ranks,
+  )
   count_crossings_port_aware_with_inputs(
     rank_keys,
     groups,

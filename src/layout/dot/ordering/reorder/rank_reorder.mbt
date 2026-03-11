@@ -1727,6 +1727,7 @@ pub fn reorder_rank_groups(
     edges,
     edge_tail,
     edge_head,
+    ranks=node_ranks,
   )
   let mut best_ordered = @rank_groups.clone_rank_groups(ordered)
   let mut order_positions = @rank_groups.order_positions_from_groups(ordered)
