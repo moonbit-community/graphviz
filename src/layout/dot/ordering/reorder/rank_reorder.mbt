@@ -413,6 +413,7 @@ fn reorder_by_medians_unconstrained(
     let mut ep = sorted.length()
     let mut nelt = sorted.length() - 1
     while nelt >= 0 {
+      let mut swapped = false
       let mut lp = 0
       while lp + 1 < ep {
         let rp = lp + 1
@@ -425,8 +426,12 @@ fn reorder_by_medians_unconstrained(
           let tmp_value = Array::unsafe_get(values, lp)
           Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
           Array::unsafe_set(values, rp, tmp_value)
+          swapped = true
         }
         lp = rp
+      }
+      if !swapped {
+        break
       }
       if !hasfixed && !reverse {
         ep = ep - 1
@@ -438,6 +443,7 @@ fn reorder_by_medians_unconstrained(
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
+    let mut swapped = false
     let mut lp = 0
     while lp < ep {
       while lp < ep && !Array::unsafe_get(has_values, lp) {
@@ -465,8 +471,12 @@ fn reorder_by_medians_unconstrained(
         let tmp_value = Array::unsafe_get(values, lp)
         Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
         Array::unsafe_set(values, rp, tmp_value)
+        swapped = true
       }
       lp = rp
+    }
+    if !swapped {
+      break
     }
     if !hasfixed && !reverse {
       ep = ep - 1
@@ -494,6 +504,7 @@ fn reorder_by_medians_constrained(
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
+    let mut swapped = false
     let mut lp = 0
     while lp < ep {
       while lp < ep && !Array::unsafe_get(has_values, lp) {
@@ -553,9 +564,13 @@ fn reorder_by_medians_constrained(
           let tmp_value = Array::unsafe_get(values, lp)
           Array::unsafe_set(values, lp, Array::unsafe_get(values, rp))
           Array::unsafe_set(values, rp, tmp_value)
+          swapped = true
         }
       }
       lp = rp
+    }
+    if !swapped {
+      break
     }
     if !hasfixed && !reverse {
       ep = ep - 1
