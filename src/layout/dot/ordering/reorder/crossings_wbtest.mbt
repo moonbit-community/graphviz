@@ -1,5 +1,5 @@
 ///|
-test "project_rank_pair_crossings groups crossing and local port data once" {
+test "count_crossings_port_aware_with_inputs respects fixed external slots" {
   let groups : Map[Int, Array[String]] = Map::new()
   groups[0] = ["a", "b"]
   groups[1] = ["x", "y"]
@@ -31,31 +31,49 @@ test "project_rank_pair_crossings groups crossing and local port data once" {
     ["y", "x", "ext", "x"],
     ranks~,
   )
-  let projected = project_rank_pair_crossings(
-    ["a", "b"],
-    ["x", "y"],
-    1,
-    @rank_groups.build_order_index(groups),
-    { "ext": 3 },
-    inputs,
+  let crossings = count_crossings_port_aware_with_inputs(
+    [0, 1],
+    groups,
+    ranks,
+    ["a", "a", "a", "b"],
     ["y", "x", "ext", "x"],
-    [2.0, 1.0, 5.0, 0.0],
-    [0.0, 0.0, 0.0, 4.0],
+    inputs,
+    edge_tail_port_x=[2.0, 1.0, 5.0, 0.0],
+    edge_head_port_x=[0.0, 0.0, 0.0, 4.0],
+    fixed_order={ "ext": 3 },
   )
 
-  assert_eq(
-    projected.crossing_slots_by_top,
-    [[(1, 1), (0, 1), (3, 1)], [(0, 1)]],
+  assert_eq(crossings, 2)
+}
+
+///|
+test "count_crossings_port_aware includes incoming local port crossings" {
+  let groups : Map[Int, Array[String]] = Map::new()
+  groups[0] = ["a", "b"]
+  groups[1] = ["x"]
+
+  let ranks : Map[String, Int] = Map::new()
+  ranks["a"] = 0
+  ranks["b"] = 0
+  ranks["x"] = 1
+
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let x = graph.node("x")
+  let edges = [graph.edge(a, x), graph.edge(b, x)]
+
+  let crossings = count_crossings_port_aware(
+    groups,
+    ranks,
+    edges,
+    ["a", "b"],
+    ["x", "x"],
+    edge_tail_port_x=[],
+    edge_head_port_x=[2.0, 1.0],
   )
-  assert_eq(
-    projected.local_out_by_top,
-    [[(1, 2.0, 1), (0, 1.0, 1)], [(0, 0.0, 1)]],
-  )
-  assert_eq(
-    projected.local_in_by_bottom,
-    [[(0, 0.0, 1), (1, 4.0, 1)], [(0, 0.0, 1)]],
-  )
-  assert_eq(projected.max_slot, 3)
+
+  assert_eq(crossings, 1)
 }
 
 ///|
