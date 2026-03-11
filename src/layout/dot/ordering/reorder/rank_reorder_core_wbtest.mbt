@@ -271,6 +271,14 @@ test "live port tie-break helpers match materialized port-order tuples" {
     in_edges: [[0, 1], [2, 4]],
     out_edges: [[5], [6, 8]],
   }
+  let active_incident_edges : ActiveIncidentEdgeMaps = {
+    in_edges: Map::new(),
+    out_edges: Map::new(),
+  }
+  active_incident_edges.in_edges["left"] = incident_edges.in_edges[0]
+  active_incident_edges.in_edges["right"] = incident_edges.in_edges[1]
+  active_incident_edges.out_edges["left"] = incident_edges.out_edges[0]
+  active_incident_edges.out_edges["right"] = incident_edges.out_edges[1]
   let edge_endpoint_orders : EdgeEndpointOrders = {
     tail_orders: [3, 1, 2, 0, 4, 2, 1, 3, 0],
     head_orders: [0, 0, 0, 0, 0, 4, 2, 1, 3],
@@ -278,6 +286,13 @@ test "live port tie-break helpers match materialized port-order tuples" {
   let edge_tail_port_x = [2.0, 1.0, 3.0]
   let edge_head_port_x = [4.0, 2.0, 1.0, 3.0, 0.0, 5.0, 1.0]
   let edge_penalty = [2, 1, 3, 0, 2, 1, 2, 0, 4]
+  let port_incident_edges = build_rank_port_incident_edge_lists(
+    ["left", "right"],
+    active_incident_edges,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_penalty,
+  )
   let port_orders = build_rank_port_tiebreak_orders(
     incident_edges,
     edge_endpoint_orders,
@@ -287,11 +302,9 @@ test "live port tie-break helpers match materialized port-order tuples" {
   )
 
   let in_pair = in_cross_pair_tiebreak_live(
-    incident_edges.in_edges[0],
-    incident_edges.in_edges[1],
+    port_incident_edges.in_edges[0],
+    port_incident_edges.in_edges[1],
     edge_endpoint_orders,
-    edge_tail_port_x,
-    edge_penalty,
   )
   assert_eq(
     in_pair.forward,
@@ -302,20 +315,16 @@ test "live port tie-break helpers match materialized port-order tuples" {
     in_cross_port_tiebreak(port_orders.in_orders[1], port_orders.in_orders[0]),
   )
   let reversed_in_pair = in_cross_pair_tiebreak_live(
-    incident_edges.in_edges[1],
-    incident_edges.in_edges[0],
+    port_incident_edges.in_edges[1],
+    port_incident_edges.in_edges[0],
     edge_endpoint_orders,
-    edge_tail_port_x,
-    edge_penalty,
   )
   assert_eq(reversed_in_pair.forward, in_pair.reverse)
   assert_eq(reversed_in_pair.reverse, in_pair.forward)
   let out_pair = out_cross_pair_tiebreak_live(
-    incident_edges.out_edges[0],
-    incident_edges.out_edges[1],
+    port_incident_edges.out_edges[0],
+    port_incident_edges.out_edges[1],
     edge_endpoint_orders,
-    edge_head_port_x,
-    edge_penalty,
   )
   assert_eq(
     out_pair.forward,
@@ -326,11 +335,9 @@ test "live port tie-break helpers match materialized port-order tuples" {
     out_cross_port_tiebreak(port_orders.out_orders[1], port_orders.out_orders[0]),
   )
   let reversed_out_pair = out_cross_pair_tiebreak_live(
-    incident_edges.out_edges[1],
-    incident_edges.out_edges[0],
+    port_incident_edges.out_edges[1],
+    port_incident_edges.out_edges[0],
     edge_endpoint_orders,
-    edge_head_port_x,
-    edge_penalty,
   )
   assert_eq(reversed_out_pair.forward, out_pair.reverse)
   assert_eq(reversed_out_pair.reverse, out_pair.forward)
