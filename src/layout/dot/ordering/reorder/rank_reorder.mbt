@@ -1182,12 +1182,16 @@ fn transpose_rank_port_tiebreak(
 ) -> TransposeRankResult {
   let _ = rank
   let _ = ranks
+  let in_edges_by_node = incident_edges.in_edges
+  let out_edges_by_node = incident_edges.out_edges
+  let node_indices = constraint_state.node_indices
+  let len = names.length()
   let mut changed = false
   let mut delta = 0
   let mut i = 0
-  while i + 1 < names.length() {
-    let left = names[i]
-    let right = names[i + 1]
+  while i + 1 < len {
+    let left = Array::unsafe_get(names, i)
+    let right = Array::unsafe_get(names, i + 1)
     if rank_left2right_constraint_resolved(
         constraint_lookup,
         constraint_state,
@@ -1200,10 +1204,10 @@ fn transpose_rank_port_tiebreak(
     }
     let mut c0 = 0
     let mut c1 = 0
-    let left_incident_in = incident_edges.in_edges[i]
-    let right_incident_in = incident_edges.in_edges[i + 1]
-    let left_incident_out = incident_edges.out_edges[i]
-    let right_incident_out = incident_edges.out_edges[i + 1]
+    let left_incident_in = Array::unsafe_get(in_edges_by_node, i)
+    let right_incident_in = Array::unsafe_get(in_edges_by_node, i + 1)
+    let left_incident_out = Array::unsafe_get(out_edges_by_node, i)
+    let right_incident_out = Array::unsafe_get(out_edges_by_node, i + 1)
     if left_incident_in.length() > 0 && right_incident_in.length() > 0 {
       let in_cross_pair = in_cross_pair_tiebreak_live(
         left_incident_in,
@@ -1223,15 +1227,15 @@ fn transpose_rank_port_tiebreak(
       c1 = c1 + out_cross_pair.reverse
     }
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
-      names[i] = right
-      names[i + 1] = left
-      incident_edges.in_edges[i] = right_incident_in
-      incident_edges.in_edges[i + 1] = left_incident_in
-      incident_edges.out_edges[i] = right_incident_out
-      incident_edges.out_edges[i + 1] = left_incident_out
-      let tmp_node_index = constraint_state.node_indices[i]
-      constraint_state.node_indices[i] = constraint_state.node_indices[i + 1]
-      constraint_state.node_indices[i + 1] = tmp_node_index
+      Array::unsafe_set(names, i, right)
+      Array::unsafe_set(names, i + 1, left)
+      Array::unsafe_set(in_edges_by_node, i, right_incident_in)
+      Array::unsafe_set(in_edges_by_node, i + 1, left_incident_in)
+      Array::unsafe_set(out_edges_by_node, i, right_incident_out)
+      Array::unsafe_set(out_edges_by_node, i + 1, left_incident_out)
+      let tmp_node_index = Array::unsafe_get(node_indices, i)
+      Array::unsafe_set(node_indices, i, Array::unsafe_get(node_indices, i + 1))
+      Array::unsafe_set(node_indices, i + 1, tmp_node_index)
       refresh_port_incident_edge_orders_for_node(
         left_incident_in,
         left_incident_out,
