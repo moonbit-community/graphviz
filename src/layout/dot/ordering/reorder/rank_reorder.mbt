@@ -371,8 +371,85 @@ fn reorder_by_medians_with_lookup(
   if sorted.length() < 2 {
     return sorted
   }
-  let constraint_state = build_rank_constraint_state(sorted, constraint_lookup)
   let desired_state = build_rank_desired_state(sorted, desired)
+  if !constraint_lookup.has_clusters && !constraint_lookup.has_flat_constraints {
+    return reorder_by_medians_unconstrained(
+      sorted,
+      desired_state,
+      reverse,
+      hasfixed,
+    )
+  }
+  let constraint_state = build_rank_constraint_state(sorted, constraint_lookup)
+  reorder_by_medians_constrained(
+    sorted,
+    desired_state,
+    reverse,
+    hasfixed,
+    constraint_lookup,
+    constraint_state,
+    remincross_mode~,
+  )
+}
+
+///|
+fn reorder_by_medians_unconstrained(
+  sorted : Array[String],
+  desired_state : RankDesiredState,
+  reverse : Bool,
+  hasfixed : Bool,
+) -> Array[String] {
+  let mut ep = sorted.length()
+  let mut nelt = sorted.length() - 1
+  while nelt >= 0 {
+    let mut lp = 0
+    while lp < ep {
+      while lp < ep && !desired_state.has_values[lp] {
+        lp = lp + 1
+      }
+      if lp >= ep {
+        break
+      }
+      let mut rp = lp + 1
+      while rp < ep && !desired_state.has_values[rp] {
+        rp = rp + 1
+      }
+      if rp >= ep {
+        break
+      }
+      let p1 = desired_state.values[lp]
+      let p2 = desired_state.values[rp]
+      if p1 > p2 || (p1 >= p2 && reverse) {
+        let tmp = sorted[lp]
+        sorted[lp] = sorted[rp]
+        sorted[rp] = tmp
+        let tmp_has_value = desired_state.has_values[lp]
+        desired_state.has_values[lp] = desired_state.has_values[rp]
+        desired_state.has_values[rp] = tmp_has_value
+        let tmp_value = desired_state.values[lp]
+        desired_state.values[lp] = desired_state.values[rp]
+        desired_state.values[rp] = tmp_value
+      }
+      lp = rp
+    }
+    if !hasfixed && !reverse {
+      ep = ep - 1
+    }
+    nelt = nelt - 1
+  }
+  sorted
+}
+
+///|
+fn reorder_by_medians_constrained(
+  sorted : Array[String],
+  desired_state : RankDesiredState,
+  reverse : Bool,
+  hasfixed : Bool,
+  constraint_lookup : RankConstraintLookup,
+  constraint_state : RankConstraintState,
+  remincross_mode? : Bool = false,
+) -> Array[String] {
   let mut ep = sorted.length()
   let mut nelt = sorted.length() - 1
   while nelt >= 0 {
