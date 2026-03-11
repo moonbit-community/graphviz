@@ -160,6 +160,7 @@ pub fn normalize_color(value : String) -> String {
     "steelblue" => "#4682b4"
     "steelblue3" => "#4f94cd"
     "navy" => "#000080"
+    "midnightblue" => "#191970"
     "darkseagreen4" => "#698b69"
     "coral" => "#ff7f50"
     "coral3" => "#cd5b45"

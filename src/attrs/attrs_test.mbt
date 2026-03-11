@@ -50,6 +50,7 @@ test "attrs color defaults and normalization" {
   assert_eq(normalize_color("green4"), "#008b00")
   assert_eq(normalize_color("yellow3"), "#cdcd00")
   assert_eq(normalize_color("skyblue"), "#87ceeb")
+  assert_eq(normalize_color("midnightblue"), "#191970")
   assert_eq(normalize_color("0.650 0.200 1.000"), "#ccd1ff")
   assert_eq(normalize_color("HotPink"), "#ff69b4")
   assert_eq(normalize_color("#ABCDEF"), "#abcdef")
