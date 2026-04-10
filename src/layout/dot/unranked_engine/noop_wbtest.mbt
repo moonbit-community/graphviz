@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "parse_edge_pos scales start/end markers and preserves cubic control points" {
   let splines = parse_edge_pos("s,1,2 3,4 5,6 7,8 9,10 e,11,12", 2.0)

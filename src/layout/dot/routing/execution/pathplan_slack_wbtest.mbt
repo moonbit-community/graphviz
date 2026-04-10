@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "recover_pathplan_slack consumes segment vnodes in rank direction and only recovers once per key" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

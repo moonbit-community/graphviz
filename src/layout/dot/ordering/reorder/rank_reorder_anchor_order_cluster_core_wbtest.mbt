@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Graphviz parity: cluster_core plugin ordering emerges from external format
 /// anchors on both the input and output sides while several routers only have

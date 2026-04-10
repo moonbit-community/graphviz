@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Cluster subgraph layout tree helpers: recursive cluster layout, subtree bbox
 /// expansion, and routing bbox extraction shared by routing/finalization paths.

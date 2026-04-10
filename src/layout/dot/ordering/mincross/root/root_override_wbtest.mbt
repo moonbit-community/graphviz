@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "reorder_names_by_override keeps only present override names once and preserves unmatched order" {
   let reordered = reorder_names_by_override(["a", "b", "c", "d"], [

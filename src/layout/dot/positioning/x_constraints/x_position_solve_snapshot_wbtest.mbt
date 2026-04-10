@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "compute_x_positions_with_prepared_constraints solves minimal input and captures reordered snapshot" {
   let solve_input = build_x_position_solve_input(

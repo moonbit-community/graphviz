@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "merge_ranks_with_vnodes overlays vnode ranks without dropping base entries" {
   let ranks : Map[String, Int] = Map::new()

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// External-anchor-order rank_reorder scenarios are split out so the
 /// core wbtest file stays focused on non-anchor synthetic and clustered cases.

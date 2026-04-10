@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Shared rank_reorder whitebox-test support for direct algorithm scenario
 /// coverage and owner-local case execution helpers.

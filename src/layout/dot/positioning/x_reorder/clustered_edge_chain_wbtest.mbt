@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_xpos_chain_with_vnodes respects rank direction" {
   let forward_ranks : Map[String, Int] = { "tail": 0, "head": 3 }

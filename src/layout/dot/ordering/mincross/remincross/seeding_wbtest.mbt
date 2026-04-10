@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_neighbor_real_indices tracks nearest previous and next real anchors around synthetic names" {
   let indices = build_neighbor_real_indices(

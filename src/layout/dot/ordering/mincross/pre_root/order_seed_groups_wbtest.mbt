@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_order_seed_groups merges vnode groups and appends cluster skeletons in cluster order before unseen clusters" {
   let ordering_groups_base : Map[Int, Array[String]] = Map::new()

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_path_adjacency dedupes parallel edges and expands vnode chains" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

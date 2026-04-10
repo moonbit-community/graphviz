@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_xpos_nlist_order visits clustered ranks in reverse with vnodes first" {
   let cluster_keys : Map[String, String] = Map::new()

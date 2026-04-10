@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Graphviz parity: the captured LR xpos scaffold for `L0` is not identical
 /// to the rank-fixture-derived slack-normal scaffold above. Keep the exact

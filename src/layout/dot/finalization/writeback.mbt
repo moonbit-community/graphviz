@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Final layout writeback: emit graph/node/edge geometry and label positions
 /// from the internal layout tree onto Graphviz attributes.

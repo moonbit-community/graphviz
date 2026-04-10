@@ -1,0 +1,11 @@
+moonbit-community/graphviz
+Copyright (c) 2026 International Digital Economy Academy
+
+This repository is a rewrite of Graphviz in MoonBit.
+
+Repo-authored files in this repository are made available under the Eclipse
+Public License 2.0.
+
+Reference material from upstream Graphviz, including `refs/graphviz/` and
+Graphviz-derived parity fixtures, remains subject to upstream notices and
+licensing.

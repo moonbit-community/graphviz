@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes once per non-empty rank" {
   let groups : Map[Int, Array[String]] = Map::new()

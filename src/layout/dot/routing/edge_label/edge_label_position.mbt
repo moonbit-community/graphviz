@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Graphviz parity: flat-edge label midpoint offset helper aligned to
 /// refs/graphviz/lib/dotgen/dotsplines.c (flat edge label placement).

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// This compact anchor-order case exercises both input-rank and output-rank
 /// ordering from external plugin names in one bidirectional scenario.

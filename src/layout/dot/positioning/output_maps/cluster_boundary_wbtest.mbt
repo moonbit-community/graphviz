@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_cluster_boundary_x collects left and right boundary nodes" {
   let cluster_names : Map[String, Bool] = Map::new()

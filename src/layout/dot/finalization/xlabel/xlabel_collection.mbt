@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Xlabel candidate collection kernels: label metrics, rankdir-aware
 /// dimensions, obstacle construction, and edge-anchor candidate assembly.

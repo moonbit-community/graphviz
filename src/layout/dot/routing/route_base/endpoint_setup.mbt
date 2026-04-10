@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Route endpoint setup owner: self-edge compass clip sizing, compass/dynamic
 /// endpoint clip resolution, flat dir=both nudges, and related clip policy.

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "clip_to_bbox returns the first rectangle intersection and preserves inside targets" {
   let rect : @geom.Rect = { llx: 4.0, lly: -2.0, urx: 8.0, ury: 2.0 }
