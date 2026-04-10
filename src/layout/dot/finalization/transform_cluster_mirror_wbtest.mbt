@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "apply_cluster_lr_mirror_after_rotation falls back to BT mirror for single-cluster LR layouts" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

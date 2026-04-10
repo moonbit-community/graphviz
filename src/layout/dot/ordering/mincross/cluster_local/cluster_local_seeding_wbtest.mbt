@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "select_vnode_anchor_neighbor prefers the first rank-crossing neighbor and otherwise falls back to the first incident neighbor or empty" {
   let ranks : Map[String, Int] = Map::new()

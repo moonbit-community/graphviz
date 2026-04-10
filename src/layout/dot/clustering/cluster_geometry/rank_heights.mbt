@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Cluster rank-height application helpers shared by rank assignment so
 /// cluster-derived top/bottom half-heights are pushed back into rank bands.

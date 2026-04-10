@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_routing_port_layout_maps gates on port edges and rotates record ports into layout coordinates" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

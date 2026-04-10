@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Positioning-owned port geometry and self-edge spacing logic shared across
 /// ordering, positioning, and routing stage boundaries.

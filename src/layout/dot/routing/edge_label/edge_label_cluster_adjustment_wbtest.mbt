@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "nudge_label_rect shifts along the lower-overlap axis and rebuilds the rect" {
   let horizontal_pos = @edge_spline.point(10.0, 10.0)

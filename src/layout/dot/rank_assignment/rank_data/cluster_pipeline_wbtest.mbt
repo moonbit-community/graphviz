@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "compute_ranks_directed uses supplied edge orientation when the graph has no clusters" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "detour_polyline_for_rects chooses the left detour lane for top-bottom routing when shorter" {
   let tail_rect : @geom.Rect = { llx: 0.0, lly: -10.0, urx: 10.0, ury: 10.0 }

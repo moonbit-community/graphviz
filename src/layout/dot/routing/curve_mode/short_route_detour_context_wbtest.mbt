@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "needs_record_port_detour depends on rankdir axis and explicit record ports" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

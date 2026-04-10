@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Public label-metric bridge APIs: simplified text dimensions and graph-label
 /// metrics built on top of the package's text measurement owner.

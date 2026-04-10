@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Keep the snapshot input candidate list in this file because
 /// `check_snapshot_input_candidates.py` parses `snapshot_test.mbt` directly.

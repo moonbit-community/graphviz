@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "route_pathplan_from_boxes matches Graphviz simple straight corridor fixture" {
   let boxes : Array[@geom.Rect] = [

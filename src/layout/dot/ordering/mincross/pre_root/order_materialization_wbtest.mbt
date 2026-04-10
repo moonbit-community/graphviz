@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "build_materialized_graphviz_neighbors preserves per-tail head order and AGSEQ-style incoming order" {
   let order_nodes = ["a", "b", "c", "isolated"]

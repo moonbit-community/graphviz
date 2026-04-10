@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Ordering domain: vnode order-key derivation helpers shared by class2,
 /// ReMincross cleanup, and Stage D x-seed preparation.

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "layout_record_tree assigns group orientation and side masks" {
   let nodes = record_nodes("<left>a|{<top>b|<bottom>c}|<right>d")

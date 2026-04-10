@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 test "apply_rank_same_order_nodes rewrites node order for unported groups only" {
   let node_order : Map[String, Int] = Map::new()

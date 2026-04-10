@@ -1,3 +1,8 @@
+// Copyright (c) 2026 International Digital Economy Academy
+// This program is made available under the terms of the Eclipse Public License 2.0.
+// SPDX-License-Identifier: EPL-2.0
+
+
 ///|
 /// Ordering domain: ReMincross snapshot capture stays with the ReMincross
 /// cleanup owner so startpass=2 fixture wiring is colocated with the algorithm.
