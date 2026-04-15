@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn ensure_dir(path : String) -> Unit raise {
   if !@fs.path_exists(path) {
@@ -61,7 +60,9 @@ test "cli renders multiple graphs from one file" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/multi_graphs.dot"
-  write_input(input_path, "digraph { fear -> anger; }\n\ndigraph { anger -> hate; }\n")
+  write_input(
+    input_path, "digraph { fear -> anger; }\n\ndigraph { anger -> hate; }\n",
+  )
   let dot_out = run_cli(["-Tdot", input_path])
   assert_true(dot_out.contains("fear -> anger"))
   assert_true(dot_out.contains("anger -> hate"))

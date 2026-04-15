@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering owner package: Stage C clustered/non-clustered dispatch adapts rank
 /// outputs into ordering-owned pipeline context and final ordering results so

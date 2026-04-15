@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv enum Token {
   Id(String)
@@ -125,21 +124,21 @@ fn Lexer::skip_whitespace_and_comments(self : Lexer) -> Unit {
 fn is_ascii_whitespace_byte(ch : Byte) -> Bool {
   let code = ch.to_int()
   code == 0x20 ||
-    code == 0x09 ||
-    code == 0x0a ||
-    code == 0x0d ||
-    code == 0x0b ||
-    code == 0x0c
+  code == 0x09 ||
+  code == 0x0a ||
+  code == 0x0d ||
+  code == 0x0b ||
+  code == 0x0c
 }
 
 ///|
 fn is_id_byte(ch : Byte) -> Bool {
   if ch.to_int() < 0x80 {
     (ch >= b'a' && ch <= b'z') ||
-      (ch >= b'A' && ch <= b'Z') ||
-      (ch >= b'0' && ch <= b'9') ||
-      ch == b'_' ||
-      ch == b'.'
+    (ch >= b'A' && ch <= b'Z') ||
+    (ch >= b'0' && ch <= b'9') ||
+    ch == b'_' ||
+    ch == b'.'
   } else {
     true
   }
@@ -177,9 +176,7 @@ fn Lexer::read_quoted_string(self : Lexer) -> String raise DotParseError {
           Some(_) => self.advance()
         }
       }
-      Some(_) => {
-        self.advance()
-      }
+      Some(_) => self.advance()
     }
   }
   ""
@@ -280,25 +277,21 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
           let id = if rest == "" { "-" } else { "-\{rest}" }
           { token: Id(id), pos }
         }
-    }
+      }
     Some(value) if value == b'\"' => {
       let value = self.read_quoted_string()
       { token: String(value), pos }
     }
-    Some(value) if value == b'<' =>
-      {
-        let value = self.read_html()
-        { token: Html(value), pos }
-      }
+    Some(value) if value == b'<' => {
+      let value = self.read_html()
+      { token: Html(value), pos }
+    }
     Some(value) if is_id_byte(value) => {
       let id = self.read_id()
       { token: Id(id), pos }
     }
     Some(value) =>
-      raise DotParseError::InvalidToken(
-        pos~,
-        token=value.to_char().to_string(),
-      )
+      raise DotParseError::InvalidToken(pos~, token=value.to_char().to_string())
   }
 }
 

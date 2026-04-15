@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "record_nodes parses nested braces" {
   let nodes = record_nodes("{a|{b|<here>c|d}|e}")

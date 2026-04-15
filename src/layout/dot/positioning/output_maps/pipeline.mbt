@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub fn DotLayoutOptions::default() -> DotLayoutOptions {
   { rankdir: None, nodesep: None, ranksep: None, splines: None }

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routing spatial owner package keeps node/port projection and ratio-adjust
 /// kernels together so Stage E integration can depend on one focused owner.

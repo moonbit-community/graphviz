@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub(all) enum LabelLoc {
   Top
@@ -54,10 +53,7 @@ pub fn parse_label_just(value : String?) -> LabelJust {
 }
 
 ///|
-pub fn graph_attr_inherited(
-  graph : @cgraph.Graph,
-  key : String,
-) -> String? {
+pub fn graph_attr_inherited(graph : @cgraph.Graph, key : String) -> String? {
   let mut current = Some(graph)
   while current is Some(_) {
     match current {
@@ -102,8 +98,9 @@ pub fn graph_label_metrics_with(
           graph_attr_inherited(graph, "fontsize"),
         )
         let font = @attrs.font_name(graph_attr_inherited(graph, "fontname"))
-        let (width_pt, height_pt) =
-          (label_text_dimensions_for)(value, font, font_size_pt)
+        let (width_pt, height_pt) = label_text_dimensions_for(
+          value, font, font_size_pt,
+        )
         Some({ width_pt, height_pt })
       }
     None => None

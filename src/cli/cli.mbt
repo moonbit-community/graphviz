@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn program_basename(program : String) -> String {
   let mut name = program
@@ -437,7 +436,11 @@ fn patch_svg_graph_group_id(svg : String, page_index : Int) -> String {
 }
 
 ///|
-fn render_graph(job : CliJob, graph : @cgraph.Graph, page_index : Int) -> String raise {
+fn render_graph(
+  job : CliJob,
+  graph : @cgraph.Graph,
+  page_index : Int,
+) -> String raise {
   cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
   cli_trace("cli: layout done")
@@ -447,7 +450,8 @@ fn render_graph(job : CliJob, graph : @cgraph.Graph, page_index : Int) -> String
       @dot.write_dot(layout.graph)
     }
     OutputFormat::XDot => @xdot.render_xdot(layout)
-    OutputFormat::Svg => patch_svg_graph_group_id(@svg.render_svg(layout), page_index)
+    OutputFormat::Svg =>
+      patch_svg_graph_group_id(@svg.render_svg(layout), page_index)
     OutputFormat::Other(_) => {
       layout.apply()
       @dot.write_dot(layout.graph)
@@ -471,7 +475,10 @@ fn render_graph_bytes(
     }
     OutputFormat::XDot => @xdot.render_xdot_bytes(layout)
     OutputFormat::Svg =>
-      @utf8.encode(patch_svg_graph_group_id(@svg.render_svg(layout), page_index), bom=false)
+      @utf8.encode(
+        patch_svg_graph_group_id(@svg.render_svg(layout), page_index),
+        bom=false,
+      )
     OutputFormat::Other(_) => {
       layout.apply()
       @dot.write_dot_bytes(layout.graph)
@@ -529,7 +536,7 @@ fn version_text() -> String {
 ///|
 pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise {
   match parse_cli_args(args, program~) {
-    CliAction::Render(job) => {
+    CliAction::Render(job) =>
       match job.output {
         Some(path) => {
           @fs.write_bytes_to_file(path, render_job_bytes(job))
@@ -537,7 +544,6 @@ pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise 
         }
         None => render_job(job)
       }
-    }
     CliAction::ListFormats => formats_list()
     CliAction::ShowVersion => version_text()
   }
@@ -549,7 +555,7 @@ pub fn run_cli_bytes(
   program? : String = "dot",
 ) -> Bytes raise {
   match parse_cli_args(args, program~) {
-    CliAction::Render(job) => {
+    CliAction::Render(job) =>
       match job.output {
         Some(path) => {
           @fs.write_bytes_to_file(path, render_job_bytes(job))
@@ -557,7 +563,6 @@ pub fn run_cli_bytes(
         }
         None => render_job_bytes(job)
       }
-    }
     CliAction::ListFormats => @utf8.encode(formats_list(), bom=false)
     CliAction::ShowVersion => @utf8.encode(version_text(), bom=false)
   }

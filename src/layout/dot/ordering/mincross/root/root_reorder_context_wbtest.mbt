@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_root_reorder_node_order prefers nlist order for materialized nodes and backfills missing names from rank-group order" {
   let root_groups : Map[Int, Array[String]] = Map::new()

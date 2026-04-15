@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "port side helpers and endpoint slope" {
   let size = @node_primitives.node_size_from_points(100.0, 50.0)

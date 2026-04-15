@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn roundtrip_file(path : String) -> Unit raise {
   let graph = try @dot.parse_dot_file(path) catch {
@@ -33,9 +32,9 @@ test "write_dot omits implicit node label defaults" {
 
 ///|
 test "write_dot preserves graph attr scope for earlier subgraphs" {
-  let graph = try @dot.parse_dot(
-    "graph G { { a; } label=\"root\"; fontsize=20; }",
-  ) catch {
+  let graph = try
+    @dot.parse_dot("graph G { { a; } label=\"root\"; fontsize=20; }")
+  catch {
     err => fail("parse_dot failed: \{err}")
   } noraise {
     graph => graph
@@ -47,9 +46,9 @@ test "write_dot preserves graph attr scope for earlier subgraphs" {
 
 ///|
 test "write_dot skips graph attr resets for later subgraphs" {
-  let graph = try @dot.parse_dot(
-    "graph G { label=\"root\"; fontsize=20; { a; } }",
-  ) catch {
+  let graph = try
+    @dot.parse_dot("graph G { label=\"root\"; fontsize=20; { a; } }")
+  catch {
     err => fail("parse_dot failed: \{err}")
   } noraise {
     graph => graph
@@ -61,9 +60,11 @@ test "write_dot skips graph attr resets for later subgraphs" {
 
 ///|
 test "write_dot keeps image before generated node geometry attrs" {
-  let graph = try @dot.parse_dot(
-    "digraph { a [height=0.5, pos=\"1,2\", width=0.75, image=\"usershape.svg\"]; }",
-  ) catch {
+  let graph = try
+    @dot.parse_dot(
+      "digraph { a [height=0.5, pos=\"1,2\", width=0.75, image=\"usershape.svg\"]; }",
+    )
+  catch {
     err => fail("parse_dot failed: \{err}")
   } noraise {
     graph => graph
@@ -87,9 +88,11 @@ test "write_dot keeps image before generated node geometry attrs" {
 
 ///|
 test "parser keeps duplicate cluster node membership on first cluster only" {
-  let graph = try @dot.parse_dot(
-    "digraph { subgraph cluster_1 { 1; } subgraph cluster_2 { 1 } }",
-  ) catch {
+  let graph = try
+    @dot.parse_dot(
+      "digraph { subgraph cluster_1 { 1; } subgraph cluster_2 { 1 } }",
+    )
+  catch {
     err => fail("parse_dot failed: \{err}")
   } noraise {
     graph => graph
@@ -99,7 +102,7 @@ test "parser keeps duplicate cluster node membership on first cluster only" {
     Some(value) => value
     None => fail("missing cluster_2: \{output}")
   }
-  let tail = output.unsafe_substring(start=start, end=output.length())
+  let tail = output.unsafe_substring(start~, end=output.length())
   let close = match tail.find("}") {
     Some(value) => value
     None => fail("unterminated cluster_2 block: \{output}")
@@ -137,7 +140,9 @@ test "dot roundtrip tier1" {
 
 ///|
 test "write_dot_bytes keeps latin1 output bytes" {
-  let graph = try @dot.parse_dot_file("refs/graphviz/graphs/directed/Latin1.gv") catch {
+  let graph = try
+    @dot.parse_dot_file("refs/graphviz/graphs/directed/Latin1.gv")
+  catch {
     err => fail("parse_dot_file failed: \{err}")
   } noraise {
     value => value
@@ -152,14 +157,14 @@ test "write_dot_bytes keeps latin1 output bytes" {
   }
   assert_true(has_high_byte)
   let decoded : Result[String, Error] = try? @utf8.decode(bytes)
-  guard decoded is Err(_) else {
-    fail("expected latin1 byte stream")
-  }
+  guard decoded is Err(_) else { fail("expected latin1 byte stream") }
 }
 
 ///|
 test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
-  let graph = try @dot.parse_dot_file("refs/graphviz/tests/windows/Latin1.gv") catch {
+  let graph = try
+    @dot.parse_dot_file("refs/graphviz/tests/windows/Latin1.gv")
+  catch {
     err => fail("parse_dot_file failed: \{err}")
   } noraise {
     value => value
@@ -176,7 +181,5 @@ test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
   }
   assert_true(has_high_byte)
   let decoded : Result[String, Error] = try? @utf8.decode(bytes)
-  guard decoded is Err(_) else {
-    fail("expected latin1 byte stream")
-  }
+  guard decoded is Err(_) else { fail("expected latin1 byte stream") }
 }

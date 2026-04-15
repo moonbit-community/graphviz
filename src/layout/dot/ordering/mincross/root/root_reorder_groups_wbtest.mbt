@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_root_reorder_groups keeps root and skeleton names and inserts only cross-cluster edge vnodes" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

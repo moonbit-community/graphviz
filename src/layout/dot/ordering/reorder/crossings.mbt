@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub(all) struct PortAwareCrossingInputs {
   edge_penalty : Array[Int]
@@ -194,9 +193,7 @@ pub fn count_crossings(
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
 /// Do not change behavior without updating fixtures/tests.
-fn count_local_port_crossings(
-  items : Array[(Int, Double, Int)],
-) -> Int {
+fn count_local_port_crossings(items : Array[(Int, Double, Int)]) -> Int {
   let len = items.length()
   if len < 2 {
     return 0
@@ -304,7 +301,9 @@ fn count_crossings_port_aware_with_inputs(
           } else {
             0.0
           }
-          Array::unsafe_get(local_in_by_bottom, slot).push((top_idx, head_port_x, penalty))
+          Array::unsafe_get(local_in_by_bottom, slot).push(
+            (top_idx, head_port_x, penalty),
+          )
         }
       }
       if max_order > 0 {
@@ -362,7 +361,7 @@ pub fn count_crossings_port_aware(
     edges,
     edge_tail,
     edge_head,
-    ranks=ranks,
+    ranks~,
   )
   count_crossings_port_aware_with_inputs(
     rank_keys,

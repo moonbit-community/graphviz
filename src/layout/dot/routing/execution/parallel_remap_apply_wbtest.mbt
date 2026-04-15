@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "remap_parallel_edge_layouts uses a snapshot so reversed remaps do not cascade" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

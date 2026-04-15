@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "env_flag_enabled respects explicit false tokens and otherwise falls back or enables" {
   assert_true(env_flag_enabled(None, true))

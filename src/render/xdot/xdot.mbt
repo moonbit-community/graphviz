@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 const PAD_X_PT : Double = 16.0
 
@@ -15,6 +14,7 @@ const DIAGONAL_RBCONST : Double = 12.0
 ///|
 const RECORD_BORDER_PT : Double = 0.5
 
+///|
 const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
 
 ///|
@@ -24,6 +24,7 @@ const POLY_GAP_PT : Double = 4.0
 const ROUNDED_CORNER_RADIUS_PT : Double = 12.0
 
 ///|
+
 ///|
 const GRAPH_LABEL_WIDTH_SCALE : Double = 1.0
 
@@ -36,8 +37,10 @@ const MCIRCLE_X : Double = 0.6614
 ///|
 const MCIRCLE_Y : Double = 0.75
 
+///|
 const CYLINDER_RY_DIVISOR : Double = 11.0
 
+///|
 const CYLINDER_KAPPA : Double = 0.5518
 
 ///|
@@ -89,29 +92,17 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       escaping = false
       match ch {
         'n' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Center,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
           sb = StringBuilder::new()
           has_chars = false
         }
         'l' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Left,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Left)
           sb = StringBuilder::new()
           has_chars = false
         }
         'r' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Right,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Right)
           sb = StringBuilder::new()
           has_chars = false
         }
@@ -127,11 +118,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(
-        lines,
-        sb.to_string(),
-        @render.TextAlign::Center,
-      )
+      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
       sb = StringBuilder::new()
       has_chars = false
       continue
@@ -144,11 +131,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(
-      lines,
-      sb.to_string(),
-      @render.TextAlign::Center,
-    )
+    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
   }
   lines
 }
@@ -165,12 +148,9 @@ fn label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) =
-      @label_metrics.label_text_metrics(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
+    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
     let height_pt = if line.text == "" {
       font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
     } else {
@@ -193,9 +173,7 @@ fn label_metrics(
 }
 
 ///|
-fn record_label_lines(
-  label : String,
- ) -> Array[RawLabelLine] {
+fn record_label_lines(label : String) -> Array[RawLabelLine] {
   let lines : Array[RawLabelLine] = []
   let mut sb = StringBuilder::new()
   let mut escaping = false
@@ -210,11 +188,7 @@ fn record_label_lines(
             'r' => @render.TextAlign::Right
             _ => @render.TextAlign::Center
           }
-          push_label_line(
-            lines,
-            sb.to_string(),
-            align,
-          )
+          push_label_line(lines, sb.to_string(), align)
           sb = StringBuilder::new()
           has_chars = false
         }
@@ -230,11 +204,7 @@ fn record_label_lines(
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(
-        lines,
-        sb.to_string(),
-        @render.TextAlign::Center,
-      )
+      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
       sb = StringBuilder::new()
       has_chars = false
       continue
@@ -247,11 +217,7 @@ fn record_label_lines(
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(
-      lines,
-      sb.to_string(),
-      @render.TextAlign::Center,
-    )
+    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
   }
   lines
 }
@@ -268,18 +234,12 @@ fn record_label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, base_height_pt) =
-      @label_metrics.record_label_text_dimensions(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
-    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) =
-      @label_metrics.label_text_metrics(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
+    let (width_pt, base_height_pt) = @label_metrics.record_label_text_dimensions(
+      metrics_text, font_name, font_size_pt,
+    )
+    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     let height_pt = if line.text == "" {
       layout_height_pt
@@ -362,6 +322,7 @@ fn pow10_bigint(exp : Int) -> @bigint.BigInt {
   out
 }
 
+///|
 fn round_abs_scaled_half_even(
   abs_value : Double,
   decimals : Int,
@@ -374,12 +335,11 @@ fn round_abs_scaled_half_even(
   let frac_mask = 0x000fffffffffffffUL
   let mantissa = bits & frac_mask
   let hidden = 0x0010000000000000UL
-  let (significand, exp2) =
-    if exp_bits == 0 {
-      (mantissa, -1074)
-    } else {
-      (mantissa | hidden, exp_bits - 1075)
-    }
+  let (significand, exp2) = if exp_bits == 0 {
+    (mantissa, -1074)
+  } else {
+    (mantissa | hidden, exp_bits - 1075)
+  }
   let mut numerator = @bigint.BigInt::from_uint64(significand)
   if decimals > 0 {
     numerator = numerator * pow10_bigint(decimals)
@@ -387,7 +347,7 @@ fn round_abs_scaled_half_even(
   if exp2 >= 0 {
     return numerator << exp2
   }
-  let denominator = @bigint.BigInt::from_int(1) << (-exp2)
+  let denominator = @bigint.BigInt::from_int(1) << -exp2
   let quotient = numerator / denominator
   let remainder = numerator % denominator
   let doubled = remainder + remainder
@@ -405,6 +365,7 @@ fn round_abs_scaled_half_even(
   }
 }
 
+///|
 fn format_scaled_integer(
   scaled_abs : @bigint.BigInt,
   decimals : Int,
@@ -429,7 +390,10 @@ fn format_scaled_integer(
   let mut frac_part = digits.unsafe_substring(start=split, end=digits.length())
   if trim_trailing_zeros {
     while frac_part.length() > 0 && frac_part.has_suffix("0") {
-      frac_part = frac_part.unsafe_substring(start=0, end=frac_part.length() - 1)
+      frac_part = frac_part.unsafe_substring(
+        start=0,
+        end=frac_part.length() - 1,
+      )
     }
   }
   let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
@@ -440,6 +404,7 @@ fn format_scaled_integer(
   }
 }
 
+///|
 fn format_double_with_decimals(value : Double, decimals : Int) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
@@ -451,6 +416,7 @@ fn format_double_with_decimals(value : Double, decimals : Int) -> String {
   format_scaled_integer(rounded, digits, negative, true)
 }
 
+///|
 fn format_double_fixed(value : Double, decimals : Int) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
@@ -462,20 +428,13 @@ fn format_double_fixed(value : Double, decimals : Int) -> String {
   format_scaled_integer(rounded, digits, negative, false)
 }
 
+///|
 fn format_double_significant(value : Double, digits : Int) -> String {
   if value == 0.0 {
     return "0"
   }
-  let sign = if value < 0.0 {
-    "-"
-  } else {
-    ""
-  }
-  let abs = if value < 0.0 {
-    -value
-  } else {
-    value
-  }
+  let sign = if value < 0.0 { "-" } else { "" }
+  let abs = if value < 0.0 { -value } else { value }
   let exp = @math.log10(abs).floor().to_int()
   let mut decimals = digits - exp - 1
   if decimals < 0 {
@@ -489,6 +448,7 @@ fn format_double_significant(value : Double, digits : Int) -> String {
   "\{sign}\{text}"
 }
 
+///|
 fn format_double(value : Double) -> String {
   format_double_with_decimals(value, 2)
 }
@@ -537,7 +497,11 @@ fn parse_palette_index(value : String) -> Int? {
     }
   }
   let index = parse_int(trimmed, 0)
-  if index <= 0 { None } else { Some(index) }
+  if index <= 0 {
+    None
+  } else {
+    Some(index)
+  }
 }
 
 ///|
@@ -633,7 +597,10 @@ fn colorscheme_index_color(scheme : String, index : Int) -> String? {
 }
 
 ///|
-fn resolve_prefixed_colorscheme_color(value : String, colorscheme : String?) -> String? {
+fn resolve_prefixed_colorscheme_color(
+  value : String,
+  colorscheme : String?,
+) -> String? {
   match slash_color_ref(value, colorscheme) {
     Some((scheme, token)) =>
       match parse_palette_index(token) {
@@ -667,14 +634,15 @@ fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
 
 ///|
 fn node_color(node : @cgraph.Node, name : String, default : String) -> String {
-  let raw = @attrs.color(node_attr(node, name), default=default)
+  let raw = @attrs.color(node_attr(node, name), default~)
   resolve_colorscheme_color(raw, node_attr(node, "colorscheme"))
 }
 
 ///|
 fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
   match node_attr(node, "fillcolor") {
-    Some(value) => resolve_colorscheme_color(value, node_attr(node, "colorscheme"))
+    Some(value) =>
+      resolve_colorscheme_color(value, node_attr(node, "colorscheme"))
     None => node_color(node, "color", fallback)
   }
 }
@@ -822,8 +790,7 @@ fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
       continue
     }
     if token.has_prefix("setlinewidth(") && token.has_suffix(")") {
-      let width_text =
-        token.unsafe_substring(start=13, end=token.length() - 1)
+      let width_text = token.unsafe_substring(start=13, end=token.length() - 1)
       let width = @attrs.parse_double(Some(width_text), 1.0)
       if width > 0.0 {
         return Some(width)
@@ -843,10 +810,7 @@ fn is_default_linewidth(width : Double) -> Bool {
 }
 
 ///|
-fn stroke_width_value(
-  style : @attrs.StyleFlags,
-  penwidth : String?,
-) -> Double {
+fn stroke_width_value(style : @attrs.StyleFlags, penwidth : String?) -> Double {
   let parsed = @attrs.parse_double(penwidth, 1.0)
   if parsed > 0.0 && !is_default_linewidth(parsed) {
     parsed
@@ -963,7 +927,10 @@ fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
 }
 
 ///|
-fn edge_ortho_rounding_radius(edge : @cgraph.Edge, penwidth : Double) -> Double? {
+fn edge_ortho_rounding_radius(
+  edge : @cgraph.Edge,
+  penwidth : Double,
+) -> Double? {
   let splines = match root_graph_for_node(edge.head()).get_attr("splines") {
     Some(value) => value.to_lower()
     None => ""
@@ -986,7 +953,11 @@ fn edge_ortho_rounding_radius(edge : @cgraph.Edge, penwidth : Double) -> Double?
     let default_radius = penwidth * 8.0
     radius = if 12.0 > default_radius { 12.0 } else { default_radius }
   }
-  if want_rounded && radius > 0.0 { Some(radius) } else { None }
+  if want_rounded && radius > 0.0 {
+    Some(radius)
+  } else {
+    None
+  }
 }
 
 ///|
@@ -1040,7 +1011,10 @@ fn arrow_ops(
     return ops
   }
   let style = @attrs.parse_style(layout.edge.get_attr("style"))
-  let stroke_style = stroke_width_style_name(style, layout.edge.get_attr("penwidth"))
+  let stroke_style = stroke_width_style_name(
+    style,
+    layout.edge.get_attr("penwidth"),
+  )
   let (head_color, tail_color) = edge_arrow_colors(layout.edge)
   let normalized = if at_head { head_color } else { tail_color }
   for primitive in primitives {
@@ -1124,8 +1098,7 @@ fn fixedshape_draw_size_in(
     Some(value) => value.to_lower()
     None => ""
   }
-  let regular_shape =
-    shape == "msquare" ||
+  let regular_shape = shape == "msquare" ||
     shape == "square" ||
     shape == "mcircle" ||
     shape == "circle" ||
@@ -1147,7 +1120,10 @@ fn fixedshape_draw_size_in(
   } else {
     default_node_height_in
   }
-  let mut width_in = @attrs.parse_double(node_attr(node, "width"), default_width_in)
+  let mut width_in = @attrs.parse_double(
+    node_attr(node, "width"),
+    default_width_in,
+  )
   let mut height_in = @attrs.parse_double(
     node_attr(node, "height"),
     default_height_in,
@@ -1178,8 +1154,11 @@ fn capture_fixedshape_draw_sizes(
   for node_layout in nodes {
     let node = node_layout.node
     if fixedsize_mode(node) == "shape" {
-      let (width_in, height_in) =
-        fixedshape_draw_size_in(node, node_layout.width_in, node_layout.height_in)
+      let (width_in, height_in) = fixedshape_draw_size_in(
+        node,
+        node_layout.width_in,
+        node_layout.height_in,
+      )
       sizes[node.name()] = (width_in, height_in)
     }
   }
@@ -1244,7 +1223,9 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
-fn rounded_polygon_bezier_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+fn rounded_polygon_bezier_points(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
   let sides = points.length()
   if sides == 0 {
     return []
@@ -1308,6 +1289,7 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ])
 }
 
+///|
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   {
     x: @edge_spline.libm_fma(t, b.x - a.x, a.x),
@@ -1374,6 +1356,7 @@ fn mcircle_segments(rect : @geom.Rect) -> Array[(@geom.Point, @geom.Point)] {
   ]
 }
 
+///|
 fn node_attr_double(
   node : @cgraph.Node,
   key : String,
@@ -1386,11 +1369,7 @@ fn node_attr_double(
 }
 
 ///|
-fn node_attr_int(
-  node : @cgraph.Node,
-  key : String,
-  fallback : Int,
-) -> Int {
+fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
   match node.get_attr(key) {
     Some(value) => parse_int(value, fallback)
     None => fallback
@@ -1400,7 +1379,11 @@ fn node_attr_int(
 ///|
 fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
   let raw = node_attr_int(node, "peripheries", fallback)
-  if raw < 1 { 1 } else { raw }
+  if raw < 1 {
+    1
+  } else {
+    raw
+  }
 }
 
 ///|
@@ -1483,10 +1466,7 @@ fn polygon_vertices_for_rect(
   let scale_y = half_h / ymax
   let out : Array[@geom.Point] = []
   for vertex in base {
-    out.push({
-      x: cx + vertex.x * scale_x,
-      y: cy + vertex.y * scale_y,
-    })
+    out.push({ x: cx + vertex.x * scale_x, y: cy + vertex.y * scale_y })
   }
   out
 }
@@ -1506,7 +1486,7 @@ fn polygon_outline_vertices(
   }
   let sides = base.length()
   let mut prev = base[sides - 1]
-  for j in 1..=sides {
+  for j in 1..<=sides {
     let candidate = base[(sides - j) % sides]
     if !point_nearly_equal(candidate, base[0]) {
       prev = candidate
@@ -1565,6 +1545,7 @@ fn polygon_paths_from_base(
   paths
 }
 
+///|
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
@@ -1582,6 +1563,7 @@ fn polygon_vertices_for_size(
   polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
 }
 
+///|
 fn polygon_outline_vertices_for_rect(
   rect : @geom.Rect,
   sides : Int,
@@ -1597,20 +1579,14 @@ fn polygon_outline_vertices_for_rect(
     return []
   }
   let count = if peripheries < 1 { 1 } else { peripheries }
-  let base_outline_pad =
-    if count > 1 {
-      POLY_GAP_PT * (count - 1).to_double()
-    } else {
-      0.0
-    }
+  let base_outline_pad = if count > 1 {
+    POLY_GAP_PT * (count - 1).to_double()
+  } else {
+    0.0
+  }
   let centered = if base_outline_pad <= 0.0 {
     polygon_vertices_for_size(
-      target_w,
-      target_h,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
+      target_w, target_h, sides, orientation_deg, distortion, skew,
     )
   } else {
     let mut inner_w = if target_w > base_outline_pad * 2.0 {
@@ -1628,12 +1604,7 @@ fn polygon_outline_vertices_for_rect(
         break
       }
       let base = polygon_vertices_for_size(
-        inner_w,
-        inner_h,
-        sides,
-        orientation_deg,
-        distortion,
-        skew,
+        inner_w, inner_h, sides, orientation_deg, distortion, skew,
       )
       if base.length() < 3 {
         break
@@ -1656,12 +1627,7 @@ fn polygon_outline_vertices_for_rect(
       inner_h = inner_h * (target_h / (max_y * 2.0))
     }
     let final_base = polygon_vertices_for_size(
-      inner_w,
-      inner_h,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
+      inner_w, inner_h, sides, orientation_deg, distortion, skew,
     )
     if final_base.length() < 3 {
       final_base
@@ -1682,7 +1648,10 @@ fn polygon_outline_vertices_for_rect(
 }
 
 ///|
-fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rect {
+fn inner_rect_for_peripheries(
+  rect : @geom.Rect,
+  peripheries : Int,
+) -> @geom.Rect {
   if peripheries <= 1 {
     return rect
   }
@@ -1707,13 +1676,7 @@ fn polygon_paths_for_shape(
   for i in 0..<count {
     let inset = -POLY_GAP_PT * (count - i - 1).to_double()
     let poly = polygon_outline_vertices_for_rect(
-      rect,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
-      count,
-      inset,
+      rect, sides, orientation_deg, distortion, skew, count, inset,
     )
     if poly.length() > 0 {
       paths.push(poly)
@@ -1729,7 +1692,11 @@ fn arrow_tip_width(rect : @geom.Rect) -> Double {
     return 0.0
   }
   let max_tip = width / 2.0
-  if max_tip < 18.0 { max_tip } else { 18.0 }
+  if max_tip < 18.0 {
+    max_tip
+  } else {
+    18.0
+  }
 }
 
 ///|
@@ -1861,19 +1828,13 @@ fn tab_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
 ///|
 fn tab_top_join_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_width = 12.0
-  [
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx + tab_width, y: rect.ury },
-  ]
+  [{ x: rect.llx, y: rect.ury }, { x: rect.llx + tab_width, y: rect.ury }]
 }
 
 ///|
 fn baseline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: rect.urx, y: cy }]
 }
 
 ///|
@@ -1905,20 +1866,14 @@ fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn insulator_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 9.0, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 9.0, y: cy }, { x: rect.urx, y: cy }]
 }
 
 ///|
 fn insulator_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx - 9.0, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx - 9.0, y: cy }]
 }
 
 ///|
@@ -1973,20 +1928,14 @@ fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn noverhang_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 13.5, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 13.5, y: cy }, { x: rect.urx, y: cy }]
 }
 
 ///|
 fn noverhang_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx - 13.5, y: cy },
-    { x: rect.llx, y: cy },
-  ]
+  [{ x: cx - 13.5, y: cy }, { x: rect.llx, y: cy }]
 }
 
 ///|
@@ -2063,20 +2012,14 @@ fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn proteinstab_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 6.0 },
-    { x: cx, y: cy },
-  ]
+  [{ x: cx, y: cy + 6.0 }, { x: cx, y: cy }]
 }
 
 ///|
 fn proteasesite_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 7.5 },
-    { x: cx, y: cy },
-  ]
+  [{ x: cx, y: cy + 7.5 }, { x: cx, y: cy }]
 }
 
 ///|
@@ -2099,40 +2042,28 @@ fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn restrictionsite_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx - 12.75, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx - 12.75, y: cy }]
 }
 
 ///|
 fn restrictionsite_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 12.75, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 12.75, y: cy }, { x: rect.urx, y: cy }]
 }
 
 ///|
 fn ribosite_segment1_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy },
-    { x: cx, y: cy + 1.5 },
-  ]
+  [{ x: cx, y: cy }, { x: cx, y: cy + 1.5 }]
 }
 
 ///|
 fn ribosite_segment2_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 3.0 },
-    { x: cx, y: cy + 4.5 },
-  ]
+  [{ x: cx, y: cy + 3.0 }, { x: cx, y: cy + 4.5 }]
 }
 
 ///|
@@ -2149,28 +2080,19 @@ fn signature_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
 ///|
 fn signature_cross_up_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy + 1.5 },
-    { x: rect.llx + 6.0, y: cy - 1.5 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy + 1.5 }, { x: rect.llx + 6.0, y: cy - 1.5 }]
 }
 
 ///|
 fn signature_cross_down_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy - 1.5 },
-    { x: rect.llx + 6.0, y: cy + 1.5 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy - 1.5 }, { x: rect.llx + 6.0, y: cy + 1.5 }]
 }
 
 ///|
 fn signature_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy - 9.0 },
-    { x: rect.urx - 3.0, y: cy - 9.0 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy - 9.0 }, { x: rect.urx - 3.0, y: cy - 9.0 }]
 }
 
 ///|
@@ -2179,15 +2101,27 @@ fn star_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let height = rect.ury - rect.lly
   [
     { x: rect.llx + width, y: rect.lly + height * 0.61803398875 },
-    { x: rect.llx + width * 0.61795974583, y: rect.lly + height * 0.61803398875 },
+    {
+      x: rect.llx + width * 0.61795974583,
+      y: rect.lly + height * 0.61803398875,
+    },
     { x: rect.llx + width * 0.5, y: rect.lly + height },
-    { x: rect.llx + width * 0.38204025417, y: rect.lly + height * 0.61803398875 },
+    {
+      x: rect.llx + width * 0.38204025417,
+      y: rect.lly + height * 0.61803398875,
+    },
     { x: rect.llx, y: rect.lly + height * 0.61803398875 },
-    { x: rect.llx + width * 0.30907407407, y: rect.lly + height * 0.38196601125 },
+    {
+      x: rect.llx + width * 0.30907407407,
+      y: rect.lly + height * 0.38196601125,
+    },
     { x: rect.llx + width * 0.19092592593, y: rect.lly },
     { x: rect.llx + width * 0.5, y: rect.lly + height * 0.2360679775 },
     { x: rect.llx + width * 0.80907407407, y: rect.lly },
-    { x: rect.llx + width * 0.69092592593, y: rect.lly + height * 0.38196601125 },
+    {
+      x: rect.llx + width * 0.69092592593,
+      y: rect.lly + height * 0.38196601125,
+    },
   ]
 }
 
@@ -2235,10 +2169,7 @@ fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn threepoverhang_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx + 3.0, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx + 3.0, y: cy }]
 }
 
 ///|
@@ -2253,10 +2184,7 @@ fn underline_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
 
 ///|
 fn underline_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  [
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
-  ]
+  [{ x: rect.llx, y: rect.lly }, { x: rect.urx, y: rect.lly }]
 }
 
 ///|
@@ -2279,7 +2207,11 @@ fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_height = 4.0
   let tab_width = 21.0
   let notch_right_raw = rect.urx - fold
-  let notch_right = if notch_right_raw < rect.llx { rect.llx } else { notch_right_raw }
+  let notch_right = if notch_right_raw < rect.llx {
+    rect.llx
+  } else {
+    notch_right_raw
+  }
   let tab_left_raw = notch_right - tab_width
   let tab_left = if tab_left_raw < rect.llx { rect.llx } else { tab_left_raw }
   let join_raw = tab_left - fold
@@ -2300,7 +2232,11 @@ fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = 12.0
   let inset = 6.0
   let body_right_raw = rect.urx - tip
-  let body_right = if body_right_raw < rect.llx { rect.llx } else { body_right_raw }
+  let body_right = if body_right_raw < rect.llx {
+    rect.llx
+  } else {
+    body_right_raw
+  }
   let top_raw = rect.ury - inset
   let bottom_raw = rect.lly + inset
   let top_bound = if top_raw < rect.lly { rect.lly } else { top_raw }
@@ -2508,7 +2444,8 @@ fn shape_polygon_paths(
       let orientation = node_attr_double(node, "orientation", 0.0)
       let distortion = node_attr_double(node, "distortion", 0.0)
       let skew = node_attr_double(node, "skew", 0.0)
-      if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+      if sides <= 2 &&
+        (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
         sides = 120
       }
       let peripheries = node_peripheries(node, 1)
@@ -2518,10 +2455,8 @@ fn shape_polygon_paths(
         Some((sides, orientation, distortion, skew, peripheries))
       }
     }
-    "rpromoter" =>
-      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
-    "lpromoter" =>
-      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "rpromoter" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "lpromoter" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
@@ -2536,20 +2471,19 @@ fn shape_polygon_paths(
           Some(polygon_paths_from_base(rpromoter_points(rect), peripheries))
         "lpromoter" =>
           Some(polygon_paths_from_base(lpromoter_points(rect), peripheries))
-        "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
-        "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
-        "folder" => Some(polygon_paths_from_base(folder_points(rect), peripheries))
+        "rarrow" =>
+          Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
+        "larrow" =>
+          Some(polygon_paths_from_base(larrow_points(rect), peripheries))
+        "folder" =>
+          Some(polygon_paths_from_base(folder_points(rect), peripheries))
         "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
-        "square" => Some(polygon_paths_from_base(rect_points(rect), peripheries))
+        "square" =>
+          Some(polygon_paths_from_base(rect_points(rect), peripheries))
         _ =>
           Some(
             polygon_paths_for_shape(
-              rect,
-              sides,
-              orientation,
-              distortion,
-              skew,
-              peripheries,
+              rect, sides, orientation, distortion, skew, peripheries,
             ),
           )
       }
@@ -2940,18 +2874,14 @@ fn record_separator_ops(
         let x2 = rect.urx
         let y = layouts[i + 1].rect.ury
         ops.push(@render.DrawOp::PenColor(color~))
-        ops.push(
-          @render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]),
-        )
+        ops.push(@render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]))
       }
       RecordOrientation::Horizontal => {
         let y1 = rect.lly
         let y2 = rect.ury
         let x = layouts[i + 1].rect.llx
         ops.push(@render.DrawOp::PenColor(color~))
-        ops.push(
-          @render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]),
-        )
+        ops.push(@render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]))
       }
     }
   }
@@ -3077,13 +3007,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     pad_x_pt,
     pad_y_pt,
   )
-  record_separator_ops(
-    ops,
-    layouts,
-    orientation,
-    inner_rect,
-    color,
-  )
+  record_separator_ops(ops, layouts, orientation, inner_rect, color)
   ops
 }
 
@@ -3202,10 +3126,7 @@ fn html_text_width(
   font_size_pt : Double,
 ) -> Double {
   let (_lines, width_pt, _height_pt) = html_text_metrics(
-    text,
-    name,
-    font_name,
-    font_size_pt,
+    text, name, font_name, font_size_pt,
   )
   width_pt
 }
@@ -3303,9 +3224,7 @@ fn html_stroke_rect_ops(
   let mut line_width = current_linewidth
   if !same_linewidth(line_width, border_pt) {
     ops.push(
-      @render.DrawOp::Style(
-        name="setlinewidth(\{format_double(border_pt)})",
-      ),
+      @render.DrawOp::Style(name="setlinewidth(\{format_double(border_pt)})"),
     )
     line_width = border_pt
   }
@@ -3335,9 +3254,11 @@ fn html_cell_size(
     font_size_pt,
   )
   let cell_border_pt = html_table_cell_border_pt(table)
-  let mut width = content_width + table.cell_padding_pt * 2.0 +
+  let mut width = content_width +
+    table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
-  let mut height = content_height + table.cell_padding_pt * 2.0 +
+  let mut height = content_height +
+    table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
@@ -3357,9 +3278,9 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  @html_label.html_table_size(table, cell => html_cell_size(
-    table, cell, name, font_name, font_size_pt,
-  ))
+  @html_label.html_table_size(table, cell => {
+    html_cell_size(table, cell, name, font_name, font_size_pt)
+  })
 }
 
 ///|
@@ -3370,9 +3291,9 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(table, rect, cell => html_cell_size(
-    table, cell, name, font_name, font_size_pt,
-  ))
+  @html_label.html_table_layout(table, rect, cell => {
+    html_cell_size(table, cell, name, font_name, font_size_pt)
+  })
 }
 
 ///|
@@ -3532,11 +3453,7 @@ fn html_table_ops(
     }
     if cell_border_pt > 0.0 {
       line_width = html_stroke_rect_ops(
-        ops,
-        cell_rect,
-        cell_border_pt,
-        stroke,
-        line_width,
+        ops, cell_rect, cell_border_pt, stroke, line_width,
       )
     }
     let content_rect : @geom.Rect = {
@@ -3548,14 +3465,7 @@ fn html_table_ops(
     match cell_layout.cell.content {
       @html_label.HtmlCellContent::Table(nested) =>
         line_width = html_table_ops(
-          ops,
-          nested,
-          content_rect,
-          name,
-          font,
-          text_color,
-          stroke,
-          line_width,
+          ops, nested, content_rect, name, font, text_color, stroke, line_width,
         )
       @html_label.HtmlCellContent::StyledText(spans) =>
         if spans.length() > 0 {
@@ -3586,13 +3496,7 @@ fn html_table_ops(
     }
   }
   if border_pt > 0.0 {
-    line_width = html_stroke_rect_ops(
-      ops,
-      rect,
-      border_pt,
-      stroke,
-      line_width,
-    )
+    line_width = html_stroke_rect_ops(ops, rect, border_pt, stroke, line_width)
   }
   line_width
 }
@@ -3606,7 +3510,8 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let inset_x = pad_x_pt / 2.0
   let inset_y = pad_y_pt / 2.0
-  let inset_rect : @geom.Rect = if outer_rect.urx - outer_rect.llx > inset_x * 2.0 &&
+  let inset_rect : @geom.Rect = if outer_rect.urx - outer_rect.llx >
+    inset_x * 2.0 &&
     outer_rect.ury - outer_rect.lly > inset_y * 2.0 {
     {
       llx: outer_rect.llx + inset_x,
@@ -3623,9 +3528,7 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   }
   let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
-  let stroke = @attrs.normalize_color(
-    node_color(node, "color", "black"),
-  )
+  let stroke = @attrs.normalize_color(node_color(node, "color", "black"))
   match @html_label.parse_html_label(label) {
     Some(@html_label.HtmlLabel::Table(table)) => {
       let rect = inset_rect
@@ -3699,8 +3602,7 @@ fn node_draw_ops(
   let shape = if kind == "unknown" { "box" } else { kind }
   let is_doublecircle = raw_shape == "doublecircle"
   let filled = if shape == "point" { true } else { style.filled }
-  let no_outline =
-    node_attr_int(node, "peripheries", 1) <= 0 &&
+  let no_outline = node_attr_int(node, "peripheries", 1) <= 0 &&
     shape != "record" &&
     shape != "plaintext" &&
     shape != "point"
@@ -3713,12 +3615,7 @@ fn node_draw_ops(
       let rect = node_rect(layout)
       ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
       ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
-      ops.push(
-        @render.DrawOp::Polygon(
-          filled=true,
-          points=rect_points(rect),
-        ),
-      )
+      ops.push(@render.DrawOp::Polygon(filled=true, points=rect_points(rect)))
     }
     return ops
   }
@@ -3743,7 +3640,7 @@ fn node_draw_ops(
     None => node_rect(layout)
   }
   match shape {
-    _ if is_doublecircle => {
+    _ if is_doublecircle =>
       if no_outline {
         let rect = expand_rect(
           rect,
@@ -3764,7 +3661,6 @@ fn node_draw_ops(
           None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
         }
       }
-    }
     "msquare" => {
       let points = rect_points(rect)
       ops.push(@render.DrawOp::Polygon(filled~, points~))
@@ -3792,41 +3688,71 @@ fn node_draw_ops(
       }
     }
     "note" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=note_outline_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=note_outline_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=note_fold_vertical_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=note_fold_horizontal_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=note_fold_horizontal_points(rect)),
+      )
     }
     "tab" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=tab_outline_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=tab_outline_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=tab_top_join_points(rect)))
     }
     "insulator" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=insulator_inner_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=insulator_inner_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=insulator_outer_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=insulator_right_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=insulator_right_line_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=insulator_left_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=insulator_left_line_points(rect)),
+      )
     }
     "noverhang" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=noverhang_top_left_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=noverhang_top_left_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polygon(filled~, points=noverhang_bottom_left_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled~,
+          points=noverhang_bottom_left_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polygon(
-        filled~,
-        points=noverhang_bottom_right_points(rect),
-      ))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled~,
+          points=noverhang_bottom_right_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polygon(filled~, points=noverhang_top_right_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled~,
+          points=noverhang_top_right_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=noverhang_right_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=noverhang_right_line_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=noverhang_left_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=noverhang_left_line_points(rect)),
+      )
     }
     "primersite" => {
       ops.push(@render.DrawOp::Polygon(filled~, points=primersite_points(rect)))
@@ -3839,28 +3765,40 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "proteasesite" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=proteasesite_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=proteasesite_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=proteasesite_line_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "proteinstab" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=proteinstab_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=proteinstab_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=proteinstab_line_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "restrictionsite" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=restrictionsite_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=restrictionsite_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=restrictionsite_left_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=restrictionsite_left_line_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=restrictionsite_right_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=restrictionsite_right_line_points(rect)),
+      )
     }
     "ribosite" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=proteasesite_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=proteasesite_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=ribosite_segment1_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
@@ -3869,7 +3807,9 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "rnastab" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=proteinstab_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=proteinstab_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=ribosite_segment1_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
@@ -3878,33 +3818,49 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "signature" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=signature_outline_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=signature_outline_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=signature_cross_up_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=signature_cross_down_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=signature_cross_down_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=signature_line_points(rect)))
     }
-    "star" => ops.push(@render.DrawOp::Polygon(filled~, points=star_points(rect)))
+    "star" =>
+      ops.push(@render.DrawOp::Polygon(filled~, points=star_points(rect)))
     "terminator" => {
       ops.push(@render.DrawOp::Polygon(filled~, points=terminator_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=baseline_points(rect)))
     }
     "threepoverhang" => {
-      ops.push(@render.DrawOp::Polygon(filled~, points=threepoverhang_top_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(filled~, points=threepoverhang_top_points(rect)),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polygon(filled~, points=threepoverhang_bottom_points(rect)))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled~,
+          points=threepoverhang_bottom_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=threepoverhang_line_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=threepoverhang_line_points(rect)),
+      )
     }
     "underline" => {
       ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
-      ops.push(@render.DrawOp::Polygon(
-        filled=false,
-        points=underline_outline_points(rect),
-      ))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled=false,
+          points=underline_outline_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=underline_line_points(rect)))
     }
@@ -3959,24 +3915,15 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::Polygon(filled~, points~))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[
-          corner,
-          { x: rect.llx, y: corner.y },
-        ]),
+        @render.DrawOp::Polyline(points=[corner, { x: rect.llx, y: corner.y }]),
       )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[
-          corner,
-          { x: corner.x, y: rect.lly },
-        ]),
+        @render.DrawOp::Polyline(points=[corner, { x: corner.x, y: rect.lly }]),
       )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[
-          corner,
-          { x: rect.urx, y: rect.ury },
-        ]),
+        @render.DrawOp::Polyline(points=[corner, { x: rect.urx, y: rect.ury }]),
       )
     }
     "component" => {
@@ -3984,18 +3931,24 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=component_top_tab_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Polyline(points=component_bottom_tab_points(rect)))
+      ops.push(
+        @render.DrawOp::Polyline(points=component_bottom_tab_points(rect)),
+      )
     }
     "cylinder" => {
-      ops.push(@render.DrawOp::Bezier(
-        filled~,
-        points=cylinder_outer_bezier_points(rect),
-      ))
+      ops.push(
+        @render.DrawOp::Bezier(
+          filled~,
+          points=cylinder_outer_bezier_points(rect),
+        ),
+      )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-      ops.push(@render.DrawOp::Bezier(
-        filled=false,
-        points=cylinder_top_inner_bezier_points(rect),
-      ))
+      ops.push(
+        @render.DrawOp::Bezier(
+          filled=false,
+          points=cylinder_top_inner_bezier_points(rect),
+        ),
+      )
     }
     "box" => {
       let peripheries = node_peripheries(node, 1)
@@ -4009,7 +3962,9 @@ fn node_draw_ops(
             ),
           )
         } else {
-          ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
+          ops.push(
+            @render.DrawOp::Polygon(filled~, points=rect_points(base_rect)),
+          )
         }
       }
       if !no_outline {
@@ -4034,7 +3989,7 @@ fn node_draw_ops(
         }
       }
     }
-    _ => {
+    _ =>
       match shape_polygon_paths(node, shape, rect) {
         Some(paths) if paths.length() > 0 => {
           if !no_outline || filled {
@@ -4046,12 +4001,7 @@ fn node_draw_ops(
                 ),
               )
             } else {
-              ops.push(
-                @render.DrawOp::Polygon(
-                  filled~,
-                  points=paths[0],
-                ),
-              )
+              ops.push(@render.DrawOp::Polygon(filled~, points=paths[0]))
             }
           }
           if !no_outline {
@@ -4065,12 +4015,7 @@ fn node_draw_ops(
                   ),
                 )
               } else {
-                ops.push(
-                  @render.DrawOp::Polygon(
-                    filled=false,
-                    points=paths[i],
-                  ),
-                )
+                ops.push(@render.DrawOp::Polygon(filled=false, points=paths[i]))
               }
             }
           }
@@ -4096,7 +4041,6 @@ fn node_draw_ops(
           }
         }
       }
-    }
   }
   ops
 }
@@ -4172,11 +4116,10 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     } else {
       let text = label_text(node_attr(node, "label"), node.name())
       match @html_label.parse_html_label(text) {
-        Some(_) => {
+        Some(_) =>
           for op in html_label_ops(layout) {
             ops.push(op)
           }
-        }
         None => {
           let label_pos = match layout.label_pos {
             Some(value) => Some(value)
@@ -4214,17 +4157,21 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
   colors
 }
 
+///|
 priv struct ColorSegment {
   color : String
   mut t : Double
 }
 
+///|
 const COLOR_SEG_EPSILON : Double = 0.00001
 
+///|
 fn color_is_zero(value : Double) -> Bool {
   value < COLOR_SEG_EPSILON && value > -COLOR_SEG_EPSILON
 }
 
+///|
 fn parse_color_fraction(value : String) -> Double? {
   if value == "" {
     return None
@@ -4241,6 +4188,7 @@ fn parse_color_fraction(value : String) -> Double? {
   }
 }
 
+///|
 fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   let segs : Array[ColorSegment] = []
   let mut left = 1.0
@@ -4255,7 +4203,8 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
     match token.find(";") {
       Some(index) => {
         color_token = token.unsafe_substring(start=0, end=index)
-        let frac_text = token.unsafe_substring(start=index + 1, end=token.length())
+        let frac_text = token
+          .unsafe_substring(start=index + 1, end=token.length())
           .trim()
           .to_string()
         match parse_color_fraction(frac_text) {
@@ -4313,6 +4262,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   segs
 }
 
+///|
 fn approx_cubic_length(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -4324,6 +4274,7 @@ fn approx_cubic_length(
   @math.hypot(p3.x - p2.x, p3.y - p2.y)
 }
 
+///|
 fn split_cubic_points(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -4343,6 +4294,7 @@ fn split_cubic_points(
   ((p0, p01, p012, p0123), (p0123, p123, p23, p3))
 }
 
+///|
 fn split_spline_points(
   points : Array[@geom.Point],
   t : Double,
@@ -4350,8 +4302,13 @@ fn split_spline_points(
   let count = (points.length() - 1) / 3
   if count <= 1 {
     let tt = if t < 0.0 { 0.0 } else if t > 1.0 { 1.0 } else { t }
-    let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
-      split_cubic_points(points[0], points[1], points[2], points[3], tt)
+    let ((l0, l1, l2, l3), (r0, r1, r2, r3)) = split_cubic_points(
+      points[0],
+      points[1],
+      points[2],
+      points[3],
+      tt,
+    )
     return ([l0, l1, l2, l3], [r0, r1, r2, r3])
   }
   let lengths : Array[Double] = []
@@ -4401,14 +4358,13 @@ fn split_spline_points(
     ratio = 1.0
   }
   let idx = segment_index * 3
-  let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
-    split_cubic_points(
-      points[idx],
-      points[idx + 1],
-      points[idx + 2],
-      points[idx + 3],
-      ratio,
-    )
+  let ((l0, l1, l2, l3), (r0, r1, r2, r3)) = split_cubic_points(
+    points[idx],
+    points[idx + 1],
+    points[idx + 2],
+    points[idx + 3],
+    ratio,
+  )
   left_points[idx] = l0
   left_points[idx + 1] = l1
   left_points[idx + 2] = l2
@@ -4420,6 +4376,7 @@ fn split_spline_points(
   (left_points, right_points)
 }
 
+///|
 fn edge_arrow_colors(edge : @cgraph.Edge) -> (String, String) {
   let raw = @attrs.color(edge.get_attr("color"), default="black")
   if raw.find(":") is Some(_) {
@@ -4446,6 +4403,8 @@ fn edge_arrow_colors(edge : @cgraph.Edge) -> (String, String) {
 
 ///|
 const COLOR_SPLINE_EPSILON : Double = 0.0001
+
+///|
 const COLOR_SPLINE_SEP_PT : Double = 2.0
 
 ///|
@@ -4456,12 +4415,8 @@ fn color_spline_offset_p(
 ) -> @geom.Point {
   let x = p.x - q.x
   let y = p.y - q.y
-  let scale =
-    distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
-  {
-    x: y * scale,
-    y: -x * scale,
-  }
+  let scale = distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  { x: y * scale, y: -x * scale }
 }
 
 ///|
@@ -4481,10 +4436,7 @@ fn color_spline_offset_qr(
     len = Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
   }
   let scale = distance / len
-  {
-    x: y * scale,
-    y: -x * scale,
-  }
+  { x: y * scale, y: -x * scale }
 }
 
 ///|
@@ -4533,20 +4485,16 @@ fn edge_multicolor_spline_points(
     }
     pf2 = points[j + 2]
     pf3 = points[j + 3]
-    let offset_qr =
-      color_spline_offset_qr(
-        pf0,
-        pf1,
-        pf2,
-        pf3,
-        COLOR_SPLINE_SEP_PT,
-      )
+    let offset_qr = color_spline_offset_qr(
+      pf0,
+      pf1,
+      pf2,
+      pf3,
+      COLOR_SPLINE_SEP_PT,
+    )
     offset[j + 1] = offset_qr
     offset[j + 2] = offset_qr
-    tmp[j] = {
-      x: pf0.x - numc2 * offset[j].x,
-      y: pf0.y - numc2 * offset[j].y,
-    }
+    tmp[j] = { x: pf0.x - numc2 * offset[j].x, y: pf0.y - numc2 * offset[j].y }
     tmp[j + 1] = {
       x: pf1.x - numc2 * offset[j + 1].x,
       y: pf1.y - numc2 * offset[j + 1].y,
@@ -4558,10 +4506,7 @@ fn edge_multicolor_spline_points(
     j = j + 3
   }
   offset[j] = color_spline_offset_p(pf2, pf3, COLOR_SPLINE_SEP_PT)
-  tmp[j] = {
-    x: pf3.x - numc2 * offset[j].x,
-    y: pf3.y - numc2 * offset[j].y,
-  }
+  tmp[j] = { x: pf3.x - numc2 * offset[j].x, y: pf3.y - numc2 * offset[j].y }
   let out : Array[Array[@geom.Point]] = []
   for _ in 0..<color_count {
     for idx in 0..<size {
@@ -4586,8 +4531,11 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let raw_color = @attrs.color(edge.get_attr("color"), default="black")
   let has_explicit_stroke_style = stroke_width_style_name(
-    style, edge.get_attr("penwidth"),
-  ) is Some(_) || dash_style_name(style) is Some(_)
+      style,
+      edge.get_attr("penwidth"),
+    )
+    is Some(_) ||
+    dash_style_name(style) is Some(_)
   let has_explicit_solid = match edge.get_attr("style") {
     Some(raw_style) => {
       let mut explicit = false
@@ -4626,36 +4574,20 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
               segment.t,
             )
             right_points = rest_points
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled=false,
-                points=left_points,
-              ),
-            )
+            ops.push(@render.DrawOp::Bezier(filled=false, points=left_points))
             if color_is_zero(left) {
               break
             }
           } else if color_is_zero(left) {
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled=false,
-                points=right_points,
-              ),
-            )
+            ops.push(@render.DrawOp::Bezier(filled=false, points=right_points))
             break
           } else {
             let split_t = segment.t / (left + segment.t)
             let (left_points, rest_points) = split_spline_points(
-              right_points,
-              split_t,
+              right_points, split_t,
             )
             right_points = rest_points
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled=false,
-                points=left_points,
-              ),
-            )
+            ops.push(@render.DrawOp::Bezier(filled=false, points=left_points))
           }
         }
       }
@@ -4694,27 +4626,16 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
               ops.push(@render.DrawOp::PenColor(color=pen_color))
               wrote_pen_color = true
             }
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled=false,
-                points=points,
-              ),
-            )
+            ops.push(@render.DrawOp::Bezier(filled=false, points~))
           }
         }
-        None =>
-          {
-            if !wrote_pen_color {
-              ops.push(@render.DrawOp::PenColor(color=pen_color))
-              wrote_pen_color = true
-            }
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled=false,
-                points=points,
-              ),
-            )
+        None => {
+          if !wrote_pen_color {
+            ops.push(@render.DrawOp::PenColor(color=pen_color))
+            wrote_pen_color = true
           }
+          ops.push(@render.DrawOp::Bezier(filled=false, points~))
+        }
       }
     }
   }
@@ -4786,8 +4707,10 @@ fn edge_side_label_ops(
     name: @attrs.font_name(edge.get_attr("labelfontname"), default=default_name),
     size: @attrs.font_size(edge.get_attr("labelfontsize"), default=default_size),
   }
-  let color =
-    @attrs.color(edge.get_attr("labelfontcolor"), default=default_color)
+  let color = @attrs.color(
+    edge.get_attr("labelfontcolor"),
+    default=default_color,
+  )
   let pen_color = @attrs.normalize_color(color)
   append_text_label_ops(ops, text, Some(pos), font, pen_color)
   ops
@@ -4990,7 +4913,7 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
           }
           end = end + 1
         }
-        let token = input.view(start=index, end=end)
+        let token = input.view(start=index, end~)
         out.write_bytes(latin1_token_bytes(token))
         index = end
         continue
@@ -5036,8 +4959,12 @@ fn graph_colorscheme(graph : @cgraph.Graph) -> String? {
 }
 
 ///|
-fn graph_color(graph : @cgraph.Graph, name : String, default : String) -> String {
-  let raw = @attrs.color(graph.get_attr(name), default=default)
+fn graph_color(
+  graph : @cgraph.Graph,
+  name : String,
+  default : String,
+) -> String {
+  let raw = @attrs.color(graph.get_attr(name), default~)
   resolve_colorscheme_color(raw, graph_colorscheme(graph))
 }
 
@@ -5092,7 +5019,8 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
       Some(graph_color(graph, "fillcolor", color))
     } else {
       match graph.get_attr("bgcolor") {
-        Some(value) => Some(resolve_colorscheme_color(value, graph_colorscheme(graph)))
+        Some(value) =>
+          Some(resolve_colorscheme_color(value, graph_colorscheme(graph)))
         None => None
       }
     }
@@ -5155,7 +5083,10 @@ fn graph_label_ops(
       } else {
         0.0
       }
-      let mut baseline = pos.y + total_height / 2.0 - font.size + baseline_adjust
+      let mut baseline = pos.y +
+        total_height / 2.0 -
+        font.size +
+        baseline_adjust
       for line in lines {
         let line_x = match line.align {
           @render.TextAlign::Left => pos.x - width_pt / 2.0
@@ -5445,21 +5376,19 @@ fn attach_xdot_attrs_internal(
     if label_ops.length() > 0 {
       edge_layout.edge.set_attr("_ldraw_", encode_xdot_ops(label_ops))
     }
-    let head_label_ops =
-      edge_side_label_ops(
-        edge_layout,
-        "headlabel",
-        edge_layout.head_label_pos,
-      )
+    let head_label_ops = edge_side_label_ops(
+      edge_layout,
+      "headlabel",
+      edge_layout.head_label_pos,
+    )
     if head_label_ops.length() > 0 {
       edge_layout.edge.set_attr("_hldraw_", encode_xdot_ops(head_label_ops))
     }
-    let tail_label_ops =
-      edge_side_label_ops(
-        edge_layout,
-        "taillabel",
-        edge_layout.tail_label_pos,
-      )
+    let tail_label_ops = edge_side_label_ops(
+      edge_layout,
+      "taillabel",
+      edge_layout.tail_label_pos,
+    )
     if tail_label_ops.length() > 0 {
       edge_layout.edge.set_attr("_tldraw_", encode_xdot_ops(tail_label_ops))
     }

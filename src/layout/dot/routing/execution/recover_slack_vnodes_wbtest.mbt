@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "recover_slack_vnodes centers plain vnodes and right-aligns only the label vnode" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
@@ -22,24 +21,22 @@ test "recover_slack_vnodes centers plain vnodes and right-aligns only the label 
     [],
   )
 
-  recover_slack_vnodes(
-    {
-      edge,
-      ordered_vnodes: ["v1", "v2"],
-      boxes: [
-        { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
-        { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
-      ],
-      ranks: { "a": 0, "b": 3 },
-      vnode_ranks: { "v1": 1, "v2": 2 },
-      rank_y: { 1: 5.0, 2: 1.0 },
-      vnode_positions,
-      vnode_sizes,
-      merged_positions,
-      pathplan_route_sizes,
-      adjacency,
-    },
-  )
+  recover_slack_vnodes({
+    edge,
+    ordered_vnodes: ["v1", "v2"],
+    boxes: [
+      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
+      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
+    ],
+    ranks: { "a": 0, "b": 3 },
+    vnode_ranks: { "v1": 1, "v2": 2 },
+    rank_y: { 1: 5.0, 2: 1.0 },
+    vnode_positions,
+    vnode_sizes,
+    merged_positions,
+    pathplan_route_sizes,
+    adjacency,
+  })
 
   assert_eq(vnode_positions.get("v1"), Some(@edge_spline.point(5.0, 5.0)))
   assert_eq(vnode_positions.get("v2"), Some(@edge_spline.point(8.0, 1.0)))
@@ -49,13 +46,22 @@ test "recover_slack_vnodes centers plain vnodes and right-aligns only the label 
   assert_eq(vnode_sizes.get("v1").map(fn(size) { size.right_pt }), Some(5.0))
   assert_eq(vnode_sizes.get("v2").map(fn(size) { size.left_pt }), Some(6.0))
   assert_eq(vnode_sizes.get("v2").map(fn(size) { size.right_pt }), Some(1.0))
-  assert_eq(pathplan_route_sizes.get("v1").map(fn(size) { size.left_pt }), Some(5.0))
+  assert_eq(
+    pathplan_route_sizes.get("v1").map(fn(size) { size.left_pt }),
+    Some(5.0),
+  )
   assert_eq(
     pathplan_route_sizes.get("v1").map(fn(size) { size.right_pt }),
     Some(5.0),
   )
-  assert_eq(pathplan_route_sizes.get("v2").map(fn(size) { size.left_pt }), Some(6.0))
-  assert_eq(pathplan_route_sizes.get("v2").map(fn(size) { size.right_pt }), Some(1.0))
+  assert_eq(
+    pathplan_route_sizes.get("v2").map(fn(size) { size.left_pt }),
+    Some(6.0),
+  )
+  assert_eq(
+    pathplan_route_sizes.get("v2").map(fn(size) { size.right_pt }),
+    Some(1.0),
+  )
 }
 
 ///|
@@ -77,24 +83,22 @@ test "recover_slack_vnodes keeps midpoint-rank plain vnode centered without labe
     [],
   )
 
-  recover_slack_vnodes(
-    {
-      edge,
-      ordered_vnodes: ["v1", "v2"],
-      boxes: [
-        { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
-        { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
-      ],
-      ranks: { "a": 0, "b": 3 },
-      vnode_ranks: { "v1": 1, "v2": 2 },
-      rank_y: { 1: 5.0, 2: 1.0 },
-      vnode_positions,
-      vnode_sizes,
-      merged_positions,
-      pathplan_route_sizes,
-      adjacency,
-    },
-  )
+  recover_slack_vnodes({
+    edge,
+    ordered_vnodes: ["v1", "v2"],
+    boxes: [
+      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
+      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
+    ],
+    ranks: { "a": 0, "b": 3 },
+    vnode_ranks: { "v1": 1, "v2": 2 },
+    rank_y: { 1: 5.0, 2: 1.0 },
+    vnode_positions,
+    vnode_sizes,
+    merged_positions,
+    pathplan_route_sizes,
+    adjacency,
+  })
 
   assert_eq(vnode_positions.get("v1"), Some(@edge_spline.point(5.0, 5.0)))
   assert_eq(vnode_positions.get("v2"), Some(@edge_spline.point(5.0, 1.0)))

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "vnode_positions_from_edges interpolates vnode x by rank span" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

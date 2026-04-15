@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "collect_noncluster_components builds components from rank groups and flat constraints in root order" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"

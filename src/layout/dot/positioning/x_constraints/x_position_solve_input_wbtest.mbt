@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_x_position_solve_input toggles vnode overlays and extra nodes" {
   let with_vnodes = build_x_position_solve_input(build_simplex_test_input(true))

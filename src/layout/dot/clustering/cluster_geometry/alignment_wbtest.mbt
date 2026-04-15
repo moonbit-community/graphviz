@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn assert_point_close(
   actual : @geom.Point?,
@@ -36,7 +35,10 @@ test "compute_nodes_bbox ignores nodes missing geometry and returns none when em
     Some({ llx: 6.0, lly: 17.0, urx: 14.0, ury: 23.0 }),
   )
 
-  let empty_graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let empty_graph = @cgraph.Graph::new(
+    @cgraph.GraphKind::Directed,
+    strict=false,
+  )
   assert_true(compute_nodes_bbox(empty_graph, Map::new(), Map::new()) is None)
 }
 

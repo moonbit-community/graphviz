@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 const NONE_EDGE : Int = -1
 
@@ -739,8 +738,7 @@ fn dfs_range(
 ) -> Int {
   let nodes = graph.nodes
   let edges = graph.edges
-  if nodes[node_idx].par_edge == parent_edge &&
-    nodes[node_idx].low == low {
+  if nodes[node_idx].par_edge == parent_edge && nodes[node_idx].low == low {
     return nodes[node_idx].lim + 1
   }
   nodes[node_idx].par_edge = parent_edge
@@ -767,8 +765,7 @@ fn dfs_range(
       state.tree_out_i = state.tree_out_i + 1
       if edge_idx != state.par_edge {
         let head = edges[edge_idx].head
-        if nodes[head].par_edge == edge_idx &&
-          nodes[head].low == state.lim {
+        if nodes[head].par_edge == edge_idx && nodes[head].low == state.lim {
           state.lim = nodes[head].lim + 1
           stack[last] = state
         } else {
@@ -795,8 +792,7 @@ fn dfs_range(
       state.tree_in_i = state.tree_in_i + 1
       if edge_idx != state.par_edge {
         let tail = edges[edge_idx].tail
-        if nodes[tail].par_edge == edge_idx &&
-          nodes[tail].low == state.lim {
+        if nodes[tail].par_edge == edge_idx && nodes[tail].low == state.lim {
           state.lim = nodes[tail].lim + 1
           stack[last] = state
         } else {

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "collect_real_only_rank_groups drops non-real nodes and omits empty ranks" {
   let ordered : Map[Int, Array[String]] = Map::new()

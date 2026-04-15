@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct GraphState {
   name : String?
@@ -271,11 +270,7 @@ pub fn Graph::node(self : Graph, name : String) -> Node {
     None => {
       let new_id = self.root.nodes.length()
       let attrs = collect_defaults(self.root, self.id, AttrKind::Node)
-      let state : NodeState = {
-        name,
-        home_graph_id: self.id,
-        attrs,
-      }
+      let state : NodeState = { name, home_graph_id: self.id, attrs }
       self.root.nodes.push(state)
       self.root.nodes_by_name[name] = new_id
       new_id

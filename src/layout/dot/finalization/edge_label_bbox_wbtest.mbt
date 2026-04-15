@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "expand_layout_tree_bbox_for_edge_labels expands root bbox for endpoint labels" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

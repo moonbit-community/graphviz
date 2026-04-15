@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn assert_label_pos_point_eq(
   actual : @geom.Point,
@@ -18,63 +17,27 @@ test "graph_label_pos matches Graphviz place_root_label" {
   let width = 20.0
   let height = 10.0
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Top,
-      LabelJust::Left,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Left),
     { x: 20.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Top,
-      LabelJust::Center,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Center),
     { x: 60.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Top,
-      LabelJust::Right,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Right),
     { x: 100.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Bottom,
-      LabelJust::Left,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Left),
     { x: 20.0, y: 25.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Bottom,
-      LabelJust::Center,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Center),
     { x: 60.0, y: 25.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos(
-      bbox,
-      width,
-      height,
-      LabelLoc::Bottom,
-      LabelJust::Right,
-    ),
+    graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Right),
     { x: 100.0, y: 25.0 },
   )
 }
@@ -133,18 +96,23 @@ test "graph_label_metrics_with uses inherited graph font attrs and skips empty l
   let empty = root.subgraph(name="cluster_1")
   empty.set_attr("label", "")
 
-  let metrics = match graph_label_metrics_with(
-    cluster,
-    (label, font, size) =>
-      (label.length().to_double() * size + font.length().to_double(), size + 2.0),
-  ) {
+  let metrics = match
+    graph_label_metrics_with(cluster, (label, font, size) => {
+      (
+        label.length().to_double() * size + font.length().to_double(),
+        size + 2.0,
+      )
+    }) {
     Some(value) => value
     None => fail("expected graph label metrics")
   }
 
   assert_eq(metrics.width_pt, 49.0)
   assert_eq(metrics.height_pt, 16.0)
-  assert_true(graph_label_metrics_with(empty, (_label, _font, _size) => (0.0, 0.0)) is None)
+  assert_true(
+    graph_label_metrics_with(empty, (_label, _font, _size) => (0.0, 0.0))
+    is None,
+  )
 }
 
 ///|
@@ -158,7 +126,13 @@ test "graph_label_pos_flip and expand_bbox_for_label match Graphviz border rules
     { x: 100.0, y: 65.0 },
   )
   assert_label_pos_point_eq(
-    graph_label_pos_flip(bbox, width, height, LabelLoc::Bottom, LabelJust::Right),
+    graph_label_pos_flip(
+      bbox,
+      width,
+      height,
+      LabelLoc::Bottom,
+      LabelJust::Right,
+    ),
     { x: 20.0, y: 25.0 },
   )
   assert_label_pos_point_eq(

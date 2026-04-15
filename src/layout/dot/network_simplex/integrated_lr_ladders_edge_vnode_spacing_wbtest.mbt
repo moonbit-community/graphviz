@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Integrated network_simplex edge-vnode spacing ladders stay owner-local so
 /// the core wbtest file can focus on kernel and compact-graph behavior.

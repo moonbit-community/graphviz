@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering domain: root-mincross shared helpers used by root reorder and
 /// component-wise root mincross preparation.
@@ -1375,10 +1374,14 @@ fn build_component_traversal_starts(
   let start_entries : Array[(String, Int)] = []
   for i, name in order_nodes {
     fallback_order[name] = i
-    start_entries.push((
-      name,
-      resolve_root_component_order_index(name, order_node_order, fallback_order),
-    ))
+    start_entries.push(
+      (
+        name,
+        resolve_root_component_order_index(
+          name, order_node_order, fallback_order,
+        ),
+      ),
+    )
   }
   if start_entries.length() > 1 {
     start_entries.sort_by((a, b) => {

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub fn color(value : String?, default? : String = "black") -> String {
   match value {
@@ -75,25 +74,24 @@ fn hsv_to_rgb_hex(h : Double, s : Double, v : Double) -> String {
   let hue = h - h.floor()
   let sat = if s < 0.0 { 0.0 } else if s > 1.0 { 1.0 } else { s }
   let val = if v < 0.0 { 0.0 } else if v > 1.0 { 1.0 } else { v }
-  let (r, g, b) =
-    if sat <= 0.0 {
-      (val, val, val)
-    } else {
-      let hh = hue * 6.0
-      let i = hh.floor().to_int()
-      let f = hh - i.to_double()
-      let p = val * (1.0 - sat)
-      let q = val * (1.0 - sat * f)
-      let t = val * (1.0 - sat * (1.0 - f))
-      match i % 6 {
-        0 => (val, t, p)
-        1 => (q, val, p)
-        2 => (p, val, t)
-        3 => (p, q, val)
-        4 => (t, p, val)
-        _ => (val, p, q)
-      }
+  let (r, g, b) = if sat <= 0.0 {
+    (val, val, val)
+  } else {
+    let hh = hue * 6.0
+    let i = hh.floor().to_int()
+    let f = hh - i.to_double()
+    let p = val * (1.0 - sat)
+    let q = val * (1.0 - sat * f)
+    let t = val * (1.0 - sat * (1.0 - f))
+    match i % 6 {
+      0 => (val, t, p)
+      1 => (q, val, p)
+      2 => (p, val, t)
+      3 => (p, q, val)
+      4 => (t, p, val)
+      _ => (val, p, q)
     }
+  }
   let sb = StringBuilder::new()
   sb.write_char('#')
   append_hex_byte(sb, (r * 255.0).floor().to_int())
@@ -108,15 +106,9 @@ fn normalize_hsv_color(value : String) -> String? {
   if tokens.length() != 3 {
     return None
   }
-  let h = @string.parse_double(tokens[0]) catch {
-    _ => return None
-  }
-  let s = @string.parse_double(tokens[1]) catch {
-    _ => return None
-  }
-  let v = @string.parse_double(tokens[2]) catch {
-    _ => return None
-  }
+  let h = @string.parse_double(tokens[0]) catch { _ => return None }
+  let s = @string.parse_double(tokens[1]) catch { _ => return None }
+  let v = @string.parse_double(tokens[2]) catch { _ => return None }
   if h < 0.0 || h > 1.0 || s < 0.0 || s > 1.0 || v < 0.0 || v > 1.0 {
     return None
   }

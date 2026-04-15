@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "apply_layout_tree_writeback writes rects only for non-html non-mrecord record shapes" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

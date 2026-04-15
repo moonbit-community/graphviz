@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn assert_points_eq(
   actual : Array[@geom.Point],
@@ -104,13 +103,19 @@ test "probe xx first segment sanitized polygon and route" {
   ]
 
   let (sanitized, clamped_start, clamped_end) = match
-    sanitize_path_boxes(boxes, { x: -4533.0, y: 482.5 }, { x: -9922.0, y: 366.5 }) {
+    sanitize_path_boxes(boxes, { x: -4533.0, y: 482.5 }, {
+      x: -9922.0,
+      y: 366.5,
+    }) {
     Some(value) => value
     None => fail("expected sanitized boxes")
   }
   let polygon = boxes_to_polygon_points(sanitized)
   let route = match
-    route_pathplan_from_boxes(boxes, { x: -4533.0, y: 482.5 }, { x: -9922.0, y: 366.5 }) {
+    route_pathplan_from_boxes(boxes, { x: -4533.0, y: 482.5 }, {
+      x: -9922.0,
+      y: 366.5,
+    }) {
     Some(value) => value
     None => fail("expected route")
   }

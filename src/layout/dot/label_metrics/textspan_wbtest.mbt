@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "generated override metrics flow through label text measurement" {
   assert_eq(
@@ -15,9 +14,7 @@ test "generated override metrics flow through label text measurement" {
 test "multiline overrides use widest line total height and font offsets" {
   assert_eq(
     label_text_metrics(
-      "Edge Label A\\nEdge Label B Longer",
-      "Times-Roman",
-      14.0,
+      "Edge Label A\\nEdge Label B Longer", "Times-Roman", 14.0,
     ),
     (117.75, 33.0, 12.75, 0.7000000000000001),
   )
@@ -51,8 +48,9 @@ test "monospace measurement depends on column counts not glyph shapes" {
 
 ///|
 test "fallback offsets apply when font has no captured offsets" {
-  let (width, height, yoffset_layout, yoffset_centerline) =
-    label_text_metrics("A", "UnknownFont", 10.0)
+  let (width, height, yoffset_layout, yoffset_centerline) = label_text_metrics(
+    "A", "UnknownFont", 10.0,
+  )
   assert_true(width > 0.0)
   assert_eq(height, 12.0)
   assert_eq(yoffset_layout, 0.0)

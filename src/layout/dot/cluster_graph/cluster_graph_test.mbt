@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "cluster graph helpers detect cluster subgraphs and recurse through nesting" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

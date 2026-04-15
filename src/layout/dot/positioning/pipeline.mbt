@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: position stage result keeps x/y coordinates, vnode
 /// positions, and cluster bbox metadata grouped for downstream stages.

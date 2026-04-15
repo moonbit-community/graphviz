@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_root_vnode_preferred_positions keeps only edge vnodes and disables forwarding when vnode ordering is off" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"

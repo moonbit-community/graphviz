@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "expand_root_bbox_for_label grows the correct axis for TB and LR layouts" {
   let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 }

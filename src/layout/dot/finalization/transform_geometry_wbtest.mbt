@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "transform_point and transform_optional_point map coordinates for each rankdir" {
   let bbox : @geom.Rect = { llx: 10.0, lly: 20.0, urx: 50.0, ury: 80.0 }

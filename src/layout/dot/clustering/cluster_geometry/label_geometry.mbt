@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Cluster-label geometry helpers shared by rank-height, x-position, and final
 /// cluster bbox adjustment paths.
@@ -20,12 +19,17 @@ pub fn cluster_label_padding_for_layout(
   if flip {
     return { top: 0.0, bottom: 0.0 }
   }
-  match @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions) {
+  match
+    @graph_label.graph_label_metrics_with(
+      graph, @label_metrics.label_text_dimensions,
+    ) {
     Some(metrics) => {
       let pad = CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
-        @graph_label.LabelLoc::Top => { top: metrics.height_pt + pad, bottom: 0.0 }
-        @graph_label.LabelLoc::Bottom => { top: 0.0, bottom: metrics.height_pt + pad }
+        @graph_label.LabelLoc::Top =>
+          { top: metrics.height_pt + pad, bottom: 0.0 }
+        @graph_label.LabelLoc::Bottom =>
+          { top: 0.0, bottom: metrics.height_pt + pad }
       }
     }
     None => { top: 0.0, bottom: 0.0 }
@@ -33,8 +37,13 @@ pub fn cluster_label_padding_for_layout(
 }
 
 ///|
-pub fn cluster_label_width_with_pad_for_layout(graph : @cgraph.Graph) -> Double? {
-  match @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions) {
+pub fn cluster_label_width_with_pad_for_layout(
+  graph : @cgraph.Graph,
+) -> Double? {
+  match
+    @graph_label.graph_label_metrics_with(
+      graph, @label_metrics.label_text_dimensions,
+    ) {
     Some(metrics) => Some(metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0)
     None => None
   }
@@ -49,7 +58,10 @@ pub fn cluster_label_borders_for_xpos_constraints(
   if !flip {
     return (0.0, 0.0)
   }
-  match @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions) {
+  match
+    @graph_label.graph_label_metrics_with(
+      graph, @label_metrics.label_text_dimensions,
+    ) {
     Some(metrics) => {
       let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
@@ -66,7 +78,10 @@ pub fn expand_cluster_label_bbox_for_position_stage(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
 ) -> @geom.Rect {
-  match @graph_label.graph_label_metrics_with(graph, @label_metrics.label_text_dimensions) {
+  match
+    @graph_label.graph_label_metrics_with(
+      graph, @label_metrics.label_text_dimensions,
+    ) {
     Some(metrics) =>
       @graph_label.expand_bbox_for_label(
         bbox,

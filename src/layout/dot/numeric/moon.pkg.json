@@ -1,7 +1,0 @@
-{
-  "import": [
-    "moonbit-community/graphviz/cgraph",
-    "moonbitlang/core/string",
-    "moonbitlang/core/strconv"
-  ]
-}

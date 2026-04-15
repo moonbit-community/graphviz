@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routesplines corridor-box owner: rank-neighbor analysis, maximal node
 /// boxes, rank gap boxes, and endpoint corridor construction.

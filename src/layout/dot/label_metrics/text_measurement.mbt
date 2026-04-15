@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Text measurement owner for dot labels: width/height/y-offset computation,
 /// fallback glyph metrics, kerning, multiline splitting, and record-label
@@ -23,6 +22,7 @@ const RECORD_TEXT_SCALE : Double = 0.97036
 ///|
 const TEXT_YOFFSET_CENTERLINE_SCALE : Double = 0.1
 
+///|
 priv struct TextDimensions {
   width : Double
   height : Double
@@ -38,10 +38,8 @@ priv struct TextOffsets {
 fn text_offsets(font_name : String, font_size_pt : Double) -> TextOffsets {
   match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
     Some((layout, centerline)) => { layout, centerline }
-    None => {
-      layout: 0.0,
-      centerline: font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE,
-    }
+    None =>
+      { layout: 0.0, centerline: font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE }
   }
 }
 
@@ -204,14 +202,13 @@ fn record_char_width_units(ch : Char) -> Double {
   if @font_metrics.HAS_FONT_METRICS {
     return char_width_units_base(ch)
   }
-  let base =
-    if ch == ' ' {
-      276.0
-    } else if ch.is_ascii_digit() {
-      char_width_units_base(ch) - 4.0
-    } else {
-      char_width_units_base(ch)
-    }
+  let base = if ch == ' ' {
+    276.0
+  } else if ch.is_ascii_digit() {
+    char_width_units_base(ch) - 4.0
+  } else {
+    char_width_units_base(ch)
+  }
   if ch.is_ascii_lowercase() {
     base - 2.0
   } else {
@@ -313,7 +310,8 @@ fn try_multiline_override(
       total_height = total_height + empty_line_height
       continue
     }
-    match @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
+    match
+      @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
       Some((width, height)) => {
         if width > max_width {
           max_width = width
@@ -335,21 +333,18 @@ pub fn label_text_metrics(
   if label == "" {
     return (0.0, 0.0, 0.0, 0.0)
   }
-  match @font_metrics.lookup_textspan_metrics(
-    label,
-    font_name,
-    font_size_pt,
-  ) {
+  match @font_metrics.lookup_textspan_metrics(label, font_name, font_size_pt) {
     Some((width, height, yoffset_layout, yoffset_centerline)) =>
       return (width, height, yoffset_layout, yoffset_centerline)
     None => ()
   }
-  match try_multiline_override(
-    label,
-    font_name,
-    font_size_pt,
-    trim_trailing_break=false,
-  ) {
+  match
+    try_multiline_override(
+      label,
+      font_name,
+      font_size_pt,
+      trim_trailing_break=false,
+    ) {
     Some(dims) => {
       let offsets = text_offsets(font_name, font_size_pt)
       return (dims.width, dims.height, offsets.layout, offsets.centerline)
@@ -398,8 +393,11 @@ pub fn label_text_metrics(
     }
     let width_units = char_width_units_base('0')
     let width_scale = font_width_scale(font_name)
-    let text_scale =
-      if @font_metrics.HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
+    let text_scale = if @font_metrics.HAS_FONT_METRICS {
+      1.0
+    } else {
+      TEXT_SCALE
+    }
     let width_pt = max_cols.to_double() *
       width_units *
       font_size_pt *
@@ -448,7 +446,8 @@ pub fn label_text_metrics(
         prev_char = None
       } else {
         match prev_char {
-          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+          Some(prev) =>
+            current_units = current_units + char_kerning_units(prev, ch)
           None => ()
         }
         current_units = current_units + char_width_units(ch, uppercase_boost)
@@ -469,7 +468,8 @@ pub fn label_text_metrics(
       prev_char = None
     } else {
       match prev_char {
-        Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+        Some(prev) =>
+          current_units = current_units + char_kerning_units(prev, ch)
         None => ()
       }
       current_units = current_units + char_width_units(ch, uppercase_boost)
@@ -490,11 +490,7 @@ pub fn label_text_metrics(
   }
   let width_scale = font_width_scale(font_name)
   let text_scale = if @font_metrics.HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
-  let width_pt = max_units *
-    font_size_pt *
-    text_scale *
-    width_scale /
-    1000.0
+  let width_pt = max_units * font_size_pt * text_scale * width_scale / 1000.0
   let height_pt = lines.to_double() * line_height
   let offsets = text_offsets(font_name, font_size_pt)
   (width_pt, height_pt, offsets.layout, offsets.centerline)
@@ -509,20 +505,17 @@ pub fn record_label_text_dimensions(
   if label == "" {
     return (0.0, 0.0)
   }
-  match @font_metrics.lookup_textspan_override(
-    label,
-    font_name,
-    font_size_pt,
-  ) {
+  match @font_metrics.lookup_textspan_override(label, font_name, font_size_pt) {
     Some((width, height)) => return (width, height)
     None => ()
   }
-  match try_multiline_override(
-    label,
-    font_name,
-    font_size_pt,
-    trim_trailing_break=true,
-  ) {
+  match
+    try_multiline_override(
+      label,
+      font_name,
+      font_size_pt,
+      trim_trailing_break=true,
+    ) {
     Some(dims) => return (dims.width, dims.height)
     None => ()
   }
@@ -577,8 +570,11 @@ pub fn record_label_text_dimensions(
     }
     let width_units = record_char_width_units('0')
     let width_scale = font_width_scale(font_name)
-    let text_scale =
-      if @font_metrics.HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
+    let text_scale = if @font_metrics.HAS_FONT_METRICS {
+      1.0
+    } else {
+      RECORD_TEXT_SCALE
+    }
     let width_pt = max_cols.to_double() *
       width_units *
       font_size_pt *
@@ -607,7 +603,8 @@ pub fn record_label_text_dimensions(
         prev_char = None
       } else {
         match prev_char {
-          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+          Some(prev) =>
+            current_units = current_units + char_kerning_units(prev, ch)
           None => ()
         }
         current_units = current_units + record_char_width_units(ch)
@@ -630,7 +627,8 @@ pub fn record_label_text_dimensions(
       prev_char = None
     } else {
       match prev_char {
-        Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+        Some(prev) =>
+          current_units = current_units + char_kerning_units(prev, ch)
         None => ()
       }
       current_units = current_units + record_char_width_units(ch)
@@ -655,13 +653,12 @@ pub fn record_label_text_dimensions(
     lines = lines - 1
   }
   let width_scale = font_width_scale(font_name)
-  let text_scale =
-    if @font_metrics.HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
-  let width_pt = max_units *
-    font_size_pt *
-    text_scale *
-    width_scale /
-    1000.0
+  let text_scale = if @font_metrics.HAS_FONT_METRICS {
+    1.0
+  } else {
+    RECORD_TEXT_SCALE
+  }
+  let width_pt = max_units * font_size_pt * text_scale * width_scale / 1000.0
   let height_pt = lines.to_double() * line_height
   (width_pt, height_pt)
 }

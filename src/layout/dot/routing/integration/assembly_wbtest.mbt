@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_dot_route_base_deps applies record border adjust only to non-html record labels" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

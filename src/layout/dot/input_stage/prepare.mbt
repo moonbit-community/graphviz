@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: Stage A input preparation owns graph-attribute validation,
 /// option canonicalization, and the public prepare entry; geometry assembly

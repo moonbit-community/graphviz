@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_constraint_segment_pass updates same-rank invis ordering constraints and skips intercluster edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

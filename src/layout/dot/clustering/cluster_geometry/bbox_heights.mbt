@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Cluster bbox-height collection and flip-rank adjustment helpers shared by
 /// positioning and later final geometry stages.
@@ -29,6 +28,7 @@ priv struct ClusterHeights {
   ht2 : Double
 }
 
+///|
 priv struct ClusterRankBounds {
   min_rank : Int?
   max_rank : Int?
@@ -61,10 +61,7 @@ priv struct ClusterBBoxHeightsCollectInput {
   rankdir : @rankdir.RankDir
   cluster_heights : Map[String, ClusterBboxHeightPair]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
-  cluster_label_padding_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> ClusterLabelPadding
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
     Map[String, @node_primitives.NodeSize],
@@ -83,10 +80,7 @@ pub(all) struct ClusterBBoxHeightsInput {
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
-  cluster_label_padding_for : (
-    @cgraph.Graph,
-    @rankdir.RankDir,
-  ) -> ClusterLabelPadding
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
   node_half_height_pt_for : (
     String,
     Map[String, @node_primitives.NodeSize],
@@ -113,6 +107,7 @@ priv struct ClusterRankHeightsCollectInput {
   ) -> Double
 }
 
+///|
 fn add_cluster_margin_if_nonzero(height : Double, margin : Double) -> Double {
   if height > 0.0 {
     height + margin
@@ -125,15 +120,15 @@ fn add_cluster_margin_if_nonzero(height : Double, margin : Double) -> Double {
 /// Graphviz parity: LR/RL cluster label height adjustment aligned to
 /// refs/graphviz/lib/dotgen/position.c (adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
-pub fn adjust_flip_rank_heights(
-  input : FlipRankHeightsAdjustInput,
-) -> Bool {
+pub fn adjust_flip_rank_heights(input : FlipRankHeightsAdjustInput) -> Bool {
   let mut changed = false
-  let margin =
-    if input.graph.is_root() { 0.0 } else { (input.cluster_margin_pt_for)(input.graph) }
+  let margin = if input.graph.is_root() {
+    0.0
+  } else {
+    (input.cluster_margin_pt_for)(input.graph)
+  }
   for child in input.graph.subgraphs() {
-    if adjust_flip_rank_heights(
-      {
+    if adjust_flip_rank_heights({
         graph: child,
         ranks: input.ranks,
         rank_y: input.rank_y,
@@ -144,8 +139,7 @@ pub fn adjust_flip_rank_heights(
         margin_total: input.margin_total + margin,
         cluster_margin_pt_for: input.cluster_margin_pt_for,
         cluster_label_width_pt_for: input.cluster_label_width_pt_for,
-      },
-    ) {
+      }) {
       changed = true
     }
   }
@@ -226,8 +220,10 @@ pub fn adjust_flip_rank_heights(
         r = r - 1
       }
     }
-    let deltop =
-      ht2 + (delta - bottom) + delbottom - (base_ht2 - input.margin_total)
+    let deltop = ht2 +
+      (delta - bottom) +
+      delbottom -
+      (base_ht2 - input.margin_total)
     if deltop > 0.0 {
       let mut r = min_rank_value - 1
       while r >= input.min_root_rank {
@@ -267,6 +263,7 @@ pub fn adjust_flip_rank_heights(
   changed
 }
 
+///|
 fn collect_cluster_rank_heights(
   input : ClusterRankHeightsCollectInput,
 ) -> ClusterRankBounds {
@@ -284,8 +281,11 @@ fn collect_cluster_rank_heights(
         // for a node while the cluster rank span still reflects subgraph
         // structure (node_induce + mark_clusters behavior).
         if @membership.graph_contains_node(input.graph, node) {
-          let half_height =
-            (input.node_half_height_pt_for)(name, input.sizes, input.self_edge_labels)
+          let half_height = (input.node_half_height_pt_for)(
+            name,
+            input.sizes,
+            input.self_edge_labels,
+          )
           let current = match input.rank_heights.get(rank) {
             Some(value) => value
             None => 0.0
@@ -307,25 +307,24 @@ fn collect_cluster_rank_heights(
     }
   }
   for child in input.graph.subgraphs() {
-    let child_bounds = collect_cluster_rank_heights(
-      {
-        graph: child,
-        ranks: input.ranks,
-        sizes: input.sizes,
-        self_edge_labels: input.self_edge_labels,
-        seen: input.seen,
-        rank_heights: input.rank_heights,
-        min_rank: next_min,
-        max_rank: next_max,
-        node_half_height_pt_for: input.node_half_height_pt_for,
-      },
-    )
+    let child_bounds = collect_cluster_rank_heights({
+      graph: child,
+      ranks: input.ranks,
+      sizes: input.sizes,
+      self_edge_labels: input.self_edge_labels,
+      seen: input.seen,
+      rank_heights: input.rank_heights,
+      min_rank: next_min,
+      max_rank: next_max,
+      node_half_height_pt_for: input.node_half_height_pt_for,
+    })
     next_min = child_bounds.min_rank
     next_max = child_bounds.max_rank
   }
   { min_rank: next_min, max_rank: next_max }
 }
 
+///|
 fn collect_cluster_bbox_heights(
   input : ClusterBBoxHeightsCollectInput,
 ) -> ClusterHeights? {
@@ -333,9 +332,38 @@ fn collect_cluster_bbox_heights(
   let children = input.graph.subgraphs()
   if !is_cluster {
     for child in children {
-      let _ =
-        collect_cluster_bbox_heights(
-        {
+      let _ = collect_cluster_bbox_heights({
+        graph: child,
+        ranks: input.ranks,
+        sizes: input.sizes,
+        self_edge_labels: input.self_edge_labels,
+        rankdir: input.rankdir,
+        cluster_heights: input.cluster_heights,
+        cluster_margin_pt_for: input.cluster_margin_pt_for,
+        cluster_label_padding_for: input.cluster_label_padding_for,
+        node_half_height_pt_for: input.node_half_height_pt_for,
+      })
+    }
+    return None
+  }
+  let seen : Map[String, Bool] = Map::new()
+  let rank_heights : Map[Int, Double] = Map::new()
+  let rank_bounds = collect_cluster_rank_heights({
+    graph: input.graph,
+    ranks: input.ranks,
+    sizes: input.sizes,
+    self_edge_labels: input.self_edge_labels,
+    seen,
+    rank_heights,
+    min_rank: None,
+    max_rank: None,
+    node_half_height_pt_for: input.node_half_height_pt_for,
+  })
+  let min_rank_value = match rank_bounds.min_rank {
+    Some(value) => value
+    None => {
+      for child in children {
+        let _ = collect_cluster_bbox_heights({
           graph: child,
           ranks: input.ranks,
           sizes: input.sizes,
@@ -345,44 +373,7 @@ fn collect_cluster_bbox_heights(
           cluster_margin_pt_for: input.cluster_margin_pt_for,
           cluster_label_padding_for: input.cluster_label_padding_for,
           node_half_height_pt_for: input.node_half_height_pt_for,
-        },
-      )
-    }
-    return None
-  }
-  let seen : Map[String, Bool] = Map::new()
-  let rank_heights : Map[Int, Double] = Map::new()
-  let rank_bounds = collect_cluster_rank_heights(
-    {
-      graph: input.graph,
-      ranks: input.ranks,
-      sizes: input.sizes,
-      self_edge_labels: input.self_edge_labels,
-      seen,
-      rank_heights,
-      min_rank: None,
-      max_rank: None,
-      node_half_height_pt_for: input.node_half_height_pt_for,
-    },
-  )
-  let min_rank_value = match rank_bounds.min_rank {
-    Some(value) => value
-    None => {
-      for child in children {
-        let _ =
-          collect_cluster_bbox_heights(
-            {
-              graph: child,
-              ranks: input.ranks,
-              sizes: input.sizes,
-              self_edge_labels: input.self_edge_labels,
-              rankdir: input.rankdir,
-              cluster_heights: input.cluster_heights,
-              cluster_margin_pt_for: input.cluster_margin_pt_for,
-              cluster_label_padding_for: input.cluster_label_padding_for,
-              node_half_height_pt_for: input.node_half_height_pt_for,
-            },
-          )
+        })
       }
       return None
     }
@@ -391,20 +382,17 @@ fn collect_cluster_bbox_heights(
     Some(value) => value
     None => {
       for child in children {
-        let _ =
-          collect_cluster_bbox_heights(
-            {
-              graph: child,
-              ranks: input.ranks,
-              sizes: input.sizes,
-              self_edge_labels: input.self_edge_labels,
-              rankdir: input.rankdir,
-              cluster_heights: input.cluster_heights,
-              cluster_margin_pt_for: input.cluster_margin_pt_for,
-              cluster_label_padding_for: input.cluster_label_padding_for,
-              node_half_height_pt_for: input.node_half_height_pt_for,
-            },
-          )
+        let _ = collect_cluster_bbox_heights({
+          graph: child,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rankdir: input.rankdir,
+          cluster_heights: input.cluster_heights,
+          cluster_margin_pt_for: input.cluster_margin_pt_for,
+          cluster_label_padding_for: input.cluster_label_padding_for,
+          node_half_height_pt_for: input.node_half_height_pt_for,
+        })
       }
       return None
     }
@@ -422,19 +410,17 @@ fn collect_cluster_bbox_heights(
   let mut ht2 = add_cluster_margin_if_nonzero(base_bottom, margin)
   for child in children {
     match
-      collect_cluster_bbox_heights(
-        {
-          graph: child,
-          ranks: input.ranks,
-          sizes: input.sizes,
-          self_edge_labels: input.self_edge_labels,
-          rankdir: input.rankdir,
-          cluster_heights: input.cluster_heights,
-          cluster_margin_pt_for: input.cluster_margin_pt_for,
-          cluster_label_padding_for: input.cluster_label_padding_for,
-          node_half_height_pt_for: input.node_half_height_pt_for,
-        },
-      ) {
+      collect_cluster_bbox_heights({
+        graph: child,
+        ranks: input.ranks,
+        sizes: input.sizes,
+        self_edge_labels: input.self_edge_labels,
+        rankdir: input.rankdir,
+        cluster_heights: input.cluster_heights,
+        cluster_margin_pt_for: input.cluster_margin_pt_for,
+        cluster_label_padding_for: input.cluster_label_padding_for,
+        node_half_height_pt_for: input.node_half_height_pt_for,
+      }) {
       Some(info) => {
         if info.max_rank == max_rank_value {
           let candidate = add_cluster_margin_if_nonzero(info.ht1, margin)
@@ -452,7 +438,10 @@ fn collect_cluster_bbox_heights(
       None => ()
     }
   }
-  let label_padding = (input.cluster_label_padding_for)(input.graph, input.rankdir)
+  let label_padding = (input.cluster_label_padding_for)(
+    input.graph,
+    input.rankdir,
+  )
   ht1 = ht1 + label_padding.bottom
   ht2 = ht2 + label_padding.top
   match input.graph.name() {
@@ -470,19 +459,16 @@ pub fn compute_cluster_bbox_heights(
   input : ClusterBBoxHeightsInput,
 ) -> Map[String, ClusterBboxHeightPair] {
   let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
-  let _ =
-    collect_cluster_bbox_heights(
-    {
-      graph: input.graph,
-      ranks: input.ranks,
-      sizes: input.sizes,
-      self_edge_labels: input.self_edge_labels,
-      rankdir: input.rankdir,
-      cluster_heights,
-      cluster_margin_pt_for: input.cluster_margin_pt_for,
-      cluster_label_padding_for: input.cluster_label_padding_for,
-      node_half_height_pt_for: input.node_half_height_pt_for,
-    },
-  )
+  let _ = collect_cluster_bbox_heights({
+    graph: input.graph,
+    ranks: input.ranks,
+    sizes: input.sizes,
+    self_edge_labels: input.self_edge_labels,
+    rankdir: input.rankdir,
+    cluster_heights,
+    cluster_margin_pt_for: input.cluster_margin_pt_for,
+    cluster_label_padding_for: input.cluster_label_padding_for,
+    node_half_height_pt_for: input.node_half_height_pt_for,
+  })
   cluster_heights
 }

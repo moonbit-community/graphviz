@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_initial_x_groups derives vnode placement from order keys and strips cluster skeletons" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)

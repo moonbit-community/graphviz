@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Pure bbox aggregation and dot_compute_bb helpers extracted from the root
 /// dot package so DotLayoutGraph-specific recursion can stay at the boundary.

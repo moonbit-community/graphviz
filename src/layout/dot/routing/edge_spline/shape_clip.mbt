@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Shape clipping domain for edge splines: fixed-size shape bounds, inside
 /// tests, node clipping, and compass-port projection on shapes.
@@ -717,9 +716,10 @@ fn build_point_inside_shape_fn(
   outline_pad_pt : Double,
 ) -> (@geom.Point) -> Bool {
   match shape {
-    ClipShape::Rect => (probe_point) => point_inside_rect(probe_point, center, size)
+    ClipShape::Rect =>
+      probe_point => point_inside_rect(probe_point, center, size)
     ClipShape::Ellipse =>
-      (probe_point) => point_inside_ellipse(probe_point, center, size)
+      probe_point => point_inside_ellipse(probe_point, center, size)
     ClipShape::Trapezium
     | ClipShape::InvTrapezium
     | ClipShape::Parallelogram
@@ -731,7 +731,10 @@ fn build_point_inside_shape_fn(
       match polygon_shape_params(shape) {
         Some(params) => {
           let polygon_size = if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
-            @node_primitives.node_size_from_points(size.height_pt, size.width_pt)
+            @node_primitives.node_size_from_points(
+              size.height_pt,
+              size.width_pt,
+            )
           } else {
             size
           }
@@ -744,18 +747,15 @@ fn build_point_inside_shape_fn(
             params.peripheries,
             outline_pad_pt,
           )
-          (probe_point) => {
-            let rel = point(
-              probe_point.x - center.x,
-              probe_point.y - center.y,
-            )
+          probe_point => {
+            let rel = point(probe_point.x - center.x, probe_point.y - center.y)
             let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
             point_in_convex_polygon(probe, vertices)
           }
         }
-        None => (_point) => false
+        None => _point => false
       }
-    ClipShape::None => (_point) => false
+    ClipShape::None => _point => false
   }
 }
 
@@ -776,11 +776,7 @@ fn clip_spline_start(
     _ => ()
   }
   let inside = build_point_inside_shape_fn(
-    center,
-    size,
-    shape,
-    rankdir_quadrant,
-    outline_pad_pt,
+    center, size, shape, rankdir_quadrant, outline_pad_pt,
   )
   let mut start = 0
   while start + 3 < points.length() && inside(points[start + 3]) {
@@ -827,11 +823,7 @@ fn clip_spline_end(
     _ => ()
   }
   let inside = build_point_inside_shape_fn(
-    center,
-    size,
-    shape,
-    rankdir_quadrant,
-    outline_pad_pt,
+    center, size, shape, rankdir_quadrant, outline_pad_pt,
   )
   let mut end = points.length() - 4
   while end > 0 && inside(points[end]) {

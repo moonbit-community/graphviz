@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering domain: clustered ReMincross pass orchestration helpers used by
 /// Stage C finalize flow before output group cleanup.

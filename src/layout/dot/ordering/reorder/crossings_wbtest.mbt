@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "count_crossings_port_aware_with_inputs respects fixed external slots" {
   let groups : Map[Int, Array[String]] = Map::new()

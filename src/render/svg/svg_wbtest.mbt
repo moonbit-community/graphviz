@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct SvgLabelEntry {
   center : @geom.Point
@@ -33,10 +32,7 @@ fn parse_attr_double(tag : String, name : String) -> Double? {
 }
 
 ///|
-fn extract_label_entries(
-  svg : String,
-  label : String,
-) -> Array[SvgLabelEntry] {
+fn extract_label_entries(svg : String, label : String) -> Array[SvgLabelEntry] {
   let entries : Array[SvgLabelEntry] = []
   let mut skip_first = true
   for part_view in svg.split("<text ") {
@@ -55,12 +51,13 @@ fn extract_label_entries(
             if text != label {
               continue
             }
-            match (
-              parse_attr_double(tag, "x"),
-              parse_attr_double(tag, "y"),
-              parse_attr_string(tag, "font-family"),
-              parse_attr_double(tag, "font-size"),
-            ) {
+            match
+              (
+                parse_attr_double(tag, "x"),
+                parse_attr_double(tag, "y"),
+                parse_attr_string(tag, "font-family"),
+                parse_attr_double(tag, "font-size"),
+              ) {
               (Some(x), Some(y), Some(font), Some(size)) => {
                 let line_x = x
                 let line_y = -y
@@ -79,9 +76,7 @@ fn extract_label_entries(
                   _ => line_x
                 }
                 let center_y = line_y - height / 2.0 + size - yoffset
-                entries.push({
-                  center: { x: center_x, y: center_y },
-                })
+                entries.push({ center: { x: center_x, y: center_y } })
               }
               _ => ()
             }
@@ -329,33 +324,29 @@ test "render_svg matches graphviz node label positions in complex" {
 
 ///|
 test "render_svg matches graphviz edge label spacing" {
-  let (svg, padded_bbox) =
-    svg_with_bbox("tests/layout/dot/edge_label_spacing.dot")
-  let reference =
-    @dot.parse_dot_file("tests/layout/dot/edge_label_spacing.gv.dot")
+  let (svg, padded_bbox) = svg_with_bbox(
+    "tests/layout/dot/edge_label_spacing.dot",
+  )
+  let reference = @dot.parse_dot_file(
+    "tests/layout/dot/edge_label_spacing.gv.dot",
+  )
   let eps = 1.5
   assert_edge_label_parity(svg, padded_bbox, reference, "Edge Label A", eps)
   assert_edge_label_parity(
-    svg,
-    padded_bbox,
-    reference,
-    "Edge Label B Longer",
-    eps,
+    svg, padded_bbox, reference, "Edge Label B Longer", eps,
   )
 }
 
 ///|
 test "render_svg matches graphviz vnode edge label spacing" {
-  let (svg, padded_bbox) =
-    svg_with_bbox("tests/layout/dot/edge_vnode_spacing.dot")
-  let reference =
-    @dot.parse_dot_file("tests/layout/dot/edge_vnode_spacing.gv.dot")
+  let (svg, padded_bbox) = svg_with_bbox(
+    "tests/layout/dot/edge_vnode_spacing.dot",
+  )
+  let reference = @dot.parse_dot_file(
+    "tests/layout/dot/edge_vnode_spacing.gv.dot",
+  )
   let eps = 1.5
   assert_edge_label_parity(
-    svg,
-    padded_bbox,
-    reference,
-    "Very Long Edge Label",
-    eps,
+    svg, padded_bbox, reference, "Very Long Edge Label", eps,
   )
 }

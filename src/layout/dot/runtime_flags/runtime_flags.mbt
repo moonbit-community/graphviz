@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub fn env_flag_enabled(value : String?, default_enabled : Bool) -> Bool {
   match value {

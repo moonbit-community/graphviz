@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn rank_parse_double(text : String, fallback : Double) -> Double {
   try @string.parse_double(text) catch {
@@ -113,7 +112,9 @@ test "rank keywords keep expected vertical extremes" {
 
 ///|
 test "constraint=false keeps same rank while default separates ranks" {
-  let unconstrained = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
+  let unconstrained = @dot_parser.parse_dot(
+    "digraph { a -> b [constraint=false]; }",
+  )
   let unconstrained_layout = @layout_dot.layout_dot(unconstrained)
   unconstrained_layout.apply()
   let unconstrained_a = match rank_node_pos(unconstrained, "a") {
@@ -144,10 +145,6 @@ test "constraint=false keeps same rank while default separates ranks" {
     None => fail("missing pos for node b")
   }
   assert_true(
-    !Double::is_close(
-      constrained_a.y,
-      constrained_b.y,
-      absolute_tolerance=0.01,
-    ),
+    !Double::is_close(constrained_a.y, constrained_b.y, absolute_tolerance=0.01),
   )
 }

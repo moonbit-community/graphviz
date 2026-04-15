@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct BottomSingleArrowLineEndpointsInput {
   prefer_linear_flat_bottom_single_arrow : Bool
@@ -111,6 +110,7 @@ fn pathplan_line_points_or_endpoints(
   }
 }
 
+///|
 priv struct PathplanPointsSplineBuildInput {
   base : EdgeRouteBase
   pathplan_points : Array[@geom.Point]
@@ -531,6 +531,7 @@ fn limit_pathplan_segment_boxes(
 }
 
 ///|
+
 ///|
 priv struct SegmentedPathplanRawBezierInput {
   pathplan_segments : Array[@routesplines.PathplanSegment]

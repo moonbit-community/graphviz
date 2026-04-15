@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "normalize_external_neighbor_name collapses unresolved external clusters but preserves local expanded and unclustered neighbors" {
   let expanded_clusters : Map[String, Bool] = Map::new()

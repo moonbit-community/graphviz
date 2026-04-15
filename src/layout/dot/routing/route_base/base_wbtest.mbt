@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "point_for_name_or_origin returns stored positions and defaults missing names to origin" {
   let positions : Map[String, @geom.Point] = Map::new()
@@ -52,10 +51,22 @@ test "cluster_bbox_if_named ignores empty keys and looks up named clusters" {
 
 ///|
 test "arrowhead inclusion respects edge dir and swap orientation" {
-  assert_eq(edge_include_arrowheads(@edge_semantics.EdgeDir::Forward), (false, true))
-  assert_eq(edge_include_arrowheads(@edge_semantics.EdgeDir::Back), (true, false))
-  assert_eq(edge_include_arrowheads(@edge_semantics.EdgeDir::Both), (true, true))
-  assert_eq(edge_include_arrowheads(@edge_semantics.EdgeDir::None), (false, false))
+  assert_eq(
+    edge_include_arrowheads(@edge_semantics.EdgeDir::Forward),
+    (false, true),
+  )
+  assert_eq(
+    edge_include_arrowheads(@edge_semantics.EdgeDir::Back),
+    (true, false),
+  )
+  assert_eq(
+    edge_include_arrowheads(@edge_semantics.EdgeDir::Both),
+    (true, true),
+  )
+  assert_eq(
+    edge_include_arrowheads(@edge_semantics.EdgeDir::None),
+    (false, false),
+  )
 
   assert_eq(route_include_arrowheads(true, false, false), (true, false))
   assert_eq(route_include_arrowheads(true, false, true), (false, true))

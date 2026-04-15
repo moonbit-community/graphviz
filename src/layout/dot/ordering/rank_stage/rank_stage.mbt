@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Dot-owned bridge logic for Stage B rank/order pipeline assembly.
 type LayoutPrep = @layout_prep.LayoutPrep

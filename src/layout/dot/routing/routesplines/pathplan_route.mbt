@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routesplines pathplan-route owner: corridor polygon conversion, route
 /// solving through boxes, and spline box limiting.
@@ -67,10 +66,18 @@ fn sanitize_path_boxes(
     let d = left.ury < right.lly
     let u = left.lly > right.ury
     let mut errs = 0
-    if l { errs = errs + 1 }
-    if r { errs = errs + 1 }
-    if d { errs = errs + 1 }
-    if u { errs = errs + 1 }
+    if l {
+      errs = errs + 1
+    }
+    if r {
+      errs = errs + 1
+    }
+    if d {
+      errs = errs + 1
+    }
+    if u {
+      errs = errs + 1
+    }
     let mut l_fix = l
     let mut r_fix = r
     let mut d_fix = d
@@ -79,42 +86,22 @@ fn sanitize_path_boxes(
       if l_fix {
         let xy = left.urx
         left = { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury }
-        right = {
-          llx: xy,
-          lly: right.lly,
-          urx: right.urx,
-          ury: right.ury,
-        }
+        right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury }
         l_fix = false
       } else if r_fix {
         let xy = left.llx
         left = { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury }
-        right = {
-          llx: right.llx,
-          lly: right.lly,
-          urx: xy,
-          ury: right.ury,
-        }
+        right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury }
         r_fix = false
       } else if d_fix {
         let xy = left.ury
         left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly }
-        right = {
-          llx: right.llx,
-          lly: xy,
-          urx: right.urx,
-          ury: right.ury,
-        }
+        right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury }
         d_fix = false
       } else if u_fix {
         let xy = left.lly
         left = { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury }
-        right = {
-          llx: right.llx,
-          lly: right.lly,
-          urx: right.urx,
-          ury: xy,
-        }
+        right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy }
         u_fix = false
       }
       let mut j = 0
@@ -122,42 +109,22 @@ fn sanitize_path_boxes(
         if l_fix {
           let xy = (left.urx + right.llx) / 2.0 + 0.5
           left = { llx: left.llx, lly: left.lly, urx: xy, ury: left.ury }
-          right = {
-            llx: xy,
-            lly: right.lly,
-            urx: right.urx,
-            ury: right.ury,
-          }
+          right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury }
           l_fix = false
         } else if r_fix {
           let xy = (left.llx + right.urx) / 2.0 + 0.5
           left = { llx: xy, lly: left.lly, urx: left.urx, ury: left.ury }
-          right = {
-            llx: right.llx,
-            lly: right.lly,
-            urx: xy,
-            ury: right.ury,
-          }
+          right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury }
           r_fix = false
         } else if d_fix {
           let xy = (left.ury + right.lly) / 2.0 + 0.5
           left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: xy }
-          right = {
-            llx: right.llx,
-            lly: xy,
-            urx: right.urx,
-            ury: right.ury,
-          }
+          right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury }
           d_fix = false
         } else if u_fix {
           let xy = (left.lly + right.ury) / 2.0 + 0.5
           left = { llx: left.llx, lly: xy, urx: left.urx, ury: left.ury }
-          right = {
-            llx: right.llx,
-            lly: right.lly,
-            urx: right.urx,
-            ury: xy,
-          }
+          right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy }
           u_fix = false
         }
         j = j + 1
@@ -169,35 +136,15 @@ fn sanitize_path_boxes(
       if xoverlap < yoverlap {
         if left.urx - left.llx > right.urx - right.llx {
           left = if left.urx < right.urx {
-            {
-              llx: left.llx,
-              lly: left.lly,
-              urx: right.llx,
-              ury: left.ury,
-            }
+            { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury }
           } else {
-            {
-              llx: right.urx,
-              lly: left.lly,
-              urx: left.urx,
-              ury: left.ury,
-            }
+            { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury }
           }
         } else {
           right = if left.urx < right.urx {
-            {
-              llx: left.urx,
-              lly: right.lly,
-              urx: right.urx,
-              ury: right.ury,
-            }
+            { llx: left.urx, lly: right.lly, urx: right.urx, ury: right.ury }
           } else {
-            {
-              llx: right.llx,
-              lly: right.lly,
-              urx: left.llx,
-              ury: right.ury,
-            }
+            { llx: right.llx, lly: right.lly, urx: left.llx, ury: right.ury }
           }
         }
       } else if left.ury - left.lly > right.ury - right.lly {
@@ -359,7 +306,8 @@ fn route_pathplan_from_boxes(
   start : @geom.Point,
   end : @geom.Point,
 ) -> PathplanRouteResult? {
-  let (sanitized_boxes, start, end) = match sanitize_path_boxes(boxes, start, end) {
+  let (sanitized_boxes, start, end) = match
+    sanitize_path_boxes(boxes, start, end) {
     Some(value) => value
     None => return None
   }
@@ -377,6 +325,7 @@ fn route_pathplan_from_boxes(
   Some({ points: dedupe_polyline_points(path), polygon, boxes: sanitized_boxes })
 }
 
+///|
 fn polygon_edges(
   polygon : Array[@geom.Point],
 ) -> Array[(@geom.Point, @geom.Point)] {

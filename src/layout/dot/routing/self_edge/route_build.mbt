@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Self-edge route builder: rank spacing, side-pair resolution, and loop
 /// geometry construction for grouped self-edge routes.

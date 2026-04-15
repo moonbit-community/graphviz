@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Node-size and shape-geometry kernels shared across dot stages, routing,
 /// engines, and dot layout postprocess.

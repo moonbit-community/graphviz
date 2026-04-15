@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "apply_rank_same_order reorders unported rank-same groups only" {
   let groups : Map[Int, Array[String]] = Map::new()

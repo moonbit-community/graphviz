@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "node size constructors keep point inch and half-width relationships" {
   let size = node_size_from_points(72.0, 36.0)

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz rank-constraint and nlist-order helpers shared by rank assignment
 /// and ordering stages.
@@ -12,11 +11,16 @@ pub fn parse_flat_constraint_key(key : String) -> (String, String)? {
   match key.find("|") {
     Some(pos) => {
       let len = key.length()
-      let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-      let head =
-        if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-          ""
-        }
+      let tail = if pos > 0 {
+        key.unsafe_substring(start=0, end=pos)
+      } else {
+        ""
+      }
+      let head = if pos + 1 < len {
+        key.unsafe_substring(start=pos + 1, end=len)
+      } else {
+        ""
+      }
       Some((tail, head))
     }
     None => None

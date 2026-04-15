@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Bezier route domain for edge splines: polyline normalization,
 /// route-to-bezier fitting, and line/polyline raw point generation.

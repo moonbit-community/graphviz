@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "sorted_edges_for_routing prioritizes self edges then flat edges then regular edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
@@ -71,5 +70,8 @@ test "sorted_edges_for_routing compares equivalent endpoint sets by port before 
     Map::new(),
   )
 
-  assert_eq(ordered.map(fn(edge) { edge.id() }), [edge_left.id(), edge_right.id()])
+  assert_eq(ordered.map(fn(edge) { edge.id() }), [
+    edge_left.id(),
+    edge_right.id(),
+  ])
 }

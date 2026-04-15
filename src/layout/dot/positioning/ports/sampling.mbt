@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Positioning ports domain: internal edge-port offset/order sampling core
 /// reused by the public ports API for ordering and xpos preprocessing.

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Edge attribute interpretation and edge-behavior helpers shared across dot
 /// ranking, ordering, routing, and final layout emission.
@@ -51,17 +50,25 @@ pub fn arrow_attr_is_none(value : String?) -> Bool {
 }
 
 ///|
-pub fn edge_has_head_marker(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> Bool {
+pub fn edge_has_head_marker(
+  edge : @cgraph.Edge,
+  kind : @cgraph.GraphKind,
+) -> Bool {
   match edge_dir_for(edge, kind) {
-    EdgeDir::Forward | EdgeDir::Both => !arrow_attr_is_none(edge.get_attr("arrowhead"))
+    EdgeDir::Forward | EdgeDir::Both =>
+      !arrow_attr_is_none(edge.get_attr("arrowhead"))
     _ => false
   }
 }
 
 ///|
-pub fn edge_has_tail_marker(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> Bool {
+pub fn edge_has_tail_marker(
+  edge : @cgraph.Edge,
+  kind : @cgraph.GraphKind,
+) -> Bool {
   match edge_dir_for(edge, kind) {
-    EdgeDir::Back | EdgeDir::Both => !arrow_attr_is_none(edge.get_attr("arrowtail"))
+    EdgeDir::Back | EdgeDir::Both =>
+      !arrow_attr_is_none(edge.get_attr("arrowtail"))
     _ => false
   }
 }

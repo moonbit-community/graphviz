@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "parse cli args uses stdin when input missing" {
   let action = parse_cli_args(["-Tdot"])

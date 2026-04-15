@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "scale_edge_layout_output and scale_record_port_maps keep nested geometry synchronized" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

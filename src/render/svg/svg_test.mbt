@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "render_svg emits svg" {
   let graph = @dot.parse_dot("digraph { a -> b; }")
@@ -108,7 +107,9 @@ test "render_svg preserves forestgreen label color" {
 
 ///|
 test "render_svg keeps trapeziumlr node families as polygons" {
-  let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/trapeziumlr.gv")
+  let graph = @dot.parse_dot_file(
+    "refs/graphviz/graphs/directed/trapeziumlr.gv",
+  )
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
     pretty: Some(false),
@@ -262,7 +263,6 @@ test "render_svg emits graph labels" {
 }
 
 ///|
-
 fn normalize_text(text : String) -> String {
   let mut out = text.replace_all(old="&#45;", new="-")
   out = out.replace_all(old="&amp;", new="&")
@@ -317,7 +317,7 @@ fn find_from(text : String, needle : String, start : Int) -> Int? {
   if start < 0 || start >= text.length() {
     return None
   }
-  let rest = text.unsafe_substring(start=start, end=text.length())
+  let rest = text.unsafe_substring(start~, end=text.length())
   match rest.find(needle) {
     Some(offset) => Some(start + offset)
     None => None
@@ -360,7 +360,7 @@ fn first_text_x(svg : String, expected_text : String) -> Double? {
       Some(value) => value
       None => return None
     }
-    let tag = svg.unsafe_substring(start=start, end=tag_end + 1)
+    let tag = svg.unsafe_substring(start~, end=tag_end + 1)
     let x = parse_attr_double(tag, "x")
     let text_rest = svg.unsafe_substring(start=tag_end + 1, end=svg.length())
     let close_pos = match text_rest.find("</text>") {
@@ -383,7 +383,7 @@ fn svg_root_tag(svg : String) -> String? {
   match find_from(svg, "<svg", 0) {
     Some(start) =>
       match find_from(svg, ">", start) {
-        Some(end_pos) => Some(svg.unsafe_substring(start=start, end=end_pos + 1))
+        Some(end_pos) => Some(svg.unsafe_substring(start~, end=end_pos + 1))
         None => None
       }
     None => None
@@ -394,7 +394,8 @@ fn svg_root_tag(svg : String) -> String? {
 fn parse_svg_size(svg : String) -> (Double, Double)? {
   match svg_root_tag(svg) {
     Some(tag) =>
-      match (parse_attr_string(tag, "width"), parse_attr_string(tag, "height")) {
+      match
+        (parse_attr_string(tag, "width"), parse_attr_string(tag, "height")) {
         (Some(width_text), Some(height_text)) => {
           let mut width = width_text.trim().to_string()
           let mut height = height_text.trim().to_string()
@@ -480,6 +481,7 @@ fn size_scale_for_test(
   (scale_x, scale_y, out_width, out_height)
 }
 
+///|
 fn snapshot_input_path(case_name : String) -> String raise {
   let candidates : Array[String] = [
     "refs/graphviz/graphs/directed/\{case_name}.gv",
@@ -514,7 +516,10 @@ fn snapshot_input_path(case_name : String) -> String raise {
 ///|
 test "svg snapshot input path resolves representative local and Graphviz cases" {
   assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
-  assert_eq(snapshot_input_path("japanese"), "refs/graphviz/graphs/directed/japanese.gv")
+  assert_eq(
+    snapshot_input_path("japanese"),
+    "refs/graphviz/graphs/directed/japanese.gv",
+  )
 }
 
 ///|
@@ -532,8 +537,11 @@ test "render_svg honors size attribute" {
   let (pad_x, pad_y) = graph_pad_pt(layout.graph)
   let width = layout.bbox.urx - layout.bbox.llx + pad_x * 2.0
   let height = layout.bbox.ury - layout.bbox.lly + pad_y * 2.0
-  let (scale_x, scale_y, expected_width, expected_height) =
-    size_scale_for_test(layout.graph, width, height)
+  let (scale_x, scale_y, expected_width, expected_height) = size_scale_for_test(
+    layout.graph,
+    width,
+    height,
+  )
   assert_close(width_pt, expected_width, 0.5)
   assert_close(height_pt, expected_height, 0.5)
   if scale_x != 1.0 || scale_y != 1.0 {

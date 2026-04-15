@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "compass_port_point_on_shape clips box compass anchors" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

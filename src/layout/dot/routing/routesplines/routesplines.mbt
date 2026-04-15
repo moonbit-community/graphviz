@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routesplines package entry: shared pathplan types/constants plus the
 /// main polyline orchestration for regular edge routing.
@@ -159,29 +158,10 @@ fn edge_pathplan_polyline_core(
   }
   let tail_max_box = match
     maximal_bbox_for_name(
-      path_tail_name,
-      path_tail_rank,
-      merged_positions,
-      route_sizes,
-      mval_route_sizes,
-      vnode_sizes,
-      cluster_keys,
-      vnode_clusters,
-      cluster_bboxes,
-      x_groups,
-      nodesep_pt,
-      splinesep_pt,
-      left_bound,
-      right_bound,
-      rank_ht1,
-      rank_ht2,
-      tail_cluster,
-      head_cluster,
-      path_out_edges,
-      path_in_edges,
-      order_index,
-      path_tail_prev,
-      tail_next,
+      path_tail_name, path_tail_rank, merged_positions, route_sizes, mval_route_sizes,
+      vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups, nodesep_pt,
+      splinesep_pt, left_bound, right_bound, rank_ht1, rank_ht2, tail_cluster, head_cluster,
+      path_out_edges, path_in_edges, order_index, path_tail_prev, tail_next,
     ) {
     Some(box) => box
     None => return None
@@ -295,29 +275,10 @@ fn edge_pathplan_polyline_core(
   }
   let head_max_box = match
     maximal_bbox_for_name(
-      path_head_name,
-      path_head_rank,
-      merged_positions,
-      route_sizes,
-      mval_route_sizes,
-      vnode_sizes,
-      cluster_keys,
-      vnode_clusters,
-      cluster_bboxes,
-      x_groups,
-      nodesep_pt,
-      splinesep_pt,
-      left_bound,
-      right_bound,
-      rank_ht1,
-      rank_ht2,
-      tail_cluster,
-      head_cluster,
-      path_out_edges,
-      path_in_edges,
-      order_index,
-      head_prev,
-      path_head_next,
+      path_head_name, path_head_rank, merged_positions, route_sizes, mval_route_sizes,
+      vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups, nodesep_pt,
+      splinesep_pt, left_bound, right_bound, rank_ht1, rank_ht2, tail_cluster, head_cluster,
+      path_out_edges, path_in_edges, order_index, head_prev, path_head_next,
     ) {
     Some(box) => box
     None => return None
@@ -662,14 +623,40 @@ pub fn edge_pathplan_polyline(
         None => {
           match
             edge_pathplan_polyline_core(
-              current_tail_name, path_head_name, current_tail_anchor, path_head_anchor,
-              current_tail_side, path_head_side, current_tail_port_box, path_head_port_box,
-              current_tail_rank, path_head_rank, current_tail_prev, None, current_vnodes, vnode_ranks, vnode_sizes,
-              cluster_keys, vnode_clusters,
-              cluster_bboxes, x_groups, order_index, path_out_edges, path_in_edges,
-              rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
-              merged_positions, route_sizes, mval_route_sizes, splinesep_pt,
-              left_bound, right_bound,
+              current_tail_name,
+              path_head_name,
+              current_tail_anchor,
+              path_head_anchor,
+              current_tail_side,
+              path_head_side,
+              current_tail_port_box,
+              path_head_port_box,
+              current_tail_rank,
+              path_head_rank,
+              current_tail_prev,
+              None,
+              current_vnodes,
+              vnode_ranks,
+              vnode_sizes,
+              cluster_keys,
+              vnode_clusters,
+              cluster_bboxes,
+              x_groups,
+              order_index,
+              path_out_edges,
+              path_in_edges,
+              rank_y,
+              rank_ht1,
+              rank_ht2,
+              nodesep_pt,
+              ranksep_pt,
+              rankdir,
+              merged_positions,
+              route_sizes,
+              mval_route_sizes,
+              splinesep_pt,
+              left_bound,
+              right_bound,
             ) {
             Some(core_result) => {
               let final_recover_vnodes : Array[String] = []
@@ -733,12 +720,39 @@ pub fn edge_pathplan_polyline(
   }
   match
     edge_pathplan_polyline_core(
-      path_tail_name, path_head_name, path_tail_anchor, path_head_anchor, path_tail_side,
-      path_head_side, path_tail_port_box, path_head_port_box, path_tail_rank, path_head_rank,
-      None, None, ordered, vnode_ranks, vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups,
-      order_index, path_out_edges,
-      path_in_edges, rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
-      merged_positions, route_sizes, mval_route_sizes, splinesep_pt, left_bound,
+      path_tail_name,
+      path_head_name,
+      path_tail_anchor,
+      path_head_anchor,
+      path_tail_side,
+      path_head_side,
+      path_tail_port_box,
+      path_head_port_box,
+      path_tail_rank,
+      path_head_rank,
+      None,
+      None,
+      ordered,
+      vnode_ranks,
+      vnode_sizes,
+      cluster_keys,
+      vnode_clusters,
+      cluster_bboxes,
+      x_groups,
+      order_index,
+      path_out_edges,
+      path_in_edges,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      nodesep_pt,
+      ranksep_pt,
+      rankdir,
+      merged_positions,
+      route_sizes,
+      mval_route_sizes,
+      splinesep_pt,
+      left_bound,
       right_bound,
     ) {
     Some(core_result) => {

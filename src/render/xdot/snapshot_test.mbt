@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Keep the snapshot input candidate list in this file because
 /// `check_snapshot_input_candidates.py` parses `snapshot_test.mbt` directly.
@@ -42,5 +41,8 @@ fn snapshot_input_path(case_name : String) -> String raise {
 ///|
 test "xdot snapshot input path resolves representative local and Graphviz cases" {
   assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
-  assert_eq(snapshot_input_path("japanese"), "refs/graphviz/graphs/directed/japanese.gv")
+  assert_eq(
+    snapshot_input_path("japanese"),
+    "refs/graphviz/graphs/directed/japanese.gv",
+  )
 }

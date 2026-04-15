@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "font metrics arrays sizes" {
   assert_eq(font_metrics.length(), 128)
@@ -16,7 +15,6 @@ test "font metrics known glyph width" {
   let width = font_metrics[idx]
   assert_true(Double::is_close(width, 722.16796875, absolute_tolerance=0.0001))
 }
-
 
 ///|
 test "generated textspan overrides expose representative captured metrics" {
@@ -43,8 +41,7 @@ test "manual textspan overrides cover Graphviz special-case labels" {
 
   let escaped = match
     lookup_textspan_metrics(
-      "double back slash in label \\. End should be the last word - End",
-      "Times-Roman",
+      "double back slash in label \\. End should be the last word - End", "Times-Roman",
       14.0,
     ) {
     Some(value) => value

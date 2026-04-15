@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_y_positions_from_rank_groups rebuilds node positions from updated rank y values" {
   let groups : Map[Int, Array[String]] = Map::new()

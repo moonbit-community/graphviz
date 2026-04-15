@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn make_label(target : XLabelTarget, width : Double, height : Double) -> XLabel {
   { target, width, height, pos: @edge_spline.point(0.0, 0.0), set: false }

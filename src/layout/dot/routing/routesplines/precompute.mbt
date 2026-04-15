@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routesplines precompute owner: path adjacency, merged routing maps, and
 /// global left/right pathplan bounds.
@@ -78,6 +77,7 @@ fn merge_positions(
   merged
 }
 
+///|
 fn pathplan_sizes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],

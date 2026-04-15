@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Shared spline geometry owner: point math, Bezier split/clip helpers,
 /// and miter geometry reused across edge spline routing and arrow shapes.

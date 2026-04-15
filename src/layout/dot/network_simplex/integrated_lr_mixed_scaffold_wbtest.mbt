@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: this larger LR mixed slack-virtual-normal scaffold still
 /// has owner-local algorithmic signal. Keep exact feasible-tree, pre-balance,

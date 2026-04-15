@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "edge_label_pos_from_input uses rank axes and width-based pad on ranked labels" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

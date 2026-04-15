@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_vnode_extra_nodes preserves explicit vnode order before fallback entries" {
   let vnode_ranks : Map[String, Int] = Map::new()

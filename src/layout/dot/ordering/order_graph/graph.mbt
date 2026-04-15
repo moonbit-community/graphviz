@@ -2,16 +2,16 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering domain: order-graph construction and materialization helpers.
-
 type NodeSize = @node_primitives.NodeSize
 
 ///|
 /// Graphviz parity: cluster traversal order index is seeded from Graphviz
 /// cluster_order for cluster tie-breaking in ordering passes.
-pub fn build_cluster_order_index(cluster_order : Array[String]) -> Map[String, Int] {
+pub fn build_cluster_order_index(
+  cluster_order : Array[String],
+) -> Map[String, Int] {
   let cluster_index : Map[String, Int] = Map::new()
   for idx, name in cluster_order {
     cluster_index[name] = idx

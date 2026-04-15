@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn point_for_name_or_origin(
   positions : Map[String, @geom.Point],
@@ -115,10 +114,7 @@ fn graphviz_mapbool_default_false(value : String) -> Bool {
 }
 
 ///|
-fn edge_clip_attr_enabled(
-  edge : @cgraph.Edge,
-  attr_name : String,
-) -> Bool {
+fn edge_clip_attr_enabled(edge : @cgraph.Edge, attr_name : String) -> Bool {
   match edge.get_attr(attr_name) {
     Some(value) => {
       let trimmed = value.trim()
@@ -214,8 +210,7 @@ fn build_edge_route_base(
     swap_ends,
   )
   let (tail_attr_clip_enabled, head_attr_clip_enabled) = oriented_edge_clip_enabled(
-    edge,
-    swap_ends,
+    edge, swap_ends,
   )
   let parallel_offset = parallel_offsets.get(edge.id()).unwrap_or_default()
   let oriented_endpoints = oriented_edge_endpoints_for_route(edge, swap_ends)

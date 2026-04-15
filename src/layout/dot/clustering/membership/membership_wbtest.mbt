@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "graph_contains_node and cluster keys follow nested cluster membership" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
@@ -116,9 +115,18 @@ test "cluster_lca walks parent chains and tolerates cycles" {
   cluster_parents["cycle_a"] = Some("cycle_b")
   cluster_parents["cycle_b"] = Some("cycle_a")
 
-  assert_eq(cluster_lca("cluster_inner", "cluster_sibling", cluster_parents), "cluster_outer")
-  assert_eq(cluster_lca("cluster_inner", "cluster_outer", cluster_parents), "cluster_outer")
-  assert_eq(cluster_lca("cluster_inner", "cluster_inner", cluster_parents), "cluster_inner")
+  assert_eq(
+    cluster_lca("cluster_inner", "cluster_sibling", cluster_parents),
+    "cluster_outer",
+  )
+  assert_eq(
+    cluster_lca("cluster_inner", "cluster_outer", cluster_parents),
+    "cluster_outer",
+  )
+  assert_eq(
+    cluster_lca("cluster_inner", "cluster_inner", cluster_parents),
+    "cluster_inner",
+  )
   assert_eq(cluster_lca("cluster_inner", "cluster_other", cluster_parents), "")
   assert_eq(cluster_lca("", "cluster_outer", cluster_parents), "")
   assert_eq(cluster_lca("cycle_a", "cluster_other", cluster_parents), "")

@@ -1,0 +1,18 @@
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/dot",
+  "moonbit-community/graphviz/layout/dot" @layout_dot,
+  "moonbit-community/graphviz/render/xdot",
+  "moonbit-community/graphviz/render/svg",
+  "moonbitlang/core/buffer",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/string",
+  "moonbitlang/core/strconv",
+  "moonbitlang/x/fs",
+  "moonbitlang/x/sys",
+}
+
+import {
+  "moonbitlang/x/fs",
+} for "test"

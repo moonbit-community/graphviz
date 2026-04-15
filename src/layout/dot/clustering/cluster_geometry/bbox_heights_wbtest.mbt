@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn assert_double_close(
   actual : Double,
@@ -34,19 +33,27 @@ test "compute_cluster_bbox_heights accumulates local, nested, margin, and label 
     sizes,
     self_edge_labels,
     rankdir: @rankdir.RankDir::TB,
-    cluster_margin_pt_for: graph =>
+    cluster_margin_pt_for: graph => {
       match graph.name() {
         Some("cluster_outer") => 2.0
         Some("cluster_inner") => 1.0
         _ => 0.0
-      },
-    cluster_label_padding_for: (graph, _rankdir) =>
+      }
+    },
+    cluster_label_padding_for: (graph, _rankdir) => {
       match graph.name() {
         Some("cluster_outer") => { top: 5.0, bottom: 7.0 }
         Some("cluster_inner") => { top: 1.0, bottom: 3.0 }
         _ => { top: 0.0, bottom: 0.0 }
-      },
-    node_half_height_pt_for: (name, _sizes, _labels) => if name == "a" { 2.0 } else { 4.0 },
+      }
+    },
+    node_half_height_pt_for: (name, _sizes, _labels) => {
+      if name == "a" {
+        2.0
+      } else {
+        4.0
+      }
+    },
   })
 
   let outer_heights = match heights.get("cluster_outer") {
@@ -98,11 +105,12 @@ test "adjust_flip_rank_heights widens rank spacing and updates cluster half-heig
     min_root_rank: 0,
     margin_total: 0.0,
     cluster_margin_pt_for: _graph => 0.0,
-    cluster_label_width_pt_for: graph =>
+    cluster_label_width_pt_for: graph => {
       match graph.name() {
         Some("cluster_0") => Some(100.0)
         _ => None
-      },
+      }
+    },
   })
 
   let updated = match cluster_heights.get("cluster_0") {

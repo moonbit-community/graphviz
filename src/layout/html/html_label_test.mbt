@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn assert_text_label(label : String, expected : String) -> Unit raise {
   match parse_html_label(label) {
@@ -326,9 +325,9 @@ test "html table size includes padding and min size" {
   let label = "<<table border=\"1\" cellborder=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
   match parse_html_label(label) {
     Some(HtmlLabel::Table(table)) => {
-      let (width, height) = html_table_size(table, cell => cell_size_from_min(
-        table, cell,
-      ))
+      let (width, height) = html_table_size(table, cell => {
+        cell_size_from_min(table, cell)
+      })
       assert_true(Double::is_close(width, 48.0, absolute_tolerance=0.01))
       assert_true(Double::is_close(height, 58.0, absolute_tolerance=0.01))
     }

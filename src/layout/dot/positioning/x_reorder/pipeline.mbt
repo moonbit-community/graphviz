@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: clustered/non-clustered xpos reorder branch gates are
 /// evaluated once and then reused by reorder + transpose cleanup.

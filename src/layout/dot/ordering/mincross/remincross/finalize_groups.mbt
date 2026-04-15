@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering domain: clustered finalize rank-group cleanup and cluster-bucket
 /// replay helpers used by the ReMincross owner package.

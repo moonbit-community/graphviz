@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Routing integration owner package keeps Stage E orchestration plus dot-specific
 /// bridge assembly, precompute, and final edge-execution wiring.
@@ -255,7 +254,9 @@ pub fn compute_dot_routing_stage(
   let label_edge_counts = @precompute.build_label_edge_counts(prep.edges, edge => {
     @edge_label_metrics.edge_mid_label_text(edge) is Some(_)
   })
-  let has_graph_edge_labels = @edge_label_metrics.graph_has_edge_labels(prep.edges)
+  let has_graph_edge_labels = @edge_label_metrics.graph_has_edge_labels(
+    prep.edges,
+  )
   let enable_complex_tuning = @precompute.complex_tuning_enabled()
   let precompute_data = build_routing_precompute_data({
     prep,

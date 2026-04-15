@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_all_ranks_with_overlays expands to cover inserted vnode ranks" {
   assert_eq(build_all_ranks_with_overlays([2, 3], [1, 5, 4]), [1, 2, 3, 4, 5])

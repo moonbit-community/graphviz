@@ -6,9 +6,7 @@ import {
 } for "wbtest"
 
 options(
-  "native-stub": [
-    "sort_nodes_by_rank_native_stub.c",
-  ],
+  "native-stub": [ "sort_nodes_by_rank_native_stub.c" ],
   targets: {
     "sort_nodes_by_rank_native.mbt": [ "native" ],
     "sort_nodes_by_rank_non_native.mbt": [ "not", "native" ],

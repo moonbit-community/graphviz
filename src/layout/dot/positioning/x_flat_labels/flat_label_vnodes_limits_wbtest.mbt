@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
   let order_index : Map[String, Int] = Map::new()

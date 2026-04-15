@@ -1,7 +1,0 @@
-{
-  "import": [
-    "moonbit-community/graphviz/layout/dot/cluster_graph",
-    "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/layout/dot/edge_identity"
-  ]
-}

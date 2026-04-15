@@ -2,11 +2,9 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Cluster membership, edge-cluster ownership, and ancestor-traversal helpers
 /// shared by clustering, positioning, routing, and finalization stages.
-
 pub fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {
@@ -18,6 +16,7 @@ pub fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   graph
 }
 
+///|
 fn graph_contains_node_raw(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   let target = node.name()
   for entry in graph.nodes() {
@@ -28,21 +27,26 @@ fn graph_contains_node_raw(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   false
 }
 
+///|
 fn is_rankset_graph(graph : @cgraph.Graph) -> Bool {
   match graph.get_attr("rank") {
     Some(value) => {
       let lower = value.to_lower()
       lower == "same" ||
-        lower == "min" ||
-        lower == "max" ||
-        lower == "source" ||
-        lower == "sink"
+      lower == "min" ||
+      lower == "max" ||
+      lower == "source" ||
+      lower == "sink"
     }
     None => false
   }
 }
 
-fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) -> Bool {
+///|
+fn graph_is_within_cluster_name(
+  graph : @cgraph.Graph,
+  cluster_name : String,
+) -> Bool {
   if cluster_name == "" {
     return false
   }
@@ -51,10 +55,7 @@ fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) ->
     match current {
       Some(value) => {
         match value.name() {
-          Some(name) =>
-            if name == cluster_name {
-              return true
-            }
+          Some(name) => if name == cluster_name { return true }
           None => ()
         }
         current = value.parent()
@@ -65,6 +66,7 @@ fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) ->
   false
 }
 
+///|
 fn node_outside_cluster_rankset(
   root : @cgraph.Graph,
   node : @cgraph.Node,
@@ -90,6 +92,7 @@ fn node_outside_cluster_rankset(
   false
 }
 
+///|
 fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   let mut current : @cgraph.Graph? = Some(graph)
   while true {
@@ -109,6 +112,7 @@ fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   ""
 }
 
+///|
 pub fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   if !graph_contains_node_raw(graph, node) {
     return false
@@ -123,11 +127,13 @@ pub fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   true
 }
 
+///|
 priv struct NodeClusterKeys {
   outer : String
   inner : String
 }
 
+///|
 fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
   let root = root_graph_for_node(node)
   let mut outer = ""
@@ -173,7 +179,6 @@ pub fn node_local_cluster_key(node : @cgraph.Node) -> String {
 }
 
 ///|
-
 fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
@@ -221,6 +226,7 @@ pub fn collect_edge_cluster_keys(
   }
 }
 
+///|
 fn collect_cluster_member_nodes(
   graph : @cgraph.Graph,
   nodes_out : Map[String, Bool],

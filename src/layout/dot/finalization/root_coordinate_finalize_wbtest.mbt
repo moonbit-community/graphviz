@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "finalize_root_coordinates applies root margin then shifts to origin and refreshes root labels" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

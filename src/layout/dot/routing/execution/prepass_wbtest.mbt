@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "collect_flat_adjacent_beziers builds one spindle per adjacent same-rank duplicate edge" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

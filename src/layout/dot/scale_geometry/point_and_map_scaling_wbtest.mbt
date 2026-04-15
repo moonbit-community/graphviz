@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "point and map scaling helpers keep expected rounding and axis scaling" {
   let point : @geom.Point = { x: 1.25, y: -2.5 }

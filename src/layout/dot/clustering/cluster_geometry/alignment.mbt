@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: cluster-alignment input keeps geometry maps and callbacks
 /// grouped so recursive rounding/label expansion wiring stays explicit.
@@ -78,12 +77,7 @@ fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
 
 ///|
 fn round_bbox_x_only(bbox : @geom.Rect) -> @geom.Rect {
-  {
-    llx: bbox.llx.round(),
-    lly: bbox.lly,
-    urx: bbox.urx.round(),
-    ury: bbox.ury,
-  }
+  { llx: bbox.llx.round(), lly: bbox.lly, urx: bbox.urx.round(), ury: bbox.ury }
 }
 
 ///|
@@ -145,28 +139,26 @@ fn shift_graph_positions(
 /// Graphviz parity: cluster bbox rounding/center alignment follows dot postproc
 /// cluster pass ordering; callback-owned margin/label expansion must preserve
 /// existing behavior from the caller package.
-pub fn adjust_cluster_positions(
-  input : ClusterAlignmentInput,
-) -> @geom.Rect? {
+pub fn adjust_cluster_positions(input : ClusterAlignmentInput) -> @geom.Rect? {
   let mut bbox = compute_nodes_bbox(input.graph, input.positions, input.sizes)
   for child in input.graph.subgraphs() {
     match
-      adjust_cluster_positions(
-        {
-          graph: child,
-          positions: input.positions,
-          vnode_positions: input.vnode_positions,
-          vnode_clusters: input.vnode_clusters,
-          sizes: input.sizes,
-          cluster_margin_pt_for: input.cluster_margin_pt_for,
-          expand_cluster_label_bbox: input.expand_cluster_label_bbox,
-        },
-      ) {
+      adjust_cluster_positions({
+        graph: child,
+        positions: input.positions,
+        vnode_positions: input.vnode_positions,
+        vnode_clusters: input.vnode_clusters,
+        sizes: input.sizes,
+        cluster_margin_pt_for: input.cluster_margin_pt_for,
+        expand_cluster_label_bbox: input.expand_cluster_label_bbox,
+      }) {
       Some(child_bbox) =>
-        bbox = Some(match bbox {
-          Some(current) => merge_bbox(current, child_bbox)
-          None => child_bbox
-        })
+        bbox = Some(
+          match bbox {
+            Some(current) => merge_bbox(current, child_bbox)
+            None => child_bbox
+          },
+        )
       None => ()
     }
   }

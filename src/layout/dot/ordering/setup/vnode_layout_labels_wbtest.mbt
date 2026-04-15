@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_edge_vnodes places the LR label vnode at midpoint rank and swaps label dimensions" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

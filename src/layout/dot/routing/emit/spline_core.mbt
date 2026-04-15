@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 pub fn edge_spline_result_for_bezier(
   spline : @geom.Spline,
@@ -185,10 +184,7 @@ fn graphviz_mapbool_default_false(value : String) -> Bool {
 }
 
 ///|
-fn edge_clip_attr_enabled(
-  edge : @cgraph.Edge,
-  attr_name : String,
-) -> Bool {
+fn edge_clip_attr_enabled(edge : @cgraph.Edge, attr_name : String) -> Bool {
   match edge.get_attr(attr_name) {
     Some(value) => {
       let trimmed = value.trim()
@@ -227,8 +223,7 @@ fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
   let tail_clip_enabled = if !base.tail_clip_enabled &&
     !attr_clip_flags.tail_clip_enabled {
     false
-  } else if !base.tail_clip_enabled &&
-    !sameport_direct_flags.tail_direct {
+  } else if !base.tail_clip_enabled && !sameport_direct_flags.tail_direct {
     true
   } else {
     base.tail_clip_enabled
@@ -236,8 +231,7 @@ fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
   let head_clip_enabled = if !base.head_clip_enabled &&
     !attr_clip_flags.head_clip_enabled {
     false
-  } else if !base.head_clip_enabled &&
-    !sameport_direct_flags.head_direct {
+  } else if !base.head_clip_enabled && !sameport_direct_flags.head_direct {
     true
   } else {
     base.head_clip_enabled

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz numeric parsing and rounding helpers shared across dot layout
 /// stages, engines, and fixtures.
@@ -82,7 +81,11 @@ pub fn parse_first_double_optional(value : String) -> Double? {
 }
 
 ///|
-pub fn parse_attr_double(value : String, fallback : Double, min : Double) -> Double {
+pub fn parse_attr_double(
+  value : String,
+  fallback : Double,
+  min : Double,
+) -> Double {
   match parse_first_double_optional(value) {
     Some(parsed) => if parsed < min { min } else { parsed }
     None => fallback
@@ -105,12 +108,11 @@ pub fn parse_graph_size_pt_attr(graph : @cgraph.Graph) -> GraphSizePt? {
         return None
       }
       let width_in = parse_double_or(parts[0], -1.0)
-      let height_in =
-        if parts.length() > 1 {
-          parse_double_or(parts[1], -1.0)
-        } else {
-          width_in
-        }
+      let height_in = if parts.length() > 1 {
+        parse_double_or(parts[1], -1.0)
+      } else {
+        width_in
+      }
       if width_in <= 0.0 || height_in <= 0.0 {
         return None
       }

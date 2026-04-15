@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 const DISTINCT_TOLERANCE : Double = 0.01
 
@@ -75,17 +74,9 @@ fn calculate_wedge_parameters(
     if dx1 > 0.0 && dy2 < 0.0 {
       (ortho_point(curr.x - radius, curr.y - radius), 0.0, @math.PI / 2.0)
     } else if dx1 > 0.0 && dy2 > 0.0 {
-      (
-        ortho_point(curr.x - radius, curr.y + radius),
-        -@math.PI / 2.0,
-        0.0,
-      )
+      (ortho_point(curr.x - radius, curr.y + radius), -@math.PI / 2.0, 0.0)
     } else if dx1 < 0.0 && dy2 < 0.0 {
-      (
-        ortho_point(curr.x + radius, curr.y - radius),
-        @math.PI / 2.0,
-        @math.PI,
-      )
+      (ortho_point(curr.x + radius, curr.y - radius), @math.PI / 2.0, @math.PI)
     } else {
       (
         ortho_point(curr.x + radius, curr.y + radius),
@@ -93,28 +84,22 @@ fn calculate_wedge_parameters(
         3.0 * @math.PI / 2.0,
       )
     }
+  } else if dy1 < 0.0 && dx2 > 0.0 {
+    (
+      ortho_point(curr.x + radius, curr.y + radius),
+      @math.PI,
+      3.0 * @math.PI / 2.0,
+    )
+  } else if dy1 < 0.0 && dx2 < 0.0 {
+    (
+      ortho_point(curr.x - radius, curr.y + radius),
+      3.0 * @math.PI / 2.0,
+      2.0 * @math.PI,
+    )
+  } else if dy1 > 0.0 && dx2 > 0.0 {
+    (ortho_point(curr.x + radius, curr.y - radius), @math.PI / 2.0, @math.PI)
   } else {
-    if dy1 < 0.0 && dx2 > 0.0 {
-      (
-        ortho_point(curr.x + radius, curr.y + radius),
-        @math.PI,
-        3.0 * @math.PI / 2.0,
-      )
-    } else if dy1 < 0.0 && dx2 < 0.0 {
-      (
-        ortho_point(curr.x - radius, curr.y + radius),
-        3.0 * @math.PI / 2.0,
-        2.0 * @math.PI,
-      )
-    } else if dy1 > 0.0 && dx2 > 0.0 {
-      (
-        ortho_point(curr.x + radius, curr.y - radius),
-        @math.PI / 2.0,
-        @math.PI,
-      )
-    } else {
-      (ortho_point(curr.x - radius, curr.y - radius), 0.0, @math.PI / 2.0)
-    }
+    (ortho_point(curr.x - radius, curr.y - radius), 0.0, @math.PI / 2.0)
   }
 }
 
@@ -158,8 +143,7 @@ fn quarter_wedge_path(
   append_line(path, x_b, y_b)
   let d_eta = (angle2 - angle1) / QUARTER_ARC_SEGMENTS.to_double()
   let t = @math.tan(0.5 * d_eta)
-  let alpha =
-    @math.sin(d_eta) * (Double::sqrt(4.0 + 3.0 * t * t) - 1.0) / 3.0
+  let alpha = @math.sin(d_eta) * (Double::sqrt(4.0 + 3.0 * t * t) - 1.0) / 3.0
   for _ in 0..<QUARTER_ARC_SEGMENTS {
     let x_a = x_b
     let y_a = y_b
@@ -255,14 +239,7 @@ fn find_ortho_corners(
     let trunc_prev = ortho_point(curr.x - dx1 * radius, curr.y - dy1 * radius)
     let trunc_next = ortho_point(curr.x + dx2 * radius, curr.y + dy2 * radius)
     let (wedge_center, angle1, angle2) = calculate_wedge_parameters(
-      curr,
-      dx1,
-      dy1,
-      dx2,
-      dy2,
-      radius,
-      seg1_horiz,
-      seg2_vert,
+      curr, dx1, dy1, dx2, dy2, radius, seg1_horiz, seg2_vert,
     )
     corners.push({
       idx: i,
@@ -294,7 +271,7 @@ pub fn rounded_ortho_polylines(
   let out : Array[Array[@geom.Point]] = []
   let mut seg_start_idx = 0
   let mut seg_start_pt = points[0]
-  for c in 0..=corners.length() {
+  for c in 0..<=corners.length() {
     let seg_end_idx = if c < corners.length() {
       corners[c].idx
     } else {
@@ -319,7 +296,7 @@ pub fn rounded_ortho_polylines(
     if c < corners.length() {
       let mut next_idx = corners[c].idx + 1
       while next_idx < points.length() &&
-        point_at_any_corner(points[next_idx], corners) {
+            point_at_any_corner(points[next_idx], corners) {
         next_idx = next_idx + 1
       }
       seg_start_idx = next_idx
@@ -338,7 +315,7 @@ pub fn rounded_ortho_polylines(
       let arc_end_idx = wedge.length() - 4
       if arc_end_idx >= arc_start_idx {
         let arc_points : Array[@geom.Point] = []
-        for i in arc_start_idx..=arc_end_idx {
+        for i in arc_start_idx..<=arc_end_idx {
           arc_points.push(wedge[i])
         }
         if arc_points.length() >= 2 {

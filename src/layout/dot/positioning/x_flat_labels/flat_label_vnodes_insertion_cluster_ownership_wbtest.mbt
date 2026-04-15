@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "non-adjacent flat edge appends label vnode after existing edge vnodes and falls back to edge cluster key" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "edge_internal_to_cluster treats ancestor-related clusters as internal" {
   let cluster_parents : Map[String, String?] = Map::new()

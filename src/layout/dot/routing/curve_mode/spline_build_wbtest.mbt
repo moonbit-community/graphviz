@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "bottom_single_arrow_line_endpoints snaps both ends to the lower node bottom when preferred" {
   let line_start = @edge_spline.point(1.0, 10.0)

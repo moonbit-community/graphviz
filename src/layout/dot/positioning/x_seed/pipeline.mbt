@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Positioning domain: x-seed group assembly helpers shared by Stage D
 /// vnode-aware xpos preparation.

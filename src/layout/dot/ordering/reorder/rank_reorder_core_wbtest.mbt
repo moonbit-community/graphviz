@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "median_value sorts inputs and averages the middle pair" {
   assert_eq(median_value([]), None)
@@ -195,12 +194,8 @@ test "build_rank_constraint_lookup keeps only enabled flat constraints inside th
   )
   let state = build_rank_constraint_state(["a", "b", "skeleton"], lookup)
 
-  assert_true(
-    rank_left2right_constraint_resolved(lookup, state, 0, 1, false),
-  )
-  assert_false(
-    rank_left2right_constraint_resolved(lookup, state, 0, 2, false),
-  )
+  assert_true(rank_left2right_constraint_resolved(lookup, state, 0, 1, false))
+  assert_false(rank_left2right_constraint_resolved(lookup, state, 0, 2, false))
 }
 
 ///|
@@ -306,11 +301,7 @@ test "live port tie-break helpers match materialized port-order tuples" {
     edge_penalty,
   )
   let port_orders = build_rank_port_tiebreak_orders(
-    incident_edges,
-    edge_endpoint_orders,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_penalty,
+    incident_edges, edge_endpoint_orders, edge_tail_port_x, edge_head_port_x, edge_penalty,
   )
 
   let in_pair = in_cross_pair_tiebreak_live(
@@ -340,11 +331,17 @@ test "live port tie-break helpers match materialized port-order tuples" {
   )
   assert_eq(
     out_pair.forward,
-    out_cross_port_tiebreak(port_orders.out_orders[0], port_orders.out_orders[1]),
+    out_cross_port_tiebreak(
+      port_orders.out_orders[0],
+      port_orders.out_orders[1],
+    ),
   )
   assert_eq(
     out_pair.reverse,
-    out_cross_port_tiebreak(port_orders.out_orders[1], port_orders.out_orders[0]),
+    out_cross_port_tiebreak(
+      port_orders.out_orders[1],
+      port_orders.out_orders[0],
+    ),
   )
   let reversed_out_pair = out_cross_pair_tiebreak_live(
     port_incident_edges.out_edges[1],

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: this is the stable wide normal tree behind the L0
 /// integrated fixture. Keep exact owner-local coverage so the fixture replay

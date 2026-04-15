@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct NeighborMaps {
   out_neighbors : Map[String, Array[String]]
@@ -113,9 +112,7 @@ pub fn build_neighbor_rank_groups(
   let resolved_order : Map[String, Int] = Map::new()
   for name in nodes {
     resolved_order[name] = resolve_component_order_index(
-      name,
-      node_order,
-      fallback_order,
+      name, node_order, fallback_order,
     )
   }
   let neighbors = create_empty_neighbors(nlist)
@@ -376,11 +373,13 @@ fn rewrite_names_by_rank_and_order(
 ) -> Unit {
   let entries : Array[(String, Int, Int)] = []
   for name in names {
-    entries.push((
-      name,
-      node_ranks.get(name).unwrap_or_default(),
-      resolved_order.get(name).unwrap_or_default(),
-    ))
+    entries.push(
+      (
+        name,
+        node_ranks.get(name).unwrap_or_default(),
+        resolved_order.get(name).unwrap_or_default(),
+      ),
+    )
   }
   entries.sort_by((a, b) => {
     let (_, a_rank, a_idx) = a
@@ -494,9 +493,7 @@ fn collect_component_skeletons(
   let resolved_order : Map[String, Int] = Map::new()
   for name in ordered_nodes {
     resolved_order[name] = resolve_component_order_index(
-      name,
-      node_order,
-      fallback_order,
+      name, node_order, fallback_order,
     )
   }
   for _key, list in cluster_skeleton_nodes {

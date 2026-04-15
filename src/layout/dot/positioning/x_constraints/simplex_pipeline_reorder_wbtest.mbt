@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "constraint graph reorder puts slack nodes first and preserves rank mapping" {
   let graph = @network_simplex.new_graph()

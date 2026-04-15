@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Label attribute parsing helpers: resolved label text, node padding, and
 /// graph margin extraction for dot label layout.

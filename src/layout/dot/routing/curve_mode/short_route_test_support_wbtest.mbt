@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn explicit_compass_port(compass : @cgraph.Compass) -> @cgraph.Port? {
   Some({ name: None, compass: Some(compass) })

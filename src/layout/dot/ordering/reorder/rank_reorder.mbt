@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 type NodeSize = @node_primitives.NodeSize
 
@@ -348,10 +347,7 @@ pub fn reorder_by_medians(
 ) -> Array[String] {
   let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
   let constraint_lookup = build_rank_constraint_lookup(
-    names,
-    cluster_keys,
-    cluster_skeleton,
-    parsed_flat_constraints,
+    names, cluster_keys, cluster_skeleton, parsed_flat_constraints,
   )
   reorder_by_medians_with_lookup(
     names,
@@ -379,10 +375,7 @@ fn reorder_by_medians_with_lookup(
   let desired_state = build_rank_desired_state(sorted, desired)
   if !constraint_lookup.has_clusters && !constraint_lookup.has_flat_constraints {
     return reorder_by_medians_unconstrained(
-      sorted,
-      desired_state,
-      reverse,
-      hasfixed,
+      sorted, desired_state, reverse, hasfixed,
     )
   }
   let constraint_state = build_rank_constraint_state(sorted, constraint_lookup)
@@ -533,11 +526,7 @@ fn reorder_by_medians_constrained(
           continue
         }
         if rank_left2right_constraint_resolved(
-            constraint_lookup,
-            constraint_state,
-            lp,
-            rp,
-            remincross_mode,
+            constraint_lookup, constraint_state, lp, rp, remincross_mode,
           ) {
           muststay = true
           break
@@ -561,7 +550,11 @@ fn reorder_by_medians_constrained(
           Array::unsafe_set(sorted, lp, Array::unsafe_get(sorted, rp))
           Array::unsafe_set(sorted, rp, tmp)
           let tmp_node_index = Array::unsafe_get(node_indices, lp)
-          Array::unsafe_set(node_indices, lp, Array::unsafe_get(node_indices, rp))
+          Array::unsafe_set(
+            node_indices,
+            lp,
+            Array::unsafe_get(node_indices, rp),
+          )
           Array::unsafe_set(node_indices, rp, tmp_node_index)
           let tmp_has_value = Array::unsafe_get(has_values, lp)
           Array::unsafe_set(has_values, lp, Array::unsafe_get(has_values, rp))
@@ -824,6 +817,7 @@ fn build_edge_endpoint_orders(
   { tail_orders, head_orders }
 }
 
+///|
 fn build_active_incident_edge_maps(
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
@@ -861,11 +855,14 @@ fn build_rank_incident_edge_lists(
   let out_edges : Array[Array[Int]] = []
   for name in names {
     in_edges.push(active_incident_edges.in_edges.get(name).unwrap_or_default())
-    out_edges.push(active_incident_edges.out_edges.get(name).unwrap_or_default())
+    out_edges.push(
+      active_incident_edges.out_edges.get(name).unwrap_or_default(),
+    )
   }
   { in_edges, out_edges }
 }
 
+///|
 fn build_rank_port_incident_edge_lists(
   names : Array[String],
   edge_in : Map[String, Array[Int]],
@@ -932,15 +929,17 @@ fn build_rank_port_tiebreak_orders(
       if penalty <= 0 {
         continue
       }
-      incoming.push((
-        edge_endpoint_orders.tail_orders[edge_idx],
-        if edge_idx < edge_tail_port_x.length() {
-          edge_tail_port_x[edge_idx]
-        } else {
-          0.0
-        },
-        penalty,
-      ))
+      incoming.push(
+        (
+          edge_endpoint_orders.tail_orders[edge_idx],
+          if edge_idx < edge_tail_port_x.length() {
+            edge_tail_port_x[edge_idx]
+          } else {
+            0.0
+          },
+          penalty,
+        ),
+      )
     }
     in_orders.push(incoming)
   }
@@ -951,15 +950,17 @@ fn build_rank_port_tiebreak_orders(
       if penalty <= 0 {
         continue
       }
-      outgoing.push((
-        edge_endpoint_orders.head_orders[edge_idx],
-        if edge_idx < edge_head_port_x.length() {
-          edge_head_port_x[edge_idx]
-        } else {
-          0.0
-        },
-        penalty,
-      ))
+      outgoing.push(
+        (
+          edge_endpoint_orders.head_orders[edge_idx],
+          if edge_idx < edge_head_port_x.length() {
+            edge_head_port_x[edge_idx]
+          } else {
+            0.0
+          },
+          penalty,
+        ),
+      )
     }
     out_orders.push(outgoing)
   }
@@ -1120,26 +1121,16 @@ pub fn count_rank_crossings_port(
     order[name] = i
   }
   let edge_endpoint_orders = build_edge_endpoint_orders(
-    edge_tail,
-    edge_head,
-    order,
-    fixed_order,
+    edge_tail, edge_head, order, fixed_order,
   )
   let active_incident_edges = build_active_incident_edge_maps(
-    edge_in,
-    edge_out,
-    edge_penalty,
+    edge_in, edge_out, edge_penalty,
   )
   let incident_edges = build_rank_incident_edge_lists(
-    names,
-    active_incident_edges,
+    names, active_incident_edges,
   )
   let port_orders = build_rank_port_tiebreak_orders(
-    incident_edges,
-    edge_endpoint_orders,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_penalty,
+    incident_edges, edge_endpoint_orders, edge_tail_port_x, edge_head_port_x, edge_penalty,
   )
   let mut cross = 0
   let mut left_idx = 0
@@ -1147,9 +1138,15 @@ pub fn count_rank_crossings_port(
     let mut right_idx = left_idx + 1
     while right_idx < names.length() {
       cross = cross +
-        in_cross_port_tiebreak(port_orders.in_orders[left_idx], port_orders.in_orders[right_idx])
+        in_cross_port_tiebreak(
+          port_orders.in_orders[left_idx],
+          port_orders.in_orders[right_idx],
+        )
       cross = cross +
-        out_cross_port_tiebreak(port_orders.out_orders[left_idx], port_orders.out_orders[right_idx])
+        out_cross_port_tiebreak(
+          port_orders.out_orders[left_idx],
+          port_orders.out_orders[right_idx],
+        )
       right_idx = right_idx + 1
     }
     left_idx = left_idx + 1
@@ -1255,7 +1252,8 @@ fn transpose_rank_port_tiebreak(
   while i + 1 < len {
     let left = Array::unsafe_get(names, i)
     let right = Array::unsafe_get(names, i + 1)
-    if has_constraints && rank_left2right_constraint_resolved(
+    if has_constraints &&
+      rank_left2right_constraint_resolved(
         constraint_lookup,
         constraint_state,
         i,
@@ -1273,18 +1271,14 @@ fn transpose_rank_port_tiebreak(
     let right_incident_out = Array::unsafe_get(out_edges_by_node, i + 1)
     if left_incident_in.length() > 0 && right_incident_in.length() > 0 {
       let in_cross_pair = in_cross_pair_tiebreak_live(
-        left_incident_in,
-        right_incident_in,
-        edge_endpoint_orders,
+        left_incident_in, right_incident_in, edge_endpoint_orders,
       )
       c0 = c0 + in_cross_pair.forward
       c1 = c1 + in_cross_pair.reverse
     }
     if left_incident_out.length() > 0 && right_incident_out.length() > 0 {
       let out_cross_pair = out_cross_pair_tiebreak_live(
-        left_incident_out,
-        right_incident_out,
-        edge_endpoint_orders,
+        left_incident_out, right_incident_out, edge_endpoint_orders,
       )
       c0 = c0 + out_cross_pair.forward
       c1 = c1 + out_cross_pair.reverse
@@ -1298,7 +1292,11 @@ fn transpose_rank_port_tiebreak(
       Array::unsafe_set(out_edges_by_node, i + 1, left_incident_out)
       if has_constraints {
         let tmp_node_index = Array::unsafe_get(node_indices, i)
-        Array::unsafe_set(node_indices, i, Array::unsafe_get(node_indices, i + 1))
+        Array::unsafe_set(
+          node_indices,
+          i,
+          Array::unsafe_get(node_indices, i + 1),
+        )
         Array::unsafe_set(node_indices, i + 1, tmp_node_index)
       }
       refresh_port_incident_edge_orders_for_node(
@@ -1308,10 +1306,7 @@ fn transpose_rank_port_tiebreak(
         edge_endpoint_orders,
       )
       refresh_port_incident_edge_orders_for_node(
-        right_incident_in,
-        right_incident_out,
-        i,
-        edge_endpoint_orders,
+        right_incident_in, right_incident_out, i, edge_endpoint_orders,
       )
       changed = true
       delta = delta + (c0 - c1)
@@ -1348,10 +1343,7 @@ pub fn transpose_rank_groups_port(
   let initial_order = @rank_groups.build_order_index(ordered)
   let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
   let edge_endpoint_orders = build_edge_endpoint_orders(
-    edge_tail,
-    edge_head,
-    initial_order,
-    fixed_order,
+    edge_tail, edge_head, initial_order, fixed_order,
   )
   let rank_incident_edges : Array[RankPortIncidentEdgeLists] = []
   let rank_constraint_lookups : Array[RankConstraintLookup] = []
@@ -1363,19 +1355,11 @@ pub fn transpose_rank_groups_port(
     }
     rank_incident_edges.push(
       build_rank_port_incident_edge_lists(
-        names,
-        edge_in,
-        edge_out,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_penalty,
+        names, edge_in, edge_out, edge_tail_port_x, edge_head_port_x, edge_penalty,
       ),
     )
     let constraint_lookup = build_rank_constraint_lookup(
-      names,
-      cluster_keys,
-      cluster_skeleton,
-      parsed_flat_constraints,
+      names, cluster_keys, cluster_skeleton, parsed_flat_constraints,
     )
     rank_constraint_lookups.push(constraint_lookup)
     rank_constraint_states.push(
@@ -2242,7 +2226,13 @@ pub fn reorder_rank_groups(
     order_positions = @rank_groups.order_positions_from_groups(ordered)
     merge_fixed_positions()
     let seed_cross = count_crossings_port_aware(
-      ordered, node_ranks, edges, edge_tail, edge_head, edge_tail_port_x~, edge_head_port_x~,
+      ordered,
+      node_ranks,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x~,
+      edge_head_port_x~,
       fixed_order~,
     )
     if seed_cross > 0 {

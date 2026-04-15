@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_component_traversal_starts sorts by root order and prefers real nodes over edge vnodes" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"

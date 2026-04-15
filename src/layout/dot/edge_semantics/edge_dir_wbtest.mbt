@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn fixture_edge_at(graph : @cgraph.Graph, index : Int) -> @cgraph.Edge raise {
   let edges = graph.edges()
@@ -36,18 +35,22 @@ test "edge_dir_for uses graph kind and defaults" {
   let directed = @dot_parser.parse_dot(
     "digraph { a -> b [dir=back]; c -> d [dir=invalid]; e -> f }",
   )
-  guard edge_dir_for(fixture_edge_at(directed, 0), directed.kind()) is EdgeDir::Back else {
+  guard edge_dir_for(fixture_edge_at(directed, 0), directed.kind())
+    is EdgeDir::Back else {
     fail("expected first edge to be Back")
   }
-  guard edge_dir_for(fixture_edge_at(directed, 1), directed.kind()) is EdgeDir::Forward else {
+  guard edge_dir_for(fixture_edge_at(directed, 1), directed.kind())
+    is EdgeDir::Forward else {
     fail("expected invalid dir attr to default Forward")
   }
-  guard edge_dir_for(fixture_edge_at(directed, 2), directed.kind()) is EdgeDir::Forward else {
+  guard edge_dir_for(fixture_edge_at(directed, 2), directed.kind())
+    is EdgeDir::Forward else {
     fail("expected missing dir attr to default Forward")
   }
 
   let undirected = @dot_parser.parse_dot("graph { a -- b [dir=both] }")
-  guard edge_dir_for(fixture_edge_at(undirected, 0), undirected.kind()) is EdgeDir::None else {
+  guard edge_dir_for(fixture_edge_at(undirected, 0), undirected.kind())
+    is EdgeDir::None else {
     fail("expected undirected edges to use EdgeDir::None")
   }
 }

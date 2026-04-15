@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct HtmlParser {
   chars : Array[Char]
@@ -37,13 +36,19 @@ const DEFAULT_CELLSPACING_PT : Double = 2.0
 /// Graphviz parity: HTML table border defaults follow refs/graphviz/lib/common/htmltable.c.
 /// Do not change behavior without updating fixtures/tests.
 fn table_border_pt(table : HtmlTable) -> Double {
-  if table.border_pt < 0.0 { DEFAULT_BORDER_PT } else { table.border_pt }
+  if table.border_pt < 0.0 {
+    DEFAULT_BORDER_PT
+  } else {
+    table.border_pt
+  }
 }
 
 ///|
 pub fn is_html_label_text(label : String) -> Bool {
   let trimmed = label.trim(chars=" \n\r\t").to_string()
-  if trimmed.length() < 3 || !trimmed.has_prefix("<") || !trimmed.has_suffix(">") {
+  if trimmed.length() < 3 ||
+    !trimmed.has_prefix("<") ||
+    !trimmed.has_suffix(">") {
     return false
   }
   let inner = trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
@@ -495,13 +500,11 @@ fn parse_html_row(parser : HtmlParser) -> HtmlRow {
             }
           None => {
             let _ = html_parse_text(parser)
-
           }
         }
       None => break
       _ => {
         let _ = html_parse_text(parser)
-
       }
     }
   }
@@ -521,10 +524,14 @@ fn parse_html_table_from_attrs(
     Some(value) => parse_double(value, 0.0)
     None => -1.0
   }
-  let cell_spacing_pt =
-    html_parse_double(attrs.get("cellspacing"), DEFAULT_CELLSPACING_PT)
-  let cell_padding_pt =
-    html_parse_double(attrs.get("cellpadding"), DEFAULT_CELLPADDING_PT)
+  let cell_spacing_pt = html_parse_double(
+    attrs.get("cellspacing"),
+    DEFAULT_CELLSPACING_PT,
+  )
+  let cell_padding_pt = html_parse_double(
+    attrs.get("cellpadding"),
+    DEFAULT_CELLPADDING_PT,
+  )
   let bg_color = attrs.get("bgcolor")
   let rows : Array[HtmlRow] = []
   while parser.index < parser.chars.length() {
@@ -538,19 +545,16 @@ fn parse_html_table_from_attrs(
               rows.push(parse_html_row(parser))
             } else if name == "table" {
               let _ = parse_html_table_from_attrs(parser, attrs)
-
             } else {
               // Ignore other tags.
             }
           None => {
             let _ = html_parse_text(parser)
-
           }
         }
       None => break
       _ => {
         let _ = html_parse_text(parser)
-
       }
     }
   }
@@ -695,8 +699,7 @@ pub fn html_table_metrics(
     }
     let spacing = table.cell_spacing_pt * (cell.col_span - 1).to_double()
     if cell_width > current + spacing && cell.col_span > 0 {
-      let extra =
-        (cell_width - spacing - current) / cell.col_span.to_double()
+      let extra = (cell_width - spacing - current) / cell.col_span.to_double()
       for j in start..<end {
         if j < col_widths.length() {
           col_widths[j] = col_widths[j] + extra
@@ -733,8 +736,7 @@ pub fn html_table_metrics(
     }
     let spacing = table.cell_spacing_pt * (cell.row_span - 1).to_double()
     if cell_height > current + spacing && cell.row_span > 0 {
-      let extra =
-        (cell_height - spacing - current) / cell.row_span.to_double()
+      let extra = (cell_height - spacing - current) / cell.row_span.to_double()
       for j in start..<end {
         if j < row_heights.length() {
           row_heights[j] = row_heights[j] + extra
@@ -802,21 +804,13 @@ pub fn html_table_layout(
   }
   let col_count = metrics.col_widths.length()
   let row_count = metrics.row_heights.length()
-  let extra_x = if col_count > 0 {
-    delx / col_count.to_double()
-  } else {
-    0.0
-  }
+  let extra_x = if col_count > 0 { delx / col_count.to_double() } else { 0.0 }
   let plus_x = if col_count > 0 {
     round_half_up(delx - extra_x * col_count.to_double())
   } else {
     0
   }
-  let extra_y = if row_count > 0 {
-    dely / row_count.to_double()
-  } else {
-    0.0
-  }
+  let extra_y = if row_count > 0 { dely / row_count.to_double() } else { 0.0 }
   let plus_y = if row_count > 0 {
     round_half_up(dely - extra_y * row_count.to_double())
   } else {

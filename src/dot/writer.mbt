@@ -2,14 +2,15 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 const MAX_OUTPUT_LINE : Int = 128
 
 ///|
 fn is_html_label_value(value : String) -> Bool {
   let trimmed = value.trim(chars=" \n\r\t").to_string()
-  if trimmed.length() < 3 || !trimmed.has_prefix("<") || !trimmed.has_suffix(">") {
+  if trimmed.length() < 3 ||
+    !trimmed.has_prefix("<") ||
+    !trimmed.has_suffix(">") {
     return false
   }
   let inner = trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
@@ -24,7 +25,10 @@ fn is_html_label_value(value : String) -> Bool {
 
 ///|
 fn is_graphviz_id_char(ch : Char) -> Bool {
-  ch.is_ascii_alphabetic() || ch.is_ascii_digit() || ch == '.' || ch == '-' ||
+  ch.is_ascii_alphabetic() ||
+  ch.is_ascii_digit() ||
+  ch == '.' ||
+  ch == '-' ||
   ch.to_int() > 0x7F
 }
 
@@ -100,7 +104,9 @@ fn canonical_id(raw : String) -> String {
         needs_quotes = true
       }
       part_of_escape = false
-    } else if !(uc.is_ascii_alphabetic() || uc.is_ascii_digit() || uc == '_' ||
+    } else if !(uc.is_ascii_alphabetic() ||
+      uc.is_ascii_digit() ||
+      uc == '_' ||
       uc.to_int() > 0x7F) {
       needs_quotes = true
       part_of_escape = false
@@ -133,7 +139,8 @@ fn canonical_id(raw : String) -> String {
   }
   out.write_char('"')
   let quoted = out.to_string()
-  if needs_quotes || (chars.length() == 1 && (chars[0] == '.' || chars[0] == '-')) {
+  if needs_quotes ||
+    (chars.length() == 1 && (chars[0] == '.' || chars[0] == '-')) {
     return quoted
   }
   if is_keyword_token(raw) {
@@ -182,10 +189,12 @@ fn compass_from_label(value : String) -> @cgraph.Compass? {
 fn split_once_colon(value : String) -> (String, String)? {
   match value.find(":") {
     Some(index) =>
-      Some((
-        value.unsafe_substring(start=0, end=index),
-        value.unsafe_substring(start=index + 1, end=value.length()),
-      ))
+      Some(
+        (
+          value.unsafe_substring(start=0, end=index),
+          value.unsafe_substring(start=index + 1, end=value.length()),
+        ),
+      )
     None => None
   }
 }
@@ -203,7 +212,10 @@ fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
     }
     match split_once_colon(rest) {
       Some((name_part, compass_part)) =>
-        Some({ name: Some(name_part), compass: compass_from_label(compass_part) })
+        Some({
+          name: Some(name_part),
+          compass: compass_from_label(compass_part),
+        })
       None =>
         match compass_from_label(rest) {
           Some(compass) => Some({ name: Some(""), compass: Some(compass) })
@@ -213,7 +225,10 @@ fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
   } else {
     match split_once_colon(value) {
       Some((name_part, compass_part)) =>
-        Some({ name: Some(name_part), compass: compass_from_label(compass_part) })
+        Some({
+          name: Some(name_part),
+          compass: compass_from_label(compass_part),
+        })
       None =>
         match compass_from_label(value) {
           Some(compass) => Some({ name: None, compass: Some(compass) })
@@ -364,9 +379,21 @@ fn node_attr_rank(name : String) -> Int {
 ///|
 fn edge_attr_rank(name : String) -> Int {
   match name {
-    "URL" | "url" | "href" | "edgeURL" | "edgeurl" | "edgehref"
-    | "headURL" | "headurl" | "headhref" | "tailURL" | "tailurl"
-    | "tailhref" | "labelURL" | "labelurl" | "labelhref" => -1
+    "URL"
+    | "url"
+    | "href"
+    | "edgeURL"
+    | "edgeurl"
+    | "edgehref"
+    | "headURL"
+    | "headurl"
+    | "headhref"
+    | "tailURL"
+    | "tailurl"
+    | "tailhref"
+    | "labelURL"
+    | "labelurl"
+    | "labelhref" => -1
     "class" => 0
     "_draw_" => 0
     "_hdraw_" => 1
@@ -513,10 +540,14 @@ fn write_attr_block(
     }
     let (key, value) = pair
     let value = if (
-      (key == "_draw_" || key == "_hdraw_" || key == "_tdraw_" ||
-        key == "_ldraw_" || key == "_hldraw_" || key == "_tldraw_") &&
-      value != ""
-    ) {
+        key == "_draw_" ||
+        key == "_hdraw_" ||
+        key == "_tdraw_" ||
+        key == "_ldraw_" ||
+        key == "_hldraw_" ||
+        key == "_tldraw_"
+      ) &&
+      value != "" {
       value + " "
     } else {
       value
@@ -559,13 +590,14 @@ fn filter_nondefault_node_attrs(
   for pair in node.attrs() {
     let (key, value) = pair
     match graph.get_default_attr(@cgraph.AttrKind::Node, key) {
-      Some(default_value) => {
+      Some(default_value) =>
         if default_value != value {
           filtered.push((key, value))
         }
-      }
       None =>
-        if value != "" || key == "distortion" || key == "style" ||
+        if value != "" ||
+          key == "distortion" ||
+          key == "style" ||
           key == "label" {
           filtered.push((key, value))
         }
@@ -592,11 +624,10 @@ fn filter_nondefault_edge_attrs(
   for pair in edge.attrs() {
     let (key, value) = pair
     match graph.get_default_attr(@cgraph.AttrKind::Edge, key) {
-      Some(default_value) => {
+      Some(default_value) =>
         if default_value != value {
           filtered.push((key, value))
         }
-      }
       None =>
         if value != "" || key == "style" || key == "label" {
           filtered.push((key, value))
@@ -616,10 +647,7 @@ fn filter_nondefault_edge_attrs(
 }
 
 ///|
-fn has_no_edges(
-  graph_edges : Array[@cgraph.Edge],
-  node : @cgraph.Node,
-) -> Bool {
+fn has_no_edges(graph_edges : Array[@cgraph.Edge], node : @cgraph.Node) -> Bool {
   let name = node.name()
   for edge in graph_edges {
     if edge.tail().name() == name || edge.head().name() == name {
@@ -637,12 +665,11 @@ fn node_has_nondefault_attrs(
   for pair in node.attrs() {
     let (key, value) = pair
     match graph.get_default_attr(@cgraph.AttrKind::Node, key) {
-      Some(default_value) =>
-        if default_value != value {
-          return true
-      }
+      Some(default_value) => if default_value != value { return true }
       None =>
-        if value != "" || key == "distortion" || key == "style" ||
+        if value != "" ||
+          key == "distortion" ||
+          key == "style" ||
           key == "label" {
           return true
         }
@@ -721,10 +748,12 @@ fn write_edge_stmt(
   write_tabs(sb, indent)
   sb.write_string(write_id(edge.tail().name()))
   sb.write_string(write_port(tail_port))
-  sb.write_string(match graph.kind() {
-    @cgraph.GraphKind::Directed => " -> "
-    @cgraph.GraphKind::Undirected => " -- "
-  })
+  sb.write_string(
+    match graph.kind() {
+      @cgraph.GraphKind::Directed => " -> "
+      @cgraph.GraphKind::Undirected => " -- "
+    },
+  )
   sb.write_string(write_id(edge.head().name()))
   sb.write_string(write_port(head_port))
   let attrs = edge_stmt_attrs(graph, edge, emit_attrs)
@@ -788,7 +817,10 @@ fn should_write_edge(
 }
 
 ///|
-fn attrs_already_written_for_node(ctx : WriteContext, node_name : String) -> Bool {
+fn attrs_already_written_for_node(
+  ctx : WriteContext,
+  node_name : String,
+) -> Bool {
   ctx.node_attrs_written.get(node_name) is Some(_)
 }
 
@@ -816,21 +848,26 @@ fn graph_contains_node_name_raw(graph : @cgraph.Graph, name : String) -> Bool {
   false
 }
 
+///|
 fn is_rankset_graph(graph : @cgraph.Graph) -> Bool {
   match graph.get_attr("rank") {
     Some(value) => {
       let lower = value.to_lower()
       lower == "same" ||
-        lower == "min" ||
-        lower == "max" ||
-        lower == "source" ||
-        lower == "sink"
+      lower == "min" ||
+      lower == "max" ||
+      lower == "source" ||
+      lower == "sink"
     }
     None => false
   }
 }
 
-fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) -> Bool {
+///|
+fn graph_is_within_cluster_name(
+  graph : @cgraph.Graph,
+  cluster_name : String,
+) -> Bool {
   if cluster_name == "" {
     return false
   }
@@ -839,10 +876,7 @@ fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) ->
     match current {
       Some(value) => {
         match value.name() {
-          Some(name) =>
-            if name == cluster_name {
-              return true
-            }
+          Some(name) => if name == cluster_name { return true }
           None => ()
         }
         current = value.parent()
@@ -853,6 +887,7 @@ fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) ->
   false
 }
 
+///|
 fn node_in_rankset_outside_cluster(
   root : @cgraph.Graph,
   node_name : String,
@@ -879,6 +914,7 @@ fn node_in_rankset_outside_cluster(
   false
 }
 
+///|
 fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   let mut current : @cgraph.Graph? = Some(graph)
   while true {
@@ -989,6 +1025,7 @@ fn graph_at_path(root : @cgraph.Graph, path : String) -> @cgraph.Graph? {
   Some(current)
 }
 
+///|
 fn parent_graph_path(path : String) -> String? {
   if path == "" {
     return None
@@ -1019,6 +1056,7 @@ fn parent_graph_path(path : String) -> String? {
   Some(parent)
 }
 
+///|
 fn nearest_ancestor_path_with_edge_endpoints(
   root : @cgraph.Graph,
   start_path : String?,
@@ -1062,15 +1100,13 @@ fn cluster_lca_path_recursive(
     }
     let child_path = child_graph_path(path, i)
     return cluster_lca_path_recursive(
-      subgraph,
-      child_path,
-      tail_name,
-      head_name,
+      subgraph, child_path, tail_name, head_name,
     )
   }
   path
 }
 
+///|
 fn nonrank_lca_path_recursive(
   graph : @cgraph.Graph,
   path : String,
@@ -1092,10 +1128,7 @@ fn nonrank_lca_path_recursive(
     }
     let child_path = child_graph_path(path, i)
     return nonrank_lca_path_recursive(
-      subgraph,
-      child_path,
-      tail_name,
-      head_name,
+      subgraph, child_path, tail_name, head_name,
     )
   }
   path
@@ -1115,10 +1148,7 @@ fn edge_target_path(
     None => {
       let home_path = edge_home_path_recursive(root, "", id)
       let cluster_path = cluster_lca_path_recursive(
-        root,
-        "",
-        tail_name,
-        head_name,
+        root, "", tail_name, head_name,
       )
       let path = if home_path == "" {
         cluster_path
@@ -1135,8 +1165,9 @@ fn edge_target_path(
                 if !is_root_rankset {
                   home_path
                 } else {
-                  let candidate_path =
-                    nonrank_lca_path_recursive(root, "", tail_name, head_name)
+                  let candidate_path = nonrank_lca_path_recursive(
+                    root, "", tail_name, head_name,
+                  )
                   if candidate_path == "" || candidate_path == home_path {
                     home_path
                   } else {
@@ -1147,12 +1178,13 @@ fn edge_target_path(
                 home_path
               }
             } else {
-              match nearest_ancestor_path_with_edge_endpoints(
-                root,
-                parent_graph_path(home_path),
-                tail_name,
-                head_name,
-              ) {
+              match
+                nearest_ancestor_path_with_edge_endpoints(
+                  root,
+                  parent_graph_path(home_path),
+                  tail_name,
+                  head_name,
+                ) {
                 Some(value) => value
                 None => cluster_path
               }
@@ -1188,18 +1220,17 @@ fn write_body(
   } else {
     graph.edges()
   }
-  let graph_nodes =
-    if is_layout_output {
-      let nodes : Array[@cgraph.Node] = []
-      for node in graph.nodes() {
-        if graph_contains_node_name(graph, node.name()) {
-          nodes.push(node)
-        }
+  let graph_nodes = if is_layout_output {
+    let nodes : Array[@cgraph.Node] = []
+    for node in graph.nodes() {
+      if graph_contains_node_name(graph, node.name()) {
+        nodes.push(node)
       }
-      nodes
-    } else {
-      graph.nodes()
     }
+    nodes
+  } else {
+    graph.nodes()
+  }
   if !is_layout_output {
     graph_nodes.sort_by_key(node => node.name())
   } else {
@@ -1208,9 +1239,11 @@ fn write_body(
     for i, node in root_nodes {
       root_order[node.name()] = i
     }
-    graph_nodes.sort_by_key(node => match root_order.get(node.name()) {
-      Some(value) => value
-      None => 100000
+    graph_nodes.sort_by_key(node => {
+      match root_order.get(node.name()) {
+        Some(value) => value
+        None => 100000
+      }
     })
   }
   let node_order : Map[String, Int] = Map::new()
@@ -1300,13 +1333,7 @@ fn write_body(
       if map_get_or_zero_int(ctx.edge_last_written, edge.id()) == preorder {
         continue
       }
-      write_edge_stmt(
-        graph,
-        edge,
-        sb,
-        indent,
-        false,
-      )
+      write_edge_stmt(graph, edge, sb, indent, false)
       ctx.edge_last_written[edge.id()] = preorder
     }
   }
@@ -1385,10 +1412,12 @@ fn write_graph_recursive(
     if graph.is_strict() {
       sb.write_string("strict ")
     }
-    sb.write_string(match graph.kind() {
-      @cgraph.GraphKind::Directed => "digraph"
-      @cgraph.GraphKind::Undirected => "graph"
-    })
+    sb.write_string(
+      match graph.kind() {
+        @cgraph.GraphKind::Directed => "digraph"
+        @cgraph.GraphKind::Undirected => "graph"
+      },
+    )
     sb.write_char(' ')
   } else {
     match graph.name() {
@@ -1409,35 +1438,31 @@ fn write_graph_recursive(
     graph.default_attrs(@cgraph.AttrKind::Graph),
   )
   let graph_attrs = filter_internal_graph_attrs(graph.attrs())
-  let graph_dict_attrs = merge_attrs_keep_order(
-    graph_defaults,
-    graph_attrs,
-  )
+  let graph_dict_attrs = merge_attrs_keep_order(graph_defaults, graph_attrs)
   write_default_stmt(sb, inner, "graph", graph_dict_attrs, AttrGroup::Graph)
   let node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
-  let node_defaults =
-    if is_root && is_layout_output {
-      let mut has_label = false
-      for pair in node_defaults {
-        let (key, _) = pair
-        if key == "label" {
-          has_label = true
-          break
-        }
+  let node_defaults = if is_root && is_layout_output {
+    let mut has_label = false
+    for pair in node_defaults {
+      let (key, _) = pair
+      if key == "label" {
+        has_label = true
+        break
       }
-      if has_label {
-        node_defaults
-      } else {
-        let out : Array[(String, String)] = []
-        for pair in node_defaults {
-          out.push(pair)
-        }
-        out.push(("label", "\\N"))
-        out
-      }
-    } else {
-      node_defaults
     }
+    if has_label {
+      node_defaults
+    } else {
+      let out : Array[(String, String)] = []
+      for pair in node_defaults {
+        out.push(pair)
+      }
+      out.push(("label", "\\N"))
+      out
+    }
+  } else {
+    node_defaults
+  }
   write_default_stmt(sb, inner, "node", node_defaults, AttrGroup::Node)
   let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
   write_default_stmt(sb, inner, "edge", edge_defaults, AttrGroup::Edge)
@@ -1447,13 +1472,7 @@ fn write_graph_recursive(
     }
     let child_path = child_graph_path(path, i)
     write_graph_recursive(
-      subgraph,
-      sb,
-      inner,
-      child_path,
-      false,
-      is_layout_output,
-      ctx,
+      subgraph, sb, inner, child_path, false, is_layout_output, ctx,
     )
   }
   write_body(graph, sb, inner, preorder, path, is_layout_output, ctx)

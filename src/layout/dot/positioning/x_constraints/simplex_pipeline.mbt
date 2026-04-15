@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: xpos nlist order keeps clustered reverse-rank traversal,
 /// vnode-first ordering, and LR/RL source-order fast path aligned with

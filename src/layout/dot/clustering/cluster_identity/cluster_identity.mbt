@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Cluster skeleton and boundary-node naming helpers shared by clustering,
 /// ordering, and positioning stages.

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "encode xdot ops basic" {
   let ops : Array[@render.DrawOp] = [
@@ -107,7 +106,6 @@ test "render_xdot attaches graph label attrs" {
   match output_graph.get_attr("lp") {
     Some(value) => {
       let _ = parse_point_attr(value)
-
     }
     None => fail("missing graph lp")
   }
@@ -229,9 +227,7 @@ test "render_xdot draws polygon node shapes" {
 
 ///|
 test "render_xdot falls back unknown node shapes to box draw ops" {
-  let graph = @dot.parse_dot(
-    "digraph { a [style=filled shape=DFDbox]; }",
-  )
+  let graph = @dot.parse_dot("digraph { a [style=filled shape=DFDbox]; }")
   let output = render_xdot(@layout_dot.layout_dot(graph))
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
@@ -318,11 +314,10 @@ test "render_xdot renders html label colors and nested tables" {
     Some(value) => value
     None => fail("missing node _ldraw_")
   }
-  let normalized =
-    label_draw
-      .replace_all(old="\\\r\n", new="")
-      .replace_all(old="\\\n", new="")
-      .replace_all(old="\\\r", new="")
+  let normalized = label_draw
+    .replace_all(old="\\\r\n", new="")
+    .replace_all(old="\\\n", new="")
+    .replace_all(old="\\\r", new="")
   assert_true(normalized.contains(" -left"))
   assert_true(normalized.contains(" -right"))
   assert_true(normalized.contains(" -inner"))

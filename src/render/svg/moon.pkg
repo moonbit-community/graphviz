@@ -1,0 +1,24 @@
+import {
+  "moonbit-community/graphviz/layout/dot" @layout_dot,
+  "moonbit-community/graphviz/layout/dot/label_metrics",
+  "moonbit-community/graphviz/layout/dot/routing/edge_spline" @edge_spline,
+  "moonbit-community/graphviz/layout/html" @html_label,
+  "moonbit-community/graphviz/attrs",
+  "moonbit-community/graphviz/render",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/bigint",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/math",
+  "moonbitlang/core/string",
+  "moonbitlang/core/strconv",
+}
+
+import {
+  "moonbitlang/x/fs",
+  "moonbit-community/graphviz/dot",
+} for "test"
+
+import {
+  "moonbit-community/graphviz/dot",
+} for "wbtest"

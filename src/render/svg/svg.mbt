@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn parse_double(value : String, fallback : Double) -> Double {
   try @string.parse_double(value) catch {
@@ -12,10 +11,12 @@ fn parse_double(value : String, fallback : Double) -> Double {
   }
 }
 
+///|
 fn parse_int(value : String, fallback : Int) -> Int {
   parse_double(value, fallback.to_double()).round().to_int()
 }
 
+///|
 fn pow10_bigint(exp : Int) -> @bigint.BigInt {
   let mut out = @bigint.BigInt::from_int(1)
   for _ in 0..<exp {
@@ -24,6 +25,7 @@ fn pow10_bigint(exp : Int) -> @bigint.BigInt {
   out
 }
 
+///|
 fn round_abs_scaled_half_even(
   abs_value : Double,
   decimals : Int,
@@ -36,12 +38,11 @@ fn round_abs_scaled_half_even(
   let frac_mask = 0x000fffffffffffffUL
   let mantissa = bits & frac_mask
   let hidden = 0x0010000000000000UL
-  let (significand, exp2) =
-    if exp_bits == 0 {
-      (mantissa, -1074)
-    } else {
-      (mantissa | hidden, exp_bits - 1075)
-    }
+  let (significand, exp2) = if exp_bits == 0 {
+    (mantissa, -1074)
+  } else {
+    (mantissa | hidden, exp_bits - 1075)
+  }
   let mut numerator = @bigint.BigInt::from_uint64(significand)
   if decimals > 0 {
     numerator = numerator * pow10_bigint(decimals)
@@ -49,7 +50,7 @@ fn round_abs_scaled_half_even(
   if exp2 >= 0 {
     return numerator << exp2
   }
-  let denominator = @bigint.BigInt::from_int(1) << (-exp2)
+  let denominator = @bigint.BigInt::from_int(1) << -exp2
   let quotient = numerator / denominator
   let remainder = numerator % denominator
   let doubled = remainder + remainder
@@ -67,6 +68,7 @@ fn round_abs_scaled_half_even(
   }
 }
 
+///|
 fn format_scaled_integer(
   scaled_abs : @bigint.BigInt,
   decimals : Int,
@@ -91,7 +93,10 @@ fn format_scaled_integer(
   let mut frac_part = digits.unsafe_substring(start=split, end=digits.length())
   if trim_trailing_zeros {
     while frac_part.length() > 0 && frac_part.has_suffix("0") {
-      frac_part = frac_part.unsafe_substring(start=0, end=frac_part.length() - 1)
+      frac_part = frac_part.unsafe_substring(
+        start=0,
+        end=frac_part.length() - 1,
+      )
     }
   }
   let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
@@ -102,6 +107,7 @@ fn format_scaled_integer(
   }
 }
 
+///|
 fn format_double_with_decimals(value : Double, decimals : Int) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
@@ -113,6 +119,7 @@ fn format_double_with_decimals(value : Double, decimals : Int) -> String {
   format_scaled_integer(rounded, digits, negative, true)
 }
 
+///|
 fn format_double_fixed(value : Double, decimals : Int) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
@@ -124,6 +131,7 @@ fn format_double_fixed(value : Double, decimals : Int) -> String {
   format_scaled_integer(rounded, digits, negative, false)
 }
 
+///|
 fn format_double_significant(value : Double, digits : Int) -> String {
   if value == 0.0 {
     return "0"
@@ -143,6 +151,7 @@ fn format_double_significant(value : Double, digits : Int) -> String {
   "\{sign}\{text}"
 }
 
+///|
 fn format_double(value : Double) -> String {
   format_double_with_decimals(value, 2)
 }
@@ -165,10 +174,13 @@ const DEFAULT_GRAPH_PAD_PT : Double = 4.0
 ///|
 const RECORD_BORDER_PT : Double = 0.5
 
+///|
 const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
 
+///|
 const POLY_GAP_PT : Double = 4.0
 
+///|
 const ROUNDED_CORNER_RADIUS_PT : Double = 12.0
 
 ///|
@@ -183,8 +195,10 @@ const MCIRCLE_X : Double = 0.6614
 ///|
 const MCIRCLE_Y : Double = 0.75
 
+///|
 const CYLINDER_RY_DIVISOR : Double = 11.0
 
+///|
 const CYLINDER_KAPPA : Double = 0.5518
 
 ///|
@@ -192,20 +206,27 @@ fn node_attr(node : @cgraph.Node, name : String) -> String? {
   node.get_attr(name)
 }
 
+///|
 fn edge_attr(edge : @cgraph.Edge, name : String) -> String? {
   edge.get_attr(name)
 }
 
+///|
 fn nonempty_attr_value(value : String?) -> String? {
   match value {
     Some(text) => {
       let trimmed = text.trim(chars=" \n\r\t").to_string()
-      if trimmed == "" { None } else { Some(trimmed) }
+      if trimmed == "" {
+        None
+      } else {
+        Some(trimmed)
+      }
     }
     None => None
   }
 }
 
+///|
 fn node_attr_case_insensitive(node : @cgraph.Node, name : String) -> String? {
   let lower = name.to_lower()
   for pair in node.attrs() {
@@ -217,6 +238,7 @@ fn node_attr_case_insensitive(node : @cgraph.Node, name : String) -> String? {
   None
 }
 
+///|
 fn node_link_href(node : @cgraph.Node) -> String? {
   match nonempty_attr_value(node_attr(node, "URL")) {
     Some(value) => Some(value)
@@ -226,12 +248,14 @@ fn node_link_href(node : @cgraph.Node) -> String? {
         None =>
           match nonempty_attr_value(node_attr_case_insensitive(node, "url")) {
             Some(value) => Some(value)
-            None => nonempty_attr_value(node_attr_case_insensitive(node, "href"))
+            None =>
+              nonempty_attr_value(node_attr_case_insensitive(node, "href"))
           }
       }
   }
 }
 
+///|
 fn node_link_target(node : @cgraph.Node) -> String? {
   match nonempty_attr_value(node_attr(node, "target")) {
     Some(value) => Some(value)
@@ -239,6 +263,7 @@ fn node_link_target(node : @cgraph.Node) -> String? {
   }
 }
 
+///|
 fn node_link_title(node : @cgraph.Node, fallback : String) -> String {
   match nonempty_attr_value(node_attr(node, "tooltip")) {
     Some(value) => value
@@ -250,6 +275,7 @@ fn node_link_title(node : @cgraph.Node, fallback : String) -> String {
   }
 }
 
+///|
 fn parse_palette_index(value : String) -> Int? {
   let trimmed = value.trim().to_string()
   if trimmed == "" {
@@ -261,9 +287,14 @@ fn parse_palette_index(value : String) -> Int? {
     }
   }
   let index = parse_int(trimmed, 0)
-  if index <= 0 { None } else { Some(index) }
+  if index <= 0 {
+    None
+  } else {
+    Some(index)
+  }
 }
 
+///|
 fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
   if !value.has_prefix("/") {
     return None
@@ -310,6 +341,7 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
   Some((scheme.to_lower(), token))
 }
 
+///|
 fn colorscheme_index_color(scheme : String, index : Int) -> String? {
   match scheme.to_lower() {
     // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
@@ -354,7 +386,11 @@ fn colorscheme_index_color(scheme : String, index : Int) -> String? {
   }
 }
 
-fn resolve_prefixed_colorscheme_color(value : String, colorscheme : String?) -> String? {
+///|
+fn resolve_prefixed_colorscheme_color(
+  value : String,
+  colorscheme : String?,
+) -> String? {
   match slash_color_ref(value, colorscheme) {
     Some((scheme, token)) =>
       match parse_palette_index(token) {
@@ -369,6 +405,7 @@ fn resolve_prefixed_colorscheme_color(value : String, colorscheme : String?) -> 
   }
 }
 
+///|
 fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
   let trimmed = value.trim().to_string()
   match resolve_prefixed_colorscheme_color(trimmed, colorscheme) {
@@ -385,6 +422,7 @@ fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
   }
 }
 
+///|
 fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
   let mut current = graph
   while true {
@@ -400,15 +438,22 @@ fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
   None
 }
 
+///|
 fn graph_colorscheme(graph : @cgraph.Graph) -> String? {
   inherited_graph_attr(graph, "colorscheme")
 }
 
-fn graph_color(graph : @cgraph.Graph, name : String, default : String) -> String {
-  let raw = @attrs.color(graph.get_attr(name), default=default)
+///|
+fn graph_color(
+  graph : @cgraph.Graph,
+  name : String,
+  default : String,
+) -> String {
+  let raw = @attrs.color(graph.get_attr(name), default~)
   resolve_colorscheme_color(raw, graph_colorscheme(graph))
 }
 
+///|
 fn node_colorscheme(node : @cgraph.Node) -> String? {
   match node_attr(node, "colorscheme") {
     Some(value) => Some(value)
@@ -416,6 +461,7 @@ fn node_colorscheme(node : @cgraph.Node) -> String? {
   }
 }
 
+///|
 fn edge_colorscheme(edge : @cgraph.Edge) -> String? {
   match edge_attr(edge, "colorscheme") {
     Some(value) => Some(value)
@@ -423,11 +469,13 @@ fn edge_colorscheme(edge : @cgraph.Edge) -> String? {
   }
 }
 
+///|
 fn node_color(node : @cgraph.Node, name : String, default : String) -> String {
-  let raw = @attrs.color(node_attr(node, name), default=default)
+  let raw = @attrs.color(node_attr(node, name), default~)
   resolve_colorscheme_color(raw, node_colorscheme(node))
 }
 
+///|
 fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
   match node_attr(node, "fillcolor") {
     Some(value) => resolve_colorscheme_color(value, node_colorscheme(node))
@@ -435,11 +483,13 @@ fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
   }
 }
 
+///|
 fn edge_color(edge : @cgraph.Edge, name : String, default : String) -> String {
-  let raw = @attrs.color(edge_attr(edge, name), default=default)
+  let raw = @attrs.color(edge_attr(edge, name), default~)
   resolve_colorscheme_color(raw, edge_colorscheme(edge))
 }
 
+///|
 priv struct SvgFontAttrs {
   family : String
   weight : String?
@@ -447,6 +497,7 @@ priv struct SvgFontAttrs {
   style : String?
 }
 
+///|
 fn mapped_svg_font_family(base_lower : String) -> String? {
   match base_lower {
     "times" => Some("Times,serif")
@@ -463,6 +514,7 @@ fn mapped_svg_font_family(base_lower : String) -> String? {
   }
 }
 
+///|
 fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
   let parts : Array[String] = []
   for part in font_name.split("-") {
@@ -495,10 +547,7 @@ fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
       "light" => weight = Some("light")
       "book" => weight = Some("book")
       "medium" => weight = Some("medium")
-      "roman" =>
-        if base_lower != "times" {
-          weight = Some("roman")
-        }
+      "roman" => if base_lower != "times" { weight = Some("roman") }
       "italic" => style = Some("italic")
       "oblique" => style = Some("oblique")
       "narrow" => stretch = Some("condensed")
@@ -539,6 +588,7 @@ fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
   { family, weight, stretch, style }
 }
 
+///|
 fn svg_text_font_attrs(font_name : String) -> String {
   let attrs = svg_font_attrs(font_name)
   let sb = StringBuilder::new()
@@ -575,14 +625,45 @@ fn svg_text_font_attrs(font_name : String) -> String {
 ///|
 fn is_svg_named_color(color : String) -> Bool {
   match color {
-    "black" | "white" | "none" | "red" | "green" | "blue" | "yellow" |
-    "orange" | "gold" | "cyan" | "magenta" | "pink" | "hotpink" |
-    "purple" | "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
-    "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
-    "skyblue" | "midnightblue" |
-    "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
-    "steelblue" | "aquamarine" | "forestgreen" | "limegreen" |
-    "lemonchiffon" | "firebrick" | "orangered" | "indigo" | "indianred" => true
+    "black"
+    | "white"
+    | "none"
+    | "red"
+    | "green"
+    | "blue"
+    | "yellow"
+    | "orange"
+    | "gold"
+    | "cyan"
+    | "magenta"
+    | "pink"
+    | "hotpink"
+    | "purple"
+    | "lightblue"
+    | "lightgrey"
+    | "lightgray"
+    | "grey"
+    | "gray"
+    | "slateblue"
+    | "greenyellow"
+    | "darkseagreen"
+    | "deepskyblue"
+    | "skyblue"
+    | "midnightblue"
+    | "blanchedalmond"
+    | "chocolate"
+    | "crimson"
+    | "navy"
+    | "coral"
+    | "steelblue"
+    | "aquamarine"
+    | "forestgreen"
+    | "limegreen"
+    | "lemonchiffon"
+    | "firebrick"
+    | "orangered"
+    | "indigo"
+    | "indianred" => true
     _ => false
   }
 }
@@ -661,14 +742,20 @@ fn rewrite_svg_alpha_attr(
         }
         let value_start = pos + attr_prefix.length()
         if value_start >= remaining.length() {
-          out.write_string(remaining.unsafe_substring(start=pos, end=remaining.length()))
+          out.write_string(
+            remaining.unsafe_substring(start=pos, end=remaining.length()),
+          )
           break
         }
-        let tail =
-          remaining.unsafe_substring(start=value_start, end=remaining.length())
+        let tail = remaining.unsafe_substring(
+          start=value_start,
+          end=remaining.length(),
+        )
         match tail.find("\"") {
           None => {
-            out.write_string(remaining.unsafe_substring(start=pos, end=remaining.length()))
+            out.write_string(
+              remaining.unsafe_substring(start=pos, end=remaining.length()),
+            )
             break
           }
           Some(value_end) => {
@@ -690,14 +777,16 @@ fn rewrite_svg_alpha_attr(
                   )
                 }
               }
-              None => {
+              None =>
                 out.write_string(
                   remaining.unsafe_substring(start=pos, end=segment_end),
                 )
-              }
             }
             remaining = if segment_end < remaining.length() {
-              remaining.unsafe_substring(start=segment_end, end=remaining.length())
+              remaining.unsafe_substring(
+                start=segment_end,
+                end=remaining.length(),
+              )
             } else {
               ""
             }
@@ -750,29 +839,17 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       escaping = false
       match ch {
         'n' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Center,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
           sb = StringBuilder::new()
           has_chars = false
         }
         'l' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Left,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Left)
           sb = StringBuilder::new()
           has_chars = false
         }
         'r' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Right,
-          )
+          push_label_line(lines, sb.to_string(), @render.TextAlign::Right)
           sb = StringBuilder::new()
           has_chars = false
         }
@@ -788,11 +865,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(
-        lines,
-        sb.to_string(),
-        @render.TextAlign::Center,
-      )
+      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
       sb = StringBuilder::new()
       has_chars = false
       continue
@@ -805,11 +878,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(
-      lines,
-      sb.to_string(),
-      @render.TextAlign::Center,
-    )
+    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
   }
   lines
 }
@@ -826,12 +895,9 @@ fn label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) =
-      @label_metrics.label_text_metrics(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
+    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
     let height_pt = if line.text == "" {
       font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
     } else {
@@ -869,11 +935,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
             'r' => @render.TextAlign::Right
             _ => @render.TextAlign::Center
           }
-          push_label_line(
-            lines,
-            sb.to_string(),
-            align,
-          )
+          push_label_line(lines, sb.to_string(), align)
           sb = StringBuilder::new()
           has_chars = false
         }
@@ -889,11 +951,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(
-        lines,
-        sb.to_string(),
-        @render.TextAlign::Center,
-      )
+      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
       sb = StringBuilder::new()
       has_chars = false
       continue
@@ -906,11 +964,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(
-      lines,
-      sb.to_string(),
-      @render.TextAlign::Center,
-    )
+    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
   }
   lines
 }
@@ -927,18 +981,12 @@ fn record_label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, base_height_pt) =
-      @label_metrics.record_label_text_dimensions(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
-    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) =
-      @label_metrics.label_text_metrics(
-        metrics_text,
-        font_name,
-        font_size_pt,
-      )
+    let (width_pt, base_height_pt) = @label_metrics.record_label_text_dimensions(
+      metrics_text, font_name, font_size_pt,
+    )
+    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     let height_pt = if line.text == "" {
       layout_height_pt
@@ -1007,6 +1055,7 @@ fn stroke_dash_attr(style : @attrs.StyleFlags) -> String {
   }
 }
 
+///|
 fn svg_style_tokens(raw : String) -> Array[String] {
   let tokens : Array[String] = []
   let mut current = StringBuilder::new()
@@ -1029,6 +1078,7 @@ fn svg_style_tokens(raw : String) -> Array[String] {
   tokens
 }
 
+///|
 fn style_has_token(style : @attrs.StyleFlags, name : String) -> Bool {
   for token in svg_style_tokens(style.raw) {
     if token == name {
@@ -1038,10 +1088,12 @@ fn style_has_token(style : @attrs.StyleFlags, name : String) -> Bool {
   false
 }
 
+///|
 fn style_is_invisible(style : @attrs.StyleFlags) -> Bool {
   style_has_token(style, "invis")
 }
 
+///|
 fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
   let mut is_bold = false
   for token in svg_style_tokens(style.raw) {
@@ -1050,8 +1102,7 @@ fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
       continue
     }
     if token.has_prefix("setlinewidth(") && token.has_suffix(")") {
-      let width_text =
-        token.unsafe_substring(start=13, end=token.length() - 1)
+      let width_text = token.unsafe_substring(start=13, end=token.length() - 1)
       let width = @attrs.parse_double(Some(width_text), 1.0)
       if width > 0.0 {
         return Some(width)
@@ -1065,31 +1116,31 @@ fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
   }
 }
 
+///|
 fn is_default_linewidth(width : Double) -> Bool {
   width >= 0.999999 && width <= 1.000001
 }
 
-fn stroke_width_value(
-  style : @attrs.StyleFlags,
-  penwidth : String?,
-) -> Double? {
+///|
+fn stroke_width_value(style : @attrs.StyleFlags, penwidth : String?) -> Double? {
   let parsed = @attrs.parse_double(penwidth, 1.0)
-  let width =
-    if parsed > 0.0 && !is_default_linewidth(parsed) {
-      parsed
-    } else {
-      match style_linewidth(style) {
-        Some(value) => if value > 0.0 { value } else { 1.0 }
-        None => 1.0
-      }
+  let width = if parsed > 0.0 && !is_default_linewidth(parsed) {
+    parsed
+  } else {
+    match style_linewidth(style) {
+      Some(value) => if value > 0.0 { value } else { 1.0 }
+      None => 1.0
     }
-  if is_default_linewidth(width) { None } else { Some(width) }
+  }
+  if is_default_linewidth(width) {
+    None
+  } else {
+    Some(width)
+  }
 }
 
-fn stroke_width_attr(
-  style : @attrs.StyleFlags,
-  penwidth : String?,
-) -> String {
+///|
+fn stroke_width_attr(style : @attrs.StyleFlags, penwidth : String?) -> String {
   match stroke_width_value(style, penwidth) {
     Some(value) => " stroke-width=\"\{format_double(value)}\""
     None => ""
@@ -1102,6 +1153,7 @@ fn resolve_label(text : String, name : String) -> String {
   with_name.replace_all(old="\\n", new="\n")
 }
 
+///|
 fn resolve_record_label(text : String, name : String) -> String {
   text.replace_all(old="\\N", new=name)
 }
@@ -1114,6 +1166,7 @@ fn label_text(value : String?, fallback : String) -> String {
   }
 }
 
+///|
 fn record_label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_record_label(text, fallback)
@@ -1239,18 +1292,24 @@ fn shape_kind(value : String?) -> String {
 fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
   let style = @attrs.parse_style(graph.get_attr("style"))
   if style.filled {
-    let fill = svg_color(resolve_colorscheme_color(
-      @attrs.color(
-        graph.get_attr("fillcolor"),
-        default=@attrs.color(graph.get_attr("color"), default="black"),
+    let fill = svg_color(
+      resolve_colorscheme_color(
+        @attrs.color(
+          graph.get_attr("fillcolor"),
+          default=@attrs.color(graph.get_attr("color"), default="black"),
+        ),
+        graph.get_attr("colorscheme"),
       ),
-      graph.get_attr("colorscheme"),
-    ))
+    )
     Some(fill)
   } else {
     match graph.get_attr("bgcolor") {
       Some(value) =>
-        Some(svg_color(resolve_colorscheme_color(value, graph.get_attr("colorscheme"))))
+        Some(
+          svg_color(
+            resolve_colorscheme_color(value, graph.get_attr("colorscheme")),
+          ),
+        )
       None => None
     }
   }
@@ -1331,6 +1390,7 @@ fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
   }
 }
 
+///|
 fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {
@@ -1342,7 +1402,11 @@ fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   graph
 }
 
-fn edge_ortho_rounding_radius(edge : @cgraph.Edge, penwidth : Double) -> Double? {
+///|
+fn edge_ortho_rounding_radius(
+  edge : @cgraph.Edge,
+  penwidth : Double,
+) -> Double? {
   let splines = match root_graph_for_node(edge.head()).get_attr("splines") {
     Some(value) => value.to_lower()
     None => ""
@@ -1365,9 +1429,14 @@ fn edge_ortho_rounding_radius(edge : @cgraph.Edge, penwidth : Double) -> Double?
     let default_radius = penwidth * 8.0
     radius = if 12.0 > default_radius { 12.0 } else { default_radius }
   }
-  if want_rounded && radius > 0.0 { Some(radius) } else { None }
+  if want_rounded && radius > 0.0 {
+    Some(radius)
+  } else {
+    None
+  }
 }
 
+///|
 fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -1436,10 +1505,12 @@ fn escape_xml_with_dash(text : String) -> String {
   escape_xml(text).replace_all(old="-", new="&#45;")
 }
 
+///|
 fn normalize_svg_title_text(text : String) -> String {
   text.replace_all(old="\\\"", new="\"")
 }
 
+///|
 fn escape_xml_text_with_dash(text : String) -> String {
   let sb = StringBuilder::new()
   let mut space_run = 0
@@ -1495,10 +1566,12 @@ fn compass_from_port_label(value : String) -> @cgraph.Compass? {
 fn split_once_colon(value : String) -> (String, String)? {
   match value.find(":") {
     Some(index) =>
-      Some((
-        value.unsafe_substring(start=0, end=index),
-        value.unsafe_substring(start=index + 1, end=value.length()),
-      ))
+      Some(
+        (
+          value.unsafe_substring(start=0, end=index),
+          value.unsafe_substring(start=index + 1, end=value.length()),
+        ),
+      )
     None => None
   }
 }
@@ -1565,10 +1638,7 @@ fn port_title_suffix(port : @cgraph.Port?) -> String {
     Some(value) => {
       let mut suffix = ""
       match value.name {
-        Some(name) =>
-          if name != "" {
-            suffix = ":\{name}"
-          }
+        Some(name) => if name != "" { suffix = ":\{name}" }
         None => ()
       }
       match value.compass {
@@ -1646,8 +1716,7 @@ fn fixedshape_draw_size_in(
     Some(value) => value.to_lower()
     None => ""
   }
-  let regular_shape =
-    shape == "msquare" ||
+  let regular_shape = shape == "msquare" ||
     shape == "square" ||
     shape == "mcircle" ||
     shape == "circle" ||
@@ -1705,8 +1774,11 @@ fn capture_fixedshape_draw_sizes(
   for node_layout in nodes {
     let node = node_layout.node
     if fixedsize_mode(node) == "shape" {
-      let (width_in, height_in) =
-        fixedshape_draw_size_in(node, node_layout.width_in, node_layout.height_in)
+      let (width_in, height_in) = fixedshape_draw_size_in(
+        node,
+        node_layout.width_in,
+        node_layout.height_in,
+      )
       sizes[node.name()] = (width_in, height_in)
     }
   }
@@ -1746,7 +1818,9 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
-fn rounded_polygon_bezier_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+fn rounded_polygon_bezier_points(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
   let sides = points.length()
   if sides == 0 {
     return []
@@ -1890,22 +1964,24 @@ fn node_attr_double(
 }
 
 ///|
-fn node_attr_int(
-  node : @cgraph.Node,
-  key : String,
-  fallback : Int,
-) -> Int {
+fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
   match node_attr(node, key) {
     Some(value) => parse_int(value, fallback)
     None => fallback
   }
 }
 
+///|
 fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
   let raw = node_attr_int(node, "peripheries", fallback)
-  if raw < 1 { 1 } else { raw }
+  if raw < 1 {
+    1
+  } else {
+    raw
+  }
 }
 
+///|
 fn polygon_params_with_defaults(
   node : @cgraph.Node,
   sides : Int,
@@ -1988,10 +2064,7 @@ fn polygon_vertices_for_rect(
   let scale_y = half_h / ymax
   let out : Array[@geom.Point] = []
   for vertex in base {
-    out.push({
-      x: cx + vertex.x * scale_x,
-      y: cy + vertex.y * scale_y,
-    })
+    out.push({ x: cx + vertex.x * scale_x, y: cy + vertex.y * scale_y })
   }
   out
 }
@@ -2006,7 +2079,7 @@ fn polygon_outline_vertices(
   }
   let sides = base.length()
   let mut prev = base[sides - 1]
-  for j in 1..=sides {
+  for j in 1..<=sides {
     let candidate = base[(sides - j) % sides]
     if !point_nearly_equal(candidate, base[0]) {
       prev = candidate
@@ -2048,6 +2121,7 @@ fn polygon_outline_vertices(
   out
 }
 
+///|
 fn polygon_paths_from_base(
   base : Array[@geom.Point],
   peripheries : Int,
@@ -2064,6 +2138,7 @@ fn polygon_paths_from_base(
   paths
 }
 
+///|
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
@@ -2081,6 +2156,7 @@ fn polygon_vertices_for_size(
   polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
 }
 
+///|
 fn polygon_outline_vertices_for_rect(
   rect : @geom.Rect,
   sides : Int,
@@ -2096,20 +2172,14 @@ fn polygon_outline_vertices_for_rect(
     return []
   }
   let count = if peripheries < 1 { 1 } else { peripheries }
-  let base_outline_pad =
-    if count > 1 {
-      POLY_GAP_PT * (count - 1).to_double()
-    } else {
-      0.0
-    }
+  let base_outline_pad = if count > 1 {
+    POLY_GAP_PT * (count - 1).to_double()
+  } else {
+    0.0
+  }
   let centered = if base_outline_pad <= 0.0 {
     polygon_vertices_for_size(
-      target_w,
-      target_h,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
+      target_w, target_h, sides, orientation_deg, distortion, skew,
     )
   } else {
     let mut inner_w = if target_w > base_outline_pad * 2.0 {
@@ -2127,12 +2197,7 @@ fn polygon_outline_vertices_for_rect(
         break
       }
       let base = polygon_vertices_for_size(
-        inner_w,
-        inner_h,
-        sides,
-        orientation_deg,
-        distortion,
-        skew,
+        inner_w, inner_h, sides, orientation_deg, distortion, skew,
       )
       if base.length() < 3 {
         break
@@ -2155,12 +2220,7 @@ fn polygon_outline_vertices_for_rect(
       inner_h = inner_h * (target_h / (max_y * 2.0))
     }
     let final_base = polygon_vertices_for_size(
-      inner_w,
-      inner_h,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
+      inner_w, inner_h, sides, orientation_deg, distortion, skew,
     )
     if final_base.length() < 3 {
       final_base
@@ -2180,7 +2240,11 @@ fn polygon_outline_vertices_for_rect(
   out
 }
 
-fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rect {
+///|
+fn inner_rect_for_peripheries(
+  rect : @geom.Rect,
+  peripheries : Int,
+) -> @geom.Rect {
   if peripheries <= 1 {
     return rect
   }
@@ -2191,6 +2255,7 @@ fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rec
   }
 }
 
+///|
 fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
   {
     llx: rect.llx - gap,
@@ -2200,6 +2265,7 @@ fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
   }
 }
 
+///|
 fn polygon_paths_for_shape(
   rect : @geom.Rect,
   sides : Int,
@@ -2213,13 +2279,7 @@ fn polygon_paths_for_shape(
   for i in 0..<count {
     let inset = -POLY_GAP_PT * (count - i - 1).to_double()
     let poly = polygon_outline_vertices_for_rect(
-      rect,
-      sides,
-      orientation_deg,
-      distortion,
-      skew,
-      count,
-      inset,
+      rect, sides, orientation_deg, distortion, skew, count, inset,
     )
     if poly.length() > 0 {
       paths.push(poly)
@@ -2228,15 +2288,21 @@ fn polygon_paths_for_shape(
   paths
 }
 
+///|
 fn arrow_tip_width(rect : @geom.Rect) -> Double {
   let width = rect.urx - rect.llx
   if width <= 0.0 {
     return 0.0
   }
   let max_tip = width / 2.0
-  if max_tip < 18.0 { max_tip } else { 18.0 }
+  if max_tip < 18.0 {
+    max_tip
+  } else {
+    18.0
+  }
 }
 
+///|
 fn rarrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = arrow_tip_width(rect)
   let body_right = rect.urx - tip
@@ -2255,6 +2321,7 @@ fn rarrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = arrow_tip_width(rect)
   let body_left = rect.llx + tip
@@ -2273,6 +2340,7 @@ fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn rpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = arrow_tip_width(rect)
   let body_right = rect.urx - tip
@@ -2294,6 +2362,7 @@ fn rpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = arrow_tip_width(rect)
   let body_left = rect.llx + tip
@@ -2315,6 +2384,7 @@ fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn note_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
@@ -2326,6 +2396,7 @@ fn note_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn note_fold_vertical_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
@@ -2334,6 +2405,7 @@ fn note_fold_vertical_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn note_fold_horizontal_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
@@ -2342,6 +2414,7 @@ fn note_fold_horizontal_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn tab_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_width = 12.0
   let tab_height = 4.0
@@ -2355,22 +2428,19 @@ fn tab_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn tab_top_join_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_width = 12.0
-  [
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx + tab_width, y: rect.ury },
-  ]
+  [{ x: rect.llx, y: rect.ury }, { x: rect.llx + tab_width, y: rect.ury }]
 }
 
+///|
 fn baseline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: rect.urx, y: cy }]
 }
 
+///|
 fn insulator_inner_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2382,6 +2452,7 @@ fn insulator_inner_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2394,24 +2465,21 @@ fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn insulator_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 9.0, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 9.0, y: cy }, { x: rect.urx, y: cy }]
 }
 
+///|
 fn insulator_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx - 9.0, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx - 9.0, y: cy }]
 }
 
+///|
 fn noverhang_top_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2423,6 +2491,7 @@ fn noverhang_top_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn noverhang_bottom_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2434,6 +2503,7 @@ fn noverhang_bottom_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn noverhang_bottom_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2445,6 +2515,7 @@ fn noverhang_bottom_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2456,24 +2527,21 @@ fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn noverhang_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 13.5, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 13.5, y: cy }, { x: rect.urx, y: cy }]
 }
 
+///|
 fn noverhang_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx - 13.5, y: cy },
-    { x: rect.llx, y: cy },
-  ]
+  [{ x: cx - 13.5, y: cy }, { x: rect.llx, y: cy }]
 }
 
+///|
 fn primersite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2486,6 +2554,7 @@ fn primersite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn promoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2502,6 +2571,7 @@ fn promoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn proteasesite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2525,6 +2595,7 @@ fn proteasesite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2540,24 +2611,21 @@ fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn proteasesite_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 7.5 },
-    { x: cx, y: cy },
-  ]
+  [{ x: cx, y: cy + 7.5 }, { x: cx, y: cy }]
 }
 
+///|
 fn proteinstab_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 6.0 },
-    { x: cx, y: cy },
-  ]
+  [{ x: cx, y: cy + 6.0 }, { x: cx, y: cy }]
 }
 
+///|
 fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2573,42 +2641,35 @@ fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn restrictionsite_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx - 12.75, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx - 12.75, y: cy }]
 }
 
+///|
 fn restrictionsite_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx + 12.75, y: cy },
-    { x: rect.urx, y: cy },
-  ]
+  [{ x: cx + 12.75, y: cy }, { x: rect.urx, y: cy }]
 }
 
+///|
 fn ribosite_segment1_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy },
-    { x: cx, y: cy + 1.5 },
-  ]
+  [{ x: cx, y: cy }, { x: cx, y: cy + 1.5 }]
 }
 
+///|
 fn ribosite_segment2_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: cy + 3.0 },
-    { x: cx, y: cy + 4.5 },
-  ]
+  [{ x: cx, y: cy + 3.0 }, { x: cx, y: cy + 4.5 }]
 }
 
+///|
 fn signature_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
@@ -2619,47 +2680,55 @@ fn signature_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn signature_cross_up_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy + 1.5 },
-    { x: rect.llx + 6.0, y: cy - 1.5 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy + 1.5 }, { x: rect.llx + 6.0, y: cy - 1.5 }]
 }
 
+///|
 fn signature_cross_down_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy - 1.5 },
-    { x: rect.llx + 6.0, y: cy + 1.5 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy - 1.5 }, { x: rect.llx + 6.0, y: cy + 1.5 }]
 }
 
+///|
 fn signature_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx + 3.0, y: cy - 9.0 },
-    { x: rect.urx - 3.0, y: cy - 9.0 },
-  ]
+  [{ x: rect.llx + 3.0, y: cy - 9.0 }, { x: rect.urx - 3.0, y: cy - 9.0 }]
 }
 
+///|
 fn star_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let width = rect.urx - rect.llx
   let height = rect.ury - rect.lly
   [
     { x: rect.llx + width, y: rect.lly + height * 0.61803398875 },
-    { x: rect.llx + width * 0.61795974583, y: rect.lly + height * 0.61803398875 },
+    {
+      x: rect.llx + width * 0.61795974583,
+      y: rect.lly + height * 0.61803398875,
+    },
     { x: rect.llx + width * 0.5, y: rect.lly + height },
-    { x: rect.llx + width * 0.38204025417, y: rect.lly + height * 0.61803398875 },
+    {
+      x: rect.llx + width * 0.38204025417,
+      y: rect.lly + height * 0.61803398875,
+    },
     { x: rect.llx, y: rect.lly + height * 0.61803398875 },
-    { x: rect.llx + width * 0.30907407407, y: rect.lly + height * 0.38196601125 },
+    {
+      x: rect.llx + width * 0.30907407407,
+      y: rect.lly + height * 0.38196601125,
+    },
     { x: rect.llx + width * 0.19092592593, y: rect.lly },
     { x: rect.llx + width * 0.5, y: rect.lly + height * 0.2360679775 },
     { x: rect.llx + width * 0.80907407407, y: rect.lly },
-    { x: rect.llx + width * 0.69092592593, y: rect.lly + height * 0.38196601125 },
+    {
+      x: rect.llx + width * 0.69092592593,
+      y: rect.lly + height * 0.38196601125,
+    },
   ]
 }
 
+///|
 fn terminator_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2675,6 +2744,7 @@ fn terminator_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn threepoverhang_top_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2686,6 +2756,7 @@ fn threepoverhang_top_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2697,15 +2768,14 @@ fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn threepoverhang_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: rect.llx, y: cy },
-    { x: cx + 3.0, y: cy },
-  ]
+  [{ x: rect.llx, y: cy }, { x: cx + 3.0, y: cy }]
 }
 
+///|
 fn underline_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.urx, y: rect.ury },
@@ -2715,13 +2785,12 @@ fn underline_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn underline_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  [
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
-  ]
+  [{ x: rect.llx, y: rect.lly }, { x: rect.urx, y: rect.lly }]
 }
 
+///|
 fn utr_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2735,12 +2804,17 @@ fn utr_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 3.0
   let tab_height = 4.0
   let tab_width = 21.0
   let notch_right_raw = rect.urx - fold
-  let notch_right = if notch_right_raw < rect.llx { rect.llx } else { notch_right_raw }
+  let notch_right = if notch_right_raw < rect.llx {
+    rect.llx
+  } else {
+    notch_right_raw
+  }
   let tab_left_raw = notch_right - tab_width
   let tab_left = if tab_left_raw < rect.llx { rect.llx } else { tab_left_raw }
   let join_raw = tab_left - fold
@@ -2756,11 +2830,16 @@ fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tip = 12.0
   let inset = 6.0
   let body_right_raw = rect.urx - tip
-  let body_right = if body_right_raw < rect.llx { rect.llx } else { body_right_raw }
+  let body_right = if body_right_raw < rect.llx {
+    rect.llx
+  } else {
+    body_right_raw
+  }
   let top_raw = rect.ury - inset
   let bottom_raw = rect.lly + inset
   let top_bound = if top_raw < rect.lly { rect.lly } else { top_raw }
@@ -2781,6 +2860,7 @@ fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn assembly_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2792,6 +2872,7 @@ fn assembly_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -2803,6 +2884,7 @@ fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
@@ -2813,6 +2895,7 @@ fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn fivepoverhang_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
@@ -2823,6 +2906,7 @@ fn fivepoverhang_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn box3d_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.urx, y: rect.ury },
@@ -2834,6 +2918,7 @@ fn box3d_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn component_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.urx, y: rect.ury },
@@ -2851,6 +2936,7 @@ fn component_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn component_top_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.llx, y: rect.ury - 4.0 },
@@ -2860,6 +2946,7 @@ fn component_top_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.llx, y: rect.lly + 8.0 },
@@ -2869,6 +2956,7 @@ fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn cylinder_outer_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let rx = (rect.urx - rect.llx) / 2.0
@@ -2900,6 +2988,7 @@ fn cylinder_outer_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn cylinder_top_inner_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let rx = (rect.urx - rect.llx) / 2.0
@@ -2919,6 +3008,7 @@ fn cylinder_top_inner_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
+///|
 fn shape_polygon_paths(
   node : @cgraph.Node,
   kind : String,
@@ -2966,10 +3056,8 @@ fn shape_polygon_paths(
         Some((sides, orientation, distortion, skew, peripheries))
       }
     }
-    "rpromoter" =>
-      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
-    "lpromoter" =>
-      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "rpromoter" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "lpromoter" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
@@ -2984,20 +3072,19 @@ fn shape_polygon_paths(
           Some(polygon_paths_from_base(rpromoter_points(rect), peripheries))
         "lpromoter" =>
           Some(polygon_paths_from_base(lpromoter_points(rect), peripheries))
-        "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
-        "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
-        "folder" => Some(polygon_paths_from_base(folder_points(rect), peripheries))
+        "rarrow" =>
+          Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
+        "larrow" =>
+          Some(polygon_paths_from_base(larrow_points(rect), peripheries))
+        "folder" =>
+          Some(polygon_paths_from_base(folder_points(rect), peripheries))
         "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
-        "square" => Some(polygon_paths_from_base(rect_points(rect), peripheries))
+        "square" =>
+          Some(polygon_paths_from_base(rect_points(rect), peripheries))
         _ =>
           Some(
             polygon_paths_for_shape(
-              rect,
-              sides,
-              orientation,
-              distortion,
-              skew,
-              peripheries,
+              rect, sides, orientation, distortion, skew, peripheries,
             ),
           )
       }
@@ -3404,11 +3491,7 @@ fn write_record_field_lines(
       let y_text = format_double(y)
       let size_text = format_double_fixed(size, 2)
       let escaped = escape_xml_text_with_dash(line.text)
-      let fill_attr = if color == "black" {
-        ""
-      } else {
-        " fill=\"\{color}\""
-      }
+      let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
       write_line(
         sb,
         "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
@@ -3533,7 +3616,11 @@ fn write_record_node(
   }
   // Graphviz parity: record outline uses field bbox (height without +1 kluge).
   let draw_rect = inner_rect
-  let record_points = polygon_points(outline_rect_points(draw_rect), bbox.llx, bbox.lly)
+  let record_points = polygon_points(
+    outline_rect_points(draw_rect),
+    bbox.llx,
+    bbox.lly,
+  )
   write_line(
     sb,
     if rounded {
@@ -3657,10 +3744,7 @@ fn html_text_width(
   font_size_pt : Double,
 ) -> Double {
   let (_lines, width_pt, _height_pt) = html_text_metrics(
-    text,
-    name,
-    font_name,
-    font_size_pt,
+    text, name, font_name, font_size_pt,
   )
   width_pt
 }
@@ -3739,9 +3823,11 @@ fn html_cell_size(
     font_size_pt,
   )
   let cell_border_pt = html_table_cell_border_pt(table)
-  let mut width = content_width + table.cell_padding_pt * 2.0 +
+  let mut width = content_width +
+    table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
-  let mut height = content_height + table.cell_padding_pt * 2.0 +
+  let mut height = content_height +
+    table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
@@ -3761,9 +3847,9 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  @html_label.html_table_size(table, cell => html_cell_size(
-    table, cell, name, font_name, font_size_pt,
-  ))
+  @html_label.html_table_size(table, cell => {
+    html_cell_size(table, cell, name, font_name, font_size_pt)
+  })
 }
 
 ///|
@@ -3774,9 +3860,9 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(table, rect, cell => html_cell_size(
-    table, cell, name, font_name, font_size_pt,
-  ))
+  @html_label.html_table_layout(table, rect, cell => {
+    html_cell_size(table, cell, name, font_name, font_size_pt)
+  })
 }
 
 ///|
@@ -3822,11 +3908,7 @@ fn write_html_text_lines(
       let y_text = format_double(y)
       let size_text = format_double_fixed(size, 2)
       let escaped = escape_xml_text_with_dash(line.text)
-      let fill_attr = if color == "black" {
-        ""
-      } else {
-        " fill=\"\{color}\""
-      }
+      let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
       write_line(
         sb,
         "<text xml:space=\"preserve\" text-anchor=\"start\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
@@ -3855,10 +3937,7 @@ fn write_html_styled_text_lines(
 ) -> Unit {
   let text = html_text_spans_plain_text(spans)
   let (lines, _max_width, total_height) = html_text_metrics(
-    text,
-    name,
-    font,
-    size,
+    text, name, font, size,
   )
   if lines.length() == 0 {
     return ()
@@ -3897,11 +3976,7 @@ fn write_html_styled_text_lines(
           Some(value) => svg_color(value)
           None => default_color
         }
-        let fill_attr = if color == "black" {
-          ""
-        } else {
-          " fill=\"\{color}\""
-        }
+        let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
         write_line(
           sb,
           "<text xml:space=\"preserve\" text-anchor=\"start\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
@@ -3954,11 +4029,7 @@ fn write_html_table(
   let cell_border_pt = html_table_cell_border_pt(table)
   match table.bg_color {
     Some(color) => {
-      let attrs = polygon_points(
-        outline_rect_points(rect),
-        bbox.llx,
-        bbox.lly,
-      )
+      let attrs = polygon_points(outline_rect_points(rect), bbox.llx, bbox.lly)
       write_line(
         sb,
         "<polygon fill=\"\{svg_color(color)}\" stroke=\"none\" points=\"\{attrs}\"/>",
@@ -4059,11 +4130,7 @@ fn write_html_table(
   }
   if border_pt > 0.0 {
     let border = border_rect(rect, border_pt)
-    let attrs = polygon_points(
-      outline_rect_points(border),
-      bbox.llx,
-      bbox.lly,
-    )
+    let attrs = polygon_points(outline_rect_points(border), bbox.llx, bbox.lly)
     let width_attr = if border_pt > 1.0 {
       " stroke-width=\"\{format_double(border_pt)}\""
     } else {
@@ -4457,11 +4524,7 @@ fn write_label_lines(
       let y_text = format_double(y)
       let size_text = format_double_fixed(size, 2)
       let escaped = escape_xml_text_with_dash(line.text)
-      let fill_attr = if color == "black" {
-        ""
-      } else {
-        " fill=\"\{color}\""
-      }
+      let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
       write_line(
         sb,
         "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
@@ -4498,7 +4561,10 @@ fn same_subgraph_name(a : @cgraph.Graph, b : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn advance_cluster_graph_ids(graph : @cgraph.Graph, next_cluster_id : Int) -> Int {
+fn advance_cluster_graph_ids(
+  graph : @cgraph.Graph,
+  next_cluster_id : Int,
+) -> Int {
   let mut cluster_id = next_cluster_id
   for subgraph in graph.subgraphs() {
     cluster_id = cluster_id + 1
@@ -4522,15 +4588,17 @@ fn write_cluster_graphs(
   for source_subgraph in layout.graph.subgraphs() {
     let current_id = cluster_id
     cluster_id = cluster_id + 1
-    let subgraph =
-      if rendered_idx < rendered_subgraphs.length() &&
-        same_subgraph_name(rendered_subgraphs[rendered_idx].graph, source_subgraph) {
-        let value = Some(rendered_subgraphs[rendered_idx])
-        rendered_idx = rendered_idx + 1
-        value
-      } else {
-        None
-      }
+    let subgraph = if rendered_idx < rendered_subgraphs.length() &&
+      same_subgraph_name(
+        rendered_subgraphs[rendered_idx].graph,
+        source_subgraph,
+      ) {
+      let value = Some(rendered_subgraphs[rendered_idx])
+      rendered_idx = rendered_idx + 1
+      value
+    } else {
+      None
+    }
     let graph = source_subgraph
     match subgraph {
       None => {
@@ -4538,73 +4606,74 @@ fn write_cluster_graphs(
         continue
       }
       Some(subgraph) => {
-    if is_cluster_graph(graph) {
-      let rect = subgraph.bbox
-      let x1 = svg_x(rect.llx, bbox.llx)
-      let x2 = svg_x(rect.urx, bbox.llx)
-      let y1 = svg_y(rect.lly, bbox.lly)
-      let y2 = svg_y(rect.ury, bbox.lly)
-      let x1_text = format_double(x1)
-      let x2_text = format_double(x2)
-      let y1_text = format_double(y1)
-      let y2_text = format_double(y2)
-      let points =
-        "\{x1_text},\{y1_text} \{x1_text},\{y2_text} \{x2_text},\{y2_text} \{x2_text},\{y1_text} \{x1_text},\{y1_text}"
-      let graph_title = match graph.name() {
-        Some(value) => escape_xml_with_dash(value)
-        None => ""
-      }
-      let stroke_style = @attrs.parse_style(inherited_graph_attr(graph, "style"))
-      if style_is_invisible(stroke_style) {
-        continue
-      }
-      let stroke = svg_color(graph_color(graph, "color", "black"))
-      let fill = match cluster_fill_color(graph) {
-        Some(value) => value
-        None => "none"
-      }
-      let dash = stroke_dash_attr(stroke_style)
-      let width_attr =
-        stroke_width_attr(stroke_style, inherited_graph_attr(graph, "penwidth"))
-      write_line(
-        sb,
-        "<g id=\"clust\{current_id}\" class=\"cluster\">",
-        indent,
-        pretty,
-      )
-      write_line(sb, "<title>\{graph_title}</title>", indent, pretty)
-      write_line(
-        sb,
-        "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{points}\"/>",
-        indent,
-        pretty,
-      )
-      match graph_label_metrics(graph) {
-        Some((text, _width_pt, height_pt)) => {
-          let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
-          let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
-          let color =
-            svg_color(graph_color(graph, "fontcolor", "black"))
-          let pos = match subgraph.label_pos {
-            Some(value) => value
-            None => graph_label_pos(rect, height_pt)
+        if is_cluster_graph(graph) {
+          let rect = subgraph.bbox
+          let x1 = svg_x(rect.llx, bbox.llx)
+          let x2 = svg_x(rect.urx, bbox.llx)
+          let y1 = svg_y(rect.lly, bbox.lly)
+          let y2 = svg_y(rect.ury, bbox.lly)
+          let x1_text = format_double(x1)
+          let x2_text = format_double(x2)
+          let y1_text = format_double(y1)
+          let y2_text = format_double(y2)
+          let points = "\{x1_text},\{y1_text} \{x1_text},\{y2_text} \{x2_text},\{y2_text} \{x2_text},\{y1_text} \{x1_text},\{y1_text}"
+          let graph_title = match graph.name() {
+            Some(value) => escape_xml_with_dash(value)
+            None => ""
           }
-          write_label_lines(
-            sb, text, font, size, color, pos, bbox, indent, pretty,
+          let stroke_style = @attrs.parse_style(
+            inherited_graph_attr(graph, "style"),
           )
+          if style_is_invisible(stroke_style) {
+            continue
+          }
+          let stroke = svg_color(graph_color(graph, "color", "black"))
+          let fill = match cluster_fill_color(graph) {
+            Some(value) => value
+            None => "none"
+          }
+          let dash = stroke_dash_attr(stroke_style)
+          let width_attr = stroke_width_attr(
+            stroke_style,
+            inherited_graph_attr(graph, "penwidth"),
+          )
+          write_line(
+            sb,
+            "<g id=\"clust\{current_id}\" class=\"cluster\">",
+            indent,
+            pretty,
+          )
+          write_line(sb, "<title>\{graph_title}</title>", indent, pretty)
+          write_line(
+            sb,
+            "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{points}\"/>",
+            indent,
+            pretty,
+          )
+          match graph_label_metrics(graph) {
+            Some((text, _width_pt, height_pt)) => {
+              let font = @attrs.font_name(
+                inherited_graph_attr(graph, "fontname"),
+              )
+              let size = @attrs.font_size(
+                inherited_graph_attr(graph, "fontsize"),
+              )
+              let color = svg_color(graph_color(graph, "fontcolor", "black"))
+              let pos = match subgraph.label_pos {
+                Some(value) => value
+                None => graph_label_pos(rect, height_pt)
+              }
+              write_label_lines(
+                sb, text, font, size, color, pos, bbox, indent, pretty,
+              )
+            }
+            None => ()
+          }
+          write_line(sb, "</g>", indent, pretty)
         }
-        None => ()
-      }
-      write_line(sb, "</g>", indent, pretty)
-    }
-    cluster_id = write_cluster_graphs(
-      sb,
-      subgraph,
-      bbox,
-      indent,
-      pretty,
-      cluster_id,
-    )
+        cluster_id = write_cluster_graphs(
+          sb, subgraph, bbox, indent, pretty, cluster_id,
+        )
       }
     }
   }
@@ -4634,17 +4703,21 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
   colors
 }
 
+///|
 priv struct ColorSegment {
   color : String
   mut t : Double
 }
 
+///|
 const COLOR_SEG_EPSILON : Double = 0.00001
 
+///|
 fn color_is_zero(value : Double) -> Bool {
   value < COLOR_SEG_EPSILON && value > -COLOR_SEG_EPSILON
 }
 
+///|
 fn parse_color_fraction(value : String) -> Double? {
   if value == "" {
     return None
@@ -4661,6 +4734,7 @@ fn parse_color_fraction(value : String) -> Double? {
   }
 }
 
+///|
 fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   let segs : Array[ColorSegment] = []
   let mut left = 1.0
@@ -4675,7 +4749,8 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
     match token.find(";") {
       Some(index) => {
         color_token = token.unsafe_substring(start=0, end=index)
-        let frac_text = token.unsafe_substring(start=index + 1, end=token.length())
+        let frac_text = token
+          .unsafe_substring(start=index + 1, end=token.length())
           .trim()
           .to_string()
         match parse_color_fraction(frac_text) {
@@ -4733,6 +4808,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   segs
 }
 
+///|
 fn approx_cubic_length(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -4744,6 +4820,7 @@ fn approx_cubic_length(
   @math.hypot(p3.x - p2.x, p3.y - p2.y)
 }
 
+///|
 fn split_cubic_points(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -4763,6 +4840,7 @@ fn split_cubic_points(
   ((p0, p01, p012, p0123), (p0123, p123, p23, p3))
 }
 
+///|
 fn split_spline_points(
   points : Array[@geom.Point],
   t : Double,
@@ -4770,8 +4848,13 @@ fn split_spline_points(
   let count = (points.length() - 1) / 3
   if count <= 1 {
     let tt = if t < 0.0 { 0.0 } else if t > 1.0 { 1.0 } else { t }
-    let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
-      split_cubic_points(points[0], points[1], points[2], points[3], tt)
+    let ((l0, l1, l2, l3), (r0, r1, r2, r3)) = split_cubic_points(
+      points[0],
+      points[1],
+      points[2],
+      points[3],
+      tt,
+    )
     return ([l0, l1, l2, l3], [r0, r1, r2, r3])
   }
   let lengths : Array[Double] = []
@@ -4821,14 +4904,13 @@ fn split_spline_points(
     ratio = 1.0
   }
   let idx = segment_index * 3
-  let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
-    split_cubic_points(
-      points[idx],
-      points[idx + 1],
-      points[idx + 2],
-      points[idx + 3],
-      ratio,
-    )
+  let ((l0, l1, l2, l3), (r0, r1, r2, r3)) = split_cubic_points(
+    points[idx],
+    points[idx + 1],
+    points[idx + 2],
+    points[idx + 3],
+    ratio,
+  )
   left_points[idx] = l0
   left_points[idx + 1] = l1
   left_points[idx + 2] = l2
@@ -4840,6 +4922,7 @@ fn split_spline_points(
   (left_points, right_points)
 }
 
+///|
 fn edge_arrow_colors(edge : @cgraph.Edge) -> (String, String) {
   let raw = @attrs.color(edge.get_attr("color"), default="black")
   if raw.find(":") is Some(_) {
@@ -4864,9 +4947,13 @@ fn edge_arrow_colors(edge : @cgraph.Edge) -> (String, String) {
   (color, color)
 }
 
+///|
 const COLOR_SPLINE_EPSILON : Double = 0.0001
+
+///|
 const COLOR_SPLINE_SEP_PT : Double = 2.0
 
+///|
 fn color_spline_offset_p(
   p : @geom.Point,
   q : @geom.Point,
@@ -4874,14 +4961,11 @@ fn color_spline_offset_p(
 ) -> @geom.Point {
   let x = p.x - q.x
   let y = p.y - q.y
-  let scale =
-    distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
-  {
-    x: y * scale,
-    y: -x * scale,
-  }
+  let scale = distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  { x: y * scale, y: -x * scale }
 }
 
+///|
 fn color_spline_offset_qr(
   p : @geom.Point,
   q : @geom.Point,
@@ -4898,12 +4982,10 @@ fn color_spline_offset_qr(
     len = Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
   }
   let scale = distance / len
-  {
-    x: y * scale,
-    y: -x * scale,
-  }
+  { x: y * scale, y: -x * scale }
 }
 
+///|
 fn edge_multicolor_spline_points(
   points : Array[@geom.Point],
   color_count : Int,
@@ -4949,20 +5031,16 @@ fn edge_multicolor_spline_points(
     }
     pf2 = points[j + 2]
     pf3 = points[j + 3]
-    let offset_qr =
-      color_spline_offset_qr(
-        pf0,
-        pf1,
-        pf2,
-        pf3,
-        COLOR_SPLINE_SEP_PT,
-      )
+    let offset_qr = color_spline_offset_qr(
+      pf0,
+      pf1,
+      pf2,
+      pf3,
+      COLOR_SPLINE_SEP_PT,
+    )
     offset[j + 1] = offset_qr
     offset[j + 2] = offset_qr
-    tmp[j] = {
-      x: pf0.x - numc2 * offset[j].x,
-      y: pf0.y - numc2 * offset[j].y,
-    }
+    tmp[j] = { x: pf0.x - numc2 * offset[j].x, y: pf0.y - numc2 * offset[j].y }
     tmp[j + 1] = {
       x: pf1.x - numc2 * offset[j + 1].x,
       y: pf1.y - numc2 * offset[j + 1].y,
@@ -4974,10 +5052,7 @@ fn edge_multicolor_spline_points(
     j = j + 3
   }
   offset[j] = color_spline_offset_p(pf2, pf3, COLOR_SPLINE_SEP_PT)
-  tmp[j] = {
-    x: pf3.x - numc2 * offset[j].x,
-    y: pf3.y - numc2 * offset[j].y,
-  }
+  tmp[j] = { x: pf3.x - numc2 * offset[j].x, y: pf3.y - numc2 * offset[j].y }
   let out : Array[Array[@geom.Point]] = []
   for _ in 0..<color_count {
     for idx in 0..<size {
@@ -5098,8 +5173,7 @@ fn write_svg_edge_group(
           } else {
             let split_t = segment.t / (left + segment.t)
             let (left_points, rest_points) = split_spline_points(
-              right_points,
-              split_t,
+              right_points, split_t,
             )
             right_points = rest_points
             let path = spline_path(
@@ -5129,7 +5203,9 @@ fn write_svg_edge_group(
     }
     let spline_sets : Array[Array[Array[@geom.Point]]] = []
     for spline in edge_layout.splines {
-      spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
+      spline_sets.push(
+        edge_multicolor_spline_points(spline.points, color_count),
+      )
     }
     for i, pen_color in pen_colors {
       for spline_index in 0..<edge_layout.splines.length() {
@@ -5224,19 +5300,10 @@ fn write_svg_edge_group(
     Some(pos) => {
       let font = @attrs.font_name(edge_attr(edge, "fontname"))
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color =
-        svg_color(edge_color(edge, "fontcolor", "black"))
+      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       if label_text != "" {
         write_label_lines(
-          sb,
-          label_text,
-          font,
-          size,
-          font_color,
-          pos,
-          bbox,
-          "",
-          pretty,
+          sb, label_text, font, size, font_color, pos, bbox, "", pretty,
         )
       }
     }
@@ -5250,19 +5317,10 @@ fn write_svg_edge_group(
     Some(pos) => {
       let font = @attrs.font_name(edge_attr(edge, "fontname"))
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color =
-        svg_color(edge_color(edge, "fontcolor", "black"))
+      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       if xlabel_text != "" {
         write_label_lines(
-          sb,
-          xlabel_text,
-          font,
-          size,
-          font_color,
-          pos,
-          bbox,
-          "",
-          pretty,
+          sb, xlabel_text, font, size, font_color, pos, bbox, "", pretty,
         )
       }
     }
@@ -5276,18 +5334,9 @@ fn write_svg_edge_group(
     Some(pos) => {
       let font = @attrs.font_name(edge_attr(edge, "fontname"))
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color =
-        svg_color(edge_color(edge, "fontcolor", "black"))
+      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       write_label_lines(
-        sb,
-        head_label_text,
-        font,
-        size,
-        font_color,
-        pos,
-        bbox,
-        "",
-        pretty,
+        sb, head_label_text, font, size, font_color, pos, bbox, "", pretty,
       )
     }
     None => ()
@@ -5300,18 +5349,9 @@ fn write_svg_edge_group(
     Some(pos) => {
       let font = @attrs.font_name(edge_attr(edge, "fontname"))
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color =
-        svg_color(edge_color(edge, "fontcolor", "black"))
+      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       write_label_lines(
-        sb,
-        tail_label_text,
-        font,
-        size,
-        font_color,
-        pos,
-        bbox,
-        "",
-        pretty,
+        sb, tail_label_text, font, size, font_color, pos, bbox, "", pretty,
       )
     }
     None => ()
@@ -5341,8 +5381,8 @@ fn write_svg_node_group(
     None => ""
   }
   let raw_kind = shape_kind(node_attr(node, "shape"))
-  let skip_unknown_shape_outline =
-    raw_kind == "unknown" && node_attr_int(node, "peripheries", 1) <= 0
+  let skip_unknown_shape_outline = raw_kind == "unknown" &&
+    node_attr_int(node, "peripheries", 1) <= 0
   // Graphviz falls back to box geometry for unknown node shapes.
   let kind = if raw_kind == "unknown" { "box" } else { raw_kind }
   let is_doublecircle = raw_shape == "doublecircle"
@@ -5395,25 +5435,26 @@ fn write_svg_node_group(
   let filled = if kind == "point" { true } else { style.filled }
   let dash = stroke_dash_attr(style)
   let width_attr = stroke_width_attr(style, node_attr(node, "penwidth"))
-  let no_outline =
-    node_attr_int(node, "peripheries", 1) <= 0 &&
+  let no_outline = node_attr_int(node, "peripheries", 1) <= 0 &&
     kind != "record" &&
     kind != "plaintext" &&
     kind != "point"
   let shape_stroke = if no_outline { "none" } else { stroke }
-  let stroke_width_pt = match stroke_width_value(style, node_attr(node, "penwidth")) {
+  let stroke_width_pt = match
+    stroke_width_value(style, node_attr(node, "penwidth")) {
     Some(value) => value
     None => 1.0
   }
   let fill = if filled {
     match node_attr(node, "fillcolor") {
-        Some(value) => svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
-        None =>
-          if kind == "point" {
-            stroke
-          } else {
-            svg_color(node_fill_color(node, "lightgrey"))
-          }
+      Some(value) =>
+        svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
+      None =>
+        if kind == "point" {
+          stroke
+        } else {
+          svg_color(node_fill_color(node, "lightgrey"))
+        }
     }
   } else {
     "none"
@@ -5422,15 +5463,7 @@ fn write_svg_node_group(
     ()
   } else if kind == "record" {
     write_record_node(
-      sb,
-      node_layout,
-      rect,
-      stroke,
-      fill,
-      dash,
-      bbox,
-      "",
-      pretty,
+      sb, node_layout, rect, stroke, fill, dash, bbox, "", pretty,
     )
     if has_link {
       write_line(sb, "</a>", "", pretty)
@@ -5594,7 +5627,11 @@ fn write_svg_node_group(
     }
   } else if kind == "note" {
     let outline = polygon_points(note_outline_points(rect), bbox.llx, bbox.lly)
-    let fold_vertical = polyline_points(note_fold_vertical_points(rect), bbox.llx, bbox.lly)
+    let fold_vertical = polyline_points(
+      note_fold_vertical_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let fold_horizontal = polyline_points(
       note_fold_horizontal_points(rect),
       bbox.llx,
@@ -5620,7 +5657,11 @@ fn write_svg_node_group(
     )
   } else if kind == "tab" {
     let outline = polygon_points(tab_outline_points(rect), bbox.llx, bbox.lly)
-    let top_join = polyline_points(tab_top_join_points(rect), bbox.llx, bbox.lly)
+    let top_join = polyline_points(
+      tab_top_join_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
@@ -5635,9 +5676,21 @@ fn write_svg_node_group(
     )
   } else if kind == "insulator" {
     let inner = polygon_points(insulator_inner_points(rect), bbox.llx, bbox.lly)
-    let outer = polyline_points(insulator_outer_points(rect), bbox.llx, bbox.lly)
-    let right_line = polyline_points(insulator_right_line_points(rect), bbox.llx, bbox.lly)
-    let left_line = polyline_points(insulator_left_line_points(rect), bbox.llx, bbox.lly)
+    let outer = polyline_points(
+      insulator_outer_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let right_line = polyline_points(
+      insulator_right_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let left_line = polyline_points(
+      insulator_left_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{inner}\"/>",
@@ -5663,16 +5716,36 @@ fn write_svg_node_group(
       pretty,
     )
   } else if kind == "noverhang" {
-    let top_left = polygon_points(noverhang_top_left_points(rect), bbox.llx, bbox.lly)
-    let bottom_left = polygon_points(noverhang_bottom_left_points(rect), bbox.llx, bbox.lly)
+    let top_left = polygon_points(
+      noverhang_top_left_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let bottom_left = polygon_points(
+      noverhang_bottom_left_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let bottom_right = polygon_points(
       noverhang_bottom_right_points(rect),
       bbox.llx,
       bbox.lly,
     )
-    let top_right = polygon_points(noverhang_top_right_points(rect), bbox.llx, bbox.lly)
-    let right_line = polyline_points(noverhang_right_line_points(rect), bbox.llx, bbox.lly)
-    let left_line = polyline_points(noverhang_left_line_points(rect), bbox.llx, bbox.lly)
+    let top_right = polygon_points(
+      noverhang_top_right_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let right_line = polyline_points(
+      noverhang_right_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let left_line = polyline_points(
+      noverhang_left_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top_left}\"/>",
@@ -5741,7 +5814,11 @@ fn write_svg_node_group(
     )
   } else if kind == "proteasesite" {
     let outline = polygon_points(proteasesite_points(rect), bbox.llx, bbox.lly)
-    let stem = polyline_points(proteasesite_line_points(rect), bbox.llx, bbox.lly)
+    let stem = polyline_points(
+      proteasesite_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
     write_line(
       sb,
@@ -5763,7 +5840,11 @@ fn write_svg_node_group(
     )
   } else if kind == "proteinstab" {
     let outline = polygon_points(proteinstab_points(rect), bbox.llx, bbox.lly)
-    let stem = polyline_points(proteinstab_line_points(rect), bbox.llx, bbox.lly)
+    let stem = polyline_points(
+      proteinstab_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
     write_line(
       sb,
@@ -5784,7 +5865,11 @@ fn write_svg_node_group(
       pretty,
     )
   } else if kind == "restrictionsite" {
-    let outline = polygon_points(restrictionsite_points(rect), bbox.llx, bbox.lly)
+    let outline = polygon_points(
+      restrictionsite_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let left_line = polyline_points(
       restrictionsite_left_line_points(rect),
       bbox.llx,
@@ -5815,8 +5900,16 @@ fn write_svg_node_group(
     )
   } else if kind == "ribosite" {
     let outline = polygon_points(proteasesite_points(rect), bbox.llx, bbox.lly)
-    let seg1 = polyline_points(ribosite_segment1_points(rect), bbox.llx, bbox.lly)
-    let seg2 = polyline_points(ribosite_segment2_points(rect), bbox.llx, bbox.lly)
+    let seg1 = polyline_points(
+      ribosite_segment1_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let seg2 = polyline_points(
+      ribosite_segment2_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
     write_line(
       sb,
@@ -5844,8 +5937,16 @@ fn write_svg_node_group(
     )
   } else if kind == "rnastab" {
     let outline = polygon_points(proteinstab_points(rect), bbox.llx, bbox.lly)
-    let seg1 = polyline_points(ribosite_segment1_points(rect), bbox.llx, bbox.lly)
-    let seg2 = polyline_points(ribosite_segment2_points(rect), bbox.llx, bbox.lly)
+    let seg1 = polyline_points(
+      ribosite_segment1_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let seg2 = polyline_points(
+      ribosite_segment2_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
     write_line(
       sb,
@@ -5872,10 +5973,26 @@ fn write_svg_node_group(
       pretty,
     )
   } else if kind == "signature" {
-    let outline = polygon_points(signature_outline_points(rect), bbox.llx, bbox.lly)
-    let cross_up = polyline_points(signature_cross_up_points(rect), bbox.llx, bbox.lly)
-    let cross_down = polyline_points(signature_cross_down_points(rect), bbox.llx, bbox.lly)
-    let sign_line = polyline_points(signature_line_points(rect), bbox.llx, bbox.lly)
+    let outline = polygon_points(
+      signature_outline_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let cross_up = polyline_points(
+      signature_cross_up_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let cross_down = polyline_points(
+      signature_cross_down_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let sign_line = polyline_points(
+      signature_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
@@ -5924,9 +6041,21 @@ fn write_svg_node_group(
       pretty,
     )
   } else if kind == "threepoverhang" {
-    let top = polygon_points(threepoverhang_top_points(rect), bbox.llx, bbox.lly)
-    let bottom = polygon_points(threepoverhang_bottom_points(rect), bbox.llx, bbox.lly)
-    let baseline = polyline_points(threepoverhang_line_points(rect), bbox.llx, bbox.lly)
+    let top = polygon_points(
+      threepoverhang_top_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let bottom = polygon_points(
+      threepoverhang_bottom_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let baseline = polyline_points(
+      threepoverhang_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top}\"/>",
@@ -5946,7 +6075,11 @@ fn write_svg_node_group(
       pretty,
     )
   } else if kind == "underline" {
-    let outline = polygon_points(underline_outline_points(rect), bbox.llx, bbox.lly)
+    let outline = polygon_points(
+      underline_outline_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     let line = polyline_points(underline_line_points(rect), bbox.llx, bbox.lly)
     write_line(
       sb,
@@ -5996,18 +6129,12 @@ fn write_svg_node_group(
     let right = top[1].x
     let left = top[0].x
     let right_line = polyline_points(
-      [
-        { x: right, y: cy },
-        { x: rect.urx, y: cy },
-      ],
+      [{ x: right, y: cy }, { x: rect.urx, y: cy }],
       bbox.llx,
       bbox.lly,
     )
     let left_line = polyline_points(
-      [
-        { x: rect.llx, y: cy },
-        { x: left, y: cy },
-      ],
+      [{ x: rect.llx, y: cy }, { x: left, y: cy }],
       bbox.llx,
       bbox.lly,
     )
@@ -6043,10 +6170,7 @@ fn write_svg_node_group(
     let cy = (rect.lly + rect.ury) / 2.0
     let right = top[1].x
     let right_line = polyline_points(
-      [
-        { x: right, y: cy },
-        { x: rect.urx, y: cy },
-      ],
+      [{ x: right, y: cy }, { x: rect.urx, y: cy }],
       bbox.llx,
       bbox.lly,
     )
@@ -6066,26 +6190,17 @@ fn write_svg_node_group(
     )
     let corner : @geom.Point = { x: rect.urx - 4.0, y: rect.ury - 4.0 }
     let top_line = polyline_points(
-      [
-        corner,
-        { x: rect.llx, y: corner.y },
-      ],
+      [corner, { x: rect.llx, y: corner.y }],
       bbox.llx,
       bbox.lly,
     )
     let side_line = polyline_points(
-      [
-        corner,
-        { x: corner.x, y: rect.lly },
-      ],
+      [corner, { x: corner.x, y: rect.lly }],
       bbox.llx,
       bbox.lly,
     )
     let diag_line = polyline_points(
-      [
-        corner,
-        { x: rect.urx, y: rect.ury },
-      ],
+      [corner, { x: rect.urx, y: rect.ury }],
       bbox.llx,
       bbox.lly,
     )
@@ -6109,8 +6224,16 @@ fn write_svg_node_group(
     )
   } else if kind == "component" {
     let outline = polygon_points(component_points(rect), bbox.llx, bbox.lly)
-    let top_tab = polyline_points(component_top_tab_points(rect), bbox.llx, bbox.lly)
-    let bottom_tab = polyline_points(component_bottom_tab_points(rect), bbox.llx, bbox.lly)
+    let top_tab = polyline_points(
+      component_top_tab_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let bottom_tab = polyline_points(
+      component_bottom_tab_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
     write_line(
       sb,
       "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
@@ -6230,7 +6353,7 @@ fn write_svg_node_group(
                 @geom.Spline::{
                   start: None,
                   end: None,
-                    points: rounded_polygon_bezier_points(rect_points(base_rect)),
+                  points: rounded_polygon_bezier_points(rect_points(base_rect)),
                 },
                 bbox.llx,
                 bbox.lly,
@@ -6242,7 +6365,11 @@ fn write_svg_node_group(
                 pretty,
               )
             } else {
-              let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
+              let attrs = polygon_points(
+                rect_points(base_rect),
+                bbox.llx,
+                bbox.lly,
+              )
               write_line(
                 sb,
                 "<polygon fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} points=\"\{attrs}\"/>",
@@ -6271,7 +6398,11 @@ fn write_svg_node_group(
                   pretty,
                 )
               } else {
-                let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+                let outline = polygon_points(
+                  rect_points(expanded),
+                  bbox.llx,
+                  bbox.lly,
+                )
                 write_line(
                   sb,
                   "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{outline}\"/>",
@@ -6306,8 +6437,14 @@ fn write_svg_node_group(
           if !no_outline {
             for i in 1..<peripheries {
               let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
-              let outer_cx = svg_x((expanded.llx + expanded.urx) / 2.0, bbox.llx)
-              let outer_cy = svg_y((expanded.lly + expanded.ury) / 2.0, bbox.lly)
+              let outer_cx = svg_x(
+                (expanded.llx + expanded.urx) / 2.0,
+                bbox.llx,
+              )
+              let outer_cy = svg_y(
+                (expanded.lly + expanded.ury) / 2.0,
+                bbox.lly,
+              )
               let outer_rx = (expanded.urx - expanded.llx) / 2.0
               let outer_ry = (expanded.ury - expanded.lly) / 2.0
               write_line(
@@ -6333,15 +6470,7 @@ fn write_svg_node_group(
       match node_layout.xlabel_pos {
         Some(pos) =>
           write_label_lines(
-            sb,
-            xlabel,
-            font,
-            size,
-            color,
-            pos,
-            bbox,
-            "",
-            pretty,
+            sb, xlabel, font, size, color, pos, bbox, "", pretty,
           )
         None => ()
       }
@@ -6409,17 +6538,7 @@ fn write_svg_node_group(
           Some(value) => value
           None => node_layout.pos
         }
-        write_label_lines(
-          sb,
-          text,
-          font,
-          size,
-          color,
-          pos,
-          bbox,
-          "",
-          pretty,
-        )
+        write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
       }
   }
   let xlabel = match node_attr(node, "xlabel") {
@@ -6429,17 +6548,7 @@ fn write_svg_node_group(
   if xlabel != "" {
     match node_layout.xlabel_pos {
       Some(pos) =>
-        write_label_lines(
-          sb,
-          xlabel,
-          font,
-          size,
-          color,
-          pos,
-          bbox,
-          "",
-          pretty,
-        )
+        write_label_lines(sb, xlabel, font, size, color, pos, bbox, "", pretty)
       None => ()
     }
   }
@@ -6515,13 +6624,14 @@ pub fn render_svg(
   let scale_y_text = format_double_significant(scale_y, 6)
   let translate_x_text = format_double(translate_x)
   let translate_y_text = format_double(translate_y)
-  let transform =
-    "scale(\{scale_x_text} \{scale_y_text}) rotate(\{rotate}) translate(\{translate_x_text} \{translate_y_text})"
+  let transform = "scale(\{scale_x_text} \{scale_y_text}) rotate(\{rotate}) translate(\{translate_x_text} \{translate_y_text})"
   let viewbox_w = format_double_fixed(display_width.to_double(), 2)
   let viewbox_h = format_double_fixed(display_height.to_double(), 2)
   let bg_fill = match layout.graph.get_attr("bgcolor") {
     Some(value) =>
-      svg_color(resolve_colorscheme_color(value, graph_colorscheme(layout.graph)))
+      svg_color(
+        resolve_colorscheme_color(value, graph_colorscheme(layout.graph)),
+      )
     None => "white"
   }
   let left = format_double(bbox.llx - pad_x)
@@ -6532,28 +6642,16 @@ pub fn render_svg(
   let sb = StringBuilder::new()
   if include_xml_decl {
     write_line(
-      sb,
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>",
-      "",
-      pretty,
+      sb, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>", "", pretty,
     )
     write_line(
-      sb,
-      "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"",
-      "",
-      pretty,
+      sb, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"", "", pretty,
     )
     write_line(
-      sb,
-      " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">",
-      "",
-      pretty,
+      sb, " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">", "", pretty,
     )
     write_line(
-      sb,
-      "<!-- Generated by graphviz version 14.1.1 (20251213.1925)",
-      "",
-      pretty,
+      sb, "<!-- Generated by graphviz version 14.1.1 (20251213.1925)", "", pretty,
     )
     write_line(sb, " -->", "", pretty)
     write_line(
@@ -6585,12 +6683,13 @@ pub fn render_svg(
     pretty,
   )
   match graph_title {
-    Some(value) => write_line(
-      sb,
-      "<title>\{escape_xml_with_dash(value)}</title>",
-      "",
-      pretty,
-    )
+    Some(value) =>
+      write_line(
+        sb,
+        "<title>\{escape_xml_with_dash(value)}</title>",
+        "",
+        pretty,
+      )
     None => ()
   }
   if layout.graph.is_root() {
@@ -6655,12 +6754,7 @@ pub fn render_svg(
             None => 1
           }
           write_svg_node_group(
-            sb,
-            node_layout,
-            fixedshape_draw_sizes,
-            bbox,
-            node_id,
-            pretty,
+            sb, node_layout, fixedshape_draw_sizes, bbox, node_id, pretty,
           )
           written_nodes[node_name] = true
         }
@@ -6691,12 +6785,7 @@ pub fn render_svg(
               None => 1
             }
             write_svg_node_group(
-              sb,
-              node_layout,
-              fixedshape_draw_sizes,
-              bbox,
-              node_id,
-              pretty,
+              sb, node_layout, fixedshape_draw_sizes, bbox, node_id, pretty,
             )
             written_nodes[head_name] = true
           }
@@ -6708,26 +6797,22 @@ pub fn render_svg(
         match layout_edge_by_id.get(edge.id()) {
           Some(edge_layout) => {
             let edge_id = match edge_attr(edge, "id") {
-              Some(value) => if value != "" { value } else {
-                match edge_order.get(edge.id()) {
-                  Some(order) => "edge\{order + 1}"
-                  None => "edge1"
+              Some(value) =>
+                if value != "" {
+                  value
+                } else {
+                  match edge_order.get(edge.id()) {
+                    Some(order) => "edge\{order + 1}"
+                    None => "edge1"
+                  }
                 }
-              }
               None =>
                 match edge_order.get(edge.id()) {
                   Some(order) => "edge\{order + 1}"
                   None => "edge1"
                 }
             }
-            write_svg_edge_group(
-              sb,
-              edge_layout,
-              kind,
-              bbox,
-              edge_id,
-              pretty,
-            )
+            write_svg_edge_group(sb, edge_layout, kind, bbox, edge_id, pretty)
             written_edges[edge.id()] = true
           }
           None => ()

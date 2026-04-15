@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Ordering mincross owner: clustered pre-root seed/reorder/materialization
 /// stage stays with the clustered root/finalize pipeline that consumes it.

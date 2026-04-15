@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: rank.c tb_balance uses qsort(rank-only), which can move
 /// tie-equivalent chain nodes one rank further than stable ordering.

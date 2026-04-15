@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Integrated network_simplex label-spacing ladders stay together because they
 /// exercise the same LR spacing responsibility through different label-heavy

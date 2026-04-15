@@ -1,0 +1,9 @@
+import {
+  "moonbit-community/graphviz/attrs",
+  "moonbit-community/graphviz/cgraph",
+  "moonbitlang/core/debug",
+}
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+} for "wbtest"

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Source position for parse errors.
 struct Position {
@@ -43,7 +42,9 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
 ///|
 /// Parse DOT file containing one or more graphs.
 #declaration_only
-pub fn parse_dot_file_all(path : String) -> Array[@cgraph.Graph] raise DotParseError {
+pub fn parse_dot_file_all(
+  path : String,
+) -> Array[@cgraph.Graph] raise DotParseError {
   ...
 }
 

@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn point(x : Double, y : Double) -> @geom.Point {
   { x, y }
@@ -43,7 +42,10 @@ test "shortest path bends around concave notch" {
 }
 
 ///|
-fn assert_points_eq(actual : Array[@geom.Point], expected : Array[@geom.Point]) -> Unit raise {
+fn assert_points_eq(
+  actual : Array[@geom.Point],
+  expected : Array[@geom.Point],
+) -> Unit raise {
   if actual.length() != expected.length() {
     fail("expected point count \{expected.length()} got \{actual.length()}")
   }

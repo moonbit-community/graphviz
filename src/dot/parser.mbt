@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 priv struct Parser {
   lexer : Lexer
@@ -223,7 +222,10 @@ fn parser_is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn parser_graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
+fn parser_graph_contains_node(
+  graph : @cgraph.Graph,
+  node : @cgraph.Node,
+) -> Bool {
   let target = node.name()
   for entry in graph.nodes() {
     if entry.name() == target {
@@ -245,7 +247,8 @@ fn parser_cluster_has_descendant_with_node(
   while stack.length() > 0 {
     let current = stack[stack.length() - 1]
     let _ = stack.pop()
-    if parser_is_cluster_graph(current) && parser_graph_contains_node(current, node) {
+    if parser_is_cluster_graph(current) &&
+      parser_graph_contains_node(current, node) {
       return true
     }
     for child in current.subgraphs() {
@@ -265,7 +268,8 @@ fn parser_innermost_cluster_names_for_node(
   while stack.length() > 0 {
     let current = stack[stack.length() - 1]
     let _ = stack.pop()
-    if parser_is_cluster_graph(current) && parser_graph_contains_node(current, node) &&
+    if parser_is_cluster_graph(current) &&
+      parser_graph_contains_node(current, node) &&
       !parser_cluster_has_descendant_with_node(current, node) {
       match current.name() {
         Some(name) => names[name] = true
@@ -288,11 +292,7 @@ fn parser_cluster_is_descendant_of_innermost(
   while true {
     if parser_is_cluster_graph(current) {
       match current.name() {
-        Some(name) => {
-          if innermost.get(name) is Some(_) {
-            return true
-          }
-        }
+        Some(name) => if innermost.get(name) is Some(_) { return true }
         None => ()
       }
     }
@@ -373,9 +373,11 @@ fn Parser::endpoint_nodes(
       for i, node in root.nodes() {
         root_order[node.name()] = i
       }
-      nodes.sort_by_key(node => match root_order.get(node.name()) {
-        Some(value) => value
-        None => 100000
+      nodes.sort_by_key(node => {
+        match root_order.get(node.name()) {
+          Some(value) => value
+          None => 100000
+        }
       })
       (nodes, None)
     }
@@ -695,7 +697,9 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
 }
 
 ///|
-pub fn parse_dot_file_all(path : String) -> Array[@cgraph.Graph] raise DotParseError {
+pub fn parse_dot_file_all(
+  path : String,
+) -> Array[@cgraph.Graph] raise DotParseError {
   let (src, used_latin1_fallback) = decode_dot_file(path)
   let graphs = parse_dot_all(src)
   if used_latin1_fallback {

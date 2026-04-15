@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "collect_top_clusters keeps only top-level clusters and excludes the cluster source itself" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

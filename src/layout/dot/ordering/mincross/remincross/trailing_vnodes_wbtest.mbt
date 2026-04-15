@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "cluster_rank_ranges_overlap treats touching ranges as overlapping and falls back to min rank when max is missing" {
   let cluster_min_rank : Map[String, Int] = Map::new()

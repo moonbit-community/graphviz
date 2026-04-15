@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Unranked-engine output projection owner: positions/sizes -> projected nodes,
 /// edge spline emission from solved positions, and final layout-tree assembly.

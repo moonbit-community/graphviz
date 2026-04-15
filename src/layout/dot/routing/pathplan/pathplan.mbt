@@ -2,10 +2,13 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 const CCW_ISCCW : Int = 1
+
+///|
 const CCW_ISCW : Int = 2
+
+///|
 const CCW_ISON : Int = 3
 
 ///|
@@ -73,7 +76,10 @@ fn intersects(
   let ccw2 = ccw(pa, pb, pd)
   let ccw3 = ccw(pc, pd, pa)
   let ccw4 = ccw(pc, pd, pb)
-  if ccw1 == CCW_ISON || ccw2 == CCW_ISON || ccw3 == CCW_ISON || ccw4 == CCW_ISON {
+  if ccw1 == CCW_ISON ||
+    ccw2 == CCW_ISON ||
+    ccw3 == CCW_ISON ||
+    ccw4 == CCW_ISON {
     between(pa, pb, pc) ||
     between(pa, pb, pd) ||
     between(pc, pd, pa) ||
@@ -83,7 +89,7 @@ fn intersects(
     let v2 = if ccw2 == CCW_ISCCW { 1 } else { 0 }
     let v3 = if ccw3 == CCW_ISCCW { 1 } else { 0 }
     let v4 = if ccw4 == CCW_ISCCW { 1 } else { 0 }
-    (v1 != v2) && (v3 != v4)
+    v1 != v2 && v3 != v4
   }
 }
 
@@ -101,12 +107,11 @@ fn is_diagonal(
   let p_i = nodes[points[i]].point
   let p_ip1 = nodes[points[ip1]].point
   let p_ip2 = nodes[points[ip2]].point
-  let res =
-    if ccw(p_im1, p_i, p_ip1) == CCW_ISCCW {
-      ccw(p_i, p_ip2, p_im1) == CCW_ISCCW && ccw(p_ip2, p_i, p_ip1) == CCW_ISCCW
-    } else {
-      ccw(p_i, p_ip2, p_ip1) == CCW_ISCW
-    }
+  let res = if ccw(p_im1, p_i, p_ip1) == CCW_ISCCW {
+    ccw(p_i, p_ip2, p_im1) == CCW_ISCCW && ccw(p_ip2, p_i, p_ip1) == CCW_ISCCW
+  } else {
+    ccw(p_i, p_ip2, p_ip1) == CCW_ISCW
+  }
   if !res {
     return false
   }
@@ -227,10 +232,7 @@ fn mark_tri_path(
   }
   for edge in triangles[trii].edges {
     match edge.right {
-      Some(next) =>
-        if mark_tri_path(triangles, next, trij) {
-        return true
-      }
+      Some(next) => if mark_tri_path(triangles, next, trij) { return true }
       None => ()
     }
   }
@@ -270,11 +272,7 @@ fn split_deque(dq : Deque, side_front : Bool, index : Int) -> Unit {
 }
 
 ///|
-fn find_deque_split(
-  dq : Deque,
-  nodes : Array[PathNode],
-  node_idx : Int,
-) -> Int {
+fn find_deque_split(dq : Deque, nodes : Array[PathNode], node_idx : Int) -> Int {
   let point = nodes[node_idx].point
   let mut idx = dq.fp
   while idx < dq.apex {
@@ -325,20 +323,19 @@ fn normalize_polygon_order(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let p2 = points[min_idx]
   let p1 = points[(min_idx + points.length() - 1) % points.length()]
   let p3 = points[(min_idx + 1) % points.length()]
-  let needs_reverse =
-    (p1.x == p2.x && p2.x == p3.x && p3.y > p2.y) || ccw(p1, p2, p3) != CCW_ISCCW
-  let ordered : Array[@geom.Point] =
-    if needs_reverse {
-      let reversed : Array[@geom.Point] = []
-      let mut idx = points.length()
-      while idx > 0 {
-        idx = idx - 1
-        reversed.push(points[idx])
-      }
-      reversed
-    } else {
-      points
+  let needs_reverse = (p1.x == p2.x && p2.x == p3.x && p3.y > p2.y) ||
+    ccw(p1, p2, p3) != CCW_ISCCW
+  let ordered : Array[@geom.Point] = if needs_reverse {
+    let reversed : Array[@geom.Point] = []
+    let mut idx = points.length()
+    while idx > 0 {
+      idx = idx - 1
+      reversed.push(points[idx])
     }
+    reversed
+  } else {
+    points
+  }
   // Graphviz parity: drop consecutive duplicate polygon vertices (shortest.c).
   if ordered.length() == 0 {
     return ordered
@@ -427,7 +424,12 @@ pub fn shortest_path_in_poly(
     return [start, end]
   }
   let dq_size = normalized.length() * 2 + 4
-  let dq = Deque::{ pnlps: Array::make(dq_size, 0), fp: dq_size / 2, lp: dq_size / 2 - 1, apex: 0 }
+  let dq = Deque::{
+    pnlps: Array::make(dq_size, 0),
+    fp: dq_size / 2,
+    lp: dq_size / 2 - 1,
+    apex: 0,
+  }
   add_to_deque(dq, true, start_idx, nodes)
   dq.apex = dq.fp
   let mut trii = start_tri

@@ -1,0 +1,10 @@
+import {
+  "moonbit-community/graphviz/layout/dot/graph_label",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/cluster_graph",
+  "moonbit-community/graphviz/layout/dot/clustering/membership",
+  "moonbit-community/graphviz/layout/dot/label_metrics",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}

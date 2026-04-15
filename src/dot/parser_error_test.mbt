@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "parse_dot reports invalid token at start" {
   let result : Result[@cgraph.Graph, DotParseError] = try? @dot.parse_dot("@")
@@ -17,8 +16,9 @@ test "parse_dot reports invalid token at start" {
 
 ///|
 test "parse_dot requires graph or digraph" {
-  let result : Result[@cgraph.Graph, DotParseError] =
-    try? @dot.parse_dot("node { }")
+  let result : Result[@cgraph.Graph, DotParseError] = try? @dot.parse_dot(
+    "node { }",
+  )
   match result {
     Err(DotParseError::InvalidSyntax(pos~, message~)) => {
       ignore(pos)
@@ -30,13 +30,13 @@ test "parse_dot requires graph or digraph" {
 
 ///|
 test "parse_dot accepts case-insensitive graph keywords" {
-  let directed = try @dot.parse_dot("diGraph G { a -> b; }") catch {
+  let directed = @dot.parse_dot("diGraph G { a -> b; }") catch {
     err => fail("unexpected parse failure: \{err}")
   }
   assert_eq(directed.kind(), @cgraph.GraphKind::Directed)
   assert_eq(directed.name(), Some("G"))
 
-  let undirected = try @dot.parse_dot("GrApH H { a -- b; }") catch {
+  let undirected = @dot.parse_dot("GrApH H { a -- b; }") catch {
     err => fail("unexpected parse failure: \{err}")
   }
   assert_eq(undirected.kind(), @cgraph.GraphKind::Undirected)
@@ -45,8 +45,9 @@ test "parse_dot accepts case-insensitive graph keywords" {
 
 ///|
 test "parse_dot rejects undirected edges in digraph" {
-  let result : Result[@cgraph.Graph, DotParseError] =
-    try? @dot.parse_dot("digraph { a -- b; }")
+  let result : Result[@cgraph.Graph, DotParseError] = try? @dot.parse_dot(
+    "digraph { a -- b; }",
+  )
   match result {
     Err(DotParseError::InvalidSyntax(pos~, message~)) => {
       ignore(pos)
@@ -58,8 +59,9 @@ test "parse_dot rejects undirected edges in digraph" {
 
 ///|
 test "parse_dot flags trailing tokens" {
-  let result : Result[@cgraph.Graph, DotParseError] =
-    try? @dot.parse_dot("digraph { a } extra")
+  let result : Result[@cgraph.Graph, DotParseError] = try? @dot.parse_dot(
+    "digraph { a } extra",
+  )
   match result {
     Err(DotParseError::InvalidSyntax(pos~, message~)) => {
       ignore(pos)

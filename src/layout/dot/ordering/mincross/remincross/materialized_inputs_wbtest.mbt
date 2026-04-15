@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_remincross_materialized_arrays replays materialized tail buckets in rem_nlist order" {
   let rem_groups : Map[Int, Array[String]] = Map::new()

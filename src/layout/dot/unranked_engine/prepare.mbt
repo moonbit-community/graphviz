@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Shared entry/prep helpers for unranked engines: prune handling, graph
 /// cloning, neato validation, and the public neato/noop prepare entry points.

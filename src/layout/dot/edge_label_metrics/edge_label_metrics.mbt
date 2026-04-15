@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Edge-label metric helpers extracted from `label_metrics` so edge label
 /// sizing and detection can evolve independently from general text metrics.

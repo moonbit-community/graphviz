@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "sample_spline_points and spline label helpers follow arc length" {
   let samples = sample_spline_points(straight_spline_points(), 3)

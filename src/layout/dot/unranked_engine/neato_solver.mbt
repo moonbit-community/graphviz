@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Neato force-directed solve owner for unranked layout: pinned-pos parsing,
 /// node sizing/indexing, edge spring construction, cooling/relax, and neato

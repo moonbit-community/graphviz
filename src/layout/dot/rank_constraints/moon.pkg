@@ -1,0 +1,11 @@
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbitlang/core/string",
+}
+
+import {
+  "moonbit-community/graphviz/layout/dot" @layout_dot,
+  "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbitlang/core/strconv",
+  "moonbit-community/graphviz/geom",
+} for "test"

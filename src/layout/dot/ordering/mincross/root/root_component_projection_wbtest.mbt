@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 fn sample_root_reorder_inputs() -> RootRankReorderInputs {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)

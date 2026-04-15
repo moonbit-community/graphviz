@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "build_x_groups_after_reorder returns source groups when reorder is disabled" {
   let output = build_x_groups_after_reorder(

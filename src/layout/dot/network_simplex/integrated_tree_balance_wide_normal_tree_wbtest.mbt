@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: this wide all-normal tree is fixture-sized but its signal is
 /// purely algorithmic. Keep it as an owner-local direct case so integrated

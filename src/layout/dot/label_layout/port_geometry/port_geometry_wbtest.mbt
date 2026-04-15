@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 test "layout_ports_from_final rotates record ports into LR layout coordinates" {
   @record_layout.reset_record_layout_caches()

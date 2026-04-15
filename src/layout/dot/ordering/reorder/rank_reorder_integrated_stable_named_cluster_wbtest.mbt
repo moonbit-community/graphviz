@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: this is a stable named multi-cluster slice behind the
 /// yours_truly integrated fixture at startpass=2. Keep an exact owner-local

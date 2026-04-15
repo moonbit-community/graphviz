@@ -2,7 +2,6 @@
 // This program is made available under the terms of the Eclipse Public License 2.0.
 // SPDX-License-Identifier: EPL-2.0
 
-
 ///|
 /// Graphviz parity: recover_slack class keys collapse reverse-direction
 /// unlabeled edges that share a class2 vnode chain.
