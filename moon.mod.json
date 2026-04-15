@@ -7,5 +7,12 @@
   "repository": "https://github.com/moonbit-community/graphviz",
   "description": "Graphviz rewrite in MoonBit",
   "license": "EPL-2.0",
-  "source": "src"
+  "source": "src",
+  "include": [
+    "src",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "moon.mod.json"
+  ]
 }
