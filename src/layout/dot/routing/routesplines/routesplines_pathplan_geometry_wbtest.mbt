@@ -75,6 +75,85 @@ test "route_pathplan_from_boxes clamps endpoints into first and last boxes" {
 }
 
 ///|
+test "route_pathplan_from_boxes repairs adjacent box gaps before routing" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: 10.0, lly: 4.0, urx: 14.0, ury: 8.0 },
+    { llx: 0.0, lly: 0.0, urx: 8.0, ury: 4.0 },
+  ]
+
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: 12.0, y: 7.0 }, { x: 2.0, y: 1.0 }) {
+    Some(value) => value
+    None => fail("expected repaired pathplan route")
+  }
+
+  assert_eq(route.boxes[0], { llx: 8.0, lly: 4.0, urx: 14.0, ury: 8.0 })
+  assert_eq(route.boxes[1], { llx: 0.0, lly: 0.0, urx: 10.0, ury: 4.0 })
+  assert_eq(route.points[0], { x: 12.0, y: 7.0 })
+  assert_eq(route.points[route.points.length() - 1], { x: 2.0, y: 1.0 })
+}
+
+///|
+test "probe xx first segment sanitized polygon and route" {
+  let boxes : Array[@geom.Rect] = [
+    { llx: -9526.0, lly: 472.0, urx: -4478.0, ury: 483.5 },
+    { llx: -11537.0, lly: 436.0, urx: 11646.0, ury: 472.0 },
+    { llx: -9946.0, lly: 413.0, urx: -5890.0, ury: 436.0 },
+    { llx: -11537.0, lly: 377.0, urx: 11646.0, ury: 413.0 },
+    { llx: -9946.0, lly: 365.5, urx: -9898.0, ury: 377.0 },
+  ]
+
+  let (sanitized, clamped_start, clamped_end) = match
+    sanitize_path_boxes(boxes, { x: -4533.0, y: 482.5 }, { x: -9922.0, y: 366.5 }) {
+    Some(value) => value
+    None => fail("expected sanitized boxes")
+  }
+  let polygon = boxes_to_polygon_points(sanitized)
+  let route = match
+    route_pathplan_from_boxes(boxes, { x: -4533.0, y: 482.5 }, { x: -9922.0, y: 366.5 }) {
+    Some(value) => value
+    None => fail("expected route")
+  }
+
+  assert_eq(sanitized, [
+    { llx: -9526.0, lly: 472.0, urx: -4478.0, ury: 483.5 },
+    { llx: -11537.0, lly: 436.0, urx: 11646.0, ury: 472.0 },
+    { llx: -9946.0, lly: 413.0, urx: -5890.0, ury: 436.0 },
+    { llx: -11537.0, lly: 377.0, urx: 11646.0, ury: 413.0 },
+    { llx: -9946.0, lly: 365.5, urx: -9898.0, ury: 377.0 },
+  ])
+  assert_eq(clamped_start, { x: -4533.0, y: 482.5 })
+  assert_eq(clamped_end, { x: -9922.0, y: 366.5 })
+  assert_eq(polygon, [
+    { x: -4478.0, y: 483.5 },
+    { x: -4478.0, y: 472.0 },
+    { x: 11646.0, y: 472.0 },
+    { x: 11646.0, y: 436.0 },
+    { x: -5890.0, y: 436.0 },
+    { x: -5890.0, y: 413.0 },
+    { x: 11646.0, y: 413.0 },
+    { x: 11646.0, y: 377.0 },
+    { x: -9898.0, y: 377.0 },
+    { x: -9898.0, y: 365.5 },
+    { x: -9946.0, y: 365.5 },
+    { x: -9946.0, y: 377.0 },
+    { x: -11537.0, y: 377.0 },
+    { x: -11537.0, y: 413.0 },
+    { x: -9946.0, y: 413.0 },
+    { x: -9946.0, y: 436.0 },
+    { x: -11537.0, y: 436.0 },
+    { x: -11537.0, y: 472.0 },
+    { x: -9526.0, y: 472.0 },
+    { x: -9526.0, y: 483.5 },
+  ])
+  assert_eq(route.points, [
+    { x: -4533.0, y: 482.5 },
+    { x: -9898.0, y: 377.0 },
+    { x: -9922.0, y: 366.5 },
+  ])
+}
+
+///|
 test "dedupe_polyline_points removes consecutive duplicates" {
   let points : Array[@geom.Point] = [
     { x: 0.0, y: 0.0 },

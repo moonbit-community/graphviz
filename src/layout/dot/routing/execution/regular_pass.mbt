@@ -162,6 +162,7 @@ fn build_regular_spline_layout(
     path_left_bound: layout_input.path_left_bound,
     path_right_bound: layout_input.path_right_bound,
     ranksep_pt: layout_input.input.ranksep_pt,
+    has_graph_edge_labels: layout_input.input.has_graph_edge_labels,
     label_edge_counts: layout_input.input.label_edge_counts,
     head_port_metrics: layout_input.input.head_port_metrics,
     routing_context: layout_input.input.routing_context,

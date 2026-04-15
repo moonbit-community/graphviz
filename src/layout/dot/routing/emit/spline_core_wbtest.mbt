@@ -65,6 +65,24 @@ test "edge_render_clip_flags keeps direct sameport endpoint unclipped" {
 }
 
 ///|
+test "edge_render_clip_flags preserves explicit no-clip attrs" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  edge.set_attr("tailclip", "false")
+  edge.set_attr("headclip", "0")
+  let base = build_emit_base(
+    edge,
+    tail_clip_enabled=false,
+    head_clip_enabled=false,
+  )
+
+  let clip_flags = edge_render_clip_flags(base)
+
+  assert_false(clip_flags.tail_clip_enabled)
+  assert_false(clip_flags.head_clip_enabled)
+}
+
+///|
 test "rebuild_spline_for_render keeps short raw beziers unchanged" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))

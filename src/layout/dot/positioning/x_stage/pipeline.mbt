@@ -85,6 +85,53 @@ priv struct XWithFlatLabelData {
 }
 
 ///|
+/// Graphviz parity: position.c/make_edge_pairs walks the currently oriented
+/// ND_out lists, so xpos must rebuild tail-group edge order from the current
+/// edge_tail/edge_head arrays instead of reusing the rank-stage original-tail
+/// grouping.
+fn build_position_edge_out_order(
+  nodes : Array[@cgraph.Node],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> Map[String, Array[Int]] {
+  let node_index : Map[String, Int] = Map::new()
+  for i in 0..<nodes.length() {
+    node_index[nodes[i].name()] = i
+  }
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  for edge_idx in 0..<edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    match edge_out_order.get(tail) {
+      Some(list) => list.push(edge_idx)
+      None => edge_out_order[tail] = [edge_idx]
+    }
+  }
+  for _tail, list in edge_out_order {
+    if list.length() <= 1 {
+      continue
+    }
+    list.sort_by((a, b) => {
+      let head_a = if a < edge_head.length() { edge_head[a] } else { "" }
+      let head_b = if b < edge_head.length() { edge_head[b] } else { "" }
+      let idx_a = node_index.get(head_a).unwrap_or_default()
+      let idx_b = node_index.get(head_b).unwrap_or_default()
+      if idx_a < idx_b {
+        -1
+      } else if idx_a > idx_b {
+        1
+      } else if a < b {
+        -1
+      } else if a > b {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  edge_out_order
+}
+
+///|
 /// Graphviz parity: x-position stage must use identical xpos input assembly,
 /// and solver invocation as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
@@ -92,6 +139,11 @@ fn compute_layout_x_positions(
   pipeline : XStageInput,
   x_data : XWithFlatLabelData,
 ) -> Map[String, Double] {
+  let position_edge_out_order = build_position_edge_out_order(
+    pipeline.prep.nodes,
+    pipeline.rank_data.edge_tail,
+    pipeline.rank_data.edge_head,
+  )
   let solve_input = @x_constraints.build_x_position_solve_input({
     use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
     x_base_sizes: x_data.x_base_sizes,
@@ -105,7 +157,7 @@ fn compute_layout_x_positions(
     edges: pipeline.prep.edges,
     edge_tail: pipeline.rank_data.edge_tail,
     edge_head: pipeline.rank_data.edge_head,
-    edge_out_order: pipeline.rank_data.edge_out_order,
+    edge_out_order: position_edge_out_order,
     nlist_order: pipeline.ordering.nlist_order,
     gdnlist_order: pipeline.ordering.gdnlist_order,
     cluster_keys: x_data.x_cluster_keys,

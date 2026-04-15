@@ -27,25 +27,29 @@ fn vnode_is_merged(
     }
     count
   }
-  // Graphviz virtual edges can carry parallel multiplicity on one edge record.
-  // Our path adjacency lists parallel hops explicitly, so merge detection must
-  // compare distinct predecessors/successors instead of raw multiplicity.
-  let out_count = unique_count(out_raw)
-  let in_count = unique_count(in_raw)
-  out_count > 1 || in_count > 1
+  unique_count(out_raw) > 1 || unique_count(in_raw) > 1
+}
+
+///|
+/// Graphviz parity: only the dedicated label vnode (ND_label(vn)) is
+/// right-aligned during recover_slack. In our vnode model that is the virtual
+/// node whose height exceeds the plain virtual-node height.
+fn vnode_is_label_vnode(
+  name : String,
+  vnode_sizes : Map[String, @node_primitives.NodeSize],
+) -> Bool {
+  match vnode_sizes.get(name) {
+    Some(size) => size.height_pt > @node_primitives.VNODE_HEIGHT_PT
+    None => false
+  }
 }
 
 ///|
 /// Graphviz parity: recover_slack aligned to refs/graphviz/lib/dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
-pub fn recover_slack_vnodes(
-  input : RecoverSlackVnodesInput,
-  label_rank_for_edge : (@cgraph.Edge, Map[String, Int]) -> Int?,
-) -> Unit {
-  let edge = input.edge
+pub fn recover_slack_vnodes(input : RecoverSlackVnodesInput) -> Unit {
   let ordered_vnodes = input.ordered_vnodes
   let boxes = input.boxes
-  let ranks = input.ranks
   let vnode_ranks = input.vnode_ranks
   let rank_y = input.rank_y
   let vnode_positions = input.vnode_positions
@@ -55,10 +59,6 @@ pub fn recover_slack_vnodes(
   let adjacency = input.adjacency
   if ordered_vnodes.length() == 0 || boxes.length() == 0 {
     return ()
-  }
-  let label_rank = match label_rank_for_edge(edge, ranks) {
-    Some(value) => value
-    None => -1
   }
   let mut box_idx = 0
   for vnode in ordered_vnodes {
@@ -87,7 +87,7 @@ pub fn recover_slack_vnodes(
       Some(value) => value
       None => continue
     }
-    if vnode_rank == label_rank {
+    if vnode_is_label_vnode(vnode, vnode_sizes) {
       let new_x = box.urx
       let left = new_x - box.llx
       let new_pos : @geom.Point = { x: new_x, y: vnode_y }

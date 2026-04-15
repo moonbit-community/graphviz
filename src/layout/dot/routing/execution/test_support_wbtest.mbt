@@ -199,6 +199,7 @@ fn sample_regular_pass_input(
     x_groups: Map::new(),
     nodesep_pt: 0.0,
     ranksep_pt: 0.0,
+    has_graph_edge_labels: false,
     label_edge_counts: Map::new(),
     head_port_metrics: {
       head_port_counts: Map::new(),

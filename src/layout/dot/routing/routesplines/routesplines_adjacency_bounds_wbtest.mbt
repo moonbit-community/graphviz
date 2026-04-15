@@ -4,7 +4,7 @@
 
 
 ///|
-test "build_path_adjacency dedupes parallel edges and expands vnode chains" {
+test "build_path_adjacency preserves parallel multiplicity and expands vnode chains" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
@@ -23,11 +23,11 @@ test "build_path_adjacency dedupes parallel edges and expands vnode chains" {
     [],
   )
 
-  assert_eq(adjacency.out_edges.get("a").unwrap_or([]), ["b"])
+  assert_eq(adjacency.out_edges.get("a").unwrap_or([]), ["b", "b"])
   assert_eq(adjacency.out_edges.get("b").unwrap_or([]), ["v1"])
   assert_eq(adjacency.out_edges.get("v1").unwrap_or([]), ["v2"])
   assert_eq(adjacency.out_edges.get("v2").unwrap_or([]), ["c"])
-  assert_eq(adjacency.in_edges.get("b").unwrap_or([]), ["a"])
+  assert_eq(adjacency.in_edges.get("b").unwrap_or([]), ["a", "a"])
   assert_eq(adjacency.in_edges.get("v1").unwrap_or([]), ["b"])
   assert_eq(adjacency.in_edges.get("v2").unwrap_or([]), ["v1"])
   assert_eq(adjacency.in_edges.get("c").unwrap_or([]), ["v2"])

@@ -21,6 +21,7 @@ fn build_route_edges_input(
     x_groups: input.x_groups,
     nodesep_pt: input.nodesep_pt,
     ranksep_pt: input.ranksep_pt,
+    has_graph_edge_labels: input.has_graph_edge_labels,
     label_edge_counts: input.label_edge_counts,
     head_port_metrics: input.head_port_metrics,
     flat_label_edge_vnodes: input.flat_label_edge_vnodes,

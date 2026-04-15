@@ -245,6 +245,7 @@ pub(all) struct RegularPassInput {
   x_groups : Map[Int, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext
@@ -280,6 +281,7 @@ pub(all) struct RouteEdgesInput {
   x_groups : Map[Int, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]
@@ -307,6 +309,7 @@ pub(all) struct RouteEdgesPipelineInput {
   x_groups : Map[Int, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]

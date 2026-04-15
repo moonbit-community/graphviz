@@ -136,6 +136,7 @@ pub(all) struct RouteEdgesForDotInput {
   routing_sizes : Map[String, NodeSize]
   path_groups : Map[Int, Array[String]]
   routing_context : @precompute.RoutingContext
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : @precompute.HeadPortMetrics
   enable_complex_tuning : Bool
@@ -178,6 +179,7 @@ pub fn route_edges_for_dot(
     x_groups: input.path_groups,
     nodesep_pt: input.rank_heights.nodesep_pt,
     ranksep_pt: input.rank_heights.ranksep_pt,
+    has_graph_edge_labels: input.has_graph_edge_labels,
     label_edge_counts: input.label_edge_counts,
     head_port_metrics: input.head_port_metrics,
     flat_label_edge_vnodes: input.routing_positions_state.flat_label_edge_vnodes,
@@ -253,6 +255,7 @@ pub fn compute_dot_routing_stage(
   let label_edge_counts = @precompute.build_label_edge_counts(prep.edges, edge => {
     @edge_label_metrics.edge_mid_label_text(edge) is Some(_)
   })
+  let has_graph_edge_labels = @edge_label_metrics.graph_has_edge_labels(prep.edges)
   let enable_complex_tuning = @precompute.complex_tuning_enabled()
   let precompute_data = build_routing_precompute_data({
     prep,
@@ -263,7 +266,7 @@ pub fn compute_dot_routing_stage(
     positions_state: routing_positions_state,
     label_ports_map: ratio_adjusted_data.label_ports_map,
     cluster_bboxes: routing_cluster_bboxes,
-    sizes: prep.sizes,
+    sizes: prep.output_sizes,
     enable_complex_tuning,
   })
   let port_pad_below = precompute_data.port_pad_below
@@ -281,9 +284,10 @@ pub fn compute_dot_routing_stage(
     routing_positions_state: ratio_adjusted_data.positions_state,
     routing_label_ports_map: ratio_adjusted_data.label_ports_map,
     routing_label_ports_raw: ratio_adjusted_data.label_ports_raw,
-    routing_sizes: prep.sizes,
+    routing_sizes: prep.output_sizes,
     path_groups,
     routing_context,
+    has_graph_edge_labels,
     label_edge_counts,
     head_port_metrics,
     enable_complex_tuning,

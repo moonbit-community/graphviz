@@ -4585,6 +4585,25 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let raw_color = @attrs.color(edge.get_attr("color"), default="black")
+  let has_explicit_stroke_style = stroke_width_style_name(
+    style, edge.get_attr("penwidth"),
+  ) is Some(_) || dash_style_name(style) is Some(_)
+  let has_explicit_solid = match edge.get_attr("style") {
+    Some(raw_style) => {
+      let mut explicit = false
+      for token in xdot_style_tokens(raw_style.to_lower()) {
+        if token == "solid" {
+          explicit = true
+          break
+        }
+      }
+      explicit
+    }
+    None => false
+  }
+  if has_explicit_solid || has_explicit_stroke_style {
+    ops.push(@render.DrawOp::Style(name="solid"))
+  }
   let has_colon = raw_color.find(":") is Some(_)
   let has_semicolon = raw_color.find(";") is Some(_)
   if has_colon && has_semicolon {

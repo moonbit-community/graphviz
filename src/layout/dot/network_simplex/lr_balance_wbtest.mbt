@@ -78,6 +78,26 @@ test "sort_nodes_by_rank is stable for equal-rank nodes" {
 }
 
 ///|
+test "sort_nodes_by_rank preserves original order within equal-rank groups" {
+  let graph = new_graph()
+  let n0 = add_node(graph, "n0")
+  let n1 = add_node(graph, "n1")
+  let n2 = add_node(graph, "n2")
+  let n3 = add_node(graph, "n3")
+  let n4 = add_node(graph, "n4")
+  set_node_rank(graph, n0, 2)
+  set_node_rank(graph, n1, 1)
+  set_node_rank(graph, n2, 2)
+  set_node_rank(graph, n3, 1)
+  set_node_rank(graph, n4, 2)
+  let nodes = [n4, n2, n0, n3, n1]
+
+  sort_nodes_by_rank(graph, nodes)
+
+  assert_eq(nodes, [n3, n1, n4, n2, n0])
+}
+
+///|
 test "network_simplex LR keeps symmetric fanout nodes aligned" {
   let graph = build_lr_fanout_graph()
 

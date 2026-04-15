@@ -46,15 +46,14 @@ pub fn build_path_adjacency(
     while idx + 1 < path_nodes.length() {
       let tail = path_nodes[idx]
       let head = path_nodes[idx + 1]
-      // Graphviz path adjacency is based on distinct predecessor/successor
-      // links in the virtual chain; parallel multiplicity must not duplicate
-      // neighbor entries here, or pathplan ordering drifts.
+      // Graphviz parity: pathscross() checks ND_out/ND_in sizes using real
+      // edge multiplicity, so routing adjacency must preserve parallel edges.
       match out_edges.get(tail) {
-        Some(list) => push_unique_string(list, head)
+        Some(list) => list.push(head)
         None => out_edges[tail] = [head]
       }
       match in_edges.get(head) {
-        Some(list) => push_unique_string(list, tail)
+        Some(list) => list.push(tail)
         None => in_edges[head] = [tail]
       }
       idx = idx + 1
@@ -178,16 +177,6 @@ pub fn pathplan_bounds(
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, 0.0)
   compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
-}
-
-///|
-fn push_unique_string(list : Array[String], value : String) -> Unit {
-  for item in list {
-    if item == value {
-      return ()
-    }
-  }
-  list.push(value)
 }
 
 ///|

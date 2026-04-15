@@ -69,6 +69,16 @@ fn cmp_double(a : Double, b : Double) -> Int {
 }
 
 ///|
+fn same_endpoint_set(a : EdgeRouteBase, b : EdgeRouteBase) -> Bool {
+  let a_tail = a.orig_tail_name
+  let a_head = a.orig_head_name
+  let b_tail = b.orig_tail_name
+  let b_head = b.orig_head_name
+  (a_tail == b_tail && a_head == b_head) ||
+  (a_tail == b_head && a_head == b_tail)
+}
+
+///|
 fn port_cmp(
   a_defined : Bool,
   a_pos : @geom.Point,
@@ -199,9 +209,14 @@ fn route_edge_cmp(
   }
   let id_a = a.id()
   let id_b = b.id()
-  let id_cmp = cmp_int(id_a, id_b)
-  if id_cmp != 0 {
-    return id_cmp
+  // Graphviz edgecmp uses the main-edge AGSEQ only as a cheap separator for
+  // non-equivalent edge classes. Preserve current edge-id order there, but let
+  // equivalent endpoint sets fall through to port comparison.
+  if !same_endpoint_set(base_a, base_b) {
+    let id_cmp = cmp_int(id_a, id_b)
+    if id_cmp != 0 {
+      return id_cmp
+    }
   }
   let port_info_a = edge_port_cmp_info(base_a, type_a, order_index)
   let port_info_b = edge_port_cmp_info(base_b, type_b, order_index)

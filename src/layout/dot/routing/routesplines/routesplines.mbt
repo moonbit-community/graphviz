@@ -58,6 +58,16 @@ const SIDE_TOP : Int = 4
 const SIDE_LEFT : Int = 8
 
 ///|
+fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => @edge_spline.point(0.0, -1.0)
+    RankDir::BT => @edge_spline.point(0.0, 1.0)
+    RankDir::LR => @edge_spline.point(1.0, 0.0)
+    RankDir::RL => @edge_spline.point(-1.0, 0.0)
+  }
+}
+
+///|
 /// Graphviz parity: pathplan split metadata for straight-path routing.
 pub(all) struct PathplanSegment {
   points : Array[@geom.Point]
@@ -94,6 +104,8 @@ fn edge_pathplan_polyline_core(
   path_head_port_box : @geom.Rect?,
   path_tail_rank : Int,
   path_head_rank : Int,
+  path_tail_prev : String?,
+  path_head_next : String?,
   ordered : Array[String],
   vnode_ranks : Map[String, Int],
   vnode_sizes : Map[String, NodeSize],
@@ -168,7 +180,7 @@ fn edge_pathplan_polyline_core(
       path_out_edges,
       path_in_edges,
       order_index,
-      None,
+      path_tail_prev,
       tail_next,
     ) {
     Some(box) => box
@@ -305,7 +317,7 @@ fn edge_pathplan_polyline_core(
       path_in_edges,
       order_index,
       head_prev,
-      None,
+      path_head_next,
     ) {
     Some(box) => box
     None => return None
@@ -363,7 +375,7 @@ fn edge_pathplan_polyline_core(
       Some({
         points: dedupe_polyline_points(route.points),
         barriers: polygon_edges(route.polygon),
-        boxes: normalized_boxes,
+        boxes: route.boxes,
       })
     None => None
   }
@@ -404,7 +416,7 @@ pub fn edge_pathplan_polyline(
   nodesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
-  has_edge_label : Bool,
+  has_any_edge_label : Bool,
 ) -> PathplanResult? {
   let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list.copy()
@@ -437,7 +449,7 @@ pub fn edge_pathplan_polyline(
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (@numeric.round_int(nodesep_pt) / 4).to_double()
   let straight_eps = 0.01
-  let label_threshold = if has_edge_label { 5 } else { 3 }
+  let label_threshold = if has_any_edge_label { 5 } else { 3 }
   let straight_len_from = (names : Array[String], start_idx : Int) => {
     if start_idx + 1 >= names.length() {
       0
@@ -451,7 +463,10 @@ pub fn edge_pathplan_polyline(
               Some(value) => value
               None => break
             }
-            // Graphviz parity: straight_len checks x alignment in unflipped coords.
+            // Graphviz parity: straight_len checks x alignment in unflipped
+            // coords; keep the small epsilon used by the original MoonBit
+            // implementation because recovered vnode coordinates are not always
+            // integer-identical to Graphviz at this stage.
             let aligned = Double::abs(pos.x - base.x) <= straight_eps
             if !aligned {
               break
@@ -466,8 +481,8 @@ pub fn edge_pathplan_polyline(
     }
   }
   let first_split_for = (names : Array[String]) => {
-    let mut split_head_idx = -1
-    let mut split_tail_idx = -1
+    let mut split_start_idx = -1
+    let mut split_straight_len = 0
     // Graphviz parity: straight-mode detection is evaluated while walking
     // the chain; a split can start at an interior vnode, not only the first.
     let mut start_idx = 0
@@ -476,19 +491,19 @@ pub fn edge_pathplan_polyline(
       if straight_len >= label_threshold {
         let sl = straight_len - 2
         if sl >= 1 {
-          let head_idx = start_idx + 1
-          let tail_idx = head_idx + sl
-          if tail_idx < names.length() {
-            split_head_idx = head_idx
-            split_tail_idx = tail_idx
+          let seg1_head_idx = start_idx + 1
+          let seg2_tail_idx = start_idx + straight_len - 1
+          if seg1_head_idx < names.length() && seg2_tail_idx < names.length() {
+            split_start_idx = start_idx
+            split_straight_len = straight_len
           }
         }
         break
       }
       start_idx = start_idx + 1
     }
-    if split_head_idx >= 0 && split_tail_idx >= split_head_idx {
-      Some((split_head_idx, split_tail_idx))
+    if split_start_idx >= 0 {
+      Some((split_start_idx, split_straight_len))
     } else {
       None
     }
@@ -497,6 +512,7 @@ pub fn edge_pathplan_polyline(
     // Graphviz parity: straight_path can split repeatedly on the remaining chain.
     let segments : Array[PathplanSegment] = []
     let mut current_tail_name = path_tail_name
+    let mut current_tail_prev : String? = None
     let mut current_tail_anchor = path_tail_anchor
     let mut current_tail_side = path_tail_side
     let mut current_tail_port_box = path_tail_port_box
@@ -505,17 +521,34 @@ pub fn edge_pathplan_polyline(
     let mut split_failed = false
     while true {
       match first_split_for(current_vnodes) {
-        Some((split_head_idx, split_tail_idx)) => {
-          let seg1_head = current_vnodes[split_head_idx]
-          let seg2_tail = current_vnodes[split_tail_idx]
+        Some((split_start_idx, split_straight_len)) => {
+          let seg1_head_idx = split_start_idx + 1
+          let seg2_tail_idx = split_start_idx + split_straight_len - 1
+          if seg1_head_idx >= current_vnodes.length() ||
+            seg2_tail_idx >= current_vnodes.length() {
+            split_failed = true
+            break
+          }
+          let seg1_head = current_vnodes[seg1_head_idx]
+          let seg2_tail = current_vnodes[seg2_tail_idx]
+          let seg1_head_next = if seg1_head_idx + 1 < current_vnodes.length() {
+            Some(current_vnodes[seg1_head_idx + 1])
+          } else {
+            None
+          }
+          let seg2_tail_prev = if seg2_tail_idx > 0 {
+            Some(current_vnodes[seg2_tail_idx - 1])
+          } else {
+            current_tail_prev
+          }
           let seg1_core_vnodes : Array[String] = []
           let mut idx = 0
-          while idx < split_head_idx {
+          while idx <= split_start_idx {
             seg1_core_vnodes.push(current_vnodes[idx])
             idx = idx + 1
           }
           let next_vnodes : Array[String] = []
-          idx = split_tail_idx + 1
+          idx = seg2_tail_idx + 1
           while idx < current_vnodes.length() {
             next_vnodes.push(current_vnodes[idx])
             idx = idx + 1
@@ -551,6 +584,8 @@ pub fn edge_pathplan_polyline(
               None,
               current_tail_rank,
               seg1_head_rank,
+              current_tail_prev,
+              seg1_head_next,
               seg1_core_vnodes,
               vnode_ranks,
               vnode_sizes,
@@ -575,20 +610,39 @@ pub fn edge_pathplan_polyline(
               right_bound,
             ) {
             Some(core_result) => {
+              let recover_boxes = if current_tail_side == 0 &&
+                core_result.points.length() >= 2 {
+                let seg_raw = @edge_spline.edge_spline_raw_for_points(
+                  core_result.points,
+                  @edge_spline.point(0.0, 0.0),
+                  straight_path_join_dir(rankdir),
+                  false,
+                  route_barriers=core_result.barriers,
+                )
+                if seg_raw.length() >= 4 {
+                  limit_boxes_for_spline(
+                    core_result.boxes,
+                    seg_raw,
+                    fallback_polyline=core_result.points,
+                  )
+                } else {
+                  core_result.boxes
+                }
+              } else {
+                core_result.boxes
+              }
               let seg1_recover_vnodes : Array[String] = []
-              if is_virtual_node(current_tail_name, vnode_sizes) {
-                seg1_recover_vnodes.push(current_tail_name)
+              // Graphviz parity: recover_slack runs later in the execution
+              // stage; segment metadata here should stay geometry-only.
+              let mut recover_idx = 0
+              while recover_idx <= seg2_tail_idx {
+                seg1_recover_vnodes.push(current_vnodes[recover_idx])
+                recover_idx = recover_idx + 1
               }
-              for vnode in seg1_core_vnodes {
-                seg1_recover_vnodes.push(vnode)
-              }
-              // Graphviz parity: recover_slack starts at aghead(segfirst), so
-              // straight split segment endpoints are still recover candidates.
-              seg1_recover_vnodes.push(seg1_head)
               segments.push({
                 points: core_result.points,
                 barriers: core_result.barriers,
-                boxes: core_result.boxes,
+                boxes: recover_boxes,
                 vnodes: seg1_recover_vnodes,
               })
             }
@@ -598,6 +652,7 @@ pub fn edge_pathplan_polyline(
             }
           }
           current_tail_name = seg2_tail
+          current_tail_prev = seg2_tail_prev
           current_tail_anchor = seg2_tail_pos
           current_tail_side = 0
           current_tail_port_box = None
@@ -609,17 +664,15 @@ pub fn edge_pathplan_polyline(
             edge_pathplan_polyline_core(
               current_tail_name, path_head_name, current_tail_anchor, path_head_anchor,
               current_tail_side, path_head_side, current_tail_port_box, path_head_port_box,
-              current_tail_rank, path_head_rank, current_vnodes, vnode_ranks, vnode_sizes,
+              current_tail_rank, path_head_rank, current_tail_prev, None, current_vnodes, vnode_ranks, vnode_sizes,
               cluster_keys, vnode_clusters,
               cluster_bboxes, x_groups, order_index, path_out_edges, path_in_edges,
-              rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir, merged_positions,
-              route_sizes, mval_route_sizes, splinesep_pt, left_bound, right_bound,
+              rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
+              merged_positions, route_sizes, mval_route_sizes, splinesep_pt,
+              left_bound, right_bound,
             ) {
             Some(core_result) => {
               let final_recover_vnodes : Array[String] = []
-              if is_virtual_node(current_tail_name, vnode_sizes) {
-                final_recover_vnodes.push(current_tail_name)
-              }
               for vnode in current_vnodes {
                 final_recover_vnodes.push(vnode)
               }
@@ -682,7 +735,7 @@ pub fn edge_pathplan_polyline(
     edge_pathplan_polyline_core(
       path_tail_name, path_head_name, path_tail_anchor, path_head_anchor, path_tail_side,
       path_head_side, path_tail_port_box, path_head_port_box, path_tail_rank, path_head_rank,
-      ordered, vnode_ranks, vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups,
+      None, None, ordered, vnode_ranks, vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups,
       order_index, path_out_edges,
       path_in_edges, rank_y, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, rankdir,
       merged_positions, route_sizes, mval_route_sizes, splinesep_pt, left_bound,

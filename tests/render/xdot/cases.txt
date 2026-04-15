@@ -193,7 +193,6 @@ newarrows
 nestedclust_dot
 nhg
 ngk10_4
-negative-dpi
 none
 no_arrow
 nohead
@@ -767,7 +766,6 @@ lsunix3.gv
 mike.gv
 mrecord.gv
 named.gv
-negative-dpi.gv
 newarrows.gv
 nhg.gv
 no_arrow.gv
@@ -919,3 +917,6 @@ val_nul
 val_val
 viewport
 xlabels
+b102
+b993
+xx

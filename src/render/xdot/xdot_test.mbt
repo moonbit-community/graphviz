@@ -169,6 +169,36 @@ test "render_xdot encodes dashed and dotted styles" {
 }
 
 ///|
+test "render_xdot omits redundant solid edge style for color-only edges" {
+  let graph = @dot.parse_dot("digraph { a -> b [color=blue]; }")
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let edges = output_graph.edges()
+  guard edges.length() > 0 else { fail("missing edge") }
+  let edge_draw = match edges[0].get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing edge _draw_")
+  }
+  assert_true(edge_draw.contains("c 7 -#0000ff"))
+  assert_false(edge_draw.contains("S 5 -solid"))
+}
+
+///|
+test "render_xdot keeps explicit solid edge style" {
+  let graph = @dot.parse_dot("digraph { a -> b [color=blue style=solid]; }")
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let edges = output_graph.edges()
+  guard edges.length() > 0 else { fail("missing edge") }
+  let edge_draw = match edges[0].get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing edge _draw_")
+  }
+  assert_true(edge_draw.contains("S 5 -solid"))
+  assert_true(edge_draw.contains("c 7 -#0000ff"))
+}
+
+///|
 test "render_xdot draws polygon node shapes" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=diamond]; b [shape=triangle]; }",

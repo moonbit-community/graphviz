@@ -9,6 +9,226 @@
 priv struct PathplanRouteResult {
   points : Array[@geom.Point]
   polygon : Array[@geom.Point]
+  boxes : Array[@geom.Rect]
+}
+
+///|
+fn box_overlap(i0 : Double, i1 : Double, j0 : Double, j1 : Double) -> Double {
+  if i1 <= j0 || i0 >= j1 {
+    return 0.0
+  }
+  if i0 <= j0 && i1 >= j1 {
+    return i1 - i0
+  }
+  if j0 <= i0 && j1 >= i1 {
+    return j1 - j0
+  }
+  if j0 <= i0 && i0 <= j1 {
+    return j1 - i0
+  }
+  i1 - j0
+}
+
+///|
+fn sanitize_path_boxes(
+  boxes : Array[@geom.Rect],
+  start : @geom.Point,
+  end : @geom.Point,
+) -> (Array[@geom.Rect], @geom.Point, @geom.Point)? {
+  let sanitized : Array[@geom.Rect] = []
+  for box in boxes {
+    if Double::abs(box.lly - box.ury) < 0.01 {
+      continue
+    }
+    if Double::abs(box.llx - box.urx) < 0.01 {
+      continue
+    }
+    sanitized.push(box)
+  }
+  if sanitized.length() == 0 {
+    return None
+  }
+  let clamp = (value : Double, min_value : Double, max_value : Double) => {
+    if value < min_value {
+      min_value
+    } else if value > max_value {
+      max_value
+    } else {
+      value
+    }
+  }
+  let repaired = sanitized.copy()
+  let mut bi = 0
+  while bi + 1 < repaired.length() {
+    let mut left = repaired[bi]
+    let mut right = repaired[bi + 1]
+    let l = left.urx < right.llx
+    let r = left.llx > right.urx
+    let d = left.ury < right.lly
+    let u = left.lly > right.ury
+    let mut errs = 0
+    if l { errs = errs + 1 }
+    if r { errs = errs + 1 }
+    if d { errs = errs + 1 }
+    if u { errs = errs + 1 }
+    let mut l_fix = l
+    let mut r_fix = r
+    let mut d_fix = d
+    let mut u_fix = u
+    if errs > 0 {
+      if l_fix {
+        let xy = left.urx
+        left = { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury }
+        right = {
+          llx: xy,
+          lly: right.lly,
+          urx: right.urx,
+          ury: right.ury,
+        }
+        l_fix = false
+      } else if r_fix {
+        let xy = left.llx
+        left = { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury }
+        right = {
+          llx: right.llx,
+          lly: right.lly,
+          urx: xy,
+          ury: right.ury,
+        }
+        r_fix = false
+      } else if d_fix {
+        let xy = left.ury
+        left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly }
+        right = {
+          llx: right.llx,
+          lly: xy,
+          urx: right.urx,
+          ury: right.ury,
+        }
+        d_fix = false
+      } else if u_fix {
+        let xy = left.lly
+        left = { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury }
+        right = {
+          llx: right.llx,
+          lly: right.lly,
+          urx: right.urx,
+          ury: xy,
+        }
+        u_fix = false
+      }
+      let mut j = 0
+      while j < errs - 1 {
+        if l_fix {
+          let xy = (left.urx + right.llx) / 2.0 + 0.5
+          left = { llx: left.llx, lly: left.lly, urx: xy, ury: left.ury }
+          right = {
+            llx: xy,
+            lly: right.lly,
+            urx: right.urx,
+            ury: right.ury,
+          }
+          l_fix = false
+        } else if r_fix {
+          let xy = (left.llx + right.urx) / 2.0 + 0.5
+          left = { llx: xy, lly: left.lly, urx: left.urx, ury: left.ury }
+          right = {
+            llx: right.llx,
+            lly: right.lly,
+            urx: xy,
+            ury: right.ury,
+          }
+          r_fix = false
+        } else if d_fix {
+          let xy = (left.ury + right.lly) / 2.0 + 0.5
+          left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: xy }
+          right = {
+            llx: right.llx,
+            lly: xy,
+            urx: right.urx,
+            ury: right.ury,
+          }
+          d_fix = false
+        } else if u_fix {
+          let xy = (left.lly + right.ury) / 2.0 + 0.5
+          left = { llx: left.llx, lly: xy, urx: left.urx, ury: left.ury }
+          right = {
+            llx: right.llx,
+            lly: right.lly,
+            urx: right.urx,
+            ury: xy,
+          }
+          u_fix = false
+        }
+        j = j + 1
+      }
+    }
+    let xoverlap = box_overlap(left.llx, left.urx, right.llx, right.urx)
+    let yoverlap = box_overlap(left.lly, left.ury, right.lly, right.ury)
+    if xoverlap > 0.0 && yoverlap > 0.0 {
+      if xoverlap < yoverlap {
+        if left.urx - left.llx > right.urx - right.llx {
+          left = if left.urx < right.urx {
+            {
+              llx: left.llx,
+              lly: left.lly,
+              urx: right.llx,
+              ury: left.ury,
+            }
+          } else {
+            {
+              llx: right.urx,
+              lly: left.lly,
+              urx: left.urx,
+              ury: left.ury,
+            }
+          }
+        } else {
+          right = if left.urx < right.urx {
+            {
+              llx: left.urx,
+              lly: right.lly,
+              urx: right.urx,
+              ury: right.ury,
+            }
+          } else {
+            {
+              llx: right.llx,
+              lly: right.lly,
+              urx: left.llx,
+              ury: right.ury,
+            }
+          }
+        }
+      } else if left.ury - left.lly > right.ury - right.lly {
+        left = if left.ury < right.ury {
+          { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly }
+        } else {
+          { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury }
+        }
+      } else {
+        right = if left.ury < right.ury {
+          { llx: right.llx, lly: left.ury, urx: right.urx, ury: right.ury }
+        } else {
+          { llx: right.llx, lly: right.lly, urx: right.urx, ury: left.lly }
+        }
+      }
+    }
+    repaired[bi] = left
+    repaired[bi + 1] = right
+    bi = bi + 1
+  }
+  let first = repaired[0]
+  let last = repaired[repaired.length() - 1]
+  let clamped_start : @geom.Point = {
+    x: clamp(start.x, first.llx, first.urx),
+    y: clamp(start.y, first.lly, first.ury),
+  }
+  let clamped_end : @geom.Point = {
+    x: clamp(end.x, last.llx, last.urx),
+    y: clamp(end.y, last.lly, last.ury),
+  }
+  Some((repaired, clamped_start, clamped_end))
 }
 
 ///|
@@ -17,7 +237,6 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
     return []
   }
   let mut boxes = boxes
-  // Graphviz parity: checkpath removes degenerate boxes before polygon build.
   if boxes.length() > 0 {
     let filtered : Array[@geom.Rect] = []
     for box in boxes {
@@ -140,43 +359,14 @@ fn route_pathplan_from_boxes(
   start : @geom.Point,
   end : @geom.Point,
 ) -> PathplanRouteResult? {
-  if boxes.length() < 2 {
+  let (sanitized_boxes, start, end) = match sanitize_path_boxes(boxes, start, end) {
+    Some(value) => value
+    None => return None
+  }
+  if sanitized_boxes.length() < 2 {
     return None
   }
-  let mut start = start
-  let mut end = end
-  let clamp = (value : Double, min_value : Double, max_value : Double) => {
-    if value < min_value {
-      min_value
-    } else if value > max_value {
-      max_value
-    } else {
-      value
-    }
-  }
-  // Graphviz parity: routespl.c clamps start/end into first/last boxes
-  // before shortest path; keep this guard to avoid 1pt drift regressions.
-  let first_box = boxes[0]
-  if start.x < first_box.llx ||
-    start.x > first_box.urx ||
-    start.y < first_box.lly ||
-    start.y > first_box.ury {
-    start = {
-      x: clamp(start.x, first_box.llx, first_box.urx),
-      y: clamp(start.y, first_box.lly, first_box.ury),
-    }
-  }
-  let last_box = boxes[boxes.length() - 1]
-  if end.x < last_box.llx ||
-    end.x > last_box.urx ||
-    end.y < last_box.lly ||
-    end.y > last_box.ury {
-    end = {
-      x: clamp(end.x, last_box.llx, last_box.urx),
-      y: clamp(end.y, last_box.lly, last_box.ury),
-    }
-  }
-  let polygon = boxes_to_polygon_points(boxes)
+  let polygon = boxes_to_polygon_points(sanitized_boxes)
   if polygon.length() < 3 {
     return None
   }
@@ -184,10 +374,9 @@ fn route_pathplan_from_boxes(
   if path.length() < 2 {
     return None
   }
-  Some({ points: dedupe_polyline_points(path), polygon })
+  Some({ points: dedupe_polyline_points(path), polygon, boxes: sanitized_boxes })
 }
 
-///|
 fn polygon_edges(
   polygon : Array[@geom.Point],
 ) -> Array[(@geom.Point, @geom.Point)] {

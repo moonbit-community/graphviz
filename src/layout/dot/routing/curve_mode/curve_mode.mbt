@@ -44,6 +44,7 @@ priv struct CurveModeRouteInput {
   path_left_bound : Double
   path_right_bound : Double
   ranksep_pt : Double
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext
@@ -98,6 +99,7 @@ fn prepare_edge_curve_mode_route(
   })
   let route_state = compute_pathplan_route_points({
     base: input.base,
+    has_any_edge_label: input.has_graph_edge_labels,
     ranks: input.ranks,
     vnode_info: input.vnode_info,
     x_groups: input.x_groups,
@@ -307,6 +309,7 @@ pub fn build_edge_spline(input : EdgeSplineBuildInput) -> EdgeSplineResult {
       path_left_bound: input.path_left_bound,
       path_right_bound: input.path_right_bound,
       ranksep_pt: input.ranksep_pt,
+      has_graph_edge_labels: input.has_graph_edge_labels,
       label_edge_counts: input.label_edge_counts,
       head_port_metrics: input.head_port_metrics,
       routing_context: input.routing_context,
@@ -334,6 +337,7 @@ pub(all) struct EdgeSplineBuildInput {
   path_left_bound : Double
   path_right_bound : Double
   ranksep_pt : Double
+  has_graph_edge_labels : Bool
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext

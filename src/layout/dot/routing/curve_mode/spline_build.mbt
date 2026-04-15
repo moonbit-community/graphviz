@@ -111,7 +111,6 @@ fn pathplan_line_points_or_endpoints(
   }
 }
 
-///|
 priv struct PathplanPointsSplineBuildInput {
   base : EdgeRouteBase
   pathplan_points : Array[@geom.Point]
@@ -531,6 +530,7 @@ fn limit_pathplan_segment_boxes(
   limited_segments
 }
 
+///|
 ///|
 priv struct SegmentedPathplanRawBezierInput {
   pathplan_segments : Array[@routesplines.PathplanSegment]

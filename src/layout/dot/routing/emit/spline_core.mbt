@@ -151,18 +151,92 @@ fn edge_sameport_direct_flags(
 }
 
 ///|
+fn graphviz_mapbool_default_false(value : String) -> Bool {
+  let trimmed = value.trim()
+  if trimmed == "" {
+    return false
+  }
+  let lower = trimmed.to_lower()
+  if lower == "false" || lower == "no" {
+    return false
+  }
+  if lower == "true" || lower == "yes" {
+    return true
+  }
+  match lower.get_char(0) {
+    Some(c) =>
+      if c.is_ascii_digit() {
+        let mut acc = 0
+        let mut seen = false
+        for ch in lower {
+          if ch.is_ascii_digit() {
+            seen = true
+            acc = acc * 10 + (ch.to_int() - '0'.to_int())
+          } else {
+            break
+          }
+        }
+        seen && acc != 0
+      } else {
+        false
+      }
+    None => false
+  }
+}
+
+///|
+fn edge_clip_attr_enabled(
+  edge : @cgraph.Edge,
+  attr_name : String,
+) -> Bool {
+  match edge.get_attr(attr_name) {
+    Some(value) => {
+      let trimmed = value.trim()
+      if trimmed == "" {
+        true
+      } else {
+        graphviz_mapbool_default_false(value)
+      }
+    }
+    None => true
+  }
+}
+
+///|
+fn edge_clip_attr_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
+  if base.swap_ends {
+    {
+      tail_clip_enabled: edge_clip_attr_enabled(base.edge, "headclip"),
+      head_clip_enabled: edge_clip_attr_enabled(base.edge, "tailclip"),
+    }
+  } else {
+    {
+      tail_clip_enabled: edge_clip_attr_enabled(base.edge, "tailclip"),
+      head_clip_enabled: edge_clip_attr_enabled(base.edge, "headclip"),
+    }
+  }
+}
+
+///|
 fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
   let sameport_direct_flags = edge_sameport_direct_flags(
     base.edge,
     base.swap_ends,
   )
+  let attr_clip_flags = edge_clip_attr_flags(base)
   let tail_clip_enabled = if !base.tail_clip_enabled &&
+    !attr_clip_flags.tail_clip_enabled {
+    false
+  } else if !base.tail_clip_enabled &&
     !sameport_direct_flags.tail_direct {
     true
   } else {
     base.tail_clip_enabled
   }
   let head_clip_enabled = if !base.head_clip_enabled &&
+    !attr_clip_flags.head_clip_enabled {
+    false
+  } else if !base.head_clip_enabled &&
     !sameport_direct_flags.head_direct {
     true
   } else {

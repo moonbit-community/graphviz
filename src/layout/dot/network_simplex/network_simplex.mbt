@@ -1306,6 +1306,9 @@ fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
   if nodes.length() <= 1 {
     return ()
   }
+  if sort_nodes_by_rank_via_native_qsort(graph, nodes) {
+    return ()
+  }
   if nodes.length() <= 100 {
     let tmp : Array[Int] = []
     for _ in 0..<nodes.length() {
@@ -1590,6 +1593,11 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
     iter = iter + 1
   }
   true
+}
+
+///|
+pub fn debug_run_core_only(graph : NsGraph, max_iter : Int) -> Bool {
+  network_simplex_core(graph, max_iter)
 }
 
 ///|

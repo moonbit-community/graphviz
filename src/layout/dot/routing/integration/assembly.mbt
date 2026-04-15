@@ -114,19 +114,7 @@ pub fn build_dot_routing_callbacks(
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
   {
-    recover_slack_vnodes_fn: input => {
-      @execution.recover_slack_vnodes(input, (edge, ranks) => {
-        match
-          @edge_label.edge_label_rank_info(
-            edge,
-            ranks,
-            @edge_label_metrics.edge_mid_label_width_pt(edge),
-          ) {
-          Some(info) => Some(info.label_rank)
-          None => None
-        }
-      })
-    },
+    recover_slack_vnodes_fn: input => @execution.recover_slack_vnodes(input),
     build_edge_layout_fn: input => {
       @edge_label.build_edge_layout({
         base: input.base,

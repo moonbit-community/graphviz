@@ -81,6 +81,76 @@ fn edge_style_is_dotted(
 }
 
 ///|
+fn graphviz_mapbool_default_false(value : String) -> Bool {
+  let trimmed = value.trim()
+  if trimmed == "" {
+    return false
+  }
+  let lower = trimmed.to_lower()
+  if lower == "false" || lower == "no" {
+    return false
+  }
+  if lower == "true" || lower == "yes" {
+    return true
+  }
+  match lower.get_char(0) {
+    Some(c) =>
+      if c.is_ascii_digit() {
+        let mut acc = 0
+        let mut seen = false
+        for ch in lower {
+          if ch.is_ascii_digit() {
+            seen = true
+            acc = acc * 10 + (ch.to_int() - '0'.to_int())
+          } else {
+            break
+          }
+        }
+        seen && acc != 0
+      } else {
+        false
+      }
+    None => false
+  }
+}
+
+///|
+fn edge_clip_attr_enabled(
+  edge : @cgraph.Edge,
+  attr_name : String,
+) -> Bool {
+  match edge.get_attr(attr_name) {
+    Some(value) => {
+      let trimmed = value.trim()
+      if trimmed == "" {
+        true
+      } else {
+        graphviz_mapbool_default_false(value)
+      }
+    }
+    None => true
+  }
+}
+
+///|
+fn oriented_edge_clip_enabled(
+  edge : @cgraph.Edge,
+  swap_ends : Bool,
+) -> (Bool, Bool) {
+  if swap_ends {
+    (
+      edge_clip_attr_enabled(edge, "headclip"),
+      edge_clip_attr_enabled(edge, "tailclip"),
+    )
+  } else {
+    (
+      edge_clip_attr_enabled(edge, "tailclip"),
+      edge_clip_attr_enabled(edge, "headclip"),
+    )
+  }
+}
+
+///|
 /// Graphviz parity: route-base cache assembly keeps sameport override
 /// collection and edge endpoint setup grouped before routing execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -141,6 +211,10 @@ fn build_edge_route_base(
   let sameport_info = edge_sameport_orientation_info(
     edge.id(),
     sameport_overrides,
+    swap_ends,
+  )
+  let (tail_attr_clip_enabled, head_attr_clip_enabled) = oriented_edge_clip_enabled(
+    edge,
     swap_ends,
   )
   let parallel_offset = parallel_offsets.get(edge.id()).unwrap_or_default()
@@ -360,8 +434,8 @@ fn build_edge_route_base(
     size: head_clip_size,
     rankdir,
   })
-  let tail_clip_enabled = tail_sameport_anchor is None
-  let head_clip_enabled = head_sameport_anchor is None
+  let tail_clip_enabled = tail_sameport_anchor is None && tail_attr_clip_enabled
+  let head_clip_enabled = head_sameport_anchor is None && head_attr_clip_enabled
   let tail_target = match tail_port_rect {
     Some(_) => head_pos
     None => tail_anchor0
