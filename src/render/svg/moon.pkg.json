@@ -18,7 +18,9 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/bigint",
+    "moonbitlang/core/debug",
     "moonbitlang/core/math",
+    "moonbitlang/core/string",
     "moonbitlang/core/strconv"
   ],
   "test-import": [

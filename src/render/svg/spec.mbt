@@ -8,7 +8,7 @@
 pub(all) struct SvgOptions {
   pretty : Bool?
   include_xml_decl : Bool?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 #declaration_only

@@ -9,7 +9,9 @@
     "moonbit-community/graphviz/render/xdot",
     "moonbit-community/graphviz/render/svg",
     "moonbitlang/core/buffer",
+    "moonbitlang/core/debug",
     "moonbitlang/core/encoding/utf8",
+    "moonbitlang/core/string",
     "moonbitlang/core/strconv",
     "moonbitlang/x/fs",
     "moonbitlang/x/sys"

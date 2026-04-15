@@ -8,14 +8,14 @@
 pub(all) struct Point {
   x : Double
   y : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Size in points (1/72 inch).
 pub(all) struct Size {
   width : Double
   height : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Axis-aligned rectangle in points.
@@ -25,20 +25,20 @@ pub(all) struct Rect {
   lly : Double
   urx : Double
   ury : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Polyline path in points.
 pub(all) struct Polyline {
   points : Array[Point]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Cubic Bezier control points in points.
 /// Invariant: points.length() >= 4 and (points.length() - 1) % 3 == 0.
 pub(all) struct Bezier {
   points : Array[Point]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Edge spline representation with optional clip points.
@@ -47,4 +47,4 @@ pub(all) struct Spline {
   start : Point?
   end : Point?
   points : Array[Point]
-} derive(Show, Eq)
+} derive(Debug, Eq)

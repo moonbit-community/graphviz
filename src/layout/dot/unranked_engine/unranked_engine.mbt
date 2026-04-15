@@ -20,7 +20,7 @@ type RankDir = @rankdir.RankDir
 
 ///|
 fn try_parse_double(text : String) -> Double? {
-  try @strconv.parse_double(text) catch {
+  try @string.parse_double(text) catch {
     _ => None
   } noraise {
     value => Some(value)

@@ -10,14 +10,14 @@ pub(all) enum OutputFormat {
   XDot
   Svg
   Other(name~ : String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Output format + optional variant (e.g. png:cairo).
 pub(all) struct FormatSpec {
   format : OutputFormat
   variant : String?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Layout engine selector.
@@ -32,14 +32,14 @@ pub(all) enum LayoutEngine {
   Patchwork
   Nop
   Other(name~ : String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Attribute assignment parsed from -G/-N/-E flags.
 pub(all) struct AttrAssignment {
   name : String
   value : String
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Parsed CLI job describing a single render pipeline.
@@ -56,7 +56,7 @@ pub(all) struct CliJob {
   neato_no_op : Int?
   neato_prune : Bool
   verbose : Bool
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// CLI actions supported by the dot/neato frontends.
@@ -64,7 +64,7 @@ pub(all) enum CliAction {
   Render(CliJob)
   ListFormats
   ShowVersion
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Errors reported while parsing CLI flags.
@@ -74,7 +74,7 @@ pub(all) suberror CliError {
   InvalidAssignment(flag~ : String, value~ : String)
   InvalidNumber(flag~ : String, value~ : String)
   MultipleInputs
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Resolve default engine from the program name (dot, neato, etc.).

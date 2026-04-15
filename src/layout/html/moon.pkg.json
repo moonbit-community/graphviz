@@ -1,6 +1,8 @@
 {
   "import": [
+    "moonbitlang/core/debug",
     "moonbit-community/graphviz/geom",
+    "moonbitlang/core/string",
     "moonbitlang/core/strconv"
   ]
 }

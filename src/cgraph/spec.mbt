@@ -8,7 +8,7 @@
 pub(all) enum GraphKind {
   Directed
   Undirected
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Attribute scope kinds.
@@ -16,7 +16,7 @@ pub(all) enum AttrKind {
   Graph
   Node
   Edge
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Compass ports used in node:port:compass syntax.
@@ -30,14 +30,14 @@ pub(all) enum Compass {
   W
   NW
   C
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Optional port name and compass reference.
 pub(all) struct Port {
   name : String?
   compass : Compass?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 #declaration_only

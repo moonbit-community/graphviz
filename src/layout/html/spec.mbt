@@ -9,7 +9,7 @@ pub(all) enum HtmlAlign {
   Left
   Center
   Right
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Vertical alignment for HTML-like labels.
@@ -17,14 +17,14 @@ pub(all) enum HtmlVAlign {
   Top
   Middle
   Bottom
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Text span for HTML-like labels.
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Cell content for HTML-like labels.
@@ -32,7 +32,7 @@ pub(all) enum HtmlCellContent {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// HTML-like table cell.
@@ -46,13 +46,13 @@ pub(all) struct HtmlCell {
   bg_color : String?
   min_width_pt : Double?
   min_height_pt : Double?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// HTML-like table row.
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// HTML-like table.
@@ -63,14 +63,14 @@ pub(all) struct HtmlTable {
   cell_spacing_pt : Double
   cell_padding_pt : Double
   bg_color : String?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// HTML-like label.
 pub(all) enum HtmlLabel {
   Text(String)
   Table(HtmlTable)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Table cell placement in the grid.
@@ -78,7 +78,7 @@ pub(all) struct HtmlCellPlacement {
   cell : HtmlCell
   row : Int
   col : Int
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Table metrics for layout.
@@ -88,14 +88,14 @@ pub(all) struct HtmlTableMetrics {
   row_heights : Array[Double]
   total_width : Double
   total_height : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Table cell layout output.
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Table layout output.
@@ -103,7 +103,7 @@ pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
   scale_x : Double
   scale_y : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Check if a label uses HTML-like syntax.

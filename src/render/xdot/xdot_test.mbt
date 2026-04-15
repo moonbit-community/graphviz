@@ -64,7 +64,7 @@ test "render_xdot attaches draw ops" {
 
 ///|
 fn parse_double_or_fail(value : StringView) -> Double raise {
-  @strconv.parse_double(value) catch {
+  @string.parse_double(value) catch {
     _ => fail("invalid number: \{value}")
   }
 }

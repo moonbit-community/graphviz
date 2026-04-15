@@ -15,7 +15,7 @@ pub(all) struct GraphSizePt {
 
 ///|
 pub fn parse_double_or(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
+  try @string.parse_double(value) catch {
     _ => fallback
   } noraise {
     parsed => parsed
@@ -72,7 +72,7 @@ pub fn parse_first_double(value : String, fallback : Double) -> Double {
 pub fn parse_first_double_optional(value : String) -> Double? {
   match first_numeric_token(value) {
     Some(token) =>
-      try @strconv.parse_double(token) catch {
+      try @string.parse_double(token) catch {
         _ => None
       } noraise {
         parsed => Some(parsed)

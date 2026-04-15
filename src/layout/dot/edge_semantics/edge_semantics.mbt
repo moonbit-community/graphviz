@@ -14,7 +14,7 @@ pub(all) enum EdgeDir {
   Back
   Both
   None
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub fn parse_edge_dir(value : String) -> EdgeDir? {

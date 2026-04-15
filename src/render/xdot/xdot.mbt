@@ -42,7 +42,7 @@ const CYLINDER_KAPPA : Double = 0.5518
 
 ///|
 fn parse_double(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
+  try @string.parse_double(value) catch {
     _ => fallback
   } noraise {
     parsed => parsed
@@ -4230,7 +4230,7 @@ fn parse_color_fraction(value : String) -> Double? {
     return None
   }
   try {
-    let parsed = @strconv.parse_double(value)
+    let parsed = @string.parse_double(value)
     if parsed < 0.0 {
       None
     } else {

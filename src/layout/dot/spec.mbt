@@ -18,7 +18,7 @@ pub(all) struct DotLayoutOptions {
   nodesep : Double?
   ranksep : Double?
   splines : SplinesMode?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 #declaration_only
@@ -31,7 +31,7 @@ pub fn DotLayoutOptions::default() -> DotLayoutOptions {
 pub(all) suberror DotLayoutError {
   UnsupportedFeature(message~ : String)
   InvalidGraph(message~ : String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Node layout output.

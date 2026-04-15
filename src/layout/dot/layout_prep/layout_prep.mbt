@@ -17,7 +17,7 @@ pub(all) enum SplinesMode {
   Ortho
   Curved
   None
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Record/html label layout orientation used by node-size and port geometry

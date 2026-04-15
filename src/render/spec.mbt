@@ -9,21 +9,21 @@ pub(all) enum TextAlign {
   Left
   Center
   Right
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Font description (size in points).
 pub(all) struct Font {
   name : String
   size : Double
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Gradient stop for linear/radial gradients.
 pub(all) struct GradientStop {
   offset : Double
   color : String
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Linear gradient definition.
@@ -31,7 +31,7 @@ pub(all) struct LinearGradient {
   start : @geom.Point
   end : @geom.Point
   stops : Array[GradientStop]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Radial gradient definition.
@@ -41,14 +41,14 @@ pub(all) struct RadialGradient {
   end_center : @geom.Point
   end_radius : Double
   stops : Array[GradientStop]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Gradient color specification.
 pub(all) enum Gradient {
   Linear(LinearGradient)
   Radial(RadialGradient)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Drawing primitive operations (points in points).
@@ -66,7 +66,7 @@ pub(all) enum DrawOp {
   Font(font~ : Font)
   Style(name~ : String)
   FontChar(codepoint~ : UInt)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Generate arrowhead drawing primitives for a single arrow tip.

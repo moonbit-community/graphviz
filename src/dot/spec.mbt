@@ -9,7 +9,7 @@ struct Position {
   line : Int
   column : Int
   offset : Int
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// DOT parse errors with position info.
@@ -17,7 +17,7 @@ pub(all) suberror DotParseError {
   UnexpectedEof(pos~ : Position)
   InvalidToken(pos~ : Position, token~ : String)
   InvalidSyntax(pos~ : Position, message~ : String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Parse DOT source into a cgraph Graph.

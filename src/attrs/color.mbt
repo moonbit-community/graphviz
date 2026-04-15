@@ -108,13 +108,13 @@ fn normalize_hsv_color(value : String) -> String? {
   if tokens.length() != 3 {
     return None
   }
-  let h = @strconv.parse_double(tokens[0]) catch {
+  let h = @string.parse_double(tokens[0]) catch {
     _ => return None
   }
-  let s = @strconv.parse_double(tokens[1]) catch {
+  let s = @string.parse_double(tokens[1]) catch {
     _ => return None
   }
-  let v = @strconv.parse_double(tokens[2]) catch {
+  let v = @string.parse_double(tokens[2]) catch {
     _ => return None
   }
   if h < 0.0 || h > 1.0 || s < 0.0 || s > 1.0 || v < 0.0 || v > 1.0 {

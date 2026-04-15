@@ -66,7 +66,7 @@ fn extract_numbers(value : String) -> Array[Double] raise {
     if token.length() == 0 {
       continue
     }
-    let parsed = @strconv.parse_double(token)
+    let parsed = @string.parse_double(token)
     numbers.push(parsed)
   }
   numbers

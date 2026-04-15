@@ -10,7 +10,7 @@ pub(all) struct StyleFlags {
   filled : Bool
   dashed : Bool
   dotted : Bool
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 /// Parse a numeric attribute as Double with a fallback value.

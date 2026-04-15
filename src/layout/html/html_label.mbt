@@ -17,7 +17,7 @@ priv enum HtmlTag {
 
 ///|
 fn parse_double(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
+  try @string.parse_double(value) catch {
     _ => fallback
   } noraise {
     parsed => parsed

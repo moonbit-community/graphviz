@@ -10,7 +10,7 @@ pub(all) enum RankDir {
   BT
   LR
   RL
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub fn parse_rankdir(value : String) -> RankDir? {

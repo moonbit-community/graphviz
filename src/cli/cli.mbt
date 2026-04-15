@@ -106,21 +106,21 @@ fn parse_assignment(
 
 ///|
 fn parse_double(flag : String, text : String) -> Double raise CliError {
-  @strconv.parse_double(text) catch {
+  @string.parse_double(text) catch {
     _ => raise CliError::InvalidNumber(flag~, value=text)
   }
 }
 
 ///|
 fn parse_int(flag : String, text : String) -> Int raise CliError {
-  @strconv.parse_int(text) catch {
+  @string.parse_int(text) catch {
     _ => raise CliError::InvalidNumber(flag~, value=text)
   }
 }
 
 ///|
 fn try_parse_double(text : String) -> Double? {
-  try @strconv.parse_double(text) catch {
+  try @string.parse_double(text) catch {
     _ => None
   } noraise {
     value => Some(value)
@@ -129,7 +129,7 @@ fn try_parse_double(text : String) -> Double? {
 
 ///|
 fn try_parse_int(text : String) -> Int? {
-  try @strconv.parse_int(text) catch {
+  try @string.parse_int(text) catch {
     _ => None
   } noraise {
     value => Some(value)

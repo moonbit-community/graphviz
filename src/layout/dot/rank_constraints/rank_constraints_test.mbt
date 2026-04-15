@@ -5,7 +5,7 @@
 
 ///|
 fn rank_parse_double(text : String, fallback : Double) -> Double {
-  try @strconv.parse_double(text) catch {
+  try @string.parse_double(text) catch {
     _ => fallback
   } noraise {
     value => value

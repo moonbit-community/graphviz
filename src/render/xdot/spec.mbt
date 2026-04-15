@@ -7,7 +7,7 @@
 /// Options for xdot output.
 pub(all) struct XDotOptions {
   version : String?
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 #declaration_only

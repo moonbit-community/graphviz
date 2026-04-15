@@ -1,6 +1,7 @@
 {
   "import": [
-    "moonbit-community/graphviz/cgraph"
+    "moonbit-community/graphviz/cgraph",
+    "moonbitlang/core/string"
   ],
   "test-import": [
     {
