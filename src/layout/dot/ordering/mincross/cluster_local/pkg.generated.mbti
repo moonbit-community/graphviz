@@ -1,0 +1,113 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/mincross/cluster_local"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub fn run_cluster_local_rank_reorder_call(ClusterLocalRankReorderCallInputs) -> Map[Int, Array[String]]
+
+pub fn run_cluster_local_rank_replay_after_root_from_sources(ClusterLocalRankReplayAfterRootSources) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) struct ClusterLocalNeighborSources {
+  source_out_neighbors : Map[String, Array[String]]
+  source_in_neighbors : Map[String, Array[String]]
+  raw_out_neighbors : Map[String, Array[String]]
+  raw_in_neighbors : Map[String, Array[String]]
+}
+
+pub(all) struct ClusterLocalRankReorderCallInputs {
+  cluster_rank_keys : Array[Int]
+  seeded_cluster_groups : Map[Int, Array[String]]
+  cluster_edges : Array[@cgraph.Edge]
+  cluster_edge_tail : Array[String]
+  cluster_edge_head : Array[String]
+  cluster_edge_tail_port_x : Array[Double]
+  cluster_edge_head_port_x : Array[Double]
+  cluster_edge_tail_port_order : Array[Double]
+  cluster_edge_head_port_order : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_order : Map[String, Int]
+  cluster_node_order : Map[String, Int]
+  cluster_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  cluster_fixed_positions : Map[String, Double]
+  fixed_ranks : Map[String, Int]
+}
+
+pub(all) struct ClusterLocalRankReplayAfterRootSources {
+  order_with_clusters : Bool
+  groups : Map[Int, Array[String]]
+  graph : @cgraph.Graph
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  ranks : Map[String, Int]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  vnode_ranks : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  order_with_vnodes : Bool
+}
+
+pub(all) struct ClusterLocalReorderDispatchContext {
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  neighbor_sources : ClusterLocalNeighborSources
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  fixed_ranks : Map[String, Int]
+  order_with_vnodes : Bool
+}
+
+// Type aliases
+
+// Traits
+

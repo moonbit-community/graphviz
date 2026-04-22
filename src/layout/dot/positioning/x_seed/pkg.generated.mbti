@@ -1,0 +1,65 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/x_seed"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub fn build_x_seed_data(XSeedPipelineSources, () -> Map[String, @node_primitives.NodeSize], (Map[String, @node_primitives.NodeSize]) -> XSeedPortSamples) -> XPositionSeedData
+
+// Errors
+
+// Types and methods
+pub struct XPositionSeedData {
+  has_vnode_order : Bool
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+}
+
+pub(all) struct XSeedPipelineSources {
+  use_vnodes_for_xpos : Bool
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  ranks : Map[String, Int]
+  intercluster_keys : Map[String, String]
+  cluster_parents : Map[String, String?]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  vnodes_by_rank : Map[Int, Array[String]]
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  vnode_clusters : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+}
+
+pub(all) struct XSeedPortSamples {
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+// Type aliases
+
+// Traits
+

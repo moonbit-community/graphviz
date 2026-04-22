@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/clustering/membership"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn cluster_lca(String, String, Map[String, String?]) -> String
+
+pub fn collect_cluster_members(Map[String, @cgraph.Graph]) -> Map[String, Map[String, Bool]]
+
+pub fn collect_cluster_names_order(@cgraph.Graph, Array[String]) -> Unit
+
+pub fn collect_edge_cluster_keys(@cgraph.Graph, Map[String, String]) -> Unit
+
+pub fn graph_contains_node(@cgraph.Graph, @cgraph.Node) -> Bool
+
+pub fn node_cluster_key(@cgraph.Node) -> String
+
+pub fn node_local_cluster_key(@cgraph.Node) -> String
+
+pub fn root_graph_for_node(@cgraph.Node) -> @cgraph.Graph
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

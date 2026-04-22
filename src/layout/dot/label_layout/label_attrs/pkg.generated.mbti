@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/label_layout/label_attrs"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn graph_margin_x_pt(@cgraph.Graph) -> Double
+
+pub fn label_text(@cgraph.Node) -> String
+
+pub fn node_padding(@cgraph.Node) -> NodePadding
+
+// Errors
+
+// Types and methods
+pub(all) struct NodePadding {
+  pad_x_pt : Double
+  pad_y_pt : Double
+}
+
+// Type aliases
+
+// Traits
+

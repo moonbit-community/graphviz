@@ -1,0 +1,69 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/finalization/xlabel"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+}
+
+// Values
+pub fn apply_xlabels(@layout_tree.LayoutTree, @layout_prep.SplinesMode) -> @layout_tree.LayoutTree
+
+pub fn build_edges_by_tail(Array[@layout_tree.DotLayoutEdge]) -> Map[String, Array[@layout_tree.DotLayoutEdge]]
+
+pub fn build_node_obstacle_with_xlabel_slot(@layout_tree.DotLayoutNode, Bool, Array[XLabel], Array[XObject]) -> XObject
+
+pub fn collect_edge_xlabel_candidates(@layout_tree.DotLayoutEdge, @layout_prep.SplinesMode, Bool, Array[XLabel], Array[XObject]) -> Unit
+
+pub fn maybe_flip_dims(Double, Double, Bool) -> LabelDims
+
+pub fn place_labels(Array[XObject], Array[XLabel], Bool) -> Unit
+
+pub fn xlabel_center(XLabel) -> @geom.Point
+
+pub fn xlabel_metrics_for_edge(@cgraph.Edge) -> XLabelMetrics?
+
+pub fn xlabel_metrics_for_node(@cgraph.Node) -> XLabelMetrics?
+
+// Errors
+
+// Types and methods
+pub struct LabelDims {
+  width : Double
+  height : Double
+}
+
+pub(all) struct XLabel {
+  target : XLabelTarget
+  width : Double
+  height : Double
+  pos : @geom.Point
+  set : Bool
+}
+
+pub struct XLabelMetrics {
+  width : Double
+  height : Double
+}
+
+pub(all) enum XLabelTarget {
+  Node(String)
+  EdgeMid(String)
+  EdgeHead(String)
+  EdgeTail(String)
+  EdgeXlabel(String)
+}
+
+pub(all) struct XObject {
+  pos : @geom.Point
+  width : Double
+  height : Double
+  label_index : Int?
+}
+
+// Type aliases
+
+// Traits
+

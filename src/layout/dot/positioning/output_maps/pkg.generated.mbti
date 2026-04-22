@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/output_maps"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub fn build_position_output_pipeline(PositionOutputPipelineInput) -> PositionOutputMaps
+
+pub fn cluster_rounding_enabled() -> Bool
+
+// Errors
+
+// Types and methods
+pub struct PositionOutputMaps {
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+}
+
+pub(all) struct PositionOutputPipelineInput {
+  has_clusters : Bool
+  has_dotted_edges : Bool
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  x_positions : Map[String, Double]
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  use_vnodes_for_xpos : Bool
+  vnode_ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  cluster_rounding_enabled : Bool
+  vnode_clusters : Map[String, String]
+  sizes : Map[String, @node_primitives.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
+}
+
+// Type aliases
+
+// Traits
+

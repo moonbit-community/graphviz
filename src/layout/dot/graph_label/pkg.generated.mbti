@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/graph_label"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+}
+
+// Values
+pub fn expand_bbox_for_label(@geom.Rect, Double, Double, LabelLoc) -> @geom.Rect
+
+pub fn graph_attr_inherited(@cgraph.Graph, String) -> String?
+
+pub fn graph_label_just(@cgraph.Graph) -> LabelJust
+
+pub fn graph_label_loc(@cgraph.Graph) -> LabelLoc
+
+pub fn graph_label_metrics_with(@cgraph.Graph, (String, String, Double) -> (Double, Double)) -> GraphLabelMetrics?
+
+pub fn graph_label_pos(@geom.Rect, Double, Double, LabelLoc, LabelJust) -> @geom.Point
+
+pub fn graph_label_pos_flip(@geom.Rect, Double, Double, LabelLoc, LabelJust) -> @geom.Point
+
+pub fn parse_label_just(String?) -> LabelJust
+
+pub fn parse_label_loc(String?, LabelLoc) -> LabelLoc
+
+// Errors
+
+// Types and methods
+pub(all) struct GraphLabelMetrics {
+  width_pt : Double
+  height_pt : Double
+}
+
+pub(all) enum LabelJust {
+  Left
+  Center
+  Right
+}
+
+pub(all) enum LabelLoc {
+  Top
+  Bottom
+}
+
+// Type aliases
+
+// Traits
+

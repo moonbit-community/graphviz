@@ -1,0 +1,118 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/edge_label"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing",
+}
+
+// Values
+pub fn adjust_edge_label_overlaps(Array[@layout_tree.DotLayoutEdge], Double, @rankdir.RankDir, (@cgraph.Edge) -> LabelExtent?, (@layout_tree.DotLayoutEdge) -> @geom.Point?) -> AdjustedEdgeLabels
+
+pub fn adjust_edge_label_positions(Array[@layout_tree.DotLayoutEdge], Array[@geom.Rect], Double, (@cgraph.Edge) -> LabelExtent?) -> AdjustedEdgeLabels
+
+pub fn apply_label_updates_to_edges(Array[@layout_tree.DotLayoutEdge], Map[String, @geom.Point]) -> Array[@layout_tree.DotLayoutEdge]
+
+pub fn bezier_point_fma(@geom.Point, @geom.Point, @geom.Point, @geom.Point, Double) -> @geom.Point
+
+pub fn build_edge_layout(EdgeLayoutBuildInput) -> @layout_tree.DotLayoutEdge
+
+pub fn edge_head_point_for_layout(@layout_tree.DotLayoutEdge) -> @geom.Point?
+
+pub fn edge_label_pos_from_input(EdgeLabelPosInput, (@cgraph.Edge) -> @routing.RouteLabelMetrics?, Double) -> @geom.Point?
+
+pub fn edge_label_pos_from_vnode(@geom.Point, Double, Double, @rankdir.RankDir) -> @geom.Point
+
+pub fn edge_label_rank_info(@cgraph.Edge, Map[String, Int], Double) -> EdgeLabelRankInfo?
+
+pub fn edge_label_rank_x(@cgraph.Edge, Int, @setup.EdgeVnodeInfo, Map[String, @geom.Point]) -> Double?
+
+pub fn edge_label_rank_y(@cgraph.Edge, Map[String, Int], Map[Int, Double], Double) -> Double?
+
+pub fn edge_midpoint_for_layout(@layout_tree.DotLayoutEdge, Bool) -> @geom.Point?
+
+pub fn edge_port_label_pos(@routing.EdgePortLabelPosInput, Double, Double, Double, Double) -> @geom.Point?
+
+pub fn edge_port_label_pos_for_dot(@routing.EdgePortLabelPosInput) -> @geom.Point?
+
+pub fn edge_tail_point_for_layout(@layout_tree.DotLayoutEdge) -> @geom.Point?
+
+pub fn expand_bbox_for_edge_labels(ExpandEdgeLabelBboxInput) -> @geom.Rect
+
+pub fn expand_bbox_for_label_pos(@geom.Rect, @geom.Point?, LabelExtent?) -> @geom.Rect
+
+pub fn flat_edge_label_pos_simple(@geom.Point, @geom.Point, Double, Double, Double, Double) -> @geom.Point
+
+pub fn make_point_with_tangent(@geom.Point, @geom.Point) -> PointWithTangent
+
+pub fn port_label_params(@cgraph.Edge, Double, Double) -> (Double, Double)?
+
+pub fn port_label_points(@geom.Spline, Bool, Bool) -> PointWithTangent?
+
+pub fn port_label_pos_from_points(@geom.Point, @geom.Point, Double, Double, Double, Double) -> @geom.Point
+
+pub fn sample_spline_points(Array[@geom.Point], Int) -> Array[@geom.Point]
+
+pub fn spline_label_pos_at_samples(Array[@geom.Point], Double, Bool) -> PointWithTangent?
+
+pub fn spline_label_pos_with_samples(Array[@geom.Point]) -> PointWithTangent?
+
+// Errors
+
+// Types and methods
+pub(all) struct AdjustedEdgeLabels {
+  edges : Array[@layout_tree.DotLayoutEdge]
+  updates : Map[String, @geom.Point]
+}
+
+pub(all) struct EdgeLabelPosInput {
+  edge : @cgraph.Edge
+  spline : @geom.Spline
+  tail_clip : @geom.Point
+  head_clip : @geom.Point
+  rankdir : @rankdir.RankDir
+  label_rank_y : Double?
+  label_rank_x : Double?
+  apply_label_pad : Bool
+  nodesep_pt : Double
+  label_pad_boost : Double
+}
+
+pub struct EdgeLabelRankInfo {
+  label_rank : Int
+  span : Int
+}
+
+pub(all) struct EdgeLayoutBuildInput {
+  base : @routing.EdgeRouteBase
+  spline : @geom.Spline
+  spline_result : @routing.EdgeSplineResult
+  edge_layout_input : @routing.EdgeLayoutInput
+}
+
+pub(all) struct ExpandEdgeLabelBboxInput {
+  bbox : @geom.Rect
+  edges : Array[@layout_tree.DotLayoutEdge]
+  ranks : Map[String, Int]
+  flat_label_edge_vnodes : Map[String, String]
+  rankdir : @rankdir.RankDir
+}
+
+pub(all) struct LabelExtent {
+  width : Double
+  height : Double
+}
+
+pub struct PointWithTangent {
+  pos : @geom.Point
+  tangent : @geom.Point
+}
+
+// Type aliases
+
+// Traits
+

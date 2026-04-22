@@ -1,0 +1,61 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/label_layout/record_layout"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/numeric",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn parse_record_nodes(RecordParser) -> Array[RecordNode]
+
+pub fn record_group_size(Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> @numeric.GraphSizePt
+
+pub fn record_nodes(String) -> Array[RecordNode]
+
+pub fn record_nodes_sizes(Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> Array[@numeric.GraphSizePt]
+
+pub fn record_port_padding_y(Array[@cgraph.Edge], Map[String, @geom.Point], Map[String, Map[String, @record_geometry.RecordPort]]) -> RecordPortPaddingY
+
+pub fn record_port_path_box(@cgraph.Node, @cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @rankdir.RankDir) -> @geom.Rect?
+
+pub fn record_ports(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
+
+pub fn record_rects(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Array[@geom.Rect]
+
+pub fn reset_record_layout_caches() -> Unit
+
+pub fn toggle_record_orientation(@layout_prep.RecordOrientation) -> @layout_prep.RecordOrientation
+
+// Errors
+
+// Types and methods
+pub(all) struct RecordField {
+  name : String?
+  text : String
+}
+
+pub(all) enum RecordNode {
+  Field(RecordField)
+  Group(Array[RecordNode])
+}
+
+pub(all) struct RecordParser {
+  chars : Array[Char]
+  mut index : Int
+}
+
+pub(all) struct RecordPortPaddingY {
+  below : Double
+  above : Double
+}
+
+// Type aliases
+
+// Traits
+

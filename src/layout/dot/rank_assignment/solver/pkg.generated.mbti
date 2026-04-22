@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_assignment/solver"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn acyclic_edge_directions_for_names(Array[String], Array[String], Array[String], Array[Bool]) -> AcyclicNameDirections
+
+pub fn acyclic_edge_directions_with_order(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> AcyclicDirectionsWithOrder
+
+pub fn apply_rank_extremes(Map[String, Int], Map[String, Bool], Map[String, Bool]) -> Unit
+
+pub fn collect_rank_extremes(@cgraph.Graph, Map[String, Bool], Map[String, Bool]) -> Unit
+
+pub fn compute_ranks_directed_base(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Array[String], Array[String]) -> Map[String, Int]
+
+// Errors
+
+// Types and methods
+pub struct AcyclicDirectionsWithOrder {
+  tail : Array[String]
+  head : Array[String]
+  reversed : Array[Bool]
+  out_edges : Array[Array[Int]]
+  in_edges : Array[Array[Int]]
+}
+
+pub struct AcyclicNameDirections {
+  tail : Array[String]
+  head : Array[String]
+  reversed : Array[Bool]
+}
+
+// Type aliases
+
+// Traits
+

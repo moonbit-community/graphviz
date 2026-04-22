@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/layout_tree"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct DotLayoutEdge {
+  edge : @cgraph.Edge
+  splines : Array[@geom.Spline]
+  label_pos : @geom.Point?
+  head_label_pos : @geom.Point?
+  tail_label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
+}
+
+pub(all) struct DotLayoutNode {
+  node : @cgraph.Node
+  pos : @geom.Point
+  width_in : Double
+  height_in : Double
+  label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
+}
+
+pub(all) struct LayoutTree {
+  graph : @cgraph.Graph
+  bbox : @geom.Rect
+  label_pos : @geom.Point?
+  nodes : Array[DotLayoutNode]
+  edges : Array[DotLayoutEdge]
+  subgraphs : Array[LayoutTree]
+}
+
+// Type aliases
+
+// Traits
+

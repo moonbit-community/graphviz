@@ -1,0 +1,118 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/html"
+
+import {
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn html_table_layout(HtmlTable, @geom.Rect, (HtmlCell) -> (Double, Double)) -> HtmlTableLayout
+
+pub fn html_table_metrics(HtmlTable, (HtmlCell) -> (Double, Double)) -> HtmlTableMetrics
+
+pub fn html_table_size(HtmlTable, (HtmlCell) -> (Double, Double)) -> (Double, Double)
+
+pub fn is_html_label_text(String) -> Bool
+
+pub fn parse_html_label(String) -> HtmlLabel?
+
+pub fn strip_html_wrappers(String) -> String?
+
+// Errors
+
+// Types and methods
+pub(all) enum HtmlAlign {
+  Left
+  Center
+  Right
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlAlign
+
+pub(all) struct HtmlCell {
+  content : HtmlCellContent
+  port : String?
+  col_span : Int
+  row_span : Int
+  align : HtmlAlign
+  valign : HtmlVAlign
+  bg_color : String?
+  min_width_pt : Double?
+  min_height_pt : Double?
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlCell
+
+pub(all) enum HtmlCellContent {
+  Text(String)
+  StyledText(Array[HtmlTextSpan])
+  Table(HtmlTable)
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlCellContent
+
+pub(all) struct HtmlCellLayout {
+  rect : @geom.Rect
+  cell : HtmlCell
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlCellLayout
+
+pub(all) struct HtmlCellPlacement {
+  cell : HtmlCell
+  row : Int
+  col : Int
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlCellPlacement
+
+pub(all) enum HtmlLabel {
+  Text(String)
+  Table(HtmlTable)
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlLabel
+
+pub(all) struct HtmlRow {
+  cells : Array[HtmlCell]
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlRow
+
+pub(all) struct HtmlTable {
+  rows : Array[HtmlRow]
+  border_pt : Double
+  cell_border_pt : Double
+  cell_spacing_pt : Double
+  cell_padding_pt : Double
+  bg_color : String?
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlTable
+
+pub(all) struct HtmlTableLayout {
+  cells : Array[HtmlCellLayout]
+  scale_x : Double
+  scale_y : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlTableLayout
+
+pub(all) struct HtmlTableMetrics {
+  placements : Array[HtmlCellPlacement]
+  col_widths : Array[Double]
+  row_heights : Array[Double]
+  total_width : Double
+  total_height : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlTableMetrics
+
+pub(all) struct HtmlTextSpan {
+  text : String
+  color : String?
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlTextSpan
+
+pub(all) enum HtmlVAlign {
+  Top
+  Middle
+  Bottom
+} derive(Eq, @debug.Debug)
+pub impl Show for HtmlVAlign
+
+// Type aliases
+
+// Traits
+

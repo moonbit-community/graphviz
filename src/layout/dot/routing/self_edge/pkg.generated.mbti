@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/self_edge"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing",
+}
+
+// Values
+pub fn apply_self_edge_right_space(SelfEdgeRightSpaceInput) -> Map[String, @node_primitives.NodeSize]
+
+pub fn collect_self_edge_groups(Array[@cgraph.Edge]) -> Map[String, Array[@cgraph.Edge]]
+
+pub fn self_edge_route_for_edge(SelfEdgeRouteLookupInput) -> @routing.SelfEdgeRoute?
+
+// Errors
+
+// Types and methods
+pub(all) struct SelfEdgeRightSpaceInput {
+  edges : Array[@cgraph.Edge]
+  sizes : Map[String, @node_primitives.NodeSize]
+  rankdir : @rankdir.RankDir
+  self_edge_size_pt : Double
+  self_edge_label_width_for : (@cgraph.Edge, @rankdir.RankDir) -> Double
+  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int
+}
+
+pub(all) struct SelfEdgeRouteLookupInput {
+  edge : @cgraph.Edge
+  self_edge_groups : Map[String, Array[@cgraph.Edge]]
+  base_cache : Map[Int, @routing.EdgeRouteBase]
+  nodesep_pt : Double
+  rank_y : Map[Int, Double]
+  self_edge_routes : Map[Int, @routing.SelfEdgeRoute]
+  self_edge_label_height_fn : (@cgraph.Edge, @rankdir.RankDir) -> Double
+  self_edge_label_width_fn : (@cgraph.Edge, @rankdir.RankDir) -> Double
+}
+
+// Type aliases
+
+// Traits
+

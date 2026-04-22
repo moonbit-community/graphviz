@@ -1,0 +1,92 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/cli"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn default_engine(program? : String) -> LayoutEngine
+
+pub fn default_format(LayoutEngine) -> FormatSpec
+
+pub fn parse_cli_args(Array[String], program? : String) -> CliAction raise CliError
+
+pub fn render_job(CliJob) -> String raise
+
+pub fn run_cli(Array[String], program? : String) -> String raise
+
+pub fn run_cli_bytes(Array[String], program? : String) -> Bytes raise
+
+// Errors
+pub(all) suberror CliError {
+  UnknownFlag(flag~ : String)
+  MissingValue(flag~ : String)
+  InvalidAssignment(flag~ : String, value~ : String)
+  InvalidNumber(flag~ : String, value~ : String)
+  MultipleInputs
+} derive(Eq, @debug.Debug)
+pub impl Show for CliError
+
+// Types and methods
+pub(all) struct AttrAssignment {
+  name : String
+  value : String
+} derive(Eq, @debug.Debug)
+pub impl Show for AttrAssignment
+
+pub(all) enum CliAction {
+  Render(CliJob)
+  ListFormats
+  ShowVersion
+} derive(Eq, @debug.Debug)
+pub impl Show for CliAction
+
+pub(all) struct CliJob {
+  input : String?
+  output : String?
+  engine : LayoutEngine
+  engine_explicit : Bool
+  format : FormatSpec
+  graph_attrs : Array[AttrAssignment]
+  node_attrs : Array[AttrAssignment]
+  edge_attrs : Array[AttrAssignment]
+  scale : Double?
+  neato_no_op : Int?
+  neato_prune : Bool
+  verbose : Bool
+} derive(Eq, @debug.Debug)
+pub impl Show for CliJob
+
+pub(all) struct FormatSpec {
+  format : OutputFormat
+  variant : String?
+} derive(Eq, @debug.Debug)
+pub impl Show for FormatSpec
+
+pub(all) enum LayoutEngine {
+  Dot
+  Neato
+  Fdp
+  Sfdp
+  Twopi
+  Circo
+  Osage
+  Patchwork
+  Nop
+  Other(name~ : String)
+} derive(Eq, @debug.Debug)
+pub impl Show for LayoutEngine
+
+pub(all) enum OutputFormat {
+  Dot
+  XDot
+  Svg
+  Other(name~ : String)
+} derive(Eq, @debug.Debug)
+pub impl Show for OutputFormat
+
+// Type aliases
+
+// Traits
+

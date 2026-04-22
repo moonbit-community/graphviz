@@ -1,0 +1,99 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/cgraph"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum AttrKind {
+  Graph
+  Node
+  Edge
+} derive(Eq, @debug.Debug)
+pub impl Show for AttrKind
+
+pub(all) enum Compass {
+  N
+  NE
+  E
+  SE
+  S
+  SW
+  W
+  NW
+  C
+} derive(Eq, @debug.Debug)
+pub impl Show for Compass
+
+pub struct Edge {
+  root : Root
+  id : Int
+}
+pub fn Edge::attrs(Self) -> Array[(String, String)]
+pub fn Edge::get_attr(Self, String) -> String?
+pub fn Edge::head(Self) -> Node
+pub fn Edge::head_port(Self) -> Port?
+pub fn Edge::id(Self) -> Int
+pub fn Edge::name(Self) -> String?
+pub fn Edge::set_attr(Self, String, String) -> Unit
+pub fn Edge::tail(Self) -> Node
+pub fn Edge::tail_port(Self) -> Port?
+
+pub struct Graph {
+  root : Root
+  id : Int
+}
+pub fn Graph::attrs(Self) -> Array[(String, String)]
+pub fn Graph::declare_attr(Self, AttrKind, String, default? : String) -> Unit
+pub fn Graph::default_attrs(Self, AttrKind) -> Array[(String, String)]
+pub fn Graph::edge(Self, Node, Node, name? : String, tail_port? : Port, head_port? : Port) -> Edge
+pub fn Graph::edges(Self) -> Array[Edge]
+pub fn Graph::find_node(Self, String) -> Node?
+pub fn Graph::get_attr(Self, String) -> String?
+pub fn Graph::get_default_attr(Self, AttrKind, String) -> String?
+pub fn Graph::is_root(Self) -> Bool
+pub fn Graph::is_strict(Self) -> Bool
+pub fn Graph::kind(Self) -> GraphKind
+pub fn Graph::name(Self) -> String?
+pub fn Graph::new(GraphKind, name? : String, strict? : Bool) -> Self
+pub fn Graph::node(Self, String) -> Node
+pub fn Graph::nodes(Self) -> Array[Node]
+pub fn Graph::parent(Self) -> Self?
+pub fn Graph::set_attr(Self, String, String) -> Unit
+pub fn Graph::set_default_attr(Self, AttrKind, String, String) -> Unit
+pub fn Graph::subgraph(Self, name? : String) -> Self
+pub fn Graph::subgraphs(Self) -> Array[Self]
+
+pub(all) enum GraphKind {
+  Directed
+  Undirected
+} derive(Eq, @debug.Debug)
+pub impl Show for GraphKind
+
+pub struct Node {
+  root : Root
+  id : Int
+}
+pub fn Node::attrs(Self) -> Array[(String, String)]
+pub fn Node::get_attr(Self, String) -> String?
+pub fn Node::graph(Self) -> Graph
+pub fn Node::name(Self) -> String
+pub fn Node::set_attr(Self, String, String) -> Unit
+
+pub(all) struct Port {
+  name : String?
+  compass : Compass?
+} derive(Eq, @debug.Debug)
+pub impl Show for Port
+
+type Root
+
+// Type aliases
+
+// Traits
+

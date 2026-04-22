@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/clustering/cluster_identity"
+
+// Values
+pub const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
+
+pub const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
+
+pub const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
+
+pub fn cluster_key_from_boundary(String, Map[String, Bool]) -> String?
+
+pub fn cluster_key_from_skeleton(String) -> String?
+
+pub fn cluster_left_boundary_name(String) -> String
+
+pub fn cluster_right_boundary_name(String) -> String
+
+pub fn cluster_skeleton_name(String, Int) -> String
+
+pub fn is_cluster_boundary_name(String) -> Bool
+
+pub fn is_cluster_left_boundary_name(String) -> Bool
+
+pub fn is_cluster_skeleton_name(String) -> Bool
+
+pub fn unique_cluster_boundary_name(String, Map[String, Bool]) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

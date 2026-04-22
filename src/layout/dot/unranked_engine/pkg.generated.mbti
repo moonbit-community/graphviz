@@ -1,0 +1,89 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/unranked_engine"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_edges_from_positions(@cgraph.Graph, Map[String, @geom.Point], (@cgraph.Node) -> @node_primitives.NodeSize, (@cgraph.Edge, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize) -> Array[@geom.Spline]) -> Array[@layout_tree.DotLayoutEdge]
+
+pub fn build_engine_geometry_context(@cgraph.Graph, Double) -> EngineGeometryContext
+
+pub fn build_neato_edges(@cgraph.Graph, Map[String, Int], Array[Double], Double) -> Array[NeatoEdge]
+
+pub fn build_neato_initial_node_state(Array[@cgraph.Node], Double) -> NeatoInitialNodeState
+
+pub fn build_neato_node_sizing(Array[@cgraph.Node], @layout_prep.RecordOrientation) -> NeatoNodeSizing
+
+pub fn build_projected_nodes_from_positions(Array[@cgraph.Node], Map[String, @geom.Point], (@cgraph.Node) -> @node_primitives.NodeSize) -> Array[@layout_tree.DotLayoutNode]
+
+pub fn finalize_unranked_layout_tree(@cgraph.Graph, @rankdir.RankDir, Array[@layout_tree.DotLayoutNode], Array[@layout_tree.DotLayoutEdge]) -> @layout_tree.LayoutTree
+
+pub fn node_size_with_fallback(Map[String, @node_primitives.NodeSize], @cgraph.Node, @layout_prep.RecordOrientation) -> @node_primitives.NodeSize
+
+pub fn noop_edge_splines(@cgraph.Edge, Bool, Double, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize) -> Array[@geom.Spline]
+
+pub fn parse_edge_pos(String, Double) -> Array[@geom.Spline]
+
+pub fn parse_point_attr(String) -> @geom.Point?
+
+pub fn prepare_neato_layout_tree(@cgraph.Graph, Double, Bool) -> Result[@layout_tree.LayoutTree, String]
+
+pub fn prepare_noop_layout_tree(@cgraph.Graph, Int, Double, Bool) -> Result[@layout_tree.LayoutTree, String]
+
+pub fn project_scaled_nodes_with_sizes(Array[@cgraph.Node], Array[@geom.Point], Double, Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation) -> EngineNodeProjectionWithSizes
+
+pub fn relax_positions(Array[@geom.Point], Array[Bool], Array[Double], Array[NeatoEdge], Double, Double, Int) -> Unit
+
+pub fn scale_point(@geom.Point, Double) -> @geom.Point
+
+pub fn straight_line_edge_splines(@cgraph.Edge, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize) -> Array[@geom.Spline]
+
+// Errors
+
+// Types and methods
+pub struct EngineGeometryContext {
+  scale_factor : Double
+  rankdir : @rankdir.RankDir
+  record_orientation : @layout_prep.RecordOrientation
+}
+
+pub(all) struct EngineNodeProjection {
+  positions : Map[String, @geom.Point]
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+}
+
+pub(all) struct EngineNodeProjectionWithSizes {
+  projection : EngineNodeProjection
+  sizes : Map[String, @node_primitives.NodeSize]
+}
+
+pub struct NeatoEdge {
+  tail : Int
+  head : Int
+  length_pt : Double
+  weight : Double
+}
+
+pub struct NeatoInitialNodeState {
+  positions : Array[@geom.Point]
+  pinned : Array[Bool]
+}
+
+pub struct NeatoNodeSizing {
+  sizes : Map[String, @node_primitives.NodeSize]
+  indices : Map[String, Int]
+  radii : Array[Double]
+  max_half : Double
+}
+
+// Type aliases
+
+// Traits
+

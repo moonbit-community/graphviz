@@ -1,0 +1,251 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/setup"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_dot_cluster_metadata_from_sources(DotClusterMetadataSources) -> DotClusterMetadata
+
+pub fn build_edge_port_sample_bundle(Array[@cgraph.Edge], Array[String], Array[String], (String, @cgraph.Port?) -> Double, (String, @cgraph.Port?) -> Double) -> EdgePortSampleBundle
+
+pub fn build_edge_vnodes(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Array[Int]], Map[String, Int], Double, @rankdir.RankDir, Map[String, Bool], Map[String, String], Map[String, String?]) -> EdgeVnodeInfo
+
+pub fn build_ordering_edge_port_data_from_sources(OrderingEdgePortDataSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingEdgePortData
+
+pub fn build_ordering_pipeline_context_from_sources(BuildOrderingPipelineContextSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingPipelineContext
+
+pub fn build_ordering_reorder_setup_from_sources(OrderingReorderSetupSources) -> OrderingReorderSetup
+
+pub fn build_ordering_result_from_pipeline_context(OrderingPipelineContext, Map[Int, Array[String]], Map[Int, Array[String]]) -> OrderingResult
+
+pub fn build_ordering_runtime_context_from_sources(BuildOrderingRuntimeContextSources) -> OrderingRuntimeContext
+
+// Errors
+
+// Types and methods
+pub(all) struct BuildOrderingPipelineContextSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  nodesep_pt : Double
+  rankdir : @rankdir.RankDir
+  cluster_meta : DotClusterMetadata
+}
+
+pub(all) struct BuildOrderingRuntimeContextSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  nodesep_pt : Double
+  rankdir : @rankdir.RankDir
+  cluster_meta : DotClusterMetadata
+}
+
+pub(all) struct ClusterCoreOrderingMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+}
+
+pub(all) struct ClusterMembershipMaps {
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+}
+
+pub(all) struct ClusterNodeRankBounds {
+  min_rank : Map[String, Int]
+  max_rank : Map[String, Int]
+  first_order : Map[String, Int]
+}
+
+pub(all) struct DedupOrderingEdgesOutput {
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+}
+
+pub(all) struct DotClusterMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+pub(all) struct DotClusterMetadataSources {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  rankdir : @rankdir.RankDir
+}
+
+pub(all) struct EdgePortSampleBundle {
+  tail_port_x : Array[Double]
+  head_port_x : Array[Double]
+  tail_port_order : Array[Double]
+  head_port_order : Array[Double]
+}
+
+pub(all) struct EdgeVnodeInfo {
+  vnode_ranks : Map[String, Int]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  vnodes_by_rank : Map[Int, Array[String]]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_clusters : Map[String, String]
+}
+
+pub(all) struct FlatConstraintsOutput {
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+pub(all) struct OrderingClass2Data {
+  edges_by_tail : Map[String, Array[Int]]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  root_edge_creation : Array[(String, String)]
+  skeleton_edge_creation : Array[(String, String)]
+  edge_creation_order : Array[(String, String)]
+  creation_order : Array[String]
+  nlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+pub(all) struct OrderingEdgePortData {
+  edge_order : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+pub(all) struct OrderingEdgePortDataSources {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+}
+
+pub(all) struct OrderingNodeNameSets {
+  real_nodes : Map[String, Bool]
+  existing_names : Map[String, Bool]
+}
+
+pub(all) struct OrderingPipelineContext {
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
+}
+
+pub(all) struct OrderingReorderSetup {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  graphviz_flip : Bool
+  flat_rank_constraints : Map[String, Bool]
+  class2_data : OrderingClass2Data
+  gdnlist_order : Array[String]
+  vnode_order_keys_for_ordering : Map[String, Double]
+}
+
+pub(all) struct OrderingReorderSetupSources {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+  vnode_info : EdgeVnodeInfo
+  cluster_has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_parents : Map[String, String?]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  rankdir : @rankdir.RankDir
+  edge_port_data : OrderingEdgePortData
+}
+
+pub(all) struct OrderingResult {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  vnode_info : EdgeVnodeInfo
+  vnode_count : Int
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  edge_order : Map[String, Int]
+  edge_cluster_keys : Map[String, String]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+pub(all) struct OrderingRuntimeContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+}
+
+pub(all) struct OrderingRuntimeCore {
+  real_nodes : Map[String, Bool]
+  existing_names : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+}
+
+// Type aliases
+
+// Traits
+

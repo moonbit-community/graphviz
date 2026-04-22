@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/x_stage"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_position_mode_flags(PositionModeFlagSources) -> PositionModeFlags
+
+pub fn build_x_stage_output(XStageInput) -> XStageOutput
+
+// Errors
+
+// Types and methods
+pub(all) struct PositionModeFlagSources {
+  has_edge_labels : Bool
+  has_port_edges : Bool
+  vnode_count : Int
+  max_xpos_vnodes : Int
+  max_xpos_reorder_vnodes : Int
+  rankdir : @rankdir.RankDir
+}
+
+pub struct PositionModeFlags {
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+}
+
+pub(all) struct XStageInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+}
+
+pub(all) struct XStageOutput {
+  use_vnodes_for_xpos : Bool
+  x_groups : Map[Int, Array[String]]
+  flat_label_ranks : Map[String, Int]
+  flat_label_edge_vnodes : Map[String, String]
+  x_positions : Map[String, Double]
+}
+
+// Type aliases
+
+// Traits
+

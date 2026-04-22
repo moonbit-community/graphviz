@@ -1,0 +1,53 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/geom"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Bezier {
+  points : Array[Point]
+} derive(Eq, @debug.Debug)
+pub impl Show for Bezier
+
+pub(all) struct Point {
+  x : Double
+  y : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for Point
+
+pub(all) struct Polyline {
+  points : Array[Point]
+} derive(Eq, @debug.Debug)
+pub impl Show for Polyline
+
+pub(all) struct Rect {
+  llx : Double
+  lly : Double
+  urx : Double
+  ury : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for Rect
+
+pub(all) struct Size {
+  width : Double
+  height : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for Size
+
+pub(all) struct Spline {
+  start : Point?
+  end : Point?
+  points : Array[Point]
+} derive(Eq, @debug.Debug)
+pub impl Show for Spline
+
+// Type aliases
+
+// Traits
+

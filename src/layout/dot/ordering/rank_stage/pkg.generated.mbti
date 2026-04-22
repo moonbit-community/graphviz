@@ -1,0 +1,62 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/rank_stage"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn compute_dot_rank_stage(RankStageInput) -> RankStageOutput
+
+pub fn compute_ordering_pipeline(OrderingPipelineInput) -> OrderingPipelineOutput
+
+// Errors
+
+// Types and methods
+pub(all) struct OrderingPipelineInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  rankdir : @rankdir.RankDir
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+pub struct OrderingPipelineOutput {
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+}
+
+pub(all) struct RankStageInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+}
+
+pub(all) struct RankStageOutput {
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+}
+
+// Type aliases
+
+// Traits
+

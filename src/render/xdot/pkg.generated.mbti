@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/render/xdot"
+
+import {
+  "moonbit-community/graphviz/layout/dot",
+  "moonbit-community/graphviz/render",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn attach_xdot_attrs(@dot.DotLayoutGraph, options? : XDotOptions) -> Unit
+
+pub fn encode_xdot_ops(Array[@render.DrawOp]) -> String
+
+pub fn render_xdot(@dot.DotLayoutGraph, options? : XDotOptions) -> String
+
+pub fn render_xdot_bytes(@dot.DotLayoutGraph, options? : XDotOptions) -> Bytes
+
+// Errors
+
+// Types and methods
+pub(all) struct XDotOptions {
+  version : String?
+} derive(Eq, @debug.Debug)
+pub fn XDotOptions::default() -> Self
+pub impl Show for XDotOptions
+
+// Type aliases
+
+// Traits
+

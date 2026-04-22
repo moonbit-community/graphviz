@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/cluster_graph"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn collect_cluster_graph_maps(@cgraph.Graph) -> ClusterGraphMaps
+
+pub fn collect_cluster_graphs(@cgraph.Graph, String?, Map[String, @cgraph.Graph], Map[String, String?]) -> Unit
+
+pub fn collect_cluster_names(@cgraph.Graph, Map[String, Bool]) -> Unit
+
+pub fn collect_graph_nodes(@cgraph.Graph, Map[String, Bool]) -> Unit
+
+pub fn graph_has_cluster(@cgraph.Graph) -> Bool
+
+pub fn is_cluster_graph(@cgraph.Graph) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct ClusterGraphMaps {
+  cluster_graphs : Map[String, @cgraph.Graph]
+  cluster_parents : Map[String, String?]
+}
+
+// Type aliases
+
+// Traits
+

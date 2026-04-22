@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_assignment/cluster_ranks"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn apply_clustered_rank_postprocessing(@cgraph.Graph, Array[@cgraph.Node], Map[String, Int]) -> Map[String, Int]
+
+pub fn build_node_cluster_index(Array[String], Map[String, Map[String, Bool]]) -> Map[String, String]
+
+pub fn collect_cluster_members(Map[String, @cgraph.Graph]) -> Map[String, Map[String, Bool]]
+
+pub fn collect_top_clusters(@cgraph.Graph) -> TopClustersCollected
+
+pub fn compute_clustered_ranks(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int, (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int) -> Map[String, Int]) -> Map[String, Int]
+
+pub fn compute_local_cluster_ranks_and_leaders(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Map[String, @cgraph.Graph], Map[String, Map[String, Bool]], (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> Map[String, Int]) -> LocalClusterRankResult
+
+pub fn project_clustered_node_ranks(Array[@cgraph.Node], Map[String, String], Map[String, String], Map[String, Int], Map[String, Int]) -> Map[String, Int]
+
+pub fn solve_clustered_leader_ranks(Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, String], Map[String, String], Map[String, Int], Bool, Int, (Array[String], Array[String], Array[String], Array[Bool]) -> (Array[String], Array[String], Array[Bool])) -> Map[String, Int]
+
+// Errors
+
+// Types and methods
+pub struct LocalClusterRankResult {
+  local_ranks : Map[String, Int]
+  cluster_leaders : Map[String, String]
+}
+
+pub struct TopClustersCollected {
+  cluster_graphs : Map[String, @cgraph.Graph]
+  top_clusters : Array[String]
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/routesplines"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_path_adjacency(Array[@cgraph.Edge], Map[String, Array[String]], Array[String], Array[String]) -> PathAdjacency
+
+pub fn edge_pathplan_polyline(@cgraph.Edge, String, String, @geom.Point, @geom.Point, @rankdir.RankDir, Int, Int, @geom.Rect?, @geom.Rect?, Double, Map[String, Int], Map[String, Int], Map[String, Array[String]], Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, String], Map[String, String], Map[String, @geom.Rect], Map[Int, Array[String]], Map[String, Int], Map[String, Array[String]], Map[String, Array[String]], Map[Int, Double], Map[Int, Double], Map[Int, Double], Double, Double, Double, Bool) -> PathplanResult?
+
+pub fn limit_boxes_for_spline(Array[@geom.Rect], Array[@geom.Point], fallback_polyline? : Array[@geom.Point]) -> Array[@geom.Rect]
+
+pub fn pathplan_bounds(Map[String, @geom.Point], Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[Int, Array[String]]) -> PathplanBounds
+
+// Errors
+
+// Types and methods
+pub struct PathAdjacency {
+  out_edges : Map[String, Array[String]]
+  in_edges : Map[String, Array[String]]
+}
+
+pub(all) struct PathplanBounds {
+  left : Double
+  right : Double
+}
+
+pub(all) struct PathplanResult {
+  points : Array[@geom.Point]
+  barriers : Array[(@geom.Point, @geom.Point)]
+  boxes : Array[@geom.Rect]
+  segments : Array[PathplanSegment]
+}
+
+pub(all) struct PathplanSegment {
+  points : Array[@geom.Point]
+  barriers : Array[(@geom.Point, @geom.Point)]
+  boxes : Array[@geom.Rect]
+  vnodes : Array[String]
+}
+
+// Type aliases
+
+// Traits
+

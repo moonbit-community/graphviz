@@ -1,0 +1,93 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub const CLUSTER_LABEL_PAD_PT : Double = 8.0
+
+pub fn adjust_cluster_positions(ClusterAlignmentInput) -> @geom.Rect?
+
+pub fn adjust_flip_rank_heights(FlipRankHeightsAdjustInput) -> Bool
+
+pub fn apply_cluster_rank_heights(ClusterRankHeightsApplyInput) -> Unit
+
+pub fn cluster_label_borders_for_xpos_constraints(@cgraph.Graph, @rankdir.RankDir) -> (Double, Double)
+
+pub fn cluster_label_padding_for_layout(@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
+
+pub fn cluster_label_width_with_pad_for_layout(@cgraph.Graph) -> Double?
+
+pub fn compute_cluster_bbox_heights(ClusterBBoxHeightsInput) -> Map[String, ClusterBboxHeightPair]
+
+pub fn expand_cluster_label_bbox_for_position_stage(@cgraph.Graph, @geom.Rect) -> @geom.Rect
+
+// Errors
+
+// Types and methods
+pub(all) struct ClusterAlignmentInput {
+  graph : @cgraph.Graph
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_clusters : Map[String, String]
+  sizes : Map[String, @node_primitives.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  expand_cluster_label_bbox : (@cgraph.Graph, @geom.Rect) -> @geom.Rect
+}
+
+pub(all) struct ClusterBBoxHeightsInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  self_edge_labels : Map[String, Double]
+  rankdir : @rankdir.RankDir
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
+  node_half_height_pt_for : (String, Map[String, @node_primitives.NodeSize], Map[String, Double]) -> Double
+}
+
+pub(all) struct ClusterBboxHeightPair {
+  ht1 : Double
+  ht2 : Double
+}
+
+pub(all) struct ClusterLabelPadding {
+  top : Double
+  bottom : Double
+}
+
+pub(all) struct ClusterRankHeightsApplyInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  self_edge_labels : Map[String, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  rankdir : @rankdir.RankDir
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
+  node_half_height_pt_for : (String, Map[String, @node_primitives.NodeSize], Map[String, Double]) -> Double
+}
+
+pub(all) struct FlipRankHeightsAdjustInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  cluster_heights : Map[String, ClusterBboxHeightPair]
+  min_root_rank : Int
+  margin_total : Double
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
+}
+
+// Type aliases
+
+// Traits
+

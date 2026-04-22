@@ -1,0 +1,122 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/precompute"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/routing/routesplines",
+}
+
+// Values
+pub fn build_dot_head_port_metrics(Array[@cgraph.Edge], Bool, Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]]) -> HeadPortMetrics
+
+pub fn build_edge_parallel_offsets(ParallelOffsetsBuildInput) -> Map[Int, Double]
+
+pub fn build_head_port_metrics(Array[@cgraph.Edge], Bool, (@cgraph.Edge) -> (String, Double)?) -> HeadPortMetrics
+
+pub fn build_label_edge_counts(Array[@cgraph.Edge], (@cgraph.Edge) -> Bool) -> Map[String, Int]
+
+pub fn build_routing_precompute_pipeline(RoutingPrecomputePipelineInput) -> RoutingPrecomputePipelineOutput
+
+pub fn collect_parallel_offset_edge_flags(Array[@cgraph.Edge], Array[String], Array[String]) -> (Map[Int, Bool], Map[Int, Bool])
+
+pub fn complex_tuning_enabled() -> Bool
+
+pub fn prepare_routing_context(PrepareRoutingContextInput) -> RoutingContext
+
+pub fn resolve_routing_port_padding(Bool, Bool, () -> (Double, Double)) -> (Double, Double)
+
+pub fn select_path_groups(Map[Int, Array[String]], Map[Int, Array[String]], Map[Int, Array[String]]) -> Map[Int, Array[String]]
+
+// Errors
+
+// Types and methods
+pub(all) struct HeadPortMetrics {
+  head_port_counts : Map[String, Int]
+  head_port_min_dist : Map[String, Double]
+  head_port_max_dist : Map[String, Double]
+}
+
+pub(all) struct ParallelOffsetsBuildInput {
+  edges : Array[@cgraph.Edge]
+  edge_has_label_by_id : Map[Int, Bool]
+  ranks : Map[String, Int]
+  nodesep_pt : Double
+  edge_reversed_by_id : Map[Int, Bool]
+  cluster_keys : Map[String, String]
+}
+
+pub(all) struct PrepareRoutingContextInput {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  ranks : Map[String, Int]
+  positions : Map[String, @geom.Point]
+  ordered_groups : Map[Int, Array[String]]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  sizes : Map[String, @node_primitives.NodeSize]
+  edge_vnodes : Map[String, Array[String]]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
+  path_cluster_keys : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+pub(all) struct RoutePortGeometry {
+  center : @geom.Point
+  size : @node_primitives.NodeSize
+}
+
+pub(all) struct RoutingContext {
+  order_index : Map[String, Int]
+  path_order_index : Map[String, Int]
+  path_adjacency : @routesplines.PathAdjacency
+  merged_positions : Map[String, @geom.Point]
+  pathplan_route_sizes : Map[String, @node_primitives.NodeSize]
+  pathplan_mval_route_sizes : Map[String, @node_primitives.NodeSize]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
+  path_cluster_keys : Map[String, String]
+  path_vnode_clusters : Map[String, String]
+  parallel_offsets : Map[Int, Double]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+pub(all) struct RoutingPrecomputePipelineInput {
+  edges : Array[@cgraph.Edge]
+  positions : Map[String, @geom.Point]
+  x_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int, Array[String]]
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  ranks : Map[String, Int]
+  nodesep_pt : Double
+  sizes : Map[String, @node_primitives.NodeSize]
+  edge_vnodes : Map[String, Array[String]]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
+  path_cluster_keys : Map[String, String]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+pub struct RoutingPrecomputePipelineOutput {
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
+  path_groups : Map[Int, Array[String]]
+  routing_context : RoutingContext
+}
+
+// Type aliases
+
+// Traits
+

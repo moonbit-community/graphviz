@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/vnode_order"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn build_vnode_keys_from_nlist(Map[Int, Array[String]], Map[Int, Array[String]], Map[String, Int], Map[String, Int], Map[String, Bool], Bool) -> Map[String, Double]
+
+pub fn build_vnode_order_keys(Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double]
+
+pub fn edge_internal_to_cluster(String, String, Map[String, String?]) -> Bool
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

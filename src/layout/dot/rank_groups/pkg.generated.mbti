@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_groups"
+
+// Values
+pub fn build_node_ranks(Map[Int, Array[String]]) -> Map[String, Int]
+
+pub fn build_order_index(Map[Int, Array[String]]) -> Map[String, Int]
+
+pub fn build_x_groups_with_vnodes(Map[Int, Array[String]], Map[String, Int], Map[Int, Array[String]], Map[String, Double]) -> Map[Int, Array[String]]
+
+pub fn clone_rank_groups(Map[Int, Array[String]]) -> Map[Int, Array[String]]
+
+pub fn collect_rank_keys(Map[Int, Array[String]]) -> Array[Int]
+
+pub fn order_positions_from_groups(Map[Int, Array[String]]) -> Map[String, Double]
+
+pub fn update_order_positions_for_rank(Map[String, Double], Array[String]) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

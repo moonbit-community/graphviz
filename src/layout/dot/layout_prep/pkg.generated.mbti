@@ -1,0 +1,55 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/layout_prep"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn merge_sizes_with_vnodes(Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize]) -> Map[String, @node_primitives.NodeSize]
+
+pub fn record_layout_orientation(@rankdir.RankDir) -> RecordOrientation
+
+// Errors
+
+// Types and methods
+pub(all) struct LayoutPrep {
+  rankdir : @rankdir.RankDir
+  nodesep_in : Double
+  ranksep_in : Double
+  splines : SplinesMode
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  has_dotted_edges : Bool
+  has_port_edges : Bool
+  has_edge_labels : Bool
+  node_order : Map[String, Int]
+  record_orientation : RecordOrientation
+  output_sizes : Map[String, @node_primitives.NodeSize]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  sizes : Map[String, @node_primitives.NodeSize]
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+pub(all) enum RecordOrientation {
+  Horizontal
+  Vertical
+}
+
+pub(all) enum SplinesMode {
+  Spline
+  Polyline
+  Ortho
+  Curved
+  None
+} derive(Eq, @debug.Debug)
+pub impl Show for SplinesMode
+
+// Type aliases
+
+// Traits
+

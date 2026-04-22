@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/pathplan"
+
+import {
+  "moonbit-community/graphviz/geom",
+}
+
+// Values
+pub fn shortest_path_in_poly(Array[@geom.Point], @geom.Point, @geom.Point) -> Array[@geom.Point]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

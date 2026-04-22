@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/bbox"
+
+import {
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub fn compute_bbox(Array[@layout_tree.DotLayoutNode], Array[@layout_tree.DotLayoutEdge]) -> @geom.Rect
+
+pub fn compute_dot_bbox(DotBBoxInput) -> @geom.Rect
+
+pub fn expand_bbox_with_edges(@geom.Rect, Array[@layout_tree.DotLayoutEdge]) -> @geom.Rect
+
+pub fn merge_bbox(@geom.Rect, @geom.Rect) -> @geom.Rect
+
+pub fn round_bbox(@geom.Rect) -> @geom.Rect
+
+pub fn spline_bbox(Array[@geom.Point]) -> @geom.Rect?
+
+// Errors
+
+// Types and methods
+pub(all) struct DotBBoxInput {
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+  all_ranks : Array[Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+// Type aliases
+
+// Traits
+
