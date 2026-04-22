@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rankdir"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn graph_rankdir(@cgraph.Graph) -> RankDir
+
+pub fn parse_rankdir(String) -> RankDir?
+
+// Errors
+
+// Types and methods
+pub(all) enum RankDir {
+  TB
+  BT
+  LR
+  RL
+} derive(Eq, @debug.Debug)
+pub impl Show for RankDir
+
+// Type aliases
+
+// Traits
+

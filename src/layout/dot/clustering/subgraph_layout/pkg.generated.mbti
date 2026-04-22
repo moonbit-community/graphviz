@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/clustering/subgraph_layout"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn compute_cluster_route_bboxes(@cgraph.Graph, Array[@layout_tree.DotLayoutNode], Map[String, Double], Map[String, Double], Map[String, @cluster_geometry.ClusterBboxHeightPair], @rankdir.RankDir, Map[String, Int], Map[Int, Double], Map[Int, Double], Map[Int, Double]) -> Map[String, @geom.Rect]
+
+pub fn expand_bbox_with_clusters(@geom.Rect, Array[@layout_tree.LayoutTree]) -> @geom.Rect
+
+pub fn expand_bbox_with_subgraphs(@geom.Rect, Array[@layout_tree.LayoutTree]) -> @geom.Rect
+
+pub fn layout_subgraphs(LayoutSubgraphsInput) -> Array[@layout_tree.LayoutTree]
+
+// Errors
+
+// Types and methods
+pub(all) struct LayoutSubgraphsInput {
+  graph : @cgraph.Graph
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+  edges_out : Array[@layout_tree.DotLayoutEdge]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
+  rankdir : @rankdir.RankDir
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+// Type aliases
+
+// Traits
+

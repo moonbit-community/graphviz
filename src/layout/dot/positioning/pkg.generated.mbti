@@ -1,0 +1,45 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+}
+
+// Values
+pub fn compute_positions(PositionPipelineInput) -> PositionResult
+
+// Errors
+
+// Types and methods
+pub(all) struct PositionPipelineInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+}
+
+pub(all) struct PositionResult {
+  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int, Double]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  flat_label_edge_vnodes : Map[String, String]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
+}
+
+// Type aliases
+
+// Traits
+

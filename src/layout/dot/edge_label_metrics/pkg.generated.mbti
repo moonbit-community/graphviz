@@ -1,0 +1,37 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/edge_label_metrics"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn edge_label_height_pt(@cgraph.Edge) -> Double
+
+pub fn edge_label_metrics_for_attr(@cgraph.Edge, String, Bool) -> EdgeLabelMetrics?
+
+pub fn edge_mid_label_metrics(@cgraph.Edge) -> EdgeLabelMetrics?
+
+pub fn edge_mid_label_text(@cgraph.Edge) -> String?
+
+pub fn edge_mid_label_width_pt(@cgraph.Edge) -> Double
+
+pub fn graph_has_edge_labels(Array[@cgraph.Edge]) -> Bool
+
+pub fn self_edge_label_height_pt(@cgraph.Edge, @rankdir.RankDir) -> Double
+
+pub fn self_edge_label_width_pt(@cgraph.Edge, @rankdir.RankDir) -> Double
+
+// Errors
+
+// Types and methods
+pub struct EdgeLabelMetrics {
+  width : Double
+  height : Double
+}
+
+// Type aliases
+
+// Traits
+

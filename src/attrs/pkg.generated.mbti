@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/attrs"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn color(String?, default? : String) -> String
+
+pub fn font_name(String?, default? : String) -> String
+
+pub fn font_size(String?, default? : Double) -> Double
+
+pub fn normalize_color(String) -> String
+
+pub fn parse_double(String?, Double) -> Double
+
+pub fn parse_style(String?, default? : String) -> StyleFlags
+
+// Errors
+
+// Types and methods
+pub(all) struct StyleFlags {
+  raw : String
+  filled : Bool
+  dashed : Bool
+  dotted : Bool
+} derive(Eq, @debug.Debug)
+pub impl Show for StyleFlags
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,57 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/edge_semantics"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn arrow_attr_is_none(String?) -> Bool
+
+pub fn edge_attr_non_empty(@cgraph.Edge, String) -> Bool
+
+pub fn edge_attr_or_empty(@cgraph.Edge, String) -> String
+
+pub fn edge_dir_for(@cgraph.Edge, @cgraph.GraphKind) -> EdgeDir
+
+pub fn edge_has_head_marker(@cgraph.Edge, @cgraph.GraphKind) -> Bool
+
+pub fn edge_has_label(@cgraph.Edge) -> Bool
+
+pub fn edge_has_tail_marker(@cgraph.Edge, @cgraph.GraphKind) -> Bool
+
+pub fn edge_is_constraint(@cgraph.Edge) -> Bool
+
+pub fn edge_is_self(@cgraph.Edge) -> Bool
+
+pub fn edge_minlen(@cgraph.Edge) -> Int
+
+pub fn edge_rank_span(@cgraph.Edge, Map[String, Int]) -> EdgeRankSpan?
+
+pub fn edge_weight(@cgraph.Edge) -> Int
+
+pub fn edge_xpenalty(@cgraph.Edge) -> Int
+
+pub fn parse_edge_dir(String) -> EdgeDir?
+
+// Errors
+
+// Types and methods
+pub(all) enum EdgeDir {
+  Forward
+  Back
+  Both
+  None
+} derive(Eq, @debug.Debug)
+pub impl Show for EdgeDir
+
+pub(all) struct EdgeRankSpan {
+  min_rank : Int
+  max_rank : Int
+}
+
+// Type aliases
+
+// Traits
+

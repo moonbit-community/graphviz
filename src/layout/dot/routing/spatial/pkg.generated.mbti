@@ -1,0 +1,60 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/spatial"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/positioning",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+}
+
+// Values
+pub fn build_routing_ratio_adjusted_data(RoutingRatioAdjustInput) -> RoutingRatioAdjustedData
+
+pub fn build_routing_spatial_data(RoutingSpatialInput) -> RoutingSpatialData
+
+// Errors
+
+// Types and methods
+pub(all) struct RoutingRatioAdjustInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+  positions_state : @positioning.PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+  label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
+  label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]]
+}
+
+pub struct RoutingRatioAdjustedData {
+  ratio_scaled : Bool
+  ratio_sx : Double
+  ratio_sy : Double
+  positions_state : @positioning.PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+  label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
+  label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]]
+}
+
+pub struct RoutingSpatialData {
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+  label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
+  label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+pub(all) struct RoutingSpatialInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  ranks : Map[String, Int]
+  positions_state : @positioning.PositionResult
+}
+
+// Type aliases
+
+// Traits
+

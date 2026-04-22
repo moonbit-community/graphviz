@@ -1,0 +1,38 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/node_geometry"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub const EDGE_LABEL_FLAT_SPACE_PT : Double = 6.0
+
+pub const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
+
+pub const GRAPHVIZ_PI : Double = 3.14159265358979323846
+
+pub const PORT_LABEL_ANGLE_DEG : Double = -25.0
+
+pub const PORT_LABEL_ANGLE_MIN_DEG : Double = -180.0
+
+pub const PORT_LABEL_DISTANCE_PT : Double = 10.0
+
+pub const SELF_EDGE_SIZE_PT : Double = 18.0
+
+pub fn compass_uses_shape_clipping(@cgraph.Node) -> Bool
+
+pub fn node_size(@cgraph.Node, @layout_prep.RecordOrientation) -> @node_primitives.NodeSize
+
+pub fn resolve_node_output_size(Map[String, @node_primitives.NodeSize], @cgraph.Node, @layout_prep.RecordOrientation) -> @node_primitives.NodeSize
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

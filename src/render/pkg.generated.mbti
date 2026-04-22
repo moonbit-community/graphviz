@@ -1,0 +1,78 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/render"
+
+import {
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn arrow_primitives(@geom.Point, @geom.Point, Double, Double, String?) -> Array[DrawOp]
+
+pub fn rounded_ortho_polylines(Array[@geom.Point], Double) -> Array[Array[@geom.Point]]
+
+// Errors
+
+// Types and methods
+pub(all) enum DrawOp {
+  Ellipse(filled~ : Bool, rect~ : @geom.Rect)
+  Polygon(filled~ : Bool, points~ : Array[@geom.Point])
+  Bezier(filled~ : Bool, points~ : Array[@geom.Point])
+  Polyline(points~ : Array[@geom.Point])
+  Text(pos~ : @geom.Point, align~ : TextAlign, width~ : Double, text~ : String)
+  Image(rect~ : @geom.Rect, name~ : String)
+  FillColor(color~ : String)
+  PenColor(color~ : String)
+  GradFill(gradient~ : Gradient)
+  GradPen(gradient~ : Gradient)
+  Font(font~ : Font)
+  Style(name~ : String)
+  FontChar(codepoint~ : UInt)
+} derive(Eq, @debug.Debug)
+pub impl Show for DrawOp
+
+pub(all) struct Font {
+  name : String
+  size : Double
+} derive(Eq, @debug.Debug)
+pub impl Show for Font
+
+pub(all) enum Gradient {
+  Linear(LinearGradient)
+  Radial(RadialGradient)
+} derive(Eq, @debug.Debug)
+pub impl Show for Gradient
+
+pub(all) struct GradientStop {
+  offset : Double
+  color : String
+} derive(Eq, @debug.Debug)
+pub impl Show for GradientStop
+
+pub(all) struct LinearGradient {
+  start : @geom.Point
+  end : @geom.Point
+  stops : Array[GradientStop]
+} derive(Eq, @debug.Debug)
+pub impl Show for LinearGradient
+
+pub(all) struct RadialGradient {
+  start_center : @geom.Point
+  start_radius : Double
+  end_center : @geom.Point
+  end_radius : Double
+  stops : Array[GradientStop]
+} derive(Eq, @debug.Debug)
+pub impl Show for RadialGradient
+
+pub(all) enum TextAlign {
+  Left
+  Center
+  Right
+} derive(Eq, @debug.Debug)
+pub impl Show for TextAlign
+
+// Type aliases
+
+// Traits
+

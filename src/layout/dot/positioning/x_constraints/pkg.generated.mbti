@@ -1,0 +1,263 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/x_constraints"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/network_simplex",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbitlang/core/ref",
+}
+
+// Values
+pub fn add_constraint_edge_if_present(@network_simplex.NsGraph, Map[String, Int], ConstraintEdge) -> Unit
+
+pub fn build_x_position_solve_input(XPositionPipelineInput) -> XPositionSolveInput
+
+pub fn compress_width_minlen_pt(@cgraph.Graph, @rankdir.RankDir) -> Int?
+
+pub fn compute_rank_positions(Array[Int], Map[Int, Array[String]], Map[String, @node_primitives.NodeSize], Double, Bool) -> Map[String, Double]
+
+pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int, (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int, Bool) -> Map[String, Double]
+
+pub fn constraint_node_kind(String) -> @network_simplex.NodeKind
+
+pub fn rank_nodesep_pt(Int, Double, Bool) -> Double
+
+pub fn segment_slack_minlen(SlackSegment, (String, @cgraph.Port?) -> Double) -> (Int, Int)
+
+pub fn should_capture_xpos_snapshot(@cgraph.Graph) -> Bool
+
+pub let xpos_constraint_snapshot : @ref.Ref[XposConstraintSnapshot?]
+
+// Errors
+
+// Types and methods
+pub(all) struct ClusterConstraintBuild {
+  extra_nodes : Array[ExtraConstraintNode]
+  extra_edges : Array[ConstraintEdge]
+  root_ln_targets : Array[String]
+  root_rn_targets : Array[String]
+}
+
+pub(all) struct ConstraintEdge {
+  tail : String
+  head : String
+  minlen : Int
+  weight : Int
+  tail_port : String?
+  head_port : String?
+}
+
+pub(all) struct ConstraintGraphBuildInput {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  nlist_order : Array[String]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  sizes : Map[String, @node_primitives.NodeSize]
+  cluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  extra_nodes : Array[ExtraConstraintNode]
+  extra_edges : Array[ConstraintEdge]
+  edge_vnodes : Map[String, Array[String]]
+  root_ln_targets : Array[String]
+  root_rn_targets : Array[String]
+  compress_width_minlen : Int?
+  segment_minlen : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int)
+  edge_has_mid_label : (@cgraph.Edge) -> Bool
+  edge_degree_increment : (@cgraph.Edge) -> Int
+  root_margin : Double
+  root_compress_weight : Int
+}
+
+pub(all) struct ConstraintGraphBuildOutput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+}
+
+pub(all) struct ConstraintNodesSetupInput {
+  graph : @network_simplex.NsGraph
+  nodes : Array[@cgraph.Node]
+  extra_nodes : Array[ExtraConstraintNode]
+  nlist_order : Array[String]
+  base_positions : Map[String, Double]
+}
+
+pub(all) struct ConstraintNodesSetupOutput {
+  index : Map[String, Int]
+  real_by_name : Map[String, @cgraph.Node]
+  late_extra_nodes : Array[ExtraConstraintNode]
+}
+
+pub(all) struct ConstraintReorderInput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+  nlist_order : Array[String]
+}
+
+pub(all) struct ConstraintSegmentPassInput {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  nlist_order : Array[String]
+  ranks : Map[String, Int]
+  cluster_keys : Map[String, String]
+  edge_vnodes : Map[String, Array[String]]
+  order_in_rank : Map[String, Int]
+  nodesep_pt : Double
+  sizes : Map[String, @node_primitives.NodeSize]
+  skip_intercluster : Bool
+  rank_adj_constraints : Map[String, ConstraintEdge]
+  edge_has_mid_label : (@cgraph.Edge) -> Bool
+  edge_degree_increment : (@cgraph.Edge) -> Int
+}
+
+pub(all) struct ConstraintSegmentPassOutput {
+  segments_by_tail : Map[String, Array[SlackSegment]]
+  flat_minlen_constraints : Map[String, ConstraintEdge]
+}
+
+pub(all) struct ExtraConstraintNode {
+  name : String
+  rank : Int
+}
+
+pub(all) struct LateConstraintNodesInput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+  late_extra_nodes : Array[ExtraConstraintNode]
+}
+
+pub(all) struct PreparedXposConstraintInputs {
+  extra_nodes : Array[ExtraConstraintNode]
+  extra_edges : Array[ConstraintEdge]
+  root_ln_targets : Array[String]
+  root_rn_targets : Array[String]
+  compress_width_minlen : Int?
+}
+
+pub(all) struct RankConstraintSeed {
+  rank_adj_constraints : Map[String, ConstraintEdge]
+  rank_adj_order : Array[String]
+  order_in_rank : Map[String, Int]
+}
+
+pub(all) struct ReorderConstraintGraphInput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+  order : Array[Int]
+}
+
+pub(all) struct ReorderConstraintGraphOutput {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+}
+
+pub(all) struct ReverseMergeMetadata {
+  merged_edge_weight_bonus : Map[Int, Int]
+  merged_edge_skip : Map[Int, Bool]
+}
+
+pub(all) struct SlackSegment {
+  tail : String
+  head : String
+  weight : Int
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+}
+
+pub(all) struct XPositionPipelineInput {
+  use_vnodes_for_xpos : Bool
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
+  x_groups : Map[Int, Array[String]]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  vnode_creation_order : Array[String]
+  vnode_ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  cluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  output_sizes : Map[String, @node_primitives.NodeSize]
+  flat_label_edges : Array[ConstraintEdge]
+}
+
+pub(all) struct XPositionSolveInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  sizes : Map[String, @node_primitives.NodeSize]
+  output_sizes : Map[String, @node_primitives.NodeSize]
+  cluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  extra_nodes : Array[ExtraConstraintNode]
+  flat_label_edges : Array[ConstraintEdge]
+  edge_vnodes : Map[String, Array[String]]
+}
+
+pub struct XposComputationInput {
+  x_sizes : Map[String, @node_primitives.NodeSize]
+  x_rank_keys : Array[Int]
+  x_ranks : Map[String, Int]
+  x_extra_nodes : Array[ExtraConstraintNode]
+  x_edge_vnodes : Map[String, Array[String]]
+}
+
+pub(all) struct XposConstraintEdgeSnapshot {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+}
+
+pub(all) struct XposConstraintNodeSnapshot {
+  name : String?
+  kind : @network_simplex.NodeKind
+  rank : Int
+  order : Int
+  left_pt : Double
+  right_pt : Double
+  height_pt : Double
+}
+
+pub(all) struct XposConstraintSnapshot {
+  nodes : Array[XposConstraintNodeSnapshot]
+  edges : Array[XposConstraintEdgeSnapshot]
+}
+
+pub(all) struct XposNlistOrderInput {
+  rankdir : @rankdir.RankDir
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  cluster_keys : Map[String, String]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+}
+
+// Type aliases
+
+// Traits
+

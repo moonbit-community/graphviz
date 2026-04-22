@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_constraints"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub fn build_graphviz_nlist_order_from_edges(Array[String], Array[String], Array[(String, String)], Map[String, Bool]) -> Array[String]
+
+pub fn build_rank_same_reps(@cgraph.Graph, Array[@cgraph.Node]) -> Map[String, String]
+
+pub fn parse_flat_constraint_key(String) -> (String, String)?
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

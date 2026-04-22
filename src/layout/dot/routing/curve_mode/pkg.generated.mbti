@@ -1,0 +1,127 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/curve_mode"
+
+import {
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing",
+  "moonbit-community/graphviz/layout/dot/routing/precompute",
+}
+
+// Values
+pub fn build_edge_spline(EdgeSplineBuildInput) -> @routing.EdgeSplineResult
+
+// Errors
+
+// Types and methods
+pub(all) struct EdgeSplineBuildInput {
+  base : @routing.EdgeRouteBase
+  spline_mode : Int
+  ranks : Map[String, Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : @setup.EdgeVnodeInfo
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  path_left_bound : Double
+  path_right_bound : Double
+  ranksep_pt : Double
+  has_graph_edge_labels : Bool
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : @precompute.HeadPortMetrics
+  routing_context : @precompute.RoutingContext
+  enable_complex_tuning : Bool
+}
+
+pub(all) struct FlatDetourLookupContext {
+  tail_name : String
+  head_name : String
+  rank : Int
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, @node_primitives.NodeSize]
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  rankdir : @rankdir.RankDir
+}
+
+pub(all) struct PointsSplineBuildInput {
+  base : @routing.EdgeRouteBase
+  points : Array[@geom.Point]
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  force_segmented : Bool
+  using_pathplan : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+}
+
+pub(all) struct PointsSplineResult {
+  spline : @geom.Spline
+  raw_bezier : Array[@geom.Point]
+}
+
+pub(all) struct ShortRouteBuildContext {
+  using_pathplan : Bool
+  has_explicit_port : Bool
+  label_width_pt : Double
+  flat_detour_lookup : FlatDetourLookupContext
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  nodesep_pt : Double
+  force_segmented : Bool
+  curve_offset : Double
+  curve_skew : Double
+  prefer_linear_flat_invis : Bool
+  prefer_linear_flat_bottom_single_arrow : Bool
+}
+
+pub(all) struct ShortRouteBuildContextInput {
+  base : @routing.EdgeRouteBase
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, @node_primitives.NodeSize]
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  using_pathplan : Bool
+  has_explicit_port : Bool
+  label_width_pt : Double
+  nodesep_pt : Double
+  force_segmented : Bool
+  curve_offset : Double
+  curve_skew : Double
+}
+
+pub(all) struct ShortRouteBuildSpec {
+  detour_line_start : @geom.Point
+  detour_line_end : @geom.Point
+  fallback_points : Array[@geom.Point]
+  fallback_line_start : @geom.Point
+  fallback_line_end : @geom.Point
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  lr_detour_uses_x_axis : Bool
+}
+
+pub(all) struct ShortRouteSpecFromAnchorInput {
+  points : Array[@geom.Point]
+  using_pathplan : Bool
+  tail_anchor : @geom.Point
+  head_anchor : @geom.Point
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,92 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/order_graph"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub fn add_order_edge(@cgraph.Graph, Map[String, @cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Array[Double], Array[Double], Array[Double], Array[Double], String, String, Int, Bool, Double, Double, Double, Double) -> Unit
+
+pub fn append_creation_name(Array[String], Map[String, Bool], String) -> Unit
+
+pub fn build_cluster_order_index(Array[String]) -> Map[String, Int]
+
+pub fn build_edge_index_for_names(Array[String], Array[String], Array[String], Map[String, Int]) -> EdgeIndexData
+
+pub fn build_edge_index_for_order(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Int]) -> EdgeIndexData
+
+pub fn build_edge_index_with_vnodes(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Int], Map[String, Array[String]], Map[String, Int]) -> EdgeIndexData
+
+pub fn build_edge_indices_and_order(Array[String], Array[String], Array[String], Map[String, Int], Array[@cgraph.Edge]) -> EdgeIndicesAndOrder
+
+pub fn build_order_edges_by_tail(Array[String], Array[@cgraph.Edge], Array[String], Array[String], Array[Double], Array[Double], Array[Double], Array[Double], Map[String, Int], Map[String, Array[String]], Bool, Map[String, String], Bool, Bool, Bool, Map[String, Array[Int]], cluster_order_index? : Map[String, Int]) -> OrderEdgesByTailOutput
+
+pub fn build_order_graph_and_nodes(String, Array[String]) -> OrderGraphAndNodes
+
+pub fn build_order_nodes_from_groups(Map[Int, Array[String]], Array[Int]) -> Array[String]
+
+pub fn build_sizes_for_order_graph(Map[String, @node_primitives.NodeSize], Bool, Map[String, @node_primitives.NodeSize]) -> Map[String, @node_primitives.NodeSize]
+
+pub fn cluster_key_or_empty(Map[String, String], String) -> String
+
+pub fn coalesce_order_edges_by_tail(Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+
+pub fn collect_edge_order(Array[@cgraph.Edge]) -> Map[String, Int]
+
+pub fn collect_order_edges_for_tails(Array[String], Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]], @cgraph.Graph, Map[String, @cgraph.Node]) -> OrderEdgeArrays
+
+pub fn edge_endpoints_at(@cgraph.Edge, Int, Array[String], Array[String]) -> (String, String)
+
+pub fn edge_head_port_for_name(@cgraph.Edge, String, fallback_to_original? : Bool) -> @cgraph.Port?
+
+pub fn edge_orientation_is_reversed(@cgraph.Edge, String, String) -> Bool
+
+pub fn edge_tail_port_for_name(@cgraph.Edge, String, fallback_to_original? : Bool) -> @cgraph.Port?
+
+pub fn flat_constraint_rank_or_zero(Map[String, Int], String) -> Int
+
+pub fn merge_edge_creation_sequences(Array[(String, String)], Array[(String, String)]) -> Array[(String, String)]
+
+pub fn order_edge_merge_key(String, String, Bool, Double, Double) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct EdgeIndexData {
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+}
+
+pub(all) struct EdgeIndicesAndOrder {
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  edge_order : Map[String, Int]
+}
+
+pub(all) struct OrderEdgeArrays {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+pub(all) struct OrderEdgesByTailOutput {
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  vnode_creation_by_tail : Map[String, Array[String]]
+  edge_creation_order : Array[(String, String)]
+}
+
+pub(all) struct OrderGraphAndNodes {
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+}
+
+// Type aliases
+
+// Traits
+

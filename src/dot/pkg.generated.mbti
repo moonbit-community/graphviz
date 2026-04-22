@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/dot"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn parse_dot(String) -> @cgraph.Graph raise DotParseError
+
+pub fn parse_dot_all(String) -> Array[@cgraph.Graph] raise DotParseError
+
+pub fn parse_dot_file(String) -> @cgraph.Graph raise DotParseError
+
+pub fn parse_dot_file_all(String) -> Array[@cgraph.Graph] raise DotParseError
+
+pub fn write_dot(@cgraph.Graph) -> String
+
+pub fn write_dot_bytes(@cgraph.Graph) -> Bytes
+
+// Errors
+pub(all) suberror DotParseError {
+  UnexpectedEof(pos~ : Position)
+  InvalidToken(pos~ : Position, token~ : String)
+  InvalidSyntax(pos~ : Position, message~ : String)
+} derive(Eq, @debug.Debug)
+pub impl Show for DotParseError
+
+// Types and methods
+type Position derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

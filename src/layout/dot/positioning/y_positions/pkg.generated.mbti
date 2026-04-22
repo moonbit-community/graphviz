@@ -1,0 +1,67 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/y_positions"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_all_ranks_with_overlays(Array[Int], Array[Int]) -> Array[Int]
+
+pub fn build_y_position_pipeline(YPositionPipelineInput) -> YPositionPipelineOutput
+
+pub fn fill_rank_positions(FillRankPositionsInput) -> Unit
+
+pub fn node_half_height_pt(String, Map[String, @node_primitives.NodeSize], Map[String, Double]) -> Double
+
+pub fn self_edge_label_half_heights(Array[@cgraph.Edge], (@cgraph.Edge) -> Double) -> Map[String, Double]
+
+// Errors
+
+// Types and methods
+pub(all) struct FillRankPositionsInput {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  all_ranks : Array[Int]
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
+
+pub(all) struct YPositionPipelineInput {
+  has_clusters : Bool
+  graph : @cgraph.Graph
+  rankdir : @rankdir.RankDir
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  self_edge_labels : Map[String, Double]
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  flat_label_ranks : Map[String, Int]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  cluster_margin_pt_for : (@cgraph.Graph) -> Double
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
+  node_half_height_pt_for : (String, Map[String, @node_primitives.NodeSize], Map[String, Double]) -> Double
+  cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
+}
+
+pub(all) struct YPositionPipelineOutput {
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+  cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
+}
+
+// Type aliases
+
+// Traits
+

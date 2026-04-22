@@ -1,0 +1,90 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/finalization"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/positioning",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/dot/routing/integration",
+}
+
+// Values
+pub fn apply_layout_tree_writeback(@layout_tree.LayoutTree) -> Unit
+
+pub fn apply_root_label_bbox(@cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> RootLabelBBoxOutput
+
+pub fn apply_root_margin_x(@cgraph.Graph, @geom.Rect) -> @geom.Rect
+
+pub fn apply_root_port_padding(@cgraph.Graph, @geom.Rect, @rankdir.RankDir, Double, Double) -> @geom.Rect
+
+pub fn compute_root_cluster_padding(@cgraph.Graph, Array[@cgraph.Node], Array[Int], Map[String, Int]) -> RootClusterPadding
+
+pub fn finalize_layout_from_sources(FinalizeLayoutBuildSources) -> @layout_tree.LayoutTree
+
+pub fn format_dim(Double) -> String
+
+pub fn format_fixed(Double, Int) -> String
+
+pub fn format_fixed_trim(Double, Int) -> String
+
+pub fn format_float(Double) -> String
+
+pub fn format_point(@geom.Point) -> String
+
+pub fn format_rect(@geom.Rect) -> String
+
+pub fn format_rects(Array[@geom.Rect]) -> String
+
+pub fn root_cluster_padding_for_rankdir(@rankdir.RankDir, RootClusterPadding) -> (Double, Double)
+
+pub fn root_label_pos_for_bbox(@cgraph.Graph, @geom.Rect) -> @geom.Point?
+
+pub fn round_to(Double, Int) -> Double
+
+pub fn shift_optional_point(@geom.Point?, Double, Double) -> @geom.Point?
+
+pub fn shift_point(@geom.Point, Double, Double) -> @geom.Point
+
+pub fn shift_spline(@geom.Spline, Double, Double) -> @geom.Spline
+
+pub fn transform_bbox_with_root(@geom.Rect, @geom.Rect, @rankdir.RankDir) -> @geom.Rect
+
+pub fn transform_optional_point(@geom.Point?, @geom.Rect, @rankdir.RankDir) -> @geom.Point?
+
+pub fn transform_point(@geom.Point, @geom.Rect, @rankdir.RankDir) -> @geom.Point
+
+pub fn transform_spline(@geom.Spline, @geom.Rect, @rankdir.RankDir) -> @geom.Spline
+
+pub fn trim_trailing_zeros(String) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct FinalizeLayoutBuildSources {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  positions_state : @positioning.PositionResult
+  routing_stage_output : @integration.DotRoutingStageOutput
+}
+
+pub struct RootClusterPadding {
+  root_cluster_pad_top : Double
+  root_cluster_pad_bottom : Double
+}
+
+pub struct RootLabelBBoxOutput {
+  bbox : @geom.Rect
+  label_pos : @geom.Point?
+}
+
+// Type aliases
+
+// Traits
+

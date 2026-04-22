@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/clustering"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub const CLUSTER_MARGIN_PT : Double = 8.0
+
+pub fn cluster_margin_pt(@cgraph.Graph) -> Double
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

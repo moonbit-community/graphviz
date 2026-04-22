@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/scale_geometry"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn ratio_fill_scale_factors(@cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> RatioFillScaleFactors?
+
+pub fn scale_double_map_rounded(Map[Int, Double], Double) -> Map[Int, Double]
+
+pub fn scale_edge_layout_output(Array[@layout_tree.DotLayoutEdge], Double, Double) -> Array[@layout_tree.DotLayoutEdge]
+
+pub fn scale_named_double_map(Map[String, Double], Double) -> Map[String, Double]
+
+pub fn scale_optional_point(@geom.Point?, Double, Double) -> @geom.Point?
+
+pub fn scale_point(@geom.Point, Double, Double) -> @geom.Point
+
+pub fn scale_point_map_rounded(Map[String, @geom.Point], Double, Double) -> Map[String, @geom.Point]
+
+pub fn scale_point_rounded(@geom.Point, Double, Double) -> @geom.Point
+
+pub fn scale_record_port_maps(Map[String, Map[String, @record_geometry.RecordPort]], Double, Double) -> Map[String, Map[String, @record_geometry.RecordPort]]
+
+pub fn scale_rect_map(Map[String, @geom.Rect], Double, Double) -> Map[String, @geom.Rect]
+
+// Errors
+
+// Types and methods
+pub(all) struct RatioFillScaleFactors {
+  sx : Double
+  sy : Double
+}
+
+// Type aliases
+
+// Traits
+

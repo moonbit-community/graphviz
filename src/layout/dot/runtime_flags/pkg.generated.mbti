@@ -1,0 +1,16 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/runtime_flags"
+
+// Values
+pub fn env_flag_enabled(String?, Bool) -> Bool
+
+pub fn env_flag_enabled_nonempty(String?) -> Bool
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

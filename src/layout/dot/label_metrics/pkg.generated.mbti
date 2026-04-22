@@ -1,0 +1,25 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/label_metrics"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/graph_label",
+}
+
+// Values
+pub fn graph_label_metrics(@cgraph.Graph) -> @graph_label.GraphLabelMetrics?
+
+pub fn label_text_dimensions(String, String, Double) -> (Double, Double)
+
+pub fn label_text_metrics(String, String, Double) -> (Double, Double, Double, Double)
+
+pub fn record_label_text_dimensions(String, String, Double) -> (Double, Double)
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

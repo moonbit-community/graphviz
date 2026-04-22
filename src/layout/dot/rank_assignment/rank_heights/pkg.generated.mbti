@@ -1,0 +1,55 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn compute_rank_heights(RankHeightsInput) -> RankHeights
+
+pub fn make_edge_mid_label_metrics(Double, Double) -> EdgeMidLabelMetrics
+
+pub fn make_rank_heights_input(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int], Map[Int, Array[String]], Array[Int], Array[Int], Map[String, @node_primitives.NodeSize], Map[String, Double], @rankdir.RankDir, Double, Double, Bool, Double, (@cgraph.Edge) -> EdgeMidLabelMetrics?, (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding) -> RankHeightsInput
+
+// Errors
+
+// Types and methods
+pub struct EdgeMidLabelMetrics {
+  width : Double
+  height : Double
+}
+
+pub struct RankHeights {
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  nodesep_pt : Double
+  ranksep_pt : Double
+}
+
+pub struct RankHeightsInput {
+  graph : @cgraph.Graph
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  all_ranks : Array[Int]
+  sizes : Map[String, @node_primitives.NodeSize]
+  self_edge_labels : Map[String, Double]
+  rankdir : @rankdir.RankDir
+  nodesep_in : Double
+  ranksep_in : Double
+  has_edge_labels : Bool
+  vnode_height_pt : Double
+  edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?
+  cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
+}
+
+// Type aliases
+
+// Traits
+

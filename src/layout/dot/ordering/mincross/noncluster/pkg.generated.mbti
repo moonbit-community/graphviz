@@ -1,0 +1,73 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/mincross/noncluster"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+}
+
+// Values
+pub fn run_noncluster_rank_reorder(NonclusterRankReorderInputs) -> Map[Int, Array[String]]
+
+pub fn run_noncluster_reorder_pass(NonclusterReorderInputsBuildSources) -> Map[Int, Array[String]]
+
+// Errors
+
+// Types and methods
+pub(all) struct NonclusterRankReorderInputs {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_order : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_skeleton : Map[String, Bool]
+  flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  graphviz_flip : Bool
+}
+
+pub(all) struct NonclusterReorderInputsBuildSources {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  order_sizes : Map[String, @node_primitives.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  flat_constraints : Map[String, Bool]
+  reorder_setup : @setup.OrderingReorderSetup
+  edge_port_data : @setup.OrderingEdgePortData
+}
+
+// Type aliases
+
+// Traits
+

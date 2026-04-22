@@ -1,0 +1,81 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/x_flat_labels"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn build_positioning_x_flat_label_pipeline(XFlatLabelPositioningPipelineSources) -> XFlatLabelAugmentationOutput
+
+pub fn flat_label_adjacent(Int, String, String, Map[Int, Array[String]]) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct XFlatLabelAugmentationOutput {
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+  flat_label_edges : Array[@x_constraints.ConstraintEdge]
+  flat_label_ranks : Map[String, Int]
+  flat_label_edge_vnodes : Map[String, String]
+}
+
+pub(all) struct XFlatLabelPositioningPipelineSources {
+  xpos_reorder_enabled : Bool
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+  has_vnode_order : Bool
+  ordering_set : Bool
+  has_clusters : Bool
+  x_groups : Map[Int, Array[String]]
+  x_base_sizes : Map[String, @node_primitives.NodeSize]
+  x_order_sizes : Map[String, @node_primitives.NodeSize]
+  x_cluster_keys : Map[String, String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  node_order : Map[String, Int]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  flat_constraints : Map[String, Bool]
+  nodes : Array[@cgraph.Node]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  edge_order : Map[String, Int]
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_skeleton : Map[String, Bool]
+  vnode_clusters : Map[String, String]
+  ordered_groups : Map[Int, Array[String]]
+  rankdir : @rankdir.RankDir
+  edge_cluster_keys : Map[String, String]
+  cluster_parents : Map[String, String?]
+  vnode_info : @setup.EdgeVnodeInfo
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives"
+
+import {
+  "moonbit-community/graphviz/geom",
+}
+
+// Values
+pub const VNODE_HEIGHT_PT : Double = 1.0
+
+pub fn clip_to_rect(@geom.Point, NodeSize, @geom.Point) -> @geom.Point
+
+pub fn default_node_height_in() -> Double
+
+pub fn default_node_width_in() -> Double
+
+pub fn default_point_size_in() -> Double
+
+pub fn node_left_pt(String, Map[String, NodeSize]) -> Double
+
+pub fn node_right_pt(String, Map[String, NodeSize]) -> Double
+
+pub fn node_size_from_points(Double, Double) -> NodeSize
+
+pub fn swap_node_size(NodeSize) -> NodeSize
+
+pub fn vnode_size_from_widths(Double, Double) -> NodeSize
+
+pub fn vnode_size_from_widths_with_h(Double, Double, Double) -> NodeSize
+
+// Errors
+
+// Types and methods
+pub(all) struct NodeSize {
+  width_in : Double
+  height_in : Double
+  width_pt : Double
+  height_pt : Double
+  left_pt : Double
+  right_pt : Double
+}
+
+// Type aliases
+
+// Traits
+

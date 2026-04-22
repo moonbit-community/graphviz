@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub const CL_BACK : Int = 10
+
+pub fn compute_rank_data(RankDataInput) -> RankData
+
+pub fn compute_ranks_directed(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Array[String], Array[String], Int) -> Map[String, Int]
+
+pub fn compute_ranks_directed_with_clusters(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int) -> Map[String, Int]
+
+pub fn make_rank_data_input(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int, (@cgraph.Edge) -> Double) -> RankDataInput
+
+// Errors
+
+// Types and methods
+pub struct RankData {
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  all_ranks : Array[Int]
+  self_edge_labels : Map[String, Double]
+}
+
+pub struct RankDataInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  has_edge_labels : Bool
+  back_weight_scale : Int
+  edge_label_height_pt_for : (@cgraph.Edge) -> Double
+}
+
+// Type aliases
+
+// Traits
+

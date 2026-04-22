@@ -1,0 +1,72 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/network_simplex"
+
+// Values
+pub fn add_edge(NsGraph, Int, Int, Int, Int) -> Int
+
+pub fn add_node(NsGraph, String, kind? : NodeKind) -> Int
+
+pub fn build_feasible_tree(NsGraph) -> Bool
+
+pub fn debug_run_core_only(NsGraph, Int) -> Bool
+
+pub fn network_simplex(NsGraph, Int, BalanceMode) -> Unit
+
+pub fn network_simplex_pre_balance(NsGraph, Int) -> Bool
+
+pub fn network_simplex_with_root(NsGraph, Int, BalanceMode, Int) -> Unit
+
+pub fn new_graph() -> NsGraph
+
+pub fn node_rank(NsGraph, Int) -> Int
+
+pub fn normalize_ranks_for_test(NsGraph) -> Int
+
+pub fn set_node_rank(NsGraph, Int, Int) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) enum BalanceMode {
+  LR
+  TB
+}
+
+pub(all) enum NodeKind {
+  Normal
+  Virtual
+  Slack
+} derive(Eq)
+
+pub(all) struct NsEdge {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+  mut cutvalue : Int
+  mut tree_index : Int
+}
+
+pub(all) struct NsGraph {
+  nodes : Array[NsNode]
+  edges : Array[NsEdge]
+  tree_edges : Array[Int]
+}
+
+pub(all) struct NsNode {
+  kind : NodeKind
+  mut rank : Int
+  in_edges : Array[Int]
+  out_edges : Array[Int]
+  tree_in : Array[Int]
+  tree_out : Array[Int]
+  mut par_edge : Int
+  mut low : Int
+  mut lim : Int
+  mut priority : Int
+}
+
+// Type aliases
+
+// Traits
+

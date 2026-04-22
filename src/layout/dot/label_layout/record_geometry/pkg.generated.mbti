@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/label_layout/record_geometry"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+}
+
+// Values
+pub const RECORD_BORDER_PT : Double = 0.5
+
+pub fn is_record_shape(@cgraph.Node) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct RecordPort {
+  center : @geom.Point
+  size : @node_primitives.NodeSize
+  sides : Int
+}
+
+// Type aliases
+
+// Traits
+

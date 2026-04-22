@@ -1,0 +1,86 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/integration"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/positioning",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
+  "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/dot/routing",
+  "moonbit-community/graphviz/layout/dot/routing/precompute",
+}
+
+// Values
+pub fn build_dot_route_base_deps(@layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, Map[String, @record_geometry.RecordPort]]) -> @routing.RouteBaseDeps
+
+pub fn build_dot_routing_callbacks(@routing.EdgeLayoutInput) -> @routing.RoutingCallbacks
+
+pub fn build_routing_precompute_data(RoutingPrecomputeInput) -> @precompute.RoutingPrecomputePipelineOutput
+
+pub fn compute_dot_routing_stage(DotRoutingStageInput) -> DotRoutingStageOutput
+
+pub fn route_edges_for_dot(RouteEdgesForDotInput) -> Array[@layout_tree.DotLayoutEdge]
+
+// Errors
+
+// Types and methods
+pub(all) struct DotRoutingStageInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+  positions_state : @positioning.PositionResult
+}
+
+pub(all) struct DotRoutingStageOutput {
+  nodes_out : Array[@layout_tree.DotLayoutNode]
+  edges_out : Array[@layout_tree.DotLayoutEdge]
+  port_pad_below : Double
+  port_pad_above : Double
+}
+
+pub(all) struct RouteEdgesForDotInput {
+  graph : @cgraph.Graph
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+  routing_positions_state : @positioning.PositionResult
+  routing_label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
+  routing_label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]]
+  routing_sizes : Map[String, @node_primitives.NodeSize]
+  path_groups : Map[Int, Array[String]]
+  routing_context : @precompute.RoutingContext
+  has_graph_edge_labels : Bool
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : @precompute.HeadPortMetrics
+  enable_complex_tuning : Bool
+}
+
+pub(all) struct RoutingPrecomputeInput {
+  prep : @layout_prep.LayoutPrep
+  rank_data : @rank_data.RankData
+  rank_heights : @rank_heights.RankHeights
+  cluster_meta : @setup.DotClusterMetadata
+  ordering : @setup.OrderingResult
+  positions_state : @positioning.PositionResult
+  label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
+  cluster_bboxes : Map[String, @geom.Rect]
+  sizes : Map[String, @node_primitives.NodeSize]
+  enable_complex_tuning : Bool
+}
+
+// Type aliases
+pub using @precompute {type RoutingPrecomputePipelineOutput as RoutingPrecomputeData}
+
+// Traits
+

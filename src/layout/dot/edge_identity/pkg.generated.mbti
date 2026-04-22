@@ -1,0 +1,30 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/edge_identity"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+}
+
+// Values
+pub const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
+
+pub fn edge_key(@cgraph.Edge) -> String
+
+pub fn edge_vnode_key(@cgraph.Edge) -> String
+
+pub fn is_edge_vnode_name(String) -> Bool
+
+pub fn port_is_explicit(@cgraph.Port?) -> Bool
+
+pub fn port_key(@cgraph.Port?) -> String
+
+pub fn unique_virtual_node_name(String, Int, Int, Map[String, Bool]) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

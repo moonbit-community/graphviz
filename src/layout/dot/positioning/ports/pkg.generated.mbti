@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/positioning/ports"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/layout_prep",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub fn apply_self_edge_right_space(Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, @node_primitives.NodeSize], @rankdir.RankDir, @layout_prep.RecordOrientation) -> Map[String, @node_primitives.NodeSize]
+
+pub fn build_edge_port_sample_bundle(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, @node_primitives.NodeSize]) -> @setup.EdgePortSampleBundle
+
+pub fn edge_port_offset(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @rankdir.RankDir, Map[String, @cgraph.Node]) -> Double
+
+pub fn edge_port_order(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, @node_primitives.NodeSize], @rankdir.RankDir, Map[String, @cgraph.Node]) -> Double
+
+pub fn port_offsets_for_nodes(Array[@cgraph.Node], Map[String, @node_primitives.NodeSize]) -> Map[String, Map[String, @record_geometry.RecordPort]]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

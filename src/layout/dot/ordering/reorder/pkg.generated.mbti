@@ -1,0 +1,102 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/ordering/reorder"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbitlang/core/ref",
+}
+
+// Values
+pub fn apply_flat_mvals(Array[String], Map[String, Double], Map[String, Array[Int]], Map[String, Array[Int]], Map[String, Bool]) -> Bool
+
+pub fn build_component_rank_groups(Array[Int], Map[Int, Array[String]], Array[String], Array[String], Map[String, Int], Map[String, Int], Map[String, String], Map[String, Bool], Int, Map[String, Bool], flip? : Bool, graphviz_out_neighbors? : Map[String, Array[String]], graphviz_in_neighbors? : Map[String, Array[String]]) -> Map[Int, Array[String]]
+
+pub fn build_neighbor_order_index(Array[String], Map[String, Array[String]], Map[String, Int], Map[String, Int], Int) -> Map[String, Array[Int]]
+
+pub fn build_neighbor_rank_groups(Array[Int], Map[Int, Array[String]], Array[String], Array[String], Map[String, Int], Map[String, Int], Map[String, String], Map[String, Bool], Int, flip? : Bool, graphviz_out_neighbors? : Map[String, Array[String]], graphviz_in_neighbors? : Map[String, Array[String]]) -> Map[Int, Array[String]]
+
+pub fn build_seeded_reorder_groups(SeededReorderBuildContext) -> Map[Int, Array[String]]
+
+pub fn build_transpose_seed_maps(Array[Int], Map[Int, Array[String]], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Int]) -> TransposeSeedMapsOutput
+
+pub let capture_pass0_flat_seed_groups_enabled : @ref.Ref[Bool]
+
+pub let capture_pass0_flat_seed_groups_value : @ref.Ref[Map[Int, Array[String]]?]
+
+pub fn compute_desired_positions(Array[String], Map[String, Array[String]], Map[String, Double], Map[String, Array[(String, Double)]], Map[String, Double]) -> Map[String, Double]
+
+pub fn compute_scaled_medians(Array[String], Map[String, Array[(String, Double)]], Map[String, Double]) -> Map[String, Double]
+
+pub fn count_crossings(Map[Int, Array[String]], Map[String, Int], Array[@cgraph.Edge], Array[String], Array[String]) -> Int
+
+pub fn count_crossings_port_aware(Map[Int, Array[String]], Map[String, Int], Array[@cgraph.Edge], Array[String], Array[String], edge_tail_port_x? : Array[Double], edge_head_port_x? : Array[Double], fixed_order? : Map[String, Int]) -> Int
+
+pub fn count_rank_crossings_port(Int, Array[String], Map[String, Int], Map[String, Int], Map[String, Array[Int]], Map[String, Array[Int]], Array[String], Array[String], Array[Double], Array[Double], Array[Int]) -> Int
+
+pub fn crossing_for_pair(String, String, Map[String, Array[Int]], Map[String, Array[Int]]) -> Int
+
+pub fn flat_reorder_rank_groups(Array[Int], Map[Int, Array[String]], Map[String, Int], Map[String, Bool], Bool) -> Map[Int, Array[String]]
+
+pub fn has_single_rank_incidents(Array[String], Array[String], Array[String], Array[Int], Map[String, Array[String]], Map[String, Array[String]]) -> Bool
+
+pub fn left2right_constraint(String, String, Map[String, String], Map[String, Bool], Map[String, Bool], remincross_mode? : Bool) -> Bool
+
+pub fn median_value(Array[Double]) -> Double?
+
+pub fn median_value_mc_scale(Array[Double]) -> Double?
+
+pub fn order_rank_by_cluster(Array[String], Map[String, Double], Map[String, Double], Map[String, Array[String]], Map[String, Array[String]], Map[String, Int], Map[String, Array[String]], Map[String, String], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, Bool], Map[String, Int], Map[String, Double], Bool) -> Array[String]
+
+pub fn reorder_by_medians(Array[String], Map[String, Double], Bool, Bool, Map[String, String], Map[String, Bool], Map[String, Bool], remincross_mode? : Bool) -> Array[String]
+
+pub fn reorder_rank_groups(Array[Int], Map[Int, Array[String]], Array[@cgraph.Edge], Array[String], Array[String], Array[Double], Array[Double], Array[Double], Array[Double], Map[String, Array[String]], Map[String, Array[String]], Map[String, String], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, @node_primitives.NodeSize], Double, Bool, Map[String, Double], Map[String, Array[(String, Double)]], Map[String, Double], Map[String, Bool], Map[String, Bool], graphviz_out_neighbors? : Map[String, Array[String]], graphviz_in_neighbors? : Map[String, Array[String]], fixed_positions? : Map[String, Double], fixed_ranks? : Map[String, Int], graphviz_flip? : Bool, coalesce_parallel_edges? : Bool, startpass? : Int, startpass_init_infinite? : Bool, remincross_mode? : Bool) -> Map[Int, Array[String]]
+
+pub fn[T] run_with_pass0_flat_seed_capture(() -> T) -> T
+
+pub fn sort_by_positions(Array[String], Map[String, Double], Map[String, Double], Map[String, Array[String]], Map[String, Array[String]], Map[String, Int], Map[String, Array[String]], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, Int], Map[String, Bool], Map[String, Int], Map[String, Double], Bool) -> Array[String]
+
+pub fn transpose_rank_groups_limited(Array[Int], Map[Int, Array[String]], Map[String, Array[String]], Map[String, Array[String]], Map[String, Int], Bool, Int) -> Bool
+
+pub fn transpose_rank_groups_port(Array[Int], Map[Int, Array[String]], Map[String, Int], fixed_order? : Map[String, Int], Map[String, Array[Int]], Map[String, Array[Int]], Array[String], Array[String], Array[Double], Array[Double], Array[Int], Map[String, String], Map[String, Bool], Map[String, Bool], Bool, Int, remincross_mode? : Bool) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct PortAwareCrossingInputs {
+  edge_penalty : Array[Int]
+  edge_in : Map[String, Array[Int]]
+  edge_out : Map[String, Array[Int]]
+  edge_tail_rank : Array[Int]
+  edge_head_rank : Array[Int]
+}
+
+pub(all) struct SeededReorderBuildContext {
+  order_rank_keys : Array[Int]
+  order_groups : Map[Int, Array[String]]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_ranks : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+pub(all) struct TransposeSeedMapsOutput {
+  edge_penalty : Array[Int]
+  edge_in : Map[String, Array[Int]]
+  edge_out : Map[String, Array[Int]]
+}
+
+// Type aliases
+
+// Traits
+

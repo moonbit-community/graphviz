@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/font_metrics"
+
+// Values
+pub const HAS_FONT_KERNING : Bool = true
+
+pub const HAS_FONT_METRICS : Bool = true
+
+pub const HAS_SPACE_KERNING : Bool = true
+
+pub let font_kerning : Array[Double]
+
+pub let font_metrics : Array[Double]
+
+pub let font_space_kerning : Array[Double]
+
+pub fn lookup_textspan_metrics(String, String, Double) -> (Double, Double, Double, Double)?
+
+pub fn lookup_textspan_offsets(String, Double) -> (Double, Double)?
+
+pub fn lookup_textspan_override(String, String, Double) -> (Double, Double)?
+
+pub let textspan_overrides_data : Array[(String, Double, String, Double, Double, Double, Double)]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,75 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/execution"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/routing",
+}
+
+// Values
+pub fn recover_slack_vnodes(@routing.RecoverSlackVnodesInput) -> Unit
+
+pub fn route_edges_pipeline(@routing.RouteEdgesPipelineInput, @routing.RouteEdgesPipelineDeps) -> Array[@layout_tree.DotLayoutEdge]
+
+pub fn sorted_edges_for_routing(Array[@cgraph.Edge], Map[Int, @routing.EdgeRouteBase], Map[String, Int]) -> Array[@cgraph.Edge]
+
+// Errors
+
+// Types and methods
+pub(all) struct FinalizeRoutedEdgesInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  edges_out_by_id : Map[Int, @layout_tree.DotLayoutEdge]
+  edge_port_label_pos_fn : (@routing.EdgePortLabelPosInput) -> @geom.Point?
+}
+
+pub(all) struct RegularLayoutsForEdgeInput {
+  edge_id : Int
+  edge : @cgraph.Edge
+  base : @routing.EdgeRouteBase
+  input : @routing.RegularPassInput
+  path_left_bound : Double
+  path_right_bound : Double
+  recover_edge_id_by_key : Map[String, Int]
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
+  base_cache : Map[Int, @routing.EdgeRouteBase]
+  recovered_slack_keys : Map[String, Bool]
+  edges_out_by_id : Map[Int, @layout_tree.DotLayoutEdge]
+  callbacks : @routing.RoutingCallbacks
+}
+
+pub(all) struct RegularRecoverRoutingPlan {
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
+  recover_edge_id_for_routing : Map[String, Int]
+}
+
+pub(all) struct RoutePrepassInput {
+  edges : Array[@cgraph.Edge]
+  base_cache : Map[Int, @routing.EdgeRouteBase]
+  build_flat_adjacent_beziers : Bool
+  ranks : Map[String, Int]
+  order_index : Map[String, Int]
+  path_order_index : Map[String, Int]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  sizes : Map[String, @node_primitives.NodeSize]
+  vnode_sizes : Map[String, @node_primitives.NodeSize]
+  x_groups : Map[Int, Array[String]]
+}
+
+pub(all) struct RoutePrepassState {
+  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
+  ordered_edges : Array[@cgraph.Edge]
+  recover_edge_id_for_routing : Map[String, Int]
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
+  path_left_bound : Double
+  path_right_bound : Double
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/emit"
+
+import {
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/layout_tree",
+  "moonbit-community/graphviz/layout/dot/routing",
+}
+
+// Values
+pub fn build_bezier_points_spline(BezierPointsSplineBuildInput) -> @geom.Spline
+
+pub fn build_flat_adjacent_layout(@routing.EdgeRouteBase, Array[@geom.Point], (@routing.EdgeLayoutBuildCallbackInput) -> @layout_tree.DotLayoutEdge) -> @layout_tree.DotLayoutEdge
+
+pub fn build_regular_bezier_layout(@routing.EdgeRouteBase, @routing.EdgeSplineResult, (@routing.EdgeLayoutBuildCallbackInput) -> @layout_tree.DotLayoutEdge) -> @layout_tree.DotLayoutEdge
+
+pub fn build_self_edge_layout(@routing.EdgeRouteBase, @routing.SelfEdgeRoute, (@routing.EdgeLayoutBuildCallbackInput) -> @layout_tree.DotLayoutEdge) -> @layout_tree.DotLayoutEdge
+
+pub fn edge_polyline_mode_spline(@routing.EdgeRouteBase, Bool) -> @geom.Spline
+
+pub fn edge_spline_result_for_bezier(@geom.Spline, Array[@geom.Point], Double, Bool) -> @routing.EdgeSplineResult
+
+pub fn finalize_edge_spline(@routing.EdgeRouteBase, @routing.EdgeSplineResult) -> @geom.Spline
+
+pub fn rebuild_spline_for_render(@routing.EdgeRouteBase, @routing.EdgeSplineResult) -> @routing.EdgeSplineResult
+
+// Errors
+
+// Types and methods
+pub(all) struct BezierPointsSplineBuildInput {
+  base : @routing.EdgeRouteBase
+  bezier_points : Array[@geom.Point]
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  clip_swapped : Bool
+  arrow_swapped : Bool
+}
+
+// Type aliases
+
+// Traits
+

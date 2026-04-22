@@ -1,0 +1,62 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/label_layout/port_geometry"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub const PORT_SIDE_ALL : Int = 15
+
+pub const PORT_SIDE_BOTTOM : Int = 1
+
+pub const PORT_SIDE_LEFT : Int = 8
+
+pub const PORT_SIDE_RIGHT : Int = 2
+
+pub const PORT_SIDE_TOP : Int = 4
+
+pub fn compass_side_mask(@cgraph.Compass) -> Int
+
+pub fn dynamic_port_anchor_for_edge(@cgraph.Port?, String, Map[String, Map[String, @record_geometry.RecordPort]], @geom.Point, @geom.Point, @rankdir.RankDir, Double) -> DynamicPortAnchorForEdge
+
+pub fn layout_port_offset(@geom.Point, @rankdir.RankDir) -> @geom.Point
+
+pub fn layout_ports_from_final(Map[String, @record_geometry.RecordPort], @geom.Point, @rankdir.RankDir) -> Map[String, @record_geometry.RecordPort]
+
+pub fn port_geometry(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]], @geom.Point, @node_primitives.NodeSize) -> PortGeometry
+
+pub fn port_is_label_port(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]]) -> Bool
+
+pub fn port_rect_from_geometry(@cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize) -> @geom.Rect?
+
+pub fn port_side_for_edge(@cgraph.Port?, @geom.Rect?, @geom.Point, @node_primitives.NodeSize, @geom.Point?) -> Int
+
+pub fn port_side_mask_from_anchor(@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
+
+pub fn port_side_mask_from_rects(@geom.Rect, @geom.Rect) -> Int
+
+pub fn resolve_label_port_name(@cgraph.Port?, Map[String, @record_geometry.RecordPort]) -> String?
+
+// Errors
+
+// Types and methods
+pub(all) struct DynamicPortAnchorForEdge {
+  anchor : @geom.Point?
+  side : Int
+  is_dynamic : Bool
+}
+
+pub(all) struct PortGeometry {
+  center : @geom.Point
+  size : @node_primitives.NodeSize
+}
+
+// Type aliases
+
+// Traits
+

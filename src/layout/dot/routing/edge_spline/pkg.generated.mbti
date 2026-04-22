@@ -1,0 +1,79 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/dot/routing/edge_spline"
+
+import {
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/rankdir",
+}
+
+// Values
+pub const LIBM_IS_NATIVE : Bool = false
+
+pub fn arrow_length_for_edge(@cgraph.Edge, Bool, Bool, Double?) -> ArrowLengthPair
+
+pub fn compass_port_point_on_shape(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @cgraph.Compass, @rankdir.RankDir) -> @geom.Point
+
+pub fn edge_spline_for_bezier_points(@cgraph.Edge, Array[@geom.Point], @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
+
+pub fn edge_spline_for_line(@cgraph.Edge, @geom.Point, @geom.Point, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, @rankdir.RankDir, Double, Double, arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, prefer_linear? : Bool, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
+
+pub fn edge_spline_for_points(@cgraph.Edge, Array[@geom.Point], @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, Bool, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, tail_port_side? : Int, head_port_side? : Int, route_barriers? : Array[(@geom.Point, @geom.Point)], arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
+
+pub fn edge_spline_for_polyline(@cgraph.Edge, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, @rankdir.RankDir, Bool, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
+
+pub fn edge_spline_raw_for_line(@geom.Point, @geom.Point, @geom.Point, @geom.Point, @rankdir.RankDir, Double, Double, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?) -> Array[@geom.Point]
+
+pub fn edge_spline_raw_for_points(Array[@geom.Point], @geom.Point, @geom.Point, Bool, route_barriers? : Array[(@geom.Point, @geom.Point)]) -> Array[@geom.Point]
+
+pub fn endpoint_slope_for_anchor(@cgraph.Port?, Int, @geom.Point, @geom.Point, @node_primitives.NodeSize, @geom.Point, @rankdir.RankDir, Bool, @geom.Rect?) -> @geom.Point
+
+pub fn libm_atan2(Double, Double) -> Double
+
+pub fn libm_cbrt(Double) -> Double
+
+pub fn libm_cos(Double) -> Double
+
+pub fn libm_fma(Double, Double, Double) -> Double
+
+pub fn libm_hypot(Double, Double) -> Double
+
+pub fn libm_sin(Double) -> Double
+
+pub fn libm_sqrt(Double) -> Double
+
+pub fn point(Double, Double) -> @geom.Point
+
+pub fn point_add(@geom.Point, @geom.Point) -> @geom.Point
+
+pub fn point_dist(@geom.Point, @geom.Point) -> Double
+
+pub fn point_dist2(@geom.Point, @geom.Point) -> Double
+
+pub fn point_lerp(@geom.Point, @geom.Point, Double) -> @geom.Point
+
+pub fn point_scale(@geom.Point, Double) -> @geom.Point
+
+pub fn point_sub(@geom.Point, @geom.Point) -> @geom.Point
+
+pub fn polyline_length(Array[@geom.Point]) -> Double
+
+pub fn port_side_count(@geom.Rect, @geom.Point, @node_primitives.NodeSize) -> Int
+
+pub fn port_side_rect(@geom.Point, @node_primitives.NodeSize) -> @geom.Rect
+
+pub fn segment_length(@geom.Point, @geom.Point) -> Double
+
+// Errors
+
+// Types and methods
+pub struct ArrowLengthPair {
+  tail : Double
+  head : Double
+}
+
+// Type aliases
+
+// Traits
+
