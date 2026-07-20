@@ -12,7 +12,7 @@ test "build_path_adjacency preserves parallel multiplicity and expands vnode cha
   let direct1 = graph.edge(a, b)
   let chained = graph.edge(b, c)
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(chained)] = ["v1", "v2"]
 
   let adjacency = build_path_adjacency(
@@ -39,7 +39,7 @@ test "build_path_adjacency uses overridden tail and head order" {
   let b = graph.node("b")
   let edge = graph.edge(a, b)
 
-  let adjacency = build_path_adjacency([edge], Map::new(), ["b"], ["a"])
+  let adjacency = build_path_adjacency([edge], Map([]), ["b"], ["a"])
 
   assert_eq(adjacency.out_edges.get("b").unwrap_or([]), ["a"])
   assert_eq(adjacency.in_edges.get("a").unwrap_or([]), ["b"])
@@ -50,21 +50,21 @@ test "build_path_adjacency uses overridden tail and head order" {
 
 ///|
 test "pathplan_bounds merges vnode positions and expands each rank by route width" {
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["a"] = { x: 10.0, y: 0.0 }
   positions["b"] = { x: 40.0, y: 0.0 }
 
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
   vnode_positions["v"] = { x: -20.0, y: 0.0 }
 
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.vnode_size_from_widths(2.0, 4.0)
   sizes["b"] = @node_primitives.vnode_size_from_widths(5.0, 1.0)
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v"] = @node_primitives.vnode_size_from_widths(3.0, 7.0)
 
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   x_groups[1] = ["v"]
 
@@ -78,11 +78,11 @@ test "pathplan_bounds merges vnode positions and expands each rank by route widt
 ///|
 test "pathplan_bounds returns zero bounds for empty rank groups" {
   let bounds = pathplan_bounds(
-    Map::new(),
-    Map::new(),
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
+    Map([]),
+    Map([]),
   )
   assert_eq(bounds.left, 0.0)
   assert_eq(bounds.right, 0.0)

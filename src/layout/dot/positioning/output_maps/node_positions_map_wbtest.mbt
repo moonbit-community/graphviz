@@ -8,9 +8,9 @@ test "build_node_positions_map defaults missing coordinates to zero" {
   let a = graph.node("a")
   let b = graph.node("b")
 
-  let x_positions : Map[String, Double] = Map::new()
+  let x_positions : Map[String, Double] = Map([])
   x_positions["a"] = 10.0
-  let y_positions : Map[String, Double] = Map::new()
+  let y_positions : Map[String, Double] = Map([])
   y_positions["b"] = 20.0
 
   let positions = build_node_positions_map([a, b], x_positions, y_positions)

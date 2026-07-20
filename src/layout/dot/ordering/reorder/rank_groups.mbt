@@ -24,8 +24,8 @@ fn has_graphviz_neighbor_hints(
 
 ///|
 fn create_empty_neighbors(nodes : Array[String]) -> NeighborMaps {
-  let out_neighbors : Map[String, Array[String]] = Map::new()
-  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let out_neighbors : Map[String, Array[String]] = Map([])
+  let in_neighbors : Map[String, Array[String]] = Map([])
   for name in nodes {
     out_neighbors[name] = []
     in_neighbors[name] = []
@@ -98,10 +98,10 @@ pub fn build_neighbor_rank_groups(
   cluster_skeleton : Map[String, Bool],
   pass : Int,
   flip? : Bool = false,
-  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
-  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map([]),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map([]),
 ) -> Map[Int, Array[String]] {
-  let ordered : Map[Int, Array[String]] = Map::new()
+  let ordered : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     ordered[rank] = []
   }
@@ -109,7 +109,7 @@ pub fn build_neighbor_rank_groups(
   let order_data = build_component_order(nodes, node_order)
   let fallback_order = order_data.fallback_order
   let nlist = order_data.ordered_nodes
-  let resolved_order : Map[String, Int] = Map::new()
+  let resolved_order : Map[String, Int] = Map([])
   for name in nodes {
     resolved_order[name] = resolve_component_order_index(
       name, node_order, fallback_order,
@@ -129,8 +129,8 @@ pub fn build_neighbor_rank_groups(
       append_neighbor_edge(out_neighbors, in_neighbors, tail, head)
     }
   }
-  let cluster_nodes : Map[String, Array[String]] = Map::new()
-  let cluster_has_skeleton : Map[String, Bool] = Map::new()
+  let cluster_nodes : Map[String, Array[String]] = Map([])
+  let cluster_has_skeleton : Map[String, Bool] = Map([])
   for name in nlist {
     if cluster_skeleton.get(name) == Some(true) {
       let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -157,9 +157,9 @@ pub fn build_neighbor_rank_groups(
       rewrite_names_by_rank_and_order(list, node_ranks, resolved_order)
     }
   }
-  let installed : Map[String, Bool] = Map::new()
-  let marks : Map[String, Bool] = Map::new()
-  let installed_clusters : Map[String, Bool] = Map::new()
+  let installed : Map[String, Bool] = Map([])
+  let marks : Map[String, Bool] = Map([])
+  let installed_clusters : Map[String, Bool] = Map([])
   for node in nlist {
     let other = if pass == 0 {
       in_neighbors.get(node).unwrap_or_default()
@@ -274,12 +274,12 @@ pub fn build_component_rank_groups(
   pass : Int,
   flat_constraints : Map[String, Bool],
   flip? : Bool = false,
-  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
-  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map([]),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map([]),
 ) -> Map[Int, Array[String]] {
   let nodes = collect_rank_group_nodes(rank_keys, groups)
   if nodes.length() == 0 {
-    let empty : Map[Int, Array[String]] = Map::new()
+    let empty : Map[Int, Array[String]] = Map([])
     for rank in rank_keys {
       empty[rank] = []
     }
@@ -407,7 +407,7 @@ fn build_component_order(
   nodes : Array[String],
   node_order : Map[String, Int],
 ) -> ComponentOrderData {
-  let fallback_order : Map[String, Int] = Map::new()
+  let fallback_order : Map[String, Int] = Map([])
   let ordered_entries : Array[(String, Int)] = []
   for i, name in nodes {
     fallback_order[name] = i
@@ -442,7 +442,7 @@ fn build_component_neighbors(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> ComponentNeighborsData {
-  let node_set : Map[String, Bool] = Map::new()
+  let node_set : Map[String, Bool] = Map([])
   for name in nodes {
     node_set[name] = true
   }
@@ -475,7 +475,7 @@ fn collect_component_skeletons(
   node_order : Map[String, Int],
   fallback_order : Map[String, Int],
 ) -> Map[String, Array[String]] {
-  let cluster_skeleton_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_skeleton_nodes : Map[String, Array[String]] = Map([])
   for name in ordered_nodes {
     if cluster_skeleton.get(name) == Some(true) {
       let cluster = match cluster_keys.get(name) {
@@ -490,7 +490,7 @@ fn collect_component_skeletons(
       }
     }
   }
-  let resolved_order : Map[String, Int] = Map::new()
+  let resolved_order : Map[String, Int] = Map([])
   for name in ordered_nodes {
     resolved_order[name] = resolve_component_order_index(
       name, node_order, fallback_order,
@@ -510,8 +510,8 @@ fn build_flat_neighbors(
   node_set : Map[String, Bool],
   flat_constraints : Map[String, Bool],
 ) -> FlatNeighborsData {
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map([])
+  let flat_in : Map[String, Array[String]] = Map([])
   for name in nodes {
     flat_out[name] = []
     flat_in[name] = []
@@ -601,7 +601,7 @@ fn discover_components(
   flat_out : Map[String, Array[String]],
   flat_in : Map[String, Array[String]],
 ) -> Array[Array[String]] {
-  let visited : Map[String, Bool] = Map::new()
+  let visited : Map[String, Bool] = Map([])
   for name in nodes {
     visited[name] = false
   }
@@ -668,8 +668,8 @@ fn discover_components(
       push_neighbors(out)
     }
     if cluster_skeleton_nodes.length() > 0 {
-      let component_set : Map[String, Bool] = Map::new()
-      let component_clusters : Map[String, Bool] = Map::new()
+      let component_set : Map[String, Bool] = Map([])
+      let component_clusters : Map[String, Bool] = Map([])
       for name in component {
         component_set[name] = true
         let cluster = match cluster_keys.get(name) {
@@ -711,8 +711,8 @@ fn discover_rank_components(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
-  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map([]),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map([]),
 ) -> Array[Array[String]] {
   let prepared = prepare_component_discovery(
     nodes, edge_tail, edge_head, node_ranks, node_order, cluster_keys, cluster_skeleton,
@@ -746,11 +746,11 @@ fn prepare_merge_inputs(
   Map[String, Array[String]],
   Map[String, Array[String]],
 ) {
-  let component_set : Map[String, Bool] = Map::new()
+  let component_set : Map[String, Bool] = Map([])
   for name in component {
     component_set[name] = true
   }
-  let component_groups : Map[Int, Array[String]] = Map::new()
+  let component_groups : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -766,8 +766,8 @@ fn prepare_merge_inputs(
       component_groups[rank] = filtered
     }
   }
-  let filtered_out : Map[String, Array[String]] = Map::new()
-  let filtered_in : Map[String, Array[String]] = Map::new()
+  let filtered_out : Map[String, Array[String]] = Map([])
+  let filtered_in : Map[String, Array[String]] = Map([])
   for name in component {
     let out = match graphviz_out_neighbors.get(name) {
       Some(list) => list
@@ -828,7 +828,7 @@ fn dedup_rank_groups_merged(
   rank_keys : Array[Int],
   merged : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for rank in rank_keys {
     let names = match merged.get(rank) {
       Some(list) => list
@@ -865,7 +865,7 @@ fn merge_rank_groups_components(
   graphviz_in_neighbors : Map[String, Array[String]],
   components : Array[Array[String]],
 ) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map::new()
+  let merged : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     merged[rank] = []
   }

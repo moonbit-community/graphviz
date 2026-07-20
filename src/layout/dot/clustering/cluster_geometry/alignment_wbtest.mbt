@@ -25,9 +25,9 @@ test "compute_nodes_bbox ignores nodes missing geometry and returns none when em
   ignore(a)
   ignore(b)
 
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["a"] = { x: 10.0, y: 20.0 }
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.node_size_from_points(8.0, 6.0)
 
   assert_eq(
@@ -39,7 +39,7 @@ test "compute_nodes_bbox ignores nodes missing geometry and returns none when em
     @cgraph.GraphKind::Directed,
     strict=false,
   )
-  assert_true(compute_nodes_bbox(empty_graph, Map::new(), Map::new()) is None)
+  assert_true(compute_nodes_bbox(empty_graph, Map([]), Map([])) is None)
 }
 
 ///|
@@ -49,15 +49,15 @@ test "adjust_cluster_positions rounds cluster x bounds and shifts member nodes a
   let a = cluster.node("a")
   ignore(a)
 
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["a"] = { x: 5.2, y: 5.0 }
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
   vnode_positions["v_cluster"] = { x: 8.0, y: 5.0 }
   vnode_positions["v_other"] = { x: 30.0, y: 5.0 }
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v_cluster"] = "cluster_0"
   vnode_clusters["v_other"] = "cluster_other"
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.node_size_from_points(10.0, 4.0)
 
   let bbox = adjust_cluster_positions({
@@ -85,12 +85,12 @@ test "adjust_cluster_positions merges child cluster bounds into the root bbox" {
   ignore(root_node)
   ignore(child_node)
 
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["root_node"] = { x: 20.0, y: 5.0 }
   positions["child_node"] = { x: 5.2, y: 5.0 }
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
-  let vnode_clusters : Map[String, String] = Map::new()
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
+  let vnode_clusters : Map[String, String] = Map([])
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["root_node"] = @node_primitives.node_size_from_points(4.0, 4.0)
   sizes["child_node"] = @node_primitives.node_size_from_points(10.0, 4.0)
 

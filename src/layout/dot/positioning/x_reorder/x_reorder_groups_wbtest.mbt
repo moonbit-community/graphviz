@@ -17,17 +17,17 @@ test "build_x_groups_after_reorder uses nonclustered reorder path to remove a si
   let ax = graph.edge(node_map["a"], node_map["x"])
   let by = graph.edge(node_map["b"], node_map["y"])
 
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   x_groups[1] = ["y", "x"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
   ranks["y"] = 1
 
-  let x_order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let x_order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   x_order_sizes["a"] = sample_node_size(10.0, 10.0)
   x_order_sizes["b"] = sample_node_size(10.0, 10.0)
   x_order_sizes["x"] = sample_node_size(10.0, 10.0)
@@ -37,10 +37,10 @@ test "build_x_groups_after_reorder uses nonclustered reorder path to remove a si
   let order_edges = [ax, by]
   let order_edge_tail = ["a", "b"]
   let order_edge_head = ["x", "y"]
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["x"] = [0]
   edge_in["y"] = [1]
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
   let before_crossings = @reorder.count_rank_crossings_port(
     1,
     x_groups.get(1).unwrap_or([]),
@@ -64,27 +64,27 @@ test "build_x_groups_after_reorder uses nonclustered reorder path to remove a si
     has_clusters: false,
     x_groups,
     x_order_sizes,
-    x_cluster_keys: Map::new(),
-    cluster_min_rank: Map::new(),
-    cluster_max_rank: Map::new(),
-    node_order: Map::new(),
+    x_cluster_keys: Map([]),
+    cluster_min_rank: Map([]),
+    cluster_max_rank: Map([]),
+    node_order: Map([]),
     cluster_skeleton_size: sample_node_size(2.0, 2.0),
     edges: [],
     edge_tail: [],
     edge_head: [],
     ranks,
-    edge_vnodes: Map::new(),
-    vnode_ranks: Map::new(),
+    edge_vnodes: Map([]),
+    vnode_ranks: Map([]),
     edge_tail_port_x: [],
     edge_head_port_x: [],
     edge_tail_port_order: [],
     edge_head_port_order: [],
     cluster_skeleton_penalty: 1,
-    rank_same_groups: Map::new(),
-    rank_same_order: Map::new(),
+    rank_same_groups: Map([]),
+    rank_same_order: Map([]),
     nodesep_pt: 18.0,
     has_edge_labels: false,
-    flat_constraints: Map::new(),
+    flat_constraints: Map([]),
     graphviz_flip: false,
     nodes,
     order_edges,
@@ -95,9 +95,9 @@ test "build_x_groups_after_reorder uses nonclustered reorder path to remove a si
     order_edge_tail_port_order: [0.5, 0.5],
     order_edge_head_port_order: [0.5, 0.5],
     edge_order: @order_graph.collect_edge_order(order_edges),
-    port_order_positions: Map::new(),
-    port_order_contrib: Map::new(),
-    cluster_skeleton: Map::new(),
+    port_order_positions: Map([]),
+    port_order_contrib: Map([]),
+    cluster_skeleton: Map([]),
     transpose_max_passes: 2,
   })
 

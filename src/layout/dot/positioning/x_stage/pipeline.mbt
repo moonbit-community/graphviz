@@ -93,11 +93,11 @@ fn build_position_edge_out_order(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> Map[String, Array[Int]] {
-  let node_index : Map[String, Int] = Map::new()
+  let node_index : Map[String, Int] = Map([])
   for i in 0..<nodes.length() {
     node_index[nodes[i].name()] = i
   }
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   for edge_idx in 0..<edge_tail.length() {
     let tail = edge_tail[edge_idx]
     match edge_out_order.get(tail) {
@@ -347,7 +347,7 @@ fn compute_x_positions_for_stage(
   let port_offsets = if has_port_edges {
     @ports.port_offsets_for_nodes(input.nodes, input.output_sizes)
   } else {
-    Map::new()
+    Map([])
   }
   let (rankdir, root_margin) = resolve_x_simplex_root_context(input.nodes)
   @x_constraints.compute_x_positions_with_prepared_constraints(

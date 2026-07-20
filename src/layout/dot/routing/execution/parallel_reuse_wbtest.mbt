@@ -10,7 +10,7 @@ test "collect_parallel_reuse_siblings only expands from the first grouped edge w
   let edge_1 = graph.edge(a, b)
   let edge_2 = graph.edge(a, b)
   let edge_3 = graph.edge(a, b)
-  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map([])
   regular_parallel_groups[@edge_identity.edge_vnode_key(edge_1)] = [
     edge_1, edge_2, edge_3,
   ]
@@ -57,14 +57,14 @@ test "apply_regular_parallel_reuse_layouts writes sibling layouts only when thei
     edge_layout: build_layout_edge(edge_1, 12.0),
     spline_result: shared,
   }
-  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let regular_parallel_groups : Map[String, Array[@cgraph.Edge]] = Map([])
   regular_parallel_groups[@edge_identity.edge_vnode_key(edge_1)] = [
     edge_1, edge_2, edge_3,
   ]
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   let edge_2_base = build_route_base(edge_2)
   base_cache[edge_2.id()] = edge_2_base
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
   let callbacks : RoutingCallbacks = {
     recover_slack_vnodes_fn: _ => (),
     build_edge_layout_fn: layout_input => {

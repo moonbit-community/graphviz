@@ -36,10 +36,10 @@ pub fn build_graphviz_nlist_order_from_edges(
   edge_creation : Array[(String, String)],
   flat_constraints : Map[String, Bool],
 ) -> Array[String] {
-  let out_neighbors : Map[String, Array[String]] = Map::new()
-  let in_neighbors : Map[String, Array[String]] = Map::new()
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
+  let out_neighbors : Map[String, Array[String]] = Map([])
+  let in_neighbors : Map[String, Array[String]] = Map([])
+  let flat_out : Map[String, Array[String]] = Map([])
+  let flat_in : Map[String, Array[String]] = Map([])
   for name in order_nodes {
     out_neighbors[name] = []
     in_neighbors[name] = []
@@ -75,7 +75,7 @@ pub fn build_graphviz_nlist_order_from_edges(
       None => ()
     }
   }
-  let visited : Map[String, Bool] = Map::new()
+  let visited : Map[String, Bool] = Map([])
   for name in order_nodes {
     visited[name] = false
   }
@@ -148,7 +148,7 @@ pub fn build_rank_same_reps(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
 ) -> Map[String, String] {
-  let parent : Map[String, String] = Map::new()
+  let parent : Map[String, String] = Map([])
   for node in nodes {
     let name = node.name()
     parent[name] = name
@@ -241,7 +241,7 @@ pub fn build_rank_same_reps(
       stack.push(child)
     }
   }
-  let reps : Map[String, String] = Map::new()
+  let reps : Map[String, String] = Map([])
   for name, _ in parent {
     reps[name] = find(name)
   }

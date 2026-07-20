@@ -82,7 +82,7 @@ test "collect_edge_cluster_keys uses outermost cluster ownership and cluster ord
   let child_edge = child_plain.edge(a, c, name="child")
   let plain_edge = plain_cluster.edge(c, a, name="plain_cluster")
 
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   collect_edge_cluster_keys(root, edge_cluster_keys)
 
   assert_eq(
@@ -107,7 +107,7 @@ test "collect_edge_cluster_keys uses outermost cluster ownership and cluster ord
 
 ///|
 test "cluster_lca walks parent chains and tolerates cycles" {
-  let cluster_parents : Map[String, String?] = Map::new()
+  let cluster_parents : Map[String, String?] = Map([])
   cluster_parents["cluster_inner"] = Some("cluster_outer")
   cluster_parents["cluster_outer"] = None
   cluster_parents["cluster_sibling"] = Some("cluster_outer")

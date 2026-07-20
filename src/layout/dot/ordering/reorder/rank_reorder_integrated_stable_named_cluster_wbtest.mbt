@@ -637,13 +637,13 @@ fn stable_named_cluster_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     node_clusters,
     node_cluster_skeleton,
     edges,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
 }
 
 ///|
 test "rank_reorder preserves stable named multi-cluster layout at startpass 2" {
   let (input, output) = stable_named_cluster_rank_reorder_case()
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }

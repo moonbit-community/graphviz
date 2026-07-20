@@ -13,30 +13,30 @@ test "build_root_reorder_groups keeps root and skeleton names and inserts only c
 
   let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map::new()
+  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root_a", skeleton_0, "cluster_member"]
   order_groups_for_mincross[1] = ["cluster_peer", "root_b"]
 
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   order_cluster_keys[skeleton_0] = "cluster_x"
   order_cluster_keys["cluster_member"] = "cluster_x"
   order_cluster_keys["cluster_peer"] = "cluster_x"
 
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton[skeleton_0] = true
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_member"] = "cluster_x"
   cluster_keys["cluster_peer"] = "cluster_x"
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = ["v_cross"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_local)] = ["v_local"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_cross", "v_local"]
 
-  let vnode_order_keys_for_ordering : Map[String, Double] = Map::new()
+  let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
   vnode_order_keys_for_ordering["v_cross"] = 0.5
   vnode_order_keys_for_ordering["v_local"] = 0.25
 
@@ -70,11 +70,11 @@ test "collect_root_vnodes keeps only edge vnodes from edges that cross cluster b
   let edge_local = graph.edge(cluster_member, cluster_peer)
   let edge_root = graph.edge(root_a, root_b)
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_member"] = "cluster_x"
   cluster_keys["cluster_peer"] = "cluster_x"
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = [
     "v_cross_0", "v_cross_1",
   ]
@@ -107,15 +107,15 @@ test "collect_root_vnodes keeps only edge vnodes from edges that cross cluster b
 
 ///|
 test "build_root_vnode_inputs keeps only marked root vnodes in rank buckets and order keys" {
-  let root_vnodes : Map[String, Bool] = Map::new()
+  let root_vnodes : Map[String, Bool] = Map([])
   root_vnodes["v_keep"] = true
   root_vnodes["v_keep_2"] = true
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_drop", "v_keep"]
   vnodes_by_rank[2] = ["v_keep_2"]
 
-  let vnode_order_keys_for_ordering : Map[String, Double] = Map::new()
+  let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
   vnode_order_keys_for_ordering["v_keep"] = 0.5
   vnode_order_keys_for_ordering["v_keep_2"] = 1.5
   vnode_order_keys_for_ordering["v_drop"] = 9.0
@@ -142,14 +142,14 @@ test "should_keep_root_reorder_name keeps root names and skeletons but drops clu
   let allowed_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}keep"
   let dropped_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}drop"
 
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   order_cluster_keys[skeleton_0] = "cluster_x"
   order_cluster_keys["cluster_member"] = "cluster_x"
 
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton[skeleton_0] = true
 
-  let root_vnodes : Map[String, Bool] = Map::new()
+  let root_vnodes : Map[String, Bool] = Map([])
   root_vnodes[allowed_vnode] = true
 
   assert_true(

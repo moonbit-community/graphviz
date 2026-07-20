@@ -11,7 +11,7 @@ test "build_edge_vnodes widens shared chains for parallel unlabeled edges" {
   let edge2 = graph.edge(a, b)
   ignore(edge2)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -40,7 +40,7 @@ test "build_edge_vnodes reuses the same chain for reverse unlabeled duplicates" 
   let forward = graph.edge(a, b)
   let reverse = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -67,15 +67,15 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
   let forward = graph.edge(a, b)
   let reverse = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map([])
   existing_names["a"] = true
   existing_names["b"] = true
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["b"] = [1]
   edge_out_order["a"] = [0]
 
@@ -89,8 +89,8 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
     20.0,
     @rankdir.RankDir::TB,
     existing_names,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
   let forward_chain = edge_vnode_chain_for_test(vnode_info, forward)
   let reverse_chain = edge_vnode_chain_for_test(vnode_info, reverse)

@@ -92,7 +92,7 @@ pub fn compute_rank_positions(
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> Map[String, Double] {
-  let positions : Map[String, Double] = Map::new()
+  let positions : Map[String, Double] = Map([])
   for rank in rank_keys {
     let names = groups.get(rank).unwrap_or_default()
     if names.length() == 0 {

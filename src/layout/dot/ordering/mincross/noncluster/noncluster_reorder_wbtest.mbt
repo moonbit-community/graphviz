@@ -4,7 +4,7 @@
 
 ///|
 test "build_noncluster_order_node_order seeds from nlist order and only backfills missing names" {
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   node_order["a"] = 9
   node_order["c"] = 7
 
@@ -27,7 +27,7 @@ test "build_noncluster_graphviz_neighbors follows edge out order and node iterat
   let dc = graph.edge(d, c)
   let bc = graph.edge(b, c)
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [1, 0]
   edge_out_order["b"] = [3]
   edge_out_order["d"] = [2]
@@ -79,7 +79,7 @@ test "build_noncluster_graphviz_neighbors preserves parallel edges and ignores t
   let bc = graph.edge(b, c)
   let da = graph.edge(d, a)
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [1, 0]
   edge_out_order["b"] = [2]
 
@@ -106,7 +106,7 @@ test "build_noncluster_graphviz_neighbors trusts in-range edge_head snapshots an
   let ab = graph.edge(a, b)
   let ac = graph.edge(a, c)
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [0, 1]
 
   let neighbors = build_noncluster_graphviz_neighbors(

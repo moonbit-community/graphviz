@@ -7,9 +7,9 @@ test "edge_polyline_points expands flat labeled vnode points and preserves left-
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1"]
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
   vnode_positions["v1"] = @edge_spline.point(10.0, 0.0)
 
   let points = edge_polyline_points({
@@ -22,10 +22,10 @@ test "edge_polyline_points expands flat labeled vnode points and preserves left-
     head_anchor: @edge_spline.point(20.0, 0.0),
     ranks: { "a": 0, "b": 0 },
     edge_vnodes,
-    vnode_ranks: Map::new(),
+    vnode_ranks: Map([]),
     vnode_positions,
-    rank_y: Map::new(),
-    rank_ht1: Map::new(),
+    rank_y: Map([]),
+    rank_ht1: Map([]),
     nodesep_pt: 12.0,
     label_width_pt: 4.0,
     label_height_pt: Some(8.0),
@@ -49,16 +49,16 @@ test "edge_polyline_points applies cluster-tuned interpolation on non-flat vnode
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1"]
-  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
   vnode_ranks["v1"] = 1
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
   vnode_positions["v1"] = @edge_spline.point(8.0, 40.0)
 
-  let rank_y : Map[Int, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map([])
   rank_y[1] = 50.0
-  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht1 : Map[Int, Double] = Map([])
   rank_ht1[1] = 3.0
 
   let points = edge_polyline_points({

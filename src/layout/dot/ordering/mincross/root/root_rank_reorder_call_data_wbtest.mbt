@@ -6,7 +6,7 @@
 test "build_root_vnode_preferred_positions keeps only edge vnodes and disables forwarding when vnode ordering is off" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let skel = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
-  let preferred_positions : Map[String, Double] = Map::new()
+  let preferred_positions : Map[String, Double] = Map([])
   preferred_positions["root"] = 1.0
   preferred_positions[vnode] = 2.0
   preferred_positions[skel] = 3.0
@@ -37,32 +37,32 @@ test "build_root_rank_reorder_call_data filters root mincross edges, normalizes 
   let edge_skel_vnode = graph.edge(skel, vnode)
   let edge_vnode_leaf = graph.edge(vnode, leaf)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map::new()
+  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root", skel_name]
   order_groups_for_mincross[1] = [vnode_name]
   order_groups_for_mincross[2] = ["leaf"]
 
-  let order_ranks : Map[String, Int] = Map::new()
+  let order_ranks : Map[String, Int] = Map([])
   order_ranks["root"] = 0
   order_ranks[skel_name] = 0
   order_ranks[vnode_name] = 1
   order_ranks["leaf"] = 2
   order_ranks["cluster_member"] = 1
 
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   order_cluster_keys[skel_name] = "cluster_a"
   order_cluster_keys["cluster_member"] = "cluster_a"
 
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton[skel_name] = true
 
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   order_node_order["root"] = 0
   order_node_order[skel_name] = 1
   order_node_order[vnode_name] = 2
   order_node_order["leaf"] = 3
 
-  let order_sizes_out : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes_out : Map[String, @node_primitives.NodeSize] = Map([])
   order_sizes_out["root"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes_out["leaf"] = @node_primitives.node_size_from_points(12.0, 9.0)
   order_sizes_out[skel_name] = @node_primitives.node_size_from_points(6.0, 6.0)
@@ -70,19 +70,19 @@ test "build_root_rank_reorder_call_data filters root mincross edges, normalizes 
     2.0, 3.0, 5.0,
   )
 
-  let preferred_positions_source : Map[String, Double] = Map::new()
+  let preferred_positions_source : Map[String, Double] = Map([])
   preferred_positions_source["root"] = 1.0
   preferred_positions_source[skel_name] = 2.0
   preferred_positions_source[vnode_name] = 3.0
 
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   graphviz_out_neighbors["root"] = ["leaf"]
   graphviz_out_neighbors[skel_name] = [vnode_name]
   graphviz_out_neighbors[vnode_name] = ["leaf"]
   graphviz_out_neighbors["leaf"] = []
   graphviz_out_neighbors["cluster_member"] = ["leaf"]
 
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   graphviz_in_neighbors["root"] = []
   graphviz_in_neighbors[skel_name] = []
   graphviz_in_neighbors[vnode_name] = [skel_name]
@@ -100,14 +100,14 @@ test "build_root_rank_reorder_call_data filters root mincross edges, normalizes 
     [0.4, 0.5, 0.0, 0.6],
     order_ranks,
     order_cluster_keys,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     order_node_order,
     order_sizes_out,
     12.0,
     false,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     preferred_positions_source,
     true,
     order_cluster_skeleton,

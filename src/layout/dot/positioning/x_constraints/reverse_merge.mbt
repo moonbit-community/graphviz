@@ -56,9 +56,9 @@ priv struct ReverseMergeMetadataInput {
 fn build_reverse_merge_metadata(
   input : ReverseMergeMetadataInput,
 ) -> ReverseMergeMetadata {
-  let forward_rep_by_key : Map[String, Int] = Map::new()
-  let merged_edge_weight_bonus : Map[Int, Int] = Map::new()
-  let merged_edge_skip : Map[Int, Bool] = Map::new()
+  let forward_rep_by_key : Map[String, Int] = Map([])
+  let merged_edge_weight_bonus : Map[Int, Int] = Map([])
+  let merged_edge_skip : Map[Int, Bool] = Map([])
   for edge_idx in 0..<input.edges.length() {
     let edge = input.edges[edge_idx]
     if (input.edge_excluded_from_reverse_merge)(edge) {

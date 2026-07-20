@@ -162,7 +162,7 @@ pub fn build_route_base_cache(
     layout_rankdir: input.layout_rankdir,
     ranksep_pt: input.ranksep_pt,
   })
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   for edge in input.edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {

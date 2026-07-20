@@ -23,7 +23,7 @@ fn collect_flat_adjacent_beziers(
   ranks : Map[String, Int],
   order_index : Map[String, Int],
 ) -> Map[Int, Array[@geom.Point]] {
-  let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
     if @edge_semantics.edge_is_self(edge) {
       continue
@@ -77,7 +77,7 @@ fn collect_flat_adjacent_beziers(
       None => groups[key] = [edge]
     }
   }
-  let out : Map[Int, Array[@geom.Point]] = Map::new()
+  let out : Map[Int, Array[@geom.Point]] = Map([])
   for _key, group_edges in groups {
     if group_edges.length() <= 1 {
       continue
@@ -177,7 +177,7 @@ fn build_route_prepass_state(input : RoutePrepassInput) -> RoutePrepassState {
       input.order_index,
     )
   } else {
-    Map::new()
+    Map([])
   }
   let path_bounds = @routesplines.pathplan_bounds(
     input.positions,

@@ -491,8 +491,8 @@ pub fn run_remincross_cleanup_reorder(
     reorder_inputs.has_edge_labels,
     reorder_inputs.port_order_positions,
     reorder_inputs.port_order_contrib,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     reorder_inputs.rem_flat_constraints,
     graphviz_flip=reorder_inputs.graphviz_flip,
     // Graphviz parity: ReMincross counts parallel chain segments once
@@ -701,7 +701,7 @@ fn build_seeded_rank_order(
   base_real : Array[String],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let real_order : Map[String, Int] = Map::new()
+  let real_order : Map[String, Int] = Map([])
   for i in 0..<base_real.length() {
     real_order[base_real[i]] = i
   }
@@ -762,7 +762,7 @@ pub fn build_seeded_remincross(
   ordered_with_vnodes : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Map[Int, Array[String]] {
-  let rem_groups : Map[Int, Array[String]] = Map::new()
+  let rem_groups : Map[Int, Array[String]] = Map([])
   for rank, names in ordered_with_vnodes {
     // Graphviz parity: seeded rank replay drops cluster skeleton placeholders
     // and keeps remaining name order unchanged.
@@ -817,7 +817,7 @@ fn collect_remincross_trailing(
   cluster_min_rank : Map[String, Int],
   cluster_max_rank : Map[String, Int],
 ) -> Map[String, Bool] {
-  let intercluster_vnodes : Map[String, Bool] = Map::new()
+  let intercluster_vnodes : Map[String, Bool] = Map([])
   for edge_idx, edge in edges {
     let (tail, head) = @order_graph.edge_endpoints_at(
       edge, edge_idx, edge_tail, edge_head,
@@ -867,7 +867,7 @@ fn apply_remincross_floor(
   }
   // Graphviz parity: trailing-vnode floor uses maximum real-node order per
   // rank from the current ReMincross base order index.
-  let max_order_by_rank : Map[Int, Int] = Map::new()
+  let max_order_by_rank : Map[Int, Int] = Map([])
   for name, order in rem_base_order_index {
     let rank = match ranks.get(name) {
       Some(value) => value
@@ -924,7 +924,7 @@ fn build_remincross_vnode_keys(
   inputs : ReMincrossVnodeGroupInputs,
   rem_base_order_index : Map[String, Int],
 ) -> Map[String, Double] {
-  let remincross_cluster_keys : Map[String, String] = Map::new()
+  let remincross_cluster_keys : Map[String, String] = Map([])
   for name, key in inputs.intercluster_keys {
     remincross_cluster_keys[name] = key
   }
@@ -971,7 +971,7 @@ pub fn build_remincross_vnode_groups(
   let rem_base_groups = @rank_groups.clone_rank_groups(inputs.final_groups)
   let rem_base_order_index = @rank_groups.build_order_index(rem_base_groups)
   let rem_vnode_order_keys = if !inputs.order_with_vnodes {
-    Map::new()
+    Map([])
   } else {
     build_remincross_vnode_keys(inputs, rem_base_order_index)
   }

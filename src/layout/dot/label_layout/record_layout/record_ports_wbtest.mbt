@@ -120,9 +120,9 @@ test "record_port_padding_y tracks explicit top and bottom label ports" {
   let node = graph.node("padding_record")
   let size = @node_geometry.node_size(node, orientation)
   let ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["padding_record"] = { x: 0.0, y: 0.0 }
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
   label_ports_map["padding_record"] = ports
 
   let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)

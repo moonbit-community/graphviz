@@ -113,7 +113,7 @@ pub fn adjust_edge_label_positions(
   edge_mid_label_metrics_for : (@cgraph.Edge) -> LabelExtent?,
 ) -> AdjustedEdgeLabels {
   let adjusted : Array[DotLayoutEdge] = []
-  let updates : Map[String, @geom.Point] = Map::new()
+  let updates : Map[String, @geom.Point] = Map([])
   for edge_layout in edges {
     let mut label_pos = edge_layout.label_pos
     match label_pos {
@@ -201,7 +201,7 @@ pub fn adjust_edge_label_overlaps(
   }
   let tail_pad = if 2.0 > nodesep_pt * 0.3 { 2.0 } else { nodesep_pt * 0.3 }
   let gap = if 4.0 > nodesep_pt * 0.8 { 4.0 } else { nodesep_pt * 0.8 }
-  let groups : Map[String, Array[EdgeLabelEntry]] = Map::new()
+  let groups : Map[String, Array[EdgeLabelEntry]] = Map([])
   for edge_layout in edges {
     match edge_layout.label_pos {
       Some(pos) =>
@@ -241,7 +241,7 @@ pub fn adjust_edge_label_overlaps(
       None => ()
     }
   }
-  let updates : Map[String, @geom.Point] = Map::new()
+  let updates : Map[String, @geom.Point] = Map([])
   for _, entries in groups {
     if entries.length() < 2 {
       continue

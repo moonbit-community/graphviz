@@ -21,8 +21,8 @@ pub fn build_path_adjacency(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> PathAdjacency {
-  let out_edges : Map[String, Array[String]] = Map::new()
-  let in_edges : Map[String, Array[String]] = Map::new()
+  let out_edges : Map[String, Array[String]] = Map([])
+  let in_edges : Map[String, Array[String]] = Map([])
   let mut edge_idx = 0
   for edge in edges {
     let key = @edge_identity.edge_vnode_key(edge)
@@ -67,7 +67,7 @@ fn merge_positions(
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
 ) -> Map[String, @geom.Point] {
-  let merged : Map[String, @geom.Point] = Map::new()
+  let merged : Map[String, @geom.Point] = Map([])
   for name, pos in positions {
     merged[name] = pos
   }
@@ -83,7 +83,7 @@ fn pathplan_sizes(
   vnode_sizes : Map[String, NodeSize],
   _nodesep_pt : Double,
 ) -> Map[String, NodeSize] {
-  let adjusted : Map[String, NodeSize] = Map::new()
+  let adjusted : Map[String, NodeSize] = Map([])
   for name, size in sizes {
     adjusted[name] = size
   }

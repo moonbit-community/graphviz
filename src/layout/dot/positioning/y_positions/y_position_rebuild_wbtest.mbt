@@ -4,11 +4,11 @@
 
 ///|
 test "build_y_positions_from_rank_groups rebuilds node positions from updated rank y values" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["low_a", "low_b"]
   groups[2] = ["high"]
 
-  let rank_y : Map[Int, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map([])
   rank_y[0] = 30.0
   rank_y[2] = 5.0
 
@@ -31,21 +31,21 @@ test "build_y_positions_with_flip rebuilds node y positions after cluster flip a
   let rank_keys = [1, 3]
   let y_all_ranks = [0, 1, 2, 3]
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[1] = ["a"]
   groups[3] = ["b"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
   ranks["b"] = 3
 
-  let initial_rank_pht : Map[Int, Double] = Map::new()
-  let initial_rank_ht1 : Map[Int, Double] = Map::new()
+  let initial_rank_pht : Map[Int, Double] = Map([])
+  let initial_rank_ht1 : Map[Int, Double] = Map([])
   initial_rank_ht1[3] = 5.0
-  let initial_rank_ht2 : Map[Int, Double] = Map::new()
+  let initial_rank_ht2 : Map[Int, Double] = Map([])
   initial_rank_ht2[1] = 5.0
-  let initial_y_positions : Map[String, Double] = Map::new()
-  let initial_rank_y : Map[Int, Double] = Map::new()
+  let initial_y_positions : Map[String, Double] = Map([])
+  let initial_rank_y : Map[Int, Double] = Map([])
   fill_rank_positions({
     rank_keys,
     groups,
@@ -58,15 +58,15 @@ test "build_y_positions_with_flip rebuilds node y positions after cluster flip a
     rank_y: initial_rank_y,
   })
 
-  let solve_rank_pht : Map[Int, Double] = Map::new()
-  let solve_rank_ht1 : Map[Int, Double] = Map::new()
+  let solve_rank_pht : Map[Int, Double] = Map([])
+  let solve_rank_ht1 : Map[Int, Double] = Map([])
   solve_rank_ht1[3] = 5.0
-  let solve_rank_ht2 : Map[Int, Double] = Map::new()
+  let solve_rank_ht2 : Map[Int, Double] = Map([])
   solve_rank_ht2[1] = 5.0
   let cluster_bbox_heights : Map[
     String,
     @cluster_geometry.ClusterBboxHeightPair,
-  ] = Map::new()
+  ] = Map([])
 
   let output = build_y_positions_with_flip({
     graph: root,

@@ -32,7 +32,7 @@ pub fn layout_ports_from_final(
   layout_pos : @geom.Point,
   rankdir : RankDir,
 ) -> Map[String, RecordPort] {
-  let rotated : Map[String, RecordPort] = Map::new()
+  let rotated : Map[String, RecordPort] = Map([])
   for name, port in ports {
     let offset = layout_port_offset(port.center, rankdir)
     let center = @geom.Point::{

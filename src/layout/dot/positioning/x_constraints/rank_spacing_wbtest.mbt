@@ -4,7 +4,7 @@
 
 ///|
 fn build_rank_spacing_test_sizes() -> Map[String, @node_primitives.NodeSize] {
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.vnode_size_from_widths_with_h(3.0, 4.0, 10.0)
   sizes["b"] = @node_primitives.vnode_size_from_widths_with_h(6.0, 7.0, 12.0)
   sizes["c"] = @node_primitives.vnode_size_from_widths_with_h(5.0, 8.0, 8.0)
@@ -31,7 +31,7 @@ test "compress_width_minlen_pt respects ratio rankdir swap and clamp" {
 ///|
 test "compute_rank_positions applies edge-label spacing only on odd ranks" {
   let sizes = build_rank_spacing_test_sizes()
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["d", "e"]
   groups[1] = ["a", "b", "c"]
 

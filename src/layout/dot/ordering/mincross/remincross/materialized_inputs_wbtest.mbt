@@ -4,7 +4,7 @@
 
 ///|
 test "build_remincross_materialized_arrays replays materialized tail buckets in rem_nlist order" {
-  let rem_groups : Map[Int, Array[String]] = Map::new()
+  let rem_groups : Map[Int, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = ["v1", "b"]
   let rem_nodes = @order_graph.build_order_nodes_from_groups(rem_groups, [0, 1])
@@ -33,24 +33,24 @@ test "build_remincross_materialized_arrays replays materialized tail buckets in 
       edge_head_port_x: [],
       edge_tail_port_order: [],
       edge_head_port_order: [],
-      ranks: Map::new(),
-      edge_vnodes: Map::new(),
+      ranks: Map([]),
+      edge_vnodes: Map([]),
       order_with_vnodes: true,
-      intercluster_keys: Map::new(),
+      intercluster_keys: Map([]),
       cluster_order: [],
       order_with_clusters: false,
-      edges_by_tail: Map::new(),
+      edges_by_tail: Map([]),
       root_tail_order_override: None,
       root_cluster: "__root__",
-      cluster_parents: Map::new(),
-      order_sizes: Map::new(),
-      vnode_sizes: Map::new(),
-      cluster_flat_constraints: Map::new(),
-      rank_same_constraints: Map::new(),
+      cluster_parents: Map([]),
+      order_sizes: Map([]),
+      vnode_sizes: Map([]),
+      cluster_flat_constraints: Map([]),
+      rank_same_constraints: Map([]),
     },
     rem_graph_output.order_graph,
     rem_graph_output.order_node_map,
-    Map::new(),
+    Map([]),
     materialized_edges,
   )
 
@@ -70,10 +70,10 @@ test "build_remincross_materialized_inputs assembles rem nodes edges sizes clust
   let b = graph.node("b")
   let edge_ab = graph.edge(a, b)
 
-  let rem_groups : Map[Int, Array[String]] = Map::new()
+  let rem_groups : Map[Int, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = ["b"]
-  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
 
@@ -89,7 +89,7 @@ test "build_remincross_materialized_inputs assembles rem nodes edges sizes clust
     edge_tail_port_order: [],
     edge_head_port_order: [],
     ranks: { "a": 0, "b": 1 },
-    edge_vnodes: Map::new(),
+    edge_vnodes: Map([]),
     order_with_vnodes: false,
     intercluster_keys: { "a": "", "b": "" },
     cluster_order: [],
@@ -97,9 +97,9 @@ test "build_remincross_materialized_inputs assembles rem nodes edges sizes clust
     edges_by_tail: { "a": [0] },
     root_tail_order_override: None,
     root_cluster: "__root__",
-    cluster_parents: Map::new(),
+    cluster_parents: Map([]),
     order_sizes,
-    vnode_sizes: Map::new(),
+    vnode_sizes: Map([]),
     cluster_flat_constraints: { "a|b": false },
     rank_same_constraints: { "b|c": false },
   })
@@ -136,21 +136,21 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
   edge_2.set_attr("xpenalty", "2")
 
   let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_0"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["a"] = "cluster_left"
   intercluster_keys["b"] = "cluster_right"
 
   let materialized = build_remincross_materialized_edges(
     {
       rem_rank_keys: [0, 2],
-      rem_groups: Map::new(),
+      rem_groups: Map([]),
       creation_order: ["a"],
       edges: [edge_1, edge_2],
       edge_tail: [],
@@ -168,11 +168,11 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
       edges_by_tail,
       root_tail_order_override: None,
       root_cluster: "__root__",
-      cluster_parents: Map::new(),
-      order_sizes: Map::new(),
-      vnode_sizes: Map::new(),
-      cluster_flat_constraints: Map::new(),
-      rank_same_constraints: Map::new(),
+      cluster_parents: Map([]),
+      order_sizes: Map([]),
+      vnode_sizes: Map([]),
+      cluster_flat_constraints: Map([]),
+      rank_same_constraints: Map([]),
     },
     { "cluster_left": 0, "cluster_right": 1 },
   )
@@ -205,18 +205,18 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
 
   let vnode_ab = "\{@edge_identity.EDGE_VNODE_PREFIX}ab_0"
   let vnode_cd = "\{@edge_identity.EDGE_VNODE_PREFIX}cd_0"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = [vnode_ab]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cd)] = [vnode_cd]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["c"] = [1]
   edges_by_tail["a"] = [0]
 
   let materialized = build_remincross_materialized_edges(
     {
       rem_rank_keys: [0, 2],
-      rem_groups: Map::new(),
+      rem_groups: Map([]),
       creation_order: ["c", "a"],
       edges: [edge_ab, edge_cd],
       edge_tail: [],
@@ -228,19 +228,19 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
       ranks: { "a": 0, "b": 2, "c": 0, "d": 2 },
       edge_vnodes,
       order_with_vnodes: true,
-      intercluster_keys: Map::new(),
+      intercluster_keys: Map([]),
       cluster_order: [],
       order_with_clusters: false,
       edges_by_tail,
       root_tail_order_override: None,
       root_cluster: "__root__",
-      cluster_parents: Map::new(),
-      order_sizes: Map::new(),
-      vnode_sizes: Map::new(),
-      cluster_flat_constraints: Map::new(),
-      rank_same_constraints: Map::new(),
+      cluster_parents: Map([]),
+      order_sizes: Map([]),
+      vnode_sizes: Map([]),
+      cluster_flat_constraints: Map([]),
+      rank_same_constraints: Map([]),
     },
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(materialized.vnode_creation.get("c"), Some([vnode_cd]))
@@ -256,18 +256,18 @@ test "build_remincross_materialized_inputs keeps clustered vnode sizes and root-
   let edge_ab = graph.edge(a, b)
 
   let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_clustered_0"
-  let rem_groups : Map[Int, Array[String]] = Map::new()
+  let rem_groups : Map[Int, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = [shared_vnode]
   rem_groups[2] = ["b"]
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = [shared_vnode]
 
-  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes[shared_vnode] = @node_primitives.vnode_size_from_widths_with_h(
     2.0, 3.0, 6.0,
   )
@@ -292,7 +292,7 @@ test "build_remincross_materialized_inputs keeps clustered vnode sizes and root-
     edges_by_tail: { "a": [0] },
     root_tail_order_override: None,
     root_cluster: "__root__",
-    cluster_parents: Map::new(),
+    cluster_parents: Map([]),
     order_sizes,
     vnode_sizes,
     cluster_flat_constraints: { "a|b": false },

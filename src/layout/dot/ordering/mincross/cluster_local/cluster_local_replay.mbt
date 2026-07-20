@@ -125,7 +125,7 @@ fn merge_ranks_with_vnodes(
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
 ) -> Map[String, Int] {
-  let merged : Map[String, Int] = Map::new()
+  let merged : Map[String, Int] = Map([])
   for name, rank in ranks {
     merged[name] = rank
   }

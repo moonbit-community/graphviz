@@ -164,7 +164,7 @@ fn build_rank_cluster_bucket_order_map(
   order_cluster_skeleton : Map[String, Bool],
   real_nodes : Map[String, Bool],
 ) -> Map[String, Int] {
-  let order_map : Map[String, Int] = Map::new()
+  let order_map : Map[String, Int] = Map([])
   let mut idx = 0
   for name in names {
     if order_cluster_skeleton.get(name) == Some(true) {
@@ -197,7 +197,7 @@ fn build_cluster_order_from_root(
   order_cluster_skeleton : Map[String, Bool],
   real_nodes : Map[String, Bool],
 ) -> Map[Int, Map[String, Int]] {
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
   let mut previous_order_map : Map[String, Int]? = None
   for rank in root_rank_keys {
     let names = ordered_root.get(rank).unwrap_or_default()

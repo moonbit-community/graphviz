@@ -150,7 +150,7 @@ pub fn adjust_flip_rank_heights(input : FlipRankHeightsAdjustInput) -> Bool {
     Some(value) => value
     None => return changed
   }
-  let cluster_nodes : Map[String, Bool] = Map::new()
+  let cluster_nodes : Map[String, Bool] = Map([])
   @cluster_graph.collect_graph_nodes(input.graph, cluster_nodes)
   let mut min_rank : Int? = None
   let mut max_rank : Int? = None
@@ -346,8 +346,8 @@ fn collect_cluster_bbox_heights(
     }
     return None
   }
-  let seen : Map[String, Bool] = Map::new()
-  let rank_heights : Map[Int, Double] = Map::new()
+  let seen : Map[String, Bool] = Map([])
+  let rank_heights : Map[Int, Double] = Map([])
   let rank_bounds = collect_cluster_rank_heights({
     graph: input.graph,
     ranks: input.ranks,
@@ -458,7 +458,7 @@ fn collect_cluster_bbox_heights(
 pub fn compute_cluster_bbox_heights(
   input : ClusterBBoxHeightsInput,
 ) -> Map[String, ClusterBboxHeightPair] {
-  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
+  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map([])
   let _ = collect_cluster_bbox_heights({
     graph: input.graph,
     ranks: input.ranks,

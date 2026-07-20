@@ -49,8 +49,8 @@ fn apply_cluster_rank_heights_inner(
     }
     return None
   }
-  let seen : Map[String, Bool] = Map::new()
-  let rank_heights : Map[Int, Double] = Map::new()
+  let seen : Map[String, Bool] = Map([])
+  let rank_heights : Map[Int, Double] = Map([])
   let rank_bounds = collect_cluster_rank_heights({
     graph: input.graph,
     ranks: input.ranks,

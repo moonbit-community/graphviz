@@ -12,14 +12,14 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
   let edge = graph.edge(a, b)
   edge.set_attr("label", "cluster-fallback")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 0
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "c", "b"]
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
 
@@ -30,7 +30,7 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
     preexisting_vnode,
   ]
 
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "cluster_edge"
 
   let result = build_flat_label_vnodes_for_positioning(
@@ -43,7 +43,7 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
     @rankdir.RankDir::TB,
     sizes,
     edge_cluster_keys,
-    Map::new(),
+    Map([]),
     make_existing_names(["a", "b", "c", preexisting_vnode]),
     vnode_info,
     x_groups,
@@ -78,19 +78,19 @@ test "non-adjacent flat edge prefers endpoint cluster membership over edge clust
   let edge = graph.edge(a, b)
   edge.set_attr("label", "cluster-membership")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 0
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "c", "b"]
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
 
   let vnode_info = empty_vnode_info()
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "wrong_cluster"
 
   let result = build_flat_label_vnodes_for_positioning(
@@ -103,7 +103,7 @@ test "non-adjacent flat edge prefers endpoint cluster membership over edge clust
     @rankdir.RankDir::TB,
     sizes,
     edge_cluster_keys,
-    Map::new(),
+    Map([]),
     make_existing_names(["a", "b", "c"]),
     vnode_info,
     x_groups,

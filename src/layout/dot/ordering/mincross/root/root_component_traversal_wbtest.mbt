@@ -39,28 +39,28 @@ test "collect_components_from_traversal replays preferred starts first and then 
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let order_nodes = [vnode, "a", "b", "c", "d"]
   let node_set = build_node_membership_set(order_nodes)
-  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let out_neighbors : Map[String, Array[String]] = Map([])
   out_neighbors[vnode] = []
   out_neighbors["a"] = [vnode]
   out_neighbors["b"] = []
   out_neighbors["c"] = ["d"]
   out_neighbors["d"] = []
 
-  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map([])
   in_neighbors[vnode] = ["a"]
   in_neighbors["a"] = []
   in_neighbors["b"] = []
   in_neighbors["c"] = []
   in_neighbors["d"] = ["c"]
 
-  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map([])
   flat_out[vnode] = []
   flat_out["a"] = []
   flat_out["b"] = []
   flat_out["c"] = []
   flat_out["d"] = []
 
-  let flat_in : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map([])
   flat_in[vnode] = []
   flat_in["a"] = []
   flat_in["b"] = []

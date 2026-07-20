@@ -4,29 +4,29 @@
 
 ///|
 test "apply_rank_same_order reorders unported rank-same groups only" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b", "c", "d"]
 
-  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_groups : Map[String, Int] = Map([])
   rank_same_groups["a"] = 1
   rank_same_groups["b"] = 1
   rank_same_groups["c"] = 2
   rank_same_groups["d"] = 2
 
-  let rank_same_order : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map([])
   rank_same_order["b"] = 0
   rank_same_order["a"] = 1
   rank_same_order["d"] = 0
   rank_same_order["c"] = 1
 
-  let port_edge_nodes : Map[String, Bool] = Map::new()
+  let port_edge_nodes : Map[String, Bool] = Map([])
   port_edge_nodes["c"] = true
 
   let adjusted = apply_rank_same_order(
     groups,
     rank_same_groups,
     rank_same_order,
-    Map::new(),
+    Map([]),
     port_edge_nodes,
   )
 

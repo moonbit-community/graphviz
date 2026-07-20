@@ -21,11 +21,11 @@ test "compute_cluster_bbox_heights accumulates local, nested, margin, and label 
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let self_edge_labels : Map[String, Double] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let self_edge_labels : Map[String, Double] = Map([])
 
   let heights = compute_cluster_bbox_heights({
     graph: root,
@@ -81,19 +81,19 @@ test "adjust_flip_rank_heights widens rank spacing and updates cluster half-heig
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
   ranks["b"] = 3
-  let rank_y : Map[Int, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map([])
   rank_y[0] = 120.0
   rank_y[1] = 100.0
   rank_y[2] = 60.0
   rank_y[3] = 20.0
-  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht1 : Map[Int, Double] = Map([])
   rank_ht1[3] = 5.0
-  let rank_ht2 : Map[Int, Double] = Map::new()
+  let rank_ht2 : Map[Int, Double] = Map([])
   rank_ht2[1] = 5.0
-  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
+  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map([])
 
   let changed = adjust_flip_rank_heights({
     graph: root,
@@ -136,13 +136,13 @@ test "adjust_flip_rank_heights leaves state unchanged when clusters have no widt
   let a = cluster.node("a")
   ignore(a)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
-  let rank_y : Map[Int, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map([])
   rank_y[1] = 42.0
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
-  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
+  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int, Double] = Map([])
+  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map([])
 
   let changed = adjust_flip_rank_heights({
     graph: root,

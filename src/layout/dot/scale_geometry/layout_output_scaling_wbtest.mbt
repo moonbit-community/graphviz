@@ -42,7 +42,7 @@ test "scale_edge_layout_output and scale_record_port_maps keep nested geometry s
   assert_eq(scaled_edges[0].tail_label_pos, Some({ x: 0.0, y: 3.0 }))
   assert_eq(scaled_edges[0].xlabel_pos, Some({ x: 12.0, y: 21.0 }))
 
-  let ports : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
+  let ports : Map[String, Map[String, @record_geometry.RecordPort]] = Map([])
   ports["node"] = {
     "p": {
       center: { x: 4.0, y: 5.0 },

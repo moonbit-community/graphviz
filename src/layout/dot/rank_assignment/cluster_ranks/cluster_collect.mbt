@@ -6,9 +6,9 @@
 pub fn collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
-  let members : Map[String, Map[String, Bool]] = Map::new()
+  let members : Map[String, Map[String, Bool]] = Map([])
   for name, cluster_graph in cluster_graphs {
-    let set : Map[String, Bool] = Map::new()
+    let set : Map[String, Bool] = Map([])
     @cluster_graph.collect_graph_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
@@ -54,7 +54,7 @@ pub fn build_node_cluster_index(
   top_clusters : Array[String],
   cluster_members : Map[String, Map[String, Bool]],
 ) -> Map[String, String] {
-  let node_cluster : Map[String, String] = Map::new()
+  let node_cluster : Map[String, String] = Map([])
   for cluster_name in top_clusters {
     match cluster_members.get(cluster_name) {
       Some(members) =>

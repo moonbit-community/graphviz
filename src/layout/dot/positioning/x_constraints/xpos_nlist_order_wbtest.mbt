@@ -4,12 +4,12 @@
 
 ///|
 test "build_xpos_nlist_order visits clustered ranks in reverse with vnodes first" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster0"
   cluster_keys["b"] = "cluster0"
   cluster_keys["v"] = "cluster0"
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["v", "x"]
 
@@ -27,12 +27,12 @@ test "build_xpos_nlist_order visits clustered ranks in reverse with vnodes first
 
 ///|
 test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster0"
   cluster_keys["b"] = "cluster0"
   cluster_keys["v"] = "cluster0"
 
-  let grouped : Map[Int, Array[String]] = Map::new()
+  let grouped : Map[Int, Array[String]] = Map([])
   grouped[0] = ["a", "b"]
   grouped[1] = ["v", "x"]
 
@@ -45,13 +45,13 @@ test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback"
     groups: grouped,
   })
 
-  let no_cluster_groups : Map[Int, Array[String]] = Map::new()
+  let no_cluster_groups : Map[Int, Array[String]] = Map([])
   no_cluster_groups[0] = ["m", "n"]
   let source_fallback = build_xpos_nlist_order({
     rankdir: @rankdir.RankDir::TB,
     nlist_order: ["m", "n"],
     gdnlist_order: [],
-    cluster_keys: Map::new(),
+    cluster_keys: Map([]),
     rank_keys: [0],
     groups: no_cluster_groups,
   })
@@ -64,13 +64,13 @@ test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback"
 test "build_xpos_nlist_order processes multiple clusters from reversed source discovery before unclustered leftovers" {
   let vnode_a = "\{@edge_identity.EDGE_VNODE_PREFIX}a"
   let vnode_b = "\{@edge_identity.EDGE_VNODE_PREFIX}b"
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a1"] = "clusterA"
   cluster_keys[vnode_a] = "clusterA"
   cluster_keys["b1"] = "clusterB"
   cluster_keys[vnode_b] = "clusterB"
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a1", "b1", "u"]
   groups[1] = [vnode_a, vnode_b]
 

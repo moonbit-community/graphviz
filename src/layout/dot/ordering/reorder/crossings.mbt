@@ -17,10 +17,10 @@ fn build_port_aware_crossing_inputs(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks? : Map[String, Int] = Map::new(),
+  ranks? : Map[String, Int] = Map([]),
 ) -> PortAwareCrossingInputs {
-  let edge_out : Map[String, Array[Int]] = Map::new()
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int]] = Map([])
   for _rank, names in groups {
     for name in names {
       edge_out[name] = []
@@ -126,7 +126,7 @@ pub fn count_crossings(
   edge_head : Array[String],
 ) -> Int {
   let order = @rank_groups.build_order_index(groups)
-  let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map::new()
+  let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     if !@edge_semantics.edge_is_constraint(edge) {
@@ -227,7 +227,7 @@ fn count_crossings_port_aware_with_inputs(
   inputs : PortAwareCrossingInputs,
   edge_tail_port_x? : Array[Double] = [],
   edge_head_port_x? : Array[Double] = [],
-  fixed_order? : Map[String, Int] = Map::new(),
+  fixed_order? : Map[String, Int] = Map([]),
 ) -> Int {
   let _ = ranks
   let _ = edge_tail
@@ -349,7 +349,7 @@ pub fn count_crossings_port_aware(
   edge_head : Array[String],
   edge_tail_port_x? : Array[Double] = [],
   edge_head_port_x? : Array[Double] = [],
-  fixed_order? : Map[String, Int] = Map::new(),
+  fixed_order? : Map[String, Int] = Map([]),
 ) -> Int {
   let rank_keys : Array[Int] = []
   for rank, _ in groups {
@@ -401,7 +401,7 @@ pub fn build_neighbor_order_index(
   order : Map[String, Int],
   target_rank : Int,
 ) -> Map[String, Array[Int]] {
-  let result : Map[String, Array[Int]] = Map::new()
+  let result : Map[String, Array[Int]] = Map([])
   for name in names {
     let orders : Array[Int] = []
     let list = match neighbors.get(name) {

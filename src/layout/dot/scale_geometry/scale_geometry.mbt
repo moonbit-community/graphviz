@@ -154,7 +154,7 @@ pub fn scale_point_map_rounded(
   sx : Double,
   sy : Double,
 ) -> Map[String, @geom.Point] {
-  let scaled : Map[String, @geom.Point] = Map::new()
+  let scaled : Map[String, @geom.Point] = Map([])
   for name, point in points {
     scaled[name] = scale_point_rounded(point, sx, sy)
   }
@@ -178,7 +178,7 @@ pub fn scale_double_map_rounded(
   values : Map[Int, Double],
   scale : Double,
 ) -> Map[Int, Double] {
-  let scaled : Map[Int, Double] = Map::new()
+  let scaled : Map[Int, Double] = Map([])
   for key, value in values {
     scaled[key] = (value * scale).round()
   }
@@ -190,7 +190,7 @@ pub fn scale_named_double_map(
   values : Map[String, Double],
   scale : Double,
 ) -> Map[String, Double] {
-  let scaled : Map[String, Double] = Map::new()
+  let scaled : Map[String, Double] = Map([])
   for key, value in values {
     scaled[key] = value * scale
   }
@@ -203,7 +203,7 @@ pub fn scale_rect_map(
   sx : Double,
   sy : Double,
 ) -> Map[String, @geom.Rect] {
-  let scaled : Map[String, @geom.Rect] = Map::new()
+  let scaled : Map[String, @geom.Rect] = Map([])
   for key, rect in rects {
     scaled[key] = {
       llx: rect.llx * sx,
@@ -221,9 +221,9 @@ pub fn scale_record_port_maps(
   sx : Double,
   sy : Double,
 ) -> Map[String, Map[String, @record_geometry.RecordPort]] {
-  let scaled : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
+  let scaled : Map[String, Map[String, @record_geometry.RecordPort]] = Map([])
   for node_name, ports in maps {
-    let scaled_ports : Map[String, @record_geometry.RecordPort] = Map::new()
+    let scaled_ports : Map[String, @record_geometry.RecordPort] = Map([])
     for port_name, port in ports {
       scaled_ports[port_name] = {
         center: scale_point(port.center, sx, sy),

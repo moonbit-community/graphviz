@@ -15,7 +15,7 @@ test "build_neighbor_real_indices tracks nearest previous and next real anchors 
 
 ///|
 test "build_seeded_rank_order uses special mixed root cluster handoff when rank starts with one vnode" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_a"] = "cluster_x"
   cluster_keys["cluster_b"] = "cluster_x"
 
@@ -38,7 +38,7 @@ test "build_seeded_rank_order falls back to keyed merge order around nearest rea
   let ordered = build_seeded_rank_order(
     ["v_before", "a", "v_between", "c", "v_after"],
     ["a", "b", "c"],
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(ordered, ["v_before", "a", "v_between", "c", "v_after"])
@@ -48,17 +48,17 @@ test "build_seeded_rank_order falls back to keyed merge order around nearest rea
 test "build_seeded_remincross drops cluster skeletons and uses base real order only when present" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let base_groups : Map[Int, Array[String]] = Map::new()
+  let base_groups : Map[Int, Array[String]] = Map([])
   base_groups[0] = ["a", "b"]
 
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
+  let ordered_with_vnodes : Map[Int, Array[String]] = Map([])
   ordered_with_vnodes[0] = [skeleton, "v_before", "a", "b"]
   ordered_with_vnodes[1] = [skeleton, "rank1_only"]
 
   let rem_groups = build_seeded_remincross(
     base_groups,
     ordered_with_vnodes,
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(rem_groups.get(0), Some(["v_before", "a", "b"]))

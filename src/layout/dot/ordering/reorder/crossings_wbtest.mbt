@@ -4,11 +4,11 @@
 
 ///|
 test "count_crossings_port_aware_with_inputs respects fixed external slots" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
@@ -52,11 +52,11 @@ test "count_crossings_port_aware_with_inputs respects fixed external slots" {
 
 ///|
 test "count_crossings_port_aware includes incoming local port crossings" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["x"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
@@ -82,11 +82,11 @@ test "count_crossings_port_aware includes incoming local port crossings" {
 
 ///|
 test "count_crossings_port_aware includes local port crossings for same node fanout" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["p"]
   groups[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["p"] = 0
   ranks["x"] = 1
   ranks["y"] = 1

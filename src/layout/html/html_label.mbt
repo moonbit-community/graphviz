@@ -192,7 +192,7 @@ fn html_parse_tag(parser : HtmlParser) -> HtmlTag? {
     }
     _ => {
       let name = html_read_name(parser)
-      let attrs : Map[String, String] = Map::new()
+      let attrs : Map[String, String] = Map([])
       let mut self_closing = false
       while parser.index < parser.chars.length() {
         html_parser_skip_whitespace(parser)

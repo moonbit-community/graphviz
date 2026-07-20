@@ -22,7 +22,7 @@ test "edge_swap_ends uses rank first then order index with missing values defaul
   assert_false(edge_swap_ends("b", "a", ranks, order_index))
   assert_true(edge_swap_ends("c", "b", ranks, order_index))
   assert_false(edge_swap_ends("b", "c", ranks, order_index))
-  assert_false(edge_swap_ends("missing_a", "missing_b", Map::new(), Map::new()))
+  assert_false(edge_swap_ends("missing_a", "missing_b", Map([]), Map([])))
 }
 
 ///|

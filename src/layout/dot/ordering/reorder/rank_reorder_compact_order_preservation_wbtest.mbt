@@ -281,7 +281,7 @@ test "rank_reorder keeps flip-enabled single chains stable" {
   }
   let output : MincrossOutput = { case_id: 1003, ranks: [[0], [1]] }
 
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }
 
 ///|
@@ -341,5 +341,5 @@ test "rank_reorder keeps total flat-label constraints in source order" {
   }
   let output : MincrossOutput = { case_id: 1004, ranks: [[0, 1, 2]] }
 
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }

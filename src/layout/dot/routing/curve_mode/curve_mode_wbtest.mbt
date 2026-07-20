@@ -117,9 +117,9 @@ test "compute_curve_offset keeps defaults when tuning is disabled or the metric 
     edge,
     base: build_curve_base(edge, orig_head_name="other"),
     head_port_metrics: {
-      head_port_counts: Map::new(),
-      head_port_min_dist: Map::new(),
-      head_port_max_dist: Map::new(),
+      head_port_counts: Map([]),
+      head_port_min_dist: Map([]),
+      head_port_max_dist: Map([]),
     },
     label_width_pt: 8.0,
     nodesep_pt: 12.0,

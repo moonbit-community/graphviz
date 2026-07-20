@@ -145,8 +145,8 @@ fn collect_noop_nodes_with_sizes(
   record_orientation : @layout_prep.RecordOrientation,
 ) -> Result[EngineNodeProjectionWithSizes, String] {
   let nodes = graph.nodes()
-  let positions : Map[String, @geom.Point] = Map::new()
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   for node in nodes {
     let pos = match required_scaled_noop_node_pos(node, scale_factor) {
       Ok(value) => value

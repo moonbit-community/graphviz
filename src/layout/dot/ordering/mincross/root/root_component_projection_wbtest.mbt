@@ -24,8 +24,8 @@ fn sample_root_reorder_inputs() -> RootRankReorderInputs {
     parents: { "a": [], "b": ["a"], "c": ["b"] },
     children: { "a": ["b"], "b": ["c"], "c": [] },
     order_cluster_keys: { "a": "", "b": "", "c": "cluster_c" },
-    rank_same_groups: Map::new(),
-    rank_same_order: Map::new(),
+    rank_same_groups: Map([]),
+    rank_same_order: Map([]),
     edge_order: { "a": 0, "b": 1, "c": 2 },
     order_node_order: { "a": 0, "b": 1, "c": 2 },
     order_sizes_out: { "a": @node_primitives.node_size_from_points(10.0, 8.0) },
@@ -34,7 +34,7 @@ fn sample_root_reorder_inputs() -> RootRankReorderInputs {
     port_order_positions: { "a": 1.0, "c": 3.0 },
     port_order_contrib: { "a": [("b", 1.0), ("c", 2.0)], "c": [("a", 3.0)] },
     preferred_positions: { "b": 2.0, "c": 4.0 },
-    order_cluster_skeleton: Map::new(),
+    order_cluster_skeleton: Map([]),
     order_flat_constraints: { "a|b": true, "b|c": true, "a|": true },
     graphviz_out_neighbors: { "a": ["b"], "b": ["c"], "c": [] },
     graphviz_in_neighbors: { "a": [], "b": ["a"], "c": ["b"] },
@@ -44,9 +44,9 @@ fn sample_root_reorder_inputs() -> RootRankReorderInputs {
 
 ///|
 test "resolve_root_component_order_index prefers explicit order then fallback then zero" {
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   order_node_order["a"] = 4
-  let fallback_order : Map[String, Int] = Map::new()
+  let fallback_order : Map[String, Int] = Map([])
   fallback_order["b"] = 9
 
   assert_eq(
@@ -69,11 +69,11 @@ test "resolve_root_component_order_index prefers explicit order then fallback th
 test "build_component_traversal_adjacency combines filtered graphviz neighbors with in-component flat constraints" {
   let order_nodes = ["a", "b", "c"]
   let node_set = build_node_membership_set(["a", "b"])
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   graphviz_out_neighbors["a"] = ["b", "c"]
   graphviz_out_neighbors["b"] = ["c"]
   graphviz_out_neighbors["c"] = ["a"]
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   graphviz_in_neighbors["a"] = ["c"]
   graphviz_in_neighbors["b"] = ["a", "c"]
   graphviz_in_neighbors["c"] = ["a", "b"]
@@ -100,7 +100,7 @@ test "build_component_traversal_adjacency combines filtered graphviz neighbors w
 ///|
 test "filter_component_port_order_contrib keeps only in-component sources and targets while preserving empty kept buckets" {
   let component_set = build_node_membership_set(["a", "b"])
-  let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
+  let port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
   port_order_contrib["a"] = [("b", 1.0), ("c", 2.0)]
   port_order_contrib["b"] = [("c", 3.0)]
   port_order_contrib["c"] = [("a", 4.0)]

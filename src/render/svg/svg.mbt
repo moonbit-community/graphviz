@@ -1770,7 +1770,7 @@ fn fixedshape_draw_size_in(
 fn capture_fixedshape_draw_sizes(
   nodes : Array[@layout_dot.DotLayoutNode],
 ) -> Map[String, (Double, Double)] {
-  let sizes : Map[String, (Double, Double)] = Map::new()
+  let sizes : Map[String, (Double, Double)] = Map([])
   for node_layout in nodes {
     let node = node_layout.node
     if fixedsize_mode(node) == "shape" {
@@ -6726,24 +6726,24 @@ pub fn render_svg(
   let kind = layout.graph.kind()
   let root_nodes = layout.graph.nodes()
   let root_edges = layout.graph.edges()
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   for i, node in root_nodes {
     node_order[node.name()] = i
   }
-  let edge_order : Map[Int, Int] = Map::new()
+  let edge_order : Map[Int, Int] = Map([])
   for i, edge in root_edges {
     edge_order[edge.id()] = i
   }
-  let layout_node_by_name : Map[String, @layout_dot.DotLayoutNode] = Map::new()
+  let layout_node_by_name : Map[String, @layout_dot.DotLayoutNode] = Map([])
   for node_layout in layout.nodes {
     layout_node_by_name[node_layout.node.name()] = node_layout
   }
-  let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map::new()
+  let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map([])
   for edge_layout in layout.edges {
     layout_edge_by_id[edge_layout.edge.id()] = edge_layout
   }
-  let written_nodes : Map[String, Bool] = Map::new()
-  let written_edges : Map[Int, Bool] = Map::new()
+  let written_nodes : Map[String, Bool] = Map([])
+  let written_edges : Map[Int, Bool] = Map([])
   for node in root_nodes {
     let node_name = node.name()
     if written_nodes.get(node_name) != Some(true) {

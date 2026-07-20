@@ -20,7 +20,7 @@ fn cluster_contains(
     return false
   }
   let mut current : String? = Some(target)
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   while current is Some(name) {
     if seen.get(name) is Some(_) {
       return false
@@ -69,8 +69,8 @@ pub fn build_vnode_keys_from_nlist(
   _intercluster_vnodes : Map[String, Bool],
   _has_clusters : Bool,
 ) -> Map[String, Double] {
-  let keys : Map[String, Double] = Map::new()
-  let rank_set : Map[Int, Bool] = Map::new()
+  let keys : Map[String, Double] = Map([])
+  let rank_set : Map[Int, Bool] = Map([])
   for rank, _ in ordered_groups {
     rank_set[rank] = true
   }
@@ -129,7 +129,7 @@ pub fn build_vnode_keys_from_nlist(
     if vnodes.length() == 0 {
       continue
     }
-    let real_set : Map[String, Bool] = Map::new()
+    let real_set : Map[String, Bool] = Map([])
     for name in real_names {
       real_set[name] = true
     }
@@ -223,8 +223,8 @@ pub fn build_vnode_order_keys(
   vnode_ranks : Map[String, Int],
 ) -> Map[String, Double] {
   let _ = edge_reversed
-  let keys : Map[String, Double] = Map::new()
-  let max_order_by_rank : Map[Int, Int] = Map::new()
+  let keys : Map[String, Double] = Map([])
+  let max_order_by_rank : Map[Int, Int] = Map([])
   for name, order in order_index {
     let rank = match ranks.get(name) {
       Some(value) => value

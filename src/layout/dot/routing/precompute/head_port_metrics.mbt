@@ -23,9 +23,9 @@ pub fn build_head_port_metrics(
   enable_complex_tuning : Bool,
   edge_metric_sample : (@cgraph.Edge) -> (String, Double)?,
 ) -> HeadPortMetrics {
-  let head_port_counts : Map[String, Int] = Map::new()
-  let head_port_min_dist : Map[String, Double] = Map::new()
-  let head_port_max_dist : Map[String, Double] = Map::new()
+  let head_port_counts : Map[String, Int] = Map([])
+  let head_port_min_dist : Map[String, Double] = Map([])
+  let head_port_max_dist : Map[String, Double] = Map([])
   if enable_complex_tuning {
     for edge in edges {
       match edge_metric_sample(edge) {

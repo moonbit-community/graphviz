@@ -14,7 +14,7 @@ test "recover_pathplan_slack consumes segment vnodes in rank direction and only 
   let input = sample_regular_pass_input(
     { "a": 3, "b": 1 },
     { "v1": 2, "v2": 1 },
-    Map::new(),
+    Map([]),
     vnode_sizes,
     { 2: 20.0, 1: 10.0 },
   )
@@ -36,9 +36,9 @@ test "recover_pathplan_slack consumes segment vnodes in rank direction and only 
     apply_dotted_adjustment: false,
   }
   let recover_key = recover_slack_key_for_edge(edge)
-  let recover_edge_id_by_key : Map[String, Int] = Map::new()
+  let recover_edge_id_by_key : Map[String, Int] = Map([])
   recover_edge_id_by_key[recover_key] = edge.id()
-  let recovered_slack_keys : Map[String, Bool] = Map::new()
+  let recovered_slack_keys : Map[String, Bool] = Map([])
   let recovered_orders : Array[String] = []
   let callbacks : RoutingCallbacks = {
     recover_slack_vnodes_fn: recover_input => {
@@ -95,7 +95,7 @@ test "recover_pathplan_slack falls back to limited pathplan boxes when segments 
   let input = sample_regular_pass_input(
     { "a": 0, "b": 2 },
     { "v1": 1, "v2": 2 },
-    Map::new(),
+    Map([]),
     vnode_sizes,
     { 1: 10.0, 2: 20.0 },
   )
@@ -122,7 +122,7 @@ test "recover_pathplan_slack falls back to limited pathplan boxes when segments 
     fallback_polyline=spline_result.pathplan_points,
   )
   let recover_key = recover_slack_key_for_edge(edge)
-  let recovered_slack_keys : Map[String, Bool] = Map::new()
+  let recovered_slack_keys : Map[String, Bool] = Map([])
   let recovered_orders : Array[String] = []
   let recovered_box_counts : Array[Int] = []
   let callbacks : RoutingCallbacks = {
@@ -143,7 +143,7 @@ test "recover_pathplan_slack falls back to limited pathplan boxes when segments 
     base,
     spline_result,
     input,
-    recover_edge_id_by_key: Map::new(),
+    recover_edge_id_by_key: Map([]),
     recovered_slack_keys,
     callbacks,
   })

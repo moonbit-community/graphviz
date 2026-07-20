@@ -53,11 +53,11 @@ test "head_metric_distance_for_edge uses sampled port centers in current routing
     head_port={ name: Some("h"), compass: None },
   )
 
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["tail"] = { x: 0.0, y: 0.0 }
   positions["head"] = { x: 2.0, y: 0.0 }
 
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["tail"] = @node_primitives.node_size_from_points(10.0, 10.0)
 
   let distance = head_metric_distance_for_edge(
@@ -95,8 +95,8 @@ test "build_head_port_metrics_from_geometry aggregates only keyed edges" {
   let second = graph.edge(tail, record_head, name="second")
   let ignored = graph.edge(tail, plain_head, name="ignored")
 
-  let positions : Map[String, @geom.Point] = Map::new()
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   let metrics = build_head_port_metrics_from_geometry(
     [first, second, ignored],
     true,
@@ -129,17 +129,17 @@ test "build_dot_head_port_metrics uses explicit label-port geometry and record f
   })
   let fallback = graph.edge(tail_plain, record_head, name="fallback")
 
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   positions["tail_port"] = { x: 0.0, y: 0.0 }
   positions["tail_plain"] = { x: 0.0, y: 0.0 }
   positions["record_head"] = { x: 6.0, y: 8.0 }
 
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["tail_port"] = @node_primitives.node_size_from_points(10.0, 10.0)
   sizes["tail_plain"] = @node_primitives.node_size_from_points(10.0, 10.0)
   sizes["record_head"] = @node_primitives.node_size_from_points(12.0, 12.0)
 
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
   label_ports_map["record_head"] = {
     "p": {
       center: { x: 3.0, y: 4.0 },

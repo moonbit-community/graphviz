@@ -25,8 +25,8 @@ pub fn build_transpose_seed_maps(
   order_ranks : Map[String, Int],
 ) -> TransposeSeedMapsOutput {
   let edge_penalty : Array[Int] = []
-  let edge_in : Map[String, Array[Int]] = Map::new()
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int]] = Map([])
   for rank in order_rank_keys {
     let names = match seeded_groups.get(rank) {
       Some(list) => list

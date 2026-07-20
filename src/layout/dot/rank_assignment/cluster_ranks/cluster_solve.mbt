@@ -30,8 +30,8 @@ pub fn compute_local_cluster_ranks_and_leaders(
     Array[@cgraph.Edge],
   ) -> Map[String, Int],
 ) -> LocalClusterRankResult {
-  let local_ranks : Map[String, Int] = Map::new()
-  let cluster_leaders : Map[String, String] = Map::new()
+  let local_ranks : Map[String, Int] = Map([])
+  let cluster_leaders : Map[String, String] = Map([])
   for cluster_name in top_clusters {
     let members = match cluster_members.get(cluster_name) {
       Some(value) => value
@@ -101,7 +101,7 @@ pub fn solve_clustered_leader_ranks(
   ) -> (Array[String], Array[String], Array[Bool]),
 ) -> Map[String, Int] {
   let rank_graph = @network_simplex.new_graph()
-  let rank_index : Map[String, Int] = Map::new()
+  let rank_index : Map[String, Int] = Map([])
   let rank_names : Array[String] = []
   for node in nodes {
     let name = node.name()
@@ -211,7 +211,7 @@ pub fn solve_clustered_leader_ranks(
   let (direct_tail_final, direct_head_final, _direct_reversed) = orient_edges_for_names(
     rank_names, direct_tail, direct_head, direct_active,
   )
-  let merged_edges : Map[String, LeaderRankEdge] = Map::new()
+  let merged_edges : Map[String, LeaderRankEdge] = Map([])
   for i in 0..<direct_tail_final.length() {
     let tail_name = direct_tail_final[i]
     let head_name = direct_head_final[i]
@@ -256,7 +256,7 @@ pub fn solve_clustered_leader_ranks(
     )
   }
   let _ = @network_simplex.network_simplex_pre_balance(rank_graph, 0x7fffffff)
-  let leader_ranks : Map[String, Int] = Map::new()
+  let leader_ranks : Map[String, Int] = Map([])
   for name, idx in rank_index {
     leader_ranks[name] = @network_simplex.node_rank(rank_graph, idx)
   }

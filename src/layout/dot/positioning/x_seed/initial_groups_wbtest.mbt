@@ -6,25 +6,25 @@
 test "build_initial_x_groups derives vnode placement from order keys and strips cluster skeletons" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a", "b"]
 
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index[cluster_skeleton] = 0
   order_index["a"] = 1
   order_index["b"] = 2
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_left", "v_right"]
 
-  let vnode_order_keys : Map[String, Double] = Map::new()
+  let vnode_order_keys : Map[String, Double] = Map([])
   vnode_order_keys["v_left"] = 1.5
   vnode_order_keys["v_right"] = 2.5
 
   let x_groups = build_initial_x_groups({
     use_vnodes_for_xpos: true,
     ordered_groups,
-    ordered_groups_with_vnodes: Map::new(),
+    ordered_groups_with_vnodes: Map([]),
     order_index,
     vnodes_by_rank,
     vnode_order_keys,
@@ -36,11 +36,11 @@ test "build_initial_x_groups derives vnode placement from order keys and strips 
 
 ///|
 test "build_x_cluster_keys overlays vnode clusters only when vnode xpos mode is enabled" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_a"
   cluster_keys["v1"] = "cluster_old"
 
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v1"] = "cluster_new"
   vnode_clusters["v2"] = "cluster_v2"
 

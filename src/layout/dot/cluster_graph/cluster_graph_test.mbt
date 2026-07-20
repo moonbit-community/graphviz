@@ -48,13 +48,13 @@ test "collect_cluster_names and collect_graph_nodes traverse all nested subgraph
   let cluster_b = plain.subgraph(name="cluster_b")
   ignore(cluster_b.node("b1"))
 
-  let cluster_names : Map[String, Bool] = Map::new()
+  let cluster_names : Map[String, Bool] = Map([])
   collect_cluster_names(root, cluster_names)
   assert_eq(cluster_names.length(), 2)
   assert_eq(cluster_names.get("cluster_a"), Some(true))
   assert_eq(cluster_names.get("cluster_b"), Some(true))
 
-  let nodes_out : Map[String, Bool] = Map::new()
+  let nodes_out : Map[String, Bool] = Map([])
   collect_graph_nodes(root, nodes_out)
   assert_eq(nodes_out.length(), 4)
   assert_eq(nodes_out.get("root_node"), Some(true))

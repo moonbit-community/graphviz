@@ -153,9 +153,9 @@ fn apply_clustered_xpos_reorder(
     input.order_sizes,
     input.nodesep_pt,
     input.has_edge_labels,
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
     input.order_cluster_skeleton,
     input.flat_constraints,
     graphviz_flip=input.graphviz_flip,
@@ -225,23 +225,23 @@ fn append_skeleton_nodes(
 fn build_clustered_xpos_seed(
   input : ClusteredXposSeedInput,
 ) -> ClusteredXposSeedOutput {
-  let order_groups : Map[Int, Array[String]] = Map::new()
+  let order_groups : Map[Int, Array[String]] = Map([])
   for rank, names in input.x_groups {
     order_groups[rank] = names.copy()
   }
-  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   for name, size in input.x_order_sizes {
     order_sizes[name] = size
   }
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   for name, key in input.x_cluster_keys {
     order_cluster_keys[name] = key
   }
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   append_skeleton_nodes(
     input, order_groups, order_sizes, order_cluster_keys, order_cluster_skeleton,
   )
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   for name, value in input.node_order {
     order_node_order[name] = value
   }
@@ -569,7 +569,7 @@ fn build_clustered_xpos_edges(
     name="xpos_order",
     strict=false,
   )
-  let order_node_map : Map[String, @cgraph.Node] = Map::new()
+  let order_node_map : Map[String, @cgraph.Node] = Map([])
   for name in input.order_nodes {
     order_node_map[name] = order_graph.node(name)
   }

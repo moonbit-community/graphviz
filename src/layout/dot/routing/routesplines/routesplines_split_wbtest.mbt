@@ -16,7 +16,7 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
   let edge = graph.edge(tail, head)
 
   let vnodes = ["v1", "v2", "v3", "v4", "v5", "v6"]
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = vnodes
 
   let ranks : Map[String, Int] = { "tail": 0, "head": 7 }
@@ -120,9 +120,9 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
       route_sizes,
       mval_route_sizes,
       vnode_sizes,
-      Map::new(),
-      Map::new(),
-      Map::new(),
+      Map([]),
+      Map([]),
+      Map([]),
       x_groups,
       order_index,
       adjacency.out_edges,

@@ -119,11 +119,11 @@ fn build_x_flat_label_augmentation(
 ) -> XFlatLabelAugmentationOutput {
   let mut next_x_groups = input.x_groups
   let mut flat_label_edges : Array[ConstraintEdge] = []
-  let mut flat_label_ranks : Map[String, Int] = Map::new()
-  let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
+  let mut flat_label_ranks : Map[String, Int] = Map([])
+  let mut flat_label_edge_vnodes : Map[String, String] = Map([])
   let next_x_cluster_keys = input.x_cluster_keys
   if input.use_vnodes_for_xpos {
-    let existing_names : Map[String, Bool] = Map::new()
+    let existing_names : Map[String, Bool] = Map([])
     for node in input.nodes {
       existing_names[node.name()] = true
     }

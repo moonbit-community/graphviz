@@ -65,7 +65,7 @@ pub fn maybe_flip_dims(
 pub fn build_edges_by_tail(
   edges : Array[DotLayoutEdge],
 ) -> Map[String, Array[DotLayoutEdge]] {
-  let edges_by_tail : Map[String, Array[DotLayoutEdge]] = Map::new()
+  let edges_by_tail : Map[String, Array[DotLayoutEdge]] = Map([])
   for edge_layout in edges {
     let tail_name = edge_layout.edge.tail().name()
     let list = match edges_by_tail.get(tail_name) {

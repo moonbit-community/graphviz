@@ -112,14 +112,14 @@ fn run_mincross_case_with_name_order(
     name=input.graph,
     strict=false,
   )
-  let id_to_name : Map[Int, String] = Map::new()
-  let name_to_id : Map[String, Int] = Map::new()
-  let name_to_rank : Map[String, Int] = Map::new()
-  let name_to_node : Map[String, @cgraph.Node] = Map::new()
-  let name_to_order : Map[String, Int] = Map::new()
-  let local_name_to_key : Map[String, String] = Map::new()
-  let ambiguous_local_names : Map[String, Bool] = Map::new()
-  let sizes : Map[String, NodeSize] = Map::new()
+  let id_to_name : Map[Int, String] = Map([])
+  let name_to_id : Map[String, Int] = Map([])
+  let name_to_rank : Map[String, Int] = Map([])
+  let name_to_node : Map[String, @cgraph.Node] = Map([])
+  let name_to_order : Map[String, Int] = Map([])
+  let local_name_to_key : Map[String, String] = Map([])
+  let ambiguous_local_names : Map[String, Bool] = Map([])
+  let sizes : Map[String, NodeSize] = Map([])
   let nodes : Array[@cgraph.Node] = []
   let default_size = @node_primitives.node_size_from_points(
     @node_primitives.default_node_width_in() * 72.0,
@@ -158,8 +158,8 @@ fn run_mincross_case_with_name_order(
   let edge_head_port_x : Array[Double] = []
   let edge_tail_port_order : Array[Double] = []
   let edge_head_port_order : Array[Double] = []
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   let append_named_neighbor = (neighbors : Array[String], raw_name : String) => {
     if raw_name.length() == 0 {
       return ()
@@ -260,7 +260,7 @@ fn run_mincross_case_with_name_order(
       "case \{input.case_id} graph=\{input.graph} rank list length mismatch expected=\{rank_keys.length()} actual=\{input.ranks.length()}",
     )
   }
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   let mut rank = input.minrank
   for rank_nodes in input.ranks {
     let names : Array[String] = []
@@ -290,8 +290,8 @@ fn run_mincross_case_with_name_order(
   let children = edge_index_data.children
   let edge_order = @order_graph.collect_edge_order(edges)
   let nodesep_pt = @input_stage.DEFAULT_NODESEP_IN * 72.0
-  let cluster_keys : Map[String, String] = Map::new()
-  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
+  let cluster_skeleton : Map[String, Bool] = Map([])
   for node in input.nodes {
     let name = node_key(node.id)
     match node.cluster {
@@ -302,7 +302,7 @@ fn run_mincross_case_with_name_order(
       cluster_skeleton[name] = true
     }
   }
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   for edge in input.flat_edges {
     let tail_name = match id_to_name.get(edge.tail) {
       Some(value) => value
@@ -327,16 +327,16 @@ fn run_mincross_case_with_name_order(
     parents,
     children,
     cluster_keys,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     edge_order,
     name_to_order,
     sizes,
     nodesep_pt,
     false,
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
     cluster_skeleton,
     flat_constraints,
     graphviz_out_neighbors~,
@@ -374,12 +374,12 @@ fn run_fixed_rank_reorder_case(
     name=input.graph,
     strict=false,
   )
-  let id_to_name : Map[Int, String] = Map::new()
-  let name_to_id : Map[String, Int] = Map::new()
-  let name_to_rank : Map[String, Int] = Map::new()
-  let name_to_node : Map[String, @cgraph.Node] = Map::new()
-  let name_to_order : Map[String, Int] = Map::new()
-  let sizes : Map[String, NodeSize] = Map::new()
+  let id_to_name : Map[Int, String] = Map([])
+  let name_to_id : Map[String, Int] = Map([])
+  let name_to_rank : Map[String, Int] = Map([])
+  let name_to_node : Map[String, @cgraph.Node] = Map([])
+  let name_to_order : Map[String, Int] = Map([])
+  let sizes : Map[String, NodeSize] = Map([])
   let nodes : Array[@cgraph.Node] = []
   let default_size = @node_primitives.node_size_from_points(
     @node_primitives.default_node_width_in() * 72.0,
@@ -398,8 +398,8 @@ fn run_fixed_rank_reorder_case(
     sizes[name] = default_size
   }
 
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   for node in input.nodes {
     let name = node_key(node.id)
     let out_names : Array[String] = []
@@ -461,7 +461,7 @@ fn run_fixed_rank_reorder_case(
   for rank in input.minrank..<=input.maxrank {
     rank_keys.push(rank)
   }
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   let mut rank = input.minrank
   for rank_nodes in input.ranks {
     let names : Array[String] = []
@@ -492,19 +492,19 @@ fn run_fixed_rank_reorder_case(
     edge_head_port_order,
     edge_index_data.parents,
     edge_index_data.children,
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
     edge_order,
     name_to_order,
     sizes,
     nodesep_pt,
     false,
-    Map::new(),
-    Map::new(),
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
+    Map([]),
+    Map([]),
     graphviz_out_neighbors~,
     graphviz_in_neighbors~,
     graphviz_flip=input.flip,
@@ -550,10 +550,10 @@ fn build_exact_layered_rank_reorder_case(
   out_neighbor_overrides : Map[Int, Array[Int]],
   in_neighbor_overrides : Map[Int, Array[Int]],
 ) -> (MincrossInput, MincrossOutput) {
-  let out_neighbors : Map[Int, Array[Int]] = Map::new()
-  let in_neighbors : Map[Int, Array[Int]] = Map::new()
-  let node_rank_by_id : Map[Int, Int] = Map::new()
-  let node_order_by_id : Map[Int, Int] = Map::new()
+  let out_neighbors : Map[Int, Array[Int]] = Map([])
+  let in_neighbors : Map[Int, Array[Int]] = Map([])
+  let node_rank_by_id : Map[Int, Int] = Map([])
+  let node_order_by_id : Map[Int, Int] = Map([])
   for rank_offset, rank_nodes in input_ranks {
     let rank = minrank + rank_offset
     for order, id in rank_nodes {

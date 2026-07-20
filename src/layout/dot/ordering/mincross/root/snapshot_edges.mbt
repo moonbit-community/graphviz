@@ -96,7 +96,7 @@ pub fn coalesce_ordering_edge_snapshot_entries(
   let entries_by_tail : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   let tail_order : Array[String] = []
   for entry in entries {
     let tail = entry.tail
@@ -188,7 +188,7 @@ pub(all) struct RootMincrossSnapshotBuildInput {
 
 ///|
 fn clone_string_map(source : Map[String, String]) -> Map[String, String] {
-  let out : Map[String, String] = Map::new()
+  let out : Map[String, String] = Map([])
   for key, value in source {
     out[key] = value
   }
@@ -197,7 +197,7 @@ fn clone_string_map(source : Map[String, String]) -> Map[String, String] {
 
 ///|
 fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
-  let out : Map[String, Bool] = Map::new()
+  let out : Map[String, Bool] = Map([])
   for key, value in source {
     out[key] = value
   }

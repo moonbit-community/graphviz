@@ -12,17 +12,17 @@ test "build_remincross_cluster_keys rewrites empty root keys and assigns vnode L
   let edge_ab = graph.edge(a, b)
   let edge_cd = graph.edge(c, d)
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = ["v_ab"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cd)] = ["v_cd"]
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["a"] = "cluster_left"
   intercluster_keys["b"] = ""
   intercluster_keys["c"] = "cluster_inner"
   intercluster_keys["d"] = "cluster_sibling"
 
-  let cluster_parents : Map[String, String?] = Map::new()
+  let cluster_parents : Map[String, String?] = Map([])
   cluster_parents["cluster_left"] = None
   cluster_parents["cluster_outer"] = None
   cluster_parents["cluster_inner"] = Some("cluster_outer")
@@ -49,21 +49,21 @@ test "build_remincross_cluster_keys rewrites empty root keys and assigns vnode L
 test "build_cluster_tail_order sorts non-root clusters by order index and keeps root override last" {
   let rem_order_creation = ["root_a", "c1_low", "c2_only", "c1_high", "root_b"]
 
-  let rem_ranks : Map[String, Int] = Map::new()
+  let rem_ranks : Map[String, Int] = Map([])
   rem_ranks["root_a"] = 0
   rem_ranks["root_b"] = 0
   rem_ranks["c1_low"] = 0
   rem_ranks["c1_high"] = 1
   rem_ranks["c2_only"] = 0
 
-  let rem_cluster_keys : Map[String, String] = Map::new()
+  let rem_cluster_keys : Map[String, String] = Map([])
   rem_cluster_keys["root_a"] = ""
   rem_cluster_keys["root_b"] = ""
   rem_cluster_keys["c1_low"] = "cluster1"
   rem_cluster_keys["c1_high"] = "cluster1"
   rem_cluster_keys["c2_only"] = "cluster2"
 
-  let cluster_order_index : Map[String, Int] = Map::new()
+  let cluster_order_index : Map[String, Int] = Map([])
   cluster_order_index["cluster1"] = 0
   cluster_order_index["cluster2"] = 1
 
@@ -81,7 +81,7 @@ test "build_cluster_tail_order sorts non-root clusters by order index and keeps 
 
 ///|
 test "build_remincross_nlist_order reverses deduped creation replay for single-cluster materialization" {
-  let rem_vnode_creation : Map[String, Array[String]] = Map::new()
+  let rem_vnode_creation : Map[String, Array[String]] = Map([])
   rem_vnode_creation["tail_a"] = ["v_shared", "v_shared"]
   rem_vnode_creation["tail_b"] = ["v_shared", "v_tail_b"]
 
@@ -89,9 +89,9 @@ test "build_remincross_nlist_order reverses deduped creation replay for single-c
     ["tail_a", "tail_b"],
     rem_vnode_creation,
     [],
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
     None,
   )
 
@@ -121,17 +121,17 @@ test "build_remincross_flat_constraints merges rank-same locks only for non-clus
 ///|
 test "cluster_key_for_tail_name prefers explicit keys and only falls back for rank-qualified skeleton names" {
   let skeleton = @cluster_identity.cluster_skeleton_name("parsed_cluster", 2)
-  let explicit_keys : Map[String, String] = Map::new()
+  let explicit_keys : Map[String, String] = Map([])
   explicit_keys[skeleton] = "explicit_cluster"
 
   assert_eq(
     cluster_key_for_tail_name(explicit_keys, skeleton),
     "explicit_cluster",
   )
-  assert_eq(cluster_key_for_tail_name(Map::new(), skeleton), "parsed_cluster")
+  assert_eq(cluster_key_for_tail_name(Map([]), skeleton), "parsed_cluster")
   assert_eq(
     cluster_key_for_tail_name(
-      Map::new(),
+      Map([]),
       "\{@cluster_identity.CLUSTER_SKELETON_PREFIX}parsed_cluster",
     ),
     "",

@@ -7,7 +7,7 @@ fn new_test_graph(
   names : Array[String],
 ) -> (@cgraph.Graph, Map[String, @cgraph.Node]) {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let node_map : Map[String, @cgraph.Node] = Map::new()
+  let node_map : Map[String, @cgraph.Node] = Map([])
   for name in names {
     node_map[name] = graph.node(name)
   }
@@ -33,7 +33,7 @@ test "edge_endpoints_at prefers override arrays and falls back to edge names" {
 
 ///|
 test "build_edge_index_for_names ignores same-rank edges" {
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   ranks["c"] = 1
@@ -104,14 +104,14 @@ test "build_order_edges_by_tail expands vnode chains into segment edges" {
   }
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1", "v2"]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["a"] = [0]
 
   let output = build_order_edges_by_tail(
@@ -126,7 +126,7 @@ test "build_order_edges_by_tail expands vnode chains into segment edges" {
     ranks,
     edge_vnodes,
     true,
-    Map::new(),
+    Map([]),
     false,
     false,
     false,
@@ -163,15 +163,15 @@ test "build_order_edges_by_tail maps intercluster edges to cluster skeletons" {
   let edge = graph.edge(a, b)
   edge.set_attr("xpenalty", "5")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "left"
   cluster_keys["b"] = "right"
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["a"] = [0]
 
   let output = build_order_edges_by_tail(
@@ -184,7 +184,7 @@ test "build_order_edges_by_tail maps intercluster edges to cluster skeletons" {
     [],
     [],
     ranks,
-    Map::new(),
+    Map([]),
     false,
     cluster_keys,
     true,
@@ -215,14 +215,14 @@ test "build_edge_index_with_vnodes chains through vnodes in rank order" {
   }
   let edge = graph.edge(high, low)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["high"] = 3
   ranks["low"] = 0
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1", "v2"]
 
-  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
   vnode_ranks["v1"] = 1
   vnode_ranks["v2"] = 2
 

@@ -13,7 +13,7 @@ test "collect_top_clusters keeps only top-level clusters and excludes the cluste
   ignore(inner.node("c"))
 
   let root_collected = collect_top_clusters(root)
-  let root_top : Map[String, Bool] = Map::new()
+  let root_top : Map[String, Bool] = Map([])
   for name in root_collected.top_clusters {
     root_top[name] = true
   }

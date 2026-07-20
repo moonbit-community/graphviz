@@ -212,7 +212,7 @@ pub fn collect_edge_cluster_keys(
   if cluster_key == "" {
     return ()
   }
-  let child_edges : Map[String, Bool] = Map::new()
+  let child_edges : Map[String, Bool] = Map([])
   for child in graph.subgraphs() {
     for edge in child.edges() {
       child_edges[@edge_identity.edge_key(edge)] = true
@@ -247,9 +247,9 @@ fn collect_cluster_member_nodes(
 pub fn collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
-  let members : Map[String, Map[String, Bool]] = Map::new()
+  let members : Map[String, Map[String, Bool]] = Map([])
   for name, cluster_graph in cluster_graphs {
-    let set : Map[String, Bool] = Map::new()
+    let set : Map[String, Bool] = Map([])
     collect_cluster_member_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
@@ -273,8 +273,8 @@ pub fn cluster_lca(
   if left == right {
     return left
   }
-  let seen : Map[String, Bool] = Map::new()
-  let walk_seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
+  let walk_seen : Map[String, Bool] = Map([])
   let mut current = left
   while current != "" {
     if walk_seen.get(current) is Some(_) {
@@ -292,7 +292,7 @@ pub fn cluster_lca(
     }
   }
   let mut probe = right
-  let probe_seen : Map[String, Bool] = Map::new()
+  let probe_seen : Map[String, Bool] = Map([])
   while probe != "" {
     if probe_seen.get(probe) is Some(_) {
       break

@@ -9,8 +9,8 @@
 /// package-local owner files.
 fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
   let nodes = graph.nodes()
-  let degree : Map[String, Int] = Map::new()
-  let neighbors : Map[String, Array[String]] = Map::new()
+  let degree : Map[String, Int] = Map([])
+  let neighbors : Map[String, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
     degree[name] = 0
@@ -50,7 +50,7 @@ fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
     head_neighbors.push(tail)
     neighbors[head] = head_neighbors
   }
-  let removed : Map[String, Bool] = Map::new()
+  let removed : Map[String, Bool] = Map([])
   let queue : Array[String] = []
   for node in nodes {
     let name = node.name()
@@ -88,7 +88,7 @@ fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
       }
     }
   }
-  let keep : Map[String, Bool] = Map::new()
+  let keep : Map[String, Bool] = Map([])
   for node in nodes {
     let name = node.name()
     if removed.get(name) is None {

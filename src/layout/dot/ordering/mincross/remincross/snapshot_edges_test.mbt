@@ -42,7 +42,7 @@ fn assert_snapshot_entries_eq(
 fn make_snapshot_penalty_lookup(
   entries : Array[(@cgraph.Edge, Int)],
 ) -> Map[Int, Int] {
-  let penalties : Map[Int, Int] = Map::new()
+  let penalties : Map[Int, Int] = Map([])
   for pair in entries {
     let (edge, penalty) = pair
     penalties[edge.id()] = penalty
@@ -60,9 +60,9 @@ test "build_remincross_input_snapshot preserves duplicate edges without coalesci
   let penalties = make_snapshot_penalty_lookup([(ab1, 2), (ab2, 3)])
 
   let rank_keys : Array[Int] = [1]
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[1] = ["a", "b"]
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_a"
 
   let snapshot = build_remincross_input_snapshot({

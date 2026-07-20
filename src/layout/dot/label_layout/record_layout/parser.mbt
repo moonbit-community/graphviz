@@ -20,7 +20,7 @@ pub(all) enum RecordNode {
 
 ///|
 let record_nodes_cache : Ref[Map[String, Array[RecordNode]]] = @ref.new(
-  Map::new(),
+  Map([]),
 )
 
 ///|

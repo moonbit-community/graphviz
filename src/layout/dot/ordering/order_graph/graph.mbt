@@ -12,7 +12,7 @@ type NodeSize = @node_primitives.NodeSize
 pub fn build_cluster_order_index(
   cluster_order : Array[String],
 ) -> Map[String, Int] {
-  let cluster_index : Map[String, Int] = Map::new()
+  let cluster_index : Map[String, Int] = Map([])
   for idx, name in cluster_order {
     cluster_index[name] = idx
   }
@@ -21,7 +21,7 @@ pub fn build_cluster_order_index(
 
 ///|
 pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
-  let order : Map[String, Int] = Map::new()
+  let order : Map[String, Int] = Map([])
   let mut idx = 0
   for edge in edges {
     let tail = edge.tail().name()
@@ -119,7 +119,7 @@ fn coalesce_order_edges_for_tail(
   let coalesced : Array[
     (String, String, Int, Bool, Double, Double, Double, Double),
   ] = []
-  let key_index : Map[String, Int] = Map::new()
+  let key_index : Map[String, Int] = Map([])
   for entry in entries {
     let (
       tail,
@@ -195,7 +195,7 @@ pub fn coalesce_order_edges_by_tail(
   let coalesced : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   for tail_name, entries in order_edges_by_tail {
     coalesced[tail_name] = coalesce_order_edges_for_tail(entries)
   }
@@ -266,7 +266,7 @@ pub fn build_sizes_for_order_graph(
   order_with_vnodes : Bool,
   vnode_sizes : Map[String, NodeSize],
 ) -> Map[String, NodeSize] {
-  let order_sizes_out : Map[String, NodeSize] = Map::new()
+  let order_sizes_out : Map[String, NodeSize] = Map([])
   for name, size in order_sizes {
     order_sizes_out[name] = size
   }
@@ -321,7 +321,7 @@ pub fn build_order_graph_and_nodes(
     name=graph_name,
     strict=false,
   )
-  let order_node_map : Map[String, @cgraph.Node] = Map::new()
+  let order_node_map : Map[String, @cgraph.Node] = Map([])
   for name in order_nodes {
     order_node_map[name] = order_graph.node(name)
   }

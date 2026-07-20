@@ -11,7 +11,7 @@
 /// lookups over the filtered node list.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
-  let membership : Map[String, Bool] = Map::new()
+  let membership : Map[String, Bool] = Map([])
   for name in names {
     membership[name] = true
   }
@@ -153,7 +153,7 @@ pub fn merge_root_mincross_groups(
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map::new()
+  let merged : Map[Int, Array[String]] = Map([])
   for rank in order_rank_keys {
     let names = seeded_groups.get(rank).unwrap_or_default()
     let replacements = ordered_mincross.get(rank).unwrap_or_default()
@@ -192,7 +192,7 @@ fn filter_root_mincross_seeded_groups_for_clusters(
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let filtered : Map[Int, Array[String]] = Map::new()
+  let filtered : Map[Int, Array[String]] = Map([])
   for rank, names in seeded_groups {
     let list : Array[String] = []
     for name in names {
@@ -273,9 +273,9 @@ fn build_root_vnode_preferred_positions(
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> Map[String, Double] {
   if !order_with_vnodes {
-    return Map::new()
+    return Map([])
   }
-  let filtered : Map[String, Double] = Map::new()
+  let filtered : Map[String, Double] = Map([])
   for name, value in vnode_order_keys_for_ordering {
     if @edge_identity.is_edge_vnode_name(name) {
       filtered[name] = value
@@ -979,7 +979,7 @@ fn run_root_and_cluster_ranks(
     inputs.graphviz_flip,
   )
   let ordered_with_vnodes = if !inputs.order_with_vnodes {
-    Map::new()
+    Map([])
   } else {
     ordered
   }
@@ -1038,7 +1038,7 @@ fn merge_rank_with_attached_skeleton_replacements(
   order_cluster_skeleton : Map[String, Bool],
 ) -> Array[String] {
   let next_names : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for replacement in replacements {
     next_names.push(replacement)
     seen[replacement] = true
@@ -1064,7 +1064,7 @@ fn build_skeleton_for_clusters(
   names : Array[String],
   cluster_for_name : (String) -> String,
 ) -> Map[String, String] {
-  let skeleton_for_cluster : Map[String, String] = Map::new()
+  let skeleton_for_cluster : Map[String, String] = Map([])
   for name in names {
     let cluster = cluster_for_name(name)
     if cluster != "" {
@@ -1083,7 +1083,7 @@ fn build_attached_by_skeleton(
   skeleton_for_cluster : Map[String, String],
   should_skip : (String) -> Bool,
 ) -> Map[String, Array[String]] {
-  let attached_by_skeleton : Map[String, Array[String]] = Map::new()
+  let attached_by_skeleton : Map[String, Array[String]] = Map([])
   for name in names {
     if should_skip(name) {
       continue
@@ -1156,12 +1156,12 @@ pub fn reorder_names_by_override(
   names : Array[String],
   override_names : Array[String],
 ) -> Array[String] {
-  let present : Map[String, Bool] = Map::new()
+  let present : Map[String, Bool] = Map([])
   for name in names {
     present[name] = true
   }
   let reordered : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for name in override_names {
     if present.get(name) is Some(_) && seen.get(name) is None {
       reordered.push(name)
@@ -1201,7 +1201,7 @@ fn rebuild_root_override_names(
     rank_names, cluster_keys, skeleton_for_cluster, is_root_override_skeleton_name,
   )
   let next_names : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for name in rank_names {
     if seen.get(name) is Some(_) {
       continue
@@ -1329,8 +1329,8 @@ fn build_flat_constraint_adjacency(
   node_set : Map[String, Bool],
   flat_constraints : Map[String, Bool],
 ) -> FlatConstraintAdjacency {
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map([])
+  let flat_in : Map[String, Array[String]] = Map([])
   for name in order_nodes {
     flat_out[name] = []
     flat_in[name] = []
@@ -1370,7 +1370,7 @@ fn build_component_traversal_starts(
   order_nodes : Array[String],
   order_node_order : Map[String, Int],
 ) -> ComponentTraversalStarts {
-  let fallback_order : Map[String, Int] = Map::new()
+  let fallback_order : Map[String, Int] = Map([])
   let start_entries : Array[(String, Int)] = []
   for i, name in order_nodes {
     fallback_order[name] = i
@@ -1453,7 +1453,7 @@ fn collect_components_from_traversal(
   traversal_starts : ComponentTraversalStarts,
   adjacency : ComponentTraversalAdjacency,
 ) -> Array[Array[String]] {
-  let visited : Map[String, Bool] = Map::new()
+  let visited : Map[String, Bool] = Map([])
   for name in order_nodes {
     visited[name] = false
   }
@@ -1545,7 +1545,7 @@ fn filter_component_neighbor_map(
   component_set : Map[String, Bool],
   neighbors : Map[String, Array[String]],
 ) -> Map[String, Array[String]] {
-  let filtered : Map[String, Array[String]] = Map::new()
+  let filtered : Map[String, Array[String]] = Map([])
   for name in component_nodes {
     let values = match neighbors.get(name) {
       Some(list) => list
@@ -1567,7 +1567,7 @@ fn filter_component_positions(
   component_set : Map[String, Bool],
   positions : Map[String, Double],
 ) -> Map[String, Double] {
-  let filtered : Map[String, Double] = Map::new()
+  let filtered : Map[String, Double] = Map([])
   for name, value in positions {
     if component_set.get(name) is Some(_) {
       filtered[name] = value
@@ -1581,7 +1581,7 @@ fn filter_component_port_order_contrib(
   component_set : Map[String, Bool],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Array[(String, Double)]] {
-  let component_port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
+  let component_port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
   for name, entries in port_order_contrib {
     if component_set.get(name) is None {
       continue
@@ -1603,7 +1603,7 @@ fn filter_component_flat_constraints(
   component_set : Map[String, Bool],
   order_flat_constraints : Map[String, Bool],
 ) -> Map[String, Bool] {
-  let component_flat_constraints : Map[String, Bool] = Map::new()
+  let component_flat_constraints : Map[String, Bool] = Map([])
   for key, enabled in order_flat_constraints {
     if !enabled {
       continue
@@ -1879,7 +1879,7 @@ fn filter_component_rank_groups(
   order_groups_for_mincross : Map[Int, Array[String]],
   component_set : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let component_groups : Map[Int, Array[String]] = Map::new()
+  let component_groups : Map[Int, Array[String]] = Map([])
   for rank in order_rank_keys_for_mincross {
     let names = order_groups_for_mincross.get(rank).unwrap_or_default()
     let keep : Array[String] = []
@@ -1925,7 +1925,7 @@ fn run_componentwise_root_rank_reorder(
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map::new()
+  let merged : Map[Int, Array[String]] = Map([])
   for rank in order_rank_keys_for_mincross {
     merged[rank] = []
   }

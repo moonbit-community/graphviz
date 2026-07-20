@@ -29,13 +29,13 @@ priv struct RecordLayoutNode {
 
 ///|
 let record_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
-  Map::new(),
+  Map([]),
 )
 
 ///|
 pub fn reset_record_layout_caches() -> Unit {
-  record_nodes_cache.val = Map::new()
-  record_ports_cache.val = Map::new()
+  record_nodes_cache.val = Map([])
+  record_ports_cache.val = Map([])
 }
 
 ///|
@@ -452,7 +452,7 @@ pub fn record_ports(
     @port_geometry.PORT_SIDE_LEFT |
     @port_geometry.PORT_SIDE_RIGHT,
   )
-  let ports : Map[String, RecordPort] = Map::new()
+  let ports : Map[String, RecordPort] = Map([])
   collect_record_ports(layout_nodes, ports)
   if is_origin {
     record_ports_cache.val[node.name()] = ports

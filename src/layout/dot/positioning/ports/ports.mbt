@@ -141,7 +141,7 @@ fn build_port_maps_for_nodes(
   record_orientation : RecordOrientation,
 ) -> Map[String, Map[String, RecordPort]] {
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
-  let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
+  let port_maps : Map[String, Map[String, RecordPort]] = Map([])
   for node in nodes {
     let name = node.name()
     let size = @node_geometry.resolve_node_output_size(

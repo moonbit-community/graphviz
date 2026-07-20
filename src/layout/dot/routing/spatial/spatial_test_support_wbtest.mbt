@@ -59,13 +59,13 @@ fn sample_layout_prep(
     has_dotted_edges: false,
     has_port_edges,
     has_edge_labels: false,
-    node_order: Map::new(),
+    node_order: Map([]),
     record_orientation: @layout_prep.record_layout_orientation(rankdir),
     output_sizes,
     order_sizes: output_sizes,
     sizes,
-    port_order_positions: Map::new(),
-    port_order_contrib: Map::new(),
+    port_order_positions: Map([]),
+    port_order_contrib: Map([]),
   }
 }
 
@@ -79,9 +79,9 @@ fn sample_position_result(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
 ) -> PositionResult {
-  let empty_x_groups : Map[Int, Array[String]] = Map::new()
-  let empty_flat_label_edge_vnodes : Map[String, String] = Map::new()
-  let empty_cluster_bbox_heights = Map::new()
+  let empty_x_groups : Map[Int, Array[String]] = Map([])
+  let empty_flat_label_edge_vnodes : Map[String, String] = Map([])
+  let empty_cluster_bbox_heights = Map([])
   {
     x_groups: empty_x_groups,
     rank_y,

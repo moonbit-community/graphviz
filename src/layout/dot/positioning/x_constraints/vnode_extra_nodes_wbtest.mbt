@@ -4,7 +4,7 @@
 
 ///|
 test "build_vnode_extra_nodes preserves explicit vnode order before fallback entries" {
-  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
   vnode_ranks["v1"] = 1
   vnode_ranks["v2"] = 2
   vnode_ranks["v3"] = 3

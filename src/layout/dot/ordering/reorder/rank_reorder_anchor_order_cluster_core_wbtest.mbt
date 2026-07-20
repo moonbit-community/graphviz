@@ -917,7 +917,7 @@ fn plugin_cluster_core_anchor_order_case() -> (
     ],
   }
 
-  let name_order : Map[String, Int] = Map::new()
+  let name_order : Map[String, Int] = Map([])
   name_order["r-lasi"] = 1
   name_order["i-svg"] = 3
   name_order["i-png"] = 4

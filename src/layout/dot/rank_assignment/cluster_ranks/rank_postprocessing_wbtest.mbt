@@ -23,7 +23,7 @@ test "apply_clustered_rank_postprocessing collapses rank sets and enforces extre
   sink.set_attr("rank", "sink")
   ignore(sink.node("d"))
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 4
   ranks["b"] = 7
   ranks["c"] = 3

@@ -10,7 +10,7 @@ test "segment_slack_minlen splits positive and negative port deltas" {
   let head_port = Some(
     make_constraint_builder_test_port("head", @cgraph.Compass::W),
   )
-  let offset_by_key : Map[String, Double] = Map::new()
+  let offset_by_key : Map[String, Double] = Map([])
   offset_by_key["a|tail:e"] = 3.0
   offset_by_key["b|head:w"] = 9.0
   offset_by_key["c|tail:e"] = 11.0

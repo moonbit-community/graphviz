@@ -38,7 +38,7 @@ priv struct XposVNodeOrderState {
 /// keys from edge-vnode chains and mark presence by non-empty key map.
 /// Do not change behavior without updating fixtures/tests.
 fn build_vnode_order_state(input : XposVNodeOrderInput) -> XposVNodeOrderState {
-  let mut vnode_order_keys : Map[String, Double] = Map::new()
+  let mut vnode_order_keys : Map[String, Double] = Map([])
   let mut has_vnode_order = false
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
     vnode_order_keys = @vnode_order.build_vnode_order_keys(
@@ -99,7 +99,7 @@ fn build_initial_x_groups(
     input.ordered_groups
   }
   if input.has_clusters {
-    let cleaned : Map[Int, Array[String]] = Map::new()
+    let cleaned : Map[Int, Array[String]] = Map([])
     for rank, names in x_groups {
       let filtered : Array[String] = []
       for name in names {
@@ -125,7 +125,7 @@ fn build_x_cluster_keys(
   use_vnodes_for_xpos : Bool,
   vnode_clusters : Map[String, String],
 ) -> Map[String, String] {
-  let x_cluster_keys : Map[String, String] = Map::new()
+  let x_cluster_keys : Map[String, String] = Map([])
   for name, key in cluster_keys {
     x_cluster_keys[name] = key
   }

@@ -17,7 +17,7 @@ test "build_constraint_segment_pass updates same-rank invis ordering constraints
   cross.set_attr("minlen", "5")
   cross.set_attr("weight", "11")
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["b"] = [0]
   edge_out_order["a"] = [1]
 
@@ -47,7 +47,7 @@ test "build_constraint_segment_pass updates same-rank invis ordering constraints
     nlist_order: ["b", "a", "c"],
     ranks,
     cluster_keys,
-    edge_vnodes: Map::new(),
+    edge_vnodes: Map([]),
     order_in_rank,
     nodesep_pt: 10.0,
     sizes: build_constraint_builder_test_sizes(),
@@ -81,13 +81,13 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
   edge.set_attr("weight", "3")
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}flat_0"
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [0]
   let ranks : Map[String, Int] = { "a": 0, "b": 0 }
   ranks[vnode] = 0
   let order_in_rank : Map[String, Int] = { "a": 0, "b": 2 }
   order_in_rank[vnode] = 1
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode]
 
   let output = build_constraint_segment_pass({
@@ -97,13 +97,13 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
     edge_out_order,
     nlist_order: ["a", vnode, "b"],
     ranks,
-    cluster_keys: Map::new(),
+    cluster_keys: Map([]),
     edge_vnodes,
     order_in_rank,
     nodesep_pt: 10.0,
     sizes: build_constraint_builder_test_sizes(),
     skip_intercluster: false,
-    rank_adj_constraints: Map::new(),
+    rank_adj_constraints: Map([]),
     edge_has_mid_label: _ => true,
     edge_degree_increment: _ => 1,
   })
@@ -145,12 +145,12 @@ test "build_constraint_segment_pass reverses descending vnode chains and scales 
 
   let vnode0 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_0"
   let vnode1 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_1"
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [0]
   let ranks : Map[String, Int] = { "a": 2, "b": 0 }
   ranks[vnode0] = 1
   ranks[vnode1] = 1
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode0, vnode1]
 
   let output = build_constraint_segment_pass({
@@ -160,13 +160,13 @@ test "build_constraint_segment_pass reverses descending vnode chains and scales 
     edge_out_order,
     nlist_order: ["a", vnode0, vnode1, "b"],
     ranks,
-    cluster_keys: Map::new(),
+    cluster_keys: Map([]),
     edge_vnodes,
-    order_in_rank: Map::new(),
+    order_in_rank: Map([]),
     nodesep_pt: 10.0,
     sizes: build_constraint_builder_test_sizes(),
     skip_intercluster: false,
-    rank_adj_constraints: Map::new(),
+    rank_adj_constraints: Map([]),
     edge_has_mid_label: _ => false,
     edge_degree_increment: _ => 1,
   })

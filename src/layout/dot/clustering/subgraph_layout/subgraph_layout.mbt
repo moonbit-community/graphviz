@@ -70,13 +70,13 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let result : Array[LayoutTree] = []
   for subgraph in graph.subgraphs() {
-    let node_set : Map[String, Bool] = Map::new()
+    let node_set : Map[String, Bool] = Map([])
     for node in subgraph.nodes() {
       if @membership.graph_contains_node(subgraph, node) {
         node_set[node.name()] = true
       }
     }
-    let edge_set : Map[String, Bool] = Map::new()
+    let edge_set : Map[String, Bool] = Map([])
     for edge in subgraph.edges() {
       edge_set[@edge_identity.edge_key(edge)] = true
     }
@@ -115,7 +115,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
     })
     if @cluster_graph.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
-      let cluster_nodes : Map[String, Bool] = Map::new()
+      let cluster_nodes : Map[String, Bool] = Map([])
       @cluster_graph.collect_graph_nodes(subgraph, cluster_nodes)
       if cluster_nodes.length() == 0 {
         continue
@@ -133,7 +133,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       // Graphviz parity: cluster y bounds come from rank positions (dot_compute_bb).
       let mut min_rank : Int? = None
       let mut max_rank : Int? = None
-      let cluster_nodes : Map[String, Bool] = Map::new()
+      let cluster_nodes : Map[String, Bool] = Map([])
       @cluster_graph.collect_graph_nodes(subgraph, cluster_nodes)
       for name, _ in cluster_nodes {
         match ranks.get(name) {
@@ -382,7 +382,7 @@ pub fn compute_cluster_route_bboxes(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
 ) -> Map[String, @geom.Rect] {
-  let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
+  let cluster_bboxes : Map[String, @geom.Rect] = Map([])
   if @cluster_graph.graph_has_cluster(graph) {
     let cluster_layouts = layout_subgraphs({
       graph,

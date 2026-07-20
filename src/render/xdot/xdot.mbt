@@ -1150,7 +1150,7 @@ fn fixedshape_draw_size_in(
 fn capture_fixedshape_draw_sizes(
   nodes : Array[@layout_dot.DotLayoutNode],
 ) -> Map[String, (Double, Double)] {
-  let sizes : Map[String, (Double, Double)] = Map::new()
+  let sizes : Map[String, (Double, Double)] = Map([])
   for node_layout in nodes {
     let node = node_layout.node
     if fixedsize_mode(node) == "shape" {
@@ -5329,7 +5329,7 @@ pub fn attach_xdot_attrs(
   layout : @layout_dot.DotLayoutGraph,
   options? : XDotOptions = XDotOptions::default(),
 ) -> Unit {
-  attach_xdot_attrs_internal(layout, Map::new(), options~)
+  attach_xdot_attrs_internal(layout, Map([]), options~)
 }
 
 ///|

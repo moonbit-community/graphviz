@@ -11,7 +11,7 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
   let positions : Map[String, @geom.Point] = { "a": { x: 5.0, y: 5.0 } }
   let position_state = sample_position_result(
     positions,
-    Map::new(),
+    Map([]),
     { "cluster": 1.5 },
     { "cluster": 2.5 },
     { 0: 5.0 },

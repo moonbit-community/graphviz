@@ -65,7 +65,7 @@ pub fn project_scaled_nodes_with_sizes(
   sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
 ) -> EngineNodeProjectionWithSizes {
-  let positions_map : Map[String, @geom.Point] = Map::new()
+  let positions_map : Map[String, @geom.Point] = Map([])
   for i in 0..<nodes.length() {
     let node = nodes[i]
     positions_map[node.name()] = scale_point(positions[i], scale_factor)
@@ -125,13 +125,13 @@ pub fn finalize_unranked_layout_tree(
   edges_out : Array[DotLayoutEdge],
 ) -> LayoutTree {
   let base_bbox = @bbox.compute_bbox(nodes_out, edges_out)
-  let empty_cluster_ln_x : Map[String, Double] = Map::new()
-  let empty_cluster_rn_x : Map[String, Double] = Map::new()
-  let empty_cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map::new()
-  let empty_ranks : Map[String, Int] = Map::new()
-  let empty_rank_y : Map[Int, Double] = Map::new()
-  let empty_rank_ht1 : Map[Int, Double] = Map::new()
-  let empty_rank_ht2 : Map[Int, Double] = Map::new()
+  let empty_cluster_ln_x : Map[String, Double] = Map([])
+  let empty_cluster_rn_x : Map[String, Double] = Map([])
+  let empty_cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map([])
+  let empty_ranks : Map[String, Int] = Map([])
+  let empty_rank_y : Map[Int, Double] = Map([])
+  let empty_rank_ht1 : Map[Int, Double] = Map([])
+  let empty_rank_ht2 : Map[Int, Double] = Map([])
   let subgraphs = @subgraph_layout.layout_subgraphs({
     graph,
     nodes_out,

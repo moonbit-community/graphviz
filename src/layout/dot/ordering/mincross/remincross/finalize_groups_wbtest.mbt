@@ -4,12 +4,12 @@
 
 ///|
 test "collect_real_only_rank_groups drops non-real nodes and omits empty ranks" {
-  let ordered : Map[Int, Array[String]] = Map::new()
+  let ordered : Map[Int, Array[String]] = Map([])
   ordered[0] = ["a", "ghost"]
   ordered[1] = ["ghost_only"]
   ordered[2] = ["b", "c"]
 
-  let real_nodes : Map[String, Bool] = Map::new()
+  let real_nodes : Map[String, Bool] = Map([])
   real_nodes["a"] = true
   real_nodes["c"] = true
 
@@ -23,11 +23,11 @@ test "collect_real_only_rank_groups drops non-real nodes and omits empty ranks" 
 ///|
 test "reorder_rank_group_by_cluster_order keeps original order when root nodes straddle clustered block" {
   let names = ["root_left", "cluster_b", "cluster_a", "root_right"]
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_a"] = "a"
   cluster_keys["cluster_b"] = "b"
 
-  let order_map : Map[String, Int] = Map::new()
+  let order_map : Map[String, Int] = Map([])
   order_map["a"] = 0
   order_map["b"] = 1
 
@@ -42,18 +42,18 @@ test "reorder_rank_group_by_cluster_order keeps original order when root nodes s
 
 ///|
 test "reorder_groups_by_local_cluster reorders within one outer cluster and keeps other slots fixed" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["root", "b", "a", "tail"]
 
-  let outer_cluster_keys : Map[String, String] = Map::new()
+  let outer_cluster_keys : Map[String, String] = Map([])
   outer_cluster_keys["a"] = "outer"
   outer_cluster_keys["b"] = "outer"
 
-  let local_cluster_keys : Map[String, String] = Map::new()
+  let local_cluster_keys : Map[String, String] = Map([])
   local_cluster_keys["a"] = "local_a"
   local_cluster_keys["b"] = "local_b"
 
-  let local_cluster_order : Map[String, Int] = Map::new()
+  let local_cluster_order : Map[String, Int] = Map([])
   local_cluster_order["local_a"] = 0
   local_cluster_order["local_b"] = 1
 
@@ -66,13 +66,13 @@ test "reorder_groups_by_local_cluster reorders within one outer cluster and keep
 
 ///|
 test "order_rank_names_by_cluster_buckets groups by first-seen cluster and reorders buckets by root order map with stable intra-bucket order" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a1"] = "cluster_a"
   cluster_keys["a2"] = "cluster_a"
   cluster_keys["b1"] = "cluster_b"
   cluster_keys["c1"] = "cluster_c"
 
-  let order_map : Map[String, Int] = Map::new()
+  let order_map : Map[String, Int] = Map([])
   order_map["cluster_b"] = 0
   order_map["cluster_a"] = 1
 
@@ -87,15 +87,15 @@ test "order_rank_names_by_cluster_buckets groups by first-seen cluster and reord
 
 ///|
 test "reorder_groups_by_cluster applies per-rank cluster bucket order independently" {
-  let final_groups : Map[Int, Array[String]] = Map::new()
+  let final_groups : Map[Int, Array[String]] = Map([])
   final_groups[0] = ["a0", "b0", "root0"]
   final_groups[1] = ["c1", "root1", "d1"]
 
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
   cluster_rank_order[0] = { "cluster_b": 0, "cluster_a": 1 }
   cluster_rank_order[1] = { "cluster_d": 0, "cluster_c": 1 }
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a0"] = "cluster_a"
   cluster_keys["b0"] = "cluster_b"
   cluster_keys["c1"] = "cluster_c"
@@ -111,18 +111,18 @@ test "reorder_groups_by_cluster applies per-rank cluster bucket order independen
 
 ///|
 test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-node-per-rank layouts" {
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
-  let only_cluster : Map[String, Int] = Map::new()
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
+  let only_cluster : Map[String, Int] = Map([])
   only_cluster["cluster0"] = 0
   cluster_rank_order[0] = only_cluster
   cluster_rank_order[1] = only_cluster
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster0"
   cluster_keys["b"] = "cluster0"
   cluster_keys["c"] = "cluster1"
 
-  let one_per_rank : Map[Int, Array[String]] = Map::new()
+  let one_per_rank : Map[Int, Array[String]] = Map([])
   one_per_rank[0] = ["a", "root0"]
   one_per_rank[1] = ["root1", "b"]
 
@@ -132,7 +132,7 @@ test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-nod
     ),
   )
 
-  let two_cluster_nodes_same_rank : Map[Int, Array[String]] = Map::new()
+  let two_cluster_nodes_same_rank : Map[Int, Array[String]] = Map([])
   two_cluster_nodes_same_rank[0] = ["a", "b"]
   assert_false(
     should_skip_cluster_rank_bucket_reorder(
@@ -140,8 +140,8 @@ test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-nod
     ),
   )
 
-  let multi_cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
-  let mixed = Map::new()
+  let multi_cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
+  let mixed = Map([])
   mixed["cluster0"] = 0
   mixed["cluster1"] = 1
   multi_cluster_rank_order[0] = mixed
@@ -154,23 +154,23 @@ test "should_skip_cluster_rank_bucket_reorder only allows single-cluster one-nod
 
 ///|
 test "build_clustered_finalize_groups reorders outer cluster buckets then reapplies local cluster order within each outer cluster" {
-  let cleaned_groups : Map[Int, Array[String]] = Map::new()
+  let cleaned_groups : Map[Int, Array[String]] = Map([])
   cleaned_groups[0] = ["a2", "b1", "a1", "root"]
 
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
   cluster_rank_order[0] = { "outer_b": 0, "outer_a": 1 }
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a1"] = "outer_a"
   cluster_keys["a2"] = "outer_a"
   cluster_keys["b1"] = "outer_b"
 
-  let local_cluster_keys : Map[String, String] = Map::new()
+  let local_cluster_keys : Map[String, String] = Map([])
   local_cluster_keys["a1"] = "local_a"
   local_cluster_keys["a2"] = "local_b"
   local_cluster_keys["b1"] = "local_root"
 
-  let local_cluster_order : Map[String, Int] = Map::new()
+  let local_cluster_order : Map[String, Int] = Map([])
   local_cluster_order["local_root"] = 0
   local_cluster_order["local_a"] = 1
   local_cluster_order["local_b"] = 2

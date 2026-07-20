@@ -66,7 +66,7 @@ fn build_y_positions_from_rank_groups(
   groups : Map[Int, Array[String]],
   rank_y : Map[Int, Double],
 ) -> Map[String, Double] {
-  let y_positions : Map[String, Double] = Map::new()
+  let y_positions : Map[String, Double] = Map([])
   for rank in rank_keys {
     let pos_y = rank_y.get(rank).unwrap_or_default()
     let names = groups.get(rank).unwrap_or_default()
@@ -109,8 +109,8 @@ priv struct YPositionsWithFlipOutput {
 fn build_y_positions_with_flip(
   input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
-  let mut y_positions : Map[String, Double] = Map::new()
-  let rank_y : Map[Int, Double] = Map::new()
+  let mut y_positions : Map[String, Double] = Map([])
+  let rank_y : Map[Int, Double] = Map([])
   fill_rank_positions({
     rank_keys: input.rank_keys,
     groups: input.groups,
@@ -195,7 +195,7 @@ fn apply_flat_label_rank_heights(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
 ) -> Array[Int] {
-  let half_heights_by_rank : Map[Int, Double] = Map::new()
+  let half_heights_by_rank : Map[Int, Double] = Map([])
   let overlay_ranks : Array[Int] = []
   for name, rank in flat_label_ranks {
     let size = match vnode_sizes.get(name) {
@@ -232,7 +232,7 @@ pub fn build_y_position_pipeline(
       node_half_height_pt_for: input.node_half_height_pt_for,
     })
   } else {
-    Map::new()
+    Map([])
   }
   let overlay_ranks = apply_flat_label_rank_heights(
     input.flat_label_ranks,

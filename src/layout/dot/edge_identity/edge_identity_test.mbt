@@ -4,7 +4,7 @@
 
 ///|
 test "unique_virtual_node_name allocates base name then collision suffixes" {
-  let existing : Map[String, Bool] = Map::new()
+  let existing : Map[String, Bool] = Map([])
 
   let first = unique_virtual_node_name("tmp_", 3, 5, existing)
   assert_eq(first, "tmp_3_5")

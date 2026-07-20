@@ -4,7 +4,7 @@
 
 ///|
 test "collect_rank_keys returns sorted ranks" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[3] = ["c"]
   groups[1] = ["a"]
   groups[2] = ["b"]
@@ -14,7 +14,7 @@ test "collect_rank_keys returns sorted ranks" {
 
 ///|
 test "build_node_ranks and build_order_index flatten rank groups consistently" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[2] = ["c", "d"]
   groups[0] = ["a"]
   groups[1] = ["b"]
@@ -35,20 +35,20 @@ test "build_node_ranks and build_order_index flatten rank groups consistently" {
 
 ///|
 test "build_x_groups_with_vnodes inserts vnodes by key while preserving base order ties" {
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
   ordered_groups[1] = ["c"]
 
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["a"] = 0
   order_index["b"] = 1
   order_index["c"] = 0
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v2", "v1"]
   vnodes_by_rank[2] = ["v3"]
 
-  let vnode_order_keys : Map[String, Double] = Map::new()
+  let vnode_order_keys : Map[String, Double] = Map([])
   vnode_order_keys["v2"] = 0.5
   vnode_order_keys["v1"] = 1.5
   vnode_order_keys["v3"] = 0.0
@@ -64,17 +64,17 @@ test "build_x_groups_with_vnodes inserts vnodes by key while preserving base ord
 
 ///|
 test "build_x_groups_with_vnodes treats epsilon-close vnode keys as stable ties" {
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
 
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["a"] = 0
   order_index["b"] = 1
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_eps"]
 
-  let vnode_order_keys : Map[String, Double] = Map::new()
+  let vnode_order_keys : Map[String, Double] = Map([])
   vnode_order_keys["v_eps"] = 0.9999995
 
   let groups = build_x_groups_with_vnodes(
@@ -86,17 +86,17 @@ test "build_x_groups_with_vnodes treats epsilon-close vnode keys as stable ties"
 
 ///|
 test "build_x_groups_with_vnodes falls back to source order when keys are missing" {
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_missing"]
 
   let groups = build_x_groups_with_vnodes(
     ordered_groups,
-    Map::new(),
+    Map([]),
     vnodes_by_rank,
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(groups.get(0), Some(["a", "v_missing", "b"]))
@@ -104,7 +104,7 @@ test "build_x_groups_with_vnodes falls back to source order when keys are missin
 
 ///|
 test "clone_rank_groups and order_positions_from_groups keep detached local order maps" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[2] = ["c"]
 

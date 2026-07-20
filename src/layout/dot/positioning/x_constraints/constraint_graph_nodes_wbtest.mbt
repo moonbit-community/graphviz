@@ -9,7 +9,7 @@ test "constraint node setup delays cluster boundaries and seeds base positions" 
   let b = graph.node("b")
   let boundary = @cluster_identity.cluster_left_boundary_name("cluster0")
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0_0"
-  let base_positions : Map[String, Double] = Map::new()
+  let base_positions : Map[String, Double] = Map([])
   base_positions["a"] = 10.0
   base_positions[vnode] = 30.0
   let constraint_graph = @network_simplex.new_graph()
@@ -59,7 +59,7 @@ test "constraint node setup delays cluster boundaries and seeds base positions" 
 ///|
 test "add_constraint_edge_if_present only emits edges with both endpoints" {
   let graph = @network_simplex.new_graph()
-  let index : Map[String, Int] = Map::new()
+  let index : Map[String, Int] = Map([])
   index["a"] = @network_simplex.add_node(graph, "a")
   index["b"] = @network_simplex.add_node(graph, "b")
 

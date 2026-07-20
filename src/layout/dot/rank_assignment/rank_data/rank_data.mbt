@@ -10,7 +10,7 @@ fn build_rank_groups(
   nodes : Array[@cgraph.Node],
   ranks : Map[String, Int],
 ) -> Map[Int, Array[String]] {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
     let rank = ranks.get(name).unwrap_or_default()
@@ -76,7 +76,7 @@ pub fn compute_rank_data(input : RankDataInput) -> RankData {
   let edges = input.edges
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   let acyclic_directions = @solver.acyclic_edge_directions_with_order(
     graph, nodes, edges,
   )

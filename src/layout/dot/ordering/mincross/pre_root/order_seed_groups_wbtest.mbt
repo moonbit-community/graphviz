@@ -4,41 +4,41 @@
 
 ///|
 test "build_order_seed_groups merges vnode groups and appends cluster skeletons in cluster order before unseen clusters" {
-  let ordering_groups_base : Map[Int, Array[String]] = Map::new()
+  let ordering_groups_base : Map[Int, Array[String]] = Map([])
   ordering_groups_base[0] = ["a"]
   ordering_groups_base[1] = ["b"]
 
-  let base_order_index : Map[String, Int] = Map::new()
+  let base_order_index : Map[String, Int] = Map([])
   base_order_index["a"] = 0
   base_order_index["b"] = 0
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_x"
   cluster_keys["b"] = "cluster_y"
 
-  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_min_rank : Map[String, Int] = Map([])
   cluster_min_rank["cluster_y"] = 1
   cluster_min_rank["cluster_x"] = 0
   cluster_min_rank["cluster_z"] = 1
 
-  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map([])
   cluster_max_rank["cluster_x"] = 1
   cluster_max_rank["cluster_z"] = 1
 
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v0"] = "cluster_x"
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v0"]
 
-  let vnode_order_keys_for_ordering : Map[String, Double] = Map::new()
+  let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
   vnode_order_keys_for_ordering["v0"] = 0.5
 
-  let order_sizes : Map[String, NodeSize] = Map::new()
+  let order_sizes : Map[String, NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
 
-  let vnode_sizes : Map[String, NodeSize] = Map::new()
+  let vnode_sizes : Map[String, NodeSize] = Map([])
   vnode_sizes["v0"] = @node_primitives.vnode_size_from_widths_with_h(
     2.0, 3.0, 4.0,
   )
@@ -94,16 +94,16 @@ test "build_order_seed_groups merges vnode groups and appends cluster skeletons 
 
 ///|
 test "build_order_seed_groups keeps only real-node metadata when vnode and cluster ordering are disabled" {
-  let ordering_groups_base : Map[Int, Array[String]] = Map::new()
+  let ordering_groups_base : Map[Int, Array[String]] = Map([])
   ordering_groups_base[0] = ["a", "b"]
 
-  let order_sizes : Map[String, NodeSize] = Map::new()
+  let order_sizes : Map[String, NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
 
   let seeded = build_order_seed_groups({
     ordering_groups_base,
-    base_order_index: Map::new(),
+    base_order_index: Map([]),
     order_with_vnodes: false,
     order_with_clusters: false,
     cluster_keys: { "a": "cluster_a" },

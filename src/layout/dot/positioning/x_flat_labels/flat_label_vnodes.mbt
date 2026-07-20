@@ -56,7 +56,7 @@ fn collect_vnode_out_heads(
   ranks : Map[String, Int],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Array[String]] {
-  let out_heads : Map[String, Array[String]] = Map::new()
+  let out_heads : Map[String, Array[String]] = Map([])
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) = @order_graph.edge_endpoints_at(
@@ -242,8 +242,8 @@ fn add_flat_label_vnodes(
     ranks,
     vnode_info.edge_vnodes,
   )
-  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
-  let flat_label_edges : Map[String, String] = Map::new()
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
+  let flat_label_edges : Map[String, String] = Map([])
   let extra_edges : Array[@x_constraints.ConstraintEdge] = []
   let mut edge_idx = 0
   let insert_at = (names : Array[String], pos : Int, value : String) => {
@@ -462,7 +462,7 @@ fn build_flat_label_vnodes_for_positioning(
     edges, edge_tail, edge_head, ranks, ordered_groups, nodesep_pt, rankdir, x_base_sizes,
     edge_cluster_keys, cluster_parents, existing_names, vnode_info, x_groups,
   )
-  let flat_label_ranks : Map[String, Int] = Map::new()
+  let flat_label_ranks : Map[String, Int] = Map([])
   for name, info in flat_label_vnodes.flat_label_nodes {
     flat_label_ranks[name] = info.rank
   }

@@ -108,11 +108,11 @@ fn build_constraint_node_seed(
       early_extra_nodes.push(extra_node)
     }
   }
-  let real_by_name : Map[String, @cgraph.Node] = Map::new()
+  let real_by_name : Map[String, @cgraph.Node] = Map([])
   for node in nodes {
     real_by_name[node.name()] = node
   }
-  let extra_rank : Map[String, Int] = Map::new()
+  let extra_rank : Map[String, Int] = Map([])
   for extra_node in early_extra_nodes {
     extra_rank[extra_node.name] = extra_node.rank
   }
@@ -127,7 +127,7 @@ fn build_constraint_ordered_names(
   extra_rank : Map[String, Int],
 ) -> Array[String] {
   let ordered_names : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for name in nlist_order {
     if real_by_name.get(name) is Some(_) || extra_rank.get(name) is Some(_) {
       if seen.get(name) is None {
@@ -229,7 +229,7 @@ fn build_constraint_nodes_setup(
     seed.real_by_name,
     seed.extra_rank,
   )
-  let index : Map[String, Int] = Map::new()
+  let index : Map[String, Int] = Map([])
   add_ordered_constraint_nodes(
     input.graph,
     index,
@@ -320,9 +320,9 @@ fn build_rank_constraint_seed(
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> RankConstraintSeed {
-  let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
+  let rank_adj_constraints : Map[String, ConstraintEdge] = Map([])
   let rank_adj_order : Array[String] = []
-  let order_in_rank : Map[String, Int] = Map::new()
+  let order_in_rank : Map[String, Int] = Map([])
   for rank in rank_keys {
     let names = groups.get(rank).unwrap_or_default()
     for i in 0..<names.length() {
@@ -359,7 +359,7 @@ fn for_each_edge_index_in_tail_order(
   nlist_order : Array[String],
   visit : (Int) -> Unit,
 ) -> Unit {
-  let seen_edges : Map[Int, Bool] = Map::new()
+  let seen_edges : Map[Int, Bool] = Map([])
   for tail_name in nlist_order {
     let indices = edge_out_order.get(tail_name).unwrap_or_default()
     for edge_idx in indices {
@@ -552,7 +552,7 @@ fn add_segment_slack_edges(
 /// Graphviz parity: virtual-edge segment constraints are emitted in ND_nlist
 /// tail order before unseen tails, preserving stable simplex insertion.
 fn add_segments_in_tail_order(input : SegmentsInTailOrderInput) -> Unit {
-  let tail_seen : Map[String, Bool] = Map::new()
+  let tail_seen : Map[String, Bool] = Map([])
   for tail_name in input.nlist_order {
     let segments = input.segments_by_tail.get(tail_name).unwrap_or_default()
     add_segment_slack_edges(
@@ -645,7 +645,7 @@ fn build_node_degrees(
   edges : Array[@cgraph.Edge],
   edge_degree_increment : (@cgraph.Edge) -> Int,
 ) -> Map[String, Int] {
-  let node_degrees : Map[String, Int] = Map::new()
+  let node_degrees : Map[String, Int] = Map([])
   for edge in edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
@@ -714,8 +714,8 @@ fn build_constraint_segment_pass(
   })
   let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus
   let merged_edge_skip = reverse_merge_metadata.merged_edge_skip
-  let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
-  let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
+  let segments_by_tail : Map[String, Array[SlackSegment]] = Map([])
+  let flat_minlen_constraints : Map[String, ConstraintEdge] = Map([])
   for_each_edge_index_in_tail_order(
     input.edges,
     input.edge_out_order,
@@ -882,8 +882,8 @@ fn append_missing_rank_boundary_targets(
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
 ) -> Unit {
-  let ln_seen : Map[String, Bool] = Map::new()
-  let rn_seen : Map[String, Bool] = Map::new()
+  let ln_seen : Map[String, Bool] = Map([])
+  let rn_seen : Map[String, Bool] = Map([])
   for name in root_ln_targets {
     ln_seen[name] = true
   }

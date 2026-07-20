@@ -4,7 +4,7 @@
 
 ///|
 test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes once per non-empty rank" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[2] = ["c", "d", "e"]
 
@@ -24,10 +24,10 @@ test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes onc
 ///|
 test "add_root_boundary_constraints builds slack nodes for plain and compress modes" {
   let plain_graph = @network_simplex.new_graph()
-  let plain_index : Map[String, Int] = Map::new()
+  let plain_index : Map[String, Int] = Map([])
   plain_index["a"] = @network_simplex.add_node(plain_graph, "a")
   plain_index["b"] = @network_simplex.add_node(plain_graph, "b")
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.vnode_size_from_widths_with_h(3.0, 4.0, 8.0)
   sizes["b"] = @node_primitives.vnode_size_from_widths_with_h(5.0, 6.0, 8.0)
 
@@ -56,7 +56,7 @@ test "add_root_boundary_constraints builds slack nodes for plain and compress mo
   assert_eq(plain_graph.edges[1].minlen, 7)
 
   let compress_graph = @network_simplex.new_graph()
-  let compress_index : Map[String, Int] = Map::new()
+  let compress_index : Map[String, Int] = Map([])
   compress_index["a"] = @network_simplex.add_node(compress_graph, "a")
   compress_index["b"] = @network_simplex.add_node(compress_graph, "b")
 

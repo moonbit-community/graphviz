@@ -115,7 +115,7 @@ fn shift_graph_positions(
   dx : Double,
   dy : Double,
 ) -> Unit {
-  let members : Map[String, Bool] = Map::new()
+  let members : Map[String, Bool] = Map([])
   @cluster_graph.collect_graph_nodes(graph, members)
   for name, _ in members {
     match positions.get(name) {
@@ -123,7 +123,7 @@ fn shift_graph_positions(
       None => ()
     }
   }
-  let clusters : Map[String, Bool] = Map::new()
+  let clusters : Map[String, Bool] = Map([])
   @cluster_graph.collect_cluster_names(graph, clusters)
   for vnode, key in vnode_clusters {
     if clusters.get(key) is Some(_) {
