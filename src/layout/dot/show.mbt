@@ -4,11 +4,11 @@ fn[T : Debug] write_debug(value : T, logger : &Logger) -> Unit {
 }
 
 ///|
-pub impl Show for DotLayoutOptions with output(self, logger) {
+pub impl Show for DotLayoutOptions with fn output(self, logger) {
   write_debug(self, logger)
 }
 
 ///|
-pub impl Show for DotLayoutError with output(self, logger) {
+pub impl Show for DotLayoutError with fn output(self, logger) {
   write_debug(self, logger)
 }

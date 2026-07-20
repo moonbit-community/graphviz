@@ -77,13 +77,7 @@ test "pathplan_bounds merges vnode positions and expands each rank by route widt
 
 ///|
 test "pathplan_bounds returns zero bounds for empty rank groups" {
-  let bounds = pathplan_bounds(
-    Map([]),
-    Map([]),
-    Map([]),
-    Map([]),
-    Map([]),
-  )
+  let bounds = pathplan_bounds(Map([]), Map([]), Map([]), Map([]), Map([]))
   assert_eq(bounds.left, 0.0)
   assert_eq(bounds.right, 0.0)
 }
