@@ -1,7 +1,7 @@
 import {
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/edge_semantics",
-  "moonbit-community/graphviz/layout/dot/routing/edge_spline" @edge_spline,
+  "moonbit-community/graphviz/layout/dot/routing/edge_spline",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/layout/dot/routing/edge_ops",
   "moonbit-community/graphviz/cgraph",

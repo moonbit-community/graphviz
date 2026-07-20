@@ -4,21 +4,21 @@ fn[T : Debug] write_debug(value : T, logger : &Logger) -> Unit {
 }
 
 ///|
-pub impl Show for GraphKind with output(self, logger) {
+pub impl Show for GraphKind with fn output(self, logger) {
   write_debug(self, logger)
 }
 
 ///|
-pub impl Show for AttrKind with output(self, logger) {
+pub impl Show for AttrKind with fn output(self, logger) {
   write_debug(self, logger)
 }
 
 ///|
-pub impl Show for Compass with output(self, logger) {
+pub impl Show for Compass with fn output(self, logger) {
   write_debug(self, logger)
 }
 
 ///|
-pub impl Show for Port with output(self, logger) {
+pub impl Show for Port with fn output(self, logger) {
   write_debug(self, logger)
 }

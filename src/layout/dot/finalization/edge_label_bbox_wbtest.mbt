@@ -34,11 +34,7 @@ test "expand_layout_tree_bbox_for_edge_labels expands root bbox for endpoint lab
   ranks["a"] = 0
   ranks["b"] = 1
 
-  let expanded = expand_layout_tree_bbox_for_edge_labels(
-    layout,
-    ranks,
-    Map([]),
-  )
+  let expanded = expand_layout_tree_bbox_for_edge_labels(layout, ranks, Map([]))
   let metrics = match
     @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
     Some(value) => value

@@ -1581,7 +1581,8 @@ fn filter_component_port_order_contrib(
   component_set : Map[String, Bool],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Array[(String, Double)]] {
-  let component_port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
+  let component_port_order_contrib : Map[String, Array[(String, Double)]] = Map([],
+  )
   for name, entries in port_order_contrib {
     if component_set.get(name) is None {
       continue
