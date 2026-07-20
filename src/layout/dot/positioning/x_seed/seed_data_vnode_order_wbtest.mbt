@@ -9,49 +9,49 @@ test "build_x_seed_data derives vnode order from edge-vnode chains when explicit
   let head = graph.node("head")
   let edge = graph.edge(tail, head)
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["tail"]
   ordered_groups[1] = ["mid_real"]
   ordered_groups[2] = ["head"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["tail"] = 0
   ranks["head"] = 2
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes["tail|head||"] = ["v_mid"]
 
-  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
   vnode_ranks["v_mid"] = 1
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[1] = ["v_mid"]
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v_mid"] = sample_node_size(14.0, 6.0)
 
   let seed = build_x_seed_data(
     {
       use_vnodes_for_xpos: true,
       ordered_groups,
-      ordered_groups_with_vnodes: Map::new(),
+      ordered_groups_with_vnodes: Map([]),
       edges: [edge],
       edge_tail: [],
       edge_head: [],
       edge_reversed: [false],
       ranks,
       intercluster_keys: { "tail": "", "head": "cluster_a" },
-      cluster_parents: Map::new(),
+      cluster_parents: Map([]),
       edge_vnodes,
       vnode_ranks,
       vnodes_by_rank,
       has_clusters: true,
       cluster_keys: { "tail": "", "head": "cluster_a" },
-      vnode_clusters: Map::new(),
+      vnode_clusters: Map([]),
       vnode_sizes,
     },
     () => {
-      let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+      let sizes : Map[String, @node_primitives.NodeSize] = Map([])
       sizes["tail"] = sample_node_size(10.0, 10.0)
       sizes["mid_real"] = sample_node_size(9.0, 9.0)
       sizes["head"] = sample_node_size(12.0, 12.0)

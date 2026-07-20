@@ -15,12 +15,12 @@ test "apply_intercluster_bonus adds the bonus only to the first representative o
   let coalesced : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   coalesced["tail0"] = [
     ("v1", "b", 2, true, 0.0, 0.0, 0.0, 0.0),
     ("v1", "b", 5, true, 1.0, 1.0, 0.0, 0.0),
   ]
-  let bonus : Map[String, Int] = Map::new()
+  let bonus : Map[String, Int] = Map([])
   bonus[@order_graph.order_edge_merge_key("v1", "b", true, 0.0, 0.0)] = 3
 
   let adjusted = apply_intercluster_bonus(coalesced, bonus)
@@ -45,14 +45,14 @@ test "collect_intercluster_bonus counts duplicated vnode-tail intercluster segme
   edge_2.set_attr("xpenalty", "2")
 
   let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_0"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_left"
   cluster_keys["b"] = "cluster_right"
 
@@ -88,21 +88,21 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
   edge_2.set_attr("xpenalty", "2")
 
   let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_0"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["a"] = "cluster_left"
   intercluster_keys["b"] = "cluster_right"
 
   let materialized = build_remincross_materialized_edges(
     {
       rem_rank_keys: [0, 2],
-      rem_groups: Map::new(),
+      rem_groups: Map([]),
       creation_order: ["a"],
       edges: [edge_1, edge_2],
       edge_tail: [],
@@ -120,11 +120,11 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
       edges_by_tail,
       root_tail_order_override: None,
       root_cluster: "__root__",
-      cluster_parents: Map::new(),
-      order_sizes: Map::new(),
-      vnode_sizes: Map::new(),
-      cluster_flat_constraints: Map::new(),
-      rank_same_constraints: Map::new(),
+      cluster_parents: Map([]),
+      order_sizes: Map([]),
+      vnode_sizes: Map([]),
+      cluster_flat_constraints: Map([]),
+      rank_same_constraints: Map([]),
     },
     { "cluster_left": 0, "cluster_right": 1 },
   )
@@ -157,18 +157,18 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
 
   let vnode_ab = "\{@edge_identity.EDGE_VNODE_PREFIX}ab_0"
   let vnode_cd = "\{@edge_identity.EDGE_VNODE_PREFIX}cd_0"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = [vnode_ab]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cd)] = [vnode_cd]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   edges_by_tail["c"] = [1]
   edges_by_tail["a"] = [0]
 
   let materialized = build_remincross_materialized_edges(
     {
       rem_rank_keys: [0, 2],
-      rem_groups: Map::new(),
+      rem_groups: Map([]),
       creation_order: ["c", "a"],
       edges: [edge_ab, edge_cd],
       edge_tail: [],
@@ -180,19 +180,19 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
       ranks: { "a": 0, "b": 2, "c": 0, "d": 2 },
       edge_vnodes,
       order_with_vnodes: true,
-      intercluster_keys: Map::new(),
+      intercluster_keys: Map([]),
       cluster_order: [],
       order_with_clusters: false,
       edges_by_tail,
       root_tail_order_override: None,
       root_cluster: "__root__",
-      cluster_parents: Map::new(),
-      order_sizes: Map::new(),
-      vnode_sizes: Map::new(),
-      cluster_flat_constraints: Map::new(),
-      rank_same_constraints: Map::new(),
+      cluster_parents: Map([]),
+      order_sizes: Map([]),
+      vnode_sizes: Map([]),
+      cluster_flat_constraints: Map([]),
+      rank_same_constraints: Map([]),
     },
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(materialized.vnode_creation.get("c"), Some([vnode_cd]))

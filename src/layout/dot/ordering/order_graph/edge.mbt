@@ -69,8 +69,8 @@ fn build_edge_index_impl(
   ranks : Map[String, Int],
   edge_count : Int,
 ) -> EdgeIndexData {
-  let parents : Map[String, Array[String]] = Map::new()
-  let children : Map[String, Array[String]] = Map::new()
+  let parents : Map[String, Array[String]] = Map([])
+  let children : Map[String, Array[String]] = Map([])
   for name in node_names {
     parents[name] = []
     children[name] = []
@@ -195,17 +195,17 @@ pub fn build_order_edges_by_tail(
   map_clusters : Bool,
   map_intercluster : Bool,
   edges_by_tail : Map[String, Array[Int]],
-  cluster_order_index? : Map[String, Int] = Map::new(),
+  cluster_order_index? : Map[String, Int] = Map([]),
 ) -> OrderEdgesByTailOutput {
   let out : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
-  let vnode_seen : Map[String, Bool] = Map::new()
-  let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
+  ] = Map([])
+  let vnode_seen : Map[String, Bool] = Map([])
+  let vnode_creation_by_tail : Map[String, Array[String]] = Map([])
   let edge_creation : Array[(String, String)] = []
   let use_mapping = order_with_clusters && map_clusters
-  let cluster_order_index_local : Map[String, Int] = Map::new()
+  let cluster_order_index_local : Map[String, Int] = Map([])
   if order_with_clusters && cluster_order_index.length() > 0 {
     for cluster, idx in cluster_order_index {
       cluster_order_index_local[cluster] = idx
@@ -542,8 +542,8 @@ pub fn build_edge_index_with_vnodes(
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
 ) -> EdgeIndexData {
-  let parents : Map[String, Array[String]] = Map::new()
-  let children : Map[String, Array[String]] = Map::new()
+  let parents : Map[String, Array[String]] = Map([])
+  let children : Map[String, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
     parents[name] = []

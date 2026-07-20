@@ -4,7 +4,7 @@
 
 ///|
 test "edge_internal_to_cluster treats ancestor-related clusters as internal" {
-  let cluster_parents : Map[String, String?] = Map::new()
+  let cluster_parents : Map[String, String?] = Map([])
   cluster_parents["child"] = Some("parent")
   cluster_parents["parent"] = None
 
@@ -15,17 +15,17 @@ test "edge_internal_to_cluster treats ancestor-related clusters as internal" {
 
 ///|
 test "build_vnode_keys_from_nlist interpolates vnodes between real nodes" {
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v1", "v2"]
 
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["a"] = 0
   order_index["b"] = 1
 
-  let nlist_order_index : Map[String, Int] = Map::new()
+  let nlist_order_index : Map[String, Int] = Map([])
   nlist_order_index["a"] = 0
   nlist_order_index["v1"] = 1
   nlist_order_index["v2"] = 2
@@ -36,7 +36,7 @@ test "build_vnode_keys_from_nlist interpolates vnodes between real nodes" {
     vnodes_by_rank,
     order_index,
     nlist_order_index,
-    Map::new(),
+    Map([]),
     false,
   )
 

@@ -11,7 +11,7 @@ test "finalize_routed_edges preserves input order for layouts that remain after 
   let edge_1 = graph.edge(a, b)
   let edge_2 = graph.edge(a, c)
   let edge_3 = graph.edge(b, c)
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
   edges_out_by_id[edge_1.id()] = build_layout_edge(edge_1, 10.0)
   edges_out_by_id[edge_3.id()] = build_layout_edge(edge_3, 30.0)
 
@@ -39,7 +39,7 @@ test "finalize_routed_edges remaps parallel layouts before output order and reap
   edge_2.set_attr("taillabel", "tail")
   edge_2.set_attr("xlabel", "x")
 
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
   edges_out_by_id[edge_1.id()] = build_layout_edge(
     edge_1,
     10.0,

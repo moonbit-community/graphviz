@@ -34,7 +34,7 @@ test "build_edge_parallel_offsets keeps sameport-marked edges on the outer slot"
   sameport.set_attr("samehead", "group")
   labeled.set_attr("label", "mid")
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
   edge_has_label_by_id[plain.id()] = false
   edge_has_label_by_id[sameport.id()] = false
   edge_has_label_by_id[labeled.id()] = true
@@ -44,8 +44,8 @@ test "build_edge_parallel_offsets keeps sameport-marked edges on the outer slot"
     edge_has_label_by_id,
     ranks: { "a": 0, "b": 1 },
     nodesep_pt: 10.0,
-    edge_reversed_by_id: Map::new(),
-    cluster_keys: Map::new(),
+    edge_reversed_by_id: Map([]),
+    cluster_keys: Map([]),
   })
 
   assert_eq(offsets.get(sameport.id()), Some(5.0))
@@ -62,10 +62,10 @@ test "build_edge_parallel_offsets prefers the reverse pair whose tail lacks a se
   let ba = graph.edge(b, a)
   ignore(graph.edge(a, a))
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
   edge_has_label_by_id[ab.id()] = false
   edge_has_label_by_id[ba.id()] = false
-  let edge_reversed_by_id : Map[Int, Bool] = Map::new()
+  let edge_reversed_by_id : Map[Int, Bool] = Map([])
   edge_reversed_by_id[ab.id()] = false
   edge_reversed_by_id[ba.id()] = true
 
@@ -75,7 +75,7 @@ test "build_edge_parallel_offsets prefers the reverse pair whose tail lacks a se
     ranks: { "a": 0, "b": 1 },
     nodesep_pt: 12.0,
     edge_reversed_by_id,
-    cluster_keys: Map::new(),
+    cluster_keys: Map([]),
   })
 
   assert_eq(offsets.get(ba.id()), Some(6.0))
@@ -91,7 +91,7 @@ test "build_edge_parallel_offsets reverses slot order when parallel edges mix di
   let back = graph.edge(a, b, name="back")
   back.set_attr("dir", "back")
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
   edge_has_label_by_id[forward.id()] = false
   edge_has_label_by_id[back.id()] = false
 
@@ -100,8 +100,8 @@ test "build_edge_parallel_offsets reverses slot order when parallel edges mix di
     edge_has_label_by_id,
     ranks: { "a": 0, "b": 1 },
     nodesep_pt: 10.0,
-    edge_reversed_by_id: Map::new(),
-    cluster_keys: Map::new(),
+    edge_reversed_by_id: Map([]),
+    cluster_keys: Map([]),
   })
 
   assert_eq(offsets.get(back.id()), Some(5.0))
@@ -116,15 +116,15 @@ test "build_edge_parallel_offsets keeps intercluster reverse pairs in cluster-co
   let ab = graph.edge(a, b)
   let ba = graph.edge(b, a)
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
   edge_has_label_by_id[ab.id()] = false
   edge_has_label_by_id[ba.id()] = false
 
-  let edge_reversed_by_id : Map[Int, Bool] = Map::new()
+  let edge_reversed_by_id : Map[Int, Bool] = Map([])
   edge_reversed_by_id[ab.id()] = false
   edge_reversed_by_id[ba.id()] = true
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_a"
   cluster_keys["b"] = "cluster_b"
 

@@ -4,16 +4,16 @@
 
 ///|
 test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["x"] = 0
   order_index["a"] = 1
   order_index["b"] = 3
   order_index["left_label"] = 0
 
-  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
   flat_label_nodes["left_label"] = { tail: "x", head: "a", rank: -1 }
 
-  let vnode_out_heads : Map[String, Array[String]] = Map::new()
+  let vnode_out_heads : Map[String, Array[String]] = Map([])
   assert_eq(
     flat_limits(
       ["left_label", "slot1", "slot2"],
@@ -31,16 +31,16 @@ test "flat_limits shifts insertion right when an earlier flat label occupies the
 test "flat_limits shifts away from existing vnode fanouts on either side" {
   let left_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}left"
   let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
-  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
 
-  let left_order_index : Map[String, Int] = Map::new()
+  let left_order_index : Map[String, Int] = Map([])
   left_order_index[left_vnode] = 0
   left_order_index["slot1"] = 1
   left_order_index["slot2"] = 2
   left_order_index["a"] = 1
   left_order_index["b"] = 2
   left_order_index["x"] = 0
-  let left_vnode_out_heads : Map[String, Array[String]] = Map::new()
+  let left_vnode_out_heads : Map[String, Array[String]] = Map([])
   left_vnode_out_heads[left_vnode] = ["x"]
   assert_eq(
     flat_limits(
@@ -54,14 +54,14 @@ test "flat_limits shifts away from existing vnode fanouts on either side" {
     2,
   )
 
-  let right_order_index : Map[String, Int] = Map::new()
+  let right_order_index : Map[String, Int] = Map([])
   right_order_index["slot0"] = 0
   right_order_index["slot1"] = 1
   right_order_index[right_vnode] = 2
   right_order_index["a"] = 0
   right_order_index["b"] = 1
   right_order_index["y"] = 2
-  let right_vnode_out_heads : Map[String, Array[String]] = Map::new()
+  let right_vnode_out_heads : Map[String, Array[String]] = Map([])
   right_vnode_out_heads[right_vnode] = ["y"]
   assert_eq(
     flat_limits(
@@ -80,9 +80,9 @@ test "flat_limits shifts away from existing vnode fanouts on either side" {
 test "flat_limits falls back to midpoint when left and right vnode fanouts exhaust the primary slot window" {
   let left_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}left"
   let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
-  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
 
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["x"] = 0
   order_index[right_vnode] = 1
   order_index["a"] = 1
@@ -92,7 +92,7 @@ test "flat_limits falls back to midpoint when left and right vnode fanouts exhau
   order_index["slot1"] = 3
   order_index["y"] = 3
 
-  let vnode_out_heads : Map[String, Array[String]] = Map::new()
+  let vnode_out_heads : Map[String, Array[String]] = Map([])
   vnode_out_heads[left_vnode] = ["x"]
   vnode_out_heads[right_vnode] = ["y"]
 

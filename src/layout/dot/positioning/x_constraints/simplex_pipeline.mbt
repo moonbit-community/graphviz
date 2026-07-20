@@ -32,7 +32,7 @@ fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
   }
   let xpos_nlist_order : Array[String] = []
   let cluster_order : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
+  let cluster_seen : Map[String, Bool] = Map([])
   let prefer_source_for_lr = input.rankdir == @rankdir.RankDir::LR ||
     input.rankdir == @rankdir.RankDir::RL
   for name in nlist_reversed {
@@ -48,7 +48,7 @@ fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
     }
     return xpos_nlist_order
   }
-  let xpos_seen : Map[String, Bool] = Map::new()
+  let xpos_seen : Map[String, Bool] = Map([])
   for cluster in cluster_order {
     let mut rank_idx = input.rank_keys.length()
     while rank_idx > 0 {
@@ -196,7 +196,7 @@ fn reorder_constraint_graph(
       edge.weight,
     )
   }
-  let new_index : Map[String, Int] = Map::new()
+  let new_index : Map[String, Int] = Map([])
   for name, old_idx in input.index {
     let new_idx = old_to_new[old_idx]
     new_index[name] = new_idx
@@ -433,7 +433,7 @@ fn build_vnode_extra_nodes(
   vnode_ranks : Map[String, Int],
 ) -> Array[ExtraConstraintNode] {
   let extra : Array[ExtraConstraintNode] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   if vnode_order.length() > 0 {
     for name in vnode_order {
       match vnode_ranks.get(name) {
@@ -481,7 +481,7 @@ fn build_xpos_computation_input_from_sources(
   let x_edge_vnodes = if sources.use_vnodes_for_xpos {
     sources.edge_vnodes
   } else {
-    Map::new()
+    Map([])
   }
   { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes }
 }
@@ -656,7 +656,7 @@ fn solve_xpos_with_simplex(
     0x7fffffff,
     @network_simplex.BalanceMode::LR,
   )
-  let positions : Map[String, Double] = Map::new()
+  let positions : Map[String, Double] = Map([])
   for node in input.nodes {
     let name = node.name()
     let idx = reordered.index.get(name).unwrap_or_default()

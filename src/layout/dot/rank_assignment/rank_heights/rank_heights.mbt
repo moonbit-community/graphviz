@@ -138,7 +138,7 @@ priv struct BaseRankHalfHeights {
 
 ///|
 fn init_rank_half_heights(all_ranks : Array[Int]) -> Map[Int, Double] {
-  let rank_pht : Map[Int, Double] = Map::new()
+  let rank_pht : Map[Int, Double] = Map([])
   for rank in all_ranks {
     rank_pht[rank] = 0.0
   }
@@ -217,8 +217,8 @@ fn clone_rank_half_heights(
 ) -> RankHeightCopies {
   // Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
   // before cluster-specific adjustments.
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
+  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int, Double] = Map([])
   for rank in all_ranks {
     let half_height = rank_pht.get(rank).unwrap_or_default()
     rank_ht1[rank] = half_height

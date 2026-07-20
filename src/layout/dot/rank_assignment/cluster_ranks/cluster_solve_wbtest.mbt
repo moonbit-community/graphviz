@@ -12,11 +12,11 @@ test "compute_local_cluster_ranks_and_leaders filters external edges and falls b
   let external = graph.edge(b, c)
 
   let top_clusters = ["cluster0"]
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster0_members : Map[String, Bool] = Map::new()
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map([])
+  let cluster0_members : Map[String, Bool] = Map([])
   cluster0_members["a"] = true
   cluster0_members["b"] = true
-  let cluster_members : Map[String, Map[String, Bool]] = Map::new()
+  let cluster_members : Map[String, Map[String, Bool]] = Map([])
   cluster_members["cluster0"] = cluster0_members
 
   let seen_graph_is_root : Array[Bool] = []
@@ -42,7 +42,7 @@ test "compute_local_cluster_ranks_and_leaders filters external edges and falls b
       }
       seen_cluster_edges.push(cluster_edge_names.join(","))
 
-      let cluster_ranks : Map[String, Int] = Map::new()
+      let cluster_ranks : Map[String, Int] = Map([])
       cluster_ranks["a"] = 2
       cluster_ranks["b"] = 4
       cluster_ranks
@@ -90,9 +90,9 @@ test "solve_clustered_leader_ranks forwards only clusterless constrained direct 
   let unconstrained = graph.edge(b, c)
   unconstrained.set_attr("constraint", "false")
 
-  let node_cluster : Map[String, String] = Map::new()
-  let cluster_leaders : Map[String, String] = Map::new()
-  let local_ranks : Map[String, Int] = Map::new()
+  let node_cluster : Map[String, String] = Map([])
+  let cluster_leaders : Map[String, String] = Map([])
+  let local_ranks : Map[String, Int] = Map([])
   let seen_tail : Array[String] = []
   let seen_head : Array[String] = []
   let seen_active : Array[Bool] = []
@@ -138,15 +138,15 @@ test "solve_clustered_leader_ranks converts positive cross-cluster offset into h
   edge.set_attr("minlen", "1")
   edge.set_attr("weight", "2")
 
-  let node_cluster : Map[String, String] = Map::new()
+  let node_cluster : Map[String, String] = Map([])
   node_cluster["a0"] = "cluster_a"
   node_cluster["b0"] = "cluster_b"
 
-  let cluster_leaders : Map[String, String] = Map::new()
+  let cluster_leaders : Map[String, String] = Map([])
   cluster_leaders["cluster_a"] = "a0"
   cluster_leaders["cluster_b"] = "b0"
 
-  let local_ranks : Map[String, Int] = Map::new()
+  let local_ranks : Map[String, Int] = Map([])
   local_ranks["a0"] = 0
   local_ranks["b0"] = 0
 
@@ -175,16 +175,16 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
   edge.set_attr("minlen", "1")
   edge.set_attr("weight", "2")
 
-  let node_cluster : Map[String, String] = Map::new()
+  let node_cluster : Map[String, String] = Map([])
   node_cluster["a0"] = "cluster_a"
   node_cluster["b0"] = "cluster_b"
   node_cluster["b2"] = "cluster_b"
 
-  let cluster_leaders : Map[String, String] = Map::new()
+  let cluster_leaders : Map[String, String] = Map([])
   cluster_leaders["cluster_a"] = "a0"
   cluster_leaders["cluster_b"] = "b0"
 
-  let local_ranks : Map[String, Int] = Map::new()
+  let local_ranks : Map[String, Int] = Map([])
   local_ranks["a0"] = 0
   local_ranks["b0"] = 0
   local_ranks["b2"] = 2

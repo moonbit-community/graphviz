@@ -5,7 +5,7 @@
 ///|
 test "constraint graph reorder puts slack nodes first and preserves rank mapping" {
   let graph = @network_simplex.new_graph()
-  let index : Map[String, Int] = Map::new()
+  let index : Map[String, Int] = Map([])
   index["a"] = @network_simplex.add_node(graph, "a")
   index["ln"] = @network_simplex.add_node(
     graph,

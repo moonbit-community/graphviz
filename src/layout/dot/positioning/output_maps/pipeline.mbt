@@ -44,8 +44,8 @@ fn cluster_rank_key(cluster : String, rank : Int) -> String {
 /// Graphviz parity: dotted-edge intercluster alignment follows dot rules for
 /// same-rank cluster groups that share a single external target.
 fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
-  let cluster_rank_nodes : Map[String, Array[String]] = Map::new()
-  let cluster_rank_value : Map[String, Int] = Map::new()
+  let cluster_rank_nodes : Map[String, Array[String]] = Map([])
+  let cluster_rank_value : Map[String, Int] = Map([])
   for node in input.nodes {
     let name = node.name()
     let cluster = input.cluster_keys.get(name).unwrap_or_default()
@@ -63,7 +63,7 @@ fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
       None => cluster_rank_nodes[key] = [name]
     }
   }
-  let cluster_rank_targets : Map[String, Map[String, Bool]] = Map::new()
+  let cluster_rank_targets : Map[String, Map[String, Bool]] = Map([])
   for edge in input.edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
@@ -80,7 +80,7 @@ fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
     match cluster_rank_targets.get(key) {
       Some(targets) => targets[head] = true
       None => {
-        let targets : Map[String, Bool] = Map::new()
+        let targets : Map[String, Bool] = Map([])
         targets[head] = true
         cluster_rank_targets[key] = targets
       }
@@ -148,7 +148,7 @@ fn vnode_positions_from_edges(
   node_positions : Map[String, Double],
   rank_y : Map[Int, Double],
 ) -> Map[String, @geom.Point] {
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   for edge in edges {
     let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
       Some(list) => list
@@ -201,7 +201,7 @@ fn build_node_positions_map(
   x_positions : Map[String, Double],
   y_positions : Map[String, Double],
 ) -> Map[String, @geom.Point] {
-  let positions : Map[String, @geom.Point] = Map::new()
+  let positions : Map[String, @geom.Point] = Map([])
   for node in nodes {
     let name = node.name()
     let pos_x = x_positions.get(name).unwrap_or_default()
@@ -230,7 +230,7 @@ fn build_vnode_positions(
   input : VnodePositionsInput,
 ) -> Map[String, @geom.Point] {
   if input.use_vnodes_for_xpos {
-    let positions : Map[String, @geom.Point] = Map::new()
+    let positions : Map[String, @geom.Point] = Map([])
     for name, rank in input.vnode_ranks {
       let pos_x = input.x_positions.get(name).unwrap_or_default()
       let pos_y = input.rank_y.get(rank).unwrap_or_default()
@@ -265,8 +265,8 @@ priv struct ClusterBoundaryXInput {
 fn build_cluster_boundary_x(
   input : ClusterBoundaryXInput,
 ) -> ClusterBoundaryXOutput {
-  let cluster_ln_x : Map[String, Double] = Map::new()
-  let cluster_rn_x : Map[String, Double] = Map::new()
+  let cluster_ln_x : Map[String, Double] = Map([])
+  let cluster_rn_x : Map[String, Double] = Map([])
   if !input.has_clusters {
     return { cluster_ln_x, cluster_rn_x }
   }
@@ -342,7 +342,7 @@ fn build_position_output_maps_from_sources(
     })
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
-  let cluster_names : Map[String, Bool] = Map::new()
+  let cluster_names : Map[String, Bool] = Map([])
   if sources.has_clusters {
     @cluster_graph.collect_cluster_names(sources.graph, cluster_names)
   }

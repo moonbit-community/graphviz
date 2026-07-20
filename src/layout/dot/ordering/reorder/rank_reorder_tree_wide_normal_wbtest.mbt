@@ -515,8 +515,8 @@ fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     node_clusters,
     node_cluster_skeleton,
     edges,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
 }
 

@@ -9,7 +9,7 @@ test "collect_flat_adjacent_beziers builds one spindle per adjacent same-rank du
   let b = graph.node("b")
   let edge_1 = graph.edge(a, b)
   let edge_2 = graph.edge(a, b)
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   base_cache[edge_1.id()] = build_route_base(
     edge_1,
     tail_anchor=@edge_spline.point(0.0, 0.0),
@@ -69,7 +69,7 @@ test "collect_flat_adjacent_beziers filters out labeled ported sameport and uncl
   sameport_2.set_attr("samehead", "g")
   let unclipped_1 = graph.edge(a, b)
   let unclipped_2 = graph.edge(a, b)
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   for edge in [labeled_1, labeled_2, ported_1, ported_2, sameport_1, sameport_2] {
     base_cache[edge.id()] = build_route_base(
       edge,

@@ -16,7 +16,7 @@ fn vnode_is_merged(
     None => []
   }
   let unique_count = (list : Array[String]) => {
-    let seen : Map[String, Bool] = Map::new()
+    let seen : Map[String, Bool] = Map([])
     let mut count = 0
     for item in list {
       if seen.get(item) is None {

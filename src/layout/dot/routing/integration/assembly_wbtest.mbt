@@ -19,8 +19,8 @@ test "build_dot_route_base_deps applies record border adjust only to non-html re
 
   let deps = build_dot_route_base_deps(
     @layout_prep.RecordOrientation::Horizontal,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
 
   assert_eq(
@@ -42,8 +42,8 @@ test "build_dot_route_base_deps converts edge mid label metrics into routing met
 
   let deps = build_dot_route_base_deps(
     @layout_prep.RecordOrientation::Horizontal,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
 
   match (deps.edge_mid_label_metrics)(unlabeled) {

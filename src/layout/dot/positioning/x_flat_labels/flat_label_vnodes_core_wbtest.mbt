@@ -8,7 +8,7 @@ fn make_sizes(
   width_pt : Double,
   height_pt : Double,
 ) -> Map[String, @node_primitives.NodeSize] {
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   for name in names {
     sizes[name] = @node_primitives.node_size_from_points(width_pt, height_pt)
   }
@@ -17,7 +17,7 @@ fn make_sizes(
 
 ///|
 fn make_existing_names(names : Array[String]) -> Map[String, Bool] {
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map([])
   for name in names {
     existing_names[name] = true
   }
@@ -26,11 +26,11 @@ fn make_existing_names(names : Array[String]) -> Map[String, Bool] {
 
 ///|
 fn empty_vnode_info() -> @setup.EdgeVnodeInfo {
-  let vnode_ranks : Map[String, Int] = Map::new()
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let edge_vnodes : Map[String, Array[String]] = Map([])
+  let vnode_clusters : Map[String, String] = Map([])
   { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
 }
 
@@ -46,7 +46,7 @@ fn single_edge_graph(label : String) -> (@cgraph.Graph, @cgraph.Edge) {
 
 ///|
 test "flat_label_adjacent checks neighbor distance inside a rank" {
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[3] = ["a", "b", "c"]
 
   assert_true(flat_label_adjacent(3, "a", "b", ordered_groups))
@@ -65,7 +65,7 @@ test "collect_vnode_out_heads follows edge direction after rank normalization" {
   let up = graph.edge(a, b)
   let down = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 2
   ranks["b"] = 0
 
@@ -73,7 +73,7 @@ test "collect_vnode_out_heads follows edge direction after rank normalization" {
   let up2 = "\{@edge_identity.EDGE_VNODE_PREFIX}u2"
   let down1 = "\{@edge_identity.EDGE_VNODE_PREFIX}d1"
   let down2 = "\{@edge_identity.EDGE_VNODE_PREFIX}d2"
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(up)] = [up1, up2]
   edge_vnodes[@edge_identity.edge_vnode_key(down)] = [down1, down2]
 
@@ -94,12 +94,12 @@ test "collect_vnode_out_heads follows edge direction after rank normalization" {
 ///|
 test "adjacent flat edge adds one direct constraint without injecting a vnode" {
   let (_graph, edge) = single_edge_graph("adjacent")
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   let sizes = make_sizes(["a", "b"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
@@ -117,8 +117,8 @@ test "adjacent flat edge adds one direct constraint without injecting a vnode" {
     20.0,
     @rankdir.RankDir::LR,
     sizes,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     make_existing_names(["a", "b"]),
     vnode_info,
     x_groups,
@@ -143,12 +143,12 @@ test "adjacent flat edge keeps base minlen when it already exceeds label spacing
   let (_graph, edge) = single_edge_graph("wide-gap")
   edge.set_attr("minlen", "5")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
-  let x_groups : Map[Int, Array[String]] = Map::new()
+  let x_groups : Map[Int, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   let sizes = make_sizes(["a", "b"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
@@ -166,8 +166,8 @@ test "adjacent flat edge keeps base minlen when it already exceeds label spacing
     20.0,
     @rankdir.RankDir::TB,
     sizes,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     make_existing_names(["a", "b"]),
     vnode_info,
     x_groups,

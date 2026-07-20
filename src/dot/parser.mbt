@@ -141,7 +141,7 @@ fn Parser::parse_node_id(self : Parser) -> NodeId raise DotParseError {
 fn Parser::parse_attr_list(
   self : Parser,
 ) -> Map[String, String] raise DotParseError {
-  let attrs : Map[String, String] = Map::new()
+  let attrs : Map[String, String] = Map([])
   while self.current.token == LBracket {
     self.advance()
     while self.current.token != RBracket && self.current.token != Eof {
@@ -263,7 +263,7 @@ fn parser_innermost_cluster_names_for_node(
   root : @cgraph.Graph,
   node : @cgraph.Node,
 ) -> Map[String, Bool] {
-  let names : Map[String, Bool] = Map::new()
+  let names : Map[String, Bool] = Map([])
   let stack : Array[@cgraph.Graph] = [root]
   while stack.length() > 0 {
     let current = stack[stack.length() - 1]
@@ -369,7 +369,7 @@ fn Parser::endpoint_nodes(
     Subgraph(sub) => {
       let nodes = sub.nodes()
       let root = root_graph_for_graph(graph)
-      let root_order : Map[String, Int] = Map::new()
+      let root_order : Map[String, Int] = Map([])
       for i, node in root.nodes() {
         root_order[node.name()] = i
       }

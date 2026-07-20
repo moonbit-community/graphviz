@@ -143,7 +143,7 @@ fn build_node_order(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
 ) -> Map[String, Int] {
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   if rankdir == RankDir::RL {
     let total = nodes.length()
     for i, node in nodes {
@@ -166,9 +166,9 @@ fn build_size_maps(
   rankdir : RankDir,
   record_orientation : RecordOrientation,
 ) -> SizeMaps {
-  let output_sizes : Map[String, NodeSize] = Map::new()
-  let order_sizes : Map[String, NodeSize] = Map::new()
-  let sizes : Map[String, NodeSize] = Map::new()
+  let output_sizes : Map[String, NodeSize] = Map([])
+  let order_sizes : Map[String, NodeSize] = Map([])
+  let sizes : Map[String, NodeSize] = Map([])
   for node in nodes {
     let size = @node_geometry.node_size(node, record_orientation)
     output_sizes[node.name()] = size
@@ -195,7 +195,7 @@ fn build_node_port_order(
     size,
     record_orientation,
   )
-  let order_map : Map[String, Double] = Map::new()
+  let order_map : Map[String, Double] = Map([])
   for port_name, port in raw_ports {
     let offset = @port_geometry.layout_port_offset(port.center, rankdir)
     order_map[port_name] = offset.x
@@ -210,7 +210,7 @@ fn build_node_port_order(
 fn build_record_port_order_map(
   input : RecordPortOrderInput,
 ) -> Map[String, Map[String, Double]] {
-  let record_port_order : Map[String, Map[String, Double]] = Map::new()
+  let record_port_order : Map[String, Map[String, Double]] = Map([])
   for node in input.nodes {
     let label = @label_attrs.label_text(node)
     let has_html = @html_label.is_html_label_text(label)
@@ -260,7 +260,7 @@ fn lookup_record_port_order(
 fn accumulate_port_order_contrib(
   input : PortOrderContribInput,
 ) -> Map[String, PortOrderTotal] {
-  let order_sum : Map[String, PortOrderTotal] = Map::new()
+  let order_sum : Map[String, PortOrderTotal] = Map([])
   let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
     match lookup_record_port_order(input.record_port_order, anchor, port) {
       Some(order) => {
@@ -314,7 +314,7 @@ fn compute_port_order_positions(
     record_port_order,
     port_order_contrib,
   })
-  let positions : Map[String, Double] = Map::new()
+  let positions : Map[String, Double] = Map([])
   for name, entry in order_sum {
     if entry.count > 0 {
       positions[name] = entry.sum / entry.count.to_double()
@@ -330,14 +330,14 @@ fn compute_port_order_positions(
 fn build_port_order_metadata(
   input : PortOrderMetadataInput,
 ) -> PortOrderMetadata {
-  let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
+  let port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
   let port_order_positions = if (
       input.rankdir == RankDir::LR || input.rankdir == RankDir::RL
     ) &&
     input.has_port_edges {
     compute_port_order_positions(input, port_order_contrib)
   } else {
-    Map::new()
+    Map([])
   }
   { positions: port_order_positions, contributions: port_order_contrib }
 }

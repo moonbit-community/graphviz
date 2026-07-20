@@ -492,7 +492,7 @@ fn merge_attrs_keep_order(
   overrides : Array[(String, String)],
 ) -> Array[(String, String)] {
   let out : Array[(String, String)] = []
-  let index : Map[String, Int] = Map::new()
+  let index : Map[String, Int] = Map([])
   for pair in base {
     let (key, value) = pair
     match index.get(key) {
@@ -1235,7 +1235,7 @@ fn write_body(
     graph_nodes.sort_by_key(node => node.name())
   } else {
     let root_nodes = root_graph(graph).nodes()
-    let root_order : Map[String, Int] = Map::new()
+    let root_order : Map[String, Int] = Map([])
     for i, node in root_nodes {
       root_order[node.name()] = i
     }
@@ -1246,7 +1246,7 @@ fn write_body(
       }
     })
   }
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   for i, node in graph_nodes {
     node_order[node.name()] = i
   }
@@ -1486,11 +1486,11 @@ pub fn write_dot(graph : @cgraph.Graph) -> String {
   let is_layout_output = should_emit_default_node_label(root_graph(graph))
   let ctx : WriteContext = {
     preorder_next: 1,
-    node_last_written: Map::new(),
-    edge_last_written: Map::new(),
-    node_attrs_written: Map::new(),
-    edge_attrs_written: Map::new(),
-    edge_target_paths: Map::new(),
+    node_last_written: Map([]),
+    edge_last_written: Map([]),
+    node_attrs_written: Map([]),
+    edge_attrs_written: Map([]),
+    edge_target_paths: Map([]),
   }
   write_graph_recursive(graph, sb, 0, "", true, is_layout_output, ctx)
   sb.to_string()

@@ -21,8 +21,8 @@ fn recover_regular_selection(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Int] {
-  let selected_ids : Map[String, Int] = Map::new()
-  let selected_scores : Map[String, Double] = Map::new()
+  let selected_ids : Map[String, Int] = Map([])
+  let selected_scores : Map[String, Double] = Map([])
   for edge in ordered_edges {
     if @edge_semantics.edge_is_self(edge) {
       continue
@@ -62,7 +62,7 @@ fn collect_parallel_groups(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Array[@cgraph.Edge]] {
-  let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in ordered_edges {
     if @edge_semantics.edge_has_label(edge) {
       continue
@@ -105,7 +105,7 @@ fn build_regular_recover_routing_plan(
   let regular_parallel_groups = collect_parallel_groups(
     ordered_edges, base_cache,
   )
-  let recover_edge_id_for_routing : Map[String, Int] = Map::new()
+  let recover_edge_id_for_routing : Map[String, Int] = Map([])
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id
   }

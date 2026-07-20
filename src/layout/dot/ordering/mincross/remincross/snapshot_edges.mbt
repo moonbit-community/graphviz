@@ -45,7 +45,7 @@ pub(all) struct RemincrossSnapshotBuildInput {
 pub fn build_remincross_input_snapshot(
   input : RemincrossSnapshotBuildInput,
 ) -> RemincrossInputSnapshot {
-  let cloned_cluster_keys : Map[String, String] = Map::new()
+  let cloned_cluster_keys : Map[String, String] = Map([])
   for key, value in input.cluster_keys {
     cloned_cluster_keys[key] = value
   }

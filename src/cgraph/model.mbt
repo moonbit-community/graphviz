@@ -70,16 +70,16 @@ fn empty_graph_state(name : String?, parent : Int?) -> GraphState {
   {
     name,
     parent,
-    subgraphs_by_name: Map::new(),
+    subgraphs_by_name: Map([]),
     subgraphs: [],
     nodes: [],
-    nodes_set: Map::new(),
+    nodes_set: Map([]),
     edges: [],
-    edges_set: Map::new(),
-    attrs: Map::new(),
-    defaults_graph: Map::new(),
-    defaults_node: Map::new(),
-    defaults_edge: Map::new(),
+    edges_set: Map([]),
+    attrs: Map([]),
+    defaults_graph: Map([]),
+    defaults_node: Map([]),
+    defaults_edge: Map([]),
   }
 }
 
@@ -164,7 +164,7 @@ fn collect_defaults(
   graph_id : Int,
   kind : AttrKind,
 ) -> Map[String, String] {
-  let resolved : Map[String, String] = Map::new()
+  let resolved : Map[String, String] = Map([])
   let mut current : Int? = Some(graph_id)
   while current is Some(id) {
     let defaults = match kind {
@@ -193,11 +193,11 @@ pub fn Graph::new(
     kind,
     strict,
     graphs: [root_state],
-    nodes_by_name: Map::new(),
+    nodes_by_name: Map([]),
     nodes: [],
     edges: [],
-    edge_index: Map::new(),
-    edge_pair_index: Map::new(),
+    edge_index: Map([]),
+    edge_pair_index: Map([]),
   }
   { root, id: 0 }
 }

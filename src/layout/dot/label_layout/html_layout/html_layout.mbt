@@ -15,18 +15,18 @@ type SizePt = @numeric.GraphSizePt
 
 ///|
 let html_label_cache : Ref[Map[String, @html_label.HtmlLabel]] = @ref.new(
-  Map::new(),
+  Map([]),
 )
 
 ///|
 let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
-  Map::new(),
+  Map([]),
 )
 
 ///|
 pub fn reset_html_label_caches() -> Unit {
-  html_label_cache.val = Map::new()
-  html_ports_cache.val = Map::new()
+  html_label_cache.val = Map([])
+  html_ports_cache.val = Map([])
 }
 
 ///|
@@ -221,7 +221,7 @@ pub fn html_ports(
       None => ()
     }
   }
-  let ports : Map[String, RecordPort] = Map::new()
+  let ports : Map[String, RecordPort] = Map([])
   match parse_html_label_cached(label) {
     Some(@html_label.HtmlLabel::Table(table)) => {
       let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))

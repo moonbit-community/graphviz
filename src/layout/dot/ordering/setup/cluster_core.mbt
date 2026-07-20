@@ -15,8 +15,8 @@ pub(all) struct ClusterMembershipMaps {
 fn build_cluster_membership_maps(
   nodes : Array[@cgraph.Node],
 ) -> ClusterMembershipMaps {
-  let cluster_keys : Map[String, String] = Map::new()
-  let intercluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
+  let intercluster_keys : Map[String, String] = Map([])
   for node in nodes {
     let name = node.name()
     cluster_keys[name] = @membership.node_cluster_key(node)
@@ -42,9 +42,9 @@ fn collect_cluster_rank_bounds(
   ranks : Map[String, Int],
   node_order : Map[String, Int],
 ) -> ClusterNodeRankBounds {
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
+  let cluster_min_rank : Map[String, Int] = Map([])
+  let cluster_max_rank : Map[String, Int] = Map([])
+  let cluster_first_order : Map[String, Int] = Map([])
   for node in nodes {
     let name = node.name()
     let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -106,8 +106,8 @@ fn build_cluster_skeleton(
   groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Map[String, Bool] {
-  let cluster_skeleton : Map[String, Bool] = Map::new()
-  let cluster_rank_seen : Map[String, Bool] = Map::new()
+  let cluster_skeleton : Map[String, Bool] = Map([])
+  let cluster_rank_seen : Map[String, Bool] = Map([])
   for rank, names in groups {
     for name in names {
       let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -160,7 +160,7 @@ fn apply_cluster_order_base(
     }
   })
   let step = nodes.length() + 1
-  let cluster_order_base : Map[String, Int] = Map::new()
+  let cluster_order_base : Map[String, Int] = Map([])
   let mut base = 0
   for entry in cluster_order_list {
     let (cluster, _rank, _order) = entry

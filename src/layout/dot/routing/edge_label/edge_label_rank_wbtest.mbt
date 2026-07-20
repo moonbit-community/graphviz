@@ -9,7 +9,7 @@ test "edge_label_rank_info uses the midpoint rank for long labeled edges" {
   edge.set_attr("label", "mid")
   let label_width = @edge_label_metrics.edge_mid_label_width_pt(edge)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
   ranks["b"] = 6
 
@@ -28,7 +28,7 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
   let b = graph.node("b")
   let unlabeled = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
   assert_true(edge_label_rank_info(unlabeled, ranks, 0.0) is None)
@@ -47,7 +47,7 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
   assert_eq(short_info.label_rank, 1)
   assert_eq(short_info.span, 3)
 
-  let short_span_ranks : Map[String, Int] = Map::new()
+  let short_span_ranks : Map[String, Int] = Map([])
   short_span_ranks["a"] = 0
   short_span_ranks["b"] = 1
   assert_eq(
@@ -60,7 +60,7 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
     true,
   )
 
-  let incomplete_ranks : Map[String, Int] = Map::new()
+  let incomplete_ranks : Map[String, Int] = Map([])
   incomplete_ranks["a"] = 0
   assert_eq(
     edge_label_rank_info(

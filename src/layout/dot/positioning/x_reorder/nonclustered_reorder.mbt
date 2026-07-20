@@ -113,7 +113,7 @@ fn reorder_nonclustered_x_groups(
     input.has_edge_labels,
     input.port_order_positions,
     input.port_order_contrib,
-    Map::new(),
+    Map([]),
     input.cluster_skeleton,
     input.flat_constraints,
     graphviz_flip=input.graphviz_flip,

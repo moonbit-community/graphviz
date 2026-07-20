@@ -121,8 +121,8 @@ fn route_ordered_edges(
   callbacks : RoutingCallbacks,
 ) -> Unit {
   let state : OrderedEdgeRoutingState = {
-    recovered_slack_keys: Map::new(),
-    self_edge_routes: Map::new(),
+    recovered_slack_keys: Map([]),
+    self_edge_routes: Map([]),
     edges_out_by_id,
   }
   for edge in input.ordered_edges {

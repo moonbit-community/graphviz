@@ -35,9 +35,9 @@ fn build_flat_constraints(
   edge_head : Array[String],
   cluster_keys : Map[String, String],
 ) -> FlatConstraintsOutput {
-  let flat_constraints : Map[String, Bool] = Map::new()
-  let out_edges : Map[String, Array[(Int, Int)]] = Map::new()
-  let in_edges : Map[String, Array[(Int, Int)]] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
+  let out_edges : Map[String, Array[(Int, Int)]] = Map([])
+  let in_edges : Map[String, Array[(Int, Int)]] = Map([])
   for node in nodes {
     let name = node.name()
     out_edges[name] = []
@@ -256,8 +256,8 @@ priv struct RankSameMetadata {
 /// attributes before ordering setup and flat-constraint wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_rank_same_metadata(graph : @cgraph.Graph) -> RankSameMetadata {
-  let rank_same_groups : Map[String, Int] = Map::new()
-  let rank_same_order : Map[String, Int] = Map::new()
+  let rank_same_groups : Map[String, Int] = Map([])
+  let rank_same_order : Map[String, Int] = Map([])
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   { rank_same_groups, rank_same_order }
 }

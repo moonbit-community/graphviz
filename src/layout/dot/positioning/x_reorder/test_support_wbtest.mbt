@@ -7,7 +7,7 @@ fn new_test_graph(
   names : Array[String],
 ) -> (@cgraph.Graph, Map[String, @cgraph.Node]) {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let node_map : Map[String, @cgraph.Node] = Map::new()
+  let node_map : Map[String, @cgraph.Node] = Map([])
   for name in names {
     node_map[name] = graph.node(name)
   }

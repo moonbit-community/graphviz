@@ -10,10 +10,10 @@ test "recover_slack_vnodes centers plain vnodes and right-aligns only the label 
     "v1": @node_primitives.vnode_size_from_widths(1.0, 1.0),
     "v2": @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 6.0),
   }
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
-  let merged_positions : Map[String, @geom.Point] = Map::new()
-  let pathplan_route_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let empty_edge_vnodes : Map[String, Array[String]] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
+  let merged_positions : Map[String, @geom.Point] = Map([])
+  let pathplan_route_sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let empty_edge_vnodes : Map[String, Array[String]] = Map([])
   let adjacency = @routesplines.build_path_adjacency(
     [],
     empty_edge_vnodes,
@@ -72,10 +72,10 @@ test "recover_slack_vnodes keeps midpoint-rank plain vnode centered without labe
     "v1": @node_primitives.vnode_size_from_widths(1.0, 1.0),
     "v2": @node_primitives.vnode_size_from_widths(1.0, 1.0),
   }
-  let vnode_positions : Map[String, @geom.Point] = Map::new()
-  let merged_positions : Map[String, @geom.Point] = Map::new()
-  let pathplan_route_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let empty_edge_vnodes : Map[String, Array[String]] = Map::new()
+  let vnode_positions : Map[String, @geom.Point] = Map([])
+  let merged_positions : Map[String, @geom.Point] = Map([])
+  let pathplan_route_sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let empty_edge_vnodes : Map[String, Array[String]] = Map([])
   let adjacency = @routesplines.build_path_adjacency(
     [],
     empty_edge_vnodes,

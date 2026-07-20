@@ -131,7 +131,7 @@ fn node_label_text(node : @cgraph.Node) -> String {
 
 ///|
 fn unique_simple_node_labels(graph : @cgraph.Graph) -> Array[String] {
-  let counts : Map[String, Int] = Map::new()
+  let counts : Map[String, Int] = Map([])
   for node in graph.nodes() {
     let label = node_label_text(node)
     if is_simple_label(label) {

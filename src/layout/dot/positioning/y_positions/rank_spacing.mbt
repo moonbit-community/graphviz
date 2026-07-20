@@ -35,7 +35,7 @@ pub fn self_edge_label_half_heights(
   edges : Array[@cgraph.Edge],
   edge_label_height_pt_for : (@cgraph.Edge) -> Double,
 ) -> Map[String, Double] {
-  let heights : Map[String, Double] = Map::new()
+  let heights : Map[String, Double] = Map([])
   for edge in edges {
     if !@edge_semantics.edge_is_self(edge) {
       continue

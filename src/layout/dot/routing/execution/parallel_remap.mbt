@@ -24,9 +24,9 @@ fn collect_parallel_remap_edge_ids(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
 ) -> Array[Array[Int]] {
-  let groups : Map[String, Array[Int]] = Map::new()
-  let group_first_direction : Map[String, String] = Map::new()
-  let group_has_mixed_direction : Map[String, Bool] = Map::new()
+  let groups : Map[String, Array[Int]] = Map([])
+  let group_first_direction : Map[String, String] = Map([])
+  let group_has_mixed_direction : Map[String, Bool] = Map([])
   for edge in edges {
     if @edge_semantics.edge_has_label(edge) {
       continue
@@ -168,7 +168,7 @@ fn remap_parallel_edge_layouts(input : ParallelEdgeLayoutsRemapInput) -> Unit {
     ranks,
     has_layout: edge_id => edges_out_by_id.get(edge_id) is Some(_),
   })
-  let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
+  let remap_snapshot : Map[Int, DotLayoutEdge] = Map([])
   for assignment in assignments {
     match edges_out_by_id.get(assignment.target_edge_id) {
       Some(layout) => remap_snapshot[assignment.target_edge_id] = layout

@@ -23,7 +23,7 @@ fn build_port_offsets_with_callbacks(
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point,
   swap_node_size : (@node_primitives.NodeSize) -> @node_primitives.NodeSize,
 ) -> Map[String, Map[String, @record_geometry.RecordPort]] {
-  let offsets : Map[String, Map[String, @record_geometry.RecordPort]] = Map::new()
+  let offsets : Map[String, Map[String, @record_geometry.RecordPort]] = Map([])
   let rankdir = if nodes.length() > 0 {
     @rankdir.graph_rankdir(nodes[0].graph())
   } else {
@@ -38,7 +38,7 @@ fn build_port_offsets_with_callbacks(
     }
     let ports = ports_for_node(node, origin, base_size, rankdir)
     if ports.length() > 0 {
-      let node_offsets : Map[String, @record_geometry.RecordPort] = Map::new()
+      let node_offsets : Map[String, @record_geometry.RecordPort] = Map([])
       for port_name, port_info in ports {
         let offset = layout_port_offset(port_info.center, rankdir)
         let size = match rankdir {
@@ -242,7 +242,7 @@ fn build_edge_port_samples_with_callbacks(
   } else {
     @rankdir.RankDir::TB
   }
-  let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
+  let nodes_by_name : Map[String, @cgraph.Node] = Map([])
   for node in nodes {
     nodes_by_name[node.name()] = node
   }

@@ -40,8 +40,8 @@ test "layout_ports_from_final rotates record ports into LR layout coordinates" {
 
 ///|
 test "dynamic_port_anchor_for_edge chooses the nearest allowed side for label ports" {
-  let raw_ports : Map[String, Map[String, RecordPort]] = Map::new()
-  let node_ports : Map[String, RecordPort] = Map::new()
+  let raw_ports : Map[String, Map[String, RecordPort]] = Map([])
+  let node_ports : Map[String, RecordPort] = Map([])
   node_ports["p"] = {
     center: @geom.Point::{ x: 0.0, y: 0.0 },
     size: @node_primitives.node_size_from_points(20.0, 10.0),
@@ -69,7 +69,7 @@ test "dynamic_port_anchor_for_edge falls back when the port resolves to a compas
   let result = dynamic_port_anchor_for_edge(
     Some({ name: None, compass: Some(@cgraph.Compass::E) }),
     "n",
-    Map::new(),
+    Map([]),
     @geom.Point::{ x: 10.0, y: 20.0 },
     @geom.Point::{ x: 100.0, y: 20.0 },
     @rankdir.RankDir::TB,

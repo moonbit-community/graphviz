@@ -29,11 +29,11 @@ pub fn build_edge_vnodes(
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
 ) -> EdgeVnodeInfo {
-  let vnode_ranks : Map[String, Int] = Map::new()
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let edge_vnodes : Map[String, Array[String]] = Map([])
+  let vnode_clusters : Map[String, String] = Map([])
   let tail_order : Array[String] = []
   for node in nodes {
     tail_order.push(node.name())

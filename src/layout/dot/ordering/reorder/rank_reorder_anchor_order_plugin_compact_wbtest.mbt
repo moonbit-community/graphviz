@@ -95,7 +95,7 @@ test "rank_reorder uses external anchor order for plugin-style single-rank slice
     ranks: [[0, 1, 2, 3, 4, 5]],
   }
   let output : MincrossOutput = { case_id: 1007, ranks: [[5, 4, 0, 3, 1, 2]] }
-  let name_order : Map[String, Int] = Map::new()
+  let name_order : Map[String, Int] = Map([])
   name_order["fmt_tiff"] = 3
   name_order["fmt_tif"] = 4
   name_order["fmt_bmp"] = 5
@@ -253,7 +253,7 @@ test "rank_reorder uses external anchor order to break symmetric plugin fanout t
     case_id: 1008,
     ranks: [[0], [1], [3, 2, 5, 4]],
   }
-  let name_order : Map[String, Int] = Map::new()
+  let name_order : Map[String, Int] = Map([])
   name_order["fmt_png"] = 8
   name_order["fmt_pdf"] = 9
   name_order["fmt_svg"] = 15

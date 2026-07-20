@@ -4,25 +4,25 @@
 
 ///|
 test "apply_rank_same_order_nodes rewrites node order for unported groups only" {
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   node_order["a"] = 2
   node_order["b"] = 5
   node_order["c"] = 9
   node_order["d"] = 7
 
-  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_groups : Map[String, Int] = Map([])
   rank_same_groups["a"] = 1
   rank_same_groups["b"] = 1
   rank_same_groups["c"] = 2
   rank_same_groups["d"] = 2
 
-  let rank_same_order : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map([])
   rank_same_order["b"] = 0
   rank_same_order["a"] = 1
   rank_same_order["d"] = 0
   rank_same_order["c"] = 1
 
-  let port_edge_nodes : Map[String, Bool] = Map::new()
+  let port_edge_nodes : Map[String, Bool] = Map([])
   port_edge_nodes["c"] = true
 
   apply_rank_same_order_nodes(
@@ -37,7 +37,7 @@ test "apply_rank_same_order_nodes rewrites node order for unported groups only" 
 
 ///|
 test "build_order_reorder_context assembles rank keys graphs creation order and node-order fallbacks on noncluster path" {
-  let order_groups : Map[Int, Array[String]] = Map::new()
+  let order_groups : Map[Int, Array[String]] = Map([])
   order_groups[0] = ["a", "b", "v0"]
   order_groups[1] = ["d"]
 
@@ -57,7 +57,7 @@ test "build_order_reorder_context assembles rank keys graphs creation order and 
     base_order_index: { "extra_real": 11, "a": 99 },
     rank_same_groups: { "a": 1, "b": 1 },
     rank_same_order: { "b": 0, "a": 1 },
-    port_edge_nodes: Map::new(),
+    port_edge_nodes: Map([]),
   })
 
   assert_eq(context.order_rank_keys, [0, 1])
@@ -80,12 +80,12 @@ test "build_order_reorder_context assembles rank keys graphs creation order and 
 
 ///|
 test "build_order_reorder_context applies rank-same normalization only when clusters are enabled" {
-  let order_groups : Map[Int, Array[String]] = Map::new()
+  let order_groups : Map[Int, Array[String]] = Map([])
   order_groups[0] = ["a", "b"]
   let empty_nlist : Array[String] = []
-  let empty_node_order : Map[String, Int] = Map::new()
-  let empty_base_order_index : Map[String, Int] = Map::new()
-  let empty_port_edge_nodes : Map[String, Bool] = Map::new()
+  let empty_node_order : Map[String, Int] = Map([])
+  let empty_base_order_index : Map[String, Int] = Map([])
+  let empty_port_edge_nodes : Map[String, Bool] = Map([])
 
   let nonclustered = build_order_reorder_context({
     order_groups,
@@ -120,10 +120,10 @@ test "build_order_reorder_context applies rank-same normalization only when clus
 
 ///|
 test "apply_unconstrained_order_overrides resets isolated real nodes to gdnlist order while leaving constrained and rank-same nodes untouched" {
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   graphviz_out_neighbors["connected"] = ["sink"]
 
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   order_node_order["connected"] = 90
   order_node_order["isolated_b"] = 91
   order_node_order["isolated_a"] = 92
@@ -141,12 +141,12 @@ test "apply_unconstrained_order_overrides resets isolated real nodes to gdnlist 
     },
     ["connected", "isolated_b", "isolated_a", "rank_locked"],
     graphviz_out_neighbors,
-    Map::new(),
+    Map([]),
     { "rank_locked": 1 },
     [],
     [],
     nodes,
-    Map::new(),
+    Map([]),
     order_node_order,
   )
 
@@ -162,29 +162,29 @@ test "apply_unconstrained_order_overrides reassigns incoming-only local cluster 
   let local_a = graph.node("local_a")
   let local_b = graph.node("local_b")
 
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   graphviz_out_neighbors["local_a"] = []
   graphviz_out_neighbors["local_b"] = []
 
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   graphviz_in_neighbors["local_a"] = []
   graphviz_in_neighbors["local_b"] = []
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["local_a"] = "cluster_local"
   intercluster_keys["local_b"] = "cluster_local"
 
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   order_node_order["local_a"] = 10
   order_node_order["local_b"] = 20
 
   apply_unconstrained_order_overrides(
     [],
-    Map::new(),
+    Map([]),
     ["local_a", "local_b"],
     graphviz_out_neighbors,
     graphviz_in_neighbors,
-    Map::new(),
+    Map([]),
     ["tail_to_b", "tail_to_a"],
     ["local_b", "local_a"],
     [local_a, local_b],

@@ -11,7 +11,7 @@ test "remap_parallel_edge_layouts uses a snapshot so reversed remaps do not casc
   let edge_2 = graph.edge(a, b)
   let edge_3 = graph.edge(a, b)
   let ranks : Map[String, Int] = { "a": 0, "b": 2 }
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
   edges_out_by_id[edge_1.id()] = build_layout_edge(edge_1, 1.0)
   edges_out_by_id[edge_2.id()] = build_layout_edge(edge_2, 20.0)
   edges_out_by_id[edge_3.id()] = build_layout_edge(edge_3, 40.0)

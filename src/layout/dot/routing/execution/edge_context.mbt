@@ -65,7 +65,7 @@ fn route_edges(
   callbacks : RoutingCallbacks,
 ) -> Array[DotLayoutEdge] {
   let ordered_routing_input = build_ordered_routing_input(input)
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
   route_ordered_edges(ordered_routing_input, edges_out_by_id, callbacks)
   finalize_routed_edges({
     edges: input.edges,

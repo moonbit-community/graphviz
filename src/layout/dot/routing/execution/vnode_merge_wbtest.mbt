@@ -12,7 +12,7 @@ test "vnode_is_merged stays false for duplicate parallel neighbors but true for 
   let duplicate_b = duplicate_graph.node("b")
   let duplicate_1 = duplicate_graph.edge(duplicate_a, duplicate_b)
   let duplicate_2 = duplicate_graph.edge(duplicate_a, duplicate_b)
-  let duplicate_vnodes : Map[String, Array[String]] = Map::new()
+  let duplicate_vnodes : Map[String, Array[String]] = Map([])
   duplicate_vnodes[@edge_identity.edge_vnode_key(duplicate_1)] = ["v"]
   duplicate_vnodes[@edge_identity.edge_vnode_key(duplicate_2)] = ["v"]
   let duplicate_adjacency = @routesplines.build_path_adjacency(
@@ -32,7 +32,7 @@ test "vnode_is_merged stays false for duplicate parallel neighbors but true for 
   let merged_d = merged_graph.node("d")
   let merged_1 = merged_graph.edge(merged_a, merged_b)
   let merged_2 = merged_graph.edge(merged_c, merged_d)
-  let merged_vnodes : Map[String, Array[String]] = Map::new()
+  let merged_vnodes : Map[String, Array[String]] = Map([])
   merged_vnodes[@edge_identity.edge_vnode_key(merged_1)] = ["v"]
   merged_vnodes[@edge_identity.edge_vnode_key(merged_2)] = ["v"]
   let merged_adjacency = @routesplines.build_path_adjacency(

@@ -66,8 +66,8 @@ pub fn run_cluster_local_rank_reorder_call(
     call_inputs.has_edge_labels,
     call_inputs.port_order_positions,
     call_inputs.port_order_contrib,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     call_inputs.cluster_flat_constraints,
     graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
     graphviz_in_neighbors=call_inputs.graphviz_in_neighbors,
@@ -211,7 +211,7 @@ fn reorder_cluster_rank_groups(
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
-  let expanded_clusters : Map[String, Bool] = Map::new()
+  let expanded_clusters : Map[String, Bool] = Map([])
   let mut current_fixed_positions = fixed_positions
   for cluster in cluster_names {
     let cluster_graph = match cluster_graphs.get(cluster) {
@@ -299,7 +299,7 @@ fn build_cluster_sizes_for_reorder(
 ) -> Map[String, @node_primitives.NodeSize] {
   // Graphviz parity: cluster-local reorder metadata keeps node sizes scoped to
   // the filtered cluster node subset.
-  let cluster_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let cluster_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   for name, _ in cluster_node_set {
     match order_sizes.get(name) {
       Some(size) => cluster_sizes[name] = size
@@ -320,7 +320,7 @@ fn filter_cluster_flat_constraints(
 ) -> Map[String, Bool] {
   // Graphviz parity: local reorder forwards same-rank flat constraints only
   // when both endpoints belong to the active cluster node subset.
-  let cluster_flat_constraints : Map[String, Bool] = Map::new()
+  let cluster_flat_constraints : Map[String, Bool] = Map([])
   for key, value in flat_constraints {
     if !value {
       continue
@@ -460,7 +460,7 @@ fn build_local_reorder_edge_bundle(
 fn build_local_reorder_cluster_keys(
   cluster_node_set : Map[String, Bool],
 ) -> Map[String, String] {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   for name, _ in cluster_node_set {
     // Graphviz parity: mincross_clust() runs on the expanded subgraph where
     // ND_clust is cleared, so local reorder/transpose should not see
@@ -615,7 +615,7 @@ fn build_cluster_node_set_for_reorder(
   vnode_clusters : Map[String, String],
   order_with_vnodes : Bool,
 ) -> Map[String, Bool] {
-  let cluster_nodes_set : Map[String, Bool] = Map::new()
+  let cluster_nodes_set : Map[String, Bool] = Map([])
   for node in cluster_graph.nodes() {
     cluster_nodes_set[node.name()] = true
   }
@@ -626,7 +626,7 @@ fn build_cluster_node_set_for_reorder(
       }
     }
   }
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   for _rank, names in groups {
     for name in names {
       if cluster_nodes_set.get(name) is Some(_) {
@@ -649,7 +649,7 @@ fn build_cluster_node_order_context(
   for name, _ in cluster_node_set {
     cluster_nodes.push(name)
   }
-  let cluster_node_order : Map[String, Int] = Map::new()
+  let cluster_node_order : Map[String, Int] = Map([])
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
@@ -672,7 +672,7 @@ fn build_cluster_fixed_positions(
   fixed_positions : Map[String, Double],
   cluster_node_set : Map[String, Bool],
 ) -> Map[String, Double] {
-  let cluster_fixed_positions : Map[String, Double] = Map::new()
+  let cluster_fixed_positions : Map[String, Double] = Map([])
   for name, value in fixed_positions {
     if cluster_node_set.get(name) is None {
       cluster_fixed_positions[name] = value
@@ -851,7 +851,7 @@ fn build_cluster_group_order_index(
   cluster_rank_keys : Array[Int],
   cluster_groups : Map[Int, Array[String]],
 ) -> Map[String, Int] {
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   for rank in cluster_rank_keys {
     let names = cluster_groups.get(rank).unwrap_or_default()
     for idx, name in names {
@@ -875,7 +875,7 @@ fn seed_local_groups_by_vnode(
   let order_index = build_cluster_group_order_index(
     cluster_rank_keys, cluster_groups,
   )
-  let seeded : Map[Int, Array[String]] = Map::new()
+  let seeded : Map[Int, Array[String]] = Map([])
   for rank in cluster_rank_keys {
     let names = cluster_groups.get(rank).unwrap_or_default()
     if names.length() <= 1 {
@@ -990,7 +990,7 @@ fn cluster_depth_for_order(
     parents,
     fallback_parents,
     memo,
-    Map::new(),
+    Map([]),
   )
 }
 
@@ -1034,7 +1034,7 @@ fn build_cluster_graph_order(
     return { cluster_graphs, cluster_names }
   }
   let cluster_index = @order_graph.build_cluster_order_index(cluster_order)
-  let cluster_depth : Map[String, Int] = Map::new()
+  let cluster_depth : Map[String, Int] = Map([])
   for name in cluster_names {
     let _ = cluster_depth_for_order(
       name, cluster_parents_hint, cluster_parents, cluster_depth,
@@ -1117,7 +1117,7 @@ fn collect_rank_real_nodes(list : Array[String]) -> Array[String] {
 
 ///|
 fn build_rank_group_name_set(names : Array[String]) -> Map[String, Bool] {
-  let out : Map[String, Bool] = Map::new()
+  let out : Map[String, Bool] = Map([])
   for name in names {
     out[name] = true
   }
@@ -1151,7 +1151,7 @@ fn build_cluster_out_heads_by_tail(
   cluster_node_set : Map[String, Bool],
   source_graphviz_out_neighbors : Map[String, Array[String]],
 ) -> Map[String, Array[String]] {
-  let out_heads_by_tail : Map[String, Array[String]] = Map::new()
+  let out_heads_by_tail : Map[String, Array[String]] = Map([])
   for tail, _ in cluster_node_set {
     let heads = source_graphviz_out_neighbors.get(tail).unwrap_or_default()
     let filtered : Array[String] = []
@@ -1185,7 +1185,7 @@ fn seed_rank_real_nodes_from_previous_rank(
     return ()
   }
   let seeded_real_nodes : Array[String] = []
-  let seeded_seen : Map[String, Bool] = Map::new()
+  let seeded_seen : Map[String, Bool] = Map([])
   for tail in prev_names {
     let heads = out_heads_by_tail.get(tail).unwrap_or_default()
     for head in heads {
@@ -1219,7 +1219,7 @@ fn build_local_rank_groups(
   cluster_node_order : Map[String, Int],
   source_graphviz_out_neighbors : Map[String, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let cluster_groups : Map[Int, Array[String]] = Map::new()
+  let cluster_groups : Map[Int, Array[String]] = Map([])
   for rank, names in groups {
     let list : Array[String] = []
     for name in names {
@@ -1303,8 +1303,8 @@ fn append_cluster_local_neighbor_edge(
 fn build_raw_graphviz_neighbor_maps(
   graph : @cgraph.Graph,
 ) -> RawGraphvizNeighborMaps {
-  let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   for node in graph.nodes() {
     let name = node.name()
     raw_graphviz_out_neighbors[name] = []
@@ -1414,7 +1414,7 @@ fn append_raw_neighbors_with_external_anchor(
   raw_neighbors : Array[String],
   merge_context : LocalNeighborMergeContext,
 ) -> Unit {
-  let external_cluster_seen : Map[String, Bool] = Map::new()
+  let external_cluster_seen : Map[String, Bool] = Map([])
   for other in raw_neighbors {
     if @edge_identity.is_edge_vnode_name(other) ||
       @cluster_identity.is_cluster_skeleton_name(other) {
@@ -1465,7 +1465,7 @@ priv struct LocalNeighborMergeContext {
 
 ///|
 fn build_name_set(names : Array[String]) -> Map[String, Bool] {
-  let result : Map[String, Bool] = Map::new()
+  let result : Map[String, Bool] = Map([])
   for name in names {
     result[name] = true
   }
@@ -1522,8 +1522,8 @@ fn build_local_neighbor_maps(
   intercluster_keys : Map[String, String],
   allow_raw_neighbors : Bool,
 ) -> ClusterLocalNeighborMaps {
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   let cluster_node_set = build_name_set(cluster_nodes)
   let merge_context : LocalNeighborMergeContext = {
     cluster,

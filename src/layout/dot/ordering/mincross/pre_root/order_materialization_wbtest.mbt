@@ -8,7 +8,7 @@ test "build_materialized_graphviz_neighbors preserves per-tail head order and AG
   let order_edges_by_tail : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   order_edges_by_tail["a"] = [
     ("a", "c", 1, true, 0.0, 0.0, 0.0, 0.0),
     ("a", "b", 2, true, 0.0, 0.0, 0.0, 0.0),
@@ -44,7 +44,7 @@ test "build_order_materialization_data replays mapped and unmapped tails in nlis
   let order_edges_by_tail : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   order_edges_by_tail["a"] = [
     ("a", "b", 5, true, 1.0, 2.0, 0.1, 0.2),
     ("a", "c", 6, false, 3.0, 4.0, 0.3, 0.4),
@@ -54,13 +54,13 @@ test "build_order_materialization_data replays mapped and unmapped tails in nlis
   let order_edges_by_tail_unmapped : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   order_edges_by_tail_unmapped["a"] = [("a", "c", 9, true, 7.0, 8.0, 0.7, 0.8)]
   order_edges_by_tail_unmapped["b"] = [
     ("b", "a", 10, false, 9.0, 10.0, 0.9, 1.0),
   ]
 
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   flat_constraints["a|b"] = true
 
   let materialized = build_order_materialization_data({

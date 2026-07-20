@@ -83,7 +83,7 @@ pub fn project_clustered_node_ranks(
   local_ranks : Map[String, Int],
   leader_ranks : Map[String, Int],
 ) -> Map[String, Int] {
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   let mut min_rank = 0
   let mut seen = false
   for node in nodes {
@@ -136,7 +136,7 @@ pub fn apply_clustered_rank_postprocessing(
   ranks : Map[String, Int],
 ) -> Map[String, Int] {
   let rank_same_reps = @rank_constraints.build_rank_same_reps(source, nodes)
-  let rep_ranks : Map[String, Int] = Map::new()
+  let rep_ranks : Map[String, Int] = Map([])
   for name, rank in ranks {
     let rep = match rank_same_reps.get(name) {
       Some(value) => value
@@ -157,8 +157,8 @@ pub fn apply_clustered_rank_postprocessing(
     }
     ranks[name] = rep_rank
   }
-  let min_nodes : Map[String, Bool] = Map::new()
-  let max_nodes : Map[String, Bool] = Map::new()
+  let min_nodes : Map[String, Bool] = Map([])
+  let max_nodes : Map[String, Bool] = Map([])
   @solver.collect_rank_extremes(source, min_nodes, max_nodes)
   @solver.apply_rank_extremes(ranks, min_nodes, max_nodes)
   ranks

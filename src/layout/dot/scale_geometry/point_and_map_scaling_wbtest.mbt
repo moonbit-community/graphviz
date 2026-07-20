@@ -16,28 +16,28 @@ test "point and map scaling helpers keep expected rounding and axis scaling" {
   )
   assert_eq(scale_optional_point(None, 2.0, 3.0), None)
 
-  let points : Map[String, @geom.Point] = Map::new()
+  let points : Map[String, @geom.Point] = Map([])
   points["a"] = { x: 1.4, y: -2.6 }
   points["b"] = { x: -0.6, y: 0.6 }
   let scaled_points = scale_point_map_rounded(points, 2.0, 3.0)
   assert_eq(scaled_points.get("a"), Some({ x: 3.0, y: -8.0 }))
   assert_eq(scaled_points.get("b"), Some({ x: -1.0, y: 2.0 }))
 
-  let doubles : Map[Int, Double] = Map::new()
+  let doubles : Map[Int, Double] = Map([])
   doubles[1] = 1.24
   doubles[2] = -1.26
   let scaled_doubles = scale_double_map_rounded(doubles, 10.0)
   assert_eq(scaled_doubles.get(1), Some(12.0))
   assert_eq(scaled_doubles.get(2), Some(-13.0))
 
-  let named : Map[String, Double] = Map::new()
+  let named : Map[String, Double] = Map([])
   named["x"] = 1.5
   named["y"] = -2.0
   let scaled_named = scale_named_double_map(named, 4.0)
   assert_eq(scaled_named.get("x"), Some(6.0))
   assert_eq(scaled_named.get("y"), Some(-8.0))
 
-  let rects : Map[String, @geom.Rect] = Map::new()
+  let rects : Map[String, @geom.Rect] = Map([])
   rects["r"] = { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 }
   let scaled_rects = scale_rect_map(rects, 2.0, 5.0)
   assert_eq(

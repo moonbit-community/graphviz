@@ -10,7 +10,7 @@ test "build_clustered_xpos_edges expands vnode chains and appends skeleton links
   let edge = graph.edge(a, b)
   edge.set_attr("xpenalty", "9")
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1"]
 
   let ranks : Map[String, Int] = { "a": 0, "v1": 1, "b": 2 }
@@ -59,14 +59,14 @@ test "build_clustered_xpos_edges uses remapped endpoint snapshots and defaults m
     edge_tail: ["tail_override"],
     edge_head: ["head_override"],
     ranks: { "tail_override": 0, "head_override": 1 },
-    edge_vnodes: Map::new(),
+    edge_vnodes: Map([]),
     order_nodes: ["tail_override", "head_override"],
     edge_tail_port_x: [],
     edge_head_port_x: [],
     edge_tail_port_order: [],
     edge_head_port_order: [],
-    cluster_min_rank: Map::new(),
-    cluster_max_rank: Map::new(),
+    cluster_min_rank: Map([]),
+    cluster_max_rank: Map([]),
     cluster_skeleton_penalty: 11,
   })
 
@@ -95,7 +95,7 @@ test "append_clustered_input_edges mixes direct edges, reverse vnode chains, and
   direct_edge.set_attr("xpenalty", "5")
   down_edge.set_attr("xpenalty", "7")
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(down_edge)] = ["down_v1", "down_v2"]
 
   let input : ClusteredXposEdgeMaterializationInput = {
@@ -118,8 +118,8 @@ test "append_clustered_input_edges mixes direct edges, reverse vnode chains, and
     edge_head_port_x: [],
     edge_tail_port_order: [0.2],
     edge_head_port_order: [0.8, 0.9],
-    cluster_min_rank: Map::new(),
-    cluster_max_rank: Map::new(),
+    cluster_min_rank: Map([]),
+    cluster_max_rank: Map([]),
     cluster_skeleton_penalty: 11,
   }
 

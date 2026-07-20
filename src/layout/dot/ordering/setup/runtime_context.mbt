@@ -66,8 +66,8 @@ pub(all) struct OrderingNodeNameSets {
 fn build_ordering_node_name_sets(
   nodes : Array[@cgraph.Node],
 ) -> OrderingNodeNameSets {
-  let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
+  let real_nodes : Map[String, Bool] = Map([])
+  let existing_names : Map[String, Bool] = Map([])
   for node in nodes {
     let name = node.name()
     real_nodes[name] = true
@@ -85,7 +85,7 @@ fn build_port_edge_nodes_for_ordering(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> Map[String, Bool] {
-  let port_edge_nodes : Map[String, Bool] = Map::new()
+  let port_edge_nodes : Map[String, Bool] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let ported = @edge_identity.port_is_explicit(edge.tail_port()) ||
@@ -108,8 +108,8 @@ fn build_local_cluster_order(
   ranks : Map[String, Int],
   node_order : Map[String, Int],
 ) -> Map[String, Int] {
-  let min_rank : Map[String, Int] = Map::new()
-  let first_order : Map[String, Int] = Map::new()
+  let min_rank : Map[String, Int] = Map([])
+  let first_order : Map[String, Int] = Map([])
   for node in nodes {
     let name = node.name()
     let cluster = local_cluster_keys.get(name).unwrap_or_default()
@@ -148,7 +148,7 @@ fn build_local_cluster_order(
       0
     }
   })
-  let order_map : Map[String, Int] = Map::new()
+  let order_map : Map[String, Int] = Map([])
   let mut idx = 0
   for entry in entries {
     let (cluster, _rank, _order) = entry
@@ -170,7 +170,7 @@ fn build_ordering_runtime_core_from_sources(
   let node_name_sets = build_ordering_node_name_sets(sources.nodes)
   let real_nodes = node_name_sets.real_nodes
   let existing_names = node_name_sets.existing_names
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   @membership.collect_edge_cluster_keys(sources.graph, edge_cluster_keys)
   let port_edge_nodes = build_port_edge_nodes_for_ordering(
     sources.edges,
@@ -215,7 +215,7 @@ pub fn build_ordering_runtime_context_from_sources(
     sources.cluster_meta.cluster_parents,
   )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
-  let rank_same_constraints : Map[String, Bool] = Map::new()
+  let rank_same_constraints : Map[String, Bool] = Map([])
   let runtime_context : OrderingRuntimeContext = {
     real_nodes: runtime_core.real_nodes,
     edge_cluster_keys: runtime_core.edge_cluster_keys,
@@ -232,7 +232,7 @@ pub fn build_ordering_runtime_context_from_sources(
       sources.edge_tail,
     )
   } else {
-    Map::new()
+    Map([])
   }
   runtime_context
 }
@@ -273,12 +273,12 @@ fn build_vnode_tail_constraints(
   vnodes_by_rank : Map[Int, Array[String]],
   edge_tail : Array[String],
 ) -> Map[String, Bool] {
-  let constraints : Map[String, Bool] = Map::new()
+  let constraints : Map[String, Bool] = Map([])
   for _rank, names in vnodes_by_rank {
     if names.length() <= 1 {
       continue
     }
-    let by_tail : Map[String, Array[(Int, String)]] = Map::new()
+    let by_tail : Map[String, Array[(Int, String)]] = Map([])
     for name in names {
       if !@edge_identity.is_edge_vnode_name(name) {
         continue

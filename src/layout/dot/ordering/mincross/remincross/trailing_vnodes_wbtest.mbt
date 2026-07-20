@@ -4,12 +4,12 @@
 
 ///|
 test "cluster_rank_ranges_overlap treats touching ranges as overlapping and falls back to min rank when max is missing" {
-  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_min_rank : Map[String, Int] = Map([])
   cluster_min_rank["left"] = 0
   cluster_min_rank["touching"] = 1
   cluster_min_rank["far"] = 3
 
-  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map([])
   cluster_max_rank["left"] = 1
 
   assert_true(
@@ -43,14 +43,14 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   let edge_root = graph.edge(root, left)
   let edge_overlap = graph.edge(overlap_a, overlap_b)
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_disjoint)] = ["v_disjoint"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_internal)] = ["v_internal"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_same)] = ["v_same"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_root)] = ["v_root"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_overlap)] = ["v_overlap"]
 
-  let remincross_cluster_keys : Map[String, String] = Map::new()
+  let remincross_cluster_keys : Map[String, String] = Map([])
   remincross_cluster_keys["left"] = "cluster_left"
   remincross_cluster_keys["right"] = "cluster_right"
   remincross_cluster_keys["child"] = "cluster_child"
@@ -61,7 +61,7 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   remincross_cluster_keys["overlap_a"] = "cluster_overlap_a"
   remincross_cluster_keys["overlap_b"] = "cluster_overlap_b"
 
-  let cluster_parents : Map[String, String?] = Map::new()
+  let cluster_parents : Map[String, String?] = Map([])
   cluster_parents["cluster_child"] = Some("cluster_parent")
   cluster_parents["cluster_parent"] = None
   cluster_parents["cluster_left"] = None
@@ -70,7 +70,7 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   cluster_parents["cluster_overlap_a"] = None
   cluster_parents["cluster_overlap_b"] = None
 
-  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_min_rank : Map[String, Int] = Map([])
   cluster_min_rank["cluster_left"] = 0
   cluster_min_rank["cluster_right"] = 2
   cluster_min_rank["cluster_child"] = 0
@@ -79,7 +79,7 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   cluster_min_rank["cluster_overlap_a"] = 1
   cluster_min_rank["cluster_overlap_b"] = 2
 
-  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map([])
   cluster_max_rank["cluster_left"] = 0
   cluster_max_rank["cluster_right"] = 2
   cluster_max_rank["cluster_child"] = 0
@@ -108,25 +108,25 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
 
 ///|
 test "apply_remincross_floor raises selected trailing vnodes behind the last real node on their rank" {
-  let keys : Map[String, Double] = Map::new()
+  let keys : Map[String, Double] = Map([])
   keys["v_floor"] = 0.25
   keys["v_keep"] = 5.0
 
-  let intercluster_vnodes : Map[String, Bool] = Map::new()
+  let intercluster_vnodes : Map[String, Bool] = Map([])
   intercluster_vnodes["v_floor"] = true
   intercluster_vnodes["v_keep"] = true
 
-  let rem_base_order_index : Map[String, Int] = Map::new()
+  let rem_base_order_index : Map[String, Int] = Map([])
   rem_base_order_index["a"] = 0
   rem_base_order_index["b"] = 1
   rem_base_order_index["c"] = 0
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 2
 
-  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_ranks : Map[String, Int] = Map([])
   vnode_ranks["v_floor"] = 0
   vnode_ranks["v_keep"] = 2
 
@@ -145,7 +145,7 @@ test "build_remincross_vnode_keys applies trailing floor to disjoint cross-clust
   let head = graph.node("head")
   let edge = graph.edge(tail, head)
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v_floor"]
 
   let inputs : ReMincrossVnodeGroupInputs = {

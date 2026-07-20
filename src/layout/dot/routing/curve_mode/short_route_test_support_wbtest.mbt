@@ -130,12 +130,12 @@ fn short_route_test_context(
 ) -> ShortRouteBuildContext {
   short_route_build_context({
     base,
-    positions: Map::new(),
-    sizes: Map::new(),
-    ranks: Map::new(),
-    rank_y: Map::new(),
-    rank_ht1: Map::new(),
-    rank_ht2: Map::new(),
+    positions: Map([]),
+    sizes: Map([]),
+    ranks: Map([]),
+    rank_y: Map([]),
+    rank_ht1: Map([]),
+    rank_ht2: Map([]),
     ranksep_pt: 12.0,
     route_barriers: [],
     using_pathplan: false,

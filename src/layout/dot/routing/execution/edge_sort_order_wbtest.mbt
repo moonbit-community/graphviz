@@ -8,7 +8,7 @@ test "sorted_edges_for_routing prioritizes self edges then flat edges then regul
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
   let flat_edge = graph.edge(graph.node("c"), graph.node("d"))
   let self_edge = graph.edge(graph.node("s"), graph.node("s"))
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   base_cache[regular_edge.id()] = build_route_base(
     regular_edge,
     tail_rank=0,
@@ -29,7 +29,7 @@ test "sorted_edges_for_routing prioritizes self edges then flat edges then regul
   let ordered = sorted_edges_for_routing(
     [regular_edge, self_edge, flat_edge],
     base_cache,
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(ordered.map(fn(edge) { edge.id() }), [
@@ -50,7 +50,7 @@ test "sorted_edges_for_routing compares equivalent endpoint sets by port before 
   let left_port = Some(left_port_value)
   let edge_right = graph.edge(a, b, tail_port=right_port_value)
   let edge_left = graph.edge(a, b, tail_port=left_port_value)
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   base_cache[edge_right.id()] = build_route_base(
     edge_right,
     tail_port=right_port,
@@ -67,7 +67,7 @@ test "sorted_edges_for_routing compares equivalent endpoint sets by port before 
   let ordered = sorted_edges_for_routing(
     [edge_right, edge_left],
     base_cache,
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(ordered.map(fn(edge) { edge.id() }), [

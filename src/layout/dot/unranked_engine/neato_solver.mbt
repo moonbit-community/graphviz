@@ -124,8 +124,8 @@ pub fn build_neato_node_sizing(
   nodes : Array[@cgraph.Node],
   record_orientation : RecordOrientation,
 ) -> NeatoNodeSizing {
-  let sizes : Map[String, NodeSize] = Map::new()
-  let indices : Map[String, Int] = Map::new()
+  let sizes : Map[String, NodeSize] = Map([])
+  let indices : Map[String, Int] = Map([])
   let radii : Array[Double] = []
   let mut max_half = 0.0
   for i in 0..<nodes.length() {

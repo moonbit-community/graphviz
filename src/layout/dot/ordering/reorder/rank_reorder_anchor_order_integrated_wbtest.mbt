@@ -3330,7 +3330,7 @@ fn plugin_dense_integrated_anchor_order_case() -> (
     ],
   }
 
-  let name_order : Map[String, Int] = Map::new()
+  let name_order : Map[String, Int] = Map([])
   name_order["i-rsvg-svg"] = 0
   name_order["i-xbm"] = 0
   name_order["o-xlib"] = 0

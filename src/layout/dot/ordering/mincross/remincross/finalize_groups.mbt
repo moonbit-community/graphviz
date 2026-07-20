@@ -19,7 +19,7 @@ pub fn collect_real_only_rank_groups(
   ordered : Map[Int, Array[String]],
   real_nodes : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let cleaned_groups : Map[Int, Array[String]] = Map::new()
+  let cleaned_groups : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     let names = ordered.get(rank).unwrap_or_default()
     let cleaned : Array[String] = []
@@ -52,8 +52,8 @@ fn reorder_groups_by_local_cluster(
     if names.length() <= 1 {
       continue
     }
-    let positions_by_outer : Map[String, Array[Int]] = Map::new()
-    let nodes_by_outer : Map[String, Array[String]] = Map::new()
+    let positions_by_outer : Map[String, Array[Int]] = Map([])
+    let nodes_by_outer : Map[String, Array[String]] = Map([])
     for i in 0..<names.length() {
       let name = names[i]
       let outer = @order_graph.cluster_key_or_empty(outer_cluster_keys, name)
@@ -74,10 +74,10 @@ fn reorder_groups_by_local_cluster(
       if outer_nodes.length() <= 1 {
         continue
       }
-      let local_groups : Map[String, Array[String]] = Map::new()
-      let local_seen : Map[String, Bool] = Map::new()
+      let local_groups : Map[String, Array[String]] = Map([])
+      let local_seen : Map[String, Bool] = Map([])
       let local_order_in_rank : Array[String] = []
-      let local_order_index : Map[String, Int] = Map::new()
+      let local_order_index : Map[String, Int] = Map([])
       for name in outer_nodes {
         let local_key = @order_graph.cluster_key_or_empty(
           local_cluster_keys, name,
@@ -232,7 +232,7 @@ fn order_rank_names_by_cluster_buckets(
   order_map : Map[String, Int],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_nodes : Map[String, Array[String]] = Map([])
   let cluster_seq : Array[String] = []
   for name in names {
     let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
@@ -305,7 +305,7 @@ fn reorder_groups_by_cluster(
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
 ) -> Map[Int, Array[String]] {
-  let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
+  let ordered_by_cluster : Map[Int, Array[String]] = Map([])
   for rank, names in final_groups {
     ordered_by_cluster[rank] = reorder_rank_group_by_cluster_order(
       names,
@@ -325,7 +325,7 @@ fn should_skip_cluster_rank_bucket_reorder(
   cleaned_groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Bool {
-  let seen_clusters : Map[String, Bool] = Map::new()
+  let seen_clusters : Map[String, Bool] = Map([])
   let mut has_single_cluster_rank_order_bucket = true
   for _rank, order_map in cluster_rank_order {
     if !has_single_cluster_rank_order_bucket {

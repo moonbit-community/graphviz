@@ -458,13 +458,13 @@ fn clustered_skeleton_tree_rank_reorder_case() -> (
     node_clusters,
     node_cluster_skeleton,
     edges,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
   )
 }
 
 ///|
 test "rank_reorder reorders clustered skeleton tree to reduce crossings" {
   let (input, output) = clustered_skeleton_tree_rank_reorder_case()
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }

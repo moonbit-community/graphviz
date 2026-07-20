@@ -133,7 +133,7 @@ fn dedup_ordering_edges(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> DedupOrderingEdgesOutput {
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   let out_edges : Array[@cgraph.Edge] = []
   let out_tail : Array[String] = []
   let out_head : Array[String] = []

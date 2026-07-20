@@ -6,16 +6,16 @@
 fn empty_cluster_meta() -> DotClusterMetadata {
   {
     has_clusters: false,
-    cluster_keys: Map::new(),
-    cluster_skeleton: Map::new(),
-    cluster_min_rank: Map::new(),
-    cluster_max_rank: Map::new(),
+    cluster_keys: Map([]),
+    cluster_skeleton: Map([]),
+    cluster_min_rank: Map([]),
+    cluster_max_rank: Map([]),
     cluster_order: [],
-    cluster_parents: Map::new(),
-    intercluster_keys: Map::new(),
-    rank_same_groups: Map::new(),
-    rank_same_order: Map::new(),
-    flat_constraints: Map::new(),
+    cluster_parents: Map([]),
+    intercluster_keys: Map([]),
+    rank_same_groups: Map([]),
+    rank_same_order: Map([]),
+    flat_constraints: Map([]),
     ordering_set: false,
   }
 }

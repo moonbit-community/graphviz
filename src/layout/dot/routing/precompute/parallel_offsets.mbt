@@ -43,8 +43,8 @@ pub fn collect_parallel_offset_edge_flags(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (Map[Int, Bool], Map[Int, Bool]) {
-  let edge_reversed_by_id : Map[Int, Bool] = Map::new()
-  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
+  let edge_reversed_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
   for i in 0..<edges.length() {
     let edge = edges[i]
     let (oriented_tail, oriented_head) = edge_endpoints_at(
@@ -82,12 +82,12 @@ pub fn build_edge_parallel_offsets(
   let nodesep_pt = input.nodesep_pt
   let edge_reversed_by_id = input.edge_reversed_by_id
   let cluster_keys = input.cluster_keys
-  let groups : Map[String, Array[Int]] = Map::new()
-  let group_first_dir_attr : Map[String, String] = Map::new()
-  let group_has_mixed_dir_attr : Map[String, Bool] = Map::new()
-  let sameport_marked : Map[Int, Bool] = Map::new()
-  let edge_by_id : Map[Int, @cgraph.Edge] = Map::new()
-  let has_self_edge : Map[String, Bool] = Map::new()
+  let groups : Map[String, Array[Int]] = Map([])
+  let group_first_dir_attr : Map[String, String] = Map([])
+  let group_has_mixed_dir_attr : Map[String, Bool] = Map([])
+  let sameport_marked : Map[Int, Bool] = Map([])
+  let edge_by_id : Map[Int, @cgraph.Edge] = Map([])
+  let has_self_edge : Map[String, Bool] = Map([])
   for edge in edges {
     edge_by_id[edge.id()] = edge
     let tail = edge.tail().name()
@@ -144,7 +144,7 @@ pub fn build_edge_parallel_offsets(
       }
     }
   }
-  let offsets : Map[Int, Double] = Map::new()
+  let offsets : Map[Int, Double] = Map([])
   for key, ids in groups {
     if ids.length() <= 1 {
       continue

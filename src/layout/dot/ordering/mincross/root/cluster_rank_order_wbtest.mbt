@@ -4,7 +4,7 @@
 
 ///|
 fn build_order_map(entries : Array[(String, Int)]) -> Map[String, Int] {
-  let order_map : Map[String, Int] = Map::new()
+  let order_map : Map[String, Int] = Map([])
   for entry in entries {
     let (name, order) = entry
     order_map[name] = order

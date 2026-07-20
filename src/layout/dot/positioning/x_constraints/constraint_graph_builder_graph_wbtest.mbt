@@ -23,18 +23,18 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
   let sizes = build_constraint_builder_test_sizes()
   sizes[vnode] = @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 2.0)
 
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_out_order : Map[String, Array[Int]] = Map([])
   edge_out_order["a"] = [1]
   edge_out_order["b"] = [0]
 
   let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 2 }
   ranks[vnode] = 1
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[2] = ["c"]
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(long_edge)] = [vnode]
 
   let build = build_constraint_graph({
@@ -48,7 +48,7 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
     rank_keys: [0, 2],
     groups,
     sizes,
-    cluster_keys: Map::new(),
+    cluster_keys: Map([]),
     nodesep_pt: 10.0,
     has_edge_labels: false,
     extra_nodes: [{ name: vnode, rank: 1 }, { name: boundary, rank: 9 }],

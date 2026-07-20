@@ -18,11 +18,11 @@ test "median_value_mc_scale follows Graphviz integer scaling" {
 
 ///|
 test "count_crossings counts inversions across adjacent ranks" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
@@ -42,11 +42,11 @@ test "count_crossings counts inversions across adjacent ranks" {
 
 ///|
 test "crossing_for_pair counts parent and child inversions" {
-  let parent_orders : Map[String, Array[Int]] = Map::new()
+  let parent_orders : Map[String, Array[Int]] = Map([])
   parent_orders["left"] = [1, 3]
   parent_orders["right"] = [0, 2]
 
-  let child_orders : Map[String, Array[Int]] = Map::new()
+  let child_orders : Map[String, Array[Int]] = Map([])
   child_orders["left"] = [0, 4]
   child_orders["right"] = [1, 2]
 
@@ -55,15 +55,15 @@ test "crossing_for_pair counts parent and child inversions" {
 
 ///|
 test "left2right_constraint combines cluster pinning and flat constraints" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["left"] = "cluster_a"
   cluster_keys["right"] = "cluster_b"
   cluster_keys["skeleton"] = "cluster_b"
 
-  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_skeleton : Map[String, Bool] = Map([])
   cluster_skeleton["skeleton"] = true
 
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   flat_constraints["flat_left|flat_right"] = true
 
   assert_true(
@@ -95,18 +95,18 @@ test "left2right_constraint combines cluster pinning and flat constraints" {
 
 ///|
 test "compute_desired_positions prefers explicit positions, then port anchors, then neighbor medians" {
-  let neighbors : Map[String, Array[String]] = Map::new()
+  let neighbors : Map[String, Array[String]] = Map([])
   neighbors["median"] = ["n1", "n2", "n3"]
   neighbors["fallback"] = ["n2", "n3"]
 
-  let x_positions : Map[String, Double] = Map::new()
+  let x_positions : Map[String, Double] = Map([])
   x_positions["anchor_left"] = 10.0
   x_positions["anchor_right"] = 30.0
   x_positions["n1"] = 2.0
   x_positions["n2"] = 6.0
   x_positions["n3"] = 100.0
 
-  let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
+  let port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
   port_order_contrib["preferred"] = [("anchor_left", 99.0)]
   port_order_contrib["ported"] = [
     ("anchor_left", 1.5),
@@ -115,7 +115,7 @@ test "compute_desired_positions prefers explicit positions, then port anchors, t
   ]
   port_order_contrib["fallback"] = [("missing_anchor", 8.0)]
 
-  let preferred_positions : Map[String, Double] = Map::new()
+  let preferred_positions : Map[String, Double] = Map([])
   preferred_positions["preferred"] = 42.0
 
   let desired = compute_desired_positions(
@@ -135,10 +135,10 @@ test "compute_desired_positions prefers explicit positions, then port anchors, t
 
 ///|
 test "compute_scaled_medians applies port offsets before Graphviz scaling" {
-  let neighbors : Map[String, Array[(String, Double)]] = Map::new()
+  let neighbors : Map[String, Array[(String, Double)]] = Map([])
   neighbors["ported"] = [("left", 0.1), ("right", 0.0), ("missing", 8.0)]
 
-  let x_positions : Map[String, Double] = Map::new()
+  let x_positions : Map[String, Double] = Map([])
   x_positions["left"] = 0.0
   x_positions["right"] = 1.0
 
@@ -149,12 +149,12 @@ test "compute_scaled_medians applies port offsets before Graphviz scaling" {
 
 ///|
 test "reorder_by_medians keeps left-to-right constrained pairs pinned" {
-  let desired : Map[String, Double] = Map::new()
+  let desired : Map[String, Double] = Map([])
   desired["a"] = 2.0
   desired["b"] = 1.0
   desired["c"] = 0.0
 
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   flat_constraints["a|b"] = true
 
   let reordered = reorder_by_medians(
@@ -162,8 +162,8 @@ test "reorder_by_medians keeps left-to-right constrained pairs pinned" {
     desired,
     false,
     false,
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
     flat_constraints,
   )
 
@@ -172,15 +172,15 @@ test "reorder_by_medians keeps left-to-right constrained pairs pinned" {
 
 ///|
 test "build_rank_constraint_lookup keeps only enabled flat constraints inside the rank" {
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_a"
   cluster_keys["b"] = "cluster_b"
   cluster_keys["skeleton"] = "cluster_b"
 
-  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_skeleton : Map[String, Bool] = Map([])
   cluster_skeleton["skeleton"] = true
 
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   flat_constraints["a|b"] = true
   flat_constraints["a|outside"] = true
   flat_constraints["disabled|pair"] = false
@@ -200,18 +200,18 @@ test "build_rank_constraint_lookup keeps only enabled flat constraints inside th
 
 ///|
 test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["p"] = 0
   ranks["x"] = 1
   ranks["y"] = 1
 
-  let fixed_order : Map[String, Int] = Map::new()
+  let fixed_order : Map[String, Int] = Map([])
 
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["x"] = [0]
   edge_in["y"] = [1]
 
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
 
   let crossings = count_rank_crossings_port(
     1,
@@ -232,21 +232,21 @@ test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
 
 ///|
 test "count_rank_crossings_port respects fixed external endpoint slots" {
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["x"] = 1
   ranks["y"] = 1
   ranks["a"] = 0
   ranks["b"] = 0
 
-  let fixed_order : Map[String, Int] = Map::new()
+  let fixed_order : Map[String, Int] = Map([])
   fixed_order["a"] = 0
   fixed_order["b"] = 1
 
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["x"] = [1]
   edge_in["y"] = [0]
 
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
 
   let crossings = count_rank_crossings_port(
     1,
@@ -272,17 +272,17 @@ test "live port tie-break helpers match materialized port-order tuples" {
     out_edges: [[5], [6, 8]],
   }
   let active_incident_edges : ActiveIncidentEdgeMaps = {
-    in_edges: Map::new(),
-    out_edges: Map::new(),
+    in_edges: Map([]),
+    out_edges: Map([]),
   }
   active_incident_edges.in_edges["left"] = incident_edges.in_edges[0]
   active_incident_edges.in_edges["right"] = incident_edges.in_edges[1]
   active_incident_edges.out_edges["left"] = incident_edges.out_edges[0]
   active_incident_edges.out_edges["right"] = incident_edges.out_edges[1]
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["left"] = incident_edges.in_edges[0]
   edge_in["right"] = incident_edges.in_edges[1]
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
   edge_out["left"] = incident_edges.out_edges[0]
   edge_out["right"] = incident_edges.out_edges[1]
   let edge_endpoint_orders : EdgeEndpointOrders = {
@@ -354,11 +354,11 @@ test "live port tie-break helpers match materialized port-order tuples" {
 
 ///|
 test "active incident edge maps filter non-positive penalties once" {
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["x"] = [0, 1, 2]
   edge_in["y"] = [3]
 
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
   edge_out["a"] = [0, 3]
   edge_out["b"] = [1, 2]
 
@@ -374,24 +374,24 @@ test "active incident edge maps filter non-positive penalties once" {
 ///|
 test "transpose_rank_groups_port reorders rank using fixed external anchors" {
   let rank_keys = [1]
-  let ordered : Map[Int, Array[String]] = Map::new()
+  let ordered : Map[Int, Array[String]] = Map([])
   ordered[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["x"] = 1
   ranks["y"] = 1
   ranks["a"] = 0
   ranks["b"] = 0
 
-  let fixed_order : Map[String, Int] = Map::new()
+  let fixed_order : Map[String, Int] = Map([])
   fixed_order["a"] = 0
   fixed_order["b"] = 1
 
-  let edge_in : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
   edge_in["x"] = [1]
   edge_in["y"] = [0]
 
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_out : Map[String, Array[Int]] = Map([])
 
   let changed = transpose_rank_groups_port(
     rank_keys,
@@ -405,9 +405,9 @@ test "transpose_rank_groups_port reorders rank using fixed external anchors" {
     [],
     [],
     [1, 1],
-    Map::new(),
-    Map::new(),
-    Map::new(),
+    Map([]),
+    Map([]),
+    Map([]),
     false,
     0,
   )
@@ -418,16 +418,16 @@ test "transpose_rank_groups_port reorders rank using fixed external anchors" {
 
 ///|
 test "flat_reorder_rank_groups topologically reorders constrained ranks" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b", "c", "d"]
 
-  let node_ranks : Map[String, Int] = Map::new()
+  let node_ranks : Map[String, Int] = Map([])
   node_ranks["a"] = 0
   node_ranks["b"] = 0
   node_ranks["c"] = 0
   node_ranks["d"] = 0
 
-  let flat_constraints : Map[String, Bool] = Map::new()
+  let flat_constraints : Map[String, Bool] = Map([])
   flat_constraints["a|c"] = true
   flat_constraints["c|b"] = true
 

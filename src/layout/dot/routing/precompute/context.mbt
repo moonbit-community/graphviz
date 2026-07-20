@@ -58,7 +58,7 @@ priv struct PathVnodeClustersInput {
 fn build_path_vnode_clusters(
   input : PathVnodeClustersInput,
 ) -> Map[String, String] {
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   for edge in input.edges {
     let key = @edge_identity.edge_vnode_key(edge)
     let vnodes = input.edge_vnodes.get(key).unwrap_or_default()
@@ -130,21 +130,21 @@ pub fn prepare_routing_context(
     input.edge_tail,
     input.edge_head,
   )
-  let merged_positions : Map[String, @geom.Point] = Map::new()
+  let merged_positions : Map[String, @geom.Point] = Map([])
   for name, pos in input.positions {
     merged_positions[name] = pos
   }
   for name, pos in input.vnode_positions {
     merged_positions[name] = pos
   }
-  let pathplan_route_sizes : Map[String, NodeSize] = Map::new()
+  let pathplan_route_sizes : Map[String, NodeSize] = Map([])
   for name, size in input.sizes {
     pathplan_route_sizes[name] = size
   }
   for name, size in input.vnode_sizes {
     pathplan_route_sizes[name] = size
   }
-  let pathplan_mval_route_sizes : Map[String, NodeSize] = Map::new()
+  let pathplan_mval_route_sizes : Map[String, NodeSize] = Map([])
   for name, size in input.pathplan_sizes {
     pathplan_mval_route_sizes[name] = size
   }

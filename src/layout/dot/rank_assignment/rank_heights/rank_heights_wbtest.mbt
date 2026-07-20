@@ -27,17 +27,17 @@ fn build_long_edge_rank_heights_input(
     edge.set_attr("label", "mid")
   }
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   ranks["c"] = 2
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a"]
   groups[1] = ["b"]
   groups[2] = ["c"]
 
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.node_size_from_points(12.0, 10.0)
   sizes["b"] = @node_primitives.node_size_from_points(12.0, 8.0)
   sizes["c"] = @node_primitives.node_size_from_points(12.0, 12.0)
@@ -55,7 +55,7 @@ fn build_long_edge_rank_heights_input(
     [0, 1, 2],
     [0, 1, 2],
     sizes,
-    Map::new(),
+    Map([]),
     rankdir,
     0.4,
     0.75,

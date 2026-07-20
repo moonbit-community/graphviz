@@ -55,7 +55,7 @@ fn build_order_seed_groups(
       inputs.vnode_order_keys_for_ordering,
     )
   } else {
-    let out : Map[Int, Array[String]] = Map::new()
+    let out : Map[Int, Array[String]] = Map([])
     for rank, names in inputs.ordering_groups_base {
       out[rank] = names.copy()
     }
@@ -68,7 +68,7 @@ fn build_order_seed_groups(
   )
   // Graphviz parity: order graph cluster-key map starts from real-node keys and
   // appends vnode cluster keys only when vnode ordering is enabled.
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   for name, key in inputs.cluster_keys {
     order_cluster_keys[name] = key
   }
@@ -77,9 +77,9 @@ fn build_order_seed_groups(
       order_cluster_keys[name] = key
     }
   }
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   if inputs.order_with_clusters {
-    let cluster_seen : Map[String, Bool] = Map::new()
+    let cluster_seen : Map[String, Bool] = Map([])
     for cluster in inputs.cluster_order {
       match inputs.cluster_min_rank.get(cluster) {
         Some(min_rank) => {
@@ -194,8 +194,8 @@ fn apply_rank_same_order_nodes(
   if rank_same_groups.length() == 0 {
     return ()
   }
-  let group_nodes : Map[Int, Array[String]] = Map::new()
-  let group_has_ported : Map[Int, Bool] = Map::new()
+  let group_nodes : Map[Int, Array[String]] = Map([])
+  let group_has_ported : Map[Int, Bool] = Map([])
   for name, group in rank_same_groups {
     if node_order.get(name) is None {
       continue
@@ -285,7 +285,7 @@ fn build_order_reorder_context(
   // Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
   // fills with nlist/order_groups/base order; rank=same ND_order normalization
   // is applied only on clustered reorder paths.
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   let mut order_idx = 0
   for name in inputs.gdnlist_order {
     order_node_order[name] = order_idx
@@ -405,8 +405,8 @@ fn build_materialized_graphviz_neighbors(
   edge_creation_order : Array[(String, String)],
 ) -> MaterializedGraphvizNeighborMaps {
   // Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   for name in order_nodes {
     graphviz_out_neighbors[name] = []
     graphviz_in_neighbors[name] = []
@@ -428,7 +428,7 @@ fn build_materialized_graphviz_neighbors(
     }
     graphviz_out_neighbors[tail] = heads
   }
-  let in_entries : Map[String, Array[String]] = Map::new()
+  let in_entries : Map[String, Array[String]] = Map([])
   for edge in edge_creation_order {
     let (tail, head) = edge
     match in_entries.get(head) {
@@ -468,7 +468,7 @@ fn build_order_materialization_data(
     inputs.order_edges_by_tail,
     inputs.edge_creation_order,
   )
-  let order_flat_constraints : Map[String, Bool] = Map::new()
+  let order_flat_constraints : Map[String, Bool] = Map([])
   for key, value in inputs.flat_constraints {
     order_flat_constraints[key] = value
   }
@@ -512,7 +512,7 @@ fn apply_unconstrained_order_overrides(
   order_node_order : Map[String, Int],
 ) -> Unit {
   // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-  let gdnlist_order_index : Map[String, Int] = Map::new()
+  let gdnlist_order_index : Map[String, Int] = Map([])
   let mut gdnlist_idx = 0
   for name in gdnlist_order {
     if real_nodes.get(name) is Some(_) {
@@ -520,7 +520,7 @@ fn apply_unconstrained_order_overrides(
     }
     gdnlist_idx = gdnlist_idx + 1
   }
-  let unconstrained_nodes : Map[String, Bool] = Map::new()
+  let unconstrained_nodes : Map[String, Bool] = Map([])
   for name in order_nodes {
     let out = match graphviz_out_neighbors.get(name) {
       Some(list) => list
@@ -543,9 +543,9 @@ fn apply_unconstrained_order_overrides(
   }
   // Graphviz parity: incoming-only unconstrained nodes inside local clusters
   // follow first incoming-edge order from unmapped class2 edge lists.
-  let node_has_out : Map[String, Bool] = Map::new()
-  let node_has_in : Map[String, Bool] = Map::new()
-  let first_in_order : Map[String, Int] = Map::new()
+  let node_has_out : Map[String, Bool] = Map([])
+  let node_has_in : Map[String, Bool] = Map([])
+  let first_in_order : Map[String, Int] = Map([])
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
     let tail = edge_tail[edge_idx]
@@ -559,7 +559,7 @@ fn apply_unconstrained_order_overrides(
     }
     edge_idx = edge_idx + 1
   }
-  let local_creation : Map[String, Array[String]] = Map::new()
+  let local_creation : Map[String, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
     let local_cluster = match intercluster_keys.get(name) {
@@ -589,7 +589,7 @@ fn apply_unconstrained_order_overrides(
     }
     let desired = unconstrained_local.copy()
     if desired.length() > 1 {
-      let local_index : Map[String, Int] = Map::new()
+      let local_index : Map[String, Int] = Map([])
       for idx, name in unconstrained_local {
         local_index[name] = idx
       }

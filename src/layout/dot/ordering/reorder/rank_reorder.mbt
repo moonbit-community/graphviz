@@ -36,7 +36,7 @@ priv struct RankDesiredState {
 fn build_parsed_flat_constraints(
   flat_constraints : Map[String, Bool],
 ) -> ParsedFlatConstraints {
-  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  let heads_by_tail : Map[String, Array[String]] = Map([])
   let mut has_enabled_constraints = false
   for key, enabled in flat_constraints {
     if !enabled {
@@ -65,9 +65,9 @@ fn build_rank_constraint_lookup(
 ) -> RankConstraintLookup {
   let cluster_ids : Array[Int] = []
   let skeletons : Array[Bool] = []
-  let name_index : Map[String, Int] = Map::new()
+  let name_index : Map[String, Int] = Map([])
   let flat_left_to_right : Array[Map[Int, Bool]] = []
-  let cluster_id_by_name : Map[String, Int] = Map::new()
+  let cluster_id_by_name : Map[String, Int] = Map([])
   let build_flat_lookup = flat_constraints.has_enabled_constraints
   let mut has_clusters = false
   let mut next_cluster_id = 1
@@ -93,7 +93,7 @@ fn build_rank_constraint_lookup(
     if build_flat_lookup {
       name_index[name] = i
     }
-    flat_left_to_right.push(Map::new())
+    flat_left_to_right.push(Map([]))
   }
   let mut has_flat_constraints = false
   if build_flat_lookup {
@@ -232,7 +232,7 @@ pub fn order_rank_by_cluster(
   let group_keys : Array[String] = []
   let group_nodes : Array[Array[String]] = []
   let group_order : Array[Int] = []
-  let group_index : Map[String, Int] = Map::new()
+  let group_index : Map[String, Int] = Map([])
   let mut next_index = 0
   for name in names {
     let cluster_key = match cluster_keys.get(name) {
@@ -586,7 +586,7 @@ pub fn compute_desired_positions(
   port_order_contrib : Map[String, Array[(String, Double)]],
   preferred_positions : Map[String, Double],
 ) -> Map[String, Double] {
-  let desired : Map[String, Double] = Map::new()
+  let desired : Map[String, Double] = Map([])
   for name in names {
     match preferred_positions.get(name) {
       Some(value) => {
@@ -641,7 +641,7 @@ pub fn compute_scaled_medians(
   neighbors : Map[String, Array[(String, Double)]],
   x_positions : Map[String, Double],
 ) -> Map[String, Double] {
-  let desired : Map[String, Double] = Map::new()
+  let desired : Map[String, Double] = Map([])
   for name in names {
     let list = match neighbors.get(name) {
       Some(value) => value
@@ -823,8 +823,8 @@ fn build_active_incident_edge_maps(
   edge_out : Map[String, Array[Int]],
   edge_penalty : Array[Int],
 ) -> ActiveIncidentEdgeMaps {
-  let active_in_edges : Map[String, Array[Int]] = Map::new()
-  let active_out_edges : Map[String, Array[Int]] = Map::new()
+  let active_in_edges : Map[String, Array[Int]] = Map([])
+  let active_out_edges : Map[String, Array[Int]] = Map([])
   for name, incident in edge_in {
     let filtered : Array[Int] = []
     for edge_idx in incident {
@@ -1116,7 +1116,7 @@ pub fn count_rank_crossings_port(
 ) -> Int {
   let _ = rank
   let _ = ranks
-  let order : Map[String, Int] = Map::new()
+  let order : Map[String, Int] = Map([])
   for i, name in names {
     order[name] = i
   }
@@ -1163,7 +1163,7 @@ pub fn has_single_rank_incidents(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> Bool {
-  let rank_nodes : Map[String, Bool] = Map::new()
+  let rank_nodes : Map[String, Bool] = Map([])
   for name in names {
     rank_nodes[name] = true
   }
@@ -1321,7 +1321,7 @@ pub fn transpose_rank_groups_port(
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
   ranks : Map[String, Int],
-  fixed_order? : Map[String, Int] = Map::new(),
+  fixed_order? : Map[String, Int] = Map([]),
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
@@ -1430,14 +1430,14 @@ pub fn apply_flat_mvals(
   edge_out : Map[String, Array[Int]],
   flat_constraints : Map[String, Bool],
 ) -> Bool {
-  let order_index : Map[String, Int] = Map::new()
-  let rank_nodes : Map[String, Bool] = Map::new()
+  let order_index : Map[String, Int] = Map([])
+  let rank_nodes : Map[String, Bool] = Map([])
   for i, name in names {
     order_index[name] = i
     rank_nodes[name] = true
   }
-  let flat_in : Map[String, Array[String]] = Map::new()
-  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map([])
+  let flat_out : Map[String, Array[String]] = Map([])
   for name in names {
     flat_in[name] = []
     flat_out[name] = []
@@ -1565,8 +1565,8 @@ pub fn flat_reorder_rank_groups(
   if flat_constraints.length() == 0 {
     return ordered
   }
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map([])
+  let flat_in : Map[String, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match ordered.get(rank) {
       Some(list) => list
@@ -1635,7 +1635,7 @@ pub fn flat_reorder_rank_groups(
     if !has_flat {
       continue
     }
-    let marked : Map[String, Bool] = Map::new()
+    let marked : Map[String, Bool] = Map([])
     for name in names {
       marked[name] = false
     }
@@ -1701,7 +1701,7 @@ pub fn flat_reorder_rank_groups(
       reversed
     }
     if reordered.length() < names.length() {
-      let seen : Map[String, Bool] = Map::new()
+      let seen : Map[String, Bool] = Map([])
       for name in reordered {
         seen[name] = true
       }
@@ -1833,7 +1833,7 @@ fn maybe_capture_seed_groups(
   if capture_pass0_flat_seed_groups_value.val is Some(_) {
     return
   }
-  let snapshot : Map[Int, Array[String]] = Map::new()
+  let snapshot : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match ordered.get(rank) {
       Some(list) => list.copy()
@@ -1885,10 +1885,10 @@ pub fn reorder_rank_groups(
   preferred_positions : Map[String, Double],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
-  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
-  fixed_positions? : Map[String, Double] = Map::new(),
-  fixed_ranks? : Map[String, Int] = Map::new(),
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map([]),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map([]),
+  fixed_positions? : Map[String, Double] = Map([]),
+  fixed_ranks? : Map[String, Int] = Map([]),
   graphviz_flip? : Bool = false,
   coalesce_parallel_edges? : Bool = false,
   startpass? : Int = 0,
@@ -1905,7 +1905,7 @@ pub fn reorder_rank_groups(
   } else {
     startpass
   }
-  let mut ordered : Map[Int, Array[String]] = Map::new()
+  let mut ordered : Map[Int, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list.copy()
@@ -1913,7 +1913,7 @@ pub fn reorder_rank_groups(
     }
     ordered[rank] = names
   }
-  let rank_sizes : Map[Int, Int] = Map::new()
+  let rank_sizes : Map[Int, Int] = Map([])
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -1921,7 +1921,7 @@ pub fn reorder_rank_groups(
     }
     rank_sizes[rank] = names.length()
   }
-  let port_edge_nodes : Map[String, Bool] = Map::new()
+  let port_edge_nodes : Map[String, Bool] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let ported = @edge_identity.port_is_explicit(edge.tail_port()) ||
@@ -1931,7 +1931,7 @@ pub fn reorder_rank_groups(
       port_edge_nodes[edge_head[edge_idx]] = true
     }
   }
-  let edge_pair_order : Map[String, Int] = Map::new()
+  let edge_pair_order : Map[String, Int] = Map([])
   let mut edge_idx = 0
   for _edge in edges {
     let tail = edge_tail[edge_idx]
@@ -1939,7 +1939,7 @@ pub fn reorder_rank_groups(
     edge_pair_order["\{tail}|\{head}"] = edge_idx
     edge_idx = edge_idx + 1
   }
-  let node_penalty : Map[String, Int] = Map::new()
+  let node_penalty : Map[String, Int] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let penalty = @edge_semantics.edge_xpenalty(edge)
@@ -1976,7 +1976,7 @@ pub fn reorder_rank_groups(
   )
   let mut best_ordered = @rank_groups.clone_rank_groups(ordered)
   let mut order_positions = @rank_groups.order_positions_from_groups(ordered)
-  let fixed_order : Map[String, Int] = Map::new()
+  let fixed_order : Map[String, Int] = Map([])
   for name, pos in fixed_positions {
     fixed_order[name] = pos.to_int()
   }
@@ -2019,11 +2019,11 @@ pub fn reorder_rank_groups(
   // Graphviz parity: port order hints do not switch mincross out of
   // graphviz-style passes (mincross.c still uses in/out port x ties).
   let graphviz_style = !has_preferred
-  let median_parents : Map[String, Array[(String, Double)]] = Map::new()
-  let median_children : Map[String, Array[(String, Double)]] = Map::new()
+  let median_parents : Map[String, Array[(String, Double)]] = Map([])
+  let median_children : Map[String, Array[(String, Double)]] = Map([])
   let edge_penalty : Array[Int] = []
-  let edge_in : Map[String, Array[Int]] = Map::new()
-  let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int]] = Map([])
   let mut has_graphviz_neighbor_hints = false
   let mut has_external_in_anchor = false
   let mut has_external_out_anchor = false
@@ -2041,7 +2041,7 @@ pub fn reorder_rank_groups(
       edge_out[name] = []
     }
   }
-  let coalesced_edge_index : Map[String, Int] = Map::new()
+  let coalesced_edge_index : Map[String, Int] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let base_penalty = @edge_semantics.edge_xpenalty(edge)

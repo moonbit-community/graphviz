@@ -32,11 +32,11 @@ priv struct XLabelUpdateMaps {
 ///|
 fn make_xlabel_update_maps() -> XLabelUpdateMaps {
   {
-    node_updates: Map::new(),
-    edge_mid_updates: Map::new(),
-    edge_head_updates: Map::new(),
-    edge_tail_updates: Map::new(),
-    edge_xlabel_updates: Map::new(),
+    node_updates: Map([]),
+    edge_mid_updates: Map([]),
+    edge_head_updates: Map([]),
+    edge_tail_updates: Map([]),
+    edge_xlabel_updates: Map([]),
   }
 }
 

@@ -12,11 +12,11 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
   ignore(cluster_graph.node("d"))
   ignore(root.node("outside"))
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["b", "outside", "a"]
   groups[1] = ["d", "\{@edge_identity.EDGE_VNODE_PREFIX}0", "c", "outside"]
 
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
   node_order["a"] = 0
   node_order["b"] = 1
   node_order["c"] = 2
@@ -24,14 +24,14 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
   node_order["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = 4
   node_order["outside"] = 5
 
-  let source_out_neighbors : Map[String, Array[String]] = Map::new()
+  let source_out_neighbors : Map[String, Array[String]] = Map([])
   source_out_neighbors["a"] = ["d"]
   source_out_neighbors["b"] = ["c"]
 
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = "cluster_a"
 
-  let fixed_positions : Map[String, Double] = Map::new()
+  let fixed_positions : Map[String, Double] = Map([])
   fixed_positions["a"] = 0.0
   fixed_positions["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = 1.0
   fixed_positions["outside"] = 2.0
@@ -80,15 +80,15 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
 
 ///|
 test "apply_cluster_rank_reorder_output rewrites only cluster member slots and leaves other ranks unchanged when desired order is trivial" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["left", "a", "middle", "b", "right"]
   groups[1] = ["keep", "c"]
 
-  let ordered_cluster : Map[Int, Array[String]] = Map::new()
+  let ordered_cluster : Map[Int, Array[String]] = Map([])
   ordered_cluster[0] = ["b", "a"]
   ordered_cluster[1] = ["c"]
 
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   cluster_node_set["a"] = true
   cluster_node_set["b"] = true
   cluster_node_set["c"] = true
@@ -109,12 +109,12 @@ test "build_local_rank_groups dedupes previous-rank reachability, ignores extern
   let vnode0 = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let vnode1 = "\{@edge_identity.EDGE_VNODE_PREFIX}1"
 
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["b", vnode0, "a", "outside"]
   groups[1] = ["e", vnode1, "d", "c", "outside"]
   groups[2] = ["solo"]
 
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   cluster_node_set["a"] = true
   cluster_node_set["b"] = true
   cluster_node_set["c"] = true
@@ -124,7 +124,7 @@ test "build_local_rank_groups dedupes previous-rank reachability, ignores extern
   cluster_node_set[vnode0] = true
   cluster_node_set[vnode1] = true
 
-  let cluster_node_order : Map[String, Int] = Map::new()
+  let cluster_node_order : Map[String, Int] = Map([])
   cluster_node_order["a"] = 0
   cluster_node_order["b"] = 1
   cluster_node_order["c"] = 2
@@ -134,7 +134,7 @@ test "build_local_rank_groups dedupes previous-rank reachability, ignores extern
   cluster_node_order[vnode0] = 6
   cluster_node_order[vnode1] = 7
 
-  let source_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let source_graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   source_graphviz_out_neighbors["a"] = ["d", "outside", "c"]
   source_graphviz_out_neighbors["b"] = ["d"]
   source_graphviz_out_neighbors[vnode0] = ["outside"]

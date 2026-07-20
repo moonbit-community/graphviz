@@ -47,12 +47,12 @@ test "build_cluster_constraints adds boundary nodes containment and keepout edge
     cluster_keys,
     10.0,
     false,
-    Map::new(),
+    Map([]),
   )
 
   let left_name = @cluster_identity.cluster_left_boundary_name("cluster_0")
   let right_name = @cluster_identity.cluster_right_boundary_name("cluster_0")
-  let extra_node_ranks : Map[String, Int] = Map::new()
+  let extra_node_ranks : Map[String, Int] = Map([])
   for extra_node in build.extra_nodes {
     extra_node_ranks[extra_node.name] = extra_node.rank
   }

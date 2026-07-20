@@ -19,7 +19,7 @@ test "expand_bbox_for_edge_labels skips flat non-self mid labels without flat-la
       ),
     ],
     ranks: { "a": 0, "b": 0 },
-    flat_label_edge_vnodes: Map::new(),
+    flat_label_edge_vnodes: Map([]),
     rankdir: @rankdir.RankDir::TB,
   })
 
@@ -44,7 +44,7 @@ test "expand_bbox_for_edge_labels keeps self-edge mid labels even on the same ra
     bbox: base_bbox,
     edges: [layout_edge(edge, straight_spline(), label_pos~)],
     ranks: { "n": 0 },
-    flat_label_edge_vnodes: Map::new(),
+    flat_label_edge_vnodes: Map([]),
     rankdir: @rankdir.RankDir::TB,
   })
 
@@ -58,7 +58,7 @@ test "expand_bbox_for_edge_labels raises top for flat-label vnode edges in TB" {
   edge.set_attr("label", "mid")
   let label_pos = Some(@edge_spline.point(25.0, 25.0))
   let edge_layout = layout_edge(edge, straight_spline(), label_pos~)
-  let flat_label_edge_vnodes : Map[String, String] = Map::new()
+  let flat_label_edge_vnodes : Map[String, String] = Map([])
   flat_label_edge_vnodes[@edge_identity.edge_key(edge)] = "v_flat"
   let ranks : Map[String, Int] = { "a": 0, "b": 0 }
   let flags = classify_flat_edge_label(edge, ranks, flat_label_edge_vnodes)
@@ -104,14 +104,14 @@ test "expand_bbox_for_edge_labels flips endpoint label extent in LR" {
     bbox: base_bbox,
     edges: [edge_layout],
     ranks: { "a": 0, "b": 1 },
-    flat_label_edge_vnodes: Map::new(),
+    flat_label_edge_vnodes: Map([]),
     rankdir: @rankdir.RankDir::TB,
   })
   let lr_output = expand_bbox_for_edge_labels({
     bbox: base_bbox,
     edges: [edge_layout],
     ranks: { "a": 0, "b": 1 },
-    flat_label_edge_vnodes: Map::new(),
+    flat_label_edge_vnodes: Map([]),
     rankdir: @rankdir.RankDir::LR,
   })
 

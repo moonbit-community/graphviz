@@ -75,19 +75,19 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   ignore(a)
 
   let nodes_out = [cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0)]
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
-  let rank_y : Map[Int, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map([])
   rank_y[1] = 100.0
-  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht1 : Map[Int, Double] = Map([])
   rank_ht1[1] = 5.0
-  let rank_ht2 : Map[Int, Double] = Map::new()
+  let rank_ht2 : Map[Int, Double] = Map([])
   rank_ht2[1] = 7.0
-  let cluster_ln_x : Map[String, Double] = Map::new()
+  let cluster_ln_x : Map[String, Double] = Map([])
   cluster_ln_x["cluster_0"] = 2.0
-  let cluster_rn_x : Map[String, Double] = Map::new()
+  let cluster_rn_x : Map[String, Double] = Map([])
   cluster_rn_x["cluster_0"] = 18.0
-  let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map::new()
+  let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map([])
   cluster_bbox_heights["cluster_0"] = { ht1: 9.0, ht2: 11.0 }
 
   let layouts = layout_subgraphs({

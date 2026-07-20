@@ -22,7 +22,7 @@ test "cluster name helpers build and recognize skeleton and boundary prefixes" {
 
 ///|
 test "unique_cluster_boundary_name keeps base then adds numeric suffixes" {
-  let existing : Map[String, Bool] = Map::new()
+  let existing : Map[String, Bool] = Map([])
 
   let first = unique_cluster_boundary_name("_mbt_cluster_ln_group", existing)
   let second = unique_cluster_boundary_name("_mbt_cluster_ln_group", existing)

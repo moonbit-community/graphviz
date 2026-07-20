@@ -24,11 +24,11 @@ test "record_layout_orientation flips only LR and RL rank directions" {
 
 ///|
 test "merge_sizes_with_vnodes overlays vnode sizes without dropping base sizes" {
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.node_size_from_points(10.0, 20.0)
   sizes["b"] = @node_primitives.node_size_from_points(30.0, 40.0)
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["b"] = @node_primitives.node_size_from_points(50.0, 60.0)
   vnode_sizes["v1"] = @node_primitives.node_size_from_points(70.0, 80.0)
 

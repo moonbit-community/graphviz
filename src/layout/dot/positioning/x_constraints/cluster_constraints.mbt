@@ -82,9 +82,9 @@ fn build_cluster_constraints(
       }
     }
   }
-  let cluster_related : Map[String, Map[String, Bool]] = Map::new()
+  let cluster_related : Map[String, Map[String, Bool]] = Map([])
   for name, members in cluster_members {
-    let related : Map[String, Bool] = Map::new()
+    let related : Map[String, Bool] = Map([])
     for node_name, _ in members {
       related[node_name] = true
     }
@@ -127,7 +127,7 @@ fn build_cluster_constraints(
       }
     }
   }
-  let node_in_any_cluster : Map[String, Bool] = Map::new()
+  let node_in_any_cluster : Map[String, Bool] = Map([])
   for _name, members in cluster_members {
     for node_name, _ in members {
       node_in_any_cluster[node_name] = true
@@ -136,16 +136,16 @@ fn build_cluster_constraints(
   let base_positions = compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map([])
   for node in nodes {
     existing_names[node.name()] = true
   }
-  let cluster_nodes : Map[String, ClusterBoundaryNodes] = Map::new()
-  let cluster_margins : Map[String, Double] = Map::new()
-  let cluster_border_left : Map[String, Double] = Map::new()
-  let cluster_border_right : Map[String, Double] = Map::new()
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_nodes : Map[String, ClusterBoundaryNodes] = Map([])
+  let cluster_margins : Map[String, Double] = Map([])
+  let cluster_border_left : Map[String, Double] = Map([])
+  let cluster_border_right : Map[String, Double] = Map([])
+  let cluster_min_rank : Map[String, Int] = Map([])
+  let cluster_max_rank : Map[String, Int] = Map([])
   let extra_nodes : Array[ExtraConstraintNode] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
@@ -453,7 +453,7 @@ fn build_cluster_constraints(
       None => ()
     }
   }
-  let parent_children : Map[String, Array[String]] = Map::new()
+  let parent_children : Map[String, Array[String]] = Map([])
   for name, parent in cluster_parents {
     let key = match parent {
       Some(value) => value

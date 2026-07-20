@@ -43,7 +43,7 @@ fn adjust_nlist_order_for_flip(
   }
   // Graphviz parity: cluster flip preprocessing first buckets nlist nodes by
   // cluster key while skipping non-cluster entries.
-  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_nodes : Map[String, Array[String]] = Map([])
   for name in nlist_order_raw {
     let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
@@ -56,8 +56,8 @@ fn adjust_nlist_order_for_flip(
   }
   // Graphviz parity: cluster flip precomputes reversed per-cluster node lists
   // and zeroed consumption indices before reconstructing adjusted nlist order.
-  let cluster_reversed : Map[String, Array[String]] = Map::new()
-  let cluster_index : Map[String, Int] = Map::new()
+  let cluster_reversed : Map[String, Array[String]] = Map([])
+  let cluster_index : Map[String, Int] = Map([])
   for cluster, list in cluster_nodes {
     // Graphviz parity: cluster flip uses explicit reverse traversal to
     // construct per-cluster replacement lists in reverse local order.
@@ -117,7 +117,7 @@ fn build_flat_rank_constraints(
   edge_head : Array[String],
   ranks : Map[String, Int],
 ) -> Map[String, Bool] {
-  let flat_rank_constraints : Map[String, Bool] = Map::new()
+  let flat_rank_constraints : Map[String, Bool] = Map([])
   let mut flat_idx = 0
   while flat_idx < edge_tail.length() {
     let tail = edge_tail[flat_idx]
@@ -196,7 +196,7 @@ fn apply_rank_same_order(
   port_edge_nodes : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   let _ = node_order
-  let adjusted : Map[Int, Array[String]] = Map::new()
+  let adjusted : Map[Int, Array[String]] = Map([])
   for rank, names in groups {
     adjusted[rank] = names.copy()
   }
@@ -207,9 +207,9 @@ fn apply_rank_same_order(
     if names.length() <= 1 {
       continue
     }
-    let group_positions : Map[Int, Array[Int]] = Map::new()
-    let group_nodes : Map[Int, Array[String]] = Map::new()
-    let group_has_ported : Map[Int, Bool] = Map::new()
+    let group_positions : Map[Int, Array[Int]] = Map([])
+    let group_nodes : Map[Int, Array[String]] = Map([])
+    let group_has_ported : Map[Int, Bool] = Map([])
     for i in 0..<names.length() {
       let name = names[i]
       match rank_same_groups.get(name) {
@@ -322,14 +322,14 @@ pub fn build_ordering_reorder_setup_from_sources(
     graphviz_flip,
     sources.cluster_order,
   )
-  let nlist_order_index : Map[String, Int] = Map::new()
+  let nlist_order_index : Map[String, Int] = Map([])
   let mut nlist_idx = 0
   for name in class2_data.nlist_order {
     nlist_order_index[name] = nlist_idx
     nlist_idx = nlist_idx + 1
   }
   let vnode_order_keys_for_ordering = if vnode_count <= 0 {
-    Map::new()
+    Map([])
   } else if sources.cluster_has_clusters {
     @vnode_order.build_vnode_order_keys(
       sources.edges,
@@ -349,7 +349,7 @@ pub fn build_ordering_reorder_setup_from_sources(
       sources.vnode_info.vnodes_by_rank,
       base_order_index,
       nlist_order_index,
-      Map::new(),
+      Map([]),
       false,
     )
   }
@@ -443,7 +443,7 @@ fn build_skeleton_edge_creation(
   if !order_with_clusters {
     return skeleton_edge_creation
   }
-  let cluster_seen : Map[String, Bool] = Map::new()
+  let cluster_seen : Map[String, Bool] = Map([])
   for cluster in cluster_order {
     match cluster_min_rank.get(cluster) {
       Some(min_rank) => {
@@ -506,7 +506,7 @@ fn build_ordering_class2_data(
   for node in nodes {
     creation_order.push(node.name())
   }
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   for node in nodes {
     let name = node.name()
     match edge_out_order.get(name) {
@@ -547,7 +547,7 @@ fn build_ordering_class2_data(
   }
   let cluster_skeleton_creation : Array[String] = []
   if order_with_clusters {
-    let cluster_seen : Map[String, Bool] = Map::new()
+    let cluster_seen : Map[String, Bool] = Map([])
     for cluster in cluster_order {
       match cluster_min_rank.get(cluster) {
         Some(min_rank) => {
@@ -587,7 +587,7 @@ fn build_ordering_class2_data(
   )
   let (order_creation, vnode_creation_order) = {
     let order_creation : Array[String] = []
-    let order_seen : Map[String, Bool] = Map::new()
+    let order_seen : Map[String, Bool] = Map([])
     for name in cluster_skeleton_creation {
       @order_graph.append_creation_name(order_creation, order_seen, name)
     }

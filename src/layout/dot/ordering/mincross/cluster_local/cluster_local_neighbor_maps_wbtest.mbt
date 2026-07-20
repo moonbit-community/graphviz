@@ -4,10 +4,10 @@
 
 ///|
 test "normalize_external_neighbor_name collapses unresolved external clusters but preserves local expanded and unclustered neighbors" {
-  let expanded_clusters : Map[String, Bool] = Map::new()
+  let expanded_clusters : Map[String, Bool] = Map([])
   expanded_clusters["cluster_done"] = true
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["local"] = "cluster_a"
   intercluster_keys["pending"] = "cluster_pending"
   intercluster_keys["done"] = "cluster_done"
@@ -40,14 +40,14 @@ test "normalize_external_neighbor_name collapses unresolved external clusters bu
 
 ///|
 test "has_source_external_anchor detects source neighbors outside the active cluster from either direction" {
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   cluster_node_set["a"] = true
   cluster_node_set["b"] = true
 
-  let source_out_neighbors : Map[String, Array[String]] = Map::new()
+  let source_out_neighbors : Map[String, Array[String]] = Map([])
   source_out_neighbors["a"] = ["b"]
   source_out_neighbors["b"] = ["outside_out"]
-  let source_in_neighbors : Map[String, Array[String]] = Map::new()
+  let source_in_neighbors : Map[String, Array[String]] = Map([])
   source_in_neighbors["a"] = ["outside_in"]
   source_in_neighbors["b"] = ["a"]
 
@@ -75,10 +75,10 @@ test "append_raw_neighbors_with_external_anchor skips synthetic names, dedupes l
     cluster_node_set: { "a": true, "b": true },
     expanded_clusters: { "cluster_done": true },
     neighbor_sources: {
-      source_out_neighbors: Map::new(),
-      source_in_neighbors: Map::new(),
-      raw_out_neighbors: Map::new(),
-      raw_in_neighbors: Map::new(),
+      source_out_neighbors: Map([]),
+      source_in_neighbors: Map([]),
+      raw_out_neighbors: Map([]),
+      raw_in_neighbors: Map([]),
     },
     intercluster_keys: {
       "a": "cluster_a",
@@ -131,7 +131,7 @@ test "build_local_neighbor_maps merges raw agseq neighbors only when source list
     },
   }
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["a"] = "cluster_a"
   intercluster_keys["b"] = "cluster_a"
   intercluster_keys["pending_1"] = "cluster_pending"

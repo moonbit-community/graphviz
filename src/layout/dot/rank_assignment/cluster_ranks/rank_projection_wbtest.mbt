@@ -9,19 +9,19 @@ test "cluster rank projection combines leader and local ranks then normalizes" {
   let b = graph.node("b")
   let c = graph.node("c")
 
-  let cluster0_members : Map[String, Bool] = Map::new()
+  let cluster0_members : Map[String, Bool] = Map([])
   cluster0_members["a"] = true
   cluster0_members["b"] = true
-  let cluster_members : Map[String, Map[String, Bool]] = Map::new()
+  let cluster_members : Map[String, Map[String, Bool]] = Map([])
   cluster_members["cluster0"] = cluster0_members
 
   let node_cluster = build_node_cluster_index(["cluster0"], cluster_members)
-  let cluster_leaders : Map[String, String] = Map::new()
+  let cluster_leaders : Map[String, String] = Map([])
   cluster_leaders["cluster0"] = "leader0"
-  let local_ranks : Map[String, Int] = Map::new()
+  let local_ranks : Map[String, Int] = Map([])
   local_ranks["a"] = 2
   local_ranks["b"] = 4
-  let leader_ranks : Map[String, Int] = Map::new()
+  let leader_ranks : Map[String, Int] = Map([])
   leader_ranks["leader0"] = 5
   leader_ranks["c"] = 1
 

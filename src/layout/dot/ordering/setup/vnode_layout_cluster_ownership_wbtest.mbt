@@ -12,7 +12,7 @@ test "build_edge_vnodes keeps cluster-local parallel chains at plain virtual wid
   let edge2 = graph.edge(a, b)
   ignore(edge2)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -42,7 +42,7 @@ test "build_edge_vnodes leaves cross-root-cluster chains unowned and at standard
   let b = right.node("b")
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -69,15 +69,15 @@ test "build_edge_vnodes applies edge cluster key when endpoints stay at root" {
   let b = graph.node("b")
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map([])
   existing_names["a"] = true
   existing_names["b"] = true
 
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "cluster_edge_owner"
 
   let vnode_info = build_edge_vnodes(
@@ -85,13 +85,13 @@ test "build_edge_vnodes applies edge cluster key when endpoints stay at root" {
     [edge],
     [],
     [],
-    Map::new(),
+    Map([]),
     ranks,
     20.0,
     @rankdir.RankDir::TB,
     existing_names,
     edge_cluster_keys,
-    Map::new(),
+    Map([]),
   )
   let chain = edge_vnode_chain_for_test(vnode_info, edge)
 

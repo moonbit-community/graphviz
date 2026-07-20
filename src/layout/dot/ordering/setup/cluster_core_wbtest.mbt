@@ -20,14 +20,14 @@ test "build_cluster_core_metadata_for_ordering seeds orders and collects cluster
   ignore(d)
 
   let nodes = [a, b, c, d]
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "d"]
   groups[1] = ["b", "c"]
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   ranks["c"] = 1
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
 
   let metadata = build_cluster_core_metadata_for_ordering(
     root, nodes, groups, ranks, node_order, false, true,
@@ -77,12 +77,12 @@ test "build_cluster_core_metadata_for_ordering respects graphviz_flip without cl
   ignore(b)
 
   let nodes = [a, b]
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
-  let node_order : Map[String, Int] = Map::new()
+  let node_order : Map[String, Int] = Map([])
 
   let metadata = build_cluster_core_metadata_for_ordering(
     root, nodes, groups, ranks, node_order, true, false,

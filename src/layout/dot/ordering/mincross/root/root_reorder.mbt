@@ -16,7 +16,7 @@ fn build_root_tail_order_seed(
   ranks : Map[String, Int],
 ) -> Array[String] {
   let tail_order_root : Array[String] = []
-  let tail_root_seen : Map[String, Bool] = Map::new()
+  let tail_root_seen : Map[String, Bool] = Map([])
   for name in nlist_order {
     let cluster = @order_graph.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" {
@@ -39,7 +39,7 @@ fn build_root_source_first_tail_order(
   root_nodes : Array[String],
   root_edge_creation_order : Array[(String, String)],
 ) -> Array[String] {
-  let root_has_in : Map[String, Bool] = Map::new()
+  let root_has_in : Map[String, Bool] = Map([])
   for name in root_nodes {
     root_has_in[name] = false
   }
@@ -50,7 +50,7 @@ fn build_root_source_first_tail_order(
     }
   }
   let root_tail_order : Array[String] = []
-  let root_tail_seen : Map[String, Bool] = Map::new()
+  let root_tail_seen : Map[String, Bool] = Map([])
   for name in tail_order_root {
     if root_has_in.get(name) == Some(false) {
       @order_graph.append_creation_name(root_tail_order, root_tail_seen, name)
@@ -72,7 +72,7 @@ fn finalize_root_nlist_order(
   root_node_map : Map[String, @cgraph.Node],
 ) -> Array[String] {
   let root_nlist_order : Array[String] = []
-  let root_seen : Map[String, Bool] = Map::new()
+  let root_seen : Map[String, Bool] = Map([])
   for name in root_nlist_full {
     if root_node_map.get(name) is Some(_) {
       root_seen[name] = true
@@ -130,7 +130,7 @@ fn collect_root_vnodes(
   cluster_keys : Map[String, String],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Bool] {
-  let root_vnodes : Map[String, Bool] = Map::new()
+  let root_vnodes : Map[String, Bool] = Map([])
   if !order_with_vnodes {
     return root_vnodes
   }
@@ -163,8 +163,8 @@ fn build_root_vnode_inputs(
   vnodes_by_rank : Map[Int, Array[String]],
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> (Map[Int, Array[String]], Map[String, Double]) {
-  let root_vnodes_by_rank : Map[Int, Array[String]] = Map::new()
-  let root_vnode_order_keys : Map[String, Double] = Map::new()
+  let root_vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let root_vnode_order_keys : Map[String, Double] = Map([])
   if !order_with_vnodes {
     return (root_vnodes_by_rank, root_vnode_order_keys)
   }
@@ -233,7 +233,7 @@ fn build_root_reorder_groups(
   )
   // Graphviz parity: root cluster reorder base groups keep only root/skeleton
   // nodes, and include edge-vnodes only when flagged as root-vnodes.
-  let root_groups_base : Map[Int, Array[String]] = Map::new()
+  let root_groups_base : Map[Int, Array[String]] = Map([])
   for rank in order_rank_keys {
     let names = order_groups_for_mincross.get(rank).unwrap_or_default()
     let root_names : Array[String] = []
@@ -357,7 +357,7 @@ fn build_root_reorder_node_order(
   root_node_map : Map[String, @cgraph.Node],
   root_groups : Map[Int, Array[String]],
 ) -> Map[String, Int] {
-  let root_node_order : Map[String, Int] = Map::new()
+  let root_node_order : Map[String, Int] = Map([])
   let mut root_node_idx = 0
   for name in root_nlist_order {
     if root_node_map.get(name) is Some(_) {
@@ -666,7 +666,7 @@ fn build_root_rank_order_replay_state_from_sources(
   let root_reorder_sources_base : RootReorderBuildSources = {
     order_with_vnodes: sources.reorder_setup.order_with_vnodes,
     order_rank_keys: sources.order_rank_keys,
-    order_groups_for_mincross: Map::new(),
+    order_groups_for_mincross: Map([]),
     order_cluster_keys: sources.order_cluster_keys,
     order_cluster_skeleton: sources.order_cluster_skeleton,
     edges: sources.edges,
@@ -737,7 +737,7 @@ struct RootRankOrderCallInputs {
 fn has_multiple_non_empty_cluster_keys(
   order_cluster_keys : Map[String, String],
 ) -> Bool {
-  let seen_cluster_keys : Map[String, Bool] = Map::new()
+  let seen_cluster_keys : Map[String, Bool] = Map([])
   for _name, key in order_cluster_keys {
     if key == "" || seen_cluster_keys.get(key) is Some(_) {
       continue
@@ -828,7 +828,7 @@ pub fn run_root_rank_order_reorder(
     call_inputs.has_edge_labels,
     call_inputs.port_order_positions,
     call_inputs.port_order_contrib,
-    Map::new(),
+    Map([]),
     call_inputs.order_cluster_skeleton,
     call_inputs.order_flat_constraints,
     graphviz_flip=root_graphviz_flip,
@@ -943,7 +943,7 @@ fn build_cluster_rank_order_replay_from_state(
 ) -> ClusterRankOrderReplay {
   (root_cluster_stage, order_cluster_keys, order_cluster_skeleton, real_nodes) => {
     if !replay_state.order_with_clusters {
-      return Map::new()
+      return Map([])
     }
     let (_root_reorder_output, root_rank_order_phase_output) = run_root_reorder_and_rank_order_from_replay_state(
       replay_state,
@@ -966,7 +966,7 @@ fn build_root_tail_order_override(
   root_reorder_output : RootClusterReorderInputs,
 ) -> Array[String] {
   let root_tail_order_override : Array[String] = []
-  let seen_root_tail : Map[String, Bool] = Map::new()
+  let seen_root_tail : Map[String, Bool] = Map([])
   for tail in root_reorder_output.root_edge_tail_out {
     @order_graph.append_creation_name(
       root_tail_order_override, seen_root_tail, tail,

@@ -16,8 +16,8 @@ test "collect_rank_extremes descends nested subgraphs" {
   sink.set_attr("rank", "sink")
   ignore(sink.node("b"))
 
-  let min_nodes : Map[String, Bool] = Map::new()
-  let max_nodes : Map[String, Bool] = Map::new()
+  let min_nodes : Map[String, Bool] = Map([])
+  let max_nodes : Map[String, Bool] = Map([])
   collect_rank_extremes(graph, min_nodes, max_nodes)
 
   assert_eq(min_nodes.get("a"), Some(true))

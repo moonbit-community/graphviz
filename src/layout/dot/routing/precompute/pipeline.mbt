@@ -27,7 +27,7 @@ pub fn build_label_edge_counts(
   edges : Array[@cgraph.Edge],
   has_mid_label : (@cgraph.Edge) -> Bool,
 ) -> Map[String, Int] {
-  let label_edge_counts : Map[String, Int] = Map::new()
+  let label_edge_counts : Map[String, Int] = Map([])
   for edge in edges {
     if !has_mid_label(edge) {
       continue

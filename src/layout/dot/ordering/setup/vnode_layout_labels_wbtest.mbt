@@ -10,7 +10,7 @@ test "build_edge_vnodes places the LR label vnode at midpoint rank and swaps lab
   let edge = graph.edge(a, b)
   edge.set_attr("label", "mid")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 4
 
@@ -50,7 +50,7 @@ test "build_edge_vnodes places the TB label vnode at midpoint rank with unflippe
   let edge = graph.edge(a, b)
   edge.set_attr("label", "Very Long Edge Label")
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 5
 

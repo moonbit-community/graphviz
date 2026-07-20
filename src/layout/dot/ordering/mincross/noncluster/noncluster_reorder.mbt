@@ -155,7 +155,7 @@ fn build_noncluster_order_node_order(
   nlist_order : Array[String],
   node_order : Map[String, Int],
 ) -> Map[String, Int] {
-  let order_node_order : Map[String, Int] = Map::new()
+  let order_node_order : Map[String, Int] = Map([])
   let mut order_idx = 0
   for name in nlist_order {
     order_node_order[name] = order_idx
@@ -197,7 +197,7 @@ pub fn run_noncluster_rank_reorder(
     call_inputs.has_edge_labels,
     call_inputs.port_order_positions,
     call_inputs.port_order_contrib,
-    Map::new(),
+    Map([]),
     call_inputs.cluster_skeleton,
     call_inputs.flat_constraints,
     graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
@@ -216,8 +216,8 @@ fn build_noncluster_graphviz_neighbors(
   edge_head : Array[String],
   edge_out_order : Map[String, Array[Int]],
 ) -> GraphvizNeighborMaps {
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
   let node_names : Array[String] = []
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
@@ -240,7 +240,7 @@ fn build_noncluster_graphviz_neighbors(
   }
   // Graphviz parity: non-cluster ND_in neighbor order follows ND_out traversal
   // in graph node iteration order (agfstnode/agnxtnode), matching add_fast_edges.
-  let in_entries : Map[String, Array[String]] = Map::new()
+  let in_entries : Map[String, Array[String]] = Map([])
   for tail in node_names {
     let heads = graphviz_out_neighbors.get(tail).unwrap_or_default()
     for head in heads {

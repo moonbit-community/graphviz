@@ -78,7 +78,7 @@ test "rank_reorder keeps clustered startpass-two fan-in order stable" {
   }
   let output : MincrossOutput = { case_id: 1005, ranks: [[1, 0], [2]] }
 
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }
 
 ///|
@@ -110,7 +110,7 @@ test "rank_reorder leaves single-node cluster slices unchanged" {
   }
   let output : MincrossOutput = { case_id: 1006, ranks: [[0]] }
 
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }
 
 ///|

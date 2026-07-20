@@ -4,7 +4,7 @@
 
 ///|
 test "build_root_reorder_node_order prefers nlist order for materialized nodes and backfills missing names from rank-group order" {
-  let root_groups : Map[Int, Array[String]] = Map::new()
+  let root_groups : Map[Int, Array[String]] = Map([])
   root_groups[0] = ["a", "c"]
   root_groups[1] = ["b"]
 
@@ -70,17 +70,17 @@ test "should_enable_root_flip requires graphviz_flip and allows fixture mode to 
 
 ///|
 test "finalize_root_rank_order_phase_output merges flip output back into seeded groups only when graphviz_flip is enabled" {
-  let root_groups : Map[Int, Array[String]] = Map::new()
+  let root_groups : Map[Int, Array[String]] = Map([])
   root_groups[0] = ["member", "skel_a", "root", "tail"]
 
-  let ordered_root : Map[Int, Array[String]] = Map::new()
+  let ordered_root : Map[Int, Array[String]] = Map([])
   ordered_root[0] = ["root", "skel_a"]
 
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   order_cluster_keys["member"] = "cluster_a"
   order_cluster_keys["skel_a"] = "cluster_a"
 
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton["skel_a"] = true
 
   let without_flip = finalize_root_rank_order_phase_output(
@@ -110,7 +110,7 @@ test "finalize_root_rank_order_phase_output merges flip output back into seeded 
 ///|
 test "build_root_tail_order_override keeps first-seen tails only" {
   let tail_override = build_root_tail_order_override({
-    root_groups: Map::new(),
+    root_groups: Map([]),
     root_rank_keys: [],
     root_edges_out: [],
     root_edge_tail_out: ["a", "b", "a", "c", "b"],
@@ -119,10 +119,10 @@ test "build_root_tail_order_override keeps first-seen tails only" {
     root_edge_head_port_x: [],
     root_edge_tail_port_order: [],
     root_edge_head_port_order: [],
-    root_parents: Map::new(),
-    root_children: Map::new(),
-    root_edge_order: Map::new(),
-    root_node_order: Map::new(),
+    root_parents: Map([]),
+    root_children: Map([]),
+    root_edge_order: Map([]),
+    root_node_order: Map([]),
   })
 
   assert_eq(tail_override, ["a", "b", "c"])
@@ -132,11 +132,11 @@ test "build_root_tail_order_override keeps first-seen tails only" {
 test "build_root_reorder_edge_data replays root tails in nlist order and normalizes synthetic vnode defaults" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let root_nodes = ["root", vnode, "leaf"]
-  let root_groups : Map[Int, Array[String]] = Map::new()
+  let root_groups : Map[Int, Array[String]] = Map([])
   root_groups[0] = ["root", vnode]
   root_groups[1] = ["leaf"]
 
-  let root_ranks : Map[String, Int] = Map::new()
+  let root_ranks : Map[String, Int] = Map([])
   root_ranks["root"] = 0
   root_ranks[vnode] = 0
   root_ranks["leaf"] = 1
@@ -148,7 +148,7 @@ test "build_root_reorder_edge_data replays root tails in nlist order and normali
   let order_edges_by_tail_root : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   order_edges_by_tail_root["root"] = [
     ("root", vnode, 5, true, 1.0, 2.0, 0.1, 0.2),
   ]
@@ -165,7 +165,7 @@ test "build_root_reorder_edge_data replays root tails in nlist order and normali
       root_graph: graph_output.order_graph,
       root_node_map: graph_output.order_node_map,
       root_nlist_order: ["root", vnode, "missing"],
-      root_node_order: Map::new(),
+      root_node_order: Map([]),
     },
     order_edges_by_tail_root,
   )
@@ -196,34 +196,34 @@ test "build_root_reorder_context assembles filtered root groups ranks nodes nlis
 
   let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map::new()
+  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root_a", skeleton_0, "cluster_member"]
   order_groups_for_mincross[1] = ["cluster_peer", "root_b"]
 
-  let order_cluster_keys : Map[String, String] = Map::new()
+  let order_cluster_keys : Map[String, String] = Map([])
   order_cluster_keys[skeleton_0] = "cluster_x"
   order_cluster_keys["cluster_member"] = "cluster_x"
   order_cluster_keys["cluster_peer"] = "cluster_x"
 
-  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton[skeleton_0] = true
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_member"] = "cluster_x"
   cluster_keys["cluster_peer"] = "cluster_x"
 
-  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = ["v_cross"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_local)] = ["v_local"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_cross", "v_local"]
 
-  let vnode_order_keys_for_ordering : Map[String, Double] = Map::new()
+  let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
   vnode_order_keys_for_ordering["v_cross"] = 0.5
   vnode_order_keys_for_ordering["v_local"] = 0.25
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["cluster_member"] = 0
   ranks["cluster_peer"] = 1
 
@@ -244,7 +244,7 @@ test "build_root_reorder_context assembles filtered root groups ranks nodes nlis
     ranks,
     skeleton_edge_creation: [(skeleton_0, "root_b")],
     root_edge_creation: [("root_b", "root_a")],
-    flat_rank_constraints: Map::new(),
+    flat_rank_constraints: Map([]),
   })
 
   assert_eq(context.root_groups.get(0), Some(["root_a", "v_cross", skeleton_0]))

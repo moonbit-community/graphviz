@@ -22,14 +22,14 @@ fn apply_intercluster_bonus(
   if intercluster_bonus.length() == 0 {
     return order_edges_by_tail_coalesced
   }
-  let remaining_bonus : Map[String, Int] = Map::new()
+  let remaining_bonus : Map[String, Int] = Map([])
   for key, value in intercluster_bonus {
     remaining_bonus[key] = value
   }
   let adjusted : Map[
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-  ] = Map::new()
+  ] = Map([])
   for tail_name, entries in order_edges_by_tail_coalesced {
     let adjusted_entries : Array[
       (String, String, Int, Bool, Double, Double, Double, Double),
@@ -87,7 +87,7 @@ fn collect_intercluster_bonus(
   edges_by_tail : Map[String, Array[Int]],
   cluster_keys : Map[String, String],
 ) -> Map[String, Int] {
-  let count_by_key : Map[String, Int] = Map::new()
+  let count_by_key : Map[String, Int] = Map([])
   for tail_name in creation_order {
     let indices = match edges_by_tail.get(tail_name) {
       Some(list) => list
@@ -190,7 +190,7 @@ fn collect_intercluster_bonus(
       }
     }
   }
-  let bonus_by_key : Map[String, Int] = Map::new()
+  let bonus_by_key : Map[String, Int] = Map([])
   for key, count in count_by_key {
     if count > 1 {
       bonus_by_key[key] = count - 1
@@ -208,7 +208,7 @@ fn build_remincross_order_creation(
   rem_vnode_creation : Map[String, Array[String]],
 ) -> Array[String] {
   let rem_order_creation : Array[String] = []
-  let rem_seen : Map[String, Bool] = Map::new()
+  let rem_seen : Map[String, Bool] = Map([])
   for tail_name in creation_order {
     @order_graph.append_creation_name(rem_order_creation, rem_seen, tail_name)
     let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
@@ -230,7 +230,7 @@ fn append_missing_creation_order_names(
   if rem_nlist_order.length() >= rem_order_creation.length() {
     return ()
   }
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for name in rem_nlist_order {
     seen[name] = true
   }
@@ -442,7 +442,7 @@ pub(all) struct ReMincrossMaterializationInputs {
 fn clone_remincross_cluster_keys(
   intercluster_keys : Map[String, String],
 ) -> Map[String, String] {
-  let cloned : Map[String, String] = Map::new()
+  let cloned : Map[String, String] = Map([])
   for name, key in intercluster_keys {
     cloned[name] = key
   }
@@ -549,7 +549,7 @@ priv struct ReMincrossFlatConstraintInputs {
 fn build_remincross_flat_constraints(
   inputs : ReMincrossFlatConstraintInputs,
 ) -> Map[String, Bool] {
-  let rem_flat_constraints : Map[String, Bool] = Map::new()
+  let rem_flat_constraints : Map[String, Bool] = Map([])
   // Graphviz parity: ReMincross flat constraints combine existing same-rank
   // constraints with local intra-cluster adjacency locks for non-intercluster
   // real-node pairs (flat.c cluster-local reorder guard).
@@ -746,8 +746,8 @@ fn build_cluster_tail_buckets(
   // Graphviz parity: clustered ReMincross groups names by cluster in
   // rem_order_creation order and records first-seen cluster sequence.
   let cluster_order_seen : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
-  let names_by_cluster : Map[String, Array[String]] = Map::new()
+  let cluster_seen : Map[String, Bool] = Map([])
+  let names_by_cluster : Map[String, Array[String]] = Map([])
   for name in rem_order_creation {
     let cluster = cluster_key_for_tail_name(rem_cluster_keys, name)
     if cluster_seen.get(cluster) is None {
@@ -759,7 +759,7 @@ fn build_cluster_tail_buckets(
       None => names_by_cluster[cluster] = [name]
     }
   }
-  let cluster_first_seen : Map[String, Int] = Map::new()
+  let cluster_first_seen : Map[String, Int] = Map([])
   for idx, cluster in cluster_order_seen {
     cluster_first_seen[cluster] = idx
   }
@@ -775,7 +775,7 @@ fn build_heads_by_tail_from_edge_creation(
 ) -> Map[String, Array[String]] {
   // Graphviz parity: clustered ReMincross tail->head adjacency keeps
   // rematerialized edge-creation order for downstream rank/block replay.
-  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  let heads_by_tail : Map[String, Array[String]] = Map([])
   for edge in rem_edge_creation {
     let (tail, head) = edge
     match heads_by_tail.get(tail) {
@@ -891,7 +891,7 @@ fn build_remincross_order(
   if has_root_cluster {
     cluster_order.push("")
   }
-  let cluster_order_pos : Map[String, Int] = Map::new()
+  let cluster_order_pos : Map[String, Int] = Map([])
   for idx, cluster in cluster_order {
     cluster_order_pos[cluster] = idx
   }
@@ -936,7 +936,7 @@ fn collect_nonroot_tail_rank_keys(
   rem_ranks : Map[String, Int],
 ) -> Array[Int] {
   let rank_keys : Array[Int] = []
-  let rank_seen : Map[Int, Bool] = Map::new()
+  let rank_seen : Map[Int, Bool] = Map([])
   for name in names {
     let rank = rem_ranks.get(name).unwrap_or(-1)
     if rank_seen.get(rank) is None {

@@ -42,7 +42,7 @@ pub fn merge_sizes_with_vnodes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
 ) -> Map[String, NodeSize] {
-  let merged : Map[String, NodeSize] = Map::new()
+  let merged : Map[String, NodeSize] = Map([])
   for name, size in sizes {
     merged[name] = size
   }

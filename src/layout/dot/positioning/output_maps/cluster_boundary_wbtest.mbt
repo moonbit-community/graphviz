@@ -4,10 +4,10 @@
 
 ///|
 test "build_cluster_boundary_x collects left and right boundary nodes" {
-  let cluster_names : Map[String, Bool] = Map::new()
+  let cluster_names : Map[String, Bool] = Map([])
   cluster_names["cluster0"] = true
 
-  let x_positions : Map[String, Double] = Map::new()
+  let x_positions : Map[String, Double] = Map([])
   x_positions[@cluster_identity.cluster_left_boundary_name("cluster0")] = 12.0
   x_positions[@cluster_identity.cluster_right_boundary_name("cluster0")] = 48.0
   x_positions["plain"] = 99.0

@@ -44,8 +44,8 @@ pub fn build_x_groups_with_vnodes(
   vnodes_by_rank : Map[Int, Array[String]],
   vnode_order_keys : Map[String, Double],
 ) -> Map[Int, Array[String]] {
-  let result : Map[Int, Array[String]] = Map::new()
-  let rank_set : Map[Int, Bool] = Map::new()
+  let result : Map[Int, Array[String]] = Map([])
+  let rank_set : Map[Int, Bool] = Map([])
   for rank, _names in ordered_groups {
     rank_set[rank] = true
   }
@@ -111,7 +111,7 @@ pub fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
 pub fn clone_rank_groups(
   groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let cloned : Map[Int, Array[String]] = Map::new()
+  let cloned : Map[Int, Array[String]] = Map([])
   for rank, names in groups {
     cloned[rank] = names.copy()
   }
@@ -120,7 +120,7 @@ pub fn clone_rank_groups(
 
 ///|
 pub fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   for rank, names in groups {
     for name in names {
       ranks[name] = rank
@@ -131,7 +131,7 @@ pub fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
 
 ///|
 pub fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
-  let order : Map[String, Int] = Map::new()
+  let order : Map[String, Int] = Map([])
   for _rank, names in groups {
     for i in 0..<names.length() {
       order[names[i]] = i
@@ -144,7 +144,7 @@ pub fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
 pub fn order_positions_from_groups(
   groups : Map[Int, Array[String]],
 ) -> Map[String, Double] {
-  let positions : Map[String, Double] = Map::new()
+  let positions : Map[String, Double] = Map([])
   for _rank, names in groups {
     for i in 0..<names.length() {
       positions[names[i]] = i.to_double()

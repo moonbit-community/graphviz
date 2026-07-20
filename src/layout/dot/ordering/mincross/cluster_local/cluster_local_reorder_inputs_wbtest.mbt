@@ -14,11 +14,11 @@ test "build_local_reorder_inputs keeps crossing edges when enabled and scopes me
   let edge_v_b = graph.edge(vnode, b)
   let edge_b_ext = graph.edge(b, ext)
 
-  let source_out_neighbors : Map[String, Array[String]] = Map::new()
+  let source_out_neighbors : Map[String, Array[String]] = Map([])
   source_out_neighbors["a"] = ["\{@edge_identity.EDGE_VNODE_PREFIX}0"]
   source_out_neighbors["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = ["b"]
   source_out_neighbors["b"] = ["ext"]
-  let source_in_neighbors : Map[String, Array[String]] = Map::new()
+  let source_in_neighbors : Map[String, Array[String]] = Map([])
   source_in_neighbors["a"] = ["ext"]
   source_in_neighbors["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = ["a"]
   source_in_neighbors["b"] = ["\{@edge_identity.EDGE_VNODE_PREFIX}0"]
@@ -27,21 +27,21 @@ test "build_local_reorder_inputs keeps crossing edges when enabled and scopes me
     graph, source_out_neighbors, source_in_neighbors,
   )
 
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   cluster_node_set["a"] = true
   cluster_node_set["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = true
   cluster_node_set["b"] = true
 
-  let fixed_ranks : Map[String, Int] = Map::new()
+  let fixed_ranks : Map[String, Int] = Map([])
   fixed_ranks["ext"] = 0
   fixed_ranks["a"] = 1
   fixed_ranks["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = 2
   fixed_ranks["b"] = 3
 
-  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
   order_sizes["b"] = @node_primitives.node_size_from_points(12.0, 9.0)
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = @node_primitives.vnode_size_from_widths_with_h(
     2.0, 3.0, 5.0,
   )
@@ -49,7 +49,7 @@ test "build_local_reorder_inputs keeps crossing edges when enabled and scopes me
   let input_phase_output = build_local_reorder_inputs({
     cluster_name: "cluster_a",
     include_external_crossing: true,
-    expanded_clusters: Map::new(),
+    expanded_clusters: Map([]),
     order_edges: [edge_ext_a, edge_a_v, edge_v_b, edge_b_ext],
     order_edge_tail: ["ext", "a", "\{@edge_identity.EDGE_VNODE_PREFIX}0", "b"],
     order_edge_head: ["a", "\{@edge_identity.EDGE_VNODE_PREFIX}0", "b", "ext"],
@@ -185,12 +185,12 @@ test "build_local_reorder_inputs drops external crossing edges when disabled" {
   let edge_v_b = graph.edge(vnode, b)
   let edge_b_ext = graph.edge(b, ext)
 
-  let source_out_neighbors : Map[String, Array[String]] = Map::new()
+  let source_out_neighbors : Map[String, Array[String]] = Map([])
   source_out_neighbors["a"] = [vnode_name]
   source_out_neighbors[vnode_name] = ["b"]
   source_out_neighbors["b"] = ["ext"]
 
-  let source_in_neighbors : Map[String, Array[String]] = Map::new()
+  let source_in_neighbors : Map[String, Array[String]] = Map([])
   source_in_neighbors["a"] = ["ext"]
   source_in_neighbors[vnode_name] = ["a"]
   source_in_neighbors["b"] = [vnode_name]
@@ -199,31 +199,31 @@ test "build_local_reorder_inputs drops external crossing edges when disabled" {
     graph, source_out_neighbors, source_in_neighbors,
   )
 
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set : Map[String, Bool] = Map([])
   cluster_node_set["a"] = true
   cluster_node_set[vnode_name] = true
   cluster_node_set["b"] = true
 
-  let fixed_ranks : Map[String, Int] = Map::new()
+  let fixed_ranks : Map[String, Int] = Map([])
   fixed_ranks["a"] = 1
   fixed_ranks[vnode_name] = 2
   fixed_ranks["b"] = 3
 
-  let order_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   order_sizes["a"] = @node_primitives.node_size_from_points(10.0, 8.0)
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes[vnode_name] = @node_primitives.vnode_size_from_widths_with_h(
     2.0, 3.0, 5.0,
   )
 
-  let intercluster_keys : Map[String, String] = Map::new()
+  let intercluster_keys : Map[String, String] = Map([])
   intercluster_keys["ext"] = "cluster_ext"
 
   let input_phase_output = build_local_reorder_inputs({
     cluster_name: "cluster_a",
     include_external_crossing: false,
-    expanded_clusters: Map::new(),
+    expanded_clusters: Map([]),
     order_edges: [edge_ext_a, edge_a_v, edge_v_b, edge_b_ext],
     order_edge_tail: ["ext", "a", vnode_name, "b"],
     order_edge_head: ["a", vnode_name, "b", "ext"],
@@ -238,7 +238,7 @@ test "build_local_reorder_inputs drops external crossing edges when disabled" {
     order_sizes,
     vnode_sizes,
     intercluster_keys,
-    flat_constraints: Map::new(),
+    flat_constraints: Map([]),
   })
 
   assert_eq(input_phase_output.cluster_edge_tail, ["a", vnode_name])

@@ -28,7 +28,7 @@ test "recover plan picks center-most edge but routing plan pins multi-edge group
   let edge_a = graph.edge(a, b)
   let edge_b = graph.edge(a, b)
   let edge_c = graph.edge(a, b)
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let base_cache : Map[Int, EdgeRouteBase] = Map([])
   base_cache[edge_a.id()] = build_route_base(edge_a, parallel_offset=2.0)
   base_cache[edge_b.id()] = build_route_base(edge_b, parallel_offset=-1.0)
   base_cache[edge_c.id()] = build_route_base(edge_c, parallel_offset=1.0)

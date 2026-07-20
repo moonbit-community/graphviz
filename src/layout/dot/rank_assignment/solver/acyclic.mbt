@@ -243,7 +243,7 @@ pub fn acyclic_edge_directions_with_order(
   edges : Array[@cgraph.Edge],
 ) -> AcyclicDirectionsWithOrder {
   let _ = graph
-  let node_index : Map[String, Int] = Map::new()
+  let node_index : Map[String, Int] = Map([])
   let node_names : Array[String] = []
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
@@ -252,7 +252,7 @@ pub fn acyclic_edge_directions_with_order(
   }
   let rank_same_reps = @rank_constraints.build_rank_same_reps(graph, nodes)
   let rep_names : Array[String] = []
-  let rep_seen : Map[String, Bool] = Map::new()
+  let rep_seen : Map[String, Bool] = Map([])
   for name in node_names {
     let rep = match rank_same_reps.get(name) {
       Some(value) => value
@@ -354,7 +354,7 @@ pub fn acyclic_edge_directions_with_order(
     sort_in_list(in_edges_all_orig[i])
   }
   // Build fast-graph edges (unique directed pairs) in agfstout order.
-  let rep_index : Map[String, Int] = Map::new()
+  let rep_index : Map[String, Int] = Map([])
   for i in 0..<rep_names.length() {
     rep_index[rep_names[i]] = i
   }
@@ -362,7 +362,7 @@ pub fn acyclic_edge_directions_with_order(
   let fast_edge_head : Array[String] = []
   let fast_edge_members : Array[Array[Int]] = []
   let fast_edge_active : Array[Bool] = []
-  let fast_edge_by_pair : Map[String, Int] = Map::new()
+  let fast_edge_by_pair : Map[String, Int] = Map([])
   let fast_out_edges : Array[Array[Int]] = []
   for _ in 0..<rep_names.length() {
     fast_out_edges.push([])
@@ -419,7 +419,7 @@ pub fn acyclic_edge_directions_with_order(
     rep_names,
     rep_names,
     edge_creation,
-    Map::new(),
+    Map([]),
   )
   let marked : Array[Bool] = []
   let onstack : Array[Bool] = []
@@ -473,7 +473,7 @@ pub fn acyclic_edge_directions_for_names(
   edge_head : Array[String],
   edge_is_active : Array[Bool],
 ) -> AcyclicNameDirections {
-  let node_index : Map[String, Int] = Map::new()
+  let node_index : Map[String, Int] = Map([])
   for i in 0..<node_names.length() {
     node_index[node_names[i]] = i
   }

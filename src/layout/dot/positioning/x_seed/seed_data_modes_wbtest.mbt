@@ -22,24 +22,24 @@ fn sample_node_size(
 test "build_x_seed_data uses explicit vnode groups, vnode size overlay, and vnode cluster keys" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
-  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map::new()
+  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map([])
   ordered_groups_with_vnodes[0] = [cluster_skeleton, "a", "v1"]
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["v1"] = 0
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_0"
   cluster_keys[cluster_skeleton] = "cluster_0"
 
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v1"] = "cluster_0"
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v1"] = sample_node_size(14.0, 6.0)
 
   let seed = build_x_seed_data(
@@ -52,18 +52,18 @@ test "build_x_seed_data uses explicit vnode groups, vnode size overlay, and vnod
       edge_head: [],
       edge_reversed: [],
       ranks,
-      intercluster_keys: Map::new(),
-      cluster_parents: Map::new(),
-      edge_vnodes: Map::new(),
-      vnode_ranks: Map::new(),
-      vnodes_by_rank: Map::new(),
+      intercluster_keys: Map([]),
+      cluster_parents: Map([]),
+      edge_vnodes: Map([]),
+      vnode_ranks: Map([]),
+      vnodes_by_rank: Map([]),
       has_clusters: true,
       cluster_keys,
       vnode_clusters,
       vnode_sizes,
     },
     () => {
-      let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+      let sizes : Map[String, @node_primitives.NodeSize] = Map([])
       sizes["a"] = sample_node_size(10.0, 10.0)
       sizes
     },
@@ -101,20 +101,20 @@ test "build_x_seed_data uses explicit vnode groups, vnode size overlay, and vnod
 test "build_x_seed_data keeps explicit cluster skeletons when cluster cleanup is disabled" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
-  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map::new()
+  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map([])
   ordered_groups_with_vnodes[0] = [cluster_skeleton, "a", "v1"]
 
-  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_0"
   cluster_keys[cluster_skeleton] = "cluster_0"
 
-  let vnode_clusters : Map[String, String] = Map::new()
+  let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v1"] = "cluster_0"
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v1"] = sample_node_size(14.0, 6.0)
 
   let seed = build_x_seed_data(
@@ -126,19 +126,19 @@ test "build_x_seed_data keeps explicit cluster skeletons when cluster cleanup is
       edge_tail: [],
       edge_head: [],
       edge_reversed: [],
-      ranks: Map::new(),
-      intercluster_keys: Map::new(),
-      cluster_parents: Map::new(),
-      edge_vnodes: Map::new(),
-      vnode_ranks: Map::new(),
-      vnodes_by_rank: Map::new(),
+      ranks: Map([]),
+      intercluster_keys: Map([]),
+      cluster_parents: Map([]),
+      edge_vnodes: Map([]),
+      vnode_ranks: Map([]),
+      vnodes_by_rank: Map([]),
       has_clusters: false,
       cluster_keys,
       vnode_clusters,
       vnode_sizes,
     },
     () => {
-      let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+      let sizes : Map[String, @node_primitives.NodeSize] = Map([])
       sizes["a"] = sample_node_size(10.0, 10.0)
       sizes
     },
@@ -165,34 +165,34 @@ test "build_x_seed_data keeps explicit cluster skeletons when cluster cleanup is
 test "build_x_seed_data keeps base groups and sizes when vnode xpos mode is off" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map::new()
+  let ordered_groups : Map[Int, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
-  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v1"] = sample_node_size(14.0, 6.0)
 
   let seed = build_x_seed_data(
     {
       use_vnodes_for_xpos: false,
       ordered_groups,
-      ordered_groups_with_vnodes: Map::new(),
+      ordered_groups_with_vnodes: Map([]),
       edges: [],
       edge_tail: [],
       edge_head: [],
       edge_reversed: [],
-      ranks: Map::new(),
-      intercluster_keys: Map::new(),
-      cluster_parents: Map::new(),
-      edge_vnodes: Map::new(),
-      vnode_ranks: Map::new(),
-      vnodes_by_rank: Map::new(),
+      ranks: Map([]),
+      intercluster_keys: Map([]),
+      cluster_parents: Map([]),
+      edge_vnodes: Map([]),
+      vnode_ranks: Map([]),
+      vnodes_by_rank: Map([]),
       has_clusters: true,
-      cluster_keys: Map::new(),
-      vnode_clusters: Map::new(),
+      cluster_keys: Map([]),
+      vnode_clusters: Map([]),
       vnode_sizes,
     },
     () => {
-      let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
+      let sizes : Map[String, @node_primitives.NodeSize] = Map([])
       sizes["a"] = sample_node_size(10.0, 10.0)
       sizes
     },

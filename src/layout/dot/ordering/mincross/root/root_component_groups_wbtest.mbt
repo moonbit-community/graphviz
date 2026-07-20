@@ -5,20 +5,20 @@
 ///|
 test "collect_noncluster_components builds components from rank groups and flat constraints in root order" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", vnode]
   groups[1] = ["b", "c"]
-  let order_index : Map[String, Int] = Map::new()
+  let order_index : Map[String, Int] = Map([])
   order_index["a"] = 0
   order_index[vnode] = 1
   order_index["b"] = 2
   order_index["c"] = 3
-  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let out_neighbors : Map[String, Array[String]] = Map([])
   out_neighbors["a"] = []
   out_neighbors[vnode] = []
   out_neighbors["b"] = []
   out_neighbors["c"] = []
-  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map([])
   in_neighbors["a"] = []
   in_neighbors[vnode] = []
   in_neighbors["b"] = []
@@ -38,7 +38,7 @@ test "collect_noncluster_components builds components from rank groups and flat 
 
 ///|
 test "filter_component_rank_groups preserves per-rank order and drops empty ranks" {
-  let groups : Map[Int, Array[String]] = Map::new()
+  let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["c"]
   groups[2] = ["d", "e"]
@@ -56,12 +56,12 @@ test "filter_component_rank_groups preserves per-rank order and drops empty rank
 
 ///|
 test "append_component_rank_groups appends each component rank output into the merged map in rank order" {
-  let merged : Map[Int, Array[String]] = Map::new()
+  let merged : Map[Int, Array[String]] = Map([])
   merged[0] = ["existing0"]
   merged[1] = []
   merged[2] = ["existing2"]
 
-  let ordered_component : Map[Int, Array[String]] = Map::new()
+  let ordered_component : Map[Int, Array[String]] = Map([])
   ordered_component[0] = ["a0", "a1"]
   ordered_component[2] = ["c0"]
 
@@ -82,17 +82,17 @@ test "build_root_component_runtime_plan disables component traversal and flip wh
     { "a": 0 },
     { "a": [] },
     { "a": [] },
-    Map::new(),
+    Map([]),
   )
   let (noncluster_components, noncluster_flip) = build_root_component_runtime_plan(
-    Map::new(),
+    Map([]),
     true,
     [0, 1],
     { 0: ["a"], 1: ["b"] },
     { "a": 0, "b": 1 },
     { "a": [], "b": [] },
     { "a": [], "b": [] },
-    Map::new(),
+    Map([]),
   )
 
   assert_eq(clustered_components, [])

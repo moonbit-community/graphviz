@@ -35,6 +35,6 @@ pub fn raw_label_ports_for_node(
   } else if @record_geometry.is_record_shape(node) {
     @record_layout.record_ports(node, origin, base_size, record_orientation)
   } else {
-    Map::new()
+    Map([])
   }
 }

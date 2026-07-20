@@ -21,13 +21,13 @@ test "apply_cluster_rank_heights propagates nested cluster heights into rank hal
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let self_edge_labels : Map[String, Double] = Map::new()
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let self_edge_labels : Map[String, Double] = Map([])
+  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int, Double] = Map([])
 
   apply_cluster_rank_heights({
     graph: root,
@@ -73,12 +73,12 @@ test "apply_cluster_rank_heights preserves larger existing rank half-heights" {
   let a = cluster.node("a")
   ignore(a)
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
-  let sizes : Map[String, @node_primitives.NodeSize] = Map::new()
-  let self_edge_labels : Map[String, Double] = Map::new()
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
+  let sizes : Map[String, @node_primitives.NodeSize] = Map([])
+  let self_edge_labels : Map[String, Double] = Map([])
+  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int, Double] = Map([])
   rank_ht1[1] = 10.0
   rank_ht2[1] = 9.0
 

@@ -75,9 +75,9 @@ pub fn compute_ranks_directed_base(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> Map[String, Int] {
-  let node_by_name : Map[String, @cgraph.Node] = Map::new()
+  let node_by_name : Map[String, @cgraph.Node] = Map([])
   let tail_order : Array[String] = []
-  let node_order_index : Map[String, Int] = Map::new()
+  let node_order_index : Map[String, Int] = Map([])
   for node in nodes {
     let name = node.name()
     node_by_name[name] = node
@@ -93,7 +93,7 @@ pub fn compute_ranks_directed_base(
     }
     head_order_by_edge.push(node_order_index.get(head_name).unwrap_or_default())
   }
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  let edges_by_tail : Map[String, Array[Int]] = Map([])
   for edge_idx in 0..<edges.length() {
     let tail = edge_tail[edge_idx]
     match edges_by_tail.get(tail) {
@@ -138,10 +138,10 @@ pub fn compute_ranks_directed_base(
     tail_order,
     tail_order,
     edge_creation,
-    Map::new(),
+    Map([]),
   )
   let rank_nodes : Array[@cgraph.Node] = []
-  let seen : Map[String, Bool] = Map::new()
+  let seen : Map[String, Bool] = Map([])
   for name in rank_node_names {
     match node_by_name.get(name) {
       Some(node) => {
@@ -161,9 +161,9 @@ pub fn compute_ranks_directed_base(
     }
   }
   let rank_same_reps = @rank_constraints.build_rank_same_reps(source, nodes)
-  let rep_index : Map[String, Int] = Map::new()
+  let rep_index : Map[String, Int] = Map([])
   let rep_order : Array[String] = []
-  let index : Map[String, Int] = Map::new()
+  let index : Map[String, Int] = Map([])
   let mut has_rank_same_groups = false
   for node in rank_nodes {
     let name = node.name()
@@ -185,7 +185,7 @@ pub fn compute_ranks_directed_base(
     }
     index[name] = idx
   }
-  let merged_edges : Map[String, MergedRankEdge] = Map::new()
+  let merged_edges : Map[String, MergedRankEdge] = Map([])
   let merged_edge_order : Array[String] = []
   for tail_name in rank_node_names {
     let indices = match edges_by_tail.get(tail_name) {
@@ -291,13 +291,13 @@ pub fn compute_ranks_directed_base(
       components.push(component)
     }
   }
-  let rep_ranks : Map[String, Int] = Map::new()
+  let rep_ranks : Map[String, Int] = Map([])
   // Graphviz parity: rank1 runs network simplex per connected component
   // (refs/graphviz/lib/dotgen/rank.c), and each component is normalized
   // independently before readout.
   for component in components {
     let graph = @network_simplex.new_graph()
-    let local_index : Map[Int, Int] = Map::new()
+    let local_index : Map[Int, Int] = Map([])
     for rep_idx in component {
       let rep_name = rep_order[rep_idx]
       local_index[rep_idx] = @network_simplex.add_node(graph, rep_name)
@@ -369,7 +369,7 @@ pub fn compute_ranks_directed_base(
       None => default_rank
     }
   }
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   let mut min_rank = 0
   let mut seen = false
   for node in nodes {
@@ -385,8 +385,8 @@ pub fn compute_ranks_directed_base(
     let name = node.name()
     ranks[name] = rank_for_name(name) - min_rank
   }
-  let min_nodes : Map[String, Bool] = Map::new()
-  let max_nodes : Map[String, Bool] = Map::new()
+  let min_nodes : Map[String, Bool] = Map([])
+  let max_nodes : Map[String, Bool] = Map([])
   collect_rank_extremes(source, min_nodes, max_nodes)
   apply_rank_extremes(ranks, min_nodes, max_nodes)
   ranks

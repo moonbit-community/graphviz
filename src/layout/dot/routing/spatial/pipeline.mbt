@@ -93,8 +93,8 @@ fn build_routing_port_layout_maps(
   rankdir : RankDir,
   has_port_edges : Bool,
 ) -> RoutingPortLayoutMaps {
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
-  let label_ports_raw : Map[String, Map[String, RecordPort]] = Map::new()
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
+  let label_ports_raw : Map[String, Map[String, RecordPort]] = Map([])
   if has_port_edges {
     for node_layout in nodes_out {
       let final_size = @node_geometry.resolve_node_output_size(

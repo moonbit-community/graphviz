@@ -17,7 +17,7 @@ test "build_port_offsets_with_callbacks uses fallback node size then rotates cen
 
   let offsets = build_port_offsets_with_callbacks(
     [node],
-    Map::new(),
+    Map([]),
     (_node, rankdir) => {
       missing_size_calls.val = missing_size_calls.val + 1
       missing_size_rankdir.val = rankdir

@@ -11,11 +11,11 @@ fn build_edge_vnodes_for_test(
 ) -> EdgeVnodeInfo {
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map([])
   for node in nodes {
     existing_names[node.name()] = true
   }
-  let edge_cluster_keys : Map[String, String] = Map::new()
+  let edge_cluster_keys : Map[String, String] = Map([])
   @membership.collect_edge_cluster_keys(graph, edge_cluster_keys)
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   build_edge_vnodes(
@@ -23,7 +23,7 @@ fn build_edge_vnodes_for_test(
     edges,
     [],
     [],
-    Map::new(),
+    Map([]),
     ranks,
     nodesep_pt,
     rankdir,

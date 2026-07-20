@@ -1272,7 +1272,7 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
       head_port_order: 0,
     },
   ]
-  let out_neighbor_overrides : Map[Int, Array[Int]] = Map::new()
+  let out_neighbor_overrides : Map[Int, Array[Int]] = Map([])
   out_neighbor_overrides[7] = [8, 6]
   out_neighbor_overrides[8] = []
   out_neighbor_overrides[15] = [16]
@@ -1282,7 +1282,7 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
   out_neighbor_overrides[43] = []
   out_neighbor_overrides[77] = [78]
   out_neighbor_overrides[80] = [23]
-  let in_neighbor_overrides : Map[Int, Array[Int]] = Map::new()
+  let in_neighbor_overrides : Map[Int, Array[Int]] = Map([])
   in_neighbor_overrides[7] = [53, 16, 21]
   in_neighbor_overrides[8] = [9, 62, 35, 52, 90, 26, 7]
   in_neighbor_overrides[15] = [85, 14, 37, 64, 78]
@@ -1301,5 +1301,5 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
 ///|
 test "rank_reorder reorders dense abstract layered case" {
   let (input, output) = abstract_dense_rank_reorder_case()
-  run_mincross_case_with_name_order(input, output, Map::new())
+  run_mincross_case_with_name_order(input, output, Map([]))
 }

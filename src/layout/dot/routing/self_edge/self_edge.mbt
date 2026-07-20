@@ -85,7 +85,7 @@ fn self_edge_right_space_for(
 pub fn apply_self_edge_right_space(
   input : SelfEdgeRightSpaceInput,
 ) -> Map[String, @node_primitives.NodeSize] {
-  let extra_right : Map[String, Double] = Map::new()
+  let extra_right : Map[String, Double] = Map([])
   for edge in input.edges {
     if !@edge_semantics.edge_is_self(edge) {
       continue
@@ -104,7 +104,7 @@ pub fn apply_self_edge_right_space(
   if extra_right.length() == 0 {
     return input.sizes
   }
-  let adjusted : Map[String, @node_primitives.NodeSize] = Map::new()
+  let adjusted : Map[String, @node_primitives.NodeSize] = Map([])
   for name, size in input.sizes {
     match extra_right.get(name) {
       Some(extra) =>
@@ -137,7 +137,7 @@ fn self_edge_group_key(edge : @cgraph.Edge) -> String {
 pub fn collect_self_edge_groups(
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Array[@cgraph.Edge]] {
-  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
     if edge.tail().name() != edge.head().name() {
       continue

@@ -31,7 +31,7 @@ fn sameport_merge_key(edge : @cgraph.Edge) -> String {
 fn collect_sameport_classes(
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Array[@cgraph.Edge]] {
-  let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let classes : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
     if @edge_semantics.edge_is_self(edge) {
       continue
@@ -443,8 +443,8 @@ fn collect_sameport_overrides(
   let node_size_for_missing = input.node_size_for_missing
   let layout_rankdir = input.layout_rankdir
   let ranksep_pt = input.ranksep_pt
-  let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
-  let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map([])
+  let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map([])
   let samehead_group_order : Array[String] = []
   let sametail_group_order : Array[String] = []
   let merge_classes = collect_sameport_classes(edges)
@@ -471,8 +471,8 @@ fn collect_sameport_overrides(
       )
     }
   }
-  let samehead_overrides : Map[Int, @geom.Point] = Map::new()
-  let samehead_group_sizes : Map[Int, Int] = Map::new()
+  let samehead_overrides : Map[Int, @geom.Point] = Map([])
+  let samehead_group_sizes : Map[Int, Int] = Map([])
   apply_sameport_group_overrides({
     groups: samehead_groups,
     group_order: samehead_group_order,
@@ -486,8 +486,8 @@ fn collect_sameport_overrides(
     layout_rankdir,
     ranksep_pt,
   })
-  let sametail_overrides : Map[Int, @geom.Point] = Map::new()
-  let sametail_group_sizes : Map[Int, Int] = Map::new()
+  let sametail_overrides : Map[Int, @geom.Point] = Map([])
+  let sametail_group_sizes : Map[Int, Int] = Map([])
   apply_sameport_group_overrides({
     groups: sametail_groups,
     group_order: sametail_group_order,

@@ -11,7 +11,7 @@ test "compute_root_cluster_padding only applies to root clustered boundary ranks
   let cluster = root.subgraph(name="cluster_0")
   ignore(cluster.node("clustered"))
 
-  let ranks : Map[String, Int] = Map::new()
+  let ranks : Map[String, Int] = Map([])
   ranks["clustered"] = 0
   ranks["outside"] = 2
 

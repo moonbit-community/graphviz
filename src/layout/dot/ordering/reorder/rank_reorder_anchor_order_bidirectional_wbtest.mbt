@@ -352,7 +352,7 @@ test "rank_reorder applies external anchor order on both plugin input and output
     case_id: 1009,
     ranks: [[5, 1, 0, 4, 3, 2], [6, 7], [11, 12, 13, 10, 9, 8, 14]],
   }
-  let name_order : Map[String, Int] = Map::new()
+  let name_order : Map[String, Int] = Map([])
   name_order["fmt_in_xbm"] = 1
   name_order["fmt_in_gd2"] = 2
   name_order["fmt_in_gd"] = 3
