@@ -151,7 +151,7 @@ pub fn cluster_key_from_skeleton(name : String) -> String? {
     end=name.length(),
   )
   for part in rest.split("@") {
-    let value = part.to_string()
+    let value = part.to_owned()
     if value != "" {
       return Some(value)
     }

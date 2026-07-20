@@ -6,7 +6,7 @@
 fn program_basename(program : String) -> String {
   let mut name = program
   for part in program.split("/") {
-    name = part.to_string()
+    name = part.to_owned()
   }
   if name == "" {
     program
@@ -55,9 +55,9 @@ fn parse_format_spec(text : String) -> FormatSpec {
   let mut idx = 0
   for part in text.split(":") {
     if idx == 0 {
-      format_name = part.to_string()
+      format_name = part.to_owned()
     } else if idx == 1 {
-      variant = Some(part.to_string())
+      variant = Some(part.to_owned())
     }
     idx = idx + 1
   }
@@ -369,7 +369,7 @@ fn layout_for_job(
   } else {
     match graph.get_attr("layout") {
       Some(value) => {
-        let layout_name = value.trim(chars=" \n\r\t").to_string()
+        let layout_name = value.trim(chars=" \n\r\t").to_owned()
         if layout_name == "" {
           job.engine
         } else {
@@ -505,7 +505,7 @@ fn render_job_bytes(job : CliJob) -> Bytes raise {
   cli_trace("cli: parse start")
   let graphs = read_dot_input(job.input)
   cli_trace("cli: parse done")
-  let out = @buffer.new()
+  let out = Buffer()
   for i in 0..<graphs.length() {
     let graph = graphs[i]
     apply_attrs(graph, job)

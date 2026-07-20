@@ -273,7 +273,7 @@ fn normalize_text(text : String) -> String {
   out = out.replace_all(old="&#160;", new=" ")
   out = out.replace_all(old="&#xA0;", new=" ")
   out = out.replace_all(old="&#xa0;", new=" ")
-  out.trim(chars=" \n\r\t").to_string()
+  out.trim(chars=" \n\r\t").to_owned()
 }
 
 ///|
@@ -294,7 +294,7 @@ fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
     Some(value) => {
       let parts : Array[String] = []
       for part in value.split(",") {
-        parts.push(part.trim().to_string())
+        parts.push(part.trim().to_owned())
       }
       let x_in = if parts.length() > 0 {
         parse_double(parts[0], DEFAULT_GRAPH_PAD_PT / 72.0)
@@ -397,8 +397,8 @@ fn parse_svg_size(svg : String) -> (Double, Double)? {
       match
         (parse_attr_string(tag, "width"), parse_attr_string(tag, "height")) {
         (Some(width_text), Some(height_text)) => {
-          let mut width = width_text.trim().to_string()
-          let mut height = height_text.trim().to_string()
+          let mut width = width_text.trim().to_owned()
+          let mut height = height_text.trim().to_owned()
           if width.has_suffix("pt") {
             width = width.unsafe_substring(start=0, end=width.length() - 2)
           }
@@ -437,11 +437,11 @@ fn size_scale_for_test(
         let parts : Array[String] = []
         let mut force = false
         for part_view in value.split(",") {
-          let part = part_view.trim().to_string()
+          let part = part_view.trim().to_owned()
           if part.contains("!") {
             force = true
           }
-          let cleaned = part.trim(chars=" \n\r\t!").to_string()
+          let cleaned = part.trim(chars=" \n\r\t!").to_owned()
           if cleaned != "" {
             parts.push(cleaned)
           }

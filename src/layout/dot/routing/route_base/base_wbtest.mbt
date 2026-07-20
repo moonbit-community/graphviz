@@ -20,7 +20,7 @@ test "size_for_name_or_node uses cached sizes before falling back to node sizing
   let fallback_size = @node_primitives.node_size_from_points(30.0, 12.0)
   let sizes : Map[String, NodeSize] = Map([])
   sizes["a"] = cached_size
-  let fallback_calls = Ref::new(0)
+  let fallback_calls = Ref(0)
 
   let cached = size_for_name_or_node(sizes, "a", a, _node => {
     fallback_calls.val = fallback_calls.val + 1

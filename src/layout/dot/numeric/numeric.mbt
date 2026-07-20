@@ -99,7 +99,7 @@ pub fn parse_graph_size_pt_attr(graph : @cgraph.Graph) -> GraphSizePt? {
     Some(value) => {
       let parts : Array[String] = []
       for part in value.split(",") {
-        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        let cleaned = part.trim(chars=" \n\r\t!").to_owned()
         if cleaned != "" {
           parts.push(cleaned)
         }

@@ -54,7 +54,7 @@ fn parse_edge_pos_segment(
   let mut end : @geom.Point? = None
   let points : Array[@geom.Point] = []
   for token in segment.split(" ") {
-    let parsed = parse_edge_token(token.to_string())
+    let parsed = parse_edge_token(token.to_owned())
     match parsed.point {
       Some(value) => {
         let scaled = scale_point(value, scale_factor)
@@ -82,7 +82,7 @@ pub fn parse_edge_pos(
 ) -> Array[@geom.Spline] {
   let splines : Array[@geom.Spline] = []
   for segment in value.split(";") {
-    match parse_edge_pos_segment(segment.to_string(), scale_factor) {
+    match parse_edge_pos_segment(segment.to_owned(), scale_factor) {
       Some(spline) => splines.push(spline)
       None => ()
     }

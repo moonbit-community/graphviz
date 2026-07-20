@@ -45,7 +45,7 @@ fn table_border_pt(table : HtmlTable) -> Double {
 
 ///|
 pub fn is_html_label_text(label : String) -> Bool {
-  let trimmed = label.trim(chars=" \n\r\t").to_string()
+  let trimmed = label.trim(chars=" \n\r\t").to_owned()
   if trimmed.length() < 3 ||
     !trimmed.has_prefix("<") ||
     !trimmed.has_suffix(">") {
@@ -63,7 +63,7 @@ pub fn is_html_label_text(label : String) -> Bool {
 
 ///|
 pub fn strip_html_wrappers(label : String) -> String? {
-  let trimmed = label.trim(chars=" \n\r\t").to_string()
+  let trimmed = label.trim(chars=" \n\r\t").to_owned()
   if !is_html_label_text(trimmed) {
     return None
   }
@@ -664,10 +664,10 @@ pub fn html_table_metrics(
   let cell_sizes : Array[(Double, Double)] = []
   for placement in placements {
     let cell = placement.cell
-    let _ = cell.align
-    let _ = cell.valign
-    let _ = cell.bg_color
-    let _ = cell.port
+    ignore(cell.align)
+    ignore(cell.valign)
+    ignore(cell.bg_color)
+    ignore(cell.port)
     cell_sizes.push(cell_size(cell))
   }
   // Graphviz parity: set single-column widths before processing colspans.

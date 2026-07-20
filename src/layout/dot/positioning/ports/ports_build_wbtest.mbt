@@ -7,13 +7,11 @@ test "build_port_offsets_with_callbacks uses fallback node size then rotates cen
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   graph.set_attr("rankdir", "LR")
   let node = graph.node("n")
-  let missing_size_rankdir = Ref::new(@rankdir.RankDir::TB)
-  let ports_rankdir = Ref::new(@rankdir.RankDir::TB)
-  let observed_base_size = Ref::new(
-    @node_primitives.node_size_from_points(0.0, 0.0),
-  )
-  let missing_size_calls = Ref::new(0)
-  let ports_calls = Ref::new(0)
+  let missing_size_rankdir = Ref(@rankdir.RankDir::TB)
+  let ports_rankdir = Ref(@rankdir.RankDir::TB)
+  let observed_base_size = Ref(@node_primitives.node_size_from_points(0.0, 0.0))
+  let missing_size_calls = Ref(0)
+  let ports_calls = Ref(0)
 
   let offsets = build_port_offsets_with_callbacks(
     [node],

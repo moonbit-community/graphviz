@@ -40,7 +40,7 @@ fn extract_label_entries(svg : String, label : String) -> Array[SvgLabelEntry] {
       skip_first = false
       continue
     }
-    let part = part_view.to_string()
+    let part = part_view.to_owned()
     match part.find(">") {
       Some(end_pos) => {
         let tag = part.unsafe_substring(start=0, end=end_pos)
@@ -94,7 +94,7 @@ fn extract_label_entries(svg : String, label : String) -> Array[SvgLabelEntry] {
 fn parse_point(text : String) -> @geom.Point? {
   let parts : Array[String] = []
   for part_view in text.split(",") {
-    parts.push(part_view.trim(chars=" \n\r\t!").to_string())
+    parts.push(part_view.trim(chars=" \n\r\t!").to_owned())
   }
   if parts.length() < 2 {
     return None

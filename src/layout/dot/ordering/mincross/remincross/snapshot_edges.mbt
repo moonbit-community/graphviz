@@ -17,9 +17,7 @@ pub(all) struct RemincrossInputSnapshot {
 }
 
 ///|
-pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(
-  None,
-)
+pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref(None)
 
 ///|
 /// Graphviz parity: remincross snapshot input keeps order-rank groups,

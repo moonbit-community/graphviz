@@ -215,7 +215,7 @@ fn edge_attr(edge : @cgraph.Edge, name : String) -> String? {
 fn nonempty_attr_value(value : String?) -> String? {
   match value {
     Some(text) => {
-      let trimmed = text.trim(chars=" \n\r\t").to_string()
+      let trimmed = text.trim(chars=" \n\r\t").to_owned()
       if trimmed == "" {
         None
       } else {
@@ -277,7 +277,7 @@ fn node_link_title(node : @cgraph.Node, fallback : String) -> String {
 
 ///|
 fn parse_palette_index(value : String) -> Int? {
-  let trimmed = value.trim().to_string()
+  let trimmed = value.trim().to_owned()
   if trimmed == "" {
     return None
   }
@@ -314,7 +314,7 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
     return None
   }
   if parts.length() == 2 {
-    let token = parts[1].trim().to_string()
+    let token = parts[1].trim().to_owned()
     if token == "" {
       return None
     }
@@ -323,12 +323,12 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
       None => None
     }
   }
-  let scheme = parts[1].trim().to_string()
+  let scheme = parts[1].trim().to_owned()
   let token_parts : Array[String] = []
   for i in 2..<parts.length() {
     token_parts.push(parts[i])
   }
-  let token = token_parts.join("/").trim().to_string()
+  let token = token_parts.join("/").trim().to_owned()
   if token == "" {
     return None
   }
@@ -407,7 +407,7 @@ fn resolve_prefixed_colorscheme_color(
 
 ///|
 fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
-  let trimmed = value.trim().to_string()
+  let trimmed = value.trim().to_owned()
   match resolve_prefixed_colorscheme_color(trimmed, colorscheme) {
     Some(mapped) => return mapped
     None => ()
@@ -518,7 +518,7 @@ fn mapped_svg_font_family(base_lower : String) -> String? {
 fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
   let parts : Array[String] = []
   for part in font_name.split("-") {
-    parts.push(part.to_string())
+    parts.push(part.to_owned())
   }
   if parts.length() == 0 {
     return { family: font_name, weight: None, stretch: None, style: None }
@@ -1024,7 +1024,7 @@ fn extract_numbers(value : String) -> Array[Double] {
     if token.length() == 0 {
       continue
     }
-    numbers.push(parse_double(token.to_string(), 0.0))
+    numbers.push(parse_double(token.to_owned(), 0.0))
   }
   numbers
 }
@@ -1578,7 +1578,7 @@ fn split_once_colon(value : String) -> (String, String)? {
 
 ///|
 fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
-  let value = raw.trim().to_string()
+  let value = raw.trim().to_owned()
   if value == "" {
     return None
   }
@@ -1698,7 +1698,7 @@ fn node_rect_with_size(
 ///|
 fn fixedsize_mode(node : @cgraph.Node) -> String {
   match node_attr(node, "fixedsize") {
-    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    Some(value) => value.trim(chars=" \n\r\t").to_owned().to_lower()
     None => ""
   }
 }
@@ -3223,7 +3223,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
 
 ///|
 fn record_field_from_text(field : String) -> RecordField {
-  let trimmed = field.trim(chars=" \n\r\t").to_string()
+  let trimmed = field.trim(chars=" \n\r\t").to_owned()
   let raw_text = if trimmed.has_prefix("<") {
     match trimmed.find(">") {
       Some(pos) => {
@@ -3239,7 +3239,7 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     trimmed
   }
-  let normalized = raw_text.trim(chars=" \n\r\t").to_string()
+  let normalized = raw_text.trim(chars=" \n\r\t").to_owned()
   let text = if normalized == "" { " " } else { normalized }
   { text, }
 }
@@ -4166,7 +4166,7 @@ fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
     Some(value) => {
       let parts : Array[String] = []
       for part in value.split(",") {
-        parts.push(part.trim().to_string())
+        parts.push(part.trim().to_owned())
       }
       let x_in = if parts.length() > 0 {
         parse_double(parts[0], DEFAULT_GRAPH_PAD_PT / 72.0)
@@ -4191,11 +4191,11 @@ fn parse_size_attr(graph : @cgraph.Graph) -> (Double, Double, Bool)? {
       let parts : Array[String] = []
       let mut force = false
       for part_view in value.split(",") {
-        let part = part_view.trim().to_string()
+        let part = part_view.trim().to_owned()
         if part.contains("!") {
           force = true
         }
-        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        let cleaned = part.trim(chars=" \n\r\t!").to_owned()
         if cleaned != "" {
           parts.push(cleaned)
         }
@@ -4685,7 +4685,7 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
   let raw = @attrs.color(edge.get_attr("color"), default="black")
   let colors : Array[String] = []
   for part in raw.split(":") {
-    let token = part.trim().to_string()
+    let token = part.trim().to_owned()
     if token == "" {
       continue
     }
@@ -4739,7 +4739,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   let segs : Array[ColorSegment] = []
   let mut left = 1.0
   for part in raw.split(":") {
-    let token = part.trim().to_string()
+    let token = part.trim().to_owned()
     if token == "" {
       continue
     }
@@ -4752,7 +4752,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
         let frac_text = token
           .unsafe_substring(start=index + 1, end=token.length())
           .trim()
-          .to_string()
+          .to_owned()
         match parse_color_fraction(frac_text) {
           Some(value) => {
             t = value
@@ -4773,7 +4773,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
         left = 0.0
       }
     }
-    let color = svg_color(color_token.trim().to_string())
+    let color = svg_color(color_token.trim().to_owned())
     segs.push({ color, t })
     if color_is_zero(left) {
       left = 0.0
@@ -5078,7 +5078,7 @@ fn write_svg_edge_group(
   let svg_group_class = (base : String, extra : String?) => {
     match extra {
       Some(value) => {
-        let trimmed = value.trim(chars=" \n\r\t").to_string()
+        let trimmed = value.trim(chars=" \n\r\t").to_owned()
         if trimmed == "" {
           escape_xml(base)
         } else {
@@ -5394,7 +5394,7 @@ fn write_svg_node_group(
   }
   let node_group_class = match node_attr(node, "class") {
     Some(value) => {
-      let trimmed = value.trim(chars=" \n\r\t").to_string()
+      let trimmed = value.trim(chars=" \n\r\t").to_owned()
       if trimmed == "" {
         "node"
       } else {

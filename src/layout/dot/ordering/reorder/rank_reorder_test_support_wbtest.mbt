@@ -89,7 +89,7 @@ fn assert_rank_groups(
       let expected_id = expected_rank[j]
       if actual_id != expected_id {
         fail(
-          "case \{case_id} graph=\{graph} rank[\{i}] index=\{j} expected=\{expected_id} actual=\{actual_id} expected_rank=\{expected_rank} actual_rank=\{actual_rank}",
+          "case \{case_id} graph=\{graph} rank[\{i}] index=\{j} expected=\{expected_id} actual=\{actual_id} expected_rank=\{repr(expected_rank)} actual_rank=\{repr(actual_rank)}",
         )
       }
     }
@@ -218,8 +218,8 @@ fn run_mincross_case_with_name_order(
   }
   let edges_input = input.edges.copy()
   for edge in edges_input {
-    let _ = edge.seq
-    let _ = edge.order
+    ignore(edge.seq)
+    ignore(edge.order)
     let tail_name = match id_to_name.get(edge.tail) {
       Some(value) => value
       None => fail("case \{input.case_id} missing tail id \{edge.tail}")

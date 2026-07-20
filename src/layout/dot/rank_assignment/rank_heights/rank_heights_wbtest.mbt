@@ -70,7 +70,7 @@ fn build_long_edge_rank_heights_input(
 fn rank_parse_point(text : String) -> @geom.Point {
   let parts : Array[String] = []
   for part in text.split(",") {
-    parts.push(part.to_string())
+    parts.push(part.to_owned())
   }
   let x = if parts.length() > 0 {
     @numeric.parse_double_or(parts[0], 0.0)

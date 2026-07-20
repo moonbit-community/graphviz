@@ -156,8 +156,11 @@ test "write_dot_bytes keeps latin1 output bytes" {
     }
   }
   assert_true(has_high_byte)
-  let decoded : Result[String, Error] = try? @utf8.decode(bytes)
-  guard decoded is Err(_) else { fail("expected latin1 byte stream") }
+  try @utf8.decode(bytes) catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected latin1 byte stream")
+  }
 }
 
 ///|
@@ -180,6 +183,9 @@ test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
     }
   }
   assert_true(has_high_byte)
-  let decoded : Result[String, Error] = try? @utf8.decode(bytes)
-  guard decoded is Err(_) else { fail("expected latin1 byte stream") }
+  try @utf8.decode(bytes) catch {
+    _ => ()
+  } noraise {
+    _ => fail("expected latin1 byte stream")
+  }
 }

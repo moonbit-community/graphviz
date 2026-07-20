@@ -22,7 +22,7 @@ pub(all) enum NodeKind {
 } derive(Eq)
 
 ///|
-let root_override : Ref[Int?] = Ref::new(None)
+let root_override : Ref[Int?] = Ref(None)
 
 ///|
 pub(all) struct NsEdge {

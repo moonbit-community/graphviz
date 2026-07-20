@@ -106,7 +106,7 @@ pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
 
 ///|
 fn record_field_from_text(field : String) -> RecordField {
-  let trimmed = field.trim(chars=" \n\r\t").to_string()
+  let trimmed = field.trim(chars=" \n\r\t").to_owned()
   let (port_name, raw_text) : (String?, String) = if trimmed.has_prefix("<") {
     match trimmed.find(">") {
       Some(pos) => {
@@ -131,7 +131,7 @@ fn record_field_from_text(field : String) -> RecordField {
   }
   let normalized = normalize_record_text(raw_text)
     .trim(chars=" \n\r\t")
-    .to_string()
+    .to_owned()
   let text = if normalized == "" { " " } else { normalized }
   { name: port_name, text }
 }

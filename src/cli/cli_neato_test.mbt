@@ -15,7 +15,7 @@ fn parse_double(text : String, fallback : Double) -> Double {
 fn parse_pos(text : String) -> (Double, Double) {
   let parts : Array[String] = []
   for part in text.split(",") {
-    parts.push(part.to_string())
+    parts.push(part.to_owned())
   }
   let x = if parts.length() > 0 { parse_double(parts[0], 0.0) } else { 0.0 }
   let y = if parts.length() > 1 { parse_double(parts[1], 0.0) } else { 0.0 }

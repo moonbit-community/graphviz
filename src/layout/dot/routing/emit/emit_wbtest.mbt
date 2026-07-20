@@ -46,8 +46,8 @@ test "build_flat_adjacent_layout propagates swap_ends to the final rendered spli
     input => layout_edge(input.base.edge, input.spline),
   )
   let base = build_emit_base(edge, swap_ends=true)
-  let seen_pad = Ref::new(-1.0)
-  let seen_dotted = Ref::new(true)
+  let seen_pad = Ref(-1.0)
+  let seen_dotted = Ref(true)
 
   let layout = build_flat_adjacent_layout(base, straight_bezier_points(), input => {
     seen_pad.val = input.spline_result.label_pad_boost
@@ -75,9 +75,9 @@ test "build_regular_bezier_layout reuses shared spline-result metadata and raw b
     5.0,
     true,
   )
-  let seen_pad = Ref::new(0.0)
-  let seen_dotted = Ref::new(false)
-  let seen_raw = Ref::new(short_bezier_points())
+  let seen_pad = Ref(0.0)
+  let seen_dotted = Ref(false)
+  let seen_raw = Ref(short_bezier_points())
 
   let layout = build_regular_bezier_layout(base, shared, input => {
     seen_pad.val = input.spline_result.label_pad_boost
