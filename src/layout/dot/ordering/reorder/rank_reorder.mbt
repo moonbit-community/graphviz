@@ -1814,10 +1814,10 @@ pub fn build_seeded_reorder_groups(
 }
 
 ///|
-pub let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
+pub let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref(false)
 
 ///|
-pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(
+pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref(
   None,
 )
 

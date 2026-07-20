@@ -7,7 +7,7 @@
 /// tests, node clipping, and compass-port projection on shapes.
 fn fixedsize_mode(node : @cgraph.Node) -> String {
   match node.get_attr("fixedsize") {
-    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    Some(value) => value.trim(chars=" \n\r\t").to_owned().to_lower()
     None => ""
   }
 }

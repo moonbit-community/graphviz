@@ -27,7 +27,7 @@ priv enum NodeFixedSizeMode {
 fn node_fixedsize_mode(node : @cgraph.Node) -> NodeFixedSizeMode {
   match node.get_attr("fixedsize") {
     Some(value) =>
-      match value.trim(chars=" \n\r\t").to_string().to_lower() {
+      match value.trim(chars=" \n\r\t").to_owned().to_lower() {
         "true" | "yes" | "1" => NodeFixedSizeMode::True
         "shape" => NodeFixedSizeMode::Shape
         _ => NodeFixedSizeMode::None

@@ -50,7 +50,7 @@ test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
   let rank_y : Map[Int, Double] = Map([])
   rank_y[1] = 18.0
 
-  let fallback_calls = Ref::new(0)
+  let fallback_calls = Ref(0)
   let direct = build_vnode_positions({
     use_vnodes_for_xpos: true,
     vnode_ranks,

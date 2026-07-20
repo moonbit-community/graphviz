@@ -7,7 +7,7 @@ const MAX_OUTPUT_LINE : Int = 128
 
 ///|
 fn is_html_label_value(value : String) -> Bool {
-  let trimmed = value.trim(chars=" \n\r\t").to_string()
+  let trimmed = value.trim(chars=" \n\r\t").to_owned()
   if trimmed.length() < 3 ||
     !trimmed.has_prefix("<") ||
     !trimmed.has_suffix(">") {
@@ -201,7 +201,7 @@ fn split_once_colon(value : String) -> (String, String)? {
 
 ///|
 fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
-  let value = raw.trim().to_string()
+  let value = raw.trim().to_owned()
   if value == "" {
     return None
   }
@@ -1008,7 +1008,7 @@ fn graph_at_path(root : @cgraph.Graph, path : String) -> @cgraph.Graph? {
   }
   let mut current = root
   for part in path.split("/") {
-    let segment = part.to_string()
+    let segment = part.to_owned()
     if segment == "" {
       continue
     }
@@ -1032,7 +1032,7 @@ fn parent_graph_path(path : String) -> String? {
   }
   let segments : Array[String] = []
   for part in path.split("/") {
-    let value = part.to_string()
+    let value = part.to_owned()
     if value != "" {
       segments.push(value)
     }

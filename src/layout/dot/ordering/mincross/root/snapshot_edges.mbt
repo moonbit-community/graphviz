@@ -164,7 +164,7 @@ pub(all) struct RootMincrossInputSnapshot {
 }
 
 ///|
-pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(
+pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref(
   None,
 )
 

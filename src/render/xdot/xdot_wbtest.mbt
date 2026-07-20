@@ -6,7 +6,7 @@
 fn parse_point(text : String) -> @geom.Point? {
   let parts : Array[String] = []
   for part_view in text.split(",") {
-    parts.push(part_view.trim(chars=" \n\r\t").to_string())
+    parts.push(part_view.trim(chars=" \n\r\t").to_owned())
   }
   if parts.length() < 2 {
     return None

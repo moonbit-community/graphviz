@@ -277,7 +277,7 @@ fn extract_numbers(value : String) -> Array[Double] {
     if token.length() == 0 {
       continue
     }
-    numbers.push(parse_double(token.to_string(), 0.0))
+    numbers.push(parse_double(token.to_owned(), 0.0))
   }
   numbers
 }
@@ -487,7 +487,7 @@ fn node_attr(node : @cgraph.Node, name : String) -> String? {
 
 ///|
 fn parse_palette_index(value : String) -> Int? {
-  let trimmed = value.trim().to_string()
+  let trimmed = value.trim().to_owned()
   if trimmed == "" {
     return None
   }
@@ -524,7 +524,7 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
     return None
   }
   if parts.length() == 2 {
-    let token = parts[1].trim().to_string()
+    let token = parts[1].trim().to_owned()
     if token == "" {
       return None
     }
@@ -533,12 +533,12 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
       None => None
     }
   }
-  let scheme = parts[1].trim().to_string()
+  let scheme = parts[1].trim().to_owned()
   let token_parts : Array[String] = []
   for i in 2..<parts.length() {
     token_parts.push(parts[i])
   }
-  let token = token_parts.join("/").trim().to_string()
+  let token = token_parts.join("/").trim().to_owned()
   if token == "" {
     return None
   }
@@ -617,7 +617,7 @@ fn resolve_prefixed_colorscheme_color(
 
 ///|
 fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
-  let trimmed = value.trim().to_string()
+  let trimmed = value.trim().to_owned()
   match resolve_prefixed_colorscheme_color(trimmed, colorscheme) {
     Some(mapped) => return mapped
     None => ()
@@ -1080,7 +1080,7 @@ fn node_rect_with_size(
 ///|
 fn fixedsize_mode(node : @cgraph.Node) -> String {
   match node_attr(node, "fixedsize") {
-    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    Some(value) => value.trim(chars=" \n\r\t").to_owned().to_lower()
     None => ""
   }
 }
@@ -2622,7 +2622,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
 
 ///|
 fn record_field_from_text(field : String) -> RecordField {
-  let trimmed = field.trim(chars=" \n\r\t").to_string()
+  let trimmed = field.trim(chars=" \n\r\t").to_owned()
   let raw_text = if trimmed.has_prefix("<") {
     match trimmed.find(">") {
       Some(pos) => {
@@ -2638,7 +2638,7 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     trimmed
   }
-  let normalized = raw_text.trim(chars=" \n\r\t").to_string()
+  let normalized = raw_text.trim(chars=" \n\r\t").to_owned()
   let text = if normalized == "" { " " } else { normalized }
   { text, }
 }
@@ -4139,7 +4139,7 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
   let raw = @attrs.color(edge.get_attr("color"), default="black")
   let colors : Array[String] = []
   for part in raw.split(":") {
-    let token = part.trim().to_string()
+    let token = part.trim().to_owned()
     if token == "" {
       continue
     }
@@ -4193,7 +4193,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
   let segs : Array[ColorSegment] = []
   let mut left = 1.0
   for part in raw.split(":") {
-    let token = part.trim().to_string()
+    let token = part.trim().to_owned()
     if token == "" {
       continue
     }
@@ -4206,7 +4206,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
         let frac_text = token
           .unsafe_substring(start=index + 1, end=token.length())
           .trim()
-          .to_string()
+          .to_owned()
         match parse_color_fraction(frac_text) {
           Some(value) => {
             t = value
@@ -4227,7 +4227,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
         left = 0.0
       }
     }
-    let color = @attrs.normalize_color(color_token.trim().to_string())
+    let color = @attrs.normalize_color(color_token.trim().to_owned())
     segs.push({ color, t })
     if color_is_zero(left) {
       left = 0.0
@@ -4828,7 +4828,7 @@ fn is_attr_name_byte(ch : Byte) -> Bool {
 ///|
 fn latin1_token_bytes(token : BytesView) -> Bytes {
   let text = try @utf8.decode(token) catch {
-    _ => return token.to_bytes()
+    _ => return token.to_owned()
   } noraise {
     value => value
   }
@@ -4836,7 +4836,7 @@ fn latin1_token_bytes(token : BytesView) -> Bytes {
   for ch in text {
     let code = ch.to_int()
     if code > 0xFF {
-      return token.to_bytes()
+      return token.to_owned()
     }
     bytes.push(code.to_byte())
   }
@@ -4846,7 +4846,7 @@ fn latin1_token_bytes(token : BytesView) -> Bytes {
 ///|
 fn xdot_latin1_label_bytes(text : String) -> Bytes {
   let input = @utf8.encode(text, bom=false)
-  let out = @buffer.new(size_hint=input.length())
+  let out = Buffer(size_hint=input.length())
   let mut index = 0
   while index < input.length() {
     if index + 6 <= input.length() &&

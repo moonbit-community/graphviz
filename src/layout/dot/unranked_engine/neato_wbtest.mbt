@@ -15,7 +15,7 @@ fn neato_parse_double(text : String, fallback : Double) -> Double {
 fn neato_parse_pos(text : String) -> @geom.Point {
   let parts : Array[String] = []
   for part in text.split(",") {
-    parts.push(part.to_string())
+    parts.push(part.to_owned())
   }
   let x = if parts.length() > 0 {
     neato_parse_double(parts[0], 0.0)

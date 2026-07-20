@@ -40,7 +40,7 @@ fn extract_numbers(value : String) -> Array[Double] {
     if token.length() == 0 {
       continue
     }
-    numbers.push(@numeric.parse_double_or(token.to_string(), 0.0))
+    numbers.push(@numeric.parse_double_or(token.to_owned(), 0.0))
   }
   numbers
 }

@@ -15,7 +15,7 @@ fn rank_parse_double(text : String, fallback : Double) -> Double {
 fn rank_parse_point(text : String) -> @geom.Point {
   let parts : Array[String] = []
   for part in text.split(",") {
-    parts.push(part.to_string())
+    parts.push(part.to_owned())
   }
   let x = if parts.length() > 0 {
     rank_parse_double(parts[0], 0.0)

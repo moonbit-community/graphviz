@@ -234,27 +234,27 @@ pub(all) struct XposConstraintSnapshot {
 
 ///|
 fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
-  let _ = snapshot.nodes
-  let _ = snapshot.edges
+  ignore(snapshot.nodes)
+  ignore(snapshot.edges)
   for node in snapshot.nodes {
-    let _ = node.name
-    let _ = node.kind
-    let _ = node.rank
-    let _ = node.order
-    let _ = node.left_pt
-    let _ = node.right_pt
-    let _ = node.height_pt
+    ignore(node.name)
+    ignore(node.kind)
+    ignore(node.rank)
+    ignore(node.order)
+    ignore(node.left_pt)
+    ignore(node.right_pt)
+    ignore(node.height_pt)
   }
   for edge in snapshot.edges {
-    let _ = edge.tail
-    let _ = edge.head
-    let _ = edge.minlen
-    let _ = edge.weight
+    ignore(edge.tail)
+    ignore(edge.head)
+    ignore(edge.minlen)
+    ignore(edge.weight)
   }
 }
 
 ///|
-pub let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
+pub let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref(None)
 
 ///|
 pub fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {

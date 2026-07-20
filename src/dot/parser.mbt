@@ -657,7 +657,7 @@ fn decode_dot_file(path : String) -> (String, Bool) raise DotParseError {
   let src = try @utf8.decode(bytes) catch {
     _ => {
       used_latin1_fallback = true
-      let buf = @buffer.new(size_hint=bytes.length() * 2)
+      let buf = Buffer(size_hint=bytes.length() * 2)
       for b in bytes {
         let value = b.to_int()
         if value < 0x80 {
