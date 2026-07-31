@@ -17,7 +17,7 @@ fn program_basename(program : String) -> String {
 
 ///|
 fn cli_trace(message : String) -> Unit {
-  if @sys.get_env_var("DOT_TRACE") is Some(_) {
+  if @env.get_env_var("DOT_TRACE") is Some(_) {
     println(message)
   }
 }
@@ -487,7 +487,7 @@ fn render_graph_bytes(
 }
 
 ///|
-pub fn render_job(job : CliJob) -> String raise {
+pub async fn render_job(job : CliJob) -> String {
   cli_trace("cli: parse start")
   let graphs = read_dot_input(job.input)
   cli_trace("cli: parse done")
@@ -501,7 +501,7 @@ pub fn render_job(job : CliJob) -> String raise {
 }
 
 ///|
-fn render_job_bytes(job : CliJob) -> Bytes raise {
+async fn render_job_bytes(job : CliJob) -> Bytes {
   cli_trace("cli: parse start")
   let graphs = read_dot_input(job.input)
   cli_trace("cli: parse done")
@@ -515,7 +515,7 @@ fn render_job_bytes(job : CliJob) -> Bytes raise {
 }
 
 ///|
-fn read_dot_input(input : String?) -> Array[@cgraph.Graph] raise {
+async fn read_dot_input(input : String?) -> Array[@cgraph.Graph] {
   let path = match input {
     None => "/dev/stdin"
     Some(path) => if path == "-" { "/dev/stdin" } else { path }
@@ -534,12 +534,16 @@ fn version_text() -> String {
 }
 
 ///|
-pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise {
+pub async fn run_cli(args : Array[String], program? : String = "dot") -> String {
   match parse_cli_args(args, program~) {
     CliAction::Render(job) =>
       match job.output {
         Some(path) => {
-          @fs.write_bytes_to_file(path, render_job_bytes(job))
+          @fs.write_file(
+            path,
+            render_job_bytes(job),
+            create_mode=@fs.CreateOrTruncate,
+          )
           ""
         }
         None => render_job(job)
@@ -550,15 +554,19 @@ pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise 
 }
 
 ///|
-pub fn run_cli_bytes(
+pub async fn run_cli_bytes(
   args : Array[String],
   program? : String = "dot",
-) -> Bytes raise {
+) -> Bytes {
   match parse_cli_args(args, program~) {
     CliAction::Render(job) =>
       match job.output {
         Some(path) => {
-          @fs.write_bytes_to_file(path, render_job_bytes(job))
+          @fs.write_file(
+            path,
+            render_job_bytes(job),
+            create_mode=@fs.CreateOrTruncate,
+          )
           @utf8.encode("", bom=false)
         }
         None => render_job_bytes(job)

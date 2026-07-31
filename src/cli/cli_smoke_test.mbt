@@ -3,19 +3,19 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn ensure_dir(path : String) -> Unit raise {
-  if !@fs.path_exists(path) {
-    @fs.create_dir(path)
+async fn ensure_dir(path : String) -> Unit {
+  if !@fs.exists(path) {
+    @fs.mkdir(path)
   }
 }
 
 ///|
-fn write_input(path : String, contents : String) -> Unit raise {
-  @fs.write_string_to_file(path, contents)
+async fn write_input(path : String, contents : String) -> Unit {
+  @fs.write_file(path, contents, create_mode=@fs.CreateOrTruncate)
 }
 
 ///|
-test "cli smoke dot/xdot/svg" {
+async test "cli smoke dot/xdot/svg" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/input.dot"
@@ -30,7 +30,7 @@ test "cli smoke dot/xdot/svg" {
 }
 
 ///|
-test "cli smoke writes output file" {
+async test "cli smoke writes output file" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/input.dot"
@@ -38,12 +38,12 @@ test "cli smoke writes output file" {
   let out_path = "target/cli/out.svg"
   let stdout = run_cli(["-Tsvg", "-o", out_path, input_path])
   assert_eq(stdout, "")
-  let svg_out = @fs.read_file_to_string(out_path)
+  let svg_out = @fs.read_file(out_path).text()
   assert_true(svg_out.contains("<svg"))
 }
 
 ///|
-test "cli -Kdot overrides layout=neato" {
+async test "cli -Kdot overrides layout=neato" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/layout_neato.dot"
@@ -56,7 +56,7 @@ test "cli -Kdot overrides layout=neato" {
 }
 
 ///|
-test "cli renders multiple graphs from one file" {
+async test "cli renders multiple graphs from one file" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/multi_graphs.dot"

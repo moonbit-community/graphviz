@@ -10,5 +10,5 @@ import {
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
   "moonbit-community/graphviz/layout/dot/rank_constraints",
-  "moonbitlang/x/sys",
+  "moonbitlang/core/env",
 }

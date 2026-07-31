@@ -15,10 +15,12 @@ import {
 }
 
 import {
-  "moonbitlang/x/fs",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
   "moonbit-community/graphviz/dot",
 } for "test"
 
 import {
+  "moonbitlang/async",
   "moonbit-community/graphviz/dot",
 } for "wbtest"

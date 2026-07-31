@@ -127,9 +127,9 @@ test "build_local_reorder_inputs keeps crossing edges when enabled and scopes me
 ///|
 test "should_include_external_crossing_edges keeps shallow clusters and only disables deep edge-free vnode-free clusters outside fixture mode" {
   let env_key = "DOT_CAPTURE_ORDERING_FIXTURE_MODE"
-  let original = @sys.get_env_var(env_key)
+  let original = @env.get_env_var(env_key)
 
-  @sys.unset_env_var(env_key)
+  @env.unset_env_var(env_key)
   let shallow_without_edges = should_include_external_crossing_edges(
     [0, 1],
     0,
@@ -147,7 +147,7 @@ test "should_include_external_crossing_edges keeps shallow clusters and only dis
   )
   let deep_with_vnodes = should_include_external_crossing_edges([0, 1, 2], 0, 1)
 
-  @sys.set_env_var(env_key, "1")
+  @env.set_env_var(env_key, "1")
   let fixture_mode_shallow = should_include_external_crossing_edges(
     [0, 1],
     9,
@@ -160,8 +160,8 @@ test "should_include_external_crossing_edges keeps shallow clusters and only dis
   )
 
   match original {
-    Some(value) => @sys.set_env_var(env_key, value)
-    None => @sys.unset_env_var(env_key)
+    Some(value) => @env.set_env_var(env_key, value)
+    None => @env.unset_env_var(env_key)
   }
 
   assert_true(shallow_without_edges)

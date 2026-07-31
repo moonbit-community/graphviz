@@ -322,7 +322,7 @@ fn build_edge_route_base(
   let force_segmented = force_segmented_base ||
     (is_flat_edge && has_vnodes && mid_label_width_pt > 0.0)
   let use_pathplan = @runtime_flags.env_flag_enabled(
-    @sys.get_env_var("DOT_USE_PATHPLAN"),
+    @env.get_env_var("DOT_USE_PATHPLAN"),
     true,
   )
   let allow_offset = !is_flat_edge &&

@@ -7,7 +7,7 @@
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 fn intercluster_alignment_enabled() -> Bool {
   @runtime_flags.env_flag_enabled(
-    @sys.get_env_var("DOT_INTERCLUSTER_ALIGN"),
+    @env.get_env_var("DOT_INTERCLUSTER_ALIGN"),
     false,
   )
 }
@@ -17,7 +17,7 @@ fn intercluster_alignment_enabled() -> Bool {
 /// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
 pub fn cluster_rounding_enabled() -> Bool {
   @runtime_flags.env_flag_enabled_nonempty(
-    @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
+    @env.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING"),
   )
 }
 

@@ -1962,7 +1962,7 @@ fn run_root_rank_reorder(
     inputs.graphviz_in_neighbors,
     inputs.order_flat_constraints,
   )
-  let coalesce_parallel = @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
+  let coalesce_parallel = @env.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   if components.length() <= 1 {
     return run_root_rank_reorder_call(
       inputs, root_graphviz_flip, coalesce_parallel,

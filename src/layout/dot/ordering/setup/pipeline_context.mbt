@@ -359,7 +359,7 @@ fn build_dot_cluster_metadata(
     sources.ranks,
     sources.node_order,
     graphviz_flip,
-    @sys.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
+    @env.get_env_var("DOT_CLUSTER_ORDER_BASE") is Some(_),
   )
   let ordering_metadata = build_cluster_ordering_metadata(
     sources.graph,

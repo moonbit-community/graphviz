@@ -7,7 +7,7 @@
 /// `check_snapshot_input_candidates.py` parses `snapshot_test.mbt` directly.
 
 ///|
-fn snapshot_input_path(case_name : String) -> String raise {
+async fn snapshot_input_path(case_name : String) -> String {
   let candidates : Array[String] = [
     "refs/graphviz/graphs/directed/\{case_name}.gv",
     "refs/graphviz/graphs/undirected/\{case_name}.gv",
@@ -31,7 +31,7 @@ fn snapshot_input_path(case_name : String) -> String raise {
     "refs/graphviz/tests/macosx/\{case_name}.gv",
   ]
   for path in candidates {
-    if @fs.path_exists(path) {
+    if @fs.exists(path) {
       return path
     }
   }
@@ -39,7 +39,7 @@ fn snapshot_input_path(case_name : String) -> String raise {
 }
 
 ///|
-test "snapshot input path resolves representative local and Graphviz cases" {
+async test "snapshot input path resolves representative local and Graphviz cases" {
   assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
   assert_eq(
     snapshot_input_path("japanese"),

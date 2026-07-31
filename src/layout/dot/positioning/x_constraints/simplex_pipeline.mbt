@@ -258,7 +258,7 @@ pub let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref(None)
 
 ///|
 pub fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
-  match @sys.get_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS") {
+  match @env.get_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS") {
     None => false
     Some(value) => {
       if value == "" || value == "1" {

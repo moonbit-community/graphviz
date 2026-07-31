@@ -23,7 +23,7 @@ priv enum Endpoint {
 
 ///|
 fn dot_parse_trace(message : String) -> Unit {
-  if @sys.get_env_var("DOT_TRACE") is Some(_) {
+  if @env.get_env_var("DOT_TRACE") is Some(_) {
     println(message)
   }
 }
@@ -643,12 +643,12 @@ pub fn parse_dot_all(src : String) -> Array[@cgraph.Graph] raise DotParseError {
 }
 
 ///|
-fn decode_dot_file(path : String) -> (String, Bool) raise DotParseError {
-  let bytes = try @fs.read_file_to_bytes(path) catch {
+async fn decode_dot_file(path : String) -> (String, Bool) {
+  let bytes = try @fs.read_file(path).binary() catch {
     err =>
       raise DotParseError::InvalidSyntax(
         pos={ line: 1, column: 1, offset: 0 },
-        message=err.to_string(),
+        message="\{err}",
       )
   } noraise {
     data => data
@@ -687,7 +687,7 @@ fn decode_dot_file(path : String) -> (String, Bool) raise DotParseError {
 }
 
 ///|
-pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
+pub async fn parse_dot_file(path : String) -> @cgraph.Graph {
   let (src, used_latin1_fallback) = decode_dot_file(path)
   let graph = parse_dot(src)
   if used_latin1_fallback {
@@ -697,9 +697,7 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
 }
 
 ///|
-pub fn parse_dot_file_all(
-  path : String,
-) -> Array[@cgraph.Graph] raise DotParseError {
+pub async fn parse_dot_file_all(path : String) -> Array[@cgraph.Graph] {
   let (src, used_latin1_fallback) = decode_dot_file(path)
   let graphs = parse_dot_all(src)
   if used_latin1_fallback {

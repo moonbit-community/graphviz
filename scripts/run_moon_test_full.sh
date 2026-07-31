@@ -21,7 +21,7 @@ use_frozen="${LOCAL_GUARD_FROZEN:-1}"
 sanitize_dot_env="${LOCAL_GUARD_SANITIZE_DOT_ENV:-1}"
 script_args=("$@")
 has_cached_modules=0
-if [[ -f "${repo_root}/.mooncakes/moonbitlang/x/moon.mod.json" ]]; then
+if [[ -f "${repo_root}/.mooncakes/moonbitlang/async/moon.mod" ]]; then
   has_cached_modules=1
 fi
 

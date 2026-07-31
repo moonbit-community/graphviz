@@ -106,7 +106,7 @@ test "render_svg preserves forestgreen label color" {
 }
 
 ///|
-test "render_svg keeps trapeziumlr node families as polygons" {
+async test "render_svg keeps trapeziumlr node families as polygons" {
   let graph = @dot.parse_dot_file(
     "refs/graphviz/graphs/directed/trapeziumlr.gv",
   )
@@ -211,7 +211,7 @@ test "render_svg renders html label alignment and colors" {
 }
 
 ///|
-test "render_svg emits cluster labels" {
+async test "render_svg emits cluster labels" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
@@ -482,7 +482,7 @@ fn size_scale_for_test(
 }
 
 ///|
-fn snapshot_input_path(case_name : String) -> String raise {
+async fn snapshot_input_path(case_name : String) -> String {
   let candidates : Array[String] = [
     "refs/graphviz/graphs/directed/\{case_name}.gv",
     "refs/graphviz/graphs/undirected/\{case_name}.gv",
@@ -506,7 +506,7 @@ fn snapshot_input_path(case_name : String) -> String raise {
     "refs/graphviz/tests/macosx/\{case_name}.gv",
   ]
   for path in candidates {
-    if @fs.path_exists(path) {
+    if @fs.exists(path) {
       return path
     }
   }
@@ -514,7 +514,7 @@ fn snapshot_input_path(case_name : String) -> String raise {
 }
 
 ///|
-test "svg snapshot input path resolves representative local and Graphviz cases" {
+async test "svg snapshot input path resolves representative local and Graphviz cases" {
   assert_eq(snapshot_input_path("complex"), "tests/layout/dot/complex.dot")
   assert_eq(
     snapshot_input_path("japanese"),
@@ -523,7 +523,7 @@ test "svg snapshot input path resolves representative local and Graphviz cases" 
 }
 
 ///|
-test "render_svg honors size attribute" {
+async test "render_svg honors size attribute" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={

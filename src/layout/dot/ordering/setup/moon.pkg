@@ -9,7 +9,7 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_constraints",
   "moonbit-community/graphviz/layout/dot/clustering/membership",
   "moonbit-community/graphviz/cgraph",
-  "moonbitlang/x/sys",
+  "moonbitlang/core/env",
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/edge_label_metrics",
