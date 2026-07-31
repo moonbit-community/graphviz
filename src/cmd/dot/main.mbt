@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn main {
-  let args = @sys.get_cli_args()
+async fn main {
+  let args = @env.args()
   if args.length() == 0 {
     return ()
   }
@@ -14,18 +14,11 @@ fn main {
     cli_args.push(args[i])
   }
   let output = @cli.run_cli_bytes(cli_args, program~) catch {
-    err => {
-      println("cli error: \{err}")
-      @sys.exit(1)
-      @utf8.encode("", bom=false)
-    }
+    err => fail("cli error: \{err}")
   }
   if output.length() > 0 {
-    @fs.write_bytes_to_file("/dev/stdout", output) catch {
-      err => {
-        println("cli error: \{err}")
-        @sys.exit(1)
-      }
+    @stdio.stdout.write(output) catch {
+      err => fail("cli error: \{err}")
     }
   }
 }

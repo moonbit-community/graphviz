@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn roundtrip_file(path : String) -> Unit raise {
+async fn roundtrip_file(path : String) -> Unit {
   let graph = try @dot.parse_dot_file(path) catch {
     err => fail("parse_dot_file failed: \{path} \{err}")
   } noraise {
@@ -112,7 +112,7 @@ test "parser keeps duplicate cluster node membership on first cluster only" {
 }
 
 ///|
-test "dot roundtrip tier0" {
+async test "dot roundtrip tier0" {
   let paths : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",
     "refs/graphviz/graphs/directed/try.gv", "refs/graphviz/graphs/directed/tree.gv",
@@ -124,7 +124,7 @@ test "dot roundtrip tier0" {
 }
 
 ///|
-test "dot roundtrip tier1" {
+async test "dot roundtrip tier1" {
   let paths : Array[String] = [
     "refs/graphviz/graphs/directed/clust.gv", "refs/graphviz/graphs/directed/clust4.gv",
     "refs/graphviz/graphs/directed/records.gv", "refs/graphviz/graphs/directed/structs.gv",
@@ -139,7 +139,7 @@ test "dot roundtrip tier1" {
 }
 
 ///|
-test "write_dot_bytes keeps latin1 output bytes" {
+async test "write_dot_bytes keeps latin1 output bytes" {
   let graph = try
     @dot.parse_dot_file("refs/graphviz/graphs/directed/Latin1.gv")
   catch {
@@ -164,7 +164,7 @@ test "write_dot_bytes keeps latin1 output bytes" {
 }
 
 ///|
-test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
+async test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
   let graph = try
     @dot.parse_dot_file("refs/graphviz/tests/windows/Latin1.gv")
   catch {

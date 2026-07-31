@@ -44,7 +44,7 @@ fn distance(a : (Double, Double), b : (Double, Double)) -> Double {
 }
 
 ///|
-test "cli neato -n preserves node positions" {
+async test "cli neato -n preserves node positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_input.dot"
@@ -68,7 +68,7 @@ test "cli neato -n preserves node positions" {
 }
 
 ///|
-test "cli neato -x prunes isolated nodes" {
+async test "cli neato -x prunes isolated nodes" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_prune.dot"
@@ -96,7 +96,7 @@ test "cli neato -x prunes isolated nodes" {
 }
 
 ///|
-test "cli neato assigns positions without -n" {
+async test "cli neato assigns positions without -n" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_layout.dot"
@@ -124,7 +124,7 @@ test "cli neato assigns positions without -n" {
 }
 
 ///|
-test "cli neato honors pinned positions" {
+async test "cli neato honors pinned positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_pinned.dot"
@@ -140,7 +140,7 @@ test "cli neato honors pinned positions" {
 }
 
 ///|
-test "cli neato respects edge length" {
+async test "cli neato respects edge length" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let short_path = "target/cli/neato_len_short.dot"

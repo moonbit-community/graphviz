@@ -280,7 +280,7 @@ fn should_include_external_crossing_edges(
   cluster_graph_edge_count : Int,
   vnode_count : Int,
 ) -> Bool {
-  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+  if @env.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
     return cluster_rank_keys.length() <= 2
   }
   if cluster_rank_keys.length() > 2 &&

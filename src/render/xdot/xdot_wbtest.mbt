@@ -76,7 +76,7 @@ fn assert_edge_label_parity(
 }
 
 ///|
-test "render_xdot matches graphviz edge label positions" {
+async test "render_xdot matches graphviz edge label positions" {
   let cases : Array[(String, String, Array[String])] = [
     (
       "tests/layout/dot/edge_label_spacing.dot",

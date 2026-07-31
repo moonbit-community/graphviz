@@ -5,7 +5,7 @@
 ///|
 test "should_capture_xpos_snapshot follows env value and graph name matching" {
   let env_key = "DOT_CAPTURE_XPOS_CONSTRAINTS"
-  let original = @sys.get_env_var(env_key)
+  let original = @env.get_env_var(env_key)
   let named = @cgraph.Graph::new(
     @cgraph.GraphKind::Directed,
     name="capture-me",
@@ -13,27 +13,27 @@ test "should_capture_xpos_snapshot follows env value and graph name matching" {
   )
   let anonymous = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
 
-  @sys.unset_env_var(env_key)
+  @env.unset_env_var(env_key)
   let absent_named = should_capture_xpos_snapshot(named)
   let absent_anonymous = should_capture_xpos_snapshot(anonymous)
 
-  @sys.set_env_var(env_key, "")
+  @env.set_env_var(env_key, "")
   let empty_named = should_capture_xpos_snapshot(named)
 
-  @sys.set_env_var(env_key, "1")
+  @env.set_env_var(env_key, "1")
   let one_named = should_capture_xpos_snapshot(named)
   let one_anonymous = should_capture_xpos_snapshot(anonymous)
 
-  @sys.set_env_var(env_key, "capture-me")
+  @env.set_env_var(env_key, "capture-me")
   let exact_named = should_capture_xpos_snapshot(named)
   let exact_anonymous = should_capture_xpos_snapshot(anonymous)
 
-  @sys.set_env_var(env_key, "other-graph")
+  @env.set_env_var(env_key, "other-graph")
   let mismatch_named = should_capture_xpos_snapshot(named)
 
   match original {
-    Some(value) => @sys.set_env_var(env_key, value)
-    None => @sys.unset_env_var(env_key)
+    Some(value) => @env.set_env_var(env_key, value)
+    None => @env.unset_env_var(env_key)
   }
 
   assert_false(absent_named)

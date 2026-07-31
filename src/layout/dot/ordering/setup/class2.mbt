@@ -143,7 +143,7 @@ fn build_gdnlist_order(
   graphviz_flip : Bool,
   cluster_order : Array[String],
 ) -> Array[String] {
-  if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
+  if @env.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
     (graphviz_flip && cluster_order.length() > 1) {
     let reversed_creation_order : Array[String] = []
     let mut creation_idx = class2_data.creation_order.length()

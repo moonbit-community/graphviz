@@ -11,9 +11,9 @@ pub fn parse_dot(String) -> @cgraph.Graph raise DotParseError
 
 pub fn parse_dot_all(String) -> Array[@cgraph.Graph] raise DotParseError
 
-pub fn parse_dot_file(String) -> @cgraph.Graph raise DotParseError
+pub async fn parse_dot_file(String) -> @cgraph.Graph
 
-pub fn parse_dot_file_all(String) -> Array[@cgraph.Graph] raise DotParseError
+pub async fn parse_dot_file_all(String) -> Array[@cgraph.Graph]
 
 pub fn write_dot(@cgraph.Graph) -> String
 

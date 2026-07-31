@@ -12,11 +12,11 @@ pub fn default_format(LayoutEngine) -> FormatSpec
 
 pub fn parse_cli_args(Array[String], program? : String) -> CliAction raise CliError
 
-pub fn render_job(CliJob) -> String raise
+pub async fn render_job(CliJob) -> String
 
-pub fn run_cli(Array[String], program? : String) -> String raise
+pub async fn run_cli(Array[String], program? : String) -> String
 
-pub fn run_cli_bytes(Array[String], program? : String) -> Bytes raise
+pub async fn run_cli_bytes(Array[String], program? : String) -> Bytes
 
 // Errors
 pub(all) suberror CliError {

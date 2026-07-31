@@ -19,7 +19,8 @@ import {
 
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
   "moonbitlang/core/string",
-  "moonbitlang/x/fs",
   "moonbitlang/core/strconv",
 } for "test"

@@ -21,7 +21,7 @@ import {
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/math",
   "moonbitlang/core/strconv",
-  "moonbitlang/x/sys",
+  "moonbitlang/core/env",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/edge_semantics",
   "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",

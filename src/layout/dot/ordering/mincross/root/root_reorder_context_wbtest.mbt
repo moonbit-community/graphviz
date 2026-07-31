@@ -45,21 +45,21 @@ test "has_multiple_non_empty_cluster_keys ignores empties and duplicates and det
 ///|
 test "should_enable_root_flip requires graphviz_flip and allows fixture mode to bypass cluster-count gating" {
   let env_key = "DOT_CAPTURE_ORDERING_FIXTURE_MODE"
-  let original = @sys.get_env_var(env_key)
+  let original = @env.get_env_var(env_key)
   let one_cluster = { "member_a": "cluster_a", "root": "" }
   let two_clusters = { "member_a": "cluster_a", "member_b": "cluster_b" }
 
-  @sys.unset_env_var(env_key)
+  @env.unset_env_var(env_key)
   let disabled = should_enable_root_flip(false, two_clusters)
   let gated_off = should_enable_root_flip(true, one_cluster)
   let gated_on = should_enable_root_flip(true, two_clusters)
 
-  @sys.set_env_var(env_key, "1")
+  @env.set_env_var(env_key, "1")
   let forced_on = should_enable_root_flip(true, one_cluster)
 
   match original {
-    Some(value) => @sys.set_env_var(env_key, value)
-    None => @sys.unset_env_var(env_key)
+    Some(value) => @env.set_env_var(env_key, value)
+    None => @env.unset_env_var(env_key)
   }
 
   assert_false(disabled)

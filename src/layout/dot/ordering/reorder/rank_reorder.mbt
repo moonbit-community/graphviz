@@ -1752,7 +1752,7 @@ pub fn build_seeded_reorder_groups(
   // Graphviz parity: seed build_ranks from component-scoped walk,
   // matching decompose/install traversal used by remincross with
   // cluster-expanded flat constraints.
-  let seed_pass = if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) {
+  let seed_pass = if @env.get_env_var("DOT_SEED_PASS1") is Some(_) {
     1
   } else {
     0

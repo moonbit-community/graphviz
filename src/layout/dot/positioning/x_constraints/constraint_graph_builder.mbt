@@ -1077,7 +1077,7 @@ fn build_constraint_graph(
   input : ConstraintGraphBuildInput,
 ) -> ConstraintGraphBuildOutput {
   let graph = @network_simplex.new_graph()
-  let skip_intercluster = @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS")
+  let skip_intercluster = @env.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS")
     is Some(_)
   let base_positions = compute_rank_positions(
     input.rank_keys,

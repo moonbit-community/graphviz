@@ -10,7 +10,7 @@
 /// DOT_CAPTURE_ORDERING_INPUTS env flag used by fixture capture workflows.
 /// Do not change behavior without updating fixtures/tests.
 pub fn should_capture_ordering_inputs() -> Bool {
-  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
+  @env.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
 }
 
 ///|

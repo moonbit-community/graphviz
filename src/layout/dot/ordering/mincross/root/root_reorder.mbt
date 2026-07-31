@@ -761,7 +761,7 @@ fn should_enable_root_flip(
   if !graphviz_flip {
     return false
   }
-  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+  if @env.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
     return true
   }
   has_multiple_non_empty_cluster_keys(order_cluster_keys)

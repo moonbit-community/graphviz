@@ -9,10 +9,11 @@ import {
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",
   "moonbitlang/core/strconv",
-  "moonbitlang/x/fs",
-  "moonbitlang/x/sys",
+  "moonbitlang/async/fs",
+  "moonbitlang/core/env",
 }
 
 import {
-  "moonbitlang/x/fs",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
 } for "test"
