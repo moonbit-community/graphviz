@@ -37,10 +37,20 @@ INPUT_CANDIDATES = (
 )
 
 
+def is_file_with_exact_name(path: Path) -> bool:
+    """Reject case-folded aliases on case-insensitive filesystems."""
+    if not path.is_file():
+        return False
+    try:
+        return any(entry.name == path.name for entry in path.parent.iterdir())
+    except OSError:
+        return False
+
+
 def resolve_input_path(repo_root: Path, case_name: str) -> Path:
     for rel in INPUT_CANDIDATES:
         path = repo_root / rel.format(case=case_name)
-        if path.exists():
+        if is_file_with_exact_name(path):
             return path
     raise FileNotFoundError(f"missing input for case: {case_name}")
 

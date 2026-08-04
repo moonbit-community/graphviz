@@ -4,3 +4,7 @@
 # Note: refs/graphviz/tests/graphs/*.gv is not in INPUT_CANDIDATE_PATTERNS,
 # so cases from that directory (b100, b103, b104, b993, root, etc.) cannot
 # be listed here even if they timeout or fail.
+
+# Collides with dotguide/Mrecord.dot on case-insensitive filesystems; add only
+# after authoring a complete, correctly sourced 14.1.1 fixture set.
+mrecord

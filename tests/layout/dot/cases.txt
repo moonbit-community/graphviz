@@ -183,7 +183,6 @@ lsunix1
 lsunix2
 lsunix3
 mike
-mrecord
 multi
 Mrecord
 Msquare
@@ -764,7 +763,6 @@ lsunix1.gv
 lsunix2.gv
 lsunix3.gv
 mike.gv
-mrecord.gv
 named.gv
 newarrows.gv
 nhg.gv
