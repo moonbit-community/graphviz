@@ -24,4 +24,3 @@ pub(all) struct RecordPort {
 // Type aliases
 
 // Traits
-

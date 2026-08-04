@@ -15,4 +15,3 @@ pub fn shortest_path_in_poly(Array[@geom.Point], @geom.Point, @geom.Point) -> Ar
 // Type aliases
 
 // Traits
-

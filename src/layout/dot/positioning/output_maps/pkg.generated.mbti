@@ -49,4 +49,3 @@ pub(all) struct PositionOutputPipelineInput {
 // Type aliases
 
 // Traits
-

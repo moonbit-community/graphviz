@@ -59,4 +59,3 @@ pub(all) struct RankStageOutput {
 // Type aliases
 
 // Traits
-

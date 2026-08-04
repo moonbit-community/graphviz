@@ -54,4 +54,3 @@ pub(all) struct EdgeRankSpan {
 // Type aliases
 
 // Traits
-

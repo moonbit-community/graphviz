@@ -35,4 +35,3 @@ pub(all) struct DotBBoxInput {
 // Type aliases
 
 // Traits
-

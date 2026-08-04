@@ -56,4 +56,3 @@ pub using @rankdir {type RankDir}
 pub using @layout_prep {type SplinesMode}
 
 // Traits
-

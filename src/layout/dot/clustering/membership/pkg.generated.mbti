@@ -29,4 +29,3 @@ pub fn root_graph_for_node(@cgraph.Node) -> @cgraph.Graph
 // Type aliases
 
 // Traits
-

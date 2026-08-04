@@ -83,4 +83,3 @@ pub(all) struct RoutingPrecomputeInput {
 pub using @precompute {type RoutingPrecomputePipelineOutput as RoutingPrecomputeData}
 
 // Traits
-

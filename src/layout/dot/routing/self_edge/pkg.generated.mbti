@@ -41,4 +41,3 @@ pub(all) struct SelfEdgeRouteLookupInput {
 // Type aliases
 
 // Traits
-

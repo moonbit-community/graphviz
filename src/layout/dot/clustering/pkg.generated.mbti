@@ -17,4 +17,3 @@ pub fn cluster_margin_pt(@cgraph.Graph) -> Double
 // Type aliases
 
 // Traits
-
