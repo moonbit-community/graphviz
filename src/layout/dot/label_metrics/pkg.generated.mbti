@@ -22,4 +22,3 @@ pub fn record_label_text_dimensions(String, String, Double) -> (Double, Double)
 // Type aliases
 
 // Traits
-

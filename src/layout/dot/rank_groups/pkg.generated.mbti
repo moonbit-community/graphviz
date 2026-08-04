@@ -23,4 +23,3 @@ pub fn update_order_positions_for_rank(Map[String, Double], Array[String]) -> Un
 // Type aliases
 
 // Traits
-

@@ -28,4 +28,3 @@ pub fn port_offsets_for_nodes(Array[@cgraph.Node], Map[String, @node_primitives.
 // Type aliases
 
 // Traits
-

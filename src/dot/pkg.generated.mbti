@@ -33,4 +33,3 @@ type Position derive(Eq, @debug.Debug)
 // Type aliases
 
 // Traits
-

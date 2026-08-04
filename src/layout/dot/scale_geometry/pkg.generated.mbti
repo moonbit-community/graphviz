@@ -41,4 +41,3 @@ pub(all) struct RatioFillScaleFactors {
 // Type aliases
 
 // Traits
-

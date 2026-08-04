@@ -66,4 +66,3 @@ pub(all) struct XObject {
 // Type aliases
 
 // Traits
-

@@ -35,4 +35,3 @@ pub fn resolve_node_output_size(Map[String, @node_primitives.NodeSize], @cgraph.
 // Type aliases
 
 // Traits
-

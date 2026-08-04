@@ -57,4 +57,3 @@ pub(all) struct RoutingSpatialInput {
 // Type aliases
 
 // Traits
-

@@ -178,4 +178,3 @@ type RootRankReorderInputs
 pub type ClusterRankOrderReplay = (RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int, Map[String, Int]]
 
 // Traits
-

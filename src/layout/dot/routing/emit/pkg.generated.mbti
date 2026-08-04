@@ -39,4 +39,3 @@ pub(all) struct BezierPointsSplineBuildInput {
 // Type aliases
 
 // Traits
-

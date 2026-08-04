@@ -31,4 +31,3 @@ pub fn reverse_spline(@geom.Spline) -> @geom.Spline
 // Type aliases
 
 // Traits
-

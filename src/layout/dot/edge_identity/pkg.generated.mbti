@@ -27,4 +27,3 @@ pub fn unique_virtual_node_name(String, Int, Int, Map[String, Bool]) -> String
 // Type aliases
 
 // Traits
-

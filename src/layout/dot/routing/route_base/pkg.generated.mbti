@@ -15,4 +15,3 @@ pub fn build_route_base_cache(@routing.RouteEdgesPipelineInput, @routing.RouteBa
 // Type aliases
 
 // Traits
-

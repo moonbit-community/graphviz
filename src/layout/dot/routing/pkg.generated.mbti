@@ -273,4 +273,3 @@ pub type RecoverSlackVnodesFn = (RecoverSlackVnodesInput) -> Unit
 pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @rankdir.RankDir) -> Double
 
 // Traits
-
