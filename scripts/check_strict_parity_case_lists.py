@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: EPL-2.0
 
 
-"""Validate strict parity focus list invariants."""
+"""Validate strict parity fixture and case-list invariants."""
 
 from __future__ import annotations
 
@@ -13,6 +13,9 @@ from pathlib import Path
 
 from case_list_utils import load_case_names
 from case_list_utils import resolve_repo_path
+from check_strict_parity import (
+    validate_fixture_coverage as validate_format_fixture_coverage,
+)
 from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES
 from snapshot_inputs import resolve_input_path as resolve_snapshot_input_path
 
@@ -32,7 +35,7 @@ INPUT_CANDIDATE_PATTERNS = [
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Validate strict parity sentinel/history case list invariants.",
+        description="Validate strict parity fixture and case-list invariants.",
     )
     parser.add_argument(
         "--repo-root",
@@ -146,6 +149,12 @@ def main() -> int:
 
     dot_cases, xdot_cases, svg_cases = load_manifest_case_names(repo_root)
     manifest_set = validate_manifest_alignment(dot_cases, xdot_cases, svg_cases)
+    for fmt, cases in (
+        ("dot", dot_cases),
+        ("xdot", xdot_cases),
+        ("svg", svg_cases),
+    ):
+        validate_format_fixture_coverage(repo_root, fmt, cases)
     input_candidate_set = load_input_candidate_case_names(repo_root)
 
     sentinel_cases = load_case_names(sentinel_path)
@@ -224,7 +233,8 @@ def main() -> int:
         f"{len(sentinel_cases)} history={len(history_cases)} "
         f"known_regression={len(known_regression_cases)} "
         f"allowed_uncovered={len(allowed_uncovered_cases)} "
-        f"manifests={len(manifest_set)} candidates={len(input_candidate_set)} "
+        f"manifests={len(manifest_set)} fixture_formats=3 "
+        f"candidates={len(input_candidate_set)} "
         f"gv_suffix_pairs={gv_suffix_pairs}",
     )
     return 0
