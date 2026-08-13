@@ -243,7 +243,7 @@ fn assert_point_close(
 
 ///|
 async fn svg_with_bbox(graph_path : String) -> (String, @geom.Rect) {
-  let graph = @dot.parse_dot_file(graph_path)
+  let graph = @dot_fs.parse_dot_file(graph_path)
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
     pretty: Some(false),
@@ -299,7 +299,7 @@ fn assert_cluster_label_parity(
 ///|
 async test "render_svg matches graphviz label positions in complex" {
   let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
-  let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let reference = @dot_fs.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let eps = 2.0
   assert_edge_label_parity(svg, padded_bbox, reference, "MechCmd", eps)
   assert_edge_label_parity(svg, padded_bbox, reference, "Raw PROT_G", eps)
@@ -309,7 +309,7 @@ async test "render_svg matches graphviz label positions in complex" {
 ///|
 async test "render_svg matches graphviz node label positions in complex" {
   let (svg, _padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
-  let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let reference = @dot_fs.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let labels = unique_simple_node_labels(reference)
   let eps = 3.0
   for label in labels {
@@ -327,7 +327,7 @@ async test "render_svg matches graphviz edge label spacing" {
   let (svg, padded_bbox) = svg_with_bbox(
     "tests/layout/dot/edge_label_spacing.dot",
   )
-  let reference = @dot.parse_dot_file(
+  let reference = @dot_fs.parse_dot_file(
     "tests/layout/dot/edge_label_spacing.gv.dot",
   )
   let eps = 1.5
@@ -342,7 +342,7 @@ async test "render_svg matches graphviz vnode edge label spacing" {
   let (svg, padded_bbox) = svg_with_bbox(
     "tests/layout/dot/edge_vnode_spacing.dot",
   )
-  let reference = @dot.parse_dot_file(
+  let reference = @dot_fs.parse_dot_file(
     "tests/layout/dot/edge_vnode_spacing.gv.dot",
   )
   let eps = 1.5
