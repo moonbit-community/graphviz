@@ -15,5 +15,5 @@ license = "EPL-2.0"
 source = "src"
 
 options(
-  "include": [ "src", "LICENSE", "NOTICE", "README.md", "moon.mod.json" ],
+  "include": [ "src", "LICENSE", "NOTICE", "README.md", "moon.mod" ],
 )
