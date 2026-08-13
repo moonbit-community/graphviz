@@ -25,4 +25,5 @@ import {
 
 import {
   "moonbitlang/async",
+  "moonbit-community/graphviz/dot/fs" @dot_fs,
 } for "wbtest"

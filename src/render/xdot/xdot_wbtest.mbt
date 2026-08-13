@@ -92,11 +92,11 @@ async test "render_xdot matches graphviz edge label positions" {
   let eps = 1.5
   for entry in cases {
     let (input_path, reference_path, labels) = entry
-    let graph = @dot.parse_dot_file(input_path)
+    let graph = @dot_fs.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let output = render_xdot(layout)
     let output_graph = @dot.parse_dot(output)
-    let reference = @dot.parse_dot_file(reference_path)
+    let reference = @dot_fs.parse_dot_file(reference_path)
     for label in labels {
       assert_edge_label_parity(output_graph, reference, label, eps)
     }

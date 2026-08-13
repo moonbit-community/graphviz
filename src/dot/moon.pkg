@@ -1,12 +1,6 @@
 import {
   "moonbit-community/graphviz/cgraph",
-  "moonbitlang/async/fs",
-  "moonbitlang/core/buffer",
   "moonbitlang/core/debug",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/env",
 }
-
-import {
-  "moonbitlang/async",
-} for "test"

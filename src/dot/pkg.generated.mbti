@@ -7,13 +7,11 @@ import {
 }
 
 // Values
+pub const INPUT_LATIN1_FALLBACK_ATTR : String = "_mbt_input_latin1_fallback"
+
 pub fn parse_dot(String) -> @cgraph.Graph raise DotParseError
 
 pub fn parse_dot_all(String) -> Array[@cgraph.Graph] raise DotParseError
-
-pub async fn parse_dot_file(String) -> @cgraph.Graph
-
-pub async fn parse_dot_file_all(String) -> Array[@cgraph.Graph]
 
 pub fn write_dot(@cgraph.Graph) -> String
 
@@ -28,7 +26,11 @@ pub(all) suberror DotParseError {
 pub impl Show for DotParseError
 
 // Types and methods
-type Position derive(Eq, @debug.Debug)
+pub(all) struct Position {
+  line : Int
+  column : Int
+  offset : Int
+} derive(Eq, @debug.Debug)
 
 // Type aliases
 

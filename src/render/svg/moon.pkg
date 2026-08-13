@@ -18,9 +18,10 @@ import {
   "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbit-community/graphviz/dot",
+  "moonbit-community/graphviz/dot/fs" @dot_fs,
 } for "test"
 
 import {
   "moonbitlang/async",
-  "moonbit-community/graphviz/dot",
+  "moonbit-community/graphviz/dot/fs" @dot_fs,
 } for "wbtest"

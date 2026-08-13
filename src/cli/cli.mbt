@@ -520,7 +520,7 @@ async fn read_dot_input(input : String?) -> Array[@cgraph.Graph] {
     None => "/dev/stdin"
     Some(path) => if path == "-" { "/dev/stdin" } else { path }
   }
-  @dot.parse_dot_file_all(path)
+  @dot_fs.parse_dot_file_all(path)
 }
 
 ///|

@@ -107,7 +107,7 @@ test "render_svg preserves forestgreen label color" {
 
 ///|
 async test "render_svg keeps trapeziumlr node families as polygons" {
-  let graph = @dot.parse_dot_file(
+  let graph = @dot_fs.parse_dot_file(
     "refs/graphviz/graphs/directed/trapeziumlr.gv",
   )
   let layout = @layout_dot.layout_dot(graph)
@@ -212,7 +212,7 @@ test "render_svg renders html label alignment and colors" {
 
 ///|
 async test "render_svg emits cluster labels" {
-  let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
+  let graph = @dot_fs.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
     pretty: Some(false),
@@ -524,7 +524,7 @@ async test "svg snapshot input path resolves representative local and Graphviz c
 
 ///|
 async test "render_svg honors size attribute" {
-  let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
+  let graph = @dot_fs.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
     pretty: Some(false),
