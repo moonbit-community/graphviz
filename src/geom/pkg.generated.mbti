@@ -13,17 +13,32 @@ import {
 pub(all) struct Bezier {
   points : Array[Point]
 } derive(Eq, @debug.Debug)
+pub fn Bezier::equal(Self, Self) -> Bool
+pub fn Bezier::not_equal(Self, Self) -> Bool
+pub fn Bezier::output(Self, &Logger) -> Unit
+pub fn Bezier::to_repr(Self) -> @debug.Repr
+pub fn Bezier::to_string(Self) -> String
 pub impl Show for Bezier
 
 pub(all) struct Point {
   x : Double
   y : Double
 } derive(Eq, @debug.Debug)
+pub fn Point::equal(Self, Self) -> Bool
+pub fn Point::not_equal(Self, Self) -> Bool
+pub fn Point::output(Self, &Logger) -> Unit
+pub fn Point::to_repr(Self) -> @debug.Repr
+pub fn Point::to_string(Self) -> String
 pub impl Show for Point
 
 pub(all) struct Polyline {
   points : Array[Point]
 } derive(Eq, @debug.Debug)
+pub fn Polyline::equal(Self, Self) -> Bool
+pub fn Polyline::not_equal(Self, Self) -> Bool
+pub fn Polyline::output(Self, &Logger) -> Unit
+pub fn Polyline::to_repr(Self) -> @debug.Repr
+pub fn Polyline::to_string(Self) -> String
 pub impl Show for Polyline
 
 pub(all) struct Rect {
@@ -32,12 +47,22 @@ pub(all) struct Rect {
   urx : Double
   ury : Double
 } derive(Eq, @debug.Debug)
+pub fn Rect::equal(Self, Self) -> Bool
+pub fn Rect::not_equal(Self, Self) -> Bool
+pub fn Rect::output(Self, &Logger) -> Unit
+pub fn Rect::to_repr(Self) -> @debug.Repr
+pub fn Rect::to_string(Self) -> String
 pub impl Show for Rect
 
 pub(all) struct Size {
   width : Double
   height : Double
 } derive(Eq, @debug.Debug)
+pub fn Size::equal(Self, Self) -> Bool
+pub fn Size::not_equal(Self, Self) -> Bool
+pub fn Size::output(Self, &Logger) -> Unit
+pub fn Size::to_repr(Self) -> @debug.Repr
+pub fn Size::to_string(Self) -> String
 pub impl Show for Size
 
 pub(all) struct Spline {
@@ -45,6 +70,11 @@ pub(all) struct Spline {
   end : Point?
   points : Array[Point]
 } derive(Eq, @debug.Debug)
+pub fn Spline::equal(Self, Self) -> Bool
+pub fn Spline::not_equal(Self, Self) -> Bool
+pub fn Spline::output(Self, &Logger) -> Unit
+pub fn Spline::to_repr(Self) -> @debug.Repr
+pub fn Spline::to_string(Self) -> String
 pub impl Show for Spline
 
 // Type aliases

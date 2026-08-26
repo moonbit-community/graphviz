@@ -5,13 +5,13 @@
 ///|
 fn style_tokens(value : String) -> Array[String] {
   let tokens : Array[String] = []
-  let mut current = StringBuilder::new()
+  let mut current = StringBuilder()
   let mut seen = false
   for ch in value {
     if ch == ',' || ch.is_whitespace() {
       if seen {
         tokens.push(current.to_string())
-        current = StringBuilder::new()
+        current = StringBuilder()
         seen = false
       }
     } else {

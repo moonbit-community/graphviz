@@ -29,7 +29,7 @@ fn try_parse_double(text : String) -> Double? {
 ///|
 fn parse_numbers(text : String, limit : Int) -> Array[Double] {
   let numbers : Array[Double] = []
-  let mut current = StringBuilder::new()
+  let mut current = StringBuilder()
   let mut seen = false
   for ch in text {
     if ch.is_ascii_digit() ||
@@ -50,7 +50,7 @@ fn parse_numbers(text : String, limit : Int) -> Array[Double] {
       if numbers.length() >= limit {
         return numbers
       }
-      current = StringBuilder::new()
+      current = StringBuilder()
       seen = false
     }
   }

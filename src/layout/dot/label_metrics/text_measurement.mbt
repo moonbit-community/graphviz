@@ -244,7 +244,7 @@ fn split_label_lines(
   trim_trailing_break~ : Bool,
 ) -> Array[String] {
   let lines : Array[String] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut ended_with_break = false
   for ch in label {
@@ -252,7 +252,7 @@ fn split_label_lines(
       escaping = false
       if ch == 'n' || ch == 'l' || ch == 'r' {
         lines.push(sb.to_string())
-        sb = StringBuilder::new()
+        sb = StringBuilder()
         ended_with_break = true
       } else {
         sb.write_char(ch)
@@ -266,7 +266,7 @@ fn split_label_lines(
     }
     if ch == '\n' || ch == '\r' {
       lines.push(sb.to_string())
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       ended_with_break = true
     } else {
       sb.write_char(ch)

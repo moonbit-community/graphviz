@@ -45,7 +45,7 @@ fn html_cell_content_size(
       { width_pt, height_pt }
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
-      let text = StringBuilder::new()
+      let text = StringBuilder()
       for span in spans {
         text.write_string(span.text)
       }

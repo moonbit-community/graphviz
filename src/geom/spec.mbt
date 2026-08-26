@@ -10,11 +10,23 @@ pub(all) struct Point {
 } derive(Debug, Eq)
 
 ///|
+pub extend Point with Debug::{to_repr}
+
+///|
+pub extend Point with Eq::{not_equal, equal}
+
+///|
 /// Size in points (1/72 inch).
 pub(all) struct Size {
   width : Double
   height : Double
 } derive(Debug, Eq)
+
+///|
+pub extend Size with Debug::{to_repr}
+
+///|
+pub extend Size with Eq::{not_equal, equal}
 
 ///|
 /// Axis-aligned rectangle in points.
@@ -27,10 +39,22 @@ pub(all) struct Rect {
 } derive(Debug, Eq)
 
 ///|
+pub extend Rect with Debug::{to_repr}
+
+///|
+pub extend Rect with Eq::{not_equal, equal}
+
+///|
 /// Polyline path in points.
 pub(all) struct Polyline {
   points : Array[Point]
 } derive(Debug, Eq)
+
+///|
+pub extend Polyline with Debug::{to_repr}
+
+///|
+pub extend Polyline with Eq::{not_equal, equal}
 
 ///|
 /// Cubic Bezier control points in points.
@@ -40,6 +64,12 @@ pub(all) struct Bezier {
 } derive(Debug, Eq)
 
 ///|
+pub extend Bezier with Debug::{to_repr}
+
+///|
+pub extend Bezier with Eq::{not_equal, equal}
+
+///|
 /// Edge spline representation with optional clip points.
 /// Invariant: points.length() >= 4 and (points.length() - 1) % 3 == 0.
 pub(all) struct Spline {
@@ -47,3 +77,9 @@ pub(all) struct Spline {
   end : Point?
   points : Array[Point]
 } derive(Debug, Eq)
+
+///|
+pub extend Spline with Debug::{to_repr}
+
+///|
+pub extend Spline with Eq::{not_equal, equal}

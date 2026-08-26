@@ -9,6 +9,12 @@ pub(all) struct XDotOptions {
 } derive(Debug, Eq)
 
 ///|
+pub extend XDotOptions with Debug::{to_repr}
+
+///|
+pub extend XDotOptions with Eq::{not_equal, equal}
+
+///|
 #declaration_only
 pub fn XDotOptions::default() -> XDotOptions {
   ...

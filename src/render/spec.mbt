@@ -11,11 +11,23 @@ pub(all) enum TextAlign {
 } derive(Debug, Eq)
 
 ///|
+pub extend TextAlign with Debug::{to_repr}
+
+///|
+pub extend TextAlign with Eq::{not_equal, equal}
+
+///|
 /// Font description (size in points).
 pub(all) struct Font {
   name : String
   size : Double
 } derive(Debug, Eq)
+
+///|
+pub extend Font with Debug::{to_repr}
+
+///|
+pub extend Font with Eq::{not_equal, equal}
 
 ///|
 /// Gradient stop for linear/radial gradients.
@@ -25,12 +37,24 @@ pub(all) struct GradientStop {
 } derive(Debug, Eq)
 
 ///|
+pub extend GradientStop with Debug::{to_repr}
+
+///|
+pub extend GradientStop with Eq::{not_equal, equal}
+
+///|
 /// Linear gradient definition.
 pub(all) struct LinearGradient {
   start : @geom.Point
   end : @geom.Point
   stops : Array[GradientStop]
 } derive(Debug, Eq)
+
+///|
+pub extend LinearGradient with Debug::{to_repr}
+
+///|
+pub extend LinearGradient with Eq::{not_equal, equal}
 
 ///|
 /// Radial gradient definition.
@@ -43,11 +67,23 @@ pub(all) struct RadialGradient {
 } derive(Debug, Eq)
 
 ///|
+pub extend RadialGradient with Debug::{to_repr}
+
+///|
+pub extend RadialGradient with Eq::{not_equal, equal}
+
+///|
 /// Gradient color specification.
 pub(all) enum Gradient {
   Linear(LinearGradient)
   Radial(RadialGradient)
 } derive(Debug, Eq)
+
+///|
+pub extend Gradient with Debug::{to_repr}
+
+///|
+pub extend Gradient with Eq::{not_equal, equal}
 
 ///|
 /// Drawing primitive operations (points in points).
@@ -66,6 +102,12 @@ pub(all) enum DrawOp {
   Style(name~ : String)
   FontChar(codepoint~ : UInt)
 } derive(Debug, Eq)
+
+///|
+pub extend DrawOp with Debug::{to_repr}
+
+///|
+pub extend DrawOp with Eq::{not_equal, equal}
 
 ///|
 /// Generate arrowhead drawing primitives for a single arrow tip.

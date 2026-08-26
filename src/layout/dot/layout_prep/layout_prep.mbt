@@ -19,6 +19,12 @@ pub(all) enum SplinesMode {
 } derive(Debug, Eq)
 
 ///|
+pub extend SplinesMode with Debug::{to_repr}
+
+///|
+pub extend SplinesMode with Eq::{not_equal, equal}
+
+///|
 /// Record/html label layout orientation used by node-size and port geometry
 /// calculations.
 pub(all) enum RecordOrientation {

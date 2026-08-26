@@ -9,6 +9,12 @@ pub impl Show for DotLayoutOptions with fn output(self, logger) {
 }
 
 ///|
+pub extend DotLayoutOptions with Show::{to_string, output}
+
+///|
 pub impl Show for DotLayoutError with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend DotLayoutError with Show::{to_string, output}

@@ -26,7 +26,7 @@ pub(all) struct NodePadding {
 
 ///|
 fn extract_numbers(value : String) -> Array[Double] {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for ch in value {
     if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
       sb.write_char(ch)

@@ -16,6 +16,12 @@ pub(all) enum EdgeDir {
 } derive(Debug, Eq)
 
 ///|
+pub extend EdgeDir with Debug::{to_repr}
+
+///|
+pub extend EdgeDir with Eq::{not_equal, equal}
+
+///|
 pub fn parse_edge_dir(value : String) -> EdgeDir? {
   match value.to_lower() {
     "forward" | "f" => Some(EdgeDir::Forward)

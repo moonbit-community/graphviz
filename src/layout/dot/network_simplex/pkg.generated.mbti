@@ -37,6 +37,8 @@ pub(all) enum NodeKind {
   Virtual
   Slack
 } derive(Eq)
+pub fn NodeKind::equal(Self, Self) -> Bool
+pub fn NodeKind::not_equal(Self, Self) -> Bool
 
 pub(all) struct NsEdge {
   tail : Int

@@ -12,6 +12,12 @@ pub(all) enum RankDir {
 } derive(Debug, Eq)
 
 ///|
+pub extend RankDir with Debug::{to_repr}
+
+///|
+pub extend RankDir with Eq::{not_equal, equal}
+
+///|
 pub fn parse_rankdir(value : String) -> RankDir? {
   match value.to_lower() {
     "tb" => Some(RankDir::TB)

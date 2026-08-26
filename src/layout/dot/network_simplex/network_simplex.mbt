@@ -22,6 +22,9 @@ pub(all) enum NodeKind {
 } derive(Eq)
 
 ///|
+pub extend NodeKind with Eq::{not_equal, equal}
+
+///|
 let root_override : Ref[Int?] = Ref(None)
 
 ///|
