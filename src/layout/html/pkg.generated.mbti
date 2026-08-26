@@ -27,6 +27,11 @@ pub(all) enum HtmlAlign {
   Center
   Right
 } derive(Eq, @debug.Debug)
+pub fn HtmlAlign::equal(Self, Self) -> Bool
+pub fn HtmlAlign::not_equal(Self, Self) -> Bool
+pub fn HtmlAlign::output(Self, &Logger) -> Unit
+pub fn HtmlAlign::to_repr(Self) -> @debug.Repr
+pub fn HtmlAlign::to_string(Self) -> String
 pub impl Show for HtmlAlign
 
 pub(all) struct HtmlCell {
@@ -40,6 +45,11 @@ pub(all) struct HtmlCell {
   min_width_pt : Double?
   min_height_pt : Double?
 } derive(Eq, @debug.Debug)
+pub fn HtmlCell::equal(Self, Self) -> Bool
+pub fn HtmlCell::not_equal(Self, Self) -> Bool
+pub fn HtmlCell::output(Self, &Logger) -> Unit
+pub fn HtmlCell::to_repr(Self) -> @debug.Repr
+pub fn HtmlCell::to_string(Self) -> String
 pub impl Show for HtmlCell
 
 pub(all) enum HtmlCellContent {
@@ -47,12 +57,22 @@ pub(all) enum HtmlCellContent {
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
 } derive(Eq, @debug.Debug)
+pub fn HtmlCellContent::equal(Self, Self) -> Bool
+pub fn HtmlCellContent::not_equal(Self, Self) -> Bool
+pub fn HtmlCellContent::output(Self, &Logger) -> Unit
+pub fn HtmlCellContent::to_repr(Self) -> @debug.Repr
+pub fn HtmlCellContent::to_string(Self) -> String
 pub impl Show for HtmlCellContent
 
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
 } derive(Eq, @debug.Debug)
+pub fn HtmlCellLayout::equal(Self, Self) -> Bool
+pub fn HtmlCellLayout::not_equal(Self, Self) -> Bool
+pub fn HtmlCellLayout::output(Self, &Logger) -> Unit
+pub fn HtmlCellLayout::to_repr(Self) -> @debug.Repr
+pub fn HtmlCellLayout::to_string(Self) -> String
 pub impl Show for HtmlCellLayout
 
 pub(all) struct HtmlCellPlacement {
@@ -60,17 +80,32 @@ pub(all) struct HtmlCellPlacement {
   row : Int
   col : Int
 } derive(Eq, @debug.Debug)
+pub fn HtmlCellPlacement::equal(Self, Self) -> Bool
+pub fn HtmlCellPlacement::not_equal(Self, Self) -> Bool
+pub fn HtmlCellPlacement::output(Self, &Logger) -> Unit
+pub fn HtmlCellPlacement::to_repr(Self) -> @debug.Repr
+pub fn HtmlCellPlacement::to_string(Self) -> String
 pub impl Show for HtmlCellPlacement
 
 pub(all) enum HtmlLabel {
   Text(String)
   Table(HtmlTable)
 } derive(Eq, @debug.Debug)
+pub fn HtmlLabel::equal(Self, Self) -> Bool
+pub fn HtmlLabel::not_equal(Self, Self) -> Bool
+pub fn HtmlLabel::output(Self, &Logger) -> Unit
+pub fn HtmlLabel::to_repr(Self) -> @debug.Repr
+pub fn HtmlLabel::to_string(Self) -> String
 pub impl Show for HtmlLabel
 
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
 } derive(Eq, @debug.Debug)
+pub fn HtmlRow::equal(Self, Self) -> Bool
+pub fn HtmlRow::not_equal(Self, Self) -> Bool
+pub fn HtmlRow::output(Self, &Logger) -> Unit
+pub fn HtmlRow::to_repr(Self) -> @debug.Repr
+pub fn HtmlRow::to_string(Self) -> String
 pub impl Show for HtmlRow
 
 pub(all) struct HtmlTable {
@@ -81,6 +116,11 @@ pub(all) struct HtmlTable {
   cell_padding_pt : Double
   bg_color : String?
 } derive(Eq, @debug.Debug)
+pub fn HtmlTable::equal(Self, Self) -> Bool
+pub fn HtmlTable::not_equal(Self, Self) -> Bool
+pub fn HtmlTable::output(Self, &Logger) -> Unit
+pub fn HtmlTable::to_repr(Self) -> @debug.Repr
+pub fn HtmlTable::to_string(Self) -> String
 pub impl Show for HtmlTable
 
 pub(all) struct HtmlTableLayout {
@@ -88,6 +128,11 @@ pub(all) struct HtmlTableLayout {
   scale_x : Double
   scale_y : Double
 } derive(Eq, @debug.Debug)
+pub fn HtmlTableLayout::equal(Self, Self) -> Bool
+pub fn HtmlTableLayout::not_equal(Self, Self) -> Bool
+pub fn HtmlTableLayout::output(Self, &Logger) -> Unit
+pub fn HtmlTableLayout::to_repr(Self) -> @debug.Repr
+pub fn HtmlTableLayout::to_string(Self) -> String
 pub impl Show for HtmlTableLayout
 
 pub(all) struct HtmlTableMetrics {
@@ -97,12 +142,22 @@ pub(all) struct HtmlTableMetrics {
   total_width : Double
   total_height : Double
 } derive(Eq, @debug.Debug)
+pub fn HtmlTableMetrics::equal(Self, Self) -> Bool
+pub fn HtmlTableMetrics::not_equal(Self, Self) -> Bool
+pub fn HtmlTableMetrics::output(Self, &Logger) -> Unit
+pub fn HtmlTableMetrics::to_repr(Self) -> @debug.Repr
+pub fn HtmlTableMetrics::to_string(Self) -> String
 pub impl Show for HtmlTableMetrics
 
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
 } derive(Eq, @debug.Debug)
+pub fn HtmlTextSpan::equal(Self, Self) -> Bool
+pub fn HtmlTextSpan::not_equal(Self, Self) -> Bool
+pub fn HtmlTextSpan::output(Self, &Logger) -> Unit
+pub fn HtmlTextSpan::to_repr(Self) -> @debug.Repr
+pub fn HtmlTextSpan::to_string(Self) -> String
 pub impl Show for HtmlTextSpan
 
 pub(all) enum HtmlVAlign {
@@ -110,6 +165,11 @@ pub(all) enum HtmlVAlign {
   Middle
   Bottom
 } derive(Eq, @debug.Debug)
+pub fn HtmlVAlign::equal(Self, Self) -> Bool
+pub fn HtmlVAlign::not_equal(Self, Self) -> Bool
+pub fn HtmlVAlign::output(Self, &Logger) -> Unit
+pub fn HtmlVAlign::to_repr(Self) -> @debug.Repr
+pub fn HtmlVAlign::to_string(Self) -> String
 pub impl Show for HtmlVAlign
 
 // Type aliases

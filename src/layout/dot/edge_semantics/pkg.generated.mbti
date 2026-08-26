@@ -44,6 +44,11 @@ pub(all) enum EdgeDir {
   Both
   None
 } derive(Eq, @debug.Debug)
+pub fn EdgeDir::equal(Self, Self) -> Bool
+pub fn EdgeDir::not_equal(Self, Self) -> Bool
+pub fn EdgeDir::output(Self, &Logger) -> Unit
+pub fn EdgeDir::to_repr(Self) -> @debug.Repr
+pub fn EdgeDir::to_string(Self) -> String
 pub impl Show for EdgeDir
 
 pub(all) struct EdgeRankSpan {

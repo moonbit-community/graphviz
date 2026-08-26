@@ -26,6 +26,11 @@ pub(all) suberror CliError {
   InvalidNumber(flag~ : String, value~ : String)
   MultipleInputs
 } derive(Eq, @debug.Debug)
+pub fn CliError::equal(Self, Self) -> Bool
+pub fn CliError::not_equal(Self, Self) -> Bool
+pub fn CliError::output(Self, &Logger) -> Unit
+pub fn CliError::to_repr(Self) -> @debug.Repr
+pub fn CliError::to_string(Self) -> String
 pub impl Show for CliError
 
 // Types and methods
@@ -33,6 +38,11 @@ pub(all) struct AttrAssignment {
   name : String
   value : String
 } derive(Eq, @debug.Debug)
+pub fn AttrAssignment::equal(Self, Self) -> Bool
+pub fn AttrAssignment::not_equal(Self, Self) -> Bool
+pub fn AttrAssignment::output(Self, &Logger) -> Unit
+pub fn AttrAssignment::to_repr(Self) -> @debug.Repr
+pub fn AttrAssignment::to_string(Self) -> String
 pub impl Show for AttrAssignment
 
 pub(all) enum CliAction {
@@ -40,6 +50,11 @@ pub(all) enum CliAction {
   ListFormats
   ShowVersion
 } derive(Eq, @debug.Debug)
+pub fn CliAction::equal(Self, Self) -> Bool
+pub fn CliAction::not_equal(Self, Self) -> Bool
+pub fn CliAction::output(Self, &Logger) -> Unit
+pub fn CliAction::to_repr(Self) -> @debug.Repr
+pub fn CliAction::to_string(Self) -> String
 pub impl Show for CliAction
 
 pub(all) struct CliJob {
@@ -56,12 +71,22 @@ pub(all) struct CliJob {
   neato_prune : Bool
   verbose : Bool
 } derive(Eq, @debug.Debug)
+pub fn CliJob::equal(Self, Self) -> Bool
+pub fn CliJob::not_equal(Self, Self) -> Bool
+pub fn CliJob::output(Self, &Logger) -> Unit
+pub fn CliJob::to_repr(Self) -> @debug.Repr
+pub fn CliJob::to_string(Self) -> String
 pub impl Show for CliJob
 
 pub(all) struct FormatSpec {
   format : OutputFormat
   variant : String?
 } derive(Eq, @debug.Debug)
+pub fn FormatSpec::equal(Self, Self) -> Bool
+pub fn FormatSpec::not_equal(Self, Self) -> Bool
+pub fn FormatSpec::output(Self, &Logger) -> Unit
+pub fn FormatSpec::to_repr(Self) -> @debug.Repr
+pub fn FormatSpec::to_string(Self) -> String
 pub impl Show for FormatSpec
 
 pub(all) enum LayoutEngine {
@@ -76,6 +101,11 @@ pub(all) enum LayoutEngine {
   Nop
   Other(name~ : String)
 } derive(Eq, @debug.Debug)
+pub fn LayoutEngine::equal(Self, Self) -> Bool
+pub fn LayoutEngine::not_equal(Self, Self) -> Bool
+pub fn LayoutEngine::output(Self, &Logger) -> Unit
+pub fn LayoutEngine::to_repr(Self) -> @debug.Repr
+pub fn LayoutEngine::to_string(Self) -> String
 pub impl Show for LayoutEngine
 
 pub(all) enum OutputFormat {
@@ -84,6 +114,11 @@ pub(all) enum OutputFormat {
   Svg
   Other(name~ : String)
 } derive(Eq, @debug.Debug)
+pub fn OutputFormat::equal(Self, Self) -> Bool
+pub fn OutputFormat::not_equal(Self, Self) -> Bool
+pub fn OutputFormat::output(Self, &Logger) -> Unit
+pub fn OutputFormat::to_repr(Self) -> @debug.Repr
+pub fn OutputFormat::to_string(Self) -> String
 pub impl Show for OutputFormat
 
 // Type aliases

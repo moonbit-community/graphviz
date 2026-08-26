@@ -24,6 +24,11 @@ pub(all) suberror DotLayoutError {
   UnsupportedFeature(message~ : String)
   InvalidGraph(message~ : String)
 } derive(Eq, @debug.Debug)
+pub fn DotLayoutError::equal(Self, Self) -> Bool
+pub fn DotLayoutError::not_equal(Self, Self) -> Bool
+pub fn DotLayoutError::output(Self, &Logger) -> Unit
+pub fn DotLayoutError::to_repr(Self) -> @debug.Repr
+pub fn DotLayoutError::to_string(Self) -> String
 pub impl Show for DotLayoutError
 
 // Types and methods
@@ -44,6 +49,11 @@ pub(all) struct DotLayoutOptions {
   splines : @layout_prep.SplinesMode?
 } derive(Eq, @debug.Debug)
 pub fn DotLayoutOptions::default() -> Self
+pub fn DotLayoutOptions::equal(Self, Self) -> Bool
+pub fn DotLayoutOptions::not_equal(Self, Self) -> Bool
+pub fn DotLayoutOptions::output(Self, &Logger) -> Unit
+pub fn DotLayoutOptions::to_repr(Self) -> @debug.Repr
+pub fn DotLayoutOptions::to_string(Self) -> String
 pub impl Show for DotLayoutOptions
 
 // Type aliases

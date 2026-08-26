@@ -523,6 +523,37 @@ async test "svg snapshot input path resolves representative local and Graphviz c
 }
 
 ///|
+test "render_svg passes css variables through as paints" {
+  let graph = @dot.parse_dot(
+    "digraph { bgcolor=\"var(--uml-canvas)\"; a [style=filled, fillcolor=\"var(--uml-node)\", color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; a -> b [color=\"var(--uml-line)\", label=\"edge\", fontcolor=\"var(--uml-text)\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("fill=\"var(--uml-canvas)\""))
+  assert_true(svg.contains("fill=\"var(--uml-node)\""))
+  assert_true(svg.contains("stroke=\"var(--uml-line)\""))
+  assert_true(svg.contains("fill=\"var(--uml-text)\""))
+  assert_true(!svg.contains("#000000"))
+}
+
+///|
+test "render_svg keeps the css variable spelling verbatim" {
+  let graph = @dot.parse_dot(
+    "digraph { bgcolor=\"VAR(--UML-Canvas)\"; a [style=filled, fillcolor=\"var(--x, #ff0000)\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("fill=\"VAR(--UML-Canvas)\""))
+  assert_true(svg.contains("fill=\"var(--x, #ff0000)\""))
+}
+
+///|
 async test "render_svg honors size attribute" {
   let graph = @dot_fs.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)

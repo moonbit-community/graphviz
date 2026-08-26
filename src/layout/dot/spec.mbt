@@ -20,6 +20,12 @@ pub(all) struct DotLayoutOptions {
 } derive(Debug, Eq)
 
 ///|
+pub extend DotLayoutOptions with Debug::{to_repr}
+
+///|
+pub extend DotLayoutOptions with Eq::{not_equal, equal}
+
+///|
 #declaration_only
 pub fn DotLayoutOptions::default() -> DotLayoutOptions {
   ...
@@ -31,6 +37,12 @@ pub(all) suberror DotLayoutError {
   UnsupportedFeature(message~ : String)
   InvalidGraph(message~ : String)
 } derive(Debug, Eq)
+
+///|
+pub extend DotLayoutError with Debug::{to_repr}
+
+///|
+pub extend DotLayoutError with Eq::{not_equal, equal}
 
 ///|
 /// Node layout output.

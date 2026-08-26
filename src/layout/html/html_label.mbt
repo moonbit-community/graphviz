@@ -109,7 +109,7 @@ fn html_parser_skip_whitespace(parser : HtmlParser) -> Unit {
 
 ///|
 fn html_read_name(parser : HtmlParser) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   while parser.index < parser.chars.length() {
     let ch = parser.chars[parser.index]
     if (ch.is_ascii_alphabetic() || ch.is_ascii_digit()) ||
@@ -130,7 +130,7 @@ fn html_read_attr_value(parser : HtmlParser) -> String {
   match html_parser_peek(parser) {
     Some('"') => {
       let _ = html_parser_advance(parser)
-      let sb = StringBuilder::new()
+      let sb = StringBuilder()
       while parser.index < parser.chars.length() {
         let ch = parser.chars[parser.index]
         parser.index = parser.index + 1
@@ -143,7 +143,7 @@ fn html_read_attr_value(parser : HtmlParser) -> String {
     }
     Some('\'') => {
       let _ = html_parser_advance(parser)
-      let sb = StringBuilder::new()
+      let sb = StringBuilder()
       while parser.index < parser.chars.length() {
         let ch = parser.chars[parser.index]
         parser.index = parser.index + 1
@@ -155,7 +155,7 @@ fn html_read_attr_value(parser : HtmlParser) -> String {
       sb.to_string()
     }
     _ => {
-      let sb = StringBuilder::new()
+      let sb = StringBuilder()
       while parser.index < parser.chars.length() {
         let ch = parser.chars[parser.index]
         if ch.is_whitespace() || ch == '>' || ch == '/' {
@@ -240,7 +240,7 @@ fn html_parse_tag(parser : HtmlParser) -> HtmlTag? {
 
 ///|
 fn html_parse_text(parser : HtmlParser) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   while parser.index < parser.chars.length() {
     let ch = parser.chars[parser.index]
     if ch == '<' {
@@ -264,7 +264,7 @@ fn html_is_whitespace_only(text : String) -> Bool {
 
 ///|
 fn html_collapse_whitespace(text : String) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let mut in_space = false
   for ch in text {
     if ch.is_whitespace() {
@@ -428,7 +428,7 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
   match nested {
     Some(table) => HtmlCellContent::Table(table)
     None => {
-      let text_builder = StringBuilder::new()
+      let text_builder = StringBuilder()
       let mut has_color = false
       for span in spans {
         text_builder.write_string(span.text)

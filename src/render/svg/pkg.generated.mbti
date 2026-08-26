@@ -17,6 +17,11 @@ pub(all) struct SvgOptions {
   include_xml_decl : Bool?
 } derive(Eq, @debug.Debug)
 pub fn SvgOptions::default() -> Self
+pub fn SvgOptions::equal(Self, Self) -> Bool
+pub fn SvgOptions::not_equal(Self, Self) -> Bool
+pub fn SvgOptions::output(Self, &Logger) -> Unit
+pub fn SvgOptions::to_repr(Self) -> @debug.Repr
+pub fn SvgOptions::to_string(Self) -> String
 pub impl Show for SvgOptions
 
 // Type aliases

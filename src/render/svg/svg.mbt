@@ -81,7 +81,7 @@ fn format_scaled_integer(
   }
   let mut digits = scaled_abs.to_string()
   if digits.length() <= decimals {
-    let padding = StringBuilder::new()
+    let padding = StringBuilder()
     for _ in 0..<(decimals - digits.length() + 1) {
       padding.write_char('0')
     }
@@ -300,11 +300,11 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
     return None
   }
   let parts : Array[String] = []
-  let mut part = StringBuilder::new()
+  let mut part = StringBuilder()
   for ch in value {
     if ch == '/' {
       parts.push(part.to_string())
-      part = StringBuilder::new()
+      part = StringBuilder()
     } else {
       part.write_char(ch)
     }
@@ -591,7 +591,7 @@ fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
 ///|
 fn svg_text_font_attrs(font_name : String) -> String {
   let attrs = svg_font_attrs(font_name)
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   sb.write_string(" font-family=\"")
   sb.write_string(attrs.family)
   sb.write_char('"')
@@ -673,6 +673,8 @@ fn svg_color(color : String) -> String {
   let lower = color.to_lower()
   if lower.has_prefix("#") {
     lower
+  } else if lower.has_prefix("var(") {
+    escape_xml(color)
   } else if is_svg_named_color(lower) {
     lower
   } else {
@@ -729,7 +731,7 @@ fn rewrite_svg_alpha_attr(
 ) -> String {
   let attr_prefix = "\{attr_name}=\""
   let mut remaining = svg
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   while true {
     match remaining.find(attr_prefix) {
       None => {
@@ -831,7 +833,7 @@ fn push_label_line(
 ///|
 fn label_lines(label : String) -> Array[RawLabelLine] {
   let lines : Array[RawLabelLine] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut has_chars = false
   let mut escaping = false
   for ch in label {
@@ -840,17 +842,17 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       match ch {
         'n' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         'l' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Left)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         'r' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Right)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         _ => {
@@ -866,7 +868,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
     }
     if ch == '\n' || ch == '\r' {
       push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       has_chars = false
       continue
     }
@@ -922,7 +924,7 @@ fn label_metrics(
 ///|
 fn record_label_lines(label : String) -> Array[RawLabelLine] {
   let lines : Array[RawLabelLine] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut has_chars = false
   for ch in label {
@@ -936,7 +938,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
             _ => @render.TextAlign::Center
           }
           push_label_line(lines, sb.to_string(), align)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         _ => {
@@ -952,7 +954,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
     }
     if ch == '\n' || ch == '\r' {
       push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       has_chars = false
       continue
     }
@@ -1010,7 +1012,7 @@ fn record_label_metrics(
 
 ///|
 fn extract_numbers(value : String) -> Array[Double] {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for ch in value {
     if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
       sb.write_char(ch)
@@ -1058,13 +1060,13 @@ fn stroke_dash_attr(style : @attrs.StyleFlags) -> String {
 ///|
 fn svg_style_tokens(raw : String) -> Array[String] {
   let tokens : Array[String] = []
-  let mut current = StringBuilder::new()
+  let mut current = StringBuilder()
   let mut seen = false
   for ch in raw {
     if ch == ',' || ch.is_whitespace() {
       if seen {
         tokens.push(current.to_string())
-        current = StringBuilder::new()
+        current = StringBuilder()
         seen = false
       }
     } else {
@@ -1486,7 +1488,7 @@ fn arrow_primitives(
 
 ///|
 fn escape_xml(text : String) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for ch in text {
     match ch {
       '&' => sb.write_string("&amp;")
@@ -1512,7 +1514,7 @@ fn normalize_svg_title_text(text : String) -> String {
 
 ///|
 fn escape_xml_text_with_dash(text : String) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let mut space_run = 0
   for ch in text {
     if ch == ' ' {
@@ -3149,7 +3151,7 @@ priv struct RecordParser {
 ///|
 fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
   let nodes : Array[RecordNode] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut in_port = false
   let mut segment_has_node = false
@@ -3185,7 +3187,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
         segment_has_node = true
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       let children = parse_record_nodes(parser)
       nodes.push(RecordNode::Group(children))
@@ -3197,7 +3199,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       segment_has_node = false
       parser.index = parser.index + 1
       continue
@@ -3207,7 +3209,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       return nodes
     }
@@ -3688,7 +3690,7 @@ fn html_text_metrics(
 fn html_text_spans_plain_text(
   spans : Array[@html_label.HtmlTextSpan],
 ) -> String {
-  let text = StringBuilder::new()
+  let text = StringBuilder()
   for span in spans {
     text.write_string(span.text)
   }
@@ -3719,12 +3721,12 @@ fn html_text_spans_by_line(
   }
   let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
   for span in spans {
-    let mut part = StringBuilder::new()
+    let mut part = StringBuilder()
     for ch in span.text {
       if ch == '\n' {
         let line = lines[lines.length() - 1]
         append_span(line, part.to_string(), span.color)
-        part = StringBuilder::new()
+        part = StringBuilder()
         lines.push([])
       } else {
         part.write_char(ch)
@@ -4290,7 +4292,7 @@ fn svg_output_scale(
 
 ///|
 fn spline_path(spline : @geom.Spline, llx : Double, lly : Double) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let points = spline.points
   if points.length() == 0 {
     return ""
@@ -4335,7 +4337,7 @@ fn polyline_points(
   llx : Double,
   lly : Double,
 ) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for i in 0..<points.length() {
     let point = shift_point(points[i], llx, lly)
     if i > 0 {
@@ -4354,7 +4356,7 @@ fn polygon_points(
   llx : Double,
   lly : Double,
 ) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for i in 0..<points.length() {
     let point = shift_point(points[i], llx, lly)
     if i > 0 {
@@ -6639,7 +6641,7 @@ pub fn render_svg(
   let top = format_double(pad_y)
   let bottom = format_double(-(bbox.ury - bbox.lly + pad_y))
   let bg_points = "\{left},\{top} \{left},\{bottom} \{right},\{bottom} \{right},\{top} \{left},\{top}"
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   if include_xml_decl {
     write_line(
       sb, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>", "", pretty,

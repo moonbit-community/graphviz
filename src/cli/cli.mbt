@@ -79,8 +79,8 @@ fn parse_assignment(
   flag : String,
   text : String,
 ) -> AttrAssignment raise CliError {
-  let name_sb = StringBuilder::new()
-  let value_sb = StringBuilder::new()
+  let name_sb = StringBuilder()
+  let value_sb = StringBuilder()
   let mut seen_eq = false
   for ch in text {
     if !seen_eq && ch == '=' {
@@ -491,7 +491,7 @@ pub async fn render_job(job : CliJob) -> String {
   cli_trace("cli: parse start")
   let graphs = read_dot_input(job.input)
   cli_trace("cli: parse done")
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   for i in 0..<graphs.length() {
     let graph = graphs[i]
     apply_attrs(graph, job)

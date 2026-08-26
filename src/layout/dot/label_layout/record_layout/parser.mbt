@@ -30,7 +30,7 @@ pub(all) struct RecordParser {
 ///|
 pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
   let nodes : Array[RecordNode] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut in_port = false
   let mut segment_has_node = false
@@ -66,7 +66,7 @@ pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
         segment_has_node = true
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       let children = parse_record_nodes(parser)
       nodes.push(RecordNode::Group(children))
@@ -78,7 +78,7 @@ pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       segment_has_node = false
       parser.index = parser.index + 1
       continue
@@ -88,7 +88,7 @@ pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       return nodes
     }
@@ -136,7 +136,7 @@ fn record_field_from_text(field : String) -> RecordField {
 
 ///|
 fn normalize_record_text(text : String) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let mut escaping = false
   for ch in text {
     if escaping {

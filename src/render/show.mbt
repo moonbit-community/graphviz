@@ -9,9 +9,15 @@ pub impl Show for TextAlign with fn output(self, logger) {
 }
 
 ///|
+pub extend TextAlign with Show::{to_string, output}
+
+///|
 pub impl Show for Font with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend Font with Show::{to_string, output}
 
 ///|
 pub impl Show for GradientStop with fn output(self, logger) {
@@ -19,9 +25,15 @@ pub impl Show for GradientStop with fn output(self, logger) {
 }
 
 ///|
+pub extend GradientStop with Show::{to_string, output}
+
+///|
 pub impl Show for LinearGradient with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend LinearGradient with Show::{to_string, output}
 
 ///|
 pub impl Show for RadialGradient with fn output(self, logger) {
@@ -29,11 +41,20 @@ pub impl Show for RadialGradient with fn output(self, logger) {
 }
 
 ///|
+pub extend RadialGradient with Show::{to_string, output}
+
+///|
 pub impl Show for Gradient with fn output(self, logger) {
   write_debug(self, logger)
 }
 
 ///|
+pub extend Gradient with Show::{to_string, output}
+
+///|
 pub impl Show for DrawOp with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend DrawOp with Show::{to_string, output}

@@ -70,7 +70,7 @@ fn canonical_id(raw : String) -> String {
   if chars.length() == 0 {
     return "\"\""
   }
-  let out = StringBuilder::new()
+  let out = StringBuilder()
   out.write_char('"')
   let mut cnt = 0
   let mut dotcnt = 0
@@ -1482,7 +1482,7 @@ fn write_graph_recursive(
 
 ///|
 pub fn write_dot(graph : @cgraph.Graph) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let is_layout_output = should_emit_default_node_label(root_graph(graph))
   let ctx : WriteContext = {
     preorder_next: 1,

@@ -13,13 +13,13 @@ pub fn color(value : String?, default? : String = "black") -> String {
 ///|
 fn tokenize_color(value : String) -> Array[String] {
   let tokens : Array[String] = []
-  let mut current = StringBuilder::new()
+  let mut current = StringBuilder()
   let mut seen = false
   for ch in value {
     if ch == ',' || ch.is_whitespace() {
       if seen {
         tokens.push(current.to_string())
-        current = StringBuilder::new()
+        current = StringBuilder()
         seen = false
       }
     } else {
@@ -92,7 +92,7 @@ fn hsv_to_rgb_hex(h : Double, s : Double, v : Double) -> String {
       _ => (val, p, q)
     }
   }
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   sb.write_char('#')
   append_hex_byte(sb, (r * 255.0).floor().to_int())
   append_hex_byte(sb, (g * 255.0).floor().to_int())

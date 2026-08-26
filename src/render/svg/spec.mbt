@@ -10,6 +10,12 @@ pub(all) struct SvgOptions {
 } derive(Debug, Eq)
 
 ///|
+pub extend SvgOptions with Debug::{to_repr}
+
+///|
+pub extend SvgOptions with Eq::{not_equal, equal}
+
+///|
 #declaration_only
 pub fn SvgOptions::default() -> SvgOptions {
   ...

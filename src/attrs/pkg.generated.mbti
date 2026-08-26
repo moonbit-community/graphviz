@@ -27,6 +27,11 @@ pub(all) struct StyleFlags {
   dashed : Bool
   dotted : Bool
 } derive(Eq, @debug.Debug)
+pub fn StyleFlags::equal(Self, Self) -> Bool
+pub fn StyleFlags::not_equal(Self, Self) -> Bool
+pub fn StyleFlags::output(Self, &Logger) -> Unit
+pub fn StyleFlags::to_repr(Self) -> @debug.Repr
+pub fn StyleFlags::to_string(Self) -> String
 pub impl Show for StyleFlags
 
 // Type aliases

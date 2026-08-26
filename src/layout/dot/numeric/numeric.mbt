@@ -42,7 +42,7 @@ pub fn trunc_int(value : Double) -> Int {
 
 ///|
 fn first_numeric_token(value : String) -> String? {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let mut seen = false
   for ch in value {
     if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {

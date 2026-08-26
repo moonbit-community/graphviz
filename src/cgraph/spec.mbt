@@ -10,12 +10,24 @@ pub(all) enum GraphKind {
 } derive(Debug, Eq)
 
 ///|
+pub extend GraphKind with Debug::{to_repr}
+
+///|
+pub extend GraphKind with Eq::{not_equal, equal}
+
+///|
 /// Attribute scope kinds.
 pub(all) enum AttrKind {
   Graph
   Node
   Edge
 } derive(Debug, Eq)
+
+///|
+pub extend AttrKind with Debug::{to_repr}
+
+///|
+pub extend AttrKind with Eq::{not_equal, equal}
 
 ///|
 /// Compass ports used in node:port:compass syntax.
@@ -32,11 +44,23 @@ pub(all) enum Compass {
 } derive(Debug, Eq)
 
 ///|
+pub extend Compass with Debug::{to_repr}
+
+///|
+pub extend Compass with Eq::{not_equal, equal}
+
+///|
 /// Optional port name and compass reference.
 pub(all) struct Port {
   name : String?
   compass : Compass?
 } derive(Debug, Eq)
+
+///|
+pub extend Port with Debug::{to_repr}
+
+///|
+pub extend Port with Eq::{not_equal, equal}
 
 ///|
 #declaration_only

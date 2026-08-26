@@ -11,12 +11,24 @@ pub(all) enum HtmlAlign {
 } derive(Debug, Eq)
 
 ///|
+pub extend HtmlAlign with Debug::{to_repr}
+
+///|
+pub extend HtmlAlign with Eq::{not_equal, equal}
+
+///|
 /// Vertical alignment for HTML-like labels.
 pub(all) enum HtmlVAlign {
   Top
   Middle
   Bottom
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlVAlign with Debug::{to_repr}
+
+///|
+pub extend HtmlVAlign with Eq::{not_equal, equal}
 
 ///|
 /// Text span for HTML-like labels.
@@ -26,12 +38,24 @@ pub(all) struct HtmlTextSpan {
 } derive(Debug, Eq)
 
 ///|
+pub extend HtmlTextSpan with Debug::{to_repr}
+
+///|
+pub extend HtmlTextSpan with Eq::{not_equal, equal}
+
+///|
 /// Cell content for HTML-like labels.
 pub(all) enum HtmlCellContent {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlCellContent with Debug::{to_repr}
+
+///|
+pub extend HtmlCellContent with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like table cell.
@@ -48,10 +72,22 @@ pub(all) struct HtmlCell {
 } derive(Debug, Eq)
 
 ///|
+pub extend HtmlCell with Debug::{to_repr}
+
+///|
+pub extend HtmlCell with Eq::{not_equal, equal}
+
+///|
 /// HTML-like table row.
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlRow with Debug::{to_repr}
+
+///|
+pub extend HtmlRow with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like table.
@@ -65,11 +101,23 @@ pub(all) struct HtmlTable {
 } derive(Debug, Eq)
 
 ///|
+pub extend HtmlTable with Debug::{to_repr}
+
+///|
+pub extend HtmlTable with Eq::{not_equal, equal}
+
+///|
 /// HTML-like label.
 pub(all) enum HtmlLabel {
   Text(String)
   Table(HtmlTable)
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlLabel with Debug::{to_repr}
+
+///|
+pub extend HtmlLabel with Eq::{not_equal, equal}
 
 ///|
 /// Table cell placement in the grid.
@@ -78,6 +126,12 @@ pub(all) struct HtmlCellPlacement {
   row : Int
   col : Int
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlCellPlacement with Debug::{to_repr}
+
+///|
+pub extend HtmlCellPlacement with Eq::{not_equal, equal}
 
 ///|
 /// Table metrics for layout.
@@ -90,11 +144,23 @@ pub(all) struct HtmlTableMetrics {
 } derive(Debug, Eq)
 
 ///|
+pub extend HtmlTableMetrics with Debug::{to_repr}
+
+///|
+pub extend HtmlTableMetrics with Eq::{not_equal, equal}
+
+///|
 /// Table cell layout output.
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlCellLayout with Debug::{to_repr}
+
+///|
+pub extend HtmlCellLayout with Eq::{not_equal, equal}
 
 ///|
 /// Table layout output.
@@ -103,6 +169,12 @@ pub(all) struct HtmlTableLayout {
   scale_x : Double
   scale_y : Double
 } derive(Debug, Eq)
+
+///|
+pub extend HtmlTableLayout with Debug::{to_repr}
+
+///|
+pub extend HtmlTableLayout with Eq::{not_equal, equal}
 
 ///|
 /// Check if a label uses HTML-like syntax.

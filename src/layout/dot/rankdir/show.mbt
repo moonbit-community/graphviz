@@ -7,3 +7,6 @@ fn[T : Debug] write_debug(value : T, logger : &Logger) -> Unit {
 pub impl Show for RankDir with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend RankDir with Show::{to_string, output}

@@ -12,6 +12,12 @@ pub(all) struct StyleFlags {
 } derive(Debug, Eq)
 
 ///|
+pub extend StyleFlags with Debug::{to_repr}
+
+///|
+pub extend StyleFlags with Eq::{not_equal, equal}
+
+///|
 /// Parse a numeric attribute as Double with a fallback value.
 #declaration_only
 pub fn parse_double(value : String?, fallback : Double) -> Double {

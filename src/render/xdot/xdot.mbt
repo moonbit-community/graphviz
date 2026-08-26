@@ -84,7 +84,7 @@ fn push_label_line(
 ///|
 fn label_lines(label : String) -> Array[RawLabelLine] {
   let lines : Array[RawLabelLine] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut has_chars = false
   let mut escaping = false
   for ch in label {
@@ -93,17 +93,17 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
       match ch {
         'n' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         'l' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Left)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         'r' => {
           push_label_line(lines, sb.to_string(), @render.TextAlign::Right)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         _ => {
@@ -119,7 +119,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
     }
     if ch == '\n' || ch == '\r' {
       push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       has_chars = false
       continue
     }
@@ -175,7 +175,7 @@ fn label_metrics(
 ///|
 fn record_label_lines(label : String) -> Array[RawLabelLine] {
   let lines : Array[RawLabelLine] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut has_chars = false
   for ch in label {
@@ -189,7 +189,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
             _ => @render.TextAlign::Center
           }
           push_label_line(lines, sb.to_string(), align)
-          sb = StringBuilder::new()
+          sb = StringBuilder()
           has_chars = false
         }
         _ => {
@@ -205,7 +205,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
     }
     if ch == '\n' || ch == '\r' {
       push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       has_chars = false
       continue
     }
@@ -263,7 +263,7 @@ fn record_label_metrics(
 
 ///|
 fn extract_numbers(value : String) -> Array[Double] {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   for ch in value {
     if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
       sb.write_char(ch)
@@ -378,7 +378,7 @@ fn format_scaled_integer(
   }
   let mut digits = scaled_abs.to_string()
   if digits.length() <= decimals {
-    let padding = StringBuilder::new()
+    let padding = StringBuilder()
     for _ in 0..<(decimals - digits.length() + 1) {
       padding.write_char('0')
     }
@@ -510,11 +510,11 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
     return None
   }
   let parts : Array[String] = []
-  let mut part = StringBuilder::new()
+  let mut part = StringBuilder()
   for ch in value {
     if ch == '/' {
       parts.push(part.to_string())
-      part = StringBuilder::new()
+      part = StringBuilder()
     } else {
       part.write_char(ch)
     }
@@ -746,13 +746,13 @@ fn dash_style_name(style : @attrs.StyleFlags) -> String? {
 ///|
 fn xdot_style_tokens(raw : String) -> Array[String] {
   let tokens : Array[String] = []
-  let mut current = StringBuilder::new()
+  let mut current = StringBuilder()
   let mut seen = false
   for ch in raw {
     if ch == ',' || ch.is_whitespace() {
       if seen {
         tokens.push(current.to_string())
-        current = StringBuilder::new()
+        current = StringBuilder()
         seen = false
       }
     } else {
@@ -2548,7 +2548,7 @@ priv struct RecordParser {
 ///|
 fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
   let nodes : Array[RecordNode] = []
-  let mut sb = StringBuilder::new()
+  let mut sb = StringBuilder()
   let mut escaping = false
   let mut in_port = false
   let mut segment_has_node = false
@@ -2584,7 +2584,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
         segment_has_node = true
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       let children = parse_record_nodes(parser)
       nodes.push(RecordNode::Group(children))
@@ -2596,7 +2596,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       segment_has_node = false
       parser.index = parser.index + 1
       continue
@@ -2606,7 +2606,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       if !segment_has_node {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
       }
-      sb = StringBuilder::new()
+      sb = StringBuilder()
       parser.index = parser.index + 1
       return nodes
     }
@@ -3070,7 +3070,7 @@ fn html_text_metrics(
 fn html_text_spans_plain_text(
   spans : Array[@html_label.HtmlTextSpan],
 ) -> String {
-  let text = StringBuilder::new()
+  let text = StringBuilder()
   for span in spans {
     text.write_string(span.text)
   }
@@ -3101,12 +3101,12 @@ fn html_text_spans_by_line(
   }
   let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
   for span in spans {
-    let mut part = StringBuilder::new()
+    let mut part = StringBuilder()
     for ch in span.text {
       if ch == '\n' {
         let line = lines[lines.length() - 1]
         append_span(line, part.to_string(), span.color)
-        part = StringBuilder::new()
+        part = StringBuilder()
         lines.push([])
       } else {
         part.write_char(ch)
@@ -5146,7 +5146,7 @@ fn attach_graph_attrs(layout : @layout_dot.DotLayoutGraph) -> Unit {
 
 ///|
 fn encode_gradient(gradient : @render.Gradient) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   match gradient {
     @render.Gradient::Linear(value) => {
       sb.write_char('[')
@@ -5219,7 +5219,7 @@ fn xdot_encode_color(color : String) -> String {
 
 ///|
 fn encode_op(op : @render.DrawOp) -> String {
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   match op {
     @render.DrawOp::Ellipse(filled~, rect~) => {
       let center_x = (rect.llx + rect.urx) / 2.0

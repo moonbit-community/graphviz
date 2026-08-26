@@ -9,9 +9,15 @@ pub impl Show for GraphKind with fn output(self, logger) {
 }
 
 ///|
+pub extend GraphKind with Show::{to_string, output}
+
+///|
 pub impl Show for AttrKind with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend AttrKind with Show::{to_string, output}
 
 ///|
 pub impl Show for Compass with fn output(self, logger) {
@@ -19,6 +25,12 @@ pub impl Show for Compass with fn output(self, logger) {
 }
 
 ///|
+pub extend Compass with Show::{to_string, output}
+
+///|
 pub impl Show for Port with fn output(self, logger) {
   write_debug(self, logger)
 }
+
+///|
+pub extend Port with Show::{to_string, output}

@@ -23,6 +23,11 @@ pub(all) suberror DotParseError {
   InvalidToken(pos~ : Position, token~ : String)
   InvalidSyntax(pos~ : Position, message~ : String)
 } derive(Eq, @debug.Debug)
+pub fn DotParseError::equal(Self, Self) -> Bool
+pub fn DotParseError::not_equal(Self, Self) -> Bool
+pub fn DotParseError::output(Self, &Logger) -> Unit
+pub fn DotParseError::to_repr(Self) -> @debug.Repr
+pub fn DotParseError::to_string(Self) -> String
 pub impl Show for DotParseError
 
 // Types and methods
@@ -31,6 +36,9 @@ pub(all) struct Position {
   column : Int
   offset : Int
 } derive(Eq, @debug.Debug)
+pub fn Position::equal(Self, Self) -> Bool
+pub fn Position::not_equal(Self, Self) -> Bool
+pub fn Position::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
