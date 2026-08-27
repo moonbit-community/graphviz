@@ -368,3 +368,33 @@ test "graph labeljust affects label position" {
   }
   assert_true(left_lp.x < right_lp.x)
 }
+
+///|
+test "encode_xdot_ops passes css variables through as paints" {
+  let ops : Array[@render.DrawOp] = [
+    @render.DrawOp::PenColor(color="var(--uml-line)"),
+    @render.DrawOp::Ellipse(filled=true, rect={
+      llx: 0.0,
+      lly: 0.0,
+      urx: 10.0,
+      ury: 20.0,
+    }),
+  ]
+  let encoded = encode_xdot_ops(ops)
+  assert_true(encoded.contains("var(--uml-line)"))
+  assert_true(!encoded.contains("#000000"))
+}
+
+///|
+test "render_xdot passes css variables through as paints" {
+  let graph = @dot.parse_dot(
+    "digraph { bgcolor=\"var(--uml-canvas)\"; a [style=filled, fillcolor=\"var(--uml-node)\", color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; b [color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; a -> b [color=\"var(--uml-line)\", label=\"edge\", fontcolor=\"var(--uml-text)\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let output = render_xdot(layout)
+  assert_true(output.contains("var(--uml-canvas)"))
+  assert_true(output.contains("var(--uml-node)"))
+  assert_true(output.contains("var(--uml-line)"))
+  assert_true(output.contains("var(--uml-text)"))
+  assert_true(!output.contains("#000000"))
+}

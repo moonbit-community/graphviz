@@ -5203,15 +5203,19 @@ fn encode_gradient(gradient : @render.Gradient) -> String {
 ///|
 fn xdot_encode_color(color : String) -> String {
   let lower = color.to_lower()
-  match lower {
-    "skyblue" => "#87ceeb"
-    "green4" => "#008b00"
-    _ => {
-      let normalized = @attrs.normalize_color(lower)
-      if normalized.has_prefix("#") || normalized == "none" {
-        normalized
-      } else {
-        "#000000"
+  if lower.has_prefix("var(") {
+    color
+  } else {
+    match lower {
+      "skyblue" => "#87ceeb"
+      "green4" => "#008b00"
+      _ => {
+        let normalized = @attrs.normalize_color(lower)
+        if normalized.has_prefix("#") || normalized == "none" {
+          normalized
+        } else {
+          "#000000"
+        }
       }
     }
   }
