@@ -1576,6 +1576,7 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
   let mut iter = 0
   let mut search_index = 0
   let search_size = 30
+  let result = true
   while iter < max_iter {
     let leaving_result = leave_edge(graph, search_index, search_size)
     search_index = leaving_result.next_index
@@ -1591,7 +1592,7 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
     }
     iter = iter + 1
   }
-  true
+  result
 }
 
 ///|

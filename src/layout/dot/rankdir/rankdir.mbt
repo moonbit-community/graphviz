@@ -30,6 +30,7 @@ pub fn parse_rankdir(value : String) -> RankDir? {
 
 ///|
 pub fn graph_rankdir(graph : @cgraph.Graph) -> RankDir {
+  let default = RankDir::TB
   let mut current = graph
   while true {
     match current.get_attr("rankdir") {
@@ -45,5 +46,5 @@ pub fn graph_rankdir(graph : @cgraph.Graph) -> RankDir {
       None => break
     }
   }
-  RankDir::TB
+  default
 }

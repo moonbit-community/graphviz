@@ -2504,6 +2504,7 @@ priv enum RecordOrientation {
 
 ///|
 fn record_layout_orientation(graph : @cgraph.Graph) -> RecordOrientation {
+  let default = RecordOrientation::Horizontal
   let mut current = graph
   while true {
     match current.get_attr("rankdir") {
@@ -2520,7 +2521,7 @@ fn record_layout_orientation(graph : @cgraph.Graph) -> RecordOrientation {
       None => break
     }
   }
-  RecordOrientation::Horizontal
+  default
 }
 
 ///|

@@ -50,6 +50,7 @@ fn graph_is_within_cluster_name(
   if cluster_name == "" {
     return false
   }
+  let default = false
   let mut current : @cgraph.Graph? = Some(graph)
   while true {
     match current {
@@ -63,7 +64,7 @@ fn graph_is_within_cluster_name(
       None => break
     }
   }
-  false
+  default
 }
 
 ///|

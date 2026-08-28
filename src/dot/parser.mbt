@@ -288,6 +288,7 @@ fn parser_cluster_is_descendant_of_innermost(
   graph : @cgraph.Graph,
   innermost : Map[String, Bool],
 ) -> Bool {
+  let default = false
   let mut current = graph
   while true {
     if parser_is_cluster_graph(current) {
@@ -301,7 +302,7 @@ fn parser_cluster_is_descendant_of_innermost(
       None => break
     }
   }
-  false
+  default
 }
 
 ///|
