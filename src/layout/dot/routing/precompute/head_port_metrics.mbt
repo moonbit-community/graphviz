@@ -47,7 +47,7 @@ pub fn build_head_port_metrics(
       }
     }
   }
-  { head_port_counts, head_port_min_dist, head_port_max_dist }
+  { head_port_counts, head_port_min_dist, head_port_max_dist, }
 }
 
 ///|
@@ -87,8 +87,8 @@ fn head_metric_distance_for_edge(
 ) -> Double {
   let tail_name = edge.tail().name()
   let head_name = edge.head().name()
-  let tail_pos = positions.get(tail_name).unwrap_or({ x: 0.0, y: 0.0 })
-  let head_pos = positions.get(head_name).unwrap_or({ x: 0.0, y: 0.0 })
+  let tail_pos = positions.get(tail_name).unwrap_or({ x: 0.0, y: 0.0, })
+  let head_pos = positions.get(head_name).unwrap_or({ x: 0.0, y: 0.0, })
   let tail_size = sizes
     .get(tail_name)
     .unwrap_or(node_size_for_missing(edge.tail()))
@@ -172,7 +172,7 @@ pub fn build_dot_head_port_metrics(
       let geometry = @port_geometry.port_geometry(
         node_name, port, label_ports_map, node_pos, node_size,
       )
-      { center: geometry.center, size: geometry.size }
+      { center: geometry.center, size: geometry.size, }
     },
   )
 }

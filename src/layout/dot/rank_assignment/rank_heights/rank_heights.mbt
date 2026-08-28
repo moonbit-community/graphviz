@@ -16,7 +16,7 @@ pub fn make_edge_mid_label_metrics(
   width : Double,
   height : Double,
 ) -> EdgeMidLabelMetrics {
-  { width, height }
+  { width, height, }
 }
 
 ///|
@@ -224,7 +224,7 @@ fn clone_rank_half_heights(
     rank_ht1[rank] = half_height
     rank_ht2[rank] = half_height
   }
-  { rank_ht1, rank_ht2 }
+  { rank_ht1, rank_ht2, }
 }
 
 ///|
@@ -292,5 +292,5 @@ pub fn compute_rank_heights(input : RankHeightsInput) -> RankHeights {
     ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }
   let ranksep_pt = ranksep_pt_int.to_double()
-  { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
+  { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt, }
 }

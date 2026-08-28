@@ -197,5 +197,5 @@ pub fn build_edge_vnodes(
       }
     }
   }
-  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
+  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters, }
 }

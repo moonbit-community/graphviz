@@ -23,13 +23,13 @@ test "apply_edge_label_updates recurses into nested subgraphs and preserves non-
       start: None,
       end: None,
       points: [
-        { x: 1.0, y: 1.0 },
-        { x: 4.0, y: 1.0 },
-        { x: 7.0, y: 1.0 },
-        { x: 10.0, y: 1.0 },
+        { x: 1.0, y: 1.0, },
+        { x: 4.0, y: 1.0, },
+        { x: 7.0, y: 1.0, },
+        { x: 10.0, y: 1.0, },
       ],
     },
-    label_pos=Some({ x: 30.0, y: 40.0 }),
+    label_pos=Some({ x: 30.0, y: 40.0, }),
   )
   let cluster_edge_layout = postprocess_make_edge_layout(
     cluster_edge,
@@ -37,13 +37,13 @@ test "apply_edge_label_updates recurses into nested subgraphs and preserves non-
       start: None,
       end: None,
       points: [
-        { x: 0.0, y: 0.0 },
-        { x: 3.0, y: 0.0 },
-        { x: 6.0, y: 0.0 },
-        { x: 9.0, y: 0.0 },
+        { x: 0.0, y: 0.0, },
+        { x: 3.0, y: 0.0, },
+        { x: 6.0, y: 0.0, },
+        { x: 9.0, y: 0.0, },
       ],
     },
-    label_pos=Some({ x: 10.0, y: 20.0 }),
+    label_pos=Some({ x: 10.0, y: 20.0, }),
   )
   let root_edge_layout = postprocess_make_edge_layout(
     root_edge,
@@ -51,43 +51,43 @@ test "apply_edge_label_updates recurses into nested subgraphs and preserves non-
       start: None,
       end: None,
       points: [
-        { x: 2.0, y: 2.0 },
-        { x: 5.0, y: 2.0 },
-        { x: 8.0, y: 2.0 },
-        { x: 11.0, y: 2.0 },
+        { x: 2.0, y: 2.0, },
+        { x: 5.0, y: 2.0, },
+        { x: 8.0, y: 2.0, },
+        { x: 11.0, y: 2.0, },
       ],
     },
-    label_pos=Some({ x: 50.0, y: 60.0 }),
+    label_pos=Some({ x: 50.0, y: 60.0, }),
   )
   let graphs = [
     postprocess_make_layout_tree(
       cluster,
-      { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 },
-      label_pos=Some({ x: 8.0, y: 9.0 }),
+      { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, },
+      label_pos=Some({ x: 8.0, y: 9.0, }),
       edges=[cluster_edge_layout],
       subgraphs=[
         postprocess_make_layout_tree(
           nested,
-          { llx: 5.0, lly: 6.0, urx: 7.0, ury: 8.0 },
-          label_pos=Some({ x: 11.0, y: 12.0 }),
+          { llx: 5.0, lly: 6.0, urx: 7.0, ury: 8.0, },
+          label_pos=Some({ x: 11.0, y: 12.0, }),
           edges=[nested_edge_layout],
         ),
       ],
     ),
     postprocess_make_layout_tree(
       root,
-      { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+      { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
       edges=[root_edge_layout],
     ),
   ]
 
   let nested_adjusted = @edge_label.adjust_edge_label_positions(
     [nested_edge_layout],
-    [{ llx: 25.0, lly: 35.0, urx: 35.0, ury: 45.0 }],
+    [{ llx: 25.0, lly: 35.0, urx: 35.0, ury: 45.0, }],
     2.0,
     edge => {
       match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
     },

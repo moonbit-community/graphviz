@@ -11,7 +11,7 @@ fn writeback_make_layout_tree(
   edges? : Array[DotLayoutEdge] = [],
   subgraphs? : Array[LayoutTree] = [],
 ) -> LayoutTree {
-  { graph, bbox, label_pos, nodes, edges, subgraphs }
+  { graph, bbox, label_pos, nodes, edges, subgraphs, }
 }
 
 ///|
@@ -23,7 +23,7 @@ fn writeback_make_node_layout(
   label_pos? : @geom.Point? = None,
   xlabel_pos? : @geom.Point? = None,
 ) -> DotLayoutNode {
-  { node, pos, width_in, height_in, label_pos, xlabel_pos }
+  { node, pos, width_in, height_in, label_pos, xlabel_pos, }
 }
 
 ///|

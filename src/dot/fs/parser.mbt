@@ -7,7 +7,7 @@ async fn decode_dot_file(path : String) -> (String, Bool) {
   let bytes = try @async_fs.read_file(path).binary() catch {
     err =>
       raise @dot.DotParseError::InvalidSyntax(
-        pos={ line: 1, column: 1, offset: 0 },
+        pos={ line: 1, column: 1, offset: 0, },
         message="\{err}",
       )
   } noraise {
@@ -33,7 +33,7 @@ async fn decode_dot_file(path : String) -> (String, Bool) {
       try @utf8.decode(utf8_bytes) catch {
         _ =>
           raise @dot.DotParseError::InvalidSyntax(
-            pos={ line: 1, column: 1, offset: 0 },
+            pos={ line: 1, column: 1, offset: 0, },
             message="invalid utf8",
           )
       } noraise {

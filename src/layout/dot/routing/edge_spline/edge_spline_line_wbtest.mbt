@@ -121,7 +121,7 @@ test "edge_spline_for_line uses linear control points when a cluster bbox is pre
     0.0,
     1.0,
     arrow_len_override=None,
-    tail_cluster_bbox=Some({ llx: -1.0, lly: -1.0, urx: 1.0, ury: 13.0 }),
+    tail_cluster_bbox=Some({ llx: -1.0, lly: -1.0, urx: 1.0, ury: 13.0, }),
     head_cluster_bbox=None,
   )
 

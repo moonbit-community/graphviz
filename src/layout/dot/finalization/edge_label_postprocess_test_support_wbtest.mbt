@@ -11,7 +11,7 @@ fn postprocess_make_layout_tree(
   edges? : Array[DotLayoutEdge] = [],
   subgraphs? : Array[LayoutTree] = [],
 ) -> LayoutTree {
-  { graph, bbox, label_pos, nodes, edges, subgraphs }
+  { graph, bbox, label_pos, nodes, edges, subgraphs, }
 }
 
 ///|

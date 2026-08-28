@@ -72,7 +72,7 @@ pub fn record_nodes_sizes(
         )
         let width_pt = text_width_pt + pad_x_pt
         let height_pt = text_height_pt + pad_y_pt
-        sizes.push({ width_pt, height_pt })
+        sizes.push({ width_pt, height_pt, })
       }
       RecordNode::Group(children) => {
         let size = record_group_size(
@@ -103,7 +103,7 @@ pub fn record_group_size(
     nodes, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   if sizes.length() == 0 {
-    return { width_pt: 0.0, height_pt: 0.0 }
+    return { width_pt: 0.0, height_pt: 0.0, }
   }
   let mut width = 0.0
   let mut height = 0.0
@@ -123,7 +123,7 @@ pub fn record_group_size(
         width = width + size.width_pt
       }
   }
-  { width_pt: width, height_pt: height }
+  { width_pt: width, height_pt: height, }
 }
 
 ///|
@@ -356,7 +356,7 @@ fn collect_record_ports(
               node.rect.urx - node.rect.llx,
               node.rect.ury - node.rect.lly,
             )
-            ports[name] = { center, size: field_size, sides: node.sides }
+            ports[name] = { center, size: field_size, sides: node.sides, }
           }
           None => ()
         }
@@ -509,7 +509,7 @@ pub fn record_port_path_box(
     return None
   }
   let orientation = @layout_prep.record_layout_orientation(rankdir)
-  let raw_ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
+  let raw_ports = record_ports(node, { x: 0.0, y: 0.0, }, size, orientation)
   let name = match @port_geometry.resolve_label_port_name(port, raw_ports) {
     Some(value) => value
     None => return None
@@ -602,7 +602,7 @@ pub fn record_port_path_box(
       maxy = abs.y
     }
   }
-  Some({ llx: minx, lly: miny, urx: maxx, ury: maxy })
+  Some({ llx: minx, lly: miny, urx: maxx, ury: maxy, })
 }
 
 ///|
@@ -663,7 +663,7 @@ pub fn record_port_padding_y(
       update_padding(edge.head().name(), edge.head_port())
     }
   }
-  { below: extra_below, above: extra_above }
+  { below: extra_below, above: extra_above, }
 }
 
 ///|

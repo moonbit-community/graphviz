@@ -162,7 +162,7 @@ fn arrow_type_normal0(
     a[3] = point_add(q, v)
     q = point_sub(q, delta_base)
   }
-  { endpoint: q, polygon: a }
+  { endpoint: q, polygon: a, }
 }
 
 ///|
@@ -312,7 +312,7 @@ fn arrow_type_crow0(
     a[7] = point(p.x + v.x, p.y + v.y)
     q = point_add(q, delta_tip)
   }
-  { endpoint: q, polygon: a }
+  { endpoint: q, polygon: a, }
 }
 
 ///|
@@ -352,7 +352,7 @@ fn arrow_type_diamond0(
   a[2] = p
   a[3] = point_sub(r, v)
   q = point_sub(q, delta)
-  { endpoint: q, polygon: a }
+  { endpoint: q, polygon: a, }
 }
 
 ///|
@@ -443,10 +443,10 @@ fn arrow_match_name_frag(
   for pair in names {
     let (name, arrow_flag) = pair
     if has_prefix_at(value, start, name) {
-      return { next: start + name.length(), flag: flag | arrow_flag }
+      return { next: start + name.length(), flag: flag | arrow_flag, }
     }
   }
-  { next: start, flag }
+  { next: start, flag, }
 }
 
 ///|
@@ -477,7 +477,7 @@ fn arrow_match_shape(value : String, start : Int) -> ArrowMatchResult {
   if flag != ARR_TYPE_NONE && (flag & type_mask) == 0 {
     flag = flag | ARR_TYPE_NORM
   }
-  { next: rest, flag }
+  { next: rest, flag, }
 }
 
 ///|
@@ -737,7 +737,7 @@ pub fn arrow_length_for_edge(
   } else {
     0.0
   }
-  { tail: tail_len, head: head_len }
+  { tail: tail_len, head: head_len, }
 }
 
 ///|
@@ -771,5 +771,5 @@ fn arrow_length_for_edge_oriented(
   } else {
     0.0
   }
-  { tail: tail_len, head: head_len }
+  { tail: tail_len, head: head_len, }
 }

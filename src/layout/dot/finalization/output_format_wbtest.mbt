@@ -32,11 +32,11 @@ test "dot format helpers keep graphviz-like numeric strings" {
   assert_eq(format_float(-0.0000123456), "-1.2346e-05")
 
   assert_eq(format_dim(12.0), "12")
-  let point : @geom.Point = { x: 12.5, y: -0.25 }
+  let point : @geom.Point = { x: 12.5, y: -0.25, }
   assert_eq(format_point(point), "12.5,-0.25")
 
-  let rect0 : @geom.Rect = { llx: 0.0, lly: 1.25, urx: 10.0, ury: 20.5 }
-  let rect1 : @geom.Rect = { llx: -1.0, lly: -2.0, urx: 3.0, ury: 4.0 }
+  let rect0 : @geom.Rect = { llx: 0.0, lly: 1.25, urx: 10.0, ury: 20.5, }
+  let rect1 : @geom.Rect = { llx: -1.0, lly: -2.0, urx: 3.0, ury: 4.0, }
   assert_eq(format_rect(rect0), "0,1.25,10,20.5")
   assert_eq(format_rects([rect0, rect1]), "0,1.25,10,20.5 -1,-2,3,4")
 }

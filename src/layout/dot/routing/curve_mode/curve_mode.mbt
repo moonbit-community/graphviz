@@ -414,5 +414,5 @@ fn compute_curve_offset(input : CurveOffsetInput) -> CurveOffsetParams {
       }
     }
   }
-  { curve_offset, curve_skew }
+  { curve_offset, curve_skew, }
 }

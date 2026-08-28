@@ -50,18 +50,18 @@ fn fma_term(x : Double) -> FmaTerm {
   let exp_bits = (bits >> 52) & 0x7ff
   let frac = bits & 0x000f_ffff_ffff_ffff
   if exp_bits == 0x7ff {
-    { sign, exp: 0, sig: 0, special: true }
+    { sign, exp: 0, sig: 0, special: true, }
   } else if exp_bits == 0 {
     if frac == 0 {
-      { sign, exp: -1074, sig: 0, special: false }
+      { sign, exp: -1074, sig: 0, special: false, }
     } else {
-      { sign, exp: -1074, sig: frac, special: false }
+      { sign, exp: -1074, sig: frac, special: false, }
     }
   } else {
     let implicit : UInt64 = 1
     let exp = exp_bits.to_int() - 1023 - 52
     let sig = frac | (implicit << 52)
-    { sign, exp, sig, special: false }
+    { sign, exp, sig, special: false, }
   }
 }
 

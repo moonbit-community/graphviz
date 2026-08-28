@@ -17,25 +17,25 @@ test "apply_layout_tree_writeback writes rects only for non-html non-mrecord rec
 
   let record_layout = writeback_make_node_layout(
     record,
-    { x: 10.0, y: 20.0 },
+    { x: 10.0, y: 20.0, },
     2.0,
     1.0,
   )
   let mrecord_layout = writeback_make_node_layout(
     mrecord,
-    { x: 40.0, y: 20.0 },
+    { x: 40.0, y: 20.0, },
     2.0,
     1.0,
   )
   let html_record_layout = writeback_make_node_layout(
     html_record,
-    { x: 70.0, y: 20.0 },
+    { x: 70.0, y: 20.0, },
     2.0,
     1.0,
   )
   let layout = writeback_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 100.0, ury: 40.0 },
+    { llx: 0.0, lly: 0.0, urx: 100.0, ury: 40.0, },
     nodes=[record_layout, mrecord_layout, html_record_layout],
   )
 

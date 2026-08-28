@@ -112,7 +112,7 @@ pub fn finalize_edge_spline(
       x: tuned[last].x,
       y: tuned[last].y * (1.0 - head_bias) + base.out_head_anchor.y * head_bias,
     }
-    spline = { start: spline.start, end: spline.end, points: tuned }
+    spline = { start: spline.start, end: spline.end, points: tuned, }
   }
   spline
 }
@@ -143,9 +143,9 @@ fn edge_sameport_direct_flags(
     None => false
   }
   if swap_ends {
-    { tail_direct: samehead_direct, head_direct: sametail_direct }
+    { tail_direct: samehead_direct, head_direct: sametail_direct, }
   } else {
-    { tail_direct: sametail_direct, head_direct: samehead_direct }
+    { tail_direct: sametail_direct, head_direct: samehead_direct, }
   }
 }
 
@@ -236,7 +236,7 @@ fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
   } else {
     base.head_clip_enabled
   }
-  { tail_clip_enabled, head_clip_enabled }
+  { tail_clip_enabled, head_clip_enabled, }
 }
 
 ///|

@@ -40,7 +40,7 @@ fn apply_parallel_offset(
   let last = out.length() - 1
   while idx < last {
     let p = out[idx]
-    out[idx] = { x: p.x + offset, y: p.y }
+    out[idx] = { x: p.x + offset, y: p.y, }
     idx = idx + 1
   }
   out
@@ -89,7 +89,7 @@ pub fn edge_spline_for_polyline(
       edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
   } else {
-    { tail: 0.0, head: 0.0 }
+    { tail: 0.0, head: 0.0, }
   }
   let polyline = compact_polyline(raw_points)
   let bezier_points = if orthogonal {
@@ -125,7 +125,7 @@ pub fn edge_spline_for_polyline(
       orthogonal~,
     )
   } else {
-    { points: trimmed, start_point: None, end_point: None }
+    { points: trimmed, start_point: None, end_point: None, }
   }
   let points = adjust_tail_cluster_compound_segment(
     arrow_clipped.points,
@@ -134,7 +134,7 @@ pub fn edge_spline_for_polyline(
     include_head,
     tail_cluster_bbox,
   )
-  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points }
+  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points, }
 }
 
 ///|
@@ -165,14 +165,14 @@ pub fn edge_spline_for_points(
   arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   if points.length() == 0 {
-    return { start: None, end: None, points: [] }
+    return { start: None, end: None, points: [], }
   }
   let arrow_lengths = if include_tail || include_head {
     arrow_length_for_edge_oriented(
       edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
   } else {
-    { tail: 0.0, head: 0.0 }
+    { tail: 0.0, head: 0.0, }
   }
   let bezier = apply_parallel_offset(
     route_bezier_points(
@@ -208,7 +208,7 @@ pub fn edge_spline_for_points(
       arrow_clip_eps,
     )
   } else {
-    { points: trimmed, start_point: None, end_point: None }
+    { points: trimmed, start_point: None, end_point: None, }
   }
   let clipped = adjust_tail_cluster_compound_segment(
     arrow_clipped.points,
@@ -255,14 +255,14 @@ pub fn edge_spline_for_bezier_points(
   arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   if bezier.length() == 0 {
-    return { start: None, end: None, points: [] }
+    return { start: None, end: None, points: [], }
   }
   let arrow_lengths = if include_tail || include_head {
     arrow_length_for_edge_oriented(
       edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
   } else {
-    { tail: 0.0, head: 0.0 }
+    { tail: 0.0, head: 0.0, }
   }
   let bezier_points = if parallel_offset != 0.0 {
     apply_parallel_offset(bezier, parallel_offset)
@@ -295,7 +295,7 @@ pub fn edge_spline_for_bezier_points(
       arrow_clip_eps,
     )
   } else {
-    { points: trimmed, start_point: None, end_point: None }
+    { points: trimmed, start_point: None, end_point: None, }
   }
   let clipped = adjust_tail_cluster_compound_segment(
     arrow_clipped.points,
@@ -383,7 +383,7 @@ pub fn edge_spline_for_line(
       edge, include_tail, include_head, arrow_len_override, arrow_swapped,
     )
   } else {
-    { tail: 0.0, head: 0.0 }
+    { tail: 0.0, head: 0.0, }
   }
   let mut points = line_bezier_points(
     tail_center, head_center, tail_slope, head_slope, rankdir, curve_offset, curve_skew,
@@ -426,7 +426,7 @@ pub fn edge_spline_for_line(
       arrow_clip_eps,
     )
   } else {
-    { points, start_point: None, end_point: None }
+    { points, start_point: None, end_point: None, }
   }
   points = adjust_tail_cluster_compound_segment(
     arrow_clipped.points,
@@ -435,5 +435,5 @@ pub fn edge_spline_for_line(
     include_head,
     tail_cluster_bbox,
   )
-  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points }
+  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points, }
 }

@@ -31,7 +31,7 @@ fn empty_vnode_info() -> @setup.EdgeVnodeInfo {
   let vnodes_by_rank : Map[Int, Array[String]] = Map([])
   let edge_vnodes : Map[String, Array[String]] = Map([])
   let vnode_clusters : Map[String, String] = Map([])
-  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
+  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters, }
 }
 
 ///|

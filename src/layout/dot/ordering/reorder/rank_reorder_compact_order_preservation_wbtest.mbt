@@ -110,7 +110,7 @@ test "rank_reorder preserves initial tie order for symmetric fixed case" {
     flat_edges: [],
     ranks: [[0, 2], [1, 3]],
   }
-  let output : MincrossOutput = { case_id: 1001, ranks: [[0, 2], [1, 3]] }
+  let output : MincrossOutput = { case_id: 1001, ranks: [[0, 2], [1, 3]], }
 
   run_fixed_rank_reorder_case(input, output)
 }
@@ -223,7 +223,7 @@ test "rank_reorder recovers nlist tie order from reversed seed" {
     flat_edges: [],
     ranks: [[2, 0], [1, 3]],
   }
-  let output : MincrossOutput = { case_id: 1002, ranks: [[0, 2], [1, 3]] }
+  let output : MincrossOutput = { case_id: 1002, ranks: [[0, 2], [1, 3]], }
 
   run_fixed_rank_reorder_case(input, output)
 }
@@ -279,7 +279,7 @@ test "rank_reorder keeps flip-enabled single chains stable" {
     flat_edges: [],
     ranks: [[0], [1]],
   }
-  let output : MincrossOutput = { case_id: 1003, ranks: [[0], [1]] }
+  let output : MincrossOutput = { case_id: 1003, ranks: [[0], [1]], }
 
   run_mincross_case_with_name_order(input, output, Map([]))
 }
@@ -333,13 +333,13 @@ test "rank_reorder keeps total flat-label constraints in source order" {
     ],
     edges: [],
     flat_edges: [
-      { tail: 0, head: 1 },
-      { tail: 0, head: 2 },
-      { tail: 1, head: 2 },
+      { tail: 0, head: 1, },
+      { tail: 0, head: 2, },
+      { tail: 1, head: 2, },
     ],
     ranks: [[0, 1, 2]],
   }
-  let output : MincrossOutput = { case_id: 1004, ranks: [[0, 1, 2]] }
+  let output : MincrossOutput = { case_id: 1004, ranks: [[0, 1, 2]], }
 
   run_mincross_case_with_name_order(input, output, Map([]))
 }

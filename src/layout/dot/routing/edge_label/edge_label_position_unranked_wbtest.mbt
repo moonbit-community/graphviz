@@ -16,7 +16,7 @@ test "edge_label_pos_from_input offsets unranked labels along the segment normal
   let pos = match
     edge_label_pos_from_input(
       input,
-      _ => Some({ width: 8.0, height: 4.0 }),
+      _ => Some({ width: 8.0, height: 4.0, }),
       12.0,
     ) {
     Some(value) => value
@@ -55,7 +55,7 @@ test "edge_label_pos_from_input keeps the base position for multi-segment diagon
   let pos = match
     edge_label_pos_from_input(
       input,
-      _ => Some({ width: 10.0, height: 6.0 }),
+      _ => Some({ width: 10.0, height: 6.0, }),
       12.0,
     ) {
     Some(value) => value

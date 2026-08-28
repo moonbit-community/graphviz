@@ -118,5 +118,5 @@ fn build_reverse_merge_metadata(
       None => ()
     }
   }
-  { merged_edge_weight_bonus, merged_edge_skip }
+  { merged_edge_weight_bonus, merged_edge_skip, }
 }

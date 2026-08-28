@@ -10,7 +10,7 @@ test "edge_port_label_pos returns None without attrs or usable spline geometry" 
 
   assert_eq(
     edge_port_label_pos(
-      { edge, spline, is_head: false },
+      { edge, spline, is_head: false, },
       -25.0,
       -180.0,
       10.0,
@@ -31,7 +31,7 @@ test "edge_port_label_pos returns None without attrs or usable spline geometry" 
   }
   assert_eq(
     edge_port_label_pos(
-      { edge, spline: short_spline, is_head: true },
+      { edge, spline: short_spline, is_head: true, },
       -25.0,
       -180.0,
       10.0,
@@ -52,7 +52,7 @@ test "edge_port_label_pos uses marker endpoints when dir enables both arrow mark
 
   let tail = match
     edge_port_label_pos(
-      { edge, spline, is_head: false },
+      { edge, spline, is_head: false, },
       -25.0,
       -180.0,
       10.0,
@@ -63,7 +63,7 @@ test "edge_port_label_pos uses marker endpoints when dir enables both arrow mark
   }
   let head = match
     edge_port_label_pos(
-      { edge, spline, is_head: true },
+      { edge, spline, is_head: true, },
       -25.0,
       -180.0,
       10.0,
@@ -103,12 +103,12 @@ test "edge_port_label_pos_for_dot uses bezier fallback and dot defaults when mar
   let spline = straight_spline_with_markers()
 
   let tail = match
-    edge_port_label_pos_for_dot({ edge, spline, is_head: false }) {
+    edge_port_label_pos_for_dot({ edge, spline, is_head: false, }) {
     Some(value) => value
     None => fail("expected tail port label pos")
   }
   let head = match
-    edge_port_label_pos_for_dot({ edge, spline, is_head: true }) {
+    edge_port_label_pos_for_dot({ edge, spline, is_head: true, }) {
     Some(value) => value
     None => fail("expected head port label pos")
   }

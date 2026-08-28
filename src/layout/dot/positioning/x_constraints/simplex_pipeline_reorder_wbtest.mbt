@@ -24,10 +24,14 @@ test "constraint graph reorder puts slack nodes first and preserves rank mapping
   @network_simplex.set_node_rank(graph, index["rn"], -2)
   ignore(@network_simplex.add_edge(graph, index["a"], index["b"], 3, 5))
 
-  let order = build_constraint_reorder({ graph, index, nlist_order: ["a", "b"] })
+  let order = build_constraint_reorder({
+    graph,
+    index,
+    nlist_order: ["a", "b"],
+  })
   assert_eq(order, [3, 1, 2, 0])
 
-  let reordered = reorder_constraint_graph({ graph, index, order })
+  let reordered = reorder_constraint_graph({ graph, index, order, })
   assert_eq(reordered.index.get("rn"), Some(0))
   assert_eq(reordered.index.get("ln"), Some(1))
   assert_eq(reordered.index.get("b"), Some(2))

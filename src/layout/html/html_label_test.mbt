@@ -68,8 +68,8 @@ fn row_span_table() -> HtmlTable {
   let tall = make_text_cell("Tall", 1, 2)
   let top = make_text_cell("Top", 1, 1)
   let bottom = make_text_cell("Bottom", 1, 1)
-  let row0 = HtmlRow::{ cells: [tall, top] }
-  let row1 = HtmlRow::{ cells: [bottom] }
+  let row0 = HtmlRow::{ cells: [tall, top], }
+  let row1 = HtmlRow::{ cells: [bottom], }
   HtmlTable::{
     rows: [row0, row1],
     border_pt: 0.0,
@@ -102,8 +102,8 @@ fn col_span_table() -> HtmlTable {
   let wide = make_text_cell("Wide", 2, 1)
   let left = make_text_cell("Left", 1, 1)
   let right = make_text_cell("Right", 1, 1)
-  let row0 = HtmlRow::{ cells: [wide] }
-  let row1 = HtmlRow::{ cells: [left, right] }
+  let row0 = HtmlRow::{ cells: [wide], }
+  let row1 = HtmlRow::{ cells: [left, right], }
   HtmlTable::{
     rows: [row0, row1],
     border_pt: 0.0,
@@ -288,7 +288,7 @@ test "html label parses sizing attributes" {
 ///|
 test "html table size includes border and spacing" {
   let cell = make_text_cell("x", 1, 1)
-  let row = HtmlRow::{ cells: [cell, cell] }
+  let row = HtmlRow::{ cells: [cell, cell], }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 1.0,
@@ -305,7 +305,7 @@ test "html table size includes border and spacing" {
 ///|
 test "html table size respects colspan" {
   let cell = make_text_cell("x", 2, 1)
-  let row = HtmlRow::{ cells: [cell] }
+  let row = HtmlRow::{ cells: [cell], }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 1.0,
@@ -338,7 +338,7 @@ test "html table size includes padding and min size" {
 ///|
 test "html table layout scales cell rect" {
   let cell = make_text_cell("x", 1, 1)
-  let row = HtmlRow::{ cells: [cell] }
+  let row = HtmlRow::{ cells: [cell], }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 0.0,
@@ -347,7 +347,7 @@ test "html table layout scales cell rect" {
     cell_padding_pt: 0.0,
     bg_color: None,
   }
-  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 40.0 }
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 40.0, }
   let layout = html_table_layout(table, rect, fixed_cell_size)
   assert_eq(layout.cells.length(), 1)
   assert_true(Double::is_close(layout.scale_x, 1.0, absolute_tolerance=0.01))
@@ -396,7 +396,7 @@ test "html table metrics distribute rowspan heights" {
 ///|
 test "html table layout spans rows" {
   let table = row_span_table()
-  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 30.0, ury: 35.0 }
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 30.0, ury: 35.0, }
   let layout = html_table_layout(table, rect, row_span_cell_size)
   match find_cell_rect(layout.cells, "Tall") {
     Some(cell_rect) => {
@@ -416,7 +416,7 @@ test "html table layout spans rows" {
 ///|
 test "html table layout spans columns" {
   let table = col_span_table()
-  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 50.0, ury: 30.0 }
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 50.0, ury: 30.0, }
   let layout = html_table_layout(table, rect, col_span_cell_size)
   match find_cell_rect(layout.cells, "Wide") {
     Some(cell_rect) => {

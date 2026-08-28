@@ -19,7 +19,7 @@ test "edge_label_pos_from_input uses rank axes and width-based pad on ranked lab
   let explicit_axis_pos = match
     edge_label_pos_from_input(
       input,
-      _ => Some({ width: 8.0, height: 4.0 }),
+      _ => Some({ width: 8.0, height: 4.0, }),
       12.0,
     ) {
     Some(value) => value
@@ -50,7 +50,7 @@ test "edge_label_pos_from_input uses rank axes and width-based pad on ranked lab
   let padded_pos = match
     edge_label_pos_from_input(
       padded_input,
-      _ => Some({ width: 12.0, height: 4.0 }),
+      _ => Some({ width: 12.0, height: 4.0, }),
       10.0,
     ) {
     Some(value) => value
@@ -76,7 +76,7 @@ test "edge_label_pos_from_input maps axes for LR and skips metric offset on self
   let pos = match
     edge_label_pos_from_input(
       input,
-      _ => Some({ width: 8.0, height: 4.0 }),
+      _ => Some({ width: 8.0, height: 4.0, }),
       12.0,
     ) {
     Some(value) => value
@@ -103,7 +103,7 @@ test "edge_label_pos_from_input falls back on ranked axis misses and applies neg
   let pos = match
     edge_label_pos_from_input(
       input,
-      _ => Some({ width: 12.0, height: 4.0 }),
+      _ => Some({ width: 12.0, height: 4.0, }),
       100.0,
     ) {
     Some(value) => value

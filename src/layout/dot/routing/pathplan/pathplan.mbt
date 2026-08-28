@@ -137,11 +137,11 @@ fn load_triangle(
   c : Int,
 ) -> Bool {
   let edges : Array[TriEdge] = [
-    { a, b, right: None },
-    { a: b, b: c, right: None },
-    { a: c, b: a, right: None },
+    { a, b, right: None, },
+    { a: b, b: c, right: None, },
+    { a: c, b: a, right: None, },
   ]
-  triangles.push({ mark: 0, edges })
+  triangles.push({ mark: 0, edges, })
   true
 }
 
@@ -299,7 +299,7 @@ fn find_deque_split(dq : Deque, nodes : Array[PathNode], node_idx : Int) -> Int 
 fn prepare_polygon_nodes(points : Array[@geom.Point]) -> Array[PathNode] {
   let nodes : Array[PathNode] = []
   for point in points {
-    nodes.push({ point, link: None })
+    nodes.push({ point, link: None, })
   }
   nodes
 }
@@ -392,9 +392,9 @@ pub fn shortest_path_in_poly(
   let normalized = normalize_polygon_order(poly_points)
   let nodes = prepare_polygon_nodes(normalized)
   let start_idx = nodes.length()
-  nodes.push({ point: start, link: None })
+  nodes.push({ point: start, link: None, })
   let end_idx = nodes.length()
-  nodes.push({ point: end, link: None })
+  nodes.push({ point: end, link: None, })
   let point_indices : Array[Int] = []
   for i in 0..<normalized.length() {
     point_indices.push(i)

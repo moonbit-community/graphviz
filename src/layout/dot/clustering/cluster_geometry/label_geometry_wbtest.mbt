@@ -90,7 +90,7 @@ test "expand_cluster_label_bbox_for_position_stage grows the label side and widt
     Some(value) => value
     None => fail("expected top cluster label metrics")
   }
-  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 }
+  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0, }
   let top_width = top_metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0
   let top_extra = if top_width > 10.0 { (top_width - 10.0) / 2.0 } else { 0.0 }
   let top_expected : @geom.Rect = {

@@ -20,9 +20,9 @@ pub fn layout_port_offset(
 ) -> @geom.Point {
   match rankdir {
     RankDir::TB => offset
-    RankDir::BT => { x: offset.x, y: -offset.y }
-    RankDir::LR => { x: offset.y, y: -offset.x }
-    RankDir::RL => { x: -offset.y, y: offset.x }
+    RankDir::BT => { x: offset.x, y: -offset.y, }
+    RankDir::LR => { x: offset.y, y: -offset.x, }
+    RankDir::RL => { x: -offset.y, y: offset.x, }
   }
 }
 
@@ -43,7 +43,7 @@ pub fn layout_ports_from_final(
       RankDir::LR | RankDir::RL => @node_primitives.swap_node_size(port.size)
       _ => port.size
     }
-    rotated[name] = { center, size, sides: port.sides }
+    rotated[name] = { center, size, sides: port.sides, }
   }
   rotated
 }
@@ -160,7 +160,7 @@ fn resolve_dynamic_port_anchor(
 ) -> DynamicPortAnchor {
   let sides = raw_port.sides
   if sides == 0 || sides == PORT_SIDE_ALL {
-    return { anchor: None, side: 0 }
+    return { anchor: None, side: 0, }
   }
   let half_w = raw_port.size.width_pt / 2.0
   let half_h = raw_port.size.height_pt / 2.0
@@ -196,11 +196,11 @@ fn resolve_dynamic_port_anchor(
   consider(PORT_SIDE_TOP, @edge_spline.point(mid_x, port_rect.ury))
   consider(PORT_SIDE_LEFT, @edge_spline.point(port_rect.llx, mid_y))
   if !seen {
-    return { anchor: None, side: 0 }
+    return { anchor: None, side: 0, }
   }
   let offset = layout_port_offset(best_point, rankdir)
   let anchor = @edge_spline.point_add(node_pos, offset)
-  { anchor: Some(anchor), side: invflip_side(best_side, rankdir) }
+  { anchor: Some(anchor), side: invflip_side(best_side, rankdir), }
 }
 
 ///|
@@ -230,24 +230,24 @@ fn resolve_label_port_for_node(
       match value.name {
         Some(name) =>
           if ports.get(name) is Some(_) {
-            { name: Some(name), effective_compass: value.compass }
+            { name: Some(name), effective_compass: value.compass, }
           } else {
-            { name: None, effective_compass: value.compass }
+            { name: None, effective_compass: value.compass, }
           }
         None =>
           match value.compass {
             Some(compass) => {
               let fallback_name = compass_port_name(compass)
               if ports.get(fallback_name) is Some(_) {
-                { name: Some(fallback_name), effective_compass: None }
+                { name: Some(fallback_name), effective_compass: None, }
               } else {
-                { name: None, effective_compass: Some(compass) }
+                { name: None, effective_compass: Some(compass), }
               }
             }
-            None => { name: None, effective_compass: None }
+            None => { name: None, effective_compass: None, }
           }
       }
-    None => { name: None, effective_compass: None }
+    None => { name: None, effective_compass: None, }
   }
 }
 
@@ -270,8 +270,8 @@ fn resolve_label_port_for_graph(
     Some(ports) => resolve_label_port_for_node(port, ports)
     None =>
       match port {
-        Some(value) => { name: None, effective_compass: value.compass }
-        None => { name: None, effective_compass: None }
+        Some(value) => { name: None, effective_compass: value.compass, }
+        None => { name: None, effective_compass: None, }
       }
   }
 }
@@ -292,11 +292,11 @@ pub fn dynamic_port_anchor_for_edge(
     node_name, port, raw_ports_map,
   )
   if resolved_port.effective_compass is Some(_) {
-    return { anchor: None, side: 0, is_dynamic: false }
+    return { anchor: None, side: 0, is_dynamic: false, }
   }
   let port_name = match resolved_port.name {
     Some(value) => value
-    None => return { anchor: None, side: 0, is_dynamic: false }
+    None => return { anchor: None, side: 0, is_dynamic: false, }
   }
   match raw_ports_map.get(node_name) {
     Some(raw_ports) =>
@@ -313,11 +313,11 @@ pub fn dynamic_port_anchor_for_edge(
           // and extra record-border shifts introduce 0.5pt drift in structs/records.
           let adjusted_anchor = resolved_anchor.anchor
           ignore(record_border_adjust)
-          { anchor: adjusted_anchor, side: effective_side, is_dynamic: true }
+          { anchor: adjusted_anchor, side: effective_side, is_dynamic: true, }
         }
-        None => { anchor: None, side: 0, is_dynamic: false }
+        None => { anchor: None, side: 0, is_dynamic: false, }
       }
-    None => { anchor: None, side: 0, is_dynamic: false }
+    None => { anchor: None, side: 0, is_dynamic: false, }
   }
 }
 
@@ -447,15 +447,15 @@ pub fn port_geometry(
   )
   let name = match resolved_port.name {
     Some(value) => value
-    None => return { center: node_pos, size: node_size }
+    None => return { center: node_pos, size: node_size, }
   }
   match label_ports_map.get(node_name) {
     Some(ports) =>
       match ports.get(name) {
-        Some(port_info) => { center: port_info.center, size: port_info.size }
-        None => { center: node_pos, size: node_size }
+        Some(port_info) => { center: port_info.center, size: port_info.size, }
+        None => { center: node_pos, size: node_size, }
       }
-    None => { center: node_pos, size: node_size }
+    None => { center: node_pos, size: node_size, }
   }
 }
 

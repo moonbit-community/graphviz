@@ -359,11 +359,11 @@ fn append_html_text_span(
     let last_index = spans.length() - 1
     let last = spans[last_index]
     if last.color == color {
-      spans[last_index] = { text: last.text + text, color }
+      spans[last_index] = { text: last.text + text, color, }
       return
     }
   }
-  spans.push({ text, color })
+  spans.push({ text, color, })
 }
 
 ///|
@@ -576,7 +576,7 @@ pub fn parse_html_label(label : String) -> HtmlLabel? {
       for ch in value {
         chars.push(ch)
       }
-      let parser = HtmlParser::{ chars, index: 0 }
+      let parser = HtmlParser::{ chars, index: 0, }
       html_parser_skip_whitespace(parser)
       match html_parse_tag(parser) {
         Some(HtmlTag::Start(name, attrs, _self_closing)) =>
@@ -625,7 +625,7 @@ fn html_table_placements(
       while row_spans.length() < needed {
         row_spans.push(0)
       }
-      placements.push({ cell, row: row_index, col: col_index })
+      placements.push({ cell, row: row_index, col: col_index, })
       if cell.row_span > 1 {
         for i in col_index..<needed {
           row_spans[i] = cell.row_span
@@ -761,7 +761,7 @@ pub fn html_table_metrics(
       total_height = total_height + height
     }
   }
-  { placements, col_widths, row_heights, total_width, total_height }
+  { placements, col_widths, row_heights, total_width, total_height, }
 }
 
 ///|
@@ -790,7 +790,7 @@ pub fn html_table_layout(
 ) -> HtmlTableLayout {
   let metrics = html_table_metrics(table, cell_size)
   if metrics.total_width <= 0.0 || metrics.total_height <= 0.0 {
-    return { cells: [], scale_x: 1.0, scale_y: 1.0 }
+    return { cells: [], scale_x: 1.0, scale_y: 1.0, }
   }
   let border_pt = table_border_pt(table)
   let spacing = table.cell_spacing_pt
@@ -852,7 +852,7 @@ pub fn html_table_layout(
     let urx = col_positions[end_col].1
     let ury = row_positions[start_row].0
     let lly = row_positions[end_row].1
-    cells.push({ rect: { llx, lly, urx, ury }, cell: placement.cell })
+    cells.push({ rect: { llx, lly, urx, ury, }, cell: placement.cell, })
   }
-  { cells, scale_x: 1.0, scale_y: 1.0 }
+  { cells, scale_x: 1.0, scale_y: 1.0, }
 }

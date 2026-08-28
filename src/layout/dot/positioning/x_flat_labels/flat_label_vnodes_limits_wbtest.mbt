@@ -11,7 +11,7 @@ test "flat_limits shifts insertion right when an earlier flat label occupies the
   order_index["left_label"] = 0
 
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
-  flat_label_nodes["left_label"] = { tail: "x", head: "a", rank: -1 }
+  flat_label_nodes["left_label"] = { tail: "x", head: "a", rank: -1, }
 
   let vnode_out_heads : Map[String, Array[String]] = Map([])
   assert_eq(

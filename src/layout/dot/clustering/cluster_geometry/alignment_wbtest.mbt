@@ -26,13 +26,13 @@ test "compute_nodes_bbox ignores nodes missing geometry and returns none when em
   ignore(b)
 
   let positions : Map[String, @geom.Point] = Map([])
-  positions["a"] = { x: 10.0, y: 20.0 }
+  positions["a"] = { x: 10.0, y: 20.0, }
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.node_size_from_points(8.0, 6.0)
 
   assert_eq(
     compute_nodes_bbox(graph, positions, sizes),
-    Some({ llx: 6.0, lly: 17.0, urx: 14.0, ury: 23.0 }),
+    Some({ llx: 6.0, lly: 17.0, urx: 14.0, ury: 23.0, }),
   )
 
   let empty_graph = @cgraph.Graph::new(
@@ -50,10 +50,10 @@ test "adjust_cluster_positions rounds cluster x bounds and shifts member nodes a
   ignore(a)
 
   let positions : Map[String, @geom.Point] = Map([])
-  positions["a"] = { x: 5.2, y: 5.0 }
+  positions["a"] = { x: 5.2, y: 5.0, }
   let vnode_positions : Map[String, @geom.Point] = Map([])
-  vnode_positions["v_cluster"] = { x: 8.0, y: 5.0 }
-  vnode_positions["v_other"] = { x: 30.0, y: 5.0 }
+  vnode_positions["v_cluster"] = { x: 8.0, y: 5.0, }
+  vnode_positions["v_other"] = { x: 30.0, y: 5.0, }
   let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v_cluster"] = "cluster_0"
   vnode_clusters["v_other"] = "cluster_other"
@@ -70,10 +70,10 @@ test "adjust_cluster_positions rounds cluster x bounds and shifts member nodes a
     expand_cluster_label_bbox: (_graph, rect) => rect,
   })
 
-  assert_eq(bbox, Some({ llx: 0.0, lly: 3.0, urx: 10.0, ury: 7.0 }))
-  assert_point_close(positions.get("a"), { x: 5.0, y: 5.0 })
-  assert_point_close(vnode_positions.get("v_cluster"), { x: 7.8, y: 5.0 })
-  assert_point_close(vnode_positions.get("v_other"), { x: 30.0, y: 5.0 })
+  assert_eq(bbox, Some({ llx: 0.0, lly: 3.0, urx: 10.0, ury: 7.0, }))
+  assert_point_close(positions.get("a"), { x: 5.0, y: 5.0, })
+  assert_point_close(vnode_positions.get("v_cluster"), { x: 7.8, y: 5.0, })
+  assert_point_close(vnode_positions.get("v_other"), { x: 30.0, y: 5.0, })
 }
 
 ///|
@@ -86,8 +86,8 @@ test "adjust_cluster_positions merges child cluster bounds into the root bbox" {
   ignore(child_node)
 
   let positions : Map[String, @geom.Point] = Map([])
-  positions["root_node"] = { x: 20.0, y: 5.0 }
-  positions["child_node"] = { x: 5.2, y: 5.0 }
+  positions["root_node"] = { x: 20.0, y: 5.0, }
+  positions["child_node"] = { x: 5.2, y: 5.0, }
   let vnode_positions : Map[String, @geom.Point] = Map([])
   let vnode_clusters : Map[String, String] = Map([])
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
@@ -104,7 +104,7 @@ test "adjust_cluster_positions merges child cluster bounds into the root bbox" {
     expand_cluster_label_bbox: (_graph, rect) => rect,
   })
 
-  assert_eq(bbox, Some({ llx: 0.0, lly: 3.0, urx: 22.0, ury: 7.0 }))
-  assert_point_close(positions.get("root_node"), { x: 20.0, y: 5.0 })
-  assert_point_close(positions.get("child_node"), { x: 5.0, y: 5.0 })
+  assert_eq(bbox, Some({ llx: 0.0, lly: 3.0, urx: 22.0, ury: 7.0, }))
+  assert_point_close(positions.get("root_node"), { x: 20.0, y: 5.0, })
+  assert_point_close(positions.get("child_node"), { x: 5.0, y: 5.0, })
 }

@@ -19,7 +19,7 @@ test "recover_pathplan_slack consumes segment vnodes in rank direction and only 
     { 2: 20.0, 1: 10.0 },
   )
   let spline_result : EdgeSplineResult = {
-    spline: { start: None, end: None, points: [] },
+    spline: { start: None, end: None, points: [], },
     label_pad_boost: 0.0,
     using_pathplan: true,
     pathplan_boxes: [],
@@ -29,7 +29,7 @@ test "recover_pathplan_slack consumes segment vnodes in rank direction and only 
       {
         points: [],
         barriers: [],
-        boxes: [{ llx: 0.0, lly: 0.0, urx: 10.0, ury: 4.0 }],
+        boxes: [{ llx: 0.0, lly: 0.0, urx: 10.0, ury: 4.0, }],
         vnodes: ["v1", "v2"],
       },
     ],
@@ -104,8 +104,8 @@ test "recover_pathplan_slack falls back to limited pathplan boxes when segments 
     label_pad_boost: 0.0,
     using_pathplan: true,
     pathplan_boxes: [
-      { llx: -4.0, lly: -4.0, urx: 12.0, ury: 4.0 },
-      { llx: 18.0, lly: -4.0, urx: 34.0, ury: 4.0 },
+      { llx: -4.0, lly: -4.0, urx: 12.0, ury: 4.0, },
+      { llx: 18.0, lly: -4.0, urx: 34.0, ury: 4.0, },
     ],
     pathplan_points: [
       @edge_spline.point(0.0, 0.0),

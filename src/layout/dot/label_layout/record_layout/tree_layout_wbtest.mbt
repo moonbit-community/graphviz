@@ -5,7 +5,7 @@
 ///|
 test "layout_record_tree assigns group orientation and side masks" {
   let nodes = record_nodes("<left>a|{<top>b|<bottom>c}|<right>d")
-  let rect : @geom.Rect = { llx: -120.0, lly: -40.0, urx: 120.0, ury: 40.0 }
+  let rect : @geom.Rect = { llx: -120.0, lly: -40.0, urx: 120.0, ury: 40.0, }
   let layout = layout_record_tree(
     nodes,
     rect,

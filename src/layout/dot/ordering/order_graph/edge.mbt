@@ -98,7 +98,7 @@ fn build_edge_index_impl(
       None => children[tail] = [head]
     }
   }
-  { parents, children }
+  { parents, children, }
 }
 
 ///|
@@ -598,5 +598,5 @@ pub fn build_edge_index_with_vnodes(
       None => children[prev] = [high]
     }
   }
-  { parents, children }
+  { parents, children, }
 }

@@ -8,7 +8,7 @@ test "edge route type classifies regular flat and self edges" {
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
   let flat_edge = build_route_base(regular_edge, is_flat_edge=true)
   let self_edge = graph.edge(graph.node("n"), graph.node("n"))
-  let explicit_port = Some(@cgraph.Port::{ name: Some("p"), compass: None })
+  let explicit_port = Some(@cgraph.Port::{ name: Some("p"), compass: None, })
   let self_noport = build_route_base(
     self_edge,
     orig_tail_name="n",
@@ -33,8 +33,8 @@ test "edge route type classifies regular flat and self edges" {
 test "edge_port_cmp_info flips flat edge ports when node order is reversed" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
-  let explicit_tail = Some(@cgraph.Port::{ name: Some("tail"), compass: None })
-  let explicit_head = Some(@cgraph.Port::{ name: Some("head"), compass: None })
+  let explicit_tail = Some(@cgraph.Port::{ name: Some("tail"), compass: None, })
+  let explicit_head = Some(@cgraph.Port::{ name: Some("head"), compass: None, })
   let order_index : Map[String, Int] = { "a": 2, "b": 0 }
   let base = build_route_base(
     edge,

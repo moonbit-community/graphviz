@@ -101,7 +101,7 @@ pub fn graph_label_metrics_with(
         let (width_pt, height_pt) = label_text_dimensions_for(
           value, font, font_size_pt,
         )
-        Some({ width_pt, height_pt })
+        Some({ width_pt, height_pt, })
       }
     None => None
   }
@@ -125,7 +125,7 @@ pub fn graph_label_pos(
     LabelLoc::Top => bbox.ury - label_height_pt / 2.0
     LabelLoc::Bottom => bbox.lly + label_height_pt / 2.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|
@@ -147,7 +147,7 @@ pub fn graph_label_pos_flip(
     LabelJust::Right => bbox.lly + label_height_pt / 2.0
     LabelJust::Center => (bbox.lly + bbox.ury) / 2.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|
@@ -175,5 +175,5 @@ pub fn expand_bbox_for_label(
     llx = llx - extra / 2.0
     urx = urx + extra / 2.0
   }
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }

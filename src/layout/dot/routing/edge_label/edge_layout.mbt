@@ -80,7 +80,7 @@ pub fn build_edge_layout(input : EdgeLayoutBuildInput) -> DotLayoutEdge {
     @edge_label_metrics.edge_mid_label_width_pt(edge),
   )
   let mid_label_metrics : EdgeLabelMetrics? = if base.mid_label_width_pt > 0.0 {
-    Some({ width: base.mid_label_width_pt, height: base.mid_label_height_pt })
+    Some({ width: base.mid_label_width_pt, height: base.mid_label_height_pt, })
   } else {
     None
   }
@@ -116,7 +116,7 @@ pub fn build_edge_layout(input : EdgeLayoutBuildInput) -> DotLayoutEdge {
       edge => {
         match @edge_label_metrics.edge_mid_label_metrics(edge) {
           Some(metrics) =>
-            Some({ width: metrics.width, height: metrics.height })
+            Some({ width: metrics.width, height: metrics.height, })
           None => None
         }
       },

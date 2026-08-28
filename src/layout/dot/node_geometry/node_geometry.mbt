@@ -47,9 +47,9 @@ fn apply_label_padding_for_shape(
   pad_y_pt : Double,
 ) -> SizePt {
   if shape == "plain" || (width_pt <= 0.0 && height_pt <= 0.0) {
-    { width_pt, height_pt }
+    { width_pt, height_pt, }
   } else {
-    { width_pt: width_pt + pad_x_pt, height_pt: height_pt + pad_y_pt }
+    { width_pt: width_pt + pad_x_pt, height_pt: height_pt + pad_y_pt, }
   }
 }
 
@@ -236,7 +236,7 @@ pub fn node_size(
       padding.pad_y_pt,
     )
   } else {
-    { width_pt: 0.0, height_pt: 0.0 }
+    { width_pt: 0.0, height_pt: 0.0, }
   }
   let polygon_shape = match builtin_polygon_attrs(node, shape) {
     Some(attrs) => Some(attrs)

@@ -61,7 +61,7 @@ fn build_vnode_order_state(input : XposVNodeOrderInput) -> XposVNodeOrderState {
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() > 0 {
     has_vnode_order = true
   }
-  { vnode_order_keys, has_vnode_order }
+  { vnode_order_keys, has_vnode_order, }
 }
 
 ///|

@@ -23,7 +23,7 @@ test "finalize_xlabels writes update maps into root and subgraph layouts and exp
   let existing_edge_xlabel = @edge_spline.point(9.0, 15.0)
   let layout = xlabel_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     nodes=[
       xlabel_make_node_layout(
         a,
@@ -47,7 +47,7 @@ test "finalize_xlabels writes update maps into root and subgraph layouts and exp
     subgraphs=[
       xlabel_make_layout_tree(
         cluster,
-        { llx: 1.0, lly: 1.0, urx: 2.0, ury: 2.0 },
+        { llx: 1.0, lly: 1.0, urx: 2.0, ury: 2.0, },
         nodes=[
           xlabel_make_node_layout(c, @edge_spline.point(20.0, 0.0), 1.0, 0.5),
         ],
@@ -124,10 +124,10 @@ test "finalize_xlabels writes update maps into root and subgraph layouts and exp
     @edge_label.expand_bbox_for_label_pos(
       layout.bbox,
       Some(existing_node_xlabel),
-      Some({ width: node_metrics.width, height: node_metrics.height }),
+      Some({ width: node_metrics.width, height: node_metrics.height, }),
     ),
     Some(existing_edge_xlabel),
-    Some({ width: edge_metrics.width, height: edge_metrics.height }),
+    Some({ width: edge_metrics.width, height: edge_metrics.height, }),
   )
   for label in labels {
     if !label.set {
@@ -136,7 +136,7 @@ test "finalize_xlabels writes update maps into root and subgraph layouts and exp
     expected_bbox = @edge_label.expand_bbox_for_label_pos(
       expected_bbox,
       Some(xlabel_center(label)),
-      Some({ width: label.width, height: label.height }),
+      Some({ width: label.width, height: label.height, }),
     )
   }
 
@@ -176,7 +176,7 @@ test "finalize_xlabels flips existing xlabel metrics when expanding bbox" {
   let edge_xlabel = @edge_spline.point(-10.0, 8.0)
   let layout = xlabel_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     nodes=[
       xlabel_make_node_layout(
         a,
@@ -210,10 +210,10 @@ test "finalize_xlabels flips existing xlabel metrics when expanding bbox" {
     @edge_label.expand_bbox_for_label_pos(
       layout.bbox,
       Some(node_xlabel),
-      Some({ width: node_dims.width, height: node_dims.height }),
+      Some({ width: node_dims.width, height: node_dims.height, }),
     ),
     Some(edge_xlabel),
-    Some({ width: edge_dims.width, height: edge_dims.height }),
+    Some({ width: edge_dims.width, height: edge_dims.height, }),
   )
 
   assert_eq(updated.bbox, expected_bbox)

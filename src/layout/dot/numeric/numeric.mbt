@@ -116,7 +116,7 @@ pub fn parse_graph_size_pt_attr(graph : @cgraph.Graph) -> GraphSizePt? {
       if width_in <= 0.0 || height_in <= 0.0 {
         return None
       }
-      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
+      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0, })
     }
     None => None
   }

@@ -164,7 +164,7 @@ fn apply_cluster_rank_heights_inner(
   if ht2 > current_bottom {
     input.rank_ht2[min_rank_value] = ht2
   }
-  Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
+  Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2, })
 }
 
 ///|

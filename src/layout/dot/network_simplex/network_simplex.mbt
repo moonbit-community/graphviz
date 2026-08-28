@@ -60,7 +60,7 @@ pub(all) struct NsGraph {
 
 ///|
 pub fn new_graph() -> NsGraph {
-  { nodes: [], edges: [], tree_edges: [] }
+  { nodes: [], edges: [], tree_edges: [], }
 }
 
 ///|
@@ -410,7 +410,7 @@ fn tight_subtree_search(
   node_subtree : Array[Int],
   subtree_id : Int,
 ) -> Int {
-  let stack : Array[TightState] = [{ node: start, in_i: 0, out_i: 0, rv: 1 }]
+  let stack : Array[TightState] = [{ node: start, in_i: 0, out_i: 0, rv: 1, }]
   node_subtree[start] = subtree_id
   let mut result = 1
   while stack.length() > 0 {
@@ -428,7 +428,7 @@ fn tight_subtree_search(
         node_subtree[tail] = subtree_id
         add_tree_edge(graph, edge_idx)
         stack[last] = state
-        stack.push({ node: tail, in_i: 0, out_i: 0, rv: 1 })
+        stack.push({ node: tail, in_i: 0, out_i: 0, rv: 1, })
         updated = true
         break
       }
@@ -447,7 +447,7 @@ fn tight_subtree_search(
         node_subtree[head] = subtree_id
         add_tree_edge(graph, edge_idx)
         stack[last] = state
-        stack.push({ node: head, in_i: 0, out_i: 0, rv: 1 })
+        stack.push({ node: head, in_i: 0, out_i: 0, rv: 1, })
         updated = true
         break
       }
@@ -488,7 +488,7 @@ fn inter_tree_edge_search(
     None => ()
   }
   let stack : Array[InterTreeState] = [
-    { node: v, parent: from, out_i: 0, in_i: 0 },
+    { node: v, parent: from, out_i: 0, in_i: 0, },
   ]
   while stack.length() > 0 {
     let last = stack.length() - 1
@@ -509,7 +509,7 @@ fn inter_tree_edge_search(
         let head = graph.edges[edge_idx].head
         if allow_descend && head != state.parent {
           stack[last] = state
-          stack.push({ node: head, parent: state.node, out_i: 0, in_i: 0 })
+          stack.push({ node: head, parent: state.node, out_i: 0, in_i: 0, })
           pushed = true
           break
         }
@@ -538,7 +538,7 @@ fn inter_tree_edge_search(
         let tail = graph.edges[edge_idx].tail
         if allow_descend && tail != state.parent {
           stack[last] = state
-          stack.push({ node: tail, parent: state.node, out_i: 0, in_i: 0 })
+          stack.push({ node: tail, parent: state.node, out_i: 0, in_i: 0, })
           pushed = true
           break
         }
@@ -665,7 +665,7 @@ fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
   nodes[root].par_edge = NONE_EDGE
   nodes[root].low = 1
   let stack : Array[DfsState] = [
-    { node: root, par_edge: NONE_EDGE, lim: 1, tree_out_i: 0, tree_in_i: 0 },
+    { node: root, par_edge: NONE_EDGE, lim: 1, tree_out_i: 0, tree_in_i: 0, },
   ]
   let mut lim = 0
   while stack.length() > 0 {
@@ -894,7 +894,7 @@ fn x_cutval(graph : NsGraph, edge_idx : Int) -> Unit {
 ///|
 fn dfs_cutval(graph : NsGraph, node_idx : Int, parent_edge : Int) -> Unit {
   let stack : Array[CutState] = [
-    { node: node_idx, parent_edge, tree_out_i: 0, tree_in_i: 0 },
+    { node: node_idx, parent_edge, tree_out_i: 0, tree_in_i: 0, },
   ]
   while stack.length() > 0 {
     let last = stack.length() - 1
@@ -1047,7 +1047,7 @@ fn leave_edge(
       }
       count = count + 1
       if count >= search_size {
-        return { edge: best_edge, next_index: idx }
+        return { edge: best_edge, next_index: idx, }
       }
     }
     idx = idx + 1
@@ -1064,13 +1064,13 @@ fn leave_edge(
         }
         count = count + 1
         if count >= search_size {
-          return { edge: best_edge, next_index: idx }
+          return { edge: best_edge, next_index: idx, }
         }
       }
       idx = idx + 1
     }
   }
-  { edge: best_edge, next_index: idx }
+  { edge: best_edge, next_index: idx, }
 }
 
 ///|
@@ -1415,7 +1415,7 @@ fn tb_balance_bounds(
   if low < 0 {
     low = 0
   }
-  { inweight, outweight, low, high }
+  { inweight, outweight, low, high, }
 }
 
 ///|

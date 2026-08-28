@@ -69,7 +69,7 @@ pub fn build_position_mode_flags(
     sources.vnode_count <= sources.max_xpos_reorder_vnodes
   let graphviz_flip = sources.rankdir == @rankdir.RankDir::LR ||
     sources.rankdir == @rankdir.RankDir::RL
-  { use_vnodes_for_xpos, allow_xpos_reorder, graphviz_flip }
+  { use_vnodes_for_xpos, allow_xpos_reorder, graphviz_flip, }
 }
 
 ///|

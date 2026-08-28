@@ -21,8 +21,8 @@ test "short_route_build_context derives linear-flat preferences from invisible a
   let bottom_edge = graph.edge(
     graph.node("bottom_tail"),
     graph.node("bottom_head"),
-    tail_port={ name: None, compass: Some(@cgraph.Compass::S) },
-    head_port={ name: None, compass: Some(@cgraph.Compass::S) },
+    tail_port={ name: None, compass: Some(@cgraph.Compass::S), },
+    head_port={ name: None, compass: Some(@cgraph.Compass::S), },
   )
   let bottom_context = short_route_test_context(
     short_route_test_base(
@@ -45,8 +45,8 @@ test "build_short_route_spline_with_detour lowers bottom single-arrow fallback l
   let edge = graph.edge(
     graph.node("tail"),
     graph.node("head"),
-    tail_port={ name: None, compass: Some(@cgraph.Compass::S) },
-    head_port={ name: None, compass: Some(@cgraph.Compass::S) },
+    tail_port={ name: None, compass: Some(@cgraph.Compass::S), },
+    head_port={ name: None, compass: Some(@cgraph.Compass::S), },
   )
   edge.set_attr("arrowhead", "none")
   let base = short_route_test_base(

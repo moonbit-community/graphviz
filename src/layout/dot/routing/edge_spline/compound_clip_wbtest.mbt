@@ -31,8 +31,8 @@ test "bbox spline clipping trims straight bezier at the first boundary hit" {
     point(6.0, 0.0),
     point(9.0, 0.0),
   ]
-  let end_bbox : @geom.Rect = { llx: 5.0, lly: -1.0, urx: 7.0, ury: 1.0 }
-  let start_bbox : @geom.Rect = { llx: 0.0, lly: -1.0, urx: 4.0, ury: 1.0 }
+  let end_bbox : @geom.Rect = { llx: 5.0, lly: -1.0, urx: 7.0, ury: 1.0, }
+  let start_bbox : @geom.Rect = { llx: 0.0, lly: -1.0, urx: 4.0, ury: 1.0, }
 
   let end_clipped = clip_spline_end_to_bbox(points, end_bbox)
   let start_clipped = clip_spline_start_to_bbox(points, start_bbox)

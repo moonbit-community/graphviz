@@ -414,7 +414,7 @@ pub fn run_remincross_pass(
       rem_ordered,
       context.real_nodes,
     )
-    { ordered_groups: rem_cleaned, ordered_with_vnodes: rem_ordered }
+    { ordered_groups: rem_cleaned, ordered_with_vnodes: rem_ordered, }
   }
 }
 
@@ -619,7 +619,7 @@ fn build_neighbor_real_indices(
     idx = idx - 1
     next_real_by_pos.push(next_rev[idx])
   }
-  { prev_real, next_real_by_pos }
+  { prev_real, next_real_by_pos, }
 }
 
 ///|

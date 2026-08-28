@@ -48,7 +48,7 @@ test "raw_label_ports_for_node prefers html ports even on record-shaped nodes" {
   node.set_attr(
     "label", "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD PORT=\"html\">one</TD></TR></TABLE>>",
   )
-  let origin = @geom.Point::{ x: 24.0, y: -12.0 }
+  let origin = @geom.Point::{ x: 24.0, y: -12.0, }
   let base_size = sample_node_size(96.0, 48.0)
 
   let actual = raw_label_ports_for_node(
@@ -77,7 +77,7 @@ test "raw_label_ports_for_node uses record ports for record-shaped non-html labe
   let node = graph.node("record_ports")
   node.set_attr("shape", "record")
   node.set_attr("label", "<left>left|<right>right")
-  let origin = @geom.Point::{ x: -8.0, y: 14.0 }
+  let origin = @geom.Point::{ x: -8.0, y: 14.0, }
   let base_size = sample_node_size(120.0, 54.0)
 
   let actual = raw_label_ports_for_node(
@@ -112,7 +112,7 @@ test "raw_label_ports_for_node returns empty for non-html non-record nodes" {
 
   let ports = raw_label_ports_for_node(
     node,
-    @geom.Point::{ x: 0.0, y: 0.0 },
+    @geom.Point::{ x: 0.0, y: 0.0, },
     sample_node_size(72.0, 36.0),
     RecordOrientation::Horizontal,
   )

@@ -8,7 +8,7 @@ fn route_dynamic_anchor(
   side? : Int = 0,
   is_dynamic? : Bool = false,
 ) -> RouteDynamicPortAnchor {
-  { anchor, side, is_dynamic }
+  { anchor, side, is_dynamic, }
 }
 
 ///|
@@ -19,7 +19,7 @@ test "clip_point_for_route_endpoint prefers cluster bbox over other clip sources
   let clipped = clip_point_for_route_endpoint({
     anchor: @edge_spline.point(0.0, 0.0),
     opposite_anchor: @edge_spline.point(10.0, 0.0),
-    cluster_bbox: Some({ llx: 4.0, lly: -1.0, urx: 6.0, ury: 1.0 }),
+    cluster_bbox: Some({ llx: 4.0, lly: -1.0, urx: 6.0, ury: 1.0, }),
     dynamic_anchor: route_dynamic_anchor(Some(@edge_spline.point(9.0, 9.0))),
     compass_clip: Some(@edge_spline.point(8.0, 8.0)),
     node,
@@ -79,7 +79,7 @@ test "clustered_edge_arrow_len_override clamps short cluster spans" {
     edge,
     include_tail: true,
     include_head: true,
-    tail_cluster_bbox: Some({ llx: 0.0, lly: 0.0, urx: 1.0, ury: 1.0 }),
+    tail_cluster_bbox: Some({ llx: 0.0, lly: 0.0, urx: 1.0, ury: 1.0, }),
     head_cluster_bbox: None,
     tail_clip: @edge_spline.point(0.0, 0.0),
     head_clip: @edge_spline.point(1.0, 0.0),

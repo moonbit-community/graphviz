@@ -187,7 +187,7 @@ fn vnode_positions_from_edges(
       let t = Double::from_int(vnode_rank - low_rank) / span_f
       let pos_x = low_pos + (high_pos - low_pos) * t
       let pos_y = rank_y.get(vnode_rank).unwrap_or_default()
-      positions[vnode] = { x: pos_x, y: pos_y }
+      positions[vnode] = { x: pos_x, y: pos_y, }
     }
   }
   positions
@@ -206,7 +206,7 @@ fn build_node_positions_map(
     let name = node.name()
     let pos_x = x_positions.get(name).unwrap_or_default()
     let pos_y = y_positions.get(name).unwrap_or_default()
-    positions[name] = { x: pos_x, y: pos_y }
+    positions[name] = { x: pos_x, y: pos_y, }
   }
   positions
 }
@@ -234,7 +234,7 @@ fn build_vnode_positions(
     for name, rank in input.vnode_ranks {
       let pos_x = input.x_positions.get(name).unwrap_or_default()
       let pos_y = input.rank_y.get(rank).unwrap_or_default()
-      positions[name] = { x: pos_x, y: pos_y }
+      positions[name] = { x: pos_x, y: pos_y, }
     }
     positions
   } else {
@@ -268,7 +268,7 @@ fn build_cluster_boundary_x(
   let cluster_ln_x : Map[String, Double] = Map([])
   let cluster_rn_x : Map[String, Double] = Map([])
   if !input.has_clusters {
-    return { cluster_ln_x, cluster_rn_x }
+    return { cluster_ln_x, cluster_rn_x, }
   }
   for name, pos_x in input.x_positions {
     if !(input.is_cluster_boundary)(name) {
@@ -284,7 +284,7 @@ fn build_cluster_boundary_x(
       None => ()
     }
   }
-  { cluster_ln_x, cluster_rn_x }
+  { cluster_ln_x, cluster_rn_x, }
 }
 
 ///|

@@ -66,7 +66,7 @@ test "straight path joins and endpoint slopes follow rankdir and explicit ports"
   assert_eq(straight_path_join_dir(RankDir::RL), @edge_spline.point(-1.0, 0.0))
 
   let (tail_slope, head_slope) = route_endpoint_slopes(
-    Some({ name: Some("p"), compass: None }),
+    Some({ name: Some("p"), compass: None, }),
     None,
     @edge_spline.point(3.0, 4.0),
     @edge_spline.point(5.0, 6.0),

@@ -27,7 +27,7 @@ test "build_port_offsets_with_callbacks uses fallback node size then rotates cen
       observed_base_size.val = base_size
       {
         "p": {
-          center: { x: base_size.width_pt, y: base_size.height_pt },
+          center: { x: base_size.width_pt, y: base_size.height_pt, },
           size: @node_primitives.node_size_from_points(6.0, 8.0),
           sides: 3,
         },
@@ -53,7 +53,7 @@ test "build_port_offsets_with_callbacks uses fallback node size then rotates cen
     None => fail("expected port offset")
   }
 
-  assert_eq(port.center, { x: 10.0, y: -20.0 })
+  assert_eq(port.center, { x: 10.0, y: -20.0, })
   assert_eq(port.size.width_pt, 8.0)
   assert_eq(port.size.height_pt, 6.0)
   assert_eq(port.sides, 3)
@@ -67,19 +67,19 @@ test "port_side_mask_for_self_edge prefers compass and otherwise uses named port
   let port_maps : Map[String, Map[String, @record_geometry.RecordPort]] = {
     "n": {
       "west": {
-        center: { x: -5.0, y: 0.0 },
+        center: { x: -5.0, y: 0.0, },
         size: @node_primitives.node_size_from_points(4.0, 4.0),
         sides: @port_geometry.PORT_SIDE_LEFT,
       },
     },
   }
 
-  let named_only : @cgraph.Port = { name: Some("west"), compass: None }
+  let named_only : @cgraph.Port = { name: Some("west"), compass: None, }
   let named_with_compass : @cgraph.Port = {
     name: Some("west"),
     compass: Some(@cgraph.Compass::E),
   }
-  let missing_named : @cgraph.Port = { name: Some("missing"), compass: None }
+  let missing_named : @cgraph.Port = { name: Some("missing"), compass: None, }
 
   assert_eq(
     port_side_mask_for_self_edge(node, Some(named_only), port_maps),

@@ -25,8 +25,8 @@ test "recover_slack_vnodes centers plain vnodes and right-aligns only the label 
     edge,
     ordered_vnodes: ["v1", "v2"],
     boxes: [
-      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
-      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
+      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0, },
+      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0, },
     ],
     ranks: { "a": 0, "b": 3 },
     vnode_ranks: { "v1": 1, "v2": 2 },
@@ -87,8 +87,8 @@ test "recover_slack_vnodes keeps midpoint-rank plain vnode centered without labe
     edge,
     ordered_vnodes: ["v1", "v2"],
     boxes: [
-      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0 },
-      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0 },
+      { llx: 0.0, lly: 4.0, urx: 10.0, ury: 6.0, },
+      { llx: 2.0, lly: 0.0, urx: 8.0, ury: 2.0, },
     ],
     ranks: { "a": 0, "b": 3 },
     vnode_ranks: { "v1": 1, "v2": 2 },

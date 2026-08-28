@@ -302,5 +302,5 @@ pub fn compute_dot_routing_stage(
   } else {
     edges_routed
   }
-  { nodes_out, edges_out, port_pad_below, port_pad_above }
+  { nodes_out, edges_out, port_pad_below, port_pad_above, }
 }

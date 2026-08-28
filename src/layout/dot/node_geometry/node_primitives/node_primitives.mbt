@@ -40,7 +40,7 @@ pub fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize 
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
   let half = width_pt / 2.0
-  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
+  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half, }
 }
 
 ///|
@@ -50,7 +50,7 @@ pub fn swap_node_size(size : NodeSize) -> NodeSize {
   let width_pt = size.height_pt
   let height_pt = size.width_pt
   let half = width_pt / 2.0
-  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
+  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half, }
 }
 
 ///|
@@ -59,7 +59,7 @@ pub fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
   let width_in = width_pt / 72.0
   let height_pt = VNODE_HEIGHT_PT
   let height_in = height_pt / 72.0
-  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
+  { width_in, height_in, width_pt, height_pt, left_pt, right_pt, }
 }
 
 ///|
@@ -71,7 +71,7 @@ pub fn vnode_size_from_widths_with_h(
   let width_pt = left_pt + right_pt
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
-  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
+  { width_in, height_in, width_pt, height_pt, left_pt, right_pt, }
 }
 
 ///|
@@ -106,5 +106,5 @@ pub fn clip_to_rect(
   let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
   let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
   let t = if tx < ty { tx } else { ty }
-  { x: center.x + dx * t, y: center.y + dy * t }
+  { x: center.x + dx * t, y: center.y + dy * t, }
 }

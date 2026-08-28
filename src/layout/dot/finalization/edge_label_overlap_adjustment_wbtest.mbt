@@ -18,13 +18,13 @@ test "adjust_labels_for_overlaps recurses into subgraphs and propagates overlap 
         start: None,
         end: None,
         points: [
-          { x: 0.0, y: 0.0 },
-          { x: 3.0, y: 0.0 },
-          { x: 6.0, y: 0.0 },
-          { x: 9.0, y: 0.0 },
+          { x: 0.0, y: 0.0, },
+          { x: 3.0, y: 0.0, },
+          { x: 6.0, y: 0.0, },
+          { x: 9.0, y: 0.0, },
         ],
       },
-      label_pos=Some({ x: 5.0, y: 10.0 }),
+      label_pos=Some({ x: 5.0, y: 10.0, }),
     ),
     postprocess_make_edge_layout(
       edge_2,
@@ -32,23 +32,23 @@ test "adjust_labels_for_overlaps recurses into subgraphs and propagates overlap 
         start: None,
         end: None,
         points: [
-          { x: 0.0, y: 0.0 },
-          { x: 3.0, y: 0.0 },
-          { x: 6.0, y: 0.0 },
-          { x: 9.0, y: 0.0 },
+          { x: 0.0, y: 0.0, },
+          { x: 3.0, y: 0.0, },
+          { x: 6.0, y: 0.0, },
+          { x: 9.0, y: 0.0, },
         ],
       },
-      label_pos=Some({ x: 7.0, y: 20.0 }),
+      label_pos=Some({ x: 7.0, y: 20.0, }),
     ),
   ]
   let cluster_layout = postprocess_make_layout_tree(
     cluster,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     edges=edge_layouts,
   )
   let root_layout = postprocess_make_layout_tree(
     root,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     subgraphs=[cluster_layout],
   )
   let expected = @edge_label.adjust_edge_label_overlaps(
@@ -57,7 +57,7 @@ test "adjust_labels_for_overlaps recurses into subgraphs and propagates overlap 
     @rankdir.RankDir::TB,
     edge => {
       match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
     },

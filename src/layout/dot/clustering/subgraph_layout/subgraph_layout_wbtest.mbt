@@ -9,7 +9,7 @@ fn cluster_test_node_layout(
   width_in : Double,
   height_in : Double,
 ) -> DotLayoutNode {
-  { node, pos, width_in, height_in, label_pos: None, xlabel_pos: None }
+  { node, pos, width_in, height_in, label_pos: None, xlabel_pos: None, }
 }
 
 ///|
@@ -18,7 +18,7 @@ fn cluster_test_layout_tree(
   bbox : @geom.Rect,
   subgraphs? : Array[LayoutTree] = [],
 ) -> LayoutTree {
-  { graph, bbox, label_pos: None, nodes: [], edges: [], subgraphs }
+  { graph, bbox, label_pos: None, nodes: [], edges: [], subgraphs, }
 }
 
 ///|
@@ -37,7 +37,7 @@ test "expand_bbox_with_subgraphs and expand_bbox_with_clusters recurse by respon
     }),
     cluster_test_layout_tree(
       plain,
-      { llx: -5.0, lly: 2.0, urx: -1.0, ury: 4.0 },
+      { llx: -5.0, lly: 2.0, urx: -1.0, ury: 4.0, },
       subgraphs=[
         cluster_test_layout_tree(nested_cluster, {
           llx: 50.0,
@@ -48,7 +48,7 @@ test "expand_bbox_with_subgraphs and expand_bbox_with_clusters recurse by respon
       ],
     ),
   ]
-  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }
+  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
 
   assert_eq(expand_bbox_with_subgraphs(bbox, subgraphs), {
     llx: -5.0,
@@ -74,7 +74,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   let a = cluster.node("a")
   ignore(a)
 
-  let nodes_out = [cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0)]
+  let nodes_out = [cluster_test_node_layout(a, { x: 10.0, y: 20.0, }, 1.0, 1.0)]
   let ranks : Map[String, Int] = Map([])
   ranks["a"] = 1
   let rank_y : Map[Int, Double] = Map([])
@@ -88,7 +88,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   let cluster_rn_x : Map[String, Double] = Map([])
   cluster_rn_x["cluster_0"] = 18.0
   let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map([])
-  cluster_bbox_heights["cluster_0"] = { ht1: 9.0, ht2: 11.0 }
+  cluster_bbox_heights["cluster_0"] = { ht1: 9.0, ht2: 11.0, }
 
   let layouts = layout_subgraphs({
     graph: root,
@@ -106,7 +106,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
 
   assert_eq(layouts.length(), 1)
   assert_eq(layouts[0].graph.name(), Some("cluster_0"))
-  assert_eq(layouts[0].bbox, { llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0 })
+  assert_eq(layouts[0].bbox, { llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0, })
 
   let metrics = match @label_metrics.graph_label_metrics(cluster) {
     Some(value) => value
@@ -133,8 +133,8 @@ test "compute_cluster_route_bboxes collects nested cluster bounds from layout_su
   let b = cluster1.node("b")
 
   let nodes_out = [
-    cluster_test_node_layout(a, { x: 10.0, y: 20.0 }, 1.0, 1.0),
-    cluster_test_node_layout(b, { x: 30.0, y: 40.0 }, 1.0, 1.0),
+    cluster_test_node_layout(a, { x: 10.0, y: 20.0, }, 1.0, 1.0),
+    cluster_test_node_layout(b, { x: 30.0, y: 40.0, }, 1.0, 1.0),
   ]
   let ranks : Map[String, Int] = { "a": 1, "b": 2 }
   let rank_y : Map[Int, Double] = { 1: 100.0, 2: 200.0 }
@@ -149,8 +149,8 @@ test "compute_cluster_route_bboxes collects nested cluster bounds from layout_su
     "cluster_1": 35.0,
   }
   let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = {
-    "cluster_0": { ht1: 9.0, ht2: 11.0 },
-    "cluster_1": { ht1: 12.0, ht2: 14.0 },
+    "cluster_0": { ht1: 9.0, ht2: 11.0, },
+    "cluster_1": { ht1: 12.0, ht2: 14.0, },
   }
 
   let cluster_bboxes = compute_cluster_route_bboxes(
@@ -169,10 +169,10 @@ test "compute_cluster_route_bboxes collects nested cluster bounds from layout_su
   assert_eq(cluster_bboxes.length(), 2)
   assert_eq(
     cluster_bboxes.get("cluster_0"),
-    Some({ llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0 }),
+    Some({ llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0, }),
   )
   assert_eq(
     cluster_bboxes.get("cluster_1"),
-    Some({ llx: 25.0, lly: 188.0, urx: 35.0, ury: 214.0 }),
+    Some({ llx: 25.0, lly: 188.0, urx: 35.0, ury: 214.0, }),
   )
 }

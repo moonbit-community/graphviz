@@ -53,7 +53,7 @@ fn build_parsed_flat_constraints(
       _ => ()
     }
   }
-  { heads_by_tail, has_enabled_constraints }
+  { heads_by_tail, has_enabled_constraints, }
 }
 
 ///|
@@ -204,7 +204,7 @@ fn build_rank_desired_state(
       }
     }
   }
-  { has_values, values }
+  { has_values, values, }
 }
 
 ///|
@@ -814,7 +814,7 @@ fn build_edge_endpoint_orders(
   for head in edge_head {
     head_orders.push(resolve_port_tiebreak_order(head, order, fixed_order))
   }
-  { tail_orders, head_orders }
+  { tail_orders, head_orders, }
 }
 
 ///|
@@ -843,7 +843,7 @@ fn build_active_incident_edge_maps(
     }
     active_out_edges[name] = filtered
   }
-  { in_edges: active_in_edges, out_edges: active_out_edges }
+  { in_edges: active_in_edges, out_edges: active_out_edges, }
 }
 
 ///|
@@ -859,7 +859,7 @@ fn build_rank_incident_edge_lists(
       active_incident_edges.out_edges.get(name).unwrap_or_default(),
     )
   }
-  { in_edges, out_edges }
+  { in_edges, out_edges, }
 }
 
 ///|
@@ -909,7 +909,7 @@ fn build_rank_port_incident_edge_lists(
     }
     out_edges.push(outgoing)
   }
-  { in_edges, out_edges }
+  { in_edges, out_edges, }
 }
 
 ///|
@@ -964,7 +964,7 @@ fn build_rank_port_tiebreak_orders(
     }
     out_orders.push(outgoing)
   }
-  { in_orders, out_orders }
+  { in_orders, out_orders, }
 }
 
 ///|
@@ -990,7 +990,7 @@ fn in_cross_pair_tiebreak_live(
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> CrossPairCounts {
   if left_in_edges.length() == 0 || right_in_edges.length() == 0 {
-    return { forward: 0, reverse: 0 }
+    return { forward: 0, reverse: 0, }
   }
   let tail_orders = edge_endpoint_orders.tail_orders
   let mut forward = 0
@@ -1018,7 +1018,7 @@ fn in_cross_pair_tiebreak_live(
     }
     right_idx = right_idx + 1
   }
-  { forward, reverse }
+  { forward, reverse, }
 }
 
 ///|
@@ -1049,7 +1049,7 @@ fn out_cross_pair_tiebreak_live(
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> CrossPairCounts {
   if left_out_edges.length() == 0 || right_out_edges.length() == 0 {
-    return { forward: 0, reverse: 0 }
+    return { forward: 0, reverse: 0, }
   }
   let head_orders = edge_endpoint_orders.head_orders
   let mut forward = 0
@@ -1077,7 +1077,7 @@ fn out_cross_pair_tiebreak_live(
     }
     right_idx = right_idx + 1
   }
-  { forward, reverse }
+  { forward, reverse, }
 }
 
 ///|
@@ -1313,7 +1313,7 @@ fn transpose_rank_port_tiebreak(
     }
     i = i + 1
   }
-  { delta, changed }
+  { delta, changed, }
 }
 
 ///|

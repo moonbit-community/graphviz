@@ -85,46 +85,46 @@ fn sanitize_path_boxes(
     if errs > 0 {
       if l_fix {
         let xy = left.urx
-        left = { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury }
-        right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury }
+        left = { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury, }
+        right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury, }
         l_fix = false
       } else if r_fix {
         let xy = left.llx
-        left = { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury }
-        right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury }
+        left = { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury, }
+        right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury, }
         r_fix = false
       } else if d_fix {
         let xy = left.ury
-        left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly }
-        right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury }
+        left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly, }
+        right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury, }
         d_fix = false
       } else if u_fix {
         let xy = left.lly
-        left = { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury }
-        right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy }
+        left = { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury, }
+        right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy, }
         u_fix = false
       }
       let mut j = 0
       while j < errs - 1 {
         if l_fix {
           let xy = (left.urx + right.llx) / 2.0 + 0.5
-          left = { llx: left.llx, lly: left.lly, urx: xy, ury: left.ury }
-          right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury }
+          left = { llx: left.llx, lly: left.lly, urx: xy, ury: left.ury, }
+          right = { llx: xy, lly: right.lly, urx: right.urx, ury: right.ury, }
           l_fix = false
         } else if r_fix {
           let xy = (left.llx + right.urx) / 2.0 + 0.5
-          left = { llx: xy, lly: left.lly, urx: left.urx, ury: left.ury }
-          right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury }
+          left = { llx: xy, lly: left.lly, urx: left.urx, ury: left.ury, }
+          right = { llx: right.llx, lly: right.lly, urx: xy, ury: right.ury, }
           r_fix = false
         } else if d_fix {
           let xy = (left.ury + right.lly) / 2.0 + 0.5
-          left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: xy }
-          right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury }
+          left = { llx: left.llx, lly: left.lly, urx: left.urx, ury: xy, }
+          right = { llx: right.llx, lly: xy, urx: right.urx, ury: right.ury, }
           d_fix = false
         } else if u_fix {
           let xy = (left.lly + right.ury) / 2.0 + 0.5
-          left = { llx: left.llx, lly: xy, urx: left.urx, ury: left.ury }
-          right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy }
+          left = { llx: left.llx, lly: xy, urx: left.urx, ury: left.ury, }
+          right = { llx: right.llx, lly: right.lly, urx: right.urx, ury: xy, }
           u_fix = false
         }
         j = j + 1
@@ -136,28 +136,28 @@ fn sanitize_path_boxes(
       if xoverlap < yoverlap {
         if left.urx - left.llx > right.urx - right.llx {
           left = if left.urx < right.urx {
-            { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury }
+            { llx: left.llx, lly: left.lly, urx: right.llx, ury: left.ury, }
           } else {
-            { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury }
+            { llx: right.urx, lly: left.lly, urx: left.urx, ury: left.ury, }
           }
         } else {
           right = if left.urx < right.urx {
-            { llx: left.urx, lly: right.lly, urx: right.urx, ury: right.ury }
+            { llx: left.urx, lly: right.lly, urx: right.urx, ury: right.ury, }
           } else {
-            { llx: right.llx, lly: right.lly, urx: left.llx, ury: right.ury }
+            { llx: right.llx, lly: right.lly, urx: left.llx, ury: right.ury, }
           }
         }
       } else if left.ury - left.lly > right.ury - right.lly {
         left = if left.ury < right.ury {
-          { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly }
+          { llx: left.llx, lly: left.lly, urx: left.urx, ury: right.lly, }
         } else {
-          { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury }
+          { llx: left.llx, lly: right.ury, urx: left.urx, ury: left.ury, }
         }
       } else {
         right = if left.ury < right.ury {
-          { llx: right.llx, lly: left.ury, urx: right.urx, ury: right.ury }
+          { llx: right.llx, lly: left.ury, urx: right.urx, ury: right.ury, }
         } else {
-          { llx: right.llx, lly: right.lly, urx: right.urx, ury: left.lly }
+          { llx: right.llx, lly: right.lly, urx: right.urx, ury: left.lly, }
         }
       }
     }
@@ -206,7 +206,7 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
     flip = true
     let flipped : Array[@geom.Rect] = []
     for box in boxes {
-      flipped.push({ llx: box.llx, lly: -box.ury, urx: box.urx, ury: -box.lly })
+      flipped.push({ llx: box.llx, lly: -box.ury, urx: box.urx, ury: -box.lly, })
     }
     boxes_copy = flipped
   }
@@ -224,15 +224,15 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
     }
     if prev != next {
       if next == -1 || prev == 1 {
-        polypoints.push({ x: box.llx, y: box.ury })
-        polypoints.push({ x: box.llx, y: box.lly })
+        polypoints.push({ x: box.llx, y: box.ury, })
+        polypoints.push({ x: box.llx, y: box.lly, })
       } else {
-        polypoints.push({ x: box.urx, y: box.lly })
-        polypoints.push({ x: box.urx, y: box.ury })
+        polypoints.push({ x: box.urx, y: box.lly, })
+        polypoints.push({ x: box.urx, y: box.ury, })
       }
     } else if prev == 0 {
-      polypoints.push({ x: box.llx, y: box.ury })
-      polypoints.push({ x: box.llx, y: box.lly })
+      polypoints.push({ x: box.llx, y: box.ury, })
+      polypoints.push({ x: box.llx, y: box.lly, })
     } else if !(prev == -1 && next == -1) {
       return []
     }
@@ -251,24 +251,24 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
     }
     if prev != next {
       if next == -1 || prev == 1 {
-        polypoints.push({ x: box.llx, y: box.ury })
-        polypoints.push({ x: box.llx, y: box.lly })
+        polypoints.push({ x: box.llx, y: box.ury, })
+        polypoints.push({ x: box.llx, y: box.lly, })
       } else {
-        polypoints.push({ x: box.urx, y: box.lly })
-        polypoints.push({ x: box.urx, y: box.ury })
+        polypoints.push({ x: box.urx, y: box.lly, })
+        polypoints.push({ x: box.urx, y: box.ury, })
       }
     } else if prev == 0 {
-      polypoints.push({ x: box.urx, y: box.lly })
-      polypoints.push({ x: box.urx, y: box.ury })
+      polypoints.push({ x: box.urx, y: box.lly, })
+      polypoints.push({ x: box.urx, y: box.ury, })
     } else {
       if !(prev == -1 && next == -1) {
         return []
       }
       // Graphviz parity: add full box loop when prev==next==-1 in reverse pass.
-      polypoints.push({ x: box.urx, y: box.lly })
-      polypoints.push({ x: box.urx, y: box.ury })
-      polypoints.push({ x: box.llx, y: box.ury })
-      polypoints.push({ x: box.llx, y: box.lly })
+      polypoints.push({ x: box.urx, y: box.lly, })
+      polypoints.push({ x: box.urx, y: box.ury, })
+      polypoints.push({ x: box.llx, y: box.ury, })
+      polypoints.push({ x: box.llx, y: box.lly, })
     }
   }
   if !flip {
@@ -276,7 +276,7 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
   }
   let restored : Array[@geom.Point] = []
   for point in polypoints {
-    restored.push({ x: point.x, y: -point.y })
+    restored.push({ x: point.x, y: -point.y, })
   }
   restored
 }
@@ -322,7 +322,11 @@ fn route_pathplan_from_boxes(
   if path.length() < 2 {
     return None
   }
-  Some({ points: dedupe_polyline_points(path), polygon, boxes: sanitized_boxes })
+  Some({
+    points: dedupe_polyline_points(path),
+    polygon,
+    boxes: sanitized_boxes,
+  })
 }
 
 ///|
@@ -507,7 +511,7 @@ fn limit_boxes_sample(
         if y0 <= box.ury + fudge && y0 >= box.lly - fudge {
           let llx = if x0 < box.llx { x0 } else { box.llx }
           let urx = if x0 > box.urx { x0 } else { box.urx }
-          boxes[bi] = { llx, lly: box.lly, urx, ury: box.ury }
+          boxes[bi] = { llx, lly: box.lly, urx, ury: box.ury, }
         }
         bi = bi + 1
       }
@@ -565,7 +569,7 @@ pub fn limit_boxes_for_spline(
     let mut idx = 0
     while idx < limited.length() {
       let box = limited[idx]
-      limited[idx] = { llx: x, lly: box.lly, urx: x, ury: box.ury }
+      limited[idx] = { llx: x, lly: box.lly, urx: x, ury: box.ury, }
       idx = idx + 1
     }
     return limited

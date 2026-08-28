@@ -36,12 +36,12 @@ priv struct Lexer {
 
 ///|
 fn Lexer::new(bytes : Bytes) -> Lexer {
-  { bytes, index: 0, line: 1, column: 1 }
+  { bytes, index: 0, line: 1, column: 1, }
 }
 
 ///|
 fn Lexer::position(self : Lexer) -> Position {
-  { line: self.line, column: self.column, offset: self.index }
+  { line: self.line, column: self.column, offset: self.index, }
 }
 
 ///|
@@ -226,69 +226,69 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
   let pos = self.position()
   let ch = self.peek_byte()
   match ch {
-    None => { token: Eof, pos }
+    None => { token: Eof, pos, }
     Some(value) if value == b'{' => {
       self.advance()
-      { token: LBrace, pos }
+      { token: LBrace, pos, }
     }
     Some(value) if value == b'}' => {
       self.advance()
-      { token: RBrace, pos }
+      { token: RBrace, pos, }
     }
     Some(value) if value == b'[' => {
       self.advance()
-      { token: LBracket, pos }
+      { token: LBracket, pos, }
     }
     Some(value) if value == b']' => {
       self.advance()
-      { token: RBracket, pos }
+      { token: RBracket, pos, }
     }
     Some(value) if value == b';' => {
       self.advance()
-      { token: Semi, pos }
+      { token: Semi, pos, }
     }
     Some(value) if value == b',' => {
       self.advance()
-      { token: Comma, pos }
+      { token: Comma, pos, }
     }
     Some(value) if value == b'=' => {
       self.advance()
-      { token: Eq, pos }
+      { token: Eq, pos, }
     }
     Some(value) if value == b':' => {
       self.advance()
-      { token: Colon, pos }
+      { token: Colon, pos, }
     }
     Some(value) if value == b'-' =>
       match self.peek_byte(offset=1) {
         Some(next) if next == b'>' => {
           self.advance()
           self.advance()
-          { token: EdgeDirected, pos }
+          { token: EdgeDirected, pos, }
         }
         Some(next) if next == b'-' => {
           self.advance()
           self.advance()
-          { token: EdgeUndirected, pos }
+          { token: EdgeUndirected, pos, }
         }
         _ => {
           self.advance()
           let rest = self.read_id()
           let id = if rest == "" { "-" } else { "-\{rest}" }
-          { token: Id(id), pos }
+          { token: Id(id), pos, }
         }
       }
     Some(value) if value == b'\"' => {
       let value = self.read_quoted_string()
-      { token: String(value), pos }
+      { token: String(value), pos, }
     }
     Some(value) if value == b'<' => {
       let value = self.read_html()
-      { token: Html(value), pos }
+      { token: Html(value), pos, }
     }
     Some(value) if is_id_byte(value) => {
       let id = self.read_id()
-      { token: Id(id), pos }
+      { token: Id(id), pos, }
     }
     Some(value) =>
       raise DotParseError::InvalidToken(pos~, token=value.to_char().to_string())

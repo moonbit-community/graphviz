@@ -21,11 +21,11 @@ test "segment_slack_minlen splits positive and negative port deltas" {
   }
 
   let positive = segment_slack_minlen(
-    { tail: "a", head: "b", weight: 1, tail_port, head_port },
+    { tail: "a", head: "b", weight: 1, tail_port, head_port, },
     edge_port_offset,
   )
   let negative = segment_slack_minlen(
-    { tail: "c", head: "d", weight: 1, tail_port, head_port },
+    { tail: "c", head: "d", weight: 1, tail_port, head_port, },
     edge_port_offset,
   )
 

@@ -15,7 +15,7 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
   let edge_xlabel = @edge_spline.point(-10.0, 8.0)
   let layout = xlabel_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     nodes=[
       xlabel_make_node_layout(
         a,
@@ -47,10 +47,10 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
     @edge_label.expand_bbox_for_label_pos(
       layout.bbox,
       Some(node_xlabel),
-      Some({ width: node_metrics.width, height: node_metrics.height }),
+      Some({ width: node_metrics.width, height: node_metrics.height, }),
     ),
     Some(edge_xlabel),
-    Some({ width: edge_metrics.width, height: edge_metrics.height }),
+    Some({ width: edge_metrics.width, height: edge_metrics.height, }),
   )
 
   assert_eq(updated.nodes[0].xlabel_pos, Some(node_xlabel))
@@ -66,7 +66,7 @@ test "apply_xlabels places unresolved node xlabels and expands bbox" {
 
   let layout = xlabel_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 80.0 },
+    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 80.0, },
     nodes=[
       xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5),
     ],
@@ -84,7 +84,7 @@ test "apply_xlabels places unresolved node xlabels and expands bbox" {
   let expected_bbox = @edge_label.expand_bbox_for_label_pos(
     layout.bbox,
     Some(expected_pos),
-    Some({ width: metrics.width, height: metrics.height }),
+    Some({ width: metrics.width, height: metrics.height, }),
   )
 
   assert_eq(updated.nodes[0].xlabel_pos, Some(expected_pos))
@@ -101,7 +101,7 @@ test "apply_xlabels writes unresolved edge xlabels back through the edge update 
 
   let layout = xlabel_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 20.0, ury: 20.0 },
+    { llx: 0.0, lly: 0.0, urx: 20.0, ury: 20.0, },
     nodes=[
       xlabel_make_node_layout(a, @edge_spline.point(100.0, 100.0), 0.25, 0.25),
       xlabel_make_node_layout(b, @edge_spline.point(120.0, 100.0), 0.25, 0.25),

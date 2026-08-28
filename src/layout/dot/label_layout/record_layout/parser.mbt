@@ -131,7 +131,7 @@ fn record_field_from_text(field : String) -> RecordField {
     .trim(chars=" \n\r\t")
     .to_owned()
   let text = if normalized == "" { " " } else { normalized }
-  { name: port_name, text }
+  { name: port_name, text, }
 }
 
 ///|
@@ -170,7 +170,7 @@ pub fn record_nodes(label : String) -> Array[RecordNode] {
       for ch in label {
         chars.push(ch)
       }
-      let parser = RecordParser::{ chars, index: 0 }
+      let parser = RecordParser::{ chars, index: 0, }
       // Graphviz parity: preserve outer braces as an explicit group.
       // Do not flatten a single top-level group; it flips field orientation.
       let nodes = parse_record_nodes(parser)

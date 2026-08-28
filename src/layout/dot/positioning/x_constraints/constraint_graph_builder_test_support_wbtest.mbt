@@ -18,7 +18,7 @@ fn make_constraint_builder_test_port(
   name : String,
   compass : @cgraph.Compass,
 ) -> @cgraph.Port {
-  { name: Some(name), compass: Some(compass) }
+  { name: Some(name), compass: Some(compass), }
 }
 
 ///|

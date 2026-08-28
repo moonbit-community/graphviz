@@ -4,7 +4,7 @@
 
 ///|
 fn explicit_compass_port(compass : @cgraph.Compass) -> @cgraph.Port? {
-  Some({ name: None, compass: Some(compass) })
+  Some({ name: None, compass: Some(compass), })
 }
 
 ///|

@@ -23,7 +23,7 @@ fn spacing_parse_point(text : String) -> @geom.Point {
   } else {
     0.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|
@@ -60,7 +60,7 @@ fn spacing_parse_rect(text : String) -> SpacingRect {
   } else {
     0.0
   }
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }
 
 ///|

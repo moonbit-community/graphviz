@@ -9,7 +9,7 @@ fn point_for_name_or_origin(
 ) -> @geom.Point {
   match positions.get(name) {
     Some(value) => value
-    None => { x: 0.0, y: 0.0 }
+    None => { x: 0.0, y: 0.0, }
   }
 }
 

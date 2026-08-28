@@ -45,7 +45,7 @@ fn build_bezier_layout_spline_result(
   )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
   let final_spline = finalize_edge_spline(base, layout_spline_result)
-  { final_spline, layout_spline_result }
+  { final_spline, layout_spline_result, }
 }
 
 ///|

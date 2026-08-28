@@ -53,11 +53,11 @@ fn parse_margin(value : String) -> MarginValues? {
   }
   if numbers.length() == 1 {
     let val = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
-    return Some({ x_in: val, y_in: val })
+    return Some({ x_in: val, y_in: val, })
   }
   let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
   let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
-  Some({ x_in: x, y_in: y })
+  Some({ x_in: x, y_in: y, })
 }
 
 ///|
@@ -97,5 +97,5 @@ pub fn node_padding(node : @cgraph.Node) -> NodePadding {
       }
     None => ()
   }
-  { pad_x_pt, pad_y_pt }
+  { pad_x_pt, pad_y_pt, }
 }

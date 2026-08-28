@@ -15,7 +15,7 @@ test "record_ports include nested port names" {
   let size = @node_geometry.node_size(node, record_orientation)
   let ports = record_ports(
     node,
-    @geom.Point::{ x: 0.0, y: 0.0 },
+    @geom.Point::{ x: 0.0, y: 0.0, },
     size,
     record_orientation,
   )
@@ -43,7 +43,7 @@ test "record_ports honor rankdir LR field order" {
   let size = @node_geometry.node_size(node, record_orientation)
   let ports = record_ports(
     node,
-    @geom.Point::{ x: 0.0, y: 0.0 },
+    @geom.Point::{ x: 0.0, y: 0.0, },
     size,
     record_orientation,
   )
@@ -63,7 +63,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
   let orientation = @layout_prep.record_layout_orientation(rankdir)
   let node = graph.node("path_box_record")
   let size = @node_geometry.node_size(node, orientation)
-  let ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
+  let ports = record_ports(node, { x: 0.0, y: 0.0, }, size, orientation)
   let left_port = match ports.get("left") {
     Some(value) => value
     None => fail("missing left port")
@@ -77,7 +77,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
     record_port_path_box(
       node,
       edges[0].tail_port(),
-      { x: 0.0, y: 0.0 },
+      { x: 0.0, y: 0.0, },
       size,
       rankdir,
     ) {
@@ -88,7 +88,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
     record_port_path_box(
       node,
       edges[1].tail_port(),
-      { x: 0.0, y: 0.0 },
+      { x: 0.0, y: 0.0, },
       size,
       rankdir,
     ) {
@@ -119,9 +119,9 @@ test "record_port_padding_y tracks explicit top and bottom label ports" {
   )
   let node = graph.node("padding_record")
   let size = @node_geometry.node_size(node, orientation)
-  let ports = record_ports(node, { x: 0.0, y: 0.0 }, size, orientation)
+  let ports = record_ports(node, { x: 0.0, y: 0.0, }, size, orientation)
   let positions : Map[String, @geom.Point] = Map([])
-  positions["padding_record"] = { x: 0.0, y: 0.0 }
+  positions["padding_record"] = { x: 0.0, y: 0.0, }
   let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
   label_ports_map["padding_record"] = ports
 

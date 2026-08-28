@@ -42,7 +42,7 @@ fn html_cell_content_size(
       let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
         text, font_name, font_size_pt,
       )
-      { width_pt, height_pt }
+      { width_pt, height_pt, }
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
       let text = StringBuilder()
@@ -54,7 +54,7 @@ fn html_cell_content_size(
         font_name,
         font_size_pt,
       )
-      { width_pt, height_pt }
+      { width_pt, height_pt, }
     }
     @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, font_name, font_size_pt)
@@ -100,7 +100,7 @@ fn html_cell_size(
     Some(value) => if value > height { height = value }
     None => ()
   }
-  { width_pt: width, height_pt: height }
+  { width_pt: width, height_pt: height, }
 }
 
 ///|
@@ -113,7 +113,7 @@ fn html_table_size(
     let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
     (cell_size.width_pt, cell_size.height_pt)
   })
-  { width_pt, height_pt }
+  { width_pt, height_pt, }
 }
 
 ///|
@@ -155,7 +155,7 @@ pub fn html_label_size(
       let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
         text, font_name, font_size_pt,
       )
-      { width_pt, height_pt }
+      { width_pt, height_pt, }
     }
     @html_label.HtmlLabel::Table(table) =>
       html_table_size(table, font_name, font_size_pt)
@@ -187,7 +187,7 @@ fn collect_html_ports(
           cell_layout.rect,
           node_rect,
         )
-        ports[name] = { center, size, sides }
+        ports[name] = { center, size, sides, }
       }
       None => ()
     }

@@ -60,5 +60,5 @@ pub fn build_transpose_seed_maps(
       None => edge_in[head] = [edge_idx]
     }
   }
-  { edge_penalty, edge_in, edge_out }
+  { edge_penalty, edge_in, edge_out, }
 }

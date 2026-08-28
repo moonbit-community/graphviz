@@ -28,15 +28,15 @@ priv struct TailHeadPoints {
 ///|
 fn nudge_endpoints(tail : @geom.Point, head : @geom.Point) -> TailHeadPoints {
   if head.y < tail.y {
-    { tail: point(tail.x, tail.y - 1.0), head: point(head.x, head.y + 1.0) }
+    { tail: point(tail.x, tail.y - 1.0), head: point(head.x, head.y + 1.0), }
   } else if head.y > tail.y {
-    { tail: point(tail.x, tail.y + 1.0), head: point(head.x, head.y - 1.0) }
+    { tail: point(tail.x, tail.y + 1.0), head: point(head.x, head.y - 1.0), }
   } else if head.x > tail.x {
-    { tail: point(tail.x + 1.0, tail.y), head: point(head.x - 1.0, head.y) }
+    { tail: point(tail.x + 1.0, tail.y), head: point(head.x - 1.0, head.y), }
   } else if head.x < tail.x {
-    { tail: point(tail.x - 1.0, tail.y), head: point(head.x + 1.0, head.y) }
+    { tail: point(tail.x - 1.0, tail.y), head: point(head.x + 1.0, head.y), }
   } else {
-    { tail, head }
+    { tail, head, }
   }
 }
 
@@ -69,28 +69,28 @@ fn orthogonal_tb_endpoint_dirs(
   let abs_dy = Double::abs(dy)
   if abs_dx <= 0.000001 {
     if dy >= 0.0 {
-      return { tail: point(0.0, 1.0), head: point(0.0, -1.0) }
+      return { tail: point(0.0, 1.0), head: point(0.0, -1.0), }
     } else {
-      return { tail: point(0.0, -1.0), head: point(0.0, 1.0) }
+      return { tail: point(0.0, -1.0), head: point(0.0, 1.0), }
     }
   }
   if abs_dy <= 0.000001 {
     if dx >= 0.0 {
-      return { tail: point(1.0, 0.0), head: point(-1.0, 0.0) }
+      return { tail: point(1.0, 0.0), head: point(-1.0, 0.0), }
     } else {
-      return { tail: point(-1.0, 0.0), head: point(1.0, 0.0) }
+      return { tail: point(-1.0, 0.0), head: point(1.0, 0.0), }
     }
   }
   if dx >= 0.0 && dy < 0.0 {
-    return { tail: point(0.0, -1.0), head: point(-1.0, 0.0) }
+    return { tail: point(0.0, -1.0), head: point(-1.0, 0.0), }
   }
   if dx < 0.0 && dy < 0.0 {
-    return { tail: point(-1.0, 0.0), head: point(0.0, 1.0) }
+    return { tail: point(-1.0, 0.0), head: point(0.0, 1.0), }
   }
   if dx < 0.0 && dy >= 0.0 {
-    return { tail: point(0.0, 1.0), head: point(1.0, 0.0) }
+    return { tail: point(0.0, 1.0), head: point(1.0, 0.0), }
   }
-  { tail: point(1.0, 0.0), head: point(0.0, -1.0) }
+  { tail: point(1.0, 0.0), head: point(0.0, -1.0), }
 }
 
 ///|
@@ -1081,7 +1081,7 @@ fn line_bezier_points(
   let endpoint_base = if point_dist(tail_center, head_center) <= 0.000001 {
     nudge_endpoints(tail_center, head_center)
   } else {
-    { tail: tail_center, head: head_center }
+    { tail: tail_center, head: head_center, }
   }
   let tail_seed = endpoint_base.tail
   let head_seed = endpoint_base.head

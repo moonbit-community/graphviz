@@ -161,7 +161,7 @@ fn edge_port_cmp_info(
       }
     }
   }
-  { tail_defined, tail_pos: tail_rel, head_defined, head_pos: head_rel }
+  { tail_defined, tail_pos: tail_rel, head_defined, head_pos: head_rel, }
 }
 
 ///|

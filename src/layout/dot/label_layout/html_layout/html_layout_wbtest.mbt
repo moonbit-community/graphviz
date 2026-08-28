@@ -16,7 +16,7 @@ test "html_ports include td port names" {
   let ports = html_ports(
     node,
     @label_attrs.label_text(node),
-    @geom.Point::{ x: 0.0, y: 0.0 },
+    @geom.Point::{ x: 0.0, y: 0.0, },
     size,
   )
   match ports.get("p1") {
@@ -44,7 +44,7 @@ test "html_ports recurse into nested tables and preserve nested cell geometry" {
   let ports = html_ports(
     node,
     @label_attrs.label_text(node),
-    @geom.Point::{ x: 0.0, y: 0.0 },
+    @geom.Point::{ x: 0.0, y: 0.0, },
     size,
   )
   let port = match ports.get("inner") {

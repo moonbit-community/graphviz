@@ -32,7 +32,7 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
         let (width, height) = @label_metrics.label_text_dimensions(
           text, font, font_size_pt,
         )
-        Some({ width, height })
+        Some({ width, height, })
       }
     None => None
   }
@@ -41,7 +41,7 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
 ///|
 pub fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
   match @edge_label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
-    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
 }
@@ -53,9 +53,9 @@ pub fn maybe_flip_dims(
   flip : Bool,
 ) -> LabelDims {
   if flip {
-    { width: height, height: width }
+    { width: height, height: width, }
   } else {
-    { width, height }
+    { width, height, }
   }
 }
 
@@ -81,7 +81,7 @@ pub fn build_edges_by_tail(
 ///|
 fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
   match @edge_label_metrics.edge_mid_label_metrics(edge) {
-    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
 }
@@ -92,7 +92,7 @@ fn edge_attr_metrics_for_xlabel(
   key : String,
 ) -> XLabelMetrics? {
   match @edge_label_metrics.edge_label_metrics_for_attr(edge, key, true) {
-    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
 }
@@ -146,7 +146,7 @@ fn push_deferred_label_anchor(
   objects : Array[XObject],
 ) -> Unit {
   let idx = push_unset_xlabel_label(target, metrics, flip, labels)
-  objects.push({ pos: anchor, width: 0.0, height: 0.0, label_index: Some(idx) })
+  objects.push({ pos: anchor, width: 0.0, height: 0.0, label_index: Some(idx), })
 }
 
 ///|

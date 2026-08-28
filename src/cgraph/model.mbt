@@ -199,7 +199,7 @@ pub fn Graph::new(
     edge_index: Map([]),
     edge_pair_index: Map([]),
   }
-  { root, id: 0 }
+  { root, id: 0, }
 }
 
 ///|
@@ -220,7 +220,7 @@ pub fn Graph::is_strict(self : Graph) -> Bool {
 ///|
 pub fn Graph::parent(self : Graph) -> Graph? {
   match self.root.graphs[self.id].parent {
-    Some(parent_id) => Some({ root: self.root, id: parent_id })
+    Some(parent_id) => Some({ root: self.root, id: parent_id, })
     None => None
   }
 }
@@ -236,14 +236,14 @@ pub fn Graph::subgraph(self : Graph, name? : String) -> Graph {
     Some(label) => {
       let existing = self.root.graphs[self.id].subgraphs_by_name.get(label)
       match existing {
-        Some(id) => { root: self.root, id }
+        Some(id) => { root: self.root, id, }
         None => {
           let state = empty_graph_state(Some(label), Some(self.id))
           let new_id = self.root.graphs.length()
           self.root.graphs.push(state)
           self.root.graphs[self.id].subgraphs_by_name[label] = new_id
           self.root.graphs[self.id].subgraphs.push(new_id)
-          { root: self.root, id: new_id }
+          { root: self.root, id: new_id, }
         }
       }
     }
@@ -252,14 +252,14 @@ pub fn Graph::subgraph(self : Graph, name? : String) -> Graph {
       let new_id = self.root.graphs.length()
       self.root.graphs.push(state)
       self.root.graphs[self.id].subgraphs.push(new_id)
-      { root: self.root, id: new_id }
+      { root: self.root, id: new_id, }
     }
   }
 }
 
 ///|
 pub fn Graph::subgraphs(self : Graph) -> Array[Graph] {
-  self.root.graphs[self.id].subgraphs.map(id => { root: self.root, id })
+  self.root.graphs[self.id].subgraphs.map(id => { root: self.root, id, })
 }
 
 ///|
@@ -270,27 +270,27 @@ pub fn Graph::node(self : Graph, name : String) -> Node {
     None => {
       let new_id = self.root.nodes.length()
       let attrs = collect_defaults(self.root, self.id, AttrKind::Node)
-      let state : NodeState = { name, home_graph_id: self.id, attrs }
+      let state : NodeState = { name, home_graph_id: self.id, attrs, }
       self.root.nodes.push(state)
       self.root.nodes_by_name[name] = new_id
       new_id
     }
   }
   add_node_membership(self.root, self.id, node_id)
-  { root: self.root, id: node_id }
+  { root: self.root, id: node_id, }
 }
 
 ///|
 pub fn Graph::find_node(self : Graph, name : String) -> Node? {
   match self.root.nodes_by_name.get(name) {
-    Some(id) => Some({ root: self.root, id })
+    Some(id) => Some({ root: self.root, id, })
     None => None
   }
 }
 
 ///|
 pub fn Graph::nodes(self : Graph) -> Array[Node] {
-  self.root.graphs[self.id].nodes.map(id => { root: self.root, id })
+  self.root.graphs[self.id].nodes.map(id => { root: self.root, id, })
 }
 
 ///|
@@ -345,12 +345,12 @@ pub fn Graph::edge(
     }
   }
   add_edge_membership(self.root, self.id, edge_id)
-  { root: self.root, id: edge_id }
+  { root: self.root, id: edge_id, }
 }
 
 ///|
 pub fn Graph::edges(self : Graph) -> Array[Edge] {
-  self.root.graphs[self.id].edges.map(id => { root: self.root, id })
+  self.root.graphs[self.id].edges.map(id => { root: self.root, id, })
 }
 
 ///|
@@ -361,17 +361,17 @@ pub fn Node::name(self : Node) -> String {
 ///|
 pub fn Node::graph(self : Node) -> Graph {
   let home = self.root.nodes[self.id].home_graph_id
-  { root: self.root, id: home }
+  { root: self.root, id: home, }
 }
 
 ///|
 pub fn Edge::tail(self : Edge) -> Node {
-  { root: self.root, id: self.root.edges[self.id].tail }
+  { root: self.root, id: self.root.edges[self.id].tail, }
 }
 
 ///|
 pub fn Edge::head(self : Edge) -> Node {
-  { root: self.root, id: self.root.edges[self.id].head }
+  { root: self.root, id: self.root.edges[self.id].head, }
 }
 
 ///|

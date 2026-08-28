@@ -27,7 +27,7 @@ fn rank_parse_point(text : String) -> @geom.Point {
   } else {
     0.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|

@@ -7,7 +7,7 @@ test "port side helpers and endpoint slope" {
   let size = @node_primitives.node_size_from_points(100.0, 50.0)
   let pos = point(10.0, 20.0)
   let rect = port_side_rect(pos, size)
-  assert_eq(rect, { llx: -40.0, lly: -5.0, urx: 60.0, ury: 45.0 })
+  assert_eq(rect, { llx: -40.0, lly: -5.0, urx: 60.0, ury: 45.0, })
   assert_eq(port_side_count(rect, pos, size), 4)
   let port_rect : @geom.Rect = {
     llx: rect.llx,
@@ -27,5 +27,5 @@ test "port side helpers and endpoint slope" {
     true,
     None,
   )
-  assert_eq(slope, { x: 0.0, y: 0.0 })
+  assert_eq(slope, { x: 0.0, y: 0.0, })
 }

@@ -8,7 +8,7 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
   let node = graph.node("a")
   let size = sample_node_size(10.0, 10.0)
   let output_sizes : Map[String, NodeSize] = { "a": size }
-  let positions : Map[String, @geom.Point] = { "a": { x: 5.0, y: 5.0 } }
+  let positions : Map[String, @geom.Point] = { "a": { x: 5.0, y: 5.0, } }
   let position_state = sample_position_result(
     positions,
     Map([]),
@@ -25,10 +25,10 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
     RecordOrientation::Horizontal,
   )
   let cluster_bboxes : Map[String, @geom.Rect] = {
-    "cluster": { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 },
+    "cluster": { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, },
   }
   let label_ports_map : Map[String, Map[String, RecordPort]] = {
-    "a": { "p": sample_record_port({ x: 1.0, y: 2.0 }, 2.0, 4.0) },
+    "a": { "p": sample_record_port({ x: 1.0, y: 2.0, }, 2.0, 4.0) },
   }
   let prep = sample_layout_prep(
     RankDir::TB,
@@ -55,11 +55,11 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
   assert_close(adjusted.ratio_sy, 1.0)
   assert_eq(
     adjusted.positions_state.positions.get("a"),
-    Some({ x: 5.0, y: 5.0 }),
+    Some({ x: 5.0, y: 5.0, }),
   )
   assert_eq(
     adjusted.cluster_bboxes.get("cluster"),
-    Some({ llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 }),
+    Some({ llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, }),
   )
   let adjusted_ports = require_map_value(
     adjusted.label_ports_map,
@@ -67,7 +67,7 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
     "adjusted ports",
   )
   let adjusted_port = require_map_value(adjusted_ports, "p", "adjusted port")
-  assert_point_close(adjusted_port.center, { x: 1.0, y: 2.0 })
+  assert_point_close(adjusted_port.center, { x: 1.0, y: 2.0, })
   assert_close(adjusted_port.size.width_pt, 2.0)
   assert_close(adjusted_port.size.height_pt, 4.0)
 }
@@ -80,8 +80,8 @@ test "build_routing_ratio_adjusted_data scales positions cluster boxes and port 
   let node = graph.node("a")
   let size = sample_node_size(10.0, 10.0)
   let output_sizes : Map[String, NodeSize] = { "a": size }
-  let positions : Map[String, @geom.Point] = { "a": { x: 5.0, y: 5.0 } }
-  let vnode_positions : Map[String, @geom.Point] = { "v1": { x: 1.5, y: 2.5 } }
+  let positions : Map[String, @geom.Point] = { "a": { x: 5.0, y: 5.0, } }
+  let vnode_positions : Map[String, @geom.Point] = { "v1": { x: 1.5, y: 2.5, } }
   let position_state = sample_position_result(
     positions,
     vnode_positions,
@@ -98,10 +98,10 @@ test "build_routing_ratio_adjusted_data scales positions cluster boxes and port 
     RecordOrientation::Horizontal,
   )
   let cluster_bboxes : Map[String, @geom.Rect] = {
-    "cluster": { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0 },
+    "cluster": { llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, },
   }
   let label_ports_map : Map[String, Map[String, RecordPort]] = {
-    "a": { "p": sample_record_port({ x: 1.0, y: 2.0 }, 2.0, 4.0) },
+    "a": { "p": sample_record_port({ x: 1.0, y: 2.0, }, 2.0, 4.0) },
   }
   let prep = sample_layout_prep(
     RankDir::TB,
@@ -128,11 +128,11 @@ test "build_routing_ratio_adjusted_data scales positions cluster boxes and port 
   assert_close(adjusted.ratio_sy, 14.4)
   assert_eq(
     adjusted.positions_state.positions.get("a"),
-    Some({ x: 36.0, y: 72.0 }),
+    Some({ x: 36.0, y: 72.0, }),
   )
   assert_eq(
     adjusted.positions_state.vnode_positions.get("v1"),
-    Some({ x: 11.0, y: 36.0 }),
+    Some({ x: 11.0, y: 36.0, }),
   )
   assert_close(
     require_map_value(
@@ -166,7 +166,7 @@ test "build_routing_ratio_adjusted_data scales positions cluster boxes and port 
     "scaled ports",
   )
   let adjusted_port = require_map_value(adjusted_ports, "p", "scaled port")
-  assert_point_close(adjusted_port.center, { x: 7.2, y: 28.8 })
+  assert_point_close(adjusted_port.center, { x: 7.2, y: 28.8, })
   assert_close(adjusted_port.size.width_pt, 14.4)
   assert_close(adjusted_port.size.height_pt, 57.6)
 }

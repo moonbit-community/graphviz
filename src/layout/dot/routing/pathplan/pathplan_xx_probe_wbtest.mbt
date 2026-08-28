@@ -1,6 +1,6 @@
 ///|
 fn probe_point(x : Double, y : Double) -> @geom.Point {
-  { x, y }
+  { x, y, }
 }
 
 ///|

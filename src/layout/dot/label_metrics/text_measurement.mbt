@@ -37,9 +37,9 @@ priv struct TextOffsets {
 ///|
 fn text_offsets(font_name : String, font_size_pt : Double) -> TextOffsets {
   match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
-    Some((layout, centerline)) => { layout, centerline }
+    Some((layout, centerline)) => { layout, centerline, }
     None =>
-      { layout: 0.0, centerline: font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE }
+      { layout: 0.0, centerline: font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE, }
   }
 }
 
@@ -321,7 +321,7 @@ fn try_multiline_override(
       None => return None
     }
   }
-  Some({ width: max_width, height: total_height })
+  Some({ width: max_width, height: total_height, })
 }
 
 ///|

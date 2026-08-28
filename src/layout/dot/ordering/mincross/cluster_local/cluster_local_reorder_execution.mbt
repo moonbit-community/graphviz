@@ -661,7 +661,7 @@ fn build_cluster_node_order_context(
     cluster_node_order[name] = order_idx
     order_idx = order_idx + 1
   }
-  { cluster_nodes, cluster_node_order }
+  { cluster_nodes, cluster_node_order, }
 }
 
 ///|
@@ -1031,7 +1031,7 @@ fn build_cluster_graph_order(
     cluster_names.push(name)
   }
   if cluster_graphs.length() == 0 {
-    return { cluster_graphs, cluster_names }
+    return { cluster_graphs, cluster_names, }
   }
   let cluster_index = @order_graph.build_cluster_order_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map([])
@@ -1061,7 +1061,7 @@ fn build_cluster_graph_order(
       }
     })
   }
-  { cluster_graphs, cluster_names }
+  { cluster_graphs, cluster_names, }
 }
 
 ///|
@@ -1494,7 +1494,7 @@ fn build_local_neighbor_lists_for_name(
       merge_context.neighbor_sources.source_out_neighbors,
       merge_context.neighbor_sources.source_in_neighbors,
     ) {
-    return { out_neighbors, in_neighbors }
+    return { out_neighbors, in_neighbors, }
   }
   let raw_out = merge_context.neighbor_sources.raw_out_neighbors
     .get(name)
@@ -1506,7 +1506,7 @@ fn build_local_neighbor_lists_for_name(
     .get(name)
     .unwrap_or_default()
   append_raw_neighbors_with_external_anchor(in_neighbors, raw_in, merge_context)
-  { out_neighbors, in_neighbors }
+  { out_neighbors, in_neighbors, }
 }
 
 ///|
@@ -1541,5 +1541,5 @@ fn build_local_neighbor_maps(
     graphviz_out_neighbors[name] = local_neighbor_lists.out_neighbors
     graphviz_in_neighbors[name] = local_neighbor_lists.in_neighbors
   }
-  { graphviz_out_neighbors, graphviz_in_neighbors }
+  { graphviz_out_neighbors, graphviz_in_neighbors, }
 }

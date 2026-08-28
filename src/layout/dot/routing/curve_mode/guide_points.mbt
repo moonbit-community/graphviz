@@ -85,11 +85,11 @@ fn edge_polyline_points(input : EdgePolylinePointsInput) -> Array[@geom.Point] {
                     None => pos.y
                   }
                   if tail_anchor.x <= head_anchor.x {
-                    points.push({ x: pos.x - half, y: bend_y })
-                    points.push({ x: pos.x + half, y: bend_y })
+                    points.push({ x: pos.x - half, y: bend_y, })
+                    points.push({ x: pos.x + half, y: bend_y, })
                   } else {
-                    points.push({ x: pos.x + half, y: bend_y })
-                    points.push({ x: pos.x - half, y: bend_y })
+                    points.push({ x: pos.x + half, y: bend_y, })
+                    points.push({ x: pos.x - half, y: bend_y, })
                   }
                 } else {
                   points.push(pos)
@@ -198,7 +198,7 @@ fn edge_polyline_points(input : EdgePolylinePointsInput) -> Array[@geom.Point] {
                         y: y - nodesep_pt * y_dir,
                       })
                     } else {
-                      points.push({ x, y })
+                      points.push({ x, y, })
                     }
                   }
                   None => ()

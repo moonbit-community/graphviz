@@ -387,7 +387,7 @@ fn add_flat_label_vnodes(
     let updated_rank = insert_at(names, place, name)
     x_groups[label_rank] = updated_rank
     rebuild_order(updated_rank)
-    flat_label_nodes[name] = { tail, head, rank: label_rank }
+    flat_label_nodes[name] = { tail, head, rank: label_rank, }
     flat_label_edges[@edge_identity.edge_key(edge)] = name
     let vnode_edge_key = @edge_identity.edge_vnode_key(edge)
     match vnode_info.edge_vnodes.get(vnode_edge_key) {

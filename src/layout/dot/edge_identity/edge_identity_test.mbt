@@ -18,8 +18,8 @@ test "unique_virtual_node_name allocates base name then collision suffixes" {
 
 ///|
 test "port helpers distinguish implicit explicit named and compass ports" {
-  let implicit : @cgraph.Port = { name: None, compass: None }
-  let named : @cgraph.Port = { name: Some("field"), compass: None }
+  let implicit : @cgraph.Port = { name: None, compass: None, }
+  let named : @cgraph.Port = { name: Some("field"), compass: None, }
   let compass : @cgraph.Port = {
     name: None,
     compass: Some(@cgraph.Compass::SW),
@@ -65,7 +65,7 @@ test "edge_vnode_key adds edge id only when the edge has a label" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
-  let port : @cgraph.Port = { name: None, compass: Some(@cgraph.Compass::S) }
+  let port : @cgraph.Port = { name: None, compass: Some(@cgraph.Compass::S), }
   let plain = graph.edge(a, b, tail_port=port, head_port=port)
   let labeled = graph.edge(a, b, name="labeled", tail_port=port, head_port=port)
   labeled.set_attr("label", "mid")

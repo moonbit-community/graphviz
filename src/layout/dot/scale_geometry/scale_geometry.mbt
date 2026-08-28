@@ -69,7 +69,7 @@ pub fn ratio_fill_scale_factors(
     xf = yf
     yf = tmp
   }
-  Some({ sx: xf, sy: yf })
+  Some({ sx: xf, sy: yf, })
 }
 
 ///|
@@ -78,7 +78,7 @@ pub fn scale_point(
   sx : Double,
   sy : Double,
 ) -> @geom.Point {
-  { x: point.x * sx, y: point.y * sy }
+  { x: point.x * sx, y: point.y * sy, }
 }
 
 ///|
@@ -88,7 +88,7 @@ pub fn scale_point_rounded(
   sy : Double,
 ) -> @geom.Point {
   let scaled = scale_point(point, sx, sy)
-  { x: scaled.x.round(), y: scaled.y.round() }
+  { x: scaled.x.round(), y: scaled.y.round(), }
 }
 
 ///|

@@ -144,7 +144,7 @@ fn build_lr_chain_case(ac_minlen : Int) -> LrChainCase {
   let ab = add_edge(graph, a, b, 1, 1)
   let bc = add_edge(graph, b, c, 1, 1)
   ignore(add_edge(graph, a, c, ac_minlen, 1))
-  { graph, ab, bc }
+  { graph, ab, bc, }
 }
 
 ///|
@@ -165,7 +165,7 @@ fn build_lr_odd_slack_diamond_case() -> LrOddSlackDiamondCase {
   let ac = add_edge(graph, a, c, 1, 1)
   ignore(add_edge(graph, b, d, 4, 1))
   let cd = add_edge(graph, c, d, 1, 1)
-  { graph, ac, cd }
+  { graph, ac, cd, }
 }
 
 ///|
@@ -184,7 +184,7 @@ fn build_lr_fanin_case() -> LrFanInCase {
   ignore(add_edge(graph, a, b, 4, 1))
   let ac = add_edge(graph, a, c, 1, 1)
   let cb = add_edge(graph, c, b, 1, 1)
-  { graph, ac, cb }
+  { graph, ac, cb, }
 }
 
 ///|

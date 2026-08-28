@@ -51,11 +51,11 @@ test "build_path_adjacency uses overridden tail and head order" {
 ///|
 test "pathplan_bounds merges vnode positions and expands each rank by route width" {
   let positions : Map[String, @geom.Point] = Map([])
-  positions["a"] = { x: 10.0, y: 0.0 }
-  positions["b"] = { x: 40.0, y: 0.0 }
+  positions["a"] = { x: 10.0, y: 0.0, }
+  positions["b"] = { x: 40.0, y: 0.0, }
 
   let vnode_positions : Map[String, @geom.Point] = Map([])
-  vnode_positions["v"] = { x: -20.0, y: 0.0 }
+  vnode_positions["v"] = { x: -20.0, y: 0.0, }
 
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["a"] = @node_primitives.vnode_size_from_widths(2.0, 4.0)

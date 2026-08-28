@@ -38,7 +38,7 @@ test "compute_root_cluster_padding only applies to root clustered boundary ranks
 
 ///|
 test "apply_root_port_padding and apply_root_margin_x respect root and cluster gating" {
-  let bbox : @geom.Rect = { llx: 0.0, lly: 1.0, urx: 10.0, ury: 11.0 }
+  let bbox : @geom.Rect = { llx: 0.0, lly: 1.0, urx: 10.0, ury: 11.0, }
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   root.set_attr("margin", "0.5")
   ignore(root.subgraph(name="cluster_0"))

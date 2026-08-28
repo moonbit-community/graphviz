@@ -172,7 +172,7 @@ fn reorder_constraint_graph(
 ) -> ReorderConstraintGraphOutput {
   let total = input.graph.nodes.length()
   if total == 0 || input.order.length() != total {
-    return { graph: input.graph, index: input.index }
+    return { graph: input.graph, index: input.index, }
   }
   let new_graph = @network_simplex.new_graph()
   let old_to_new : Array[Int] = []
@@ -201,7 +201,7 @@ fn reorder_constraint_graph(
     let new_idx = old_to_new[old_idx]
     new_index[name] = new_idx
   }
-  { graph: new_graph, index: new_index }
+  { graph: new_graph, index: new_index, }
 }
 
 ///|
@@ -333,7 +333,7 @@ fn build_constraint_snapshot(
       weight: edge.weight,
     })
   }
-  let snapshot = { nodes, edges }
+  let snapshot = { nodes, edges, }
   touch_constraint_snapshot(snapshot)
   snapshot
 }
@@ -438,7 +438,7 @@ fn build_vnode_extra_nodes(
     for name in vnode_order {
       match vnode_ranks.get(name) {
         Some(rank) => {
-          extra.push({ name, rank })
+          extra.push({ name, rank, })
           seen[name] = true
         }
         None => ()
@@ -448,7 +448,7 @@ fn build_vnode_extra_nodes(
   if extra.length() < vnode_ranks.length() {
     for name, rank in vnode_ranks {
       if seen.get(name) is None {
-        extra.push({ name, rank })
+        extra.push({ name, rank, })
       }
     }
   }
@@ -483,7 +483,7 @@ fn build_xpos_computation_input_from_sources(
   } else {
     Map([])
   }
-  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes }
+  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes, }
 }
 
 ///|

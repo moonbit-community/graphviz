@@ -62,7 +62,7 @@ fn build_edge_endpoint_port_projection(
     head_ports.push(head_port)
     endpoint_idx = endpoint_idx + 1
   }
-  { tail_names, head_names, tail_ports, head_ports }
+  { tail_names, head_names, tail_ports, head_ports, }
 }
 
 ///|
@@ -84,7 +84,7 @@ fn sample_edge_endpoint_ports(
     )
     idx = idx + 1
   }
-  { tail_values, head_values }
+  { tail_values, head_values, }
 }
 
 ///|

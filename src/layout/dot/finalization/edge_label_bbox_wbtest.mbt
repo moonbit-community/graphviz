@@ -12,7 +12,7 @@ test "expand_layout_tree_bbox_for_edge_labels expands root bbox for endpoint lab
 
   let layout = postprocess_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     edges=[
       postprocess_make_edge_layout(
         edge,
@@ -20,13 +20,13 @@ test "expand_layout_tree_bbox_for_edge_labels expands root bbox for endpoint lab
           start: None,
           end: None,
           points: [
-            { x: 0.0, y: 0.0 },
-            { x: 3.0, y: 3.0 },
-            { x: 6.0, y: 6.0 },
-            { x: 9.0, y: 9.0 },
+            { x: 0.0, y: 0.0, },
+            { x: 3.0, y: 3.0, },
+            { x: 6.0, y: 6.0, },
+            { x: 9.0, y: 9.0, },
           ],
         },
-        head_label_pos=Some({ x: 20.0, y: 15.0 }),
+        head_label_pos=Some({ x: 20.0, y: 15.0, }),
       ),
     ],
   )

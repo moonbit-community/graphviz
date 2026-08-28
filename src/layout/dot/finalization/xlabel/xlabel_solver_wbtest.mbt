@@ -4,7 +4,7 @@
 
 ///|
 fn make_label(target : XLabelTarget, width : Double, height : Double) -> XLabel {
-  { target, width, height, pos: @edge_spline.point(0.0, 0.0), set: false }
+  { target, width, height, pos: @edge_spline.point(0.0, 0.0), set: false, }
 }
 
 ///|
@@ -14,7 +14,7 @@ fn make_object(
   height : Double,
   label_index? : Int? = None,
 ) -> XObject {
-  { pos, width, height, label_index }
+  { pos, width, height, label_index, }
 }
 
 ///|

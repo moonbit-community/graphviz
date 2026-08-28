@@ -67,7 +67,7 @@ fn arrow_clip_start_segment(
 ) -> SegmentClipResult {
   let start_point = points[start_idx]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return { points, idx: start_idx, anchor: start_point }
+    return { points, idx: start_idx, anchor: start_point, }
   }
   let len2 = arrow_len * arrow_len
   let mut start = start_idx
@@ -86,7 +86,7 @@ fn arrow_clip_start_segment(
   out[start + 1] = clipped.points[1]
   out[start + 2] = clipped.points[2]
   out[start + 3] = clipped.points[3]
-  { points: out, idx: start, anchor: start_point }
+  { points: out, idx: start, anchor: start_point, }
 }
 
 ///|
@@ -99,7 +99,7 @@ fn arrow_clip_end_segment(
 ) -> SegmentClipResult {
   let end_point = points[end_idx + 3]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return { points, idx: end_idx, anchor: end_point }
+    return { points, idx: end_idx, anchor: end_point, }
   }
   let len2 = arrow_len * arrow_len
   let mut end = end_idx
@@ -118,7 +118,7 @@ fn arrow_clip_end_segment(
   out[end + 1] = clipped.points[1]
   out[end + 2] = clipped.points[2]
   out[end + 3] = clipped.points[3]
-  { points: out, idx: end, anchor: end_point }
+  { points: out, idx: end, anchor: end_point, }
 }
 
 ///|
@@ -165,7 +165,7 @@ fn clip_spline_arrows_ortho(
     out[end_idx + 1] = s
     out[end_idx + 2] = t
     out[end_idx + 3] = t
-    return { points: out, start_point, end_point }
+    return { points: out, start_point, end_point, }
   }
   if include_head {
     let p = out[end_idx]
@@ -203,7 +203,7 @@ fn clip_spline_arrows_ortho(
     out[start_idx + 1] = r
     out[start_idx + 2] = q
   }
-  { points: out, start_point, end_point }
+  { points: out, start_point, end_point, }
 }
 
 ///|
@@ -250,9 +250,9 @@ fn clip_spline_arrows(
       trimmed.push(out[idx])
       idx += 1
     }
-    { points: trimmed, start_point, end_point }
+    { points: trimmed, start_point, end_point, }
   } else {
-    { points: out, start_point, end_point }
+    { points: out, start_point, end_point, }
   }
 }
 
@@ -285,7 +285,7 @@ fn arrow_end_clip(
     clipped[1],
     clipped[0],
   ]
-  { points: new_points }
+  { points: new_points, }
 }
 
 ///|
@@ -312,5 +312,5 @@ fn arrow_start_clip(
     clipped[1],
     clipped[0],
   ]
-  { points: new_points }
+  { points: new_points, }
 }

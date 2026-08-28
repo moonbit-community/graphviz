@@ -89,7 +89,7 @@ pub fn recover_slack_vnodes(input : RecoverSlackVnodesInput) -> Unit {
     if vnode_is_label_vnode(vnode, vnode_sizes) {
       let new_x = box.urx
       let left = new_x - box.llx
-      let new_pos : @geom.Point = { x: new_x, y: vnode_y }
+      let new_pos : @geom.Point = { x: new_x, y: vnode_y, }
       let new_size = @node_primitives.vnode_size_from_widths_with_h(
         left,
         size.right_pt,
@@ -102,7 +102,7 @@ pub fn recover_slack_vnodes(input : RecoverSlackVnodesInput) -> Unit {
     } else {
       let new_x = (box.llx + box.urx) / 2.0
       let half = (box.urx - box.llx) / 2.0
-      let new_pos : @geom.Point = { x: new_x, y: vnode_y }
+      let new_pos : @geom.Point = { x: new_x, y: vnode_y, }
       let new_size = @node_primitives.vnode_size_from_widths_with_h(
         half,
         half,

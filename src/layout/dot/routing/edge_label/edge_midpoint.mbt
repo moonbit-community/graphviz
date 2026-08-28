@@ -60,7 +60,7 @@ fn edge_endpoints(edge_layout : DotLayoutEdge) -> EdgeEndpoints? {
       edge_tail_point_for_layout(edge_layout),
       edge_head_point_for_layout(edge_layout),
     ) {
-    (Some(tail), Some(head)) => Some({ tail, head })
+    (Some(tail), Some(head)) => Some({ tail, head, })
     _ => None
   }
 }

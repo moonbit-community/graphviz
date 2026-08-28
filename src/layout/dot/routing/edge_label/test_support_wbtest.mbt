@@ -46,7 +46,7 @@ fn straight_spline_points() -> Array[@geom.Point] {
 
 ///|
 fn straight_spline() -> @geom.Spline {
-  { start: None, end: None, points: straight_spline_points() }
+  { start: None, end: None, points: straight_spline_points(), }
 }
 
 ///|

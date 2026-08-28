@@ -163,7 +163,7 @@ fn find_cluster_block_bounds(
       last_cluster = i
     }
   }
-  { first_cluster, last_cluster }
+  { first_cluster, last_cluster, }
 }
 
 ///|
@@ -247,7 +247,7 @@ fn order_rank_names_by_cluster_buckets(
   let cluster_ordered : Array[ClusterOrderBucket] = []
   for idx, cluster in cluster_seq {
     let base = order_map.get(cluster).unwrap_or(order_map.length() + idx)
-    cluster_ordered.push({ order: base, seq_idx: idx, cluster })
+    cluster_ordered.push({ order: base, seq_idx: idx, cluster, })
   }
   if cluster_ordered.length() > 1 {
     cluster_ordered.sort_by((a, b) => {

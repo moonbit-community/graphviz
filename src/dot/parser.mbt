@@ -35,7 +35,7 @@ fn Parser::new(src : String) -> Parser raise DotParseError {
   let current = lexer.next_token()
   let next = lexer.next_token()
   dot_parse_trace("dot: first token=\{token_label(current.token)}")
-  { lexer, current, next }
+  { lexer, current, next, }
 }
 
 ///|
@@ -132,9 +132,9 @@ fn Parser::parse_node_id(self : Parser) -> NodeId raise DotParseError {
         None => name_value = Some(first)
       }
     }
-    port = Some({ name: name_value, compass })
+    port = Some({ name: name_value, compass, })
   }
-  { name, port }
+  { name, port, }
 }
 
 ///|

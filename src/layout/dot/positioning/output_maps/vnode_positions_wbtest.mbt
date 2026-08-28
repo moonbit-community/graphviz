@@ -37,8 +37,8 @@ test "vnode_positions_from_edges interpolates vnode x by rank span" {
     rank_y,
   )
 
-  assert_eq(positions.get("v1"), Some({ x: 15.0, y: 100.0 }))
-  assert_eq(positions.get("v2"), Some({ x: 25.0, y: 300.0 }))
+  assert_eq(positions.get("v1"), Some({ x: 15.0, y: 100.0, }))
+  assert_eq(positions.get("v2"), Some({ x: 25.0, y: 300.0, }))
 }
 
 ///|
@@ -58,7 +58,7 @@ test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
     rank_y,
     fallback_fn: () => {
       fallback_calls.val = fallback_calls.val + 1
-      { "fallback": { x: 1.0, y: 2.0 } }
+      { "fallback": { x: 1.0, y: 2.0, } }
     },
   })
 
@@ -69,11 +69,11 @@ test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
     rank_y,
     fallback_fn: () => {
       fallback_calls.val = fallback_calls.val + 1
-      { "fallback": { x: 1.0, y: 2.0 } }
+      { "fallback": { x: 1.0, y: 2.0, } }
     },
   })
 
   assert_eq(fallback_calls.val, 1)
-  assert_eq(direct.get("v1"), Some({ x: 42.0, y: 18.0 }))
-  assert_eq(fallback.get("fallback"), Some({ x: 1.0, y: 2.0 }))
+  assert_eq(direct.get("v1"), Some({ x: 42.0, y: 18.0, }))
+  assert_eq(fallback.get("fallback"), Some({ x: 1.0, y: 2.0, }))
 }

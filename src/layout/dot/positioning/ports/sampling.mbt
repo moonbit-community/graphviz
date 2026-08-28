@@ -29,7 +29,7 @@ fn build_port_offsets_with_callbacks(
   } else {
     @rankdir.RankDir::TB
   }
-  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
+  let origin = @geom.Point::{ x: 0.0, y: 0.0, }
   for node in nodes {
     let name = node.name()
     let base_size = match output_sizes.get(name) {
@@ -86,14 +86,14 @@ fn record_port_point(
   match compass {
     Some(value) =>
       match value {
-        @cgraph.Compass::N => { x: center.x, y: center.y + half_h }
-        @cgraph.Compass::NE => { x: center.x + half_w, y: center.y + half_h }
-        @cgraph.Compass::E => { x: center.x + half_w, y: center.y }
-        @cgraph.Compass::SE => { x: center.x + half_w, y: center.y - half_h }
-        @cgraph.Compass::S => { x: center.x, y: center.y - half_h }
-        @cgraph.Compass::SW => { x: center.x - half_w, y: center.y - half_h }
-        @cgraph.Compass::W => { x: center.x - half_w, y: center.y }
-        @cgraph.Compass::NW => { x: center.x - half_w, y: center.y + half_h }
+        @cgraph.Compass::N => { x: center.x, y: center.y + half_h, }
+        @cgraph.Compass::NE => { x: center.x + half_w, y: center.y + half_h, }
+        @cgraph.Compass::E => { x: center.x + half_w, y: center.y, }
+        @cgraph.Compass::SE => { x: center.x + half_w, y: center.y - half_h, }
+        @cgraph.Compass::S => { x: center.x, y: center.y - half_h, }
+        @cgraph.Compass::SW => { x: center.x - half_w, y: center.y - half_h, }
+        @cgraph.Compass::W => { x: center.x - half_w, y: center.y, }
+        @cgraph.Compass::NW => { x: center.x - half_w, y: center.y + half_h, }
         @cgraph.Compass::C => center
       }
     None => center
@@ -311,7 +311,7 @@ fn resolve_compass_port_point(
   let top = half_height
   let bottom = -half_height
   let base_point = match compass {
-    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0, }
     _ =>
       match node {
         Some(value) =>
@@ -319,28 +319,28 @@ fn resolve_compass_port_point(
             shape_clipped_point_on_node(value, base_size, compass, rankdir)
           } else {
             match compass {
-              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
-              @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
-              @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
-              @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
-              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
-              @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
-              @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
-              @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
-              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top, }
+              @cgraph.Compass::NE => @geom.Point::{ x: right, y: top, }
+              @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0, }
+              @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom, }
+              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom, }
+              @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom, }
+              @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0, }
+              @cgraph.Compass::NW => @geom.Point::{ x: left, y: top, }
+              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0, }
             }
           }
         None =>
           match compass {
-            @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
-            @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
-            @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
-            @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
-            @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
-            @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
-            @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
-            @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
-            @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+            @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top, }
+            @cgraph.Compass::NE => @geom.Point::{ x: right, y: top, }
+            @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0, }
+            @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom, }
+            @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom, }
+            @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom, }
+            @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0, }
+            @cgraph.Compass::NW => @geom.Point::{ x: left, y: top, }
+            @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0, }
           }
       }
   }

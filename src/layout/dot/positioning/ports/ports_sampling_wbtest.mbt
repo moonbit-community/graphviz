@@ -15,18 +15,18 @@ fn assert_close(
 
 ///|
 test "port order fraction keeps Graphviz cardinal compass quantization" {
-  assert_eq(port_order_fraction({ x: 0.0, y: 0.0 }), 0.5)
-  assert_close(port_order_fraction({ x: 0.0, y: 1.0 }), 0.0)
-  assert_close(port_order_fraction({ x: -1.0, y: 0.0 }), 0.25)
-  assert_close(port_order_fraction({ x: 0.0, y: -1.0 }), 0.5)
-  assert_close(port_order_fraction({ x: 1.0, y: 0.0 }), 0.75)
+  assert_eq(port_order_fraction({ x: 0.0, y: 0.0, }), 0.5)
+  assert_close(port_order_fraction({ x: 0.0, y: 1.0, }), 0.0)
+  assert_close(port_order_fraction({ x: -1.0, y: 0.0, }), 0.25)
+  assert_close(port_order_fraction({ x: 0.0, y: -1.0, }), 0.5)
+  assert_close(port_order_fraction({ x: 1.0, y: 0.0, }), 0.75)
 }
 
 ///|
 test "record port sampling uses mapped geometry before compass fallback" {
   let size = @node_primitives.node_size_from_points(8.0, 4.0)
   let info : @record_geometry.RecordPort = {
-    center: { x: 10.0, y: 20.0 },
+    center: { x: 10.0, y: 20.0, },
     size,
     sides: 0,
   }
@@ -64,7 +64,7 @@ test "record port sampling uses mapped geometry before compass fallback" {
   )
   assert_eq(sample_edge_port_offset("n", None, offsets, _ => 42.0), 0.0)
 
-  let expected_order = port_order_fraction({ x: 14.0, y: 22.0 })
+  let expected_order = port_order_fraction({ x: 14.0, y: 22.0, })
   assert_close(
     sample_edge_port_order("n", Some(named_ne), offsets, _ => {
       x: 100.0,
@@ -80,7 +80,7 @@ test "record port sampling uses mapped geometry before compass fallback" {
     0.75,
   )
   assert_eq(
-    sample_edge_port_order("n", None, offsets, _ => { x: 1.0, y: 0.0 }),
+    sample_edge_port_order("n", None, offsets, _ => { x: 1.0, y: 0.0, }),
     0.0,
   )
 }
@@ -100,10 +100,10 @@ test "resolve_compass_port_point uses box fallback or shape-clipped point before
     sizes,
     @rankdir.RankDir::TB,
     _ => false,
-    (_node, _size, _compass, _rankdir) => { x: 99.0, y: 99.0 },
+    (_node, _size, _compass, _rankdir) => { x: 99.0, y: 99.0, },
     (point, _rankdir) => point,
   )
-  assert_eq(box_point, { x: 18.0, y: 10.0 })
+  assert_eq(box_point, { x: 18.0, y: 10.0, })
 
   let clipped_point = resolve_compass_port_point(
     "n",
@@ -112,16 +112,16 @@ test "resolve_compass_port_point uses box fallback or shape-clipped point before
     sizes,
     @rankdir.RankDir::LR,
     _ => true,
-    (_node, _size, _compass, _rankdir) => { x: 7.0, y: 3.0 },
+    (_node, _size, _compass, _rankdir) => { x: 7.0, y: 3.0, },
     (point, rankdir) => {
       if rankdir == @rankdir.RankDir::LR {
-        { x: point.y, y: -point.x }
+        { x: point.y, y: -point.x, }
       } else {
         point
       }
     },
   )
-  assert_eq(clipped_point, { x: 3.0, y: -7.0 })
+  assert_eq(clipped_point, { x: 3.0, y: -7.0, })
 }
 
 ///|
@@ -138,11 +138,11 @@ test "sample_compass_port_offset keeps unrotated x for record-like nodes" {
     sizes,
     @rankdir.RankDir::LR,
     Some(node),
-    (_name, _node, _compass, _sizes, _rankdir) => { x: 10.0, y: 4.0 },
+    (_name, _node, _compass, _sizes, _rankdir) => { x: 10.0, y: 4.0, },
     _ => false,
     (point, rankdir) => {
       if rankdir == @rankdir.RankDir::LR {
-        { x: point.y, y: -point.x }
+        { x: point.y, y: -point.x, }
       } else {
         point
       }
@@ -156,11 +156,11 @@ test "sample_compass_port_offset keeps unrotated x for record-like nodes" {
     sizes,
     @rankdir.RankDir::LR,
     Some(node),
-    (_name, _node, _compass, _sizes, _rankdir) => { x: 10.0, y: 4.0 },
+    (_name, _node, _compass, _sizes, _rankdir) => { x: 10.0, y: 4.0, },
     _ => true,
     (point, rankdir) => {
       if rankdir == @rankdir.RankDir::LR {
-        { x: point.y, y: -point.x }
+        { x: point.y, y: -point.x, }
       } else {
         point
       }

@@ -90,7 +90,7 @@ fn scan_edge_flags(edges : Array[@cgraph.Edge]) -> EdgeFlags {
       }
     }
   }
-  { has_dotted_edges, has_port_edges }
+  { has_dotted_edges, has_port_edges, }
 }
 
 ///|
@@ -179,7 +179,7 @@ fn build_size_maps(
       size
     }
   }
-  { output_sizes, order_sizes, sizes }
+  { output_sizes, order_sizes, sizes, }
 }
 
 ///|
@@ -191,7 +191,7 @@ fn build_node_port_order(
 ) -> Map[String, Double] {
   let raw_ports = @label_layout.raw_label_ports_for_node(
     node,
-    { x: 0.0, y: 0.0 },
+    { x: 0.0, y: 0.0, },
     size,
     record_orientation,
   )
@@ -266,7 +266,7 @@ fn accumulate_port_order_contrib(
       Some(order) => {
         let current = match order_sum.get(target) {
           Some(value) => value
-          None => { sum: 0.0, count: 0 }
+          None => { sum: 0.0, count: 0, }
         }
         order_sum[target] = {
           sum: current.sum + order,
@@ -339,5 +339,5 @@ fn build_port_order_metadata(
   } else {
     Map([])
   }
-  { positions: port_order_positions, contributions: port_order_contrib }
+  { positions: port_order_positions, contributions: port_order_contrib, }
 }

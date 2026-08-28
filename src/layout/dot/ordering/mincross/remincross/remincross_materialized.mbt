@@ -763,7 +763,7 @@ fn build_cluster_tail_buckets(
   for idx, cluster in cluster_order_seen {
     cluster_first_seen[cluster] = idx
   }
-  { cluster_order_seen, names_by_cluster, cluster_first_seen }
+  { cluster_order_seen, names_by_cluster, cluster_first_seen, }
 }
 
 ///|
@@ -895,7 +895,7 @@ fn build_remincross_order(
   for idx, cluster in cluster_order {
     cluster_order_pos[cluster] = idx
   }
-  { cluster_order, cluster_order_pos }
+  { cluster_order, cluster_order_pos, }
 }
 
 ///|

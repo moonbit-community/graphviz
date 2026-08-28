@@ -13,20 +13,20 @@ test "collect_cluster_label_rects recurses and skips unlabeled subgraphs" {
 
   let cluster_layout = postprocess_make_layout_tree(
     cluster,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
-    label_pos=Some({ x: 20.0, y: 30.0 }),
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
+    label_pos=Some({ x: 20.0, y: 30.0, }),
     subgraphs=[
       postprocess_make_layout_tree(
         nested,
-        { llx: 0.0, lly: 0.0, urx: 8.0, ury: 8.0 },
-        label_pos=Some({ x: 40.0, y: 50.0 }),
+        { llx: 0.0, lly: 0.0, urx: 8.0, ury: 8.0, },
+        label_pos=Some({ x: 40.0, y: 50.0, }),
       ),
     ],
   )
   let plain_layout = postprocess_make_layout_tree(
     plain,
-    { llx: 0.0, lly: 0.0, urx: 5.0, ury: 5.0 },
-    label_pos=Some({ x: 60.0, y: 70.0 }),
+    { llx: 0.0, lly: 0.0, urx: 5.0, ury: 5.0, },
+    label_pos=Some({ x: 60.0, y: 70.0, }),
   )
 
   let rects = collect_cluster_label_rects([cluster_layout, plain_layout], 3.0)
@@ -40,13 +40,13 @@ test "collect_cluster_label_rects recurses and skips unlabeled subgraphs" {
     None => fail("expected nested label metrics")
   }
   let expected_cluster = rect_from_center(
-    { x: 20.0, y: 30.0 },
+    { x: 20.0, y: 30.0, },
     cluster_metrics.width_pt,
     cluster_metrics.height_pt,
     3.0,
   )
   let expected_nested = rect_from_center(
-    { x: 40.0, y: 50.0 },
+    { x: 40.0, y: 50.0, },
     nested_metrics.width_pt,
     nested_metrics.height_pt,
     3.0,

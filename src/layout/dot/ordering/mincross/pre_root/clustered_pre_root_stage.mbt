@@ -122,7 +122,7 @@ fn build_order_seed_groups(
       )
     }
   }
-  { order_groups, order_sizes_out, order_cluster_keys, order_cluster_skeleton }
+  { order_groups, order_sizes_out, order_cluster_keys, order_cluster_skeleton, }
 }
 
 ///|
@@ -439,7 +439,10 @@ fn build_materialized_graphviz_neighbors(
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
-  { out_neighbors: graphviz_out_neighbors, in_neighbors: graphviz_in_neighbors }
+  {
+    out_neighbors: graphviz_out_neighbors,
+    in_neighbors: graphviz_in_neighbors,
+  }
 }
 
 ///|
@@ -772,7 +775,7 @@ fn build_clustered_materialized_stage(
     sources.intercluster_keys,
     reorder_context.order_node_order,
   )
-  { reorder_context, materialized }
+  { reorder_context, materialized, }
 }
 
 ///|

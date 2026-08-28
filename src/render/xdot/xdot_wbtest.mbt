@@ -13,7 +13,7 @@ fn parse_point(text : String) -> @geom.Point? {
   }
   let x = parse_double(parts[0], 0.0)
   let y = parse_double(parts[1], 0.0)
-  Some({ x, y })
+  Some({ x, y, })
 }
 
 ///|

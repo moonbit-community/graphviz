@@ -189,7 +189,7 @@ fn build_regular_spline_layout(
     spline,
     spline_result: layout_spline_result,
   })
-  { edge_layout: layout, spline_result }
+  { edge_layout: layout, spline_result, }
 }
 
 ///|

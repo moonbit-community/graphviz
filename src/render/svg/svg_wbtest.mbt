@@ -76,7 +76,7 @@ fn extract_label_entries(svg : String, label : String) -> Array[SvgLabelEntry] {
                   _ => line_x
                 }
                 let center_y = line_y - height / 2.0 + size - yoffset
-                entries.push({ center: { x: center_x, y: center_y } })
+                entries.push({ center: { x: center_x, y: center_y, }, })
               }
               _ => ()
             }
@@ -101,7 +101,7 @@ fn parse_point(text : String) -> @geom.Point? {
   }
   let x = parse_double(parts[0], 0.0)
   let y = parse_double(parts[1], 0.0)
-  Some({ x, y })
+  Some({ x, y, })
 }
 
 ///|

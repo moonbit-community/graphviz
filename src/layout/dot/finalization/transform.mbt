@@ -17,9 +17,9 @@ pub fn transform_point(
 ) -> @geom.Point {
   match rankdir {
     RankDir::TB => point
-    RankDir::BT => { x: point.x, y: bbox.lly + bbox.ury - point.y }
-    RankDir::LR => { x: bbox.lly + bbox.ury - point.y, y: point.x }
-    RankDir::RL => { x: point.y, y: point.x }
+    RankDir::BT => { x: point.x, y: bbox.lly + bbox.ury - point.y, }
+    RankDir::LR => { x: bbox.lly + bbox.ury - point.y, y: point.x, }
+    RankDir::RL => { x: point.y, y: point.x, }
   }
 }
 
@@ -58,7 +58,7 @@ pub fn shift_point(
   dx : Double,
   dy : Double,
 ) -> @geom.Point {
-  { x: point.x + dx, y: point.y + dy }
+  { x: point.x + dx, y: point.y + dy, }
 }
 
 ///|
@@ -103,10 +103,10 @@ pub fn transform_bbox_with_root(
     return bbox
   }
   let points : Array[@geom.Point] = [
-    { x: bbox.llx, y: bbox.lly },
-    { x: bbox.llx, y: bbox.ury },
-    { x: bbox.urx, y: bbox.lly },
-    { x: bbox.urx, y: bbox.ury },
+    { x: bbox.llx, y: bbox.lly, },
+    { x: bbox.llx, y: bbox.ury, },
+    { x: bbox.urx, y: bbox.lly, },
+    { x: bbox.urx, y: bbox.ury, },
   ]
   let mut min_x = 0.0
   let mut max_x = 0.0
@@ -136,7 +136,7 @@ pub fn transform_bbox_with_root(
       }
     }
   }
-  { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+  { llx: min_x, lly: min_y, urx: max_x, ury: max_y, }
 }
 
 ///|

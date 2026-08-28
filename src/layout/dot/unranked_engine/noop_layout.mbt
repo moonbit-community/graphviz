@@ -21,17 +21,17 @@ priv struct EdgeTokenParse {
 ///|
 fn parse_edge_token(token : String) -> EdgeTokenParse {
   if token == "" {
-    return { tag: None, point: None }
+    return { tag: None, point: None, }
   }
   if token.has_prefix("s,") {
     let rest = token.unsafe_substring(start=2, end=token.length())
-    return { tag: Some(EdgeTokenTag::Start), point: parse_point_attr(rest) }
+    return { tag: Some(EdgeTokenTag::Start), point: parse_point_attr(rest), }
   }
   if token.has_prefix("e,") {
     let rest = token.unsafe_substring(start=2, end=token.length())
-    return { tag: Some(EdgeTokenTag::End), point: parse_point_attr(rest) }
+    return { tag: Some(EdgeTokenTag::End), point: parse_point_attr(rest), }
   }
-  { tag: None, point: parse_point_attr(token) }
+  { tag: None, point: parse_point_attr(token), }
 }
 
 ///|
@@ -69,7 +69,7 @@ fn parse_edge_pos_segment(
   }
   let normalized = normalize_spline_points(points)
   if normalized.length() > 0 {
-    Some({ start, end, points: normalized })
+    Some({ start, end, points: normalized, })
   } else {
     None
   }
@@ -158,7 +158,7 @@ fn collect_noop_nodes_with_sizes(
   let nodes_out = build_projected_nodes_from_positions(nodes, positions, node => {
     node_size_with_fallback(sizes, node, record_orientation)
   })
-  Ok({ projection: { positions, nodes_out }, sizes })
+  Ok({ projection: { positions, nodes_out, }, sizes, })
 }
 
 ///|

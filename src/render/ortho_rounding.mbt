@@ -27,7 +27,7 @@ priv struct RoundedCorner {
 
 ///|
 fn ortho_point(x : Double, y : Double) -> @geom.Point {
-  @geom.Point::{ x, y }
+  @geom.Point::{ x, y, }
 }
 
 ///|

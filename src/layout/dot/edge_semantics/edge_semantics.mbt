@@ -132,7 +132,7 @@ pub fn edge_rank_span(
   }
   let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
   let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-  Some({ min_rank, max_rank })
+  Some({ min_rank, max_rank, })
 }
 
 ///|

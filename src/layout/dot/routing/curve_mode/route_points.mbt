@@ -16,7 +16,7 @@ fn curve_point_line_distance(
     return Double::sqrt(pdx * pdx + pdy * pdy)
   }
   let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy)
-  let proj = @geom.Point::{ x: a.x + t * dx, y: a.y + t * dy }
+  let proj = @geom.Point::{ x: a.x + t * dx, y: a.y + t * dy, }
   let pdx = point.x - proj.x
   let pdy = point.y - proj.y
   Double::sqrt(pdx * pdx + pdy * pdy)
@@ -161,7 +161,7 @@ fn sameport_path_port_box(
     (anchor.x, anchor.y)
   }
   let eps = if group_size > 3 { 0.005 } else { 0.01 }
-  { llx: bx - eps, lly: by - eps, urx: bx + eps, ury: by + eps }
+  { llx: bx - eps, lly: by - eps, urx: bx + eps, ury: by + eps, }
 }
 
 ///|

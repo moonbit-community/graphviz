@@ -75,7 +75,7 @@ fn apply_node_output_attrs(
     let output_pos : @geom.Point = match node.get_attr("shape") {
       // Graphviz rounds star-node centroids up at the 0.001 boundary.
       Some(shape) if shape.to_lower() == "star" =>
-        { x: node_layout.pos.x, y: node_layout.pos.y + 0.0005 }
+        { x: node_layout.pos.x, y: node_layout.pos.y + 0.0005, }
       _ => node_layout.pos
     }
     node.set_attr("pos", format_point(output_pos))

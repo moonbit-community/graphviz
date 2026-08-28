@@ -64,7 +64,7 @@ fn polygon_shape_attrs(node : @cgraph.Node) -> PolygonShapeAttrs {
     sides = 120
   }
   let regular = attr_bool_true(node.get_attr("regular"))
-  { sides, peripheries, orientation, distortion, skew, regular }
+  { sides, peripheries, orientation, distortion, skew, regular, }
 }
 
 ///|
@@ -241,7 +241,7 @@ fn polygon_scaled_label_bbox(
   is_box : Bool,
 ) -> ScaledLabelBBox {
   if is_box {
-    return { width_pt: label_width_pt, height_pt: label_height_pt }
+    return { width_pt: label_width_pt, height_pt: label_height_pt, }
   }
   let sqrt2 = Double::sqrt(2.0)
   let mut bb_width = label_width_pt
@@ -271,7 +271,7 @@ fn polygon_scaled_label_bbox(
       bb_height = bb_height / cos_val
     }
   }
-  { width_pt: bb_width, height_pt: bb_height }
+  { width_pt: bb_width, height_pt: bb_height, }
 }
 
 ///|
@@ -307,10 +307,10 @@ fn polygon_vertices_for_size(
   skew : Double,
 ) -> PolygonVerticesResult {
   if sides < 3 {
-    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [], }
   }
   if width_pt <= 0.0 || height_pt <= 0.0 {
-    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [], }
   }
   let sector = 2.0 * @math.PI / sides.to_double()
   let side_len = @math.sin(sector / 2.0)
@@ -318,7 +318,7 @@ fn polygon_vertices_for_size(
   let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
   let cos_half = @math.cos(sector / 2.0)
   if Double::abs(cos_half) <= 0.0000001 {
-    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [], }
   }
   let g_distortion = distortion * Double::sqrt(2.0) / cos_half
   let g_skew = skew / 2.0
@@ -354,7 +354,7 @@ fn polygon_vertices_for_size(
     base.push(@edge_spline.point(px, py))
   }
   if max_x <= 0.0 || max_y <= 0.0 {
-    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [], }
   }
   let xmax = max_x * 2.0
   let ymax = max_y * 2.0
@@ -366,7 +366,7 @@ fn polygon_vertices_for_size(
   for vertex in base {
     out.push(@edge_spline.point(vertex.x * scale_x, vertex.y * scale_y))
   }
-  { bbox_width_pt: bbox_width, bbox_height_pt: bbox_height, vertices: out }
+  { bbox_width_pt: bbox_width, bbox_height_pt: bbox_height, vertices: out, }
 }
 
 ///|

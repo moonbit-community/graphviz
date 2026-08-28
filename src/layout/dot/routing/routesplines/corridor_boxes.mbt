@@ -202,14 +202,14 @@ fn neighbor_names_for_rank(
             }
             right_idx = right_idx + 1
           }
-          return { left, right }
+          return { left, right, }
         }
         idx = idx + 1
       }
     }
     None => ()
   }
-  { left: None, right: None }
+  { left: None, right: None, }
 }
 
 ///|
@@ -430,7 +430,7 @@ fn maximal_bbox_for_name(
     lly = ury
     ury = tmp
   }
-  Some({ llx, lly, urx, ury })
+  Some({ llx, lly, urx, ury, })
 }
 
 ///|
@@ -481,7 +481,7 @@ fn rank_gap_box(
     llx = urx
     urx = tmp
   }
-  Some({ llx, lly, urx, ury })
+  Some({ llx, lly, urx, ury, })
 }
 
 ///|
@@ -536,8 +536,8 @@ fn beginpath_boxes_regular(
         boxes.push(b0)
         boxes.push(b)
       }
-      start = { x: start.x, y: start.y + 1.0 }
-      return { boxes, endpoint: start }
+      start = { x: start.x, y: start.y + 1.0, }
+      return { boxes, endpoint: start, }
     } else if (side & SIDE_BOTTOM) != 0 {
       let b = rect(
         base_box.llx,
@@ -546,30 +546,30 @@ fn beginpath_boxes_regular(
         max_double(base_box.ury, start.y),
       )
       boxes.push(b)
-      start = { x: start.x, y: start.y - 1.0 }
-      return { boxes, endpoint: start }
+      start = { x: start.x, y: start.y - 1.0, }
+      return { boxes, endpoint: start, }
     } else if (side & SIDE_LEFT) != 0 {
       let b = rect(base_box.llx, node_bottom, start.x, start.y)
       boxes.push(b)
-      start = { x: start.x - 1.0, y: start.y }
-      return { boxes, endpoint: start }
+      start = { x: start.x - 1.0, y: start.y, }
+      return { boxes, endpoint: start, }
     } else if (side & SIDE_RIGHT) != 0 {
       let b = rect(start.x, node_bottom, base_box.urx, start.y)
       boxes.push(b)
-      start = { x: start.x + 1.0, y: start.y }
-      return { boxes, endpoint: start }
+      start = { x: start.x + 1.0, y: start.y, }
+      return { boxes, endpoint: start, }
     }
   }
   if use_port_box {
     // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
     boxes.push(base_box)
-    return { boxes, endpoint: start }
+    return { boxes, endpoint: start, }
   }
   // Graphviz parity: default to bottom side, clamp box to start.y, then offset by -1pt.
   let b = rect(base_box.llx, base_box.lly, base_box.urx, start.y)
   boxes.push(b)
-  start = { x: start.x, y: start.y - 1.0 }
-  { boxes, endpoint: start }
+  start = { x: start.x, y: start.y - 1.0, }
+  { boxes, endpoint: start, }
 }
 
 ///|
@@ -598,8 +598,8 @@ fn endpath_boxes_regular(
         base_box.ury,
       )
       boxes.push(b)
-      end = { x: end.x, y: end.y + 1.0 }
-      return { boxes, endpoint: end }
+      end = { x: end.x, y: end.y + 1.0, }
+      return { boxes, endpoint: end, }
     } else if (side & SIDE_BOTTOM) != 0 {
       if end.x < node_pos.x {
         let b0 = rect(
@@ -622,28 +622,28 @@ fn endpath_boxes_regular(
         boxes.push(b0)
         boxes.push(b)
       }
-      end = { x: end.x, y: end.y - 1.0 }
-      return { boxes, endpoint: end }
+      end = { x: end.x, y: end.y - 1.0, }
+      return { boxes, endpoint: end, }
     } else if (side & SIDE_LEFT) != 0 {
       let b = rect(base_box.llx, end.y, end.x, node_top)
       boxes.push(b)
-      end = { x: end.x - 1.0, y: end.y }
-      return { boxes, endpoint: end }
+      end = { x: end.x - 1.0, y: end.y, }
+      return { boxes, endpoint: end, }
     } else if (side & SIDE_RIGHT) != 0 {
       let b = rect(end.x, end.y, base_box.urx, node_top)
       boxes.push(b)
-      end = { x: end.x + 1.0, y: end.y }
-      return { boxes, endpoint: end }
+      end = { x: end.x + 1.0, y: end.y, }
+      return { boxes, endpoint: end, }
     }
   }
   if use_port_box {
     // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
     boxes.push(base_box)
-    return { boxes, endpoint: end }
+    return { boxes, endpoint: end, }
   }
   // Graphviz parity: default to top side, clamp box to end.y, then offset by +1pt.
   let b = rect(base_box.llx, end.y, base_box.urx, base_box.ury)
   boxes.push(b)
-  end = { x: end.x, y: end.y + 1.0 }
-  { boxes, endpoint: end }
+  end = { x: end.x, y: end.y + 1.0, }
+  { boxes, endpoint: end, }
 }

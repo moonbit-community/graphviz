@@ -37,14 +37,14 @@ test "node side lookup uses stored sizes and falls back to default width" {
 
 ///|
 test "clip_to_rect clips horizontal vertical and diagonal rays" {
-  let center : @geom.Point = { x: 0.0, y: 0.0 }
+  let center : @geom.Point = { x: 0.0, y: 0.0, }
   let size = node_size_from_points(20.0, 10.0)
-  let horizontal : @geom.Point = { x: 20.0, y: 0.0 }
-  let vertical : @geom.Point = { x: 0.0, y: 20.0 }
-  let diagonal : @geom.Point = { x: 20.0, y: 20.0 }
-  let clipped_horizontal : @geom.Point = { x: 10.0, y: 0.0 }
-  let clipped_vertical : @geom.Point = { x: 0.0, y: 5.0 }
-  let clipped_diagonal : @geom.Point = { x: 5.0, y: 5.0 }
+  let horizontal : @geom.Point = { x: 20.0, y: 0.0, }
+  let vertical : @geom.Point = { x: 0.0, y: 20.0, }
+  let diagonal : @geom.Point = { x: 20.0, y: 20.0, }
+  let clipped_horizontal : @geom.Point = { x: 10.0, y: 0.0, }
+  let clipped_vertical : @geom.Point = { x: 0.0, y: 5.0, }
+  let clipped_diagonal : @geom.Point = { x: 5.0, y: 5.0, }
 
   assert_eq(clip_to_rect(center, size, horizontal), clipped_horizontal)
   assert_eq(clip_to_rect(center, size, vertical), clipped_vertical)

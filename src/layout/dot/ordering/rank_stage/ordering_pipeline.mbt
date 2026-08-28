@@ -97,7 +97,7 @@ fn run_nonclustered_ordering_dispatch(
     reorder_setup: pipeline_context.reorder_setup,
     edge_port_data: pipeline_context.edge_port_data,
   })
-  { ordered_groups, ordered_with_vnodes: Map([]) }
+  { ordered_groups, ordered_with_vnodes: Map([]), }
 }
 
 ///|

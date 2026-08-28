@@ -11,13 +11,13 @@ test "apply_cluster_lr_mirror_after_rotation falls back to BT mirror for single-
 
   let rotated = transform_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 100.0 },
-    nodes=[transform_make_node_layout(node, { x: 20.0, y: 30.0 }, 1.0, 0.5)],
+    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 100.0, },
+    nodes=[transform_make_node_layout(node, { x: 20.0, y: 30.0, }, 1.0, 0.5)],
     subgraphs=[
       transform_make_layout_tree(
         cluster,
-        { llx: 10.0, lly: 20.0, urx: 30.0, ury: 50.0 },
-        label_pos=Some({ x: 15.0, y: 48.0 }),
+        { llx: 10.0, lly: 20.0, urx: 30.0, ury: 50.0, },
+        label_pos=Some({ x: 15.0, y: 48.0, }),
       ),
     ],
   )
@@ -26,20 +26,20 @@ test "apply_cluster_lr_mirror_after_rotation falls back to BT mirror for single-
     graph,
     rankdir: RankDir::LR,
     rotated,
-    pre_rotation_bbox: { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0 },
-    rank_bbox: { llx: 0.0, lly: 0.0, urx: 50.0, ury: 40.0 },
-    subgraph_base_bbox: { llx: 0.0, lly: 0.0, urx: 50.0, ury: 40.0 },
+    pre_rotation_bbox: { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0, },
+    rank_bbox: { llx: 0.0, lly: 0.0, urx: 50.0, ury: 40.0, },
+    subgraph_base_bbox: { llx: 0.0, lly: 0.0, urx: 50.0, ury: 40.0, },
   })
 
   assert_eq(mirrored.bbox, rotated.bbox)
-  assert_eq(mirrored.nodes[0].pos, { x: 20.0, y: 70.0 })
+  assert_eq(mirrored.nodes[0].pos, { x: 20.0, y: 70.0, })
   assert_eq(mirrored.subgraphs[0].bbox, {
     llx: 10.0,
     lly: 50.0,
     urx: 30.0,
     ury: 80.0,
   })
-  assert_eq(mirrored.subgraphs[0].label_pos, Some({ x: 15.0, y: 52.0 }))
+  assert_eq(mirrored.subgraphs[0].label_pos, Some({ x: 15.0, y: 52.0, }))
 }
 
 ///|
@@ -51,13 +51,13 @@ test "apply_cluster_lr_mirror_after_rotation uses point mirror and refreshes clu
 
   let rotated = transform_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 100.0 },
-    nodes=[transform_make_node_layout(node, { x: 20.0, y: 30.0 }, 1.0, 0.5)],
+    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 100.0, },
+    nodes=[transform_make_node_layout(node, { x: 20.0, y: 30.0, }, 1.0, 0.5)],
     subgraphs=[
       transform_make_layout_tree(
         cluster,
-        { llx: 10.0, lly: 20.0, urx: 30.0, ury: 50.0 },
-        label_pos=Some({ x: -1.0, y: -1.0 }),
+        { llx: 10.0, lly: 20.0, urx: 30.0, ury: 50.0, },
+        label_pos=Some({ x: -1.0, y: -1.0, }),
       ),
     ],
   )
@@ -66,9 +66,9 @@ test "apply_cluster_lr_mirror_after_rotation uses point mirror and refreshes clu
     graph,
     rankdir: RankDir::LR,
     rotated,
-    pre_rotation_bbox: { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0 },
-    rank_bbox: { llx: 10.0, lly: 0.0, urx: 60.0, ury: 80.0 },
-    subgraph_base_bbox: { llx: 0.0, lly: 0.0, urx: 70.0, ury: 80.0 },
+    pre_rotation_bbox: { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0, },
+    rank_bbox: { llx: 10.0, lly: 0.0, urx: 60.0, ury: 80.0, },
+    subgraph_base_bbox: { llx: 0.0, lly: 0.0, urx: 70.0, ury: 80.0, },
   })
 
   let cluster_metrics = match @label_metrics.graph_label_metrics(cluster) {
@@ -85,7 +85,7 @@ test "apply_cluster_lr_mirror_after_rotation uses point mirror and refreshes clu
   )
 
   assert_eq(mirrored.bbox, rotated.bbox)
-  assert_eq(mirrored.nodes[0].pos, { x: 20.0, y: 40.0 })
+  assert_eq(mirrored.nodes[0].pos, { x: 20.0, y: 40.0, })
   assert_eq(mirrored.subgraphs[0].bbox, {
     llx: 10.0,
     lly: 50.0,

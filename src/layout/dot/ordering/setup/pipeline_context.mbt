@@ -156,7 +156,7 @@ fn build_flat_constraints(
         }
       }
   }
-  { flat_constraints, ordering_set }
+  { flat_constraints, ordering_set, }
 }
 
 ///|
@@ -210,7 +210,7 @@ fn build_cluster_flat_constraints(
   add_same_rank_constraint_edges_to_flat_constraints(
     edges, edge_tail, edge_head, ranks, flat_constraints,
   )
-  { flat_constraints, ordering_set: flat_constraints_output.ordering_set }
+  { flat_constraints, ordering_set: flat_constraints_output.ordering_set, }
 }
 
 ///|
@@ -259,7 +259,7 @@ fn collect_rank_same_metadata(graph : @cgraph.Graph) -> RankSameMetadata {
   let rank_same_groups : Map[String, Int] = Map([])
   let rank_same_order : Map[String, Int] = Map([])
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
-  { rank_same_groups, rank_same_order }
+  { rank_same_groups, rank_same_order, }
 }
 
 ///|
@@ -486,7 +486,7 @@ pub fn build_ordering_pipeline_context_from_sources(
     rankdir: sources.rankdir,
     edge_port_data,
   })
-  { runtime_context, edge_port_data, reorder_setup }
+  { runtime_context, edge_port_data, reorder_setup, }
 }
 
 ///|

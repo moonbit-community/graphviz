@@ -250,7 +250,7 @@ fn resolve_spacing(
     Ok(value) => value
     Err(message) => return Err(message)
   }
-  Ok({ nodesep_in, ranksep_in })
+  Ok({ nodesep_in, ranksep_in, })
 }
 
 ///|

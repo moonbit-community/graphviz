@@ -241,7 +241,7 @@ pub fn adjust_flip_rank_heights(input : FlipRankHeightsAdjustInput) -> Bool {
     let next_ht2 = ht2 + (delta - bottom)
     match input.graph.name() {
       Some(name) =>
-        input.cluster_heights[name] = { ht1: next_ht1, ht2: next_ht2 }
+        input.cluster_heights[name] = { ht1: next_ht1, ht2: next_ht2, }
       None => ()
     }
     let current_ht1 = match input.rank_ht1.get(max_rank_value) {
@@ -321,7 +321,7 @@ fn collect_cluster_rank_heights(
     next_min = child_bounds.min_rank
     next_max = child_bounds.max_rank
   }
-  { min_rank: next_min, max_rank: next_max }
+  { min_rank: next_min, max_rank: next_max, }
 }
 
 ///|
@@ -445,10 +445,10 @@ fn collect_cluster_bbox_heights(
   ht1 = ht1 + label_padding.bottom
   ht2 = ht2 + label_padding.top
   match input.graph.name() {
-    Some(name) => input.cluster_heights[name] = { ht1, ht2 }
+    Some(name) => input.cluster_heights[name] = { ht1, ht2, }
     None => ()
   }
-  Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
+  Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2, })
 }
 
 ///|

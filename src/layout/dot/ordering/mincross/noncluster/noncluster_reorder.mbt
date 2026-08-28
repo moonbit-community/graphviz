@@ -253,7 +253,10 @@ fn build_noncluster_graphviz_neighbors(
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
-  { out_neighbors: graphviz_out_neighbors, in_neighbors: graphviz_in_neighbors }
+  {
+    out_neighbors: graphviz_out_neighbors,
+    in_neighbors: graphviz_in_neighbors,
+  }
 }
 
 ///|

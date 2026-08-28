@@ -69,13 +69,13 @@ pub fn parse_point_attr(text : String) -> @geom.Point? {
   if numbers.length() < 2 {
     None
   } else {
-    Some({ x: numbers[0], y: numbers[1] })
+    Some({ x: numbers[0], y: numbers[1], })
   }
 }
 
 ///|
 pub fn scale_point(point : @geom.Point, factor : Double) -> @geom.Point {
-  { x: point.x * factor, y: point.y * factor }
+  { x: point.x * factor, y: point.y * factor, }
 }
 
 ///|
@@ -138,7 +138,7 @@ pub fn build_engine_geometry_context(
   let scale_factor = 72.0 / scale_value
   let rankdir = @rankdir.graph_rankdir(graph)
   let record_orientation = @layout_prep.record_layout_orientation(rankdir)
-  { scale_factor, rankdir, record_orientation }
+  { scale_factor, rankdir, record_orientation, }
 }
 
 ///|

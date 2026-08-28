@@ -221,7 +221,7 @@ fn line_rect_intersection_from_inside(
     let y = inside.y +
       c_round((x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x))
     if y >= rect.lly && y <= rect.ury {
-      return @geom.Point::{ x, y }
+      return @geom.Point::{ x, y, }
     }
   }
   if outside.x > rect.urx {
@@ -229,7 +229,7 @@ fn line_rect_intersection_from_inside(
     let y = inside.y +
       c_round((x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x))
     if y >= rect.lly && y <= rect.ury {
-      return @geom.Point::{ x, y }
+      return @geom.Point::{ x, y, }
     }
   }
   if outside.y < rect.lly {
@@ -237,7 +237,7 @@ fn line_rect_intersection_from_inside(
     let x = inside.x +
       c_round((y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y))
     if x >= rect.llx && x <= rect.urx {
-      return @geom.Point::{ x, y }
+      return @geom.Point::{ x, y, }
     }
   }
   if outside.y > rect.ury {
@@ -245,7 +245,7 @@ fn line_rect_intersection_from_inside(
     let x = inside.x +
       c_round((y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y))
     if x >= rect.llx && x <= rect.urx {
-      return @geom.Point::{ x, y }
+      return @geom.Point::{ x, y, }
     }
   }
   inside
@@ -285,8 +285,8 @@ fn adjust_tail_cluster_compound_segment(
   } else {
     p0
   }
-  let c2 : @geom.Point = { x: (p.x + ep.x) / 2.0, y: (p.y + ep.y) / 2.0 }
-  let c3 : @geom.Point = { x: (c2.x + ep.x) / 2.0, y: (c2.y + ep.y) / 2.0 }
-  let c1 : @geom.Point = { x: (c2.x + p.x) / 2.0, y: (c2.y + p.y) / 2.0 }
+  let c2 : @geom.Point = { x: (p.x + ep.x) / 2.0, y: (p.y + ep.y) / 2.0, }
+  let c3 : @geom.Point = { x: (c2.x + ep.x) / 2.0, y: (c2.y + ep.y) / 2.0, }
+  let c1 : @geom.Point = { x: (c2.x + p.x) / 2.0, y: (c2.y + p.y) / 2.0, }
   [p, c1, c2, c3]
 }

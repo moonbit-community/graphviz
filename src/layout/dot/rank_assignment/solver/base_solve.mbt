@@ -233,7 +233,7 @@ pub fn compute_ranks_directed_base(
           }
         }
         None => {
-          merged_edges[key] = { tail_idx, head_idx, minlen, weight }
+          merged_edges[key] = { tail_idx, head_idx, minlen, weight, }
           merged_edge_order.push(key)
         }
       }

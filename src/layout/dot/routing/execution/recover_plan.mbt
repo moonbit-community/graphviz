@@ -115,5 +115,5 @@ fn build_regular_recover_routing_plan(
       recover_edge_id_for_routing[recover_key] = group_edges[0].id()
     }
   }
-  { regular_parallel_groups, recover_edge_id_for_routing }
+  { regular_parallel_groups, recover_edge_id_for_routing, }
 }

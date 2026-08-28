@@ -113,5 +113,5 @@ fn sample_record_port(
   width_pt : Double,
   height_pt : Double,
 ) -> RecordPort {
-  { center, size: sample_node_size(width_pt, height_pt), sides: 0 }
+  { center, size: sample_node_size(width_pt, height_pt), sides: 0, }
 }

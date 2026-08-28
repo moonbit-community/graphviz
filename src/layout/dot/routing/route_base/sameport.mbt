@@ -348,7 +348,7 @@ fn edge_sameport_orientation_info(
   } else {
     samehead_group_size
   }
-  { tail_anchor, head_anchor, tail_group_size, head_group_size }
+  { tail_anchor, head_anchor, tail_group_size, head_group_size, }
 }
 
 ///|

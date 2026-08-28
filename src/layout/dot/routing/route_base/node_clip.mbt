@@ -23,7 +23,7 @@ fn clip_to_ellipse(
     return center
   }
   let t = 1.0 / Double::sqrt(denom)
-  { x: center.x + dx * t, y: center.y + dy * t }
+  { x: center.x + dx * t, y: center.y + dy * t, }
 }
 
 ///|
@@ -47,7 +47,7 @@ fn clip_to_diamond(
     return center
   }
   let t = 1.0 / denom
-  { x: center.x + dx * t, y: center.y + dy * t }
+  { x: center.x + dx * t, y: center.y + dy * t, }
 }
 
 ///|
@@ -145,28 +145,29 @@ fn clip_polygon_shape_params(
 ) -> ClipPolygonShapeParams? {
   match shape {
     "triangle" =>
-      Some({ sides: 3, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 3, orientation: 0.0, distortion: 0.0, skew: 0.0, })
     "invtriangle" =>
-      Some({ sides: 3, orientation: 180.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 3, orientation: 180.0, distortion: 0.0, skew: 0.0, })
     "trapezium" =>
-      Some({ sides: 4, orientation: 0.0, distortion: -0.4, skew: 0.0 })
+      Some({ sides: 4, orientation: 0.0, distortion: -0.4, skew: 0.0, })
     "invtrapezium" =>
-      Some({ sides: 4, orientation: 180.0, distortion: -0.4, skew: 0.0 })
+      Some({ sides: 4, orientation: 180.0, distortion: -0.4, skew: 0.0, })
     "parallelogram" =>
-      Some({ sides: 4, orientation: 0.0, distortion: 0.0, skew: 0.6 })
-    "egg" => Some({ sides: 120, orientation: 0.0, distortion: -0.3, skew: 0.0 })
+      Some({ sides: 4, orientation: 0.0, distortion: 0.0, skew: 0.6, })
+    "egg" =>
+      Some({ sides: 120, orientation: 0.0, distortion: -0.3, skew: 0.0, })
     "house" =>
-      Some({ sides: 5, orientation: 0.0, distortion: -0.64, skew: 0.0 })
+      Some({ sides: 5, orientation: 0.0, distortion: -0.64, skew: 0.0, })
     "invhouse" =>
-      Some({ sides: 5, orientation: 180.0, distortion: -0.64, skew: 0.0 })
+      Some({ sides: 5, orientation: 180.0, distortion: -0.64, skew: 0.0, })
     "pentagon" =>
-      Some({ sides: 5, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 5, orientation: 0.0, distortion: 0.0, skew: 0.0, })
     "hexagon" =>
-      Some({ sides: 6, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 6, orientation: 0.0, distortion: 0.0, skew: 0.0, })
     "septagon" =>
-      Some({ sides: 7, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 7, orientation: 0.0, distortion: 0.0, skew: 0.0, })
     "octagon" | "doubleoctagon" | "tripleoctagon" =>
-      Some({ sides: 8, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+      Some({ sides: 8, orientation: 0.0, distortion: 0.0, skew: 0.0, })
     "polygon" => {
       let mut sides = clip_polygon_attr_int(node, "sides", 4)
       if sides < 0 {
@@ -180,7 +181,7 @@ fn clip_polygon_shape_params(
         sides = 120
       }
       if sides >= 3 {
-        Some({ sides, orientation, distortion, skew })
+        Some({ sides, orientation, distortion, skew, })
       } else {
         None
       }

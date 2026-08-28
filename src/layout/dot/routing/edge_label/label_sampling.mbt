@@ -15,7 +15,7 @@ pub fn make_point_with_tangent(
   pos : @geom.Point,
   tangent : @geom.Point,
 ) -> PointWithTangent {
-  { pos, tangent }
+  { pos, tangent, }
 }
 
 ///|
@@ -121,7 +121,7 @@ fn polyline_point_with_dir(
     return None
   }
   if points.length() == 1 {
-    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0) })
+    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0), })
   }
   let mut remaining = target_len
   let mut last_dir = @edge_spline.point(1.0, 0.0)
@@ -151,11 +151,11 @@ fn polyline_point_with_dir(
       } else {
         @edge_spline.point_scale(delta, 1.0 / len)
       }
-      return Some({ pos, tangent: dir })
+      return Some({ pos, tangent: dir, })
     }
     remaining = remaining - seg_len
   }
-  Some({ pos: last_pos, tangent: last_dir })
+  Some({ pos: last_pos, tangent: last_dir, })
 }
 
 ///|
@@ -168,7 +168,7 @@ fn polyline_point_at_axis(
     return None
   }
   if points.length() == 1 {
-    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0) })
+    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0), })
   }
   let total_len = @edge_spline.polyline_length(points)
   let target = if total_len <= 0.0 { 0.0 } else { total_len / 2.0 }
@@ -215,7 +215,7 @@ fn polyline_point_at_axis(
   match best_pos {
     Some(pos) =>
       match best_dir {
-        Some(dir) => Some({ pos, tangent: dir })
+        Some(dir) => Some({ pos, tangent: dir, })
         None => None
       }
     None => None
@@ -265,14 +265,14 @@ pub fn port_label_points(
     let p1 = points[start + 1]
     let p2 = points[start + 2]
     let p3 = points[start + 3]
-    { pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) }
+    { pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9), }
   }
   let tail_bezier_sample = () => {
     let p0 = points[0]
     let p1 = points[1]
     let p2 = points[2]
     let p3 = points[3]
-    { pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) }
+    { pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1), }
   }
   if is_head {
     if !marker_present {
@@ -280,7 +280,7 @@ pub fn port_label_points(
     }
     match spline.end {
       Some(end_point) =>
-        Some({ pos: end_point, tangent: points[points.length() - 1] })
+        Some({ pos: end_point, tangent: points[points.length() - 1], })
       None => Some(head_bezier_sample())
     }
   } else {
@@ -288,7 +288,7 @@ pub fn port_label_points(
       return Some(tail_bezier_sample())
     }
     match spline.start {
-      Some(start_point) => Some({ pos: start_point, tangent: points[0] })
+      Some(start_point) => Some({ pos: start_point, tangent: points[0], })
       None => Some(tail_bezier_sample())
     }
   }

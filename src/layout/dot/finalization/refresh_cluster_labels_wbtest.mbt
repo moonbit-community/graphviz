@@ -15,24 +15,24 @@ test "refresh_cluster_labels recomputes labeled cluster anchors and leaves other
 
   let layout = transform_make_layout_tree(
     root,
-    { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0 },
+    { llx: 0.0, lly: 0.0, urx: 100.0, ury: 80.0, },
     subgraphs=[
       transform_make_layout_tree(
         cluster,
-        { llx: 10.0, lly: 20.0, urx: 50.0, ury: 60.0 },
-        label_pos=Some({ x: -1.0, y: -1.0 }),
+        { llx: 10.0, lly: 20.0, urx: 50.0, ury: 60.0, },
+        label_pos=Some({ x: -1.0, y: -1.0, }),
         subgraphs=[
           transform_make_layout_tree(
             nested,
-            { llx: 14.0, lly: 26.0, urx: 32.0, ury: 42.0 },
-            label_pos=Some({ x: -2.0, y: -2.0 }),
+            { llx: 14.0, lly: 26.0, urx: 32.0, ury: 42.0, },
+            label_pos=Some({ x: -2.0, y: -2.0, }),
           ),
         ],
       ),
       transform_make_layout_tree(
         unlabeled,
-        { llx: 60.0, lly: 10.0, urx: 90.0, ury: 30.0 },
-        label_pos=Some({ x: 61.0, y: 11.0 }),
+        { llx: 60.0, lly: 10.0, urx: 90.0, ury: 30.0, },
+        label_pos=Some({ x: 61.0, y: 11.0, }),
       ),
     ],
   )
@@ -68,5 +68,5 @@ test "refresh_cluster_labels recomputes labeled cluster anchors and leaves other
 
   assert_eq(refreshed_cluster.label_pos, Some(expected_cluster_label))
   assert_eq(refreshed_nested.label_pos, Some(expected_nested_label))
-  assert_eq(refreshed_unlabeled.label_pos, Some({ x: 61.0, y: 11.0 }))
+  assert_eq(refreshed_unlabeled.label_pos, Some({ x: 61.0, y: 11.0, }))
 }

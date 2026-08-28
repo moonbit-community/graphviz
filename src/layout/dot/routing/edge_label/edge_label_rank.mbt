@@ -31,7 +31,7 @@ pub fn edge_label_rank_info(
     return None
   }
   let label_rank = (min_rank + max_rank) / 2
-  Some({ label_rank, span })
+  Some({ label_rank, span, })
 }
 
 ///|

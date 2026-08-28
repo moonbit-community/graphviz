@@ -14,24 +14,24 @@ test "apply_layout_tree_writeback writes graph label metrics star node rounding 
 
   let star_layout = writeback_make_node_layout(
     star,
-    { x: 10.0, y: 20.0 },
+    { x: 10.0, y: 20.0, },
     1.0,
     0.5,
   )
   let edge_layout = writeback_make_edge_layout(edge, {
-    start: Some({ x: -1.0, y: -2.0 }),
-    end: Some({ x: 12.0, y: 13.0 }),
+    start: Some({ x: -1.0, y: -2.0, }),
+    end: Some({ x: 12.0, y: 13.0, }),
     points: [
-      { x: 0.0, y: 0.0 },
-      { x: 2.0, y: 1.0 },
-      { x: 4.0, y: 2.0 },
-      { x: 6.0, y: 3.0 },
+      { x: 0.0, y: 0.0, },
+      { x: 2.0, y: 1.0, },
+      { x: 4.0, y: 2.0, },
+      { x: 6.0, y: 3.0, },
     ],
   })
   let layout = writeback_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
-    label_pos=Some({ x: 5.0, y: 9.0 }),
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
+    label_pos=Some({ x: 5.0, y: 9.0, }),
     nodes=[star_layout],
     edges=[edge_layout],
   )
@@ -51,7 +51,7 @@ test "apply_layout_tree_writeback writes graph label metrics star node rounding 
     Some(format_fixed(graph_metrics.height_pt / 72.0, 2)),
   )
   assert_eq(graph.get_attr("lp"), Some("5,9"))
-  assert_eq(star.get_attr("pos"), Some(format_point({ x: 10.0, y: 20.0005 })))
+  assert_eq(star.get_attr("pos"), Some(format_point({ x: 10.0, y: 20.0005, })))
   assert_eq(edge.get_attr("pos"), Some("s,-1,-2 e,12,13 0,0 2,1 4,2 6,3"))
 }
 
@@ -69,26 +69,26 @@ test "apply_layout_tree_writeback omits disabled arrow markers independently" {
 
   let layout = writeback_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     edges=[
       writeback_make_edge_layout(tail_disabled, {
-        start: Some({ x: -1.0, y: -2.0 }),
-        end: Some({ x: 12.0, y: 13.0 }),
+        start: Some({ x: -1.0, y: -2.0, }),
+        end: Some({ x: 12.0, y: 13.0, }),
         points: [
-          { x: 0.0, y: 0.0 },
-          { x: 2.0, y: 1.0 },
-          { x: 4.0, y: 2.0 },
-          { x: 6.0, y: 3.0 },
+          { x: 0.0, y: 0.0, },
+          { x: 2.0, y: 1.0, },
+          { x: 4.0, y: 2.0, },
+          { x: 6.0, y: 3.0, },
         ],
       }),
       writeback_make_edge_layout(head_disabled, {
-        start: Some({ x: -3.0, y: -4.0 }),
-        end: Some({ x: 14.0, y: 15.0 }),
+        start: Some({ x: -3.0, y: -4.0, }),
+        end: Some({ x: 14.0, y: 15.0, }),
         points: [
-          { x: 1.0, y: 0.0 },
-          { x: 3.0, y: 1.0 },
-          { x: 5.0, y: 2.0 },
-          { x: 7.0, y: 3.0 },
+          { x: 1.0, y: 0.0, },
+          { x: 3.0, y: 1.0, },
+          { x: 5.0, y: 2.0, },
+          { x: 7.0, y: 3.0, },
         ],
       }),
     ],

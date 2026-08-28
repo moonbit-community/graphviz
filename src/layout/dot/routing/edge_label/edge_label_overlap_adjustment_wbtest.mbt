@@ -25,7 +25,7 @@ test "adjust_edge_label_overlaps spreads sibling labels along the rank axis with
     edge_layouts,
     10.0,
     @rankdir.RankDir::TB,
-    _ => Some({ width: 6.0, height: 4.0 }),
+    _ => Some({ width: 6.0, height: 4.0, }),
     _ => Some(@edge_spline.point(0.0, 0.0)),
   )
 

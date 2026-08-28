@@ -43,7 +43,7 @@ pub fn collect_top_clusters(source : @cgraph.Graph) -> TopClustersCollected {
       Some(_) => ()
     }
   }
-  { cluster_graphs, top_clusters }
+  { cluster_graphs, top_clusters, }
 }
 
 ///|

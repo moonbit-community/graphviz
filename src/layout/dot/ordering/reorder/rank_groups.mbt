@@ -30,7 +30,7 @@ fn create_empty_neighbors(nodes : Array[String]) -> NeighborMaps {
     out_neighbors[name] = []
     in_neighbors[name] = []
   }
-  { out_neighbors, in_neighbors }
+  { out_neighbors, in_neighbors, }
 }
 
 ///|
@@ -431,7 +431,7 @@ fn build_component_order(
     let (name, _) = entry
     ordered_nodes.push(name)
   }
-  { ordered_nodes, fallback_order }
+  { ordered_nodes, fallback_order, }
 }
 
 ///|
@@ -463,7 +463,7 @@ fn build_component_neighbors(
       append_neighbor_edge(out_neighbors, in_neighbors, tail, head)
     }
   }
-  { out_neighbors, in_neighbors, node_set }
+  { out_neighbors, in_neighbors, node_set, }
 }
 
 ///|
@@ -540,7 +540,7 @@ fn build_flat_neighbors(
       None => ()
     }
   }
-  { flat_out, flat_in }
+  { flat_out, flat_in, }
 }
 
 ///|

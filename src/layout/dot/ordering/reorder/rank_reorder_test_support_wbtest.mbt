@@ -610,6 +610,6 @@ fn build_exact_layered_rank_reorder_case(
     flat_edges: [],
     ranks: input_ranks,
   }
-  let output : MincrossOutput = { case_id, ranks: output_ranks }
+  let output : MincrossOutput = { case_id, ranks: output_ranks, }
   (input, output)
 }

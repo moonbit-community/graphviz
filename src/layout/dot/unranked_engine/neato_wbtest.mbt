@@ -27,7 +27,7 @@ fn neato_parse_pos(text : String) -> @geom.Point {
   } else {
     0.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|

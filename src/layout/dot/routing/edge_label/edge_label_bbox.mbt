@@ -77,9 +77,9 @@ fn edge_label_extent_for_rankdir(
   match metrics {
     Some(value) =>
       if flip {
-        Some({ width: value.height, height: value.width })
+        Some({ width: value.height, height: value.width, })
       } else {
-        Some({ width: value.width, height: value.height })
+        Some({ width: value.width, height: value.height, })
       }
     None => None
   }
@@ -106,7 +106,7 @@ fn classify_flat_edge_label(
   // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
   // Graphviz parity: self-edge labels still update BB via dotsplines.
   let skip_mid_label = is_flat && !has_flat_label_vnode && tail != head
-  { is_flat, has_flat_label_vnode, skip_mid_label }
+  { is_flat, has_flat_label_vnode, skip_mid_label, }
 }
 
 ///|
@@ -129,7 +129,7 @@ fn expand_bbox_for_edge_mid_label(
       edge_label_extent_for_rankdir(
         match @edge_label_metrics.edge_mid_label_metrics(edge_layout.edge) {
           Some(metrics) =>
-            Some({ width: metrics.width, height: metrics.height })
+            Some({ width: metrics.width, height: metrics.height, })
           None => None
         },
         flip,
@@ -166,7 +166,7 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
       }
       let top = center.y + half_height
       if top > bbox.ury {
-        { llx: bbox.llx, lly: bbox.lly, urx: bbox.urx, ury: top }
+        { llx: bbox.llx, lly: bbox.lly, urx: bbox.urx, ury: top, }
       } else {
         bbox
       }
@@ -193,7 +193,7 @@ fn expand_bbox_for_edge_endpoint_label(
           label_attr,
           true,
         ) {
-        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       },
       flip,

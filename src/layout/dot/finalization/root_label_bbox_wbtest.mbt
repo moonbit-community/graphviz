@@ -4,10 +4,10 @@
 
 ///|
 test "expand_root_bbox_for_label grows the correct axis for TB and LR layouts" {
-  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 }
+  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0, }
 
-  let tb_expected : @geom.Rect = { llx: -2.0, lly: 0.0, urx: 12.0, ury: 26.0 }
-  let lr_expected : @geom.Rect = { llx: -5.0, lly: -5.0, urx: 10.0, ury: 25.0 }
+  let tb_expected : @geom.Rect = { llx: -2.0, lly: 0.0, urx: 12.0, ury: 26.0, }
+  let lr_expected : @geom.Rect = { llx: -5.0, lly: -5.0, urx: 10.0, ury: 25.0, }
 
   assert_eq(
     expand_root_bbox_for_label(bbox, 14.0, 6.0, LabelLoc::Top, RankDir::TB),
@@ -25,7 +25,7 @@ test "apply_root_label_bbox expands the root bbox and places the requested label
   root.set_attr("label", "Root Label")
   root.set_attr("labelloc", "t")
   root.set_attr("labeljust", "l")
-  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 }
+  let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
   let metrics = match @label_metrics.graph_label_metrics(root) {
     Some(value) => value
     None => fail("expected root label metrics")

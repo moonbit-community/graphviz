@@ -18,32 +18,32 @@ test "apply_layout_tree_writeback writes bbox by graph role and edge label attrs
 
   let node_layout = writeback_make_node_layout(
     a,
-    { x: 10.0, y: 20.0 },
+    { x: 10.0, y: 20.0, },
     1.0,
     0.5,
-    xlabel_pos=Some({ x: 12.0, y: 24.0 }),
+    xlabel_pos=Some({ x: 12.0, y: 24.0, }),
   )
   let spline : @geom.Spline = {
-    start: Some({ x: -1.0, y: -1.0 }),
-    end: Some({ x: 11.0, y: 11.0 }),
+    start: Some({ x: -1.0, y: -1.0, }),
+    end: Some({ x: 11.0, y: 11.0, }),
     points: [
-      { x: 0.0, y: 0.0 },
-      { x: 3.0, y: 0.0 },
-      { x: 6.0, y: 0.0 },
-      { x: 9.0, y: 0.0 },
+      { x: 0.0, y: 0.0, },
+      { x: 3.0, y: 0.0, },
+      { x: 6.0, y: 0.0, },
+      { x: 9.0, y: 0.0, },
     ],
   }
   let edge_layout = writeback_make_edge_layout(
     edge,
     spline,
-    label_pos=Some({ x: 4.0, y: 5.0 }),
-    head_label_pos=Some({ x: 7.0, y: 8.0 }),
-    tail_label_pos=Some({ x: 1.0, y: 2.0 }),
-    xlabel_pos=Some({ x: 6.0, y: 7.0 }),
+    label_pos=Some({ x: 4.0, y: 5.0, }),
+    head_label_pos=Some({ x: 7.0, y: 8.0, }),
+    tail_label_pos=Some({ x: 1.0, y: 2.0, }),
+    xlabel_pos=Some({ x: 6.0, y: 7.0, }),
   )
   let layout = writeback_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     nodes=[node_layout],
     edges=[edge_layout],
     subgraphs=[
@@ -89,13 +89,13 @@ test "apply_layout_tree_writeback writes root and cluster label attrs recursivel
 
   let layout = writeback_make_layout_tree(
     graph,
-    { llx: 0.0, lly: 0.0, urx: 20.0, ury: 10.0 },
-    label_pos=Some({ x: 7.0, y: 8.0 }),
+    { llx: 0.0, lly: 0.0, urx: 20.0, ury: 10.0, },
+    label_pos=Some({ x: 7.0, y: 8.0, }),
     subgraphs=[
       writeback_make_layout_tree(
         cluster,
-        { llx: 1.0, lly: 2.0, urx: 11.0, ury: 12.0 },
-        label_pos=Some({ x: 6.0, y: 9.0 }),
+        { llx: 1.0, lly: 2.0, urx: 11.0, ury: 12.0, },
+        label_pos=Some({ x: 6.0, y: 9.0, }),
       ),
     ],
   )

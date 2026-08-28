@@ -42,9 +42,9 @@ test "compute_cluster_bbox_heights accumulates local, nested, margin, and label 
     },
     cluster_label_padding_for: (graph, _rankdir) => {
       match graph.name() {
-        Some("cluster_outer") => { top: 5.0, bottom: 7.0 }
-        Some("cluster_inner") => { top: 1.0, bottom: 3.0 }
-        _ => { top: 0.0, bottom: 0.0 }
+        Some("cluster_outer") => { top: 5.0, bottom: 7.0, }
+        Some("cluster_inner") => { top: 1.0, bottom: 3.0, }
+        _ => { top: 0.0, bottom: 0.0, }
       }
     },
     node_half_height_pt_for: (name, _sizes, _labels) => {

@@ -160,7 +160,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
       stack.push(child)
     }
   }
-  { outer, inner }
+  { outer, inner, }
 }
 
 ///|

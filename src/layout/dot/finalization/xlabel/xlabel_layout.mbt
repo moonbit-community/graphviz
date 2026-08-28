@@ -77,7 +77,7 @@ fn expand_bbox_for_existing_xlabel(
           expanded = @edge_label.expand_bbox_for_label_pos(
             expanded,
             Some(value),
-            Some({ width: dims.width, height: dims.height }),
+            Some({ width: dims.width, height: dims.height, }),
           )
         }
         None => ()
@@ -161,7 +161,7 @@ fn finalize_xlabels(
     bbox = @edge_label.expand_bbox_for_label_pos(
       bbox,
       Some(center),
-      Some({ width: label.width, height: label.height }),
+      Some({ width: label.width, height: label.height, }),
     )
     record_xlabel_update(updates, label.target, center)
   }

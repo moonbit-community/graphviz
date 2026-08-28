@@ -208,7 +208,7 @@ fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
   if value.has_prefix(":") {
     let rest = value.unsafe_substring(start=1, end=value.length())
     if rest == "" {
-      return Some({ name: Some(""), compass: None })
+      return Some({ name: Some(""), compass: None, })
     }
     match split_once_colon(rest) {
       Some((name_part, compass_part)) =>
@@ -218,8 +218,8 @@ fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
         })
       None =>
         match compass_from_label(rest) {
-          Some(compass) => Some({ name: Some(""), compass: Some(compass) })
-          None => Some({ name: Some(rest), compass: None })
+          Some(compass) => Some({ name: Some(""), compass: Some(compass), })
+          None => Some({ name: Some(rest), compass: None, })
         }
     }
   } else {
@@ -231,8 +231,8 @@ fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
         })
       None =>
         match compass_from_label(value) {
-          Some(compass) => Some({ name: None, compass: Some(compass) })
-          None => Some({ name: Some(value), compass: None })
+          Some(compass) => Some({ name: None, compass: Some(compass), })
+          None => Some({ name: Some(value), compass: None, })
         }
     }
   }

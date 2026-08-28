@@ -50,14 +50,14 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
   }
   let rank_ht2 = rank_ht1
   let merged_positions : Map[String, @geom.Point] = {
-    "tail": { x: 0.0, y: 700.0 },
-    "v1": { x: 0.0, y: 600.0 },
-    "v2": { x: 0.0, y: 500.0 },
-    "v3": { x: 0.0, y: 400.0 },
-    "v4": { x: 0.0, y: 300.0 },
-    "v5": { x: 0.0, y: 200.0 },
-    "v6": { x: 0.0, y: 100.0 },
-    "head": { x: 0.0, y: 0.0 },
+    "tail": { x: 0.0, y: 700.0, },
+    "v1": { x: 0.0, y: 600.0, },
+    "v2": { x: 0.0, y: 500.0, },
+    "v3": { x: 0.0, y: 400.0, },
+    "v4": { x: 0.0, y: 300.0, },
+    "v5": { x: 0.0, y: 200.0, },
+    "v6": { x: 0.0, y: 100.0, },
+    "head": { x: 0.0, y: 0.0, },
   }
   let route_sizes : Map[String, NodeSize] = {
     "tail": split_test_node_size(),
@@ -105,8 +105,8 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
       edge,
       "tail",
       "head",
-      { x: 0.0, y: 700.0 },
-      { x: 0.0, y: 0.0 },
+      { x: 0.0, y: 700.0, },
+      { x: 0.0, y: 0.0, },
       RankDir::TB,
       0,
       0,

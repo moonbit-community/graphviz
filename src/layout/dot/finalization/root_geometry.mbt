@@ -71,7 +71,7 @@ pub fn compute_root_cluster_padding(
       },
     }
   } else {
-    { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0 }
+    { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0, }
   }
 }
 
@@ -182,7 +182,7 @@ fn expand_root_bbox_for_label(
       urx = urx + diff
     }
   }
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }
 
 ///|
@@ -255,7 +255,7 @@ pub fn apply_root_label_bbox(
     }
     None => ()
   }
-  { bbox, label_pos }
+  { bbox, label_pos, }
 }
 
 ///|

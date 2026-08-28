@@ -31,7 +31,7 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
       }
     }
   }
-  { min_rank, max_rank }
+  { min_rank, max_rank, }
 }
 
 ///|
@@ -186,7 +186,7 @@ fn self_edge_routes_top(input : TopSelfEdgeRoutesInput) -> Array[SelfEdgeRoute] 
         dy = dy + (label_height - stepy)
       }
     }
-    routes.push({ points, label_pos })
+    routes.push({ points, label_pos, })
   }
   routes
 }
@@ -250,7 +250,7 @@ fn self_edge_routes_bottom(
         dy = dy + (label_height - stepy)
       }
     }
-    routes.push({ points, label_pos })
+    routes.push({ points, label_pos, })
   }
   routes
 }
@@ -361,7 +361,7 @@ fn self_edge_routes_horizontal_side(
         dx = dx + (label_width - stepx)
       }
     }
-    routes.push({ points, label_pos })
+    routes.push({ points, label_pos, })
   }
   routes
 }

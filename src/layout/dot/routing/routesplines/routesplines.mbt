@@ -32,7 +32,7 @@ fn max_double(a : Double, b : Double) -> Double {
 
 ///|
 fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }
 
 ///|
@@ -172,11 +172,11 @@ fn edge_pathplan_polyline_core(
   }
   let path_tail_pos = match merged_positions.get(path_tail_name) {
     Some(value) => value
-    None => { x: 0.0, y: 0.0 }
+    None => { x: 0.0, y: 0.0, }
   }
   let path_head_pos = match merged_positions.get(path_head_name) {
     Some(value) => value
-    None => { x: 0.0, y: 0.0 }
+    None => { x: 0.0, y: 0.0, }
   }
   let path_tail_size = size_for_name(path_tail_name, mval_route_sizes)
   let path_head_size = size_for_name(path_head_name, mval_route_sizes)

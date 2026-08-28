@@ -94,7 +94,7 @@ fn build_points_spline(input : PointsSplineBuildInput) -> PointsSplineResult {
     clip_swapped=input.base.swap_ends,
     arrow_swapped=input.base.swap_ends,
   )
-  { spline, raw_bezier }
+  { spline, raw_bezier, }
 }
 
 ///|
@@ -281,8 +281,8 @@ fn build_flat_detour_spline(
     let gap = last_left - first_right
     if gap > 200.0 {
       let points = detour_spline.points.copy()
-      points[4] = { x: first_right + 0.76, y: detour_y + vspace * 0.3535 }
-      points[5] = { x: last_left + 0.25, y: detour_y + vspace * 0.4016 }
+      points[4] = { x: first_right + 0.76, y: detour_y + vspace * 0.3535, }
+      points[5] = { x: last_left + 0.25, y: detour_y + vspace * 0.4016, }
       detour_spline = {
         start: detour_spline.start,
         end: detour_spline.end,
@@ -290,7 +290,7 @@ fn build_flat_detour_spline(
       }
     }
   }
-  { spline: detour_spline, raw_bezier }
+  { spline: detour_spline, raw_bezier, }
 }
 
 ///|
@@ -639,7 +639,7 @@ fn build_multi_point_routed_spline(
       clip_swapped: base.swap_ends,
       arrow_swapped: base.swap_ends,
     })
-    { spline, raw_bezier: segmented_raw }
+    { spline, raw_bezier: segmented_raw, }
   } else {
     build_points_spline({
       base,

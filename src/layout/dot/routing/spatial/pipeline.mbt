@@ -66,7 +66,7 @@ fn build_routing_layout_nodes(
     let name = node.name()
     let pos = match positions.get(name) {
       Some(value) => value
-      None => { x: 0.0, y: 0.0 }
+      None => { x: 0.0, y: 0.0, }
     }
     let size = @node_geometry.resolve_node_output_size(
       output_sizes, node, record_orientation,
@@ -105,7 +105,7 @@ fn build_routing_port_layout_maps(
       let name = node_layout.node.name()
       let raw_ports = @label_layout.raw_label_ports_for_node(
         node_layout.node,
-        { x: 0.0, y: 0.0 },
+        { x: 0.0, y: 0.0, },
         final_size,
         record_orientation,
       )
@@ -120,7 +120,7 @@ fn build_routing_port_layout_maps(
       }
     }
   }
-  { label_ports_map, label_ports_raw }
+  { label_ports_map, label_ports_raw, }
 }
 
 ///|

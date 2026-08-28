@@ -26,7 +26,7 @@ pub fn build_dot_route_base_deps(
     edge : @cgraph.Edge,
   ) => {
     match @edge_label_metrics.edge_mid_label_metrics(edge) {
-      Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+      Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
       None => None
     }
   }
@@ -44,7 +44,7 @@ pub fn build_dot_route_base_deps(
     let geometry = @port_geometry.port_geometry(
       node_name, port, routing_label_ports_map, node_pos, node_size,
     )
-    { center: geometry.center, size: geometry.size }
+    { center: geometry.center, size: geometry.size, }
   }
   let route_dynamic_port_anchor : (
     @cgraph.Port?,
@@ -64,7 +64,7 @@ pub fn build_dot_route_base_deps(
     let anchor = @port_geometry.dynamic_port_anchor_for_edge(
       port, node_name, routing_label_ports_raw, node_pos, other_pos, rankdir, record_border_adjust,
     )
-    { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic }
+    { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic, }
   }
   {
     node_size_for_missing: node => {

@@ -9,7 +9,7 @@ fn zero_cluster_label_padding(
 ) -> @cluster_geometry.ClusterLabelPadding {
   ignore(graph)
   ignore(rankdir)
-  { top: 0.0, bottom: 0.0 }
+  { top: 0.0, bottom: 0.0, }
 }
 
 ///|
@@ -82,7 +82,7 @@ fn rank_parse_point(text : String) -> @geom.Point {
   } else {
     0.0
   }
-  { x, y }
+  { x, y, }
 }
 
 ///|

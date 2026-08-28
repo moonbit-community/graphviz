@@ -143,7 +143,7 @@ test "compute_curve_offset uses explicit head port metrics and halves skew for b
     edge,
     tail_anchor=@edge_spline.point(10.0, 0.0),
     head_anchor=@edge_spline.point(-10.0, 0.0),
-    head_port=Some({ name: Some("p"), compass: Some(@cgraph.Compass::E) }),
+    head_port=Some({ name: Some("p"), compass: Some(@cgraph.Compass::E), }),
     layout_rankdir=RankDir::TB,
   )
 

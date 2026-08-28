@@ -51,7 +51,7 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
     cluster_keys: Map([]),
     nodesep_pt: 10.0,
     has_edge_labels: false,
-    extra_nodes: [{ name: vnode, rank: 1 }, { name: boundary, rank: 9 }],
+    extra_nodes: [{ name: vnode, rank: 1, }, { name: boundary, rank: 9, }],
     extra_edges: [
       {
         tail: boundary,

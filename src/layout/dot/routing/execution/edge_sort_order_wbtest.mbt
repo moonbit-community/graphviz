@@ -44,8 +44,8 @@ test "sorted_edges_for_routing compares equivalent endpoint sets by port before 
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
-  let right_port_value = @cgraph.Port::{ name: Some("right"), compass: None }
-  let left_port_value = @cgraph.Port::{ name: Some("left"), compass: None }
+  let right_port_value = @cgraph.Port::{ name: Some("right"), compass: None, }
+  let left_port_value = @cgraph.Port::{ name: Some("left"), compass: None, }
   let right_port = Some(right_port_value)
   let left_port = Some(left_port_value)
   let edge_right = graph.edge(a, b, tail_port=right_port_value)

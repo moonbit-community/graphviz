@@ -872,12 +872,12 @@ fn finalize_root_rank_order_phase_output(
   graphviz_flip : Bool,
 ) -> RootRankOrderPhaseOutput {
   if !graphviz_flip {
-    return { root_rank_keys, ordered_root }
+    return { root_rank_keys, ordered_root, }
   }
   let merged_ordered_root = build_graphviz_flip_merged_root_groups(
     root_rank_keys, root_groups, ordered_root, order_cluster_keys, order_cluster_skeleton,
   )
-  { root_rank_keys, ordered_root: merged_ordered_root }
+  { root_rank_keys, ordered_root: merged_ordered_root, }
 }
 
 ///|

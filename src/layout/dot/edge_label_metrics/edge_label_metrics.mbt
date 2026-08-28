@@ -63,7 +63,7 @@ pub fn edge_label_metrics_for_attr(
         let (width, height) = @label_metrics.label_text_dimensions(
           text, font, font_size_pt,
         )
-        Some({ width, height })
+        Some({ width, height, })
       }
     None => None
   }

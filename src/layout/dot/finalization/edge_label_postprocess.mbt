@@ -133,7 +133,7 @@ fn adjust_labels_for_clusters(
       edge => {
         match @edge_label_metrics.edge_mid_label_metrics(edge) {
           Some(metrics) =>
-            Some({ width: metrics.width, height: metrics.height })
+            Some({ width: metrics.width, height: metrics.height, })
           None => None
         }
       },
@@ -161,7 +161,7 @@ fn adjust_labels_for_overlaps(
     rankdir,
     edge => {
       match @edge_label_metrics.edge_mid_label_metrics(edge) {
-        Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+        Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
     },

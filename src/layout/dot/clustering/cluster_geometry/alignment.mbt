@@ -64,7 +64,7 @@ fn compute_nodes_bbox(
     }
   }
   if bbox_set {
-    Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y })
+    Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y, })
   } else {
     None
   }
@@ -72,12 +72,17 @@ fn compute_nodes_bbox(
 
 ///|
 fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
-  { x: point.x + dx, y: point.y + dy }
+  { x: point.x + dx, y: point.y + dy, }
 }
 
 ///|
 fn round_bbox_x_only(bbox : @geom.Rect) -> @geom.Rect {
-  { llx: bbox.llx.round(), lly: bbox.lly, urx: bbox.urx.round(), ury: bbox.ury }
+  {
+    llx: bbox.llx.round(),
+    lly: bbox.lly,
+    urx: bbox.urx.round(),
+    ury: bbox.ury,
+  }
 }
 
 ///|

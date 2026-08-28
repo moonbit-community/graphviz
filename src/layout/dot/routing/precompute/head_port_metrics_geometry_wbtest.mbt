@@ -9,7 +9,7 @@ fn sample_route_port_geometry(
     10.0, 10.0,
   ),
 ) -> RoutePortGeometry {
-  { center, size }
+  { center, size, }
 }
 
 ///|
@@ -49,13 +49,13 @@ test "head_metric_distance_for_edge uses sampled port centers in current routing
   let edge = graph.edge(
     tail,
     head,
-    tail_port={ name: Some("t"), compass: None },
-    head_port={ name: Some("h"), compass: None },
+    tail_port={ name: Some("t"), compass: None, },
+    head_port={ name: Some("h"), compass: None, },
   )
 
   let positions : Map[String, @geom.Point] = Map([])
-  positions["tail"] = { x: 0.0, y: 0.0 }
-  positions["head"] = { x: 2.0, y: 0.0 }
+  positions["tail"] = { x: 0.0, y: 0.0, }
+  positions["head"] = { x: 2.0, y: 0.0, }
 
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["tail"] = @node_primitives.node_size_from_points(10.0, 10.0)
@@ -105,7 +105,7 @@ test "build_head_port_metrics_from_geometry aggregates only keyed edges" {
     @record_geometry.is_record_shape,
     _node => @node_primitives.node_size_from_points(10.0, 10.0),
     (_name, _port, _pos, _size) => {
-      sample_route_port_geometry({ x: 0.0, y: 0.0 })
+      sample_route_port_geometry({ x: 0.0, y: 0.0, })
     },
   )
 
@@ -130,9 +130,9 @@ test "build_dot_head_port_metrics uses explicit label-port geometry and record f
   let fallback = graph.edge(tail_plain, record_head, name="fallback")
 
   let positions : Map[String, @geom.Point] = Map([])
-  positions["tail_port"] = { x: 0.0, y: 0.0 }
-  positions["tail_plain"] = { x: 0.0, y: 0.0 }
-  positions["record_head"] = { x: 6.0, y: 8.0 }
+  positions["tail_port"] = { x: 0.0, y: 0.0, }
+  positions["tail_plain"] = { x: 0.0, y: 0.0, }
+  positions["record_head"] = { x: 6.0, y: 8.0, }
 
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   sizes["tail_port"] = @node_primitives.node_size_from_points(10.0, 10.0)
@@ -142,7 +142,7 @@ test "build_dot_head_port_metrics uses explicit label-port geometry and record f
   let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
   label_ports_map["record_head"] = {
     "p": {
-      center: { x: 3.0, y: 4.0 },
+      center: { x: 3.0, y: 4.0, },
       size: @node_primitives.node_size_from_points(2.0, 2.0),
       sides: 0,
     },

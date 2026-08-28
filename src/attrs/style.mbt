@@ -35,7 +35,7 @@ pub fn parse_style(value : String?, default? : String = "solid") -> StyleFlags {
   let tokens = style_tokens(lowered)
   // Graphviz style parser drops overlong style vectors (63-token cap).
   if tokens.length() > 63 {
-    return { raw: lowered, filled: false, dashed: false, dotted: false }
+    return { raw: lowered, filled: false, dashed: false, dotted: false, }
   }
   let mut filled = false
   let mut dashed = false
@@ -48,5 +48,5 @@ pub fn parse_style(value : String?, default? : String = "solid") -> StyleFlags {
       _ => ()
     }
   }
-  { raw: lowered, filled, dashed, dotted }
+  { raw: lowered, filled, dashed, dotted, }
 }

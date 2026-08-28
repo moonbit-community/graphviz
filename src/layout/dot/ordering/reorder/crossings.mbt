@@ -50,7 +50,7 @@ fn build_port_aware_crossing_inputs(
       None => edge_in[head] = [edge_idx]
     }
   }
-  { edge_penalty, edge_in, edge_out, edge_tail_rank, edge_head_rank }
+  { edge_penalty, edge_in, edge_out, edge_tail_rank, edge_head_rank, }
 }
 
 ///|

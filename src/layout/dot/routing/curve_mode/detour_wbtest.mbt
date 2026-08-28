@@ -4,8 +4,8 @@
 
 ///|
 test "detour_polyline_for_rects chooses the left detour lane for top-bottom routing when shorter" {
-  let tail_rect : @geom.Rect = { llx: 0.0, lly: -10.0, urx: 10.0, ury: 10.0 }
-  let head_rect : @geom.Rect = { llx: 20.0, lly: 30.0, urx: 30.0, ury: 50.0 }
+  let tail_rect : @geom.Rect = { llx: 0.0, lly: -10.0, urx: 10.0, ury: 10.0, }
+  let head_rect : @geom.Rect = { llx: 20.0, lly: 30.0, urx: 30.0, ury: 50.0, }
 
   let points = detour_polyline_for_rects({
     tail: @edge_spline.point(0.0, 0.0),
@@ -27,8 +27,8 @@ test "detour_polyline_for_rects chooses the left detour lane for top-bottom rout
 
 ///|
 test "detour_polyline_for_rects chooses the lower detour lane for left-right routing when tied" {
-  let tail_rect : @geom.Rect = { llx: -2.0, lly: 0.0, urx: 2.0, ury: 10.0 }
-  let head_rect : @geom.Rect = { llx: 38.0, lly: 10.0, urx: 42.0, ury: 20.0 }
+  let tail_rect : @geom.Rect = { llx: -2.0, lly: 0.0, urx: 2.0, ury: 10.0, }
+  let head_rect : @geom.Rect = { llx: 38.0, lly: 10.0, urx: 42.0, ury: 20.0, }
 
   let points = detour_polyline_for_rects({
     tail: @edge_spline.point(0.0, 5.0),

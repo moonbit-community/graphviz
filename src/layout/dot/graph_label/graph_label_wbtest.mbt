@@ -13,32 +13,32 @@ fn assert_label_pos_point_eq(
 
 ///|
 test "graph_label_pos matches Graphviz place_root_label" {
-  let bbox : @geom.Rect = { llx: 10.0, lly: 20.0, urx: 110.0, ury: 70.0 }
+  let bbox : @geom.Rect = { llx: 10.0, lly: 20.0, urx: 110.0, ury: 70.0, }
   let width = 20.0
   let height = 10.0
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Left),
-    { x: 20.0, y: 65.0 },
+    { x: 20.0, y: 65.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Center),
-    { x: 60.0, y: 65.0 },
+    { x: 60.0, y: 65.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Top, LabelJust::Right),
-    { x: 100.0, y: 65.0 },
+    { x: 100.0, y: 65.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Left),
-    { x: 20.0, y: 25.0 },
+    { x: 20.0, y: 25.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Center),
-    { x: 60.0, y: 25.0 },
+    { x: 60.0, y: 25.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos(bbox, width, height, LabelLoc::Bottom, LabelJust::Right),
-    { x: 100.0, y: 25.0 },
+    { x: 100.0, y: 25.0, },
   )
 }
 
@@ -117,13 +117,13 @@ test "graph_label_metrics_with uses inherited graph font attrs and skips empty l
 
 ///|
 test "graph_label_pos_flip and expand_bbox_for_label match Graphviz border rules" {
-  let bbox : @geom.Rect = { llx: 10.0, lly: 20.0, urx: 110.0, ury: 70.0 }
+  let bbox : @geom.Rect = { llx: 10.0, lly: 20.0, urx: 110.0, ury: 70.0, }
   let width = 20.0
   let height = 10.0
 
   assert_label_pos_point_eq(
     graph_label_pos_flip(bbox, width, height, LabelLoc::Top, LabelJust::Left),
-    { x: 100.0, y: 65.0 },
+    { x: 100.0, y: 65.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos_flip(
@@ -133,26 +133,26 @@ test "graph_label_pos_flip and expand_bbox_for_label match Graphviz border rules
       LabelLoc::Bottom,
       LabelJust::Right,
     ),
-    { x: 20.0, y: 25.0 },
+    { x: 20.0, y: 25.0, },
   )
   assert_label_pos_point_eq(
     graph_label_pos_flip(bbox, width, height, LabelLoc::Top, LabelJust::Center),
-    { x: 100.0, y: 45.0 },
+    { x: 100.0, y: 45.0, },
   )
 
   let expanded_top = expand_bbox_for_label(
-    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, },
     20.0,
     5.0,
     LabelLoc::Top,
   )
-  assert_eq(expanded_top, { llx: -13.0, lly: 0.0, urx: 23.0, ury: 23.0 })
+  assert_eq(expanded_top, { llx: -13.0, lly: 0.0, urx: 23.0, ury: 23.0, })
 
   let expanded_bottom = expand_bbox_for_label(
-    { llx: 0.0, lly: 0.0, urx: 30.0, ury: 10.0 },
+    { llx: 0.0, lly: 0.0, urx: 30.0, ury: 10.0, },
     10.0,
     5.0,
     LabelLoc::Bottom,
   )
-  assert_eq(expanded_bottom, { llx: 0.0, lly: -13.0, urx: 30.0, ury: 10.0 })
+  assert_eq(expanded_bottom, { llx: 0.0, lly: -13.0, urx: 30.0, ury: 10.0, })
 }

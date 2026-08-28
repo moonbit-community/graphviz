@@ -96,7 +96,7 @@ fn rect_from_object(obj : XObject) -> @geom.Rect {
   let lly = obj.pos.y.round()
   let urx = (obj.pos.x + obj.width).round()
   let ury = (obj.pos.y + obj.height).round()
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }
 
 ///|
@@ -105,7 +105,7 @@ fn rect_from_label(label : XLabel) -> @geom.Rect {
   let lly = label.pos.y.round()
   let urx = (label.pos.x + label.width).round()
   let ury = (label.pos.y + label.height).round()
-  { llx, lly, urx, ury }
+  { llx, lly, urx, ury, }
 }
 
 ///|
@@ -221,7 +221,7 @@ fn xlintersections(
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
     Some(value) => value
-    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0), }
   }
   let label = labels[label_idx]
   let mut count = 0
@@ -271,7 +271,7 @@ fn xlintersections(
       None => ()
     }
   }
-  { n: count, area, pos: label.pos }
+  { n: count, area, pos: label.pos, }
 }
 
 ///|
@@ -283,7 +283,7 @@ fn xladjust(
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
     Some(value) => value
-    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0), }
   }
   let label = labels[label_idx]
   let xincr = (2.0 * label.width + obj.width) / XLXDENOM

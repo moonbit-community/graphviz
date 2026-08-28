@@ -54,7 +54,7 @@ fn rect_overlap_amount(a : @geom.Rect, b : @geom.Rect) -> RectOverlapAmount? {
   let overlap_y = (if a.ury < b.ury { a.ury } else { b.ury }) -
     (if a.lly > b.lly { a.lly } else { b.lly })
   if overlap_x > 0.0 && overlap_y > 0.0 {
-    Some({ overlap_x, overlap_y })
+    Some({ overlap_x, overlap_y, })
   } else {
     None
   }
@@ -99,7 +99,7 @@ fn nudge_label_rect(
         }
       }
     }
-    None => { label_pos, label_rect }
+    None => { label_pos, label_rect, }
   }
 }
 
@@ -158,7 +158,7 @@ pub fn adjust_edge_label_positions(
       xlabel_pos: edge_layout.xlabel_pos,
     })
   }
-  { edges: adjusted, updates }
+  { edges: adjusted, updates, }
 }
 
 ///|
@@ -259,9 +259,9 @@ pub fn adjust_edge_label_overlaps(
         }
       }
       let new_pos : @geom.Point = if axis_is_x {
-        { x: axis_value, y: entry.pos.y }
+        { x: axis_value, y: entry.pos.y, }
       } else {
-        { x: entry.pos.x, y: axis_value }
+        { x: entry.pos.x, y: axis_value, }
       }
       if new_pos.x != entry.pos.x || new_pos.y != entry.pos.y {
         updates[entry.key] = new_pos
@@ -272,8 +272,8 @@ pub fn adjust_edge_label_overlaps(
     }
   }
   if updates.length() == 0 {
-    { edges, updates }
+    { edges, updates, }
   } else {
-    { edges: apply_label_updates_to_edges(edges, updates), updates }
+    { edges: apply_label_updates_to_edges(edges, updates), updates, }
   }
 }

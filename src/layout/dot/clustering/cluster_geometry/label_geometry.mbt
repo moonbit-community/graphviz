@@ -17,7 +17,7 @@ pub fn cluster_label_padding_for_layout(
 ) -> ClusterLabelPadding {
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   if flip {
-    return { top: 0.0, bottom: 0.0 }
+    return { top: 0.0, bottom: 0.0, }
   }
   match
     @graph_label.graph_label_metrics_with(
@@ -27,12 +27,12 @@ pub fn cluster_label_padding_for_layout(
       let pad = CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
         @graph_label.LabelLoc::Top =>
-          { top: metrics.height_pt + pad, bottom: 0.0 }
+          { top: metrics.height_pt + pad, bottom: 0.0, }
         @graph_label.LabelLoc::Bottom =>
-          { top: 0.0, bottom: metrics.height_pt + pad }
+          { top: 0.0, bottom: metrics.height_pt + pad, }
       }
     }
-    None => { top: 0.0, bottom: 0.0 }
+    None => { top: 0.0, bottom: 0.0, }
   }
 }
 

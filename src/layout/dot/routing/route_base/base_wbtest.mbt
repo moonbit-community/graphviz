@@ -5,10 +5,10 @@
 ///|
 test "point_for_name_or_origin returns stored positions and defaults missing names to origin" {
   let positions : Map[String, @geom.Point] = Map([])
-  positions["a"] = { x: 12.5, y: -3.0 }
+  positions["a"] = { x: 12.5, y: -3.0, }
 
-  assert_eq(point_for_name_or_origin(positions, "a"), { x: 12.5, y: -3.0 })
-  assert_eq(point_for_name_or_origin(positions, "missing"), { x: 0.0, y: 0.0 })
+  assert_eq(point_for_name_or_origin(positions, "a"), { x: 12.5, y: -3.0, })
+  assert_eq(point_for_name_or_origin(positions, "missing"), { x: 0.0, y: 0.0, })
 }
 
 ///|
@@ -41,7 +41,7 @@ test "size_for_name_or_node uses cached sizes before falling back to node sizing
 ///|
 test "cluster_bbox_if_named ignores empty keys and looks up named clusters" {
   let bboxes : Map[String, @geom.Rect] = Map([])
-  let rect : @geom.Rect = { llx: 1.0, lly: 2.0, urx: 4.0, ury: 6.0 }
+  let rect : @geom.Rect = { llx: 1.0, lly: 2.0, urx: 4.0, ury: 6.0, }
   bboxes["cluster0"] = rect
 
   assert_eq(cluster_bbox_if_named(bboxes, ""), None)

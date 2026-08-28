@@ -81,7 +81,7 @@ pub fn compute_local_cluster_ranks_and_leaders(
     }
     cluster_leaders[cluster_name] = leader
   }
-  { local_ranks, cluster_leaders }
+  { local_ranks, cluster_leaders, }
 }
 
 ///|
@@ -243,7 +243,7 @@ pub fn solve_clustered_leader_ranks(
           weight: entry.weight + weight,
         }
       }
-      None => merged_edges[key] = { tail_idx, head_idx, minlen, weight }
+      None => merged_edges[key] = { tail_idx, head_idx, minlen, weight, }
     }
   }
   for _key, entry in merged_edges {

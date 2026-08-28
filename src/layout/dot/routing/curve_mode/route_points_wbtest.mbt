@@ -21,7 +21,7 @@ test "curve_point_line_distance handles degenerate and projected segments" {
 
 ///|
 test "segment_intersects_rect ignores endpoint-only touches but detects true crossings" {
-  let rect : @geom.Rect = { llx: 2.0, lly: 2.0, urx: 8.0, ury: 8.0 }
+  let rect : @geom.Rect = { llx: 2.0, lly: 2.0, urx: 8.0, ury: 8.0, }
 
   let crossing = segment_intersects_rect(
     @edge_spline.point(0.0, 5.0),
@@ -82,7 +82,7 @@ test "sameport_path_port_box shrinks inward for larger groups" {
     5,
   )
 
-  assert_eq(regular, { llx: 1.99, lly: -0.01, urx: 2.01, ury: 0.01 })
+  assert_eq(regular, { llx: 1.99, lly: -0.01, urx: 2.01, ury: 0.01, })
   assert_eq(large.lly, -0.005)
   assert_eq(large.ury, 0.005)
   assert_eq(large.urx, 2.0)

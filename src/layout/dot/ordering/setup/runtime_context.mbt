@@ -73,7 +73,7 @@ fn build_ordering_node_name_sets(
     real_nodes[name] = true
     existing_names[name] = true
   }
-  { real_nodes, existing_names }
+  { real_nodes, existing_names, }
 }
 
 ///|

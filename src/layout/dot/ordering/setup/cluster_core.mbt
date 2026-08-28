@@ -22,7 +22,7 @@ fn build_cluster_membership_maps(
     cluster_keys[name] = @membership.node_cluster_key(node)
     intercluster_keys[name] = @membership.node_local_cluster_key(node)
   }
-  { cluster_keys, intercluster_keys }
+  { cluster_keys, intercluster_keys, }
 }
 
 ///|

@@ -95,7 +95,7 @@ fn build_subgraphs_and_bbox(input : SubgraphsAndBBoxInput) -> SubgraphsAndBBox {
   } else {
     input.bbox
   }
-  { subgraphs, base_bbox: expanded }
+  { subgraphs, base_bbox: expanded, }
 }
 
 ///|
@@ -162,7 +162,7 @@ fn build_root_padded_layout_data(
   // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
   // padding that is part of set_ycoords before final edge bbox expansion.
   let ratio_bbox = layout_with_root_pad.bbox
-  { layout_with_root_pad, ratio_bbox }
+  { layout_with_root_pad, ratio_bbox, }
 }
 
 ///|

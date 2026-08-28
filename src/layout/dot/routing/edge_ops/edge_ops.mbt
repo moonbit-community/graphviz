@@ -54,7 +54,7 @@ pub fn reverse_spline(spline : @geom.Spline) -> @geom.Spline {
     idx = idx - 1
     reversed.push(spline.points[idx])
   }
-  { start: spline.end, end: spline.start, points: reversed }
+  { start: spline.end, end: spline.start, points: reversed, }
 }
 
 ///|
@@ -138,7 +138,7 @@ pub fn adjust_intercluster_dots(
   }
   let y = tail_anchor.y + (head_anchor.y - tail_anchor.y) * 0.5
   let adjusted = points.copy()
-  adjusted[last_idx] = { x, y }
+  adjusted[last_idx] = { x, y, }
   adjusted
 }
 

@@ -9,7 +9,7 @@ test "nudge_label_rect shifts along the lower-overlap axis and rebuilds the rect
   let horizontal = nudge_label_rect(
     horizontal_pos,
     horizontal_rect,
-    { llx: 11.0, lly: 8.0, urx: 16.0, ury: 12.0 },
+    { llx: 11.0, lly: 8.0, urx: 16.0, ury: 12.0, },
     4.0,
     4.0,
     1.0,
@@ -23,7 +23,7 @@ test "nudge_label_rect shifts along the lower-overlap axis and rebuilds the rect
   let vertical = nudge_label_rect(
     horizontal.label_pos,
     horizontal.label_rect,
-    { llx: 6.0, lly: 11.0, urx: 9.0, ury: 16.0 },
+    { llx: 6.0, lly: 11.0, urx: 9.0, ury: 16.0, },
     4.0,
     4.0,
     1.0,
@@ -46,11 +46,11 @@ test "adjust_edge_label_positions applies sequential nudges and records the fina
   let adjusted = adjust_edge_label_positions(
     [edge_layout],
     [
-      { llx: 11.0, lly: 8.0, urx: 16.0, ury: 12.0 },
-      { llx: 6.0, lly: 11.0, urx: 9.0, ury: 16.0 },
+      { llx: 11.0, lly: 8.0, urx: 16.0, ury: 12.0, },
+      { llx: 6.0, lly: 11.0, urx: 9.0, ury: 16.0, },
     ],
     1.0,
-    _ => Some({ width: 4.0, height: 4.0 }),
+    _ => Some({ width: 4.0, height: 4.0, }),
   )
 
   let expected = Some(@edge_spline.point(7.0, 7.0))

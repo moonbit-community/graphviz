@@ -15,6 +15,6 @@ test "build_node_positions_map defaults missing coordinates to zero" {
 
   let positions = build_node_positions_map([a, b], x_positions, y_positions)
 
-  assert_eq(positions.get("a"), Some({ x: 10.0, y: 0.0 }))
-  assert_eq(positions.get("b"), Some({ x: 0.0, y: 20.0 }))
+  assert_eq(positions.get("a"), Some({ x: 10.0, y: 0.0, }))
+  assert_eq(positions.get("b"), Some({ x: 0.0, y: 20.0, }))
 }

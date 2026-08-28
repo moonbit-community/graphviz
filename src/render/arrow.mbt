@@ -17,7 +17,7 @@ priv struct Triangle {
 
 ///|
 fn point(x : Double, y : Double) -> @geom.Point {
-  @geom.Point::{ x, y }
+  @geom.Point::{ x, y, }
 }
 
 ///|
@@ -247,7 +247,7 @@ fn miter_shape(
 ) -> Triangle {
   if (base_left.x == p.x && base_left.y == p.y) ||
     (base_right.x == p.x && base_right.y == p.y) {
-    return Triangle::{ p0: p, p1: p, p2: p }
+    return Triangle::{ p0: p, p1: p, p2: p, }
   }
   let dx_a = p.x - base_left.x
   let dy_a = p.y - base_left.y
@@ -288,11 +288,11 @@ fn miter_shape(
   )
   if normalized_miter_length > stroke_miterlimit {
     let p_bevel = point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
-    Triangle::{ p0: p_bevel, p1, p2 }
+    Triangle::{ p0: p_bevel, p1, p2, }
   } else {
     let l = penwidth / 2.0 / @math.tan(theta / 2.0)
     let p3 = point(p1.x + l * cos_alpha, p1.y + l * sin_alpha)
-    Triangle::{ p0: p3, p1, p2 }
+    Triangle::{ p0: p3, p1, p2, }
   }
 }
 

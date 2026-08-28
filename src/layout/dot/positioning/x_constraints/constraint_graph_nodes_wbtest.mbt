@@ -17,7 +17,7 @@ test "constraint node setup delays cluster boundaries and seeds base positions" 
   let setup = build_constraint_nodes_setup({
     graph: constraint_graph,
     nodes: [a, b],
-    extra_nodes: [{ name: boundary, rank: 9 }, { name: vnode, rank: 7 }],
+    extra_nodes: [{ name: boundary, rank: 9, }, { name: vnode, rank: 7, }],
     nlist_order: [vnode, "a", boundary],
     base_positions,
   })

@@ -4,7 +4,7 @@
 
 ///|
 test "clip_to_bbox returns the first rectangle intersection and preserves inside targets" {
-  let rect : @geom.Rect = { llx: 4.0, lly: -2.0, urx: 8.0, ury: 2.0 }
+  let rect : @geom.Rect = { llx: 4.0, lly: -2.0, urx: 8.0, ury: 2.0, }
 
   let clipped = clip_to_bbox(
     @edge_spline.point(0.0, 0.0),

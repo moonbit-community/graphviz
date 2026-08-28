@@ -92,7 +92,7 @@ test "rebuild_spline_for_render keeps short raw beziers unchanged" {
   )
   let raw_bezier = short_bezier_points()
   let original = edge_spline_result_for_bezier(
-    { start: None, end: None, points: raw_bezier },
+    { start: None, end: None, points: raw_bezier, },
     raw_bezier,
     5.0,
     false,

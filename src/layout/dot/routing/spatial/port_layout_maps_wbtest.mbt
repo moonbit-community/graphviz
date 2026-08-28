@@ -14,7 +14,7 @@ test "build_routing_port_layout_maps gates on port edges and rotates record port
   let nodes_out : Array[DotLayoutNode] = [
     {
       node,
-      pos: { x: 100.0, y: 50.0 },
+      pos: { x: 100.0, y: 50.0, },
       width_in: size.width_in,
       height_in: size.height_in,
       label_pos: None,

@@ -116,7 +116,7 @@ fn build_constraint_node_seed(
   for extra_node in early_extra_nodes {
     extra_rank[extra_node.name] = extra_node.rank
   }
-  { real_by_name, extra_rank, late_extra_nodes }
+  { real_by_name, extra_rank, late_extra_nodes, }
 }
 
 ///|
@@ -347,7 +347,7 @@ fn build_rank_constraint_seed(
       i = i + 1
     }
   }
-  { rank_adj_constraints, rank_adj_order, order_in_rank }
+  { rank_adj_constraints, rank_adj_order, order_in_rank, }
 }
 
 ///|
@@ -464,7 +464,7 @@ fn push_slack_segment(
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
 ) -> Unit {
-  let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port }
+  let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port, }
   match segments_by_tail.get(seg_tail) {
     Some(list) => list.push(entry)
     None => segments_by_tail[seg_tail] = [entry]
@@ -870,7 +870,7 @@ fn build_constraint_segment_pass(
       }
     },
   )
-  { segments_by_tail, flat_minlen_constraints }
+  { segments_by_tail, flat_minlen_constraints, }
 }
 
 ///|
@@ -1158,5 +1158,5 @@ fn build_constraint_graph(
     let _ = edge.head_port
     add_constraint_edge_if_present(graph, index, edge)
   }
-  { graph, index }
+  { graph, index, }
 }

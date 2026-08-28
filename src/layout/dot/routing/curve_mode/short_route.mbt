@@ -97,7 +97,7 @@ fn flat_detour_candidate_flags(
       input.route_include_tail,
       input.route_include_head,
     )
-  { no_arrow, top_single_arrow }
+  { no_arrow, top_single_arrow, }
 }
 
 ///|

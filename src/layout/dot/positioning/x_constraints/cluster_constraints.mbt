@@ -203,7 +203,7 @@ fn build_cluster_constraints(
           @cluster_identity.cluster_right_boundary_name(name),
           existing_names,
         )
-        cluster_nodes[name] = { left_node: ln_name, right_node: rn_name }
+        cluster_nodes[name] = { left_node: ln_name, right_node: rn_name, }
         let margin = match cluster_margins.get(name) {
           Some(value) => value
           None => CLUSTER_MARGIN_PT
@@ -628,5 +628,5 @@ fn build_cluster_constraints(
       }
     }
   }
-  { extra_nodes, extra_edges, root_ln_targets, root_rn_targets }
+  { extra_nodes, extra_edges, root_ln_targets, root_rn_targets, }
 }

@@ -140,7 +140,7 @@ fn build_port_maps_for_nodes(
   sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
 ) -> Map[String, Map[String, RecordPort]] {
-  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
+  let origin = @geom.Point::{ x: 0.0, y: 0.0, }
   let port_maps : Map[String, Map[String, RecordPort]] = Map([])
   for node in nodes {
     let name = node.name()

@@ -95,11 +95,11 @@ fn node_pos_hint(node : @cgraph.Node) -> NodePosHint {
       match parse_point_attr(value) {
         Some(pos) => {
           let pinned = pin_attr || pos_is_pinned(value)
-          { pos: Some(pos), is_pinned: pinned }
+          { pos: Some(pos), is_pinned: pinned, }
         }
-        None => { pos: None, is_pinned: false }
+        None => { pos: None, is_pinned: false, }
       }
-    None => { pos: None, is_pinned: false }
+    None => { pos: None, is_pinned: false, }
   }
 }
 
@@ -143,7 +143,7 @@ pub fn build_neato_node_sizing(
       max_half = half
     }
   }
-  { sizes, indices, radii, max_half }
+  { sizes, indices, radii, max_half, }
 }
 
 ///|
@@ -187,7 +187,7 @@ pub fn build_neato_initial_node_state(
     positions.push(pos)
     pinned.push(hint_data.is_pinned)
   }
-  { positions, pinned }
+  { positions, pinned, }
 }
 
 ///|
@@ -344,7 +344,7 @@ fn recenter_positions(positions : Array[@geom.Point]) -> Unit {
   cx = cx * inv
   cy = cy * inv
   for i in 0..<positions.length() {
-    positions[i] = { x: positions[i].x - cx, y: positions[i].y - cy }
+    positions[i] = { x: positions[i].x - cx, y: positions[i].y - cy, }
   }
 }
 

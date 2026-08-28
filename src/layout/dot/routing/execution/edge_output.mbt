@@ -27,7 +27,7 @@ fn remap_port_label_pos(input : PortLabelPosRemapInput) -> @geom.Point? {
     return fallback
   }
   let spline = if is_head { splines[splines.length() - 1] } else { splines[0] }
-  match edge_port_label_pos_fn({ edge, spline, is_head }) {
+  match edge_port_label_pos_fn({ edge, spline, is_head, }) {
     Some(pos) => Some(pos)
     None => fallback
   }

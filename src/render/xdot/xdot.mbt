@@ -78,7 +78,7 @@ fn push_label_line(
   text : String,
   align : @render.TextAlign,
 ) -> Unit {
-  lines.push({ text, align })
+  lines.push({ text, align, })
 }
 
 ///|
@@ -856,7 +856,7 @@ fn push_stroke_style_ops(
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
   if kind != @cgraph.GraphKind::Directed {
-    return { head: false, tail: false }
+    return { head: false, tail: false, }
   }
   let dir = match edge.get_attr("dir") {
     Some(value) => value.to_lower()
@@ -893,7 +893,7 @@ fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
   if tail_shape == "none" {
     tail = false
   }
-  { head, tail }
+  { head, tail, }
 }
 
 ///|
@@ -1193,10 +1193,10 @@ fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
 ///|
 fn rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.urx, y: rect.ury },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
@@ -1205,20 +1205,20 @@ fn mdiamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx, y: rect.ury },
-    { x: rect.llx, y: cy },
-    { x: cx, y: rect.lly },
-    { x: rect.urx, y: cy },
+    { x: cx, y: rect.ury, },
+    { x: rect.llx, y: cy, },
+    { x: cx, y: rect.lly, },
+    { x: rect.urx, y: cy, },
   ]
 }
 
 ///|
 fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.llx, y: rect.lly },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.urx, y: rect.ury },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
@@ -1282,10 +1282,10 @@ fn rounded_polygon_bezier_points(
 ///|
 fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   rounded_polygon_bezier_points([
-    @geom.Point::{ x: rect.llx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.ury },
-    @geom.Point::{ x: rect.llx, y: rect.ury },
+    @geom.Point::{ x: rect.llx, y: rect.lly, },
+    @geom.Point::{ x: rect.urx, y: rect.lly, },
+    @geom.Point::{ x: rect.urx, y: rect.ury, },
+    @geom.Point::{ x: rect.llx, y: rect.ury, },
   ])
 }
 
@@ -1351,8 +1351,8 @@ fn mcircle_segments(rect : @geom.Rect) -> Array[(@geom.Point, @geom.Point)] {
   let dx = rx * MCIRCLE_X
   let dy = ry * MCIRCLE_Y
   [
-    ({ x: cx + dx, y: cy + dy }, { x: cx - dx, y: cy + dy }),
-    ({ x: cx + dx, y: cy - dy }, { x: cx - dx, y: cy - dy }),
+    ({ x: cx + dx, y: cy + dy, }, { x: cx - dx, y: cy + dy, }),
+    ({ x: cx + dx, y: cy - dy, }, { x: cx - dx, y: cy - dy, }),
   ]
 }
 
@@ -1433,7 +1433,7 @@ fn polygon_vertices_for_rect(
   let mut angle = (sector - @math.PI) / 2.0
   let mut sinx = @math.sin(angle)
   let mut cosx = @math.cos(angle)
-  let mut r : @geom.Point = { x: 0.5 * cosx, y: 0.5 * sinx }
+  let mut r : @geom.Point = { x: 0.5 * cosx, y: 0.5 * sinx, }
   let mut xmax = 0.0
   let mut ymax = 0.0
   angle = angle + (@math.PI - sector) / 2.0
@@ -1442,7 +1442,7 @@ fn polygon_vertices_for_rect(
     angle = angle + sector
     sinx = @math.sin(angle)
     cosx = @math.cos(angle)
-    r = { x: r.x + side_len * cosx, y: r.y + side_len * sinx }
+    r = { x: r.x + side_len * cosx, y: r.y + side_len * sinx, }
     let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
     let mut py = r.y
     let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
@@ -1455,7 +1455,7 @@ fn polygon_vertices_for_rect(
     if Double::abs(py) > ymax {
       ymax = Double::abs(py)
     }
-    base.push({ x: px, y: py })
+    base.push({ x: px, y: py, })
   }
   if xmax <= 0.0 || ymax <= 0.0 {
     return []
@@ -1466,7 +1466,7 @@ fn polygon_vertices_for_rect(
   let scale_y = half_h / ymax
   let out : Array[@geom.Point] = []
   for vertex in base {
-    out.push({ x: cx + vertex.x * scale_x, y: cy + vertex.y * scale_y })
+    out.push({ x: cx + vertex.x * scale_x, y: cy + vertex.y * scale_y, })
   }
   out
 }
@@ -1642,7 +1642,7 @@ fn polygon_outline_vertices_for_rect(
   let cy = (rect.lly + rect.ury) / 2.0
   let out : Array[@geom.Point] = []
   for vertex in centered {
-    out.push({ x: vertex.x + cx, y: vertex.y + cy })
+    out.push({ x: vertex.x + cx, y: vertex.y + cy, })
   }
   out
 }
@@ -1708,13 +1708,13 @@ fn rarrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: body_right, y: y_top },
-    { x: rect.llx, y: y_top },
-    { x: rect.llx, y: y_mid },
-    { x: body_right, y: y_mid },
-    { x: body_right, y: rect.lly },
-    { x: rect.urx, y: cy },
-    { x: body_right, y: rect.ury },
+    { x: body_right, y: y_top, },
+    { x: rect.llx, y: y_top, },
+    { x: rect.llx, y: y_mid, },
+    { x: body_right, y: y_mid, },
+    { x: body_right, y: rect.lly, },
+    { x: rect.urx, y: cy, },
+    { x: body_right, y: rect.ury, },
   ]
 }
 
@@ -1727,13 +1727,13 @@ fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.urx, y: y_top },
-    { x: body_left, y: y_top },
-    { x: body_left, y: rect.ury },
-    { x: rect.llx, y: cy },
-    { x: body_left, y: rect.lly },
-    { x: body_left, y: y_mid },
-    { x: rect.urx, y: y_mid },
+    { x: rect.urx, y: y_top, },
+    { x: body_left, y: y_top, },
+    { x: body_left, y: rect.ury, },
+    { x: rect.llx, y: cy, },
+    { x: body_left, y: rect.lly, },
+    { x: body_left, y: y_mid, },
+    { x: rect.urx, y: y_mid, },
   ]
 }
 
@@ -1747,15 +1747,15 @@ fn rpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: body_right, y: y_top },
-    { x: rect.llx, y: y_top },
-    { x: rect.llx, y: rect.lly },
-    { x: notch, y: rect.lly },
-    { x: notch, y: y_mid },
-    { x: body_right, y: y_mid },
-    { x: body_right, y: rect.lly },
-    { x: rect.urx, y: cy },
-    { x: body_right, y: rect.ury },
+    { x: body_right, y: y_top, },
+    { x: rect.llx, y: y_top, },
+    { x: rect.llx, y: rect.lly, },
+    { x: notch, y: rect.lly, },
+    { x: notch, y: y_mid, },
+    { x: body_right, y: y_mid, },
+    { x: body_right, y: rect.lly, },
+    { x: rect.urx, y: cy, },
+    { x: body_right, y: rect.ury, },
   ]
 }
 
@@ -1769,15 +1769,15 @@ fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.urx, y: y_top },
-    { x: body_left, y: y_top },
-    { x: body_left, y: rect.ury },
-    { x: rect.llx, y: cy },
-    { x: body_left, y: rect.lly },
-    { x: body_left, y: y_mid },
-    { x: notch, y: y_mid },
-    { x: notch, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: y_top, },
+    { x: body_left, y: y_top, },
+    { x: body_left, y: rect.ury, },
+    { x: rect.llx, y: cy, },
+    { x: body_left, y: rect.lly, },
+    { x: body_left, y: y_mid, },
+    { x: notch, y: y_mid, },
+    { x: notch, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
@@ -1785,11 +1785,11 @@ fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn note_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
-    { x: rect.urx - fold, y: rect.ury },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
-    { x: rect.urx, y: rect.ury - fold },
+    { x: rect.urx - fold, y: rect.ury, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
+    { x: rect.urx, y: rect.ury - fold, },
   ]
 }
 
@@ -1797,8 +1797,8 @@ fn note_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn note_fold_vertical_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
-    { x: rect.urx - fold, y: rect.ury },
-    { x: rect.urx - fold, y: rect.ury - fold },
+    { x: rect.urx - fold, y: rect.ury, },
+    { x: rect.urx - fold, y: rect.ury - fold, },
   ]
 }
 
@@ -1806,8 +1806,8 @@ fn note_fold_vertical_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn note_fold_horizontal_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let fold = 6.0
   [
-    { x: rect.urx, y: rect.ury - fold },
-    { x: rect.urx - fold, y: rect.ury - fold },
+    { x: rect.urx, y: rect.ury - fold, },
+    { x: rect.urx - fold, y: rect.ury - fold, },
   ]
 }
 
@@ -1816,25 +1816,25 @@ fn tab_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_width = 12.0
   let tab_height = 4.0
   [
-    { x: rect.urx, y: rect.ury },
-    { x: rect.llx + tab_width, y: rect.ury },
-    { x: rect.llx + tab_width, y: rect.ury + tab_height },
-    { x: rect.llx, y: rect.ury + tab_height },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.llx + tab_width, y: rect.ury, },
+    { x: rect.llx + tab_width, y: rect.ury + tab_height, },
+    { x: rect.llx, y: rect.ury + tab_height, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
 ///|
 fn tab_top_join_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let tab_width = 12.0
-  [{ x: rect.llx, y: rect.ury }, { x: rect.llx + tab_width, y: rect.ury }]
+  [{ x: rect.llx, y: rect.ury, }, { x: rect.llx + tab_width, y: rect.ury, }]
 }
 
 ///|
 fn baseline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx, y: cy }, { x: rect.urx, y: cy }]
+  [{ x: rect.llx, y: cy, }, { x: rect.urx, y: cy, }]
 }
 
 ///|
@@ -1842,10 +1842,10 @@ fn insulator_inner_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 6.0, y: cy + 6.0 },
-    { x: cx + 6.0, y: cy - 6.0 },
-    { x: cx - 6.0, y: cy - 6.0 },
-    { x: cx - 6.0, y: cy + 6.0 },
+    { x: cx + 6.0, y: cy + 6.0, },
+    { x: cx + 6.0, y: cy - 6.0, },
+    { x: cx - 6.0, y: cy - 6.0, },
+    { x: cx - 6.0, y: cy + 6.0, },
   ]
 }
 
@@ -1854,11 +1854,11 @@ fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 9.0, y: cy + 9.0 },
-    { x: cx + 9.0, y: cy - 9.0 },
-    { x: cx - 9.0, y: cy - 9.0 },
-    { x: cx - 9.0, y: cy + 9.0 },
-    { x: cx + 9.0, y: cy + 9.0 },
+    { x: cx + 9.0, y: cy + 9.0, },
+    { x: cx + 9.0, y: cy - 9.0, },
+    { x: cx - 9.0, y: cy - 9.0, },
+    { x: cx - 9.0, y: cy + 9.0, },
+    { x: cx + 9.0, y: cy + 9.0, },
   ]
 }
 
@@ -1866,14 +1866,14 @@ fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn insulator_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx + 9.0, y: cy }, { x: rect.urx, y: cy }]
+  [{ x: cx + 9.0, y: cy, }, { x: rect.urx, y: cy, }]
 }
 
 ///|
 fn insulator_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx, y: cy }, { x: cx - 9.0, y: cy }]
+  [{ x: rect.llx, y: cy, }, { x: cx - 9.0, y: cy, }]
 }
 
 ///|
@@ -1881,10 +1881,10 @@ fn noverhang_top_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx - 13.5, y: cy + 1.5 },
-    { x: cx - 1.5, y: cy + 1.5 },
-    { x: cx - 1.5, y: cy + 7.5 },
-    { x: cx - 13.5, y: cy + 7.5 },
+    { x: cx - 13.5, y: cy + 1.5, },
+    { x: cx - 1.5, y: cy + 1.5, },
+    { x: cx - 1.5, y: cy + 7.5, },
+    { x: cx - 13.5, y: cy + 7.5, },
   ]
 }
 
@@ -1893,10 +1893,10 @@ fn noverhang_bottom_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx - 13.5, y: cy - 7.5 },
-    { x: cx - 1.5, y: cy - 7.5 },
-    { x: cx - 1.5, y: cy - 1.5 },
-    { x: cx - 13.5, y: cy - 1.5 },
+    { x: cx - 13.5, y: cy - 7.5, },
+    { x: cx - 1.5, y: cy - 7.5, },
+    { x: cx - 1.5, y: cy - 1.5, },
+    { x: cx - 13.5, y: cy - 1.5, },
   ]
 }
 
@@ -1905,10 +1905,10 @@ fn noverhang_bottom_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 1.5, y: cy - 7.5 },
-    { x: cx + 13.5, y: cy - 7.5 },
-    { x: cx + 13.5, y: cy - 1.5 },
-    { x: cx + 1.5, y: cy - 1.5 },
+    { x: cx + 1.5, y: cy - 7.5, },
+    { x: cx + 13.5, y: cy - 7.5, },
+    { x: cx + 13.5, y: cy - 1.5, },
+    { x: cx + 1.5, y: cy - 1.5, },
   ]
 }
 
@@ -1917,10 +1917,10 @@ fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 1.5, y: cy + 1.5 },
-    { x: cx + 13.5, y: cy + 1.5 },
-    { x: cx + 13.5, y: cy + 7.5 },
-    { x: cx + 1.5, y: cy + 7.5 },
+    { x: cx + 1.5, y: cy + 1.5, },
+    { x: cx + 13.5, y: cy + 1.5, },
+    { x: cx + 13.5, y: cy + 7.5, },
+    { x: cx + 1.5, y: cy + 7.5, },
   ]
 }
 
@@ -1928,14 +1928,14 @@ fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn noverhang_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx + 13.5, y: cy }, { x: rect.urx, y: cy }]
+  [{ x: cx + 13.5, y: cy, }, { x: rect.urx, y: cy, }]
 }
 
 ///|
 fn noverhang_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx - 13.5, y: cy }, { x: rect.llx, y: cy }]
+  [{ x: cx - 13.5, y: cy, }, { x: rect.llx, y: cy, }]
 }
 
 ///|
@@ -1943,11 +1943,11 @@ fn primersite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 12.0, y: cy + 3.0 },
-    { x: cx, y: cy + 15.0 },
-    { x: cx, y: cy + 9.0 },
-    { x: cx - 13.5, y: cy + 9.0 },
-    { x: cx - 13.5, y: cy + 3.0 },
+    { x: cx + 12.0, y: cy + 3.0, },
+    { x: cx, y: cy + 15.0, },
+    { x: cx, y: cy + 9.0, },
+    { x: cx - 13.5, y: cy + 9.0, },
+    { x: cx - 13.5, y: cy + 3.0, },
   ]
 }
 
@@ -1956,15 +1956,15 @@ fn promoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 6.75, y: rect.ury },
-    { x: cx - 13.5, y: rect.ury },
-    { x: cx - 13.5, y: cy },
-    { x: cx - 7.5, y: cy },
-    { x: cx - 7.5, y: cy + 12.0 },
-    { x: cx + 6.75, y: cy + 12.0 },
-    { x: cx + 6.75, y: cy + 9.0 },
-    { x: cx + 18.75, y: cy + 15.0 },
-    { x: cx + 6.75, y: cy + 21.0 },
+    { x: cx + 6.75, y: rect.ury, },
+    { x: cx - 13.5, y: rect.ury, },
+    { x: cx - 13.5, y: cy, },
+    { x: cx - 7.5, y: cy, },
+    { x: cx - 7.5, y: cy + 12.0, },
+    { x: cx + 6.75, y: cy + 12.0, },
+    { x: cx + 6.75, y: cy + 9.0, },
+    { x: cx + 18.75, y: cy + 15.0, },
+    { x: cx + 6.75, y: cy + 21.0, },
   ]
 }
 
@@ -1973,22 +1973,22 @@ fn proteasesite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 3.0, y: cy + 6.0 },
-    { x: cx + 3.0, y: cy + 7.5 },
-    { x: cx + 1.5, y: cy + 9.0 },
-    { x: cx + 3.0, y: cy + 10.5 },
-    { x: cx + 3.0, y: cy + 12.0 },
-    { x: cx + 1.5, y: cy + 12.0 },
-    { x: cx, y: cy + 10.5 },
-    { x: cx - 1.5, y: cy + 12.0 },
-    { x: cx - 3.0, y: cy + 12.0 },
-    { x: cx - 3.0, y: cy + 10.5 },
-    { x: cx - 1.5, y: cy + 9.0 },
-    { x: cx - 3.0, y: cy + 7.5 },
-    { x: cx - 3.0, y: cy + 6.0 },
-    { x: cx - 1.5, y: cy + 6.0 },
-    { x: cx, y: cy + 7.5 },
-    { x: cx + 1.5, y: cy + 6.0 },
+    { x: cx + 3.0, y: cy + 6.0, },
+    { x: cx + 3.0, y: cy + 7.5, },
+    { x: cx + 1.5, y: cy + 9.0, },
+    { x: cx + 3.0, y: cy + 10.5, },
+    { x: cx + 3.0, y: cy + 12.0, },
+    { x: cx + 1.5, y: cy + 12.0, },
+    { x: cx, y: cy + 10.5, },
+    { x: cx - 1.5, y: cy + 12.0, },
+    { x: cx - 3.0, y: cy + 12.0, },
+    { x: cx - 3.0, y: cy + 10.5, },
+    { x: cx - 1.5, y: cy + 9.0, },
+    { x: cx - 3.0, y: cy + 7.5, },
+    { x: cx - 3.0, y: cy + 6.0, },
+    { x: cx - 1.5, y: cy + 6.0, },
+    { x: cx, y: cy + 7.5, },
+    { x: cx + 1.5, y: cy + 6.0, },
   ]
 }
 
@@ -1997,14 +1997,14 @@ fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 1.5, y: cy + 6.0 },
-    { x: cx + 3.0, y: cy + 7.5 },
-    { x: cx + 3.0, y: cy + 10.5 },
-    { x: cx + 1.5, y: cy + 12.0 },
-    { x: cx - 1.5, y: cy + 12.0 },
-    { x: cx - 3.0, y: cy + 10.5 },
-    { x: cx - 3.0, y: cy + 7.5 },
-    { x: cx - 1.5, y: cy + 6.0 },
+    { x: cx + 1.5, y: cy + 6.0, },
+    { x: cx + 3.0, y: cy + 7.5, },
+    { x: cx + 3.0, y: cy + 10.5, },
+    { x: cx + 1.5, y: cy + 12.0, },
+    { x: cx - 1.5, y: cy + 12.0, },
+    { x: cx - 3.0, y: cy + 10.5, },
+    { x: cx - 3.0, y: cy + 7.5, },
+    { x: cx - 1.5, y: cy + 6.0, },
   ]
 }
 
@@ -2012,14 +2012,14 @@ fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn proteinstab_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx, y: cy + 6.0 }, { x: cx, y: cy }]
+  [{ x: cx, y: cy + 6.0, }, { x: cx, y: cy, }]
 }
 
 ///|
 fn proteasesite_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx, y: cy + 7.5 }, { x: cx, y: cy }]
+  [{ x: cx, y: cy + 7.5, }, { x: cx, y: cy, }]
 }
 
 ///|
@@ -2027,14 +2027,14 @@ fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 12.75, y: cy + 3.0 },
-    { x: cx - 6.75, y: cy + 3.0 },
-    { x: cx - 6.75, y: cy + 9.0 },
-    { x: cx - 12.75, y: cy + 9.0 },
-    { x: cx - 12.75, y: cy - 3.0 },
-    { x: cx + 6.75, y: cy - 3.0 },
-    { x: cx + 6.75, y: cy - 9.0 },
-    { x: cx + 12.75, y: cy - 9.0 },
+    { x: cx + 12.75, y: cy + 3.0, },
+    { x: cx - 6.75, y: cy + 3.0, },
+    { x: cx - 6.75, y: cy + 9.0, },
+    { x: cx - 12.75, y: cy + 9.0, },
+    { x: cx - 12.75, y: cy - 3.0, },
+    { x: cx + 6.75, y: cy - 3.0, },
+    { x: cx + 6.75, y: cy - 9.0, },
+    { x: cx + 12.75, y: cy - 9.0, },
   ]
 }
 
@@ -2042,57 +2042,57 @@ fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn restrictionsite_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx, y: cy }, { x: cx - 12.75, y: cy }]
+  [{ x: rect.llx, y: cy, }, { x: cx - 12.75, y: cy, }]
 }
 
 ///|
 fn restrictionsite_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx + 12.75, y: cy }, { x: rect.urx, y: cy }]
+  [{ x: cx + 12.75, y: cy, }, { x: rect.urx, y: cy, }]
 }
 
 ///|
 fn ribosite_segment1_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx, y: cy }, { x: cx, y: cy + 1.5 }]
+  [{ x: cx, y: cy, }, { x: cx, y: cy + 1.5, }]
 }
 
 ///|
 fn ribosite_segment2_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: cx, y: cy + 3.0 }, { x: cx, y: cy + 4.5 }]
+  [{ x: cx, y: cy + 3.0, }, { x: cx, y: cy + 4.5, }]
 }
 
 ///|
 fn signature_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.urx, y: cy + 12.0 },
-    { x: rect.llx, y: cy + 12.0 },
-    { x: rect.llx, y: cy - 12.0 },
-    { x: rect.urx, y: cy - 12.0 },
+    { x: rect.urx, y: cy + 12.0, },
+    { x: rect.llx, y: cy + 12.0, },
+    { x: rect.llx, y: cy - 12.0, },
+    { x: rect.urx, y: cy - 12.0, },
   ]
 }
 
 ///|
 fn signature_cross_up_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx + 3.0, y: cy + 1.5 }, { x: rect.llx + 6.0, y: cy - 1.5 }]
+  [{ x: rect.llx + 3.0, y: cy + 1.5, }, { x: rect.llx + 6.0, y: cy - 1.5, }]
 }
 
 ///|
 fn signature_cross_down_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx + 3.0, y: cy - 1.5 }, { x: rect.llx + 6.0, y: cy + 1.5 }]
+  [{ x: rect.llx + 3.0, y: cy - 1.5, }, { x: rect.llx + 6.0, y: cy + 1.5, }]
 }
 
 ///|
 fn signature_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx + 3.0, y: cy - 9.0 }, { x: rect.urx - 3.0, y: cy - 9.0 }]
+  [{ x: rect.llx + 3.0, y: cy - 9.0, }, { x: rect.urx - 3.0, y: cy - 9.0, }]
 }
 
 ///|
@@ -2100,24 +2100,24 @@ fn star_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let width = rect.urx - rect.llx
   let height = rect.ury - rect.lly
   [
-    { x: rect.llx + width, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx + width, y: rect.lly + height * 0.61803398875, },
     {
       x: rect.llx + width * 0.61795974583,
       y: rect.lly + height * 0.61803398875,
     },
-    { x: rect.llx + width * 0.5, y: rect.lly + height },
+    { x: rect.llx + width * 0.5, y: rect.lly + height, },
     {
       x: rect.llx + width * 0.38204025417,
       y: rect.lly + height * 0.61803398875,
     },
-    { x: rect.llx, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx, y: rect.lly + height * 0.61803398875, },
     {
       x: rect.llx + width * 0.30907407407,
       y: rect.lly + height * 0.38196601125,
     },
-    { x: rect.llx + width * 0.19092592593, y: rect.lly },
-    { x: rect.llx + width * 0.5, y: rect.lly + height * 0.2360679775 },
-    { x: rect.llx + width * 0.80907407407, y: rect.lly },
+    { x: rect.llx + width * 0.19092592593, y: rect.lly, },
+    { x: rect.llx + width * 0.5, y: rect.lly + height * 0.2360679775, },
+    { x: rect.llx + width * 0.80907407407, y: rect.lly, },
     {
       x: rect.llx + width * 0.69092592593,
       y: rect.lly + height * 0.38196601125,
@@ -2130,14 +2130,14 @@ fn terminator_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 3.0, y: cy },
-    { x: cx + 3.0, y: cy + 6.0 },
-    { x: cx + 9.0, y: cy + 6.0 },
-    { x: cx + 9.0, y: cy + 12.0 },
-    { x: cx - 9.0, y: cy + 12.0 },
-    { x: cx - 9.0, y: cy + 6.0 },
-    { x: cx - 3.0, y: cy + 6.0 },
-    { x: cx - 3.0, y: cy },
+    { x: cx + 3.0, y: cy, },
+    { x: cx + 3.0, y: cy + 6.0, },
+    { x: cx + 9.0, y: cy + 6.0, },
+    { x: cx + 9.0, y: cy + 12.0, },
+    { x: cx - 9.0, y: cy + 12.0, },
+    { x: cx - 9.0, y: cy + 6.0, },
+    { x: cx - 3.0, y: cy + 6.0, },
+    { x: cx - 3.0, y: cy, },
   ]
 }
 
@@ -2146,10 +2146,10 @@ fn threepoverhang_top_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.urx, y: cy + 1.5 },
-    { x: rect.urx, y: cy + 7.5 },
-    { x: cx + 3.0, y: cy + 7.5 },
-    { x: cx + 3.0, y: cy + 1.5 },
+    { x: rect.urx, y: cy + 1.5, },
+    { x: rect.urx, y: cy + 7.5, },
+    { x: cx + 3.0, y: cy + 7.5, },
+    { x: cx + 3.0, y: cy + 1.5, },
   ]
 }
 
@@ -2158,10 +2158,10 @@ fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 15.0, y: cy - 7.5 },
-    { x: cx + 15.0, y: cy - 1.5 },
-    { x: cx + 3.0, y: cy - 1.5 },
-    { x: cx + 3.0, y: cy - 7.5 },
+    { x: cx + 15.0, y: cy - 7.5, },
+    { x: cx + 15.0, y: cy - 1.5, },
+    { x: cx + 3.0, y: cy - 1.5, },
+    { x: cx + 3.0, y: cy - 7.5, },
   ]
 }
 
@@ -2169,22 +2169,22 @@ fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn threepoverhang_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
-  [{ x: rect.llx, y: cy }, { x: cx + 3.0, y: cy }]
+  [{ x: rect.llx, y: cy, }, { x: cx + 3.0, y: cy, }]
 }
 
 ///|
 fn underline_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.urx, y: rect.ury },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
 ///|
 fn underline_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  [{ x: rect.llx, y: rect.lly }, { x: rect.urx, y: rect.lly }]
+  [{ x: rect.llx, y: rect.lly, }, { x: rect.urx, y: rect.lly, }]
 }
 
 ///|
@@ -2192,12 +2192,12 @@ fn utr_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx + 9.0, y: cy },
-    { x: cx + 9.0, y: cy + 3.0 },
-    { x: cx + 3.0, y: cy + 9.0 },
-    { x: cx - 3.0, y: cy + 9.0 },
-    { x: cx - 9.0, y: cy + 3.0 },
-    { x: cx - 9.0, y: cy },
+    { x: cx + 9.0, y: cy, },
+    { x: cx + 9.0, y: cy + 3.0, },
+    { x: cx + 3.0, y: cy + 9.0, },
+    { x: cx - 3.0, y: cy + 9.0, },
+    { x: cx - 9.0, y: cy + 3.0, },
+    { x: cx - 9.0, y: cy, },
   ]
 }
 
@@ -2217,13 +2217,13 @@ fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let join_raw = tab_left - fold
   let join = if join_raw < rect.llx { rect.llx } else { join_raw }
   [
-    { x: rect.urx, y: rect.ury },
-    { x: notch_right, y: rect.ury + tab_height },
-    { x: tab_left, y: rect.ury + tab_height },
-    { x: join, y: rect.ury },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury, },
+    { x: notch_right, y: rect.ury + tab_height, },
+    { x: tab_left, y: rect.ury + tab_height, },
+    { x: join, y: rect.ury, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
@@ -2249,11 +2249,11 @@ fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
   }
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: body_right, y: top },
-    { x: rect.llx, y: top },
-    { x: rect.llx, y: bottom },
-    { x: body_right, y: bottom },
-    { x: rect.urx, y: cy },
+    { x: body_right, y: top, },
+    { x: rect.llx, y: top, },
+    { x: rect.llx, y: bottom, },
+    { x: body_right, y: bottom, },
+    { x: rect.urx, y: cy, },
   ]
 }
 
@@ -2262,10 +2262,10 @@ fn assembly_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx - 12.0, y: cy + 1.5 },
-    { x: cx + 12.0, y: cy + 1.5 },
-    { x: cx + 12.0, y: cy + 7.5 },
-    { x: cx - 12.0, y: cy + 7.5 },
+    { x: cx - 12.0, y: cy + 1.5, },
+    { x: cx + 12.0, y: cy + 1.5, },
+    { x: cx + 12.0, y: cy + 7.5, },
+    { x: cx - 12.0, y: cy + 7.5, },
   ]
 }
 
@@ -2274,10 +2274,10 @@ fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: cx - 12.0, y: cy - 7.5 },
-    { x: cx + 12.0, y: cy - 7.5 },
-    { x: cx + 12.0, y: cy - 1.5 },
-    { x: cx - 12.0, y: cy - 1.5 },
+    { x: cx - 12.0, y: cy - 7.5, },
+    { x: cx + 12.0, y: cy - 7.5, },
+    { x: cx + 12.0, y: cy - 1.5, },
+    { x: cx - 12.0, y: cy - 1.5, },
   ]
 }
 
@@ -2285,10 +2285,10 @@ fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.llx, y: cy + 1.5 },
-    { x: rect.llx + 24.0, y: cy + 1.5 },
-    { x: rect.llx + 24.0, y: cy + 7.5 },
-    { x: rect.llx, y: cy + 7.5 },
+    { x: rect.llx, y: cy + 1.5, },
+    { x: rect.llx + 24.0, y: cy + 1.5, },
+    { x: rect.llx + 24.0, y: cy + 7.5, },
+    { x: rect.llx, y: cy + 7.5, },
   ]
 }
 
@@ -2296,60 +2296,60 @@ fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
 fn fivepoverhang_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: rect.llx + 12.0, y: cy - 7.5 },
-    { x: rect.llx + 24.0, y: cy - 7.5 },
-    { x: rect.llx + 24.0, y: cy - 1.5 },
-    { x: rect.llx + 12.0, y: cy - 1.5 },
+    { x: rect.llx + 12.0, y: cy - 7.5, },
+    { x: rect.llx + 24.0, y: cy - 7.5, },
+    { x: rect.llx + 24.0, y: cy - 1.5, },
+    { x: rect.llx + 12.0, y: cy - 1.5, },
   ]
 }
 
 ///|
 fn box3d_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.urx, y: rect.ury },
-    { x: rect.llx + 4.0, y: rect.ury },
-    { x: rect.llx, y: rect.ury - 4.0 },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx - 4.0, y: rect.lly },
-    { x: rect.urx, y: rect.lly + 4.0 },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.llx + 4.0, y: rect.ury, },
+    { x: rect.llx, y: rect.ury - 4.0, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx - 4.0, y: rect.lly, },
+    { x: rect.urx, y: rect.lly + 4.0, },
   ]
 }
 
 ///|
 fn component_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.urx, y: rect.ury },
-    { x: rect.llx, y: rect.ury },
-    { x: rect.llx, y: rect.ury - 4.0 },
-    { x: rect.llx - 4.0, y: rect.ury - 4.0 },
-    { x: rect.llx - 4.0, y: rect.ury - 8.0 },
-    { x: rect.llx, y: rect.ury - 8.0 },
-    { x: rect.llx, y: rect.lly + 8.0 },
-    { x: rect.llx - 4.0, y: rect.lly + 8.0 },
-    { x: rect.llx - 4.0, y: rect.lly + 4.0 },
-    { x: rect.llx, y: rect.lly + 4.0 },
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury, },
+    { x: rect.llx, y: rect.ury, },
+    { x: rect.llx, y: rect.ury - 4.0, },
+    { x: rect.llx - 4.0, y: rect.ury - 4.0, },
+    { x: rect.llx - 4.0, y: rect.ury - 8.0, },
+    { x: rect.llx, y: rect.ury - 8.0, },
+    { x: rect.llx, y: rect.lly + 8.0, },
+    { x: rect.llx - 4.0, y: rect.lly + 8.0, },
+    { x: rect.llx - 4.0, y: rect.lly + 4.0, },
+    { x: rect.llx, y: rect.lly + 4.0, },
+    { x: rect.llx, y: rect.lly, },
+    { x: rect.urx, y: rect.lly, },
   ]
 }
 
 ///|
 fn component_top_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.llx, y: rect.ury - 4.0 },
-    { x: rect.llx + 4.0, y: rect.ury - 4.0 },
-    { x: rect.llx + 4.0, y: rect.ury - 8.0 },
-    { x: rect.llx, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.ury - 4.0, },
+    { x: rect.llx + 4.0, y: rect.ury - 4.0, },
+    { x: rect.llx + 4.0, y: rect.ury - 8.0, },
+    { x: rect.llx, y: rect.ury - 8.0, },
   ]
 }
 
 ///|
 fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
-    { x: rect.llx, y: rect.lly + 8.0 },
-    { x: rect.llx + 4.0, y: rect.lly + 8.0 },
-    { x: rect.llx + 4.0, y: rect.lly + 4.0 },
-    { x: rect.llx, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly + 8.0, },
+    { x: rect.llx + 4.0, y: rect.lly + 8.0, },
+    { x: rect.llx + 4.0, y: rect.lly + 4.0, },
+    { x: rect.llx, y: rect.lly + 4.0, },
   ]
 }
 
@@ -2363,25 +2363,25 @@ fn cylinder_outer_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let top = rect.ury - ry
   let bottom = rect.lly + ry
   [
-    { x: rect.urx, y: top },
-    { x: rect.urx, y: top + dy },
-    { x: cx + dx, y: rect.ury },
-    { x: cx, y: rect.ury },
-    { x: cx - dx, y: rect.ury },
-    { x: rect.llx, y: top + dy },
-    { x: rect.llx, y: top },
-    { x: rect.llx, y: top },
-    { x: rect.llx, y: bottom },
-    { x: rect.llx, y: bottom },
-    { x: rect.llx, y: bottom - dy },
-    { x: cx - dx, y: rect.lly },
-    { x: cx, y: rect.lly },
-    { x: cx + dx, y: rect.lly },
-    { x: rect.urx, y: bottom - dy },
-    { x: rect.urx, y: bottom },
-    { x: rect.urx, y: bottom },
-    { x: rect.urx, y: top },
-    { x: rect.urx, y: top },
+    { x: rect.urx, y: top, },
+    { x: rect.urx, y: top + dy, },
+    { x: cx + dx, y: rect.ury, },
+    { x: cx, y: rect.ury, },
+    { x: cx - dx, y: rect.ury, },
+    { x: rect.llx, y: top + dy, },
+    { x: rect.llx, y: top, },
+    { x: rect.llx, y: top, },
+    { x: rect.llx, y: bottom, },
+    { x: rect.llx, y: bottom, },
+    { x: rect.llx, y: bottom - dy, },
+    { x: cx - dx, y: rect.lly, },
+    { x: cx, y: rect.lly, },
+    { x: cx + dx, y: rect.lly, },
+    { x: rect.urx, y: bottom - dy, },
+    { x: rect.urx, y: bottom, },
+    { x: rect.urx, y: bottom, },
+    { x: rect.urx, y: top, },
+    { x: rect.urx, y: top, },
   ]
 }
 
@@ -2395,13 +2395,13 @@ fn cylinder_top_inner_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let top = rect.ury - ry
   let inner = top - ry
   [
-    { x: rect.urx, y: top },
-    { x: rect.urx, y: top - dy },
-    { x: cx + dx, y: inner },
-    { x: cx, y: inner },
-    { x: cx - dx, y: inner },
-    { x: rect.llx, y: top - dy },
-    { x: rect.llx, y: top },
+    { x: rect.urx, y: top, },
+    { x: rect.urx, y: top - dy, },
+    { x: cx + dx, y: inner, },
+    { x: cx, y: inner, },
+    { x: cx - dx, y: inner, },
+    { x: rect.llx, y: top - dy, },
+    { x: rect.llx, y: top, },
   ]
 }
 
@@ -2650,7 +2650,7 @@ fn record_nodes(label : String) -> Array[RecordNode] {
   for ch in label {
     chars.push(ch)
   }
-  let parser = RecordParser::{ chars, index: 0 }
+  let parser = RecordParser::{ chars, index: 0, }
   // Graphviz parity: preserve outer braces as an explicit group.
   // Flattening a single top-level group flips field orientation.
   parse_record_nodes(parser)
@@ -2716,7 +2716,7 @@ fn record_group_size(
     nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   if sizes.length() == 0 {
-    return { width_pt: 0.0, height_pt: 0.0 }
+    return { width_pt: 0.0, height_pt: 0.0, }
   }
   let mut width = 0.0
   let mut height = 0.0
@@ -2736,7 +2736,7 @@ fn record_group_size(
         width = width + size.width_pt
       }
   }
-  { width_pt: width, height_pt: height }
+  { width_pt: width, height_pt: height, }
 }
 
 ///|
@@ -2823,7 +2823,7 @@ fn record_layout_nodes(
     }
     match nodes[i] {
       RecordNode::Field(_) =>
-        layouts.push({ rect: child_rect, node: nodes[i], children: [] })
+        layouts.push({ rect: child_rect, node: nodes[i], children: [], })
       RecordNode::Group(children) => {
         let child_layouts = record_layout_nodes(
           children,
@@ -2875,14 +2875,18 @@ fn record_separator_ops(
         let x2 = rect.urx
         let y = layouts[i + 1].rect.ury
         ops.push(@render.DrawOp::PenColor(color~))
-        ops.push(@render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]))
+        ops.push(
+          @render.DrawOp::Polyline(points=[{ x: x1, y, }, { x: x2, y, }]),
+        )
       }
       RecordOrientation::Horizontal => {
         let y1 = rect.lly
         let y2 = rect.ury
         let x = layouts[i + 1].rect.llx
         ops.push(@render.DrawOp::PenColor(color~))
-        ops.push(@render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]))
+        ops.push(
+          @render.DrawOp::Polyline(points=[{ x, y: y1, }, { x, y: y2, }]),
+        )
       }
     }
   }
@@ -2929,7 +2933,7 @@ fn record_label_ops_from_layout(
             ops.push(@render.DrawOp::PenColor(color~))
             ops.push(
               @render.DrawOp::Text(
-                pos={ x: line_x, y: line_y },
+                pos={ x: line_x, y: line_y, },
                 align=line.align,
                 width=line.width_pt,
                 text=line.text,
@@ -3094,11 +3098,11 @@ fn html_text_spans_by_line(
       let last_index = line.length() - 1
       let last = line[last_index]
       if last.color == color {
-        line[last_index] = { text: last.text + text, color }
+        line[last_index] = { text: last.text + text, color, }
         return
       }
     }
-    line.push({ text, color })
+    line.push({ text, color, })
   }
   let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
   for span in spans {
@@ -3336,7 +3340,7 @@ fn html_text_ops(
       ops.push(@render.DrawOp::PenColor(color~))
       ops.push(
         @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
+          pos={ x: line_x, y: line_y, },
           align=@render.TextAlign::Left,
           width=line.width_pt,
           text=line.text,
@@ -3399,7 +3403,7 @@ fn html_styled_text_ops(
         ops.push(@render.DrawOp::PenColor(color~))
         ops.push(
           @render.DrawOp::Text(
-            pos={ x: cursor_x, y: line_y },
+            pos={ x: cursor_x, y: line_y, },
             align=@render.TextAlign::Left,
             width=width_pt,
             text=run.text,
@@ -3412,7 +3416,7 @@ fn html_styled_text_ops(
       ops.push(@render.DrawOp::PenColor(color=default_color))
       ops.push(
         @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
+          pos={ x: line_x, y: line_y, },
           align=@render.TextAlign::Left,
           width=line.width_pt,
           text=line.text,
@@ -3564,14 +3568,14 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 
 ///|
 fn midpoint(a : @geom.Point, b : @geom.Point) -> @geom.Point {
-  { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0 }
+  { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0, }
 }
 
 ///|
 fn spline_midpoint(spline : @geom.Spline) -> @geom.Point {
   let count = spline.points.length()
   if count == 0 {
-    { x: 0.0, y: 0.0 }
+    { x: 0.0, y: 0.0, }
   } else {
     midpoint(spline.points[0], spline.points[count - 1])
   }
@@ -3882,15 +3886,15 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
         @render.DrawOp::Polyline(points=[
-          { x: right, y: cy },
-          { x: rect.urx, y: cy },
+          { x: right, y: cy, },
+          { x: rect.urx, y: cy, },
         ]),
       )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
         @render.DrawOp::Polyline(points=[
-          { x: rect.llx, y: cy },
-          { x: left, y: cy },
+          { x: rect.llx, y: cy, },
+          { x: left, y: cy, },
         ]),
       )
     }
@@ -3905,26 +3909,26 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
         @render.DrawOp::Polyline(points=[
-          { x: right, y: cy },
-          { x: rect.urx, y: cy },
+          { x: right, y: cy, },
+          { x: rect.urx, y: cy, },
         ]),
       )
     }
     "box3d" => {
       let points = box3d_points(rect)
-      let corner : @geom.Point = { x: rect.urx - 4.0, y: rect.ury - 4.0 }
+      let corner : @geom.Point = { x: rect.urx - 4.0, y: rect.ury - 4.0, }
       ops.push(@render.DrawOp::Polygon(filled~, points~))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[corner, { x: rect.llx, y: corner.y }]),
+        @render.DrawOp::Polyline(points=[corner, { x: rect.llx, y: corner.y, }]),
       )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[corner, { x: corner.x, y: rect.lly }]),
+        @render.DrawOp::Polyline(points=[corner, { x: corner.x, y: rect.lly, }]),
       )
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(
-        @render.DrawOp::Polyline(points=[corner, { x: rect.urx, y: rect.ury }]),
+        @render.DrawOp::Polyline(points=[corner, { x: rect.urx, y: rect.ury, }]),
       )
     }
     "component" => {
@@ -4079,7 +4083,7 @@ fn append_text_label_ops(
       ops.push(@render.DrawOp::PenColor(color=pen_color))
       ops.push(
         @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
+          pos={ x: line_x, y: line_y, },
           align=line.align,
           width=line.width_pt,
           text=line.text,
@@ -4229,7 +4233,7 @@ fn parse_color_segments(raw : String) -> Array[ColorSegment] {
       }
     }
     let color = @attrs.normalize_color(color_token.trim().to_owned())
-    segs.push({ color, t })
+    segs.push({ color, t, })
     if color_is_zero(left) {
       left = 0.0
       break
@@ -4417,7 +4421,7 @@ fn color_spline_offset_p(
   let x = p.x - q.x
   let y = p.y - q.y
   let scale = distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
-  { x: y * scale, y: -x * scale }
+  { x: y * scale, y: -x * scale, }
 }
 
 ///|
@@ -4437,7 +4441,7 @@ fn color_spline_offset_qr(
     len = Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
   }
   let scale = distance / len
-  { x: y * scale, y: -x * scale }
+  { x: y * scale, y: -x * scale, }
 }
 
 ///|
@@ -4458,7 +4462,7 @@ fn edge_multicolor_spline_points(
       } else {
         let shifted : Array[@geom.Point] = []
         for point in points {
-          shifted.push({ x: point.x, y: point.y + distance })
+          shifted.push({ x: point.x, y: point.y + distance, })
         }
         out.push(shifted)
       }
@@ -4469,8 +4473,8 @@ fn edge_multicolor_spline_points(
   let offset : Array[@geom.Point] = []
   let tmp : Array[@geom.Point] = []
   for _ in 0..<size {
-    offset.push({ x: 0.0, y: 0.0 })
-    tmp.push({ x: 0.0, y: 0.0 })
+    offset.push({ x: 0.0, y: 0.0, })
+    tmp.push({ x: 0.0, y: 0.0, })
   }
   let numc2 = (1.0 + color_count.to_double()) / 2.0
   let mut pf3 = points[0]
@@ -4495,7 +4499,7 @@ fn edge_multicolor_spline_points(
     )
     offset[j + 1] = offset_qr
     offset[j + 2] = offset_qr
-    tmp[j] = { x: pf0.x - numc2 * offset[j].x, y: pf0.y - numc2 * offset[j].y }
+    tmp[j] = { x: pf0.x - numc2 * offset[j].x, y: pf0.y - numc2 * offset[j].y, }
     tmp[j + 1] = {
       x: pf1.x - numc2 * offset[j + 1].x,
       y: pf1.y - numc2 * offset[j + 1].y,
@@ -4507,7 +4511,7 @@ fn edge_multicolor_spline_points(
     j = j + 3
   }
   offset[j] = color_spline_offset_p(pf2, pf3, COLOR_SPLINE_SEP_PT)
-  tmp[j] = { x: pf3.x - numc2 * offset[j].x, y: pf3.y - numc2 * offset[j].y }
+  tmp[j] = { x: pf3.x - numc2 * offset[j].x, y: pf3.y - numc2 * offset[j].y, }
   let out : Array[Array[@geom.Point]] = []
   for _ in 0..<color_count {
     for idx in 0..<size {
@@ -4992,7 +4996,7 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
 fn graph_label_pos(bbox : @geom.Rect, height_pt : Double) -> @geom.Point {
   let x = (bbox.llx + bbox.urx) / 2.0
   let y = bbox.ury - 4.0 - height_pt / 2.0
-  { x, y }
+  { x, y, }
 }
 
 ///|
@@ -5100,7 +5104,7 @@ fn graph_label_ops(
           ops.push(@render.DrawOp::PenColor(color=pen_color))
           ops.push(
             @render.DrawOp::Text(
-              pos={ x: line_x, y: line_y },
+              pos={ x: line_x, y: line_y, },
               align=line.align,
               width=line.width_pt,
               text=line.text,
@@ -5317,7 +5321,7 @@ fn encode_op(op : @render.DrawOp) -> String {
 
 ///|
 pub fn XDotOptions::default() -> XDotOptions {
-  { version: Some("1.7") }
+  { version: Some("1.7"), }
 }
 
 ///|

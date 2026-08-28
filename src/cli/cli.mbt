@@ -45,7 +45,7 @@ pub fn default_engine(program? : String = "dot") -> LayoutEngine {
 
 ///|
 pub fn default_format(_engine : LayoutEngine) -> FormatSpec {
-  { format: OutputFormat::Dot, variant: None }
+  { format: OutputFormat::Dot, variant: None, }
 }
 
 ///|
@@ -71,7 +71,7 @@ fn parse_format_spec(text : String) -> FormatSpec {
     "svg" => OutputFormat::Svg
     _ => OutputFormat::Other(name=format_name)
   }
-  { format, variant }
+  { format, variant, }
 }
 
 ///|
@@ -100,7 +100,7 @@ fn parse_assignment(
   if name == "" {
     raise CliError::InvalidAssignment(flag~, value=text)
   }
-  { name, value: value_sb.to_string() }
+  { name, value: value_sb.to_string(), }
 }
 
 ///|

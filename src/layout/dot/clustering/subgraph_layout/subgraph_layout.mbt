@@ -195,14 +195,24 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
         Some(cluster_name) => {
           match cluster_ln_x.get(cluster_name) {
             Some(value) => {
-              bbox = { llx: value, lly: bbox.lly, urx: bbox.urx, ury: bbox.ury }
+              bbox = {
+                llx: value,
+                lly: bbox.lly,
+                urx: bbox.urx,
+                ury: bbox.ury,
+              }
               pad_left = 0.0
             }
             None => ()
           }
           match cluster_rn_x.get(cluster_name) {
             Some(value) => {
-              bbox = { llx: bbox.llx, lly: bbox.lly, urx: value, ury: bbox.ury }
+              bbox = {
+                llx: bbox.llx,
+                lly: bbox.lly,
+                urx: value,
+                ury: bbox.ury,
+              }
               pad_right = 0.0
             }
             None => ()
@@ -214,7 +224,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       let lly = bbox.lly - pad_y
       let urx = bbox.urx + pad_right
       let ury = bbox.ury + pad_y
-      bbox = { llx, lly, urx, ury }
+      bbox = { llx, lly, urx, ury, }
       match @label_metrics.graph_label_metrics(subgraph) {
         Some(metrics) => {
           let loc = @graph_label.graph_label_loc(subgraph)
@@ -241,7 +251,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
               lly = lly - diff
               ury = ury + diff
             }
-            bbox = { llx, lly, urx, ury }
+            bbox = { llx, lly, urx, ury, }
             label_info = Some({
               width_pt: border_x,
               height_pt: border_y,

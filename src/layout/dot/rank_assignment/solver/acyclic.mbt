@@ -519,5 +519,5 @@ pub fn acyclic_edge_directions_for_names(
       )
     }
   }
-  { tail, head, reversed: edge_reversed }
+  { tail, head, reversed: edge_reversed, }
 }

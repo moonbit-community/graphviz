@@ -325,7 +325,7 @@ pub fn build_order_graph_and_nodes(
   for name in order_nodes {
     order_node_map[name] = order_graph.node(name)
   }
-  { order_graph, order_node_map }
+  { order_graph, order_node_map, }
 }
 
 ///|
@@ -424,5 +424,5 @@ pub fn build_edge_indices_and_order(
   let parents = edge_index_data.parents
   let children = edge_index_data.children
   let edge_order = collect_edge_order(edges_out)
-  { parents, children, edge_order }
+  { parents, children, edge_order, }
 }

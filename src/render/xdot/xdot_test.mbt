@@ -13,7 +13,7 @@ test "encode xdot ops basic" {
       ury: 20.0,
     }),
     @render.DrawOp::Text(
-      pos={ x: 5.0, y: 6.0 },
+      pos={ x: 5.0, y: 6.0, },
       align=@render.TextAlign::Center,
       width=12.0,
       text="Hi",
@@ -29,8 +29,8 @@ test "encode xdot ops basic" {
 test "encode xdot ops rounds doubles" {
   let ops : Array[@render.DrawOp] = [
     @render.DrawOp::Polyline(points=[
-      { x: 1.239, y: 5.0 },
-      { x: -2.341, y: 0.0 },
+      { x: 1.239, y: 5.0, },
+      { x: -2.341, y: 0.0, },
     ]),
   ]
   inspect(encode_xdot_ops(ops), content="L 2 1.24 5 -2.34 0")
@@ -74,7 +74,7 @@ fn parse_point_attr(value : String) -> @geom.Point raise {
   if parts.length() != 2 {
     fail("invalid point: \{value}")
   }
-  { x: parse_double_or_fail(parts[0]), y: parse_double_or_fail(parts[1]) }
+  { x: parse_double_or_fail(parts[0]), y: parse_double_or_fail(parts[1]), }
 }
 
 ///|

@@ -224,7 +224,7 @@ fn polygon_clip_params(node : @cgraph.Node) -> PolygonClipParams {
     (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
     sides = 120
   }
-  { sides, orientation, distortion, skew }
+  { sides, orientation, distortion, skew, }
 }
 
 ///|
@@ -268,7 +268,7 @@ fn builtin_polygon_clip_params(
     Some(value) => @numeric.parse_double_or(value, default_skew)
     None => default_skew
   }
-  Some({ sides, orientation, distortion, skew })
+  Some({ sides, orientation, distortion, skew, })
 }
 
 ///|

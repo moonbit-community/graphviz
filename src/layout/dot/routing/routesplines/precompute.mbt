@@ -59,7 +59,7 @@ pub fn build_path_adjacency(
     }
     edge_idx = edge_idx + 1
   }
-  { out_edges, in_edges }
+  { out_edges, in_edges, }
 }
 
 ///|
@@ -119,7 +119,7 @@ fn compute_horizontal_bounds(
   }
   let (start_rank, end_rank) = match (min_rank, max_rank) {
     (Some(start), Some(end)) => (start, end)
-    _ => return { left: 0.0, right: 0.0 }
+    _ => return { left: 0.0, right: 0.0, }
   }
   let mut left_bound = 0.0
   let mut right_bound = 0.0
@@ -161,7 +161,7 @@ fn compute_horizontal_bounds(
     right_bound = right_bound + ROUTE_MIN_WIDTH
     rank = rank + 1
   }
-  { left: left_bound, right: right_bound }
+  { left: left_bound, right: right_bound, }
 }
 
 ///|

@@ -599,7 +599,7 @@ fn run_root_reorder_for_groups(
   let ordered_mincross = run_root_rank_reorder(
     reorder_call_data.root_rank_reorder_inputs,
   )
-  { ordered_mincross, reorder_call_data }
+  { ordered_mincross, reorder_call_data, }
 }
 
 ///|
@@ -928,7 +928,7 @@ pub fn run_clustered_root_phase_stage(
   let root_cluster_stage = run_root_and_cluster_ranks_stage_from_sources(
     sources, root_groups_override_for_root_pass, capture_call,
   )
-  { root_cluster_stage, root_tail_order_override, cluster_rank_order_replay }
+  { root_cluster_stage, root_tail_order_override, cluster_rank_order_replay, }
 }
 
 ///|
@@ -983,7 +983,7 @@ fn run_root_and_cluster_ranks(
   } else {
     ordered
   }
-  { order_groups_for_mincross, ordered, ordered_with_vnodes }
+  { order_groups_for_mincross, ordered, ordered_with_vnodes, }
 }
 
 ///|
@@ -1359,7 +1359,7 @@ fn build_flat_constraint_adjacency(
       None => ()
     }
   }
-  { flat_out, flat_in }
+  { flat_out, flat_in, }
 }
 
 ///|
@@ -1412,7 +1412,7 @@ fn build_component_traversal_starts(
   } else {
     start_nodes
   }
-  { start_nodes, traversal_starts }
+  { start_nodes, traversal_starts, }
 }
 
 ///|

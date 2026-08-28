@@ -29,7 +29,7 @@ fn bbox_is_zero_sentinel(bbox : @geom.Rect) -> Bool {
 
 ///|
 fn bbox_acc_empty() -> BBoxAccumulator {
-  { set: false, min_x: 0.0, max_x: 0.0, min_y: 0.0, max_y: 0.0 }
+  { set: false, min_x: 0.0, max_x: 0.0, min_y: 0.0, max_y: 0.0, }
 }
 
 ///|
@@ -53,7 +53,7 @@ fn bbox_acc_include_point(
   p : @geom.Point,
 ) -> BBoxAccumulator {
   if !acc.set {
-    { set: true, min_x: p.x, max_x: p.x, min_y: p.y, max_y: p.y }
+    { set: true, min_x: p.x, max_x: p.x, min_y: p.y, max_y: p.y, }
   } else {
     {
       set: true,
@@ -84,9 +84,9 @@ fn bbox_acc_include_point(
 ///|
 fn bbox_acc_to_rect(acc : BBoxAccumulator) -> @geom.Rect {
   if acc.set {
-    { llx: acc.min_x, lly: acc.min_y, urx: acc.max_x, ury: acc.max_y }
+    { llx: acc.min_x, lly: acc.min_y, urx: acc.max_x, ury: acc.max_y, }
   } else {
-    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
+    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0, }
   }
 }
 
@@ -106,8 +106,8 @@ pub fn compute_bbox(
     let right = node.pos.x + half_w
     let bottom = node.pos.y - half_h
     let top = node.pos.y + half_h
-    acc = bbox_acc_include_point(acc, { x: left, y: bottom })
-    acc = bbox_acc_include_point(acc, { x: right, y: top })
+    acc = bbox_acc_include_point(acc, { x: left, y: bottom, })
+    acc = bbox_acc_include_point(acc, { x: right, y: top, })
   }
   for edge in edges {
     for spline in edge.splines {
@@ -122,8 +122,8 @@ pub fn compute_bbox(
       }
       match spline_bbox(spline.points) {
         Some(rect) => {
-          update({ x: rect.llx, y: rect.lly })
-          update({ x: rect.urx, y: rect.ury })
+          update({ x: rect.llx, y: rect.lly, })
+          update({ x: rect.urx, y: rect.ury, })
         }
         None => ()
       }
@@ -154,8 +154,8 @@ pub fn expand_bbox_with_edges(
       }
       match spline_bbox(spline.points) {
         Some(rect) => {
-          update({ x: rect.llx, y: rect.lly })
-          update({ x: rect.urx, y: rect.ury })
+          update({ x: rect.llx, y: rect.lly, })
+          update({ x: rect.urx, y: rect.ury, })
         }
         None => ()
       }
@@ -192,7 +192,12 @@ pub fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
 
 ///|
 pub fn round_bbox(bbox : @geom.Rect) -> @geom.Rect {
-  { llx: bbox.llx.round(), lly: bbox.lly, urx: bbox.urx.round(), ury: bbox.ury }
+  {
+    llx: bbox.llx.round(),
+    lly: bbox.lly,
+    urx: bbox.urx.round(),
+    ury: bbox.ury,
+  }
 }
 
 ///|
@@ -225,7 +230,7 @@ pub fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
         max_y = p.y
       }
     }
-    return Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y })
+    return Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y, })
   }
   let mut bbox : @geom.Rect = {
     llx: points[0].x,
@@ -323,9 +328,9 @@ fn split_bezier_half(
   p2 : @geom.Point,
   p3 : @geom.Point,
 ) -> SplitBezierHalf {
-  let p01 : @geom.Point = { x: (p0.x + p1.x) / 2.0, y: (p0.y + p1.y) / 2.0 }
-  let p12 : @geom.Point = { x: (p1.x + p2.x) / 2.0, y: (p1.y + p2.y) / 2.0 }
-  let p23 : @geom.Point = { x: (p2.x + p3.x) / 2.0, y: (p2.y + p3.y) / 2.0 }
+  let p01 : @geom.Point = { x: (p0.x + p1.x) / 2.0, y: (p0.y + p1.y) / 2.0, }
+  let p12 : @geom.Point = { x: (p1.x + p2.x) / 2.0, y: (p1.y + p2.y) / 2.0, }
+  let p23 : @geom.Point = { x: (p2.x + p3.x) / 2.0, y: (p2.y + p3.y) / 2.0, }
   let p012 : @geom.Point = {
     x: (p01.x + p12.x) / 2.0,
     y: (p01.y + p12.y) / 2.0,
@@ -339,8 +344,8 @@ fn split_bezier_half(
     y: (p012.y + p123.y) / 2.0,
   }
   {
-    left: { p0, p1: p01, p2: p012, p3: p0123 },
-    right: { p0: p0123, p1: p123, p2: p23, p3 },
+    left: { p0, p1: p01, p2: p012, p3: p0123, },
+    right: { p0: p0123, p1: p123, p2: p23, p3, },
   }
 }
 
@@ -416,7 +421,7 @@ pub(all) struct DotBBoxInput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_dot_bbox(input : DotBBoxInput) -> @geom.Rect {
   if input.nodes_out.length() == 0 {
-    return { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
+    return { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0, }
   }
   let mut min_x = 0.0
   let mut max_x = 0.0
@@ -464,5 +469,5 @@ pub fn compute_dot_bbox(input : DotBBoxInput) -> @geom.Rect {
     min_y = max_rank_y - ht1
     max_y = min_rank_y + ht2
   }
-  { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+  { llx: min_x, lly: min_y, urx: max_x, ury: max_y, }
 }

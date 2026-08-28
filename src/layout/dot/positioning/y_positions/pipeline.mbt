@@ -149,7 +149,7 @@ fn build_y_positions_with_flip(
       )
     }
   }
-  { y_positions, rank_y }
+  { y_positions, rank_y, }
 }
 
 ///|

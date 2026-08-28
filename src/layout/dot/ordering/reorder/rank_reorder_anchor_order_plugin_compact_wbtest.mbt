@@ -94,7 +94,7 @@ test "rank_reorder uses external anchor order for plugin-style single-rank slice
     flat_edges: [],
     ranks: [[0, 1, 2, 3, 4, 5]],
   }
-  let output : MincrossOutput = { case_id: 1007, ranks: [[5, 4, 0, 3, 1, 2]] }
+  let output : MincrossOutput = { case_id: 1007, ranks: [[5, 4, 0, 3, 1, 2]], }
   let name_order : Map[String, Int] = Map([])
   name_order["fmt_tiff"] = 3
   name_order["fmt_tif"] = 4
