@@ -267,7 +267,7 @@ pub fn compute_dot_routing_stage(
     positions_state: routing_positions_state,
     label_ports_map: ratio_adjusted_data.label_ports_map,
     cluster_bboxes: routing_cluster_bboxes,
-    sizes: prep.output_sizes,
+    sizes: prep.sizes,
     enable_complex_tuning,
   })
   let port_pad_below = precompute_data.port_pad_below
@@ -285,7 +285,7 @@ pub fn compute_dot_routing_stage(
     routing_positions_state: ratio_adjusted_data.positions_state,
     routing_label_ports_map: ratio_adjusted_data.label_ports_map,
     routing_label_ports_raw: ratio_adjusted_data.label_ports_raw,
-    routing_sizes: prep.output_sizes,
+    routing_sizes: prep.sizes,
     path_groups,
     routing_context,
     has_graph_edge_labels,
