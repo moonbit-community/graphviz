@@ -1,0 +1,16 @@
+docs/
+refs/
+scripts/
+tests/
+tools/
+target/
+
+.DS_Store
+
+_build/
+/target
+.mooncakes
+/.waylog
+
+# Local throwaway debug tests should not be committed or picked up accidentally.
+src/layout/dot/tmp_*.mbt

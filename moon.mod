@@ -13,7 +13,3 @@ description = "Graphviz rewrite in MoonBit"
 license = "EPL-2.0"
 
 source = "src"
-
-options(
-  "include": [ "src", "LICENSE", "NOTICE", "README.md", "moon.mod" ],
-)
