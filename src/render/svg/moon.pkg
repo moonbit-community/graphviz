@@ -11,7 +11,6 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/math",
   "moonbitlang/core/string",
-  "moonbitlang/core/strconv",
 }
 
 import {

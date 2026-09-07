@@ -14,7 +14,6 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/math",
   "moonbitlang/core/ref",
-  "moonbitlang/core/strconv",
 }
 
 import {
@@ -22,5 +21,4 @@ import {
   "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbitlang/core/string",
-  "moonbitlang/core/strconv",
 } for "test"

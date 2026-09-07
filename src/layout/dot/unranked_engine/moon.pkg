@@ -12,7 +12,6 @@ import {
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/math",
   "moonbitlang/core/string",
-  "moonbitlang/core/strconv",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/input_stage",
