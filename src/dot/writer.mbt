@@ -300,6 +300,7 @@ fn graph_attr_rank(name : String) -> Int {
     "bb" => 2
     "charset" => 3
     "bgcolor" => 3
+    "gradientangle" => 3
     "color" => 4
     "fillcolor" => 4
     "pencolor" => 5
@@ -313,6 +314,7 @@ fn graph_attr_rank(name : String) -> Int {
     "labeljust" => 11
     "labelloc" => 12
     "lheight" => 13
+    "peripheries" => 14
     "lp" => 14
     "lwidth" => 15
     "layout" => 16
@@ -347,6 +349,7 @@ fn node_attr_rank(name : String) -> Int {
     "color" => 2
     "colorscheme" => 3
     "fillcolor" => 4
+    "gradientangle" => 4
     "fixedsize" => 5
     "distortion" => 5
     "fontcolor" => 6

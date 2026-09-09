@@ -9,7 +9,6 @@ import {
   "moonbit-community/graphviz/layout/dot/routing/edge_ops",
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
-  "moonbitlang/core/math",
   "moonbitlang/core/env",
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",

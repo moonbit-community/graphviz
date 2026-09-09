@@ -327,6 +327,18 @@ test "render_svg fills cluster background" {
 }
 
 ///|
+test "render_svg hides cluster outlines with zero peripheries" {
+  let graph = @dot.parse_dot(
+    "digraph { subgraph cluster_0 { style=filled; peripheries=0; a; } }",
+  )
+  let svg = render_svg(@layout_dot.layout_dot(graph), options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("stroke=\"none\""))
+}
+
+///|
 test "render_svg skips empty cluster outlines" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",

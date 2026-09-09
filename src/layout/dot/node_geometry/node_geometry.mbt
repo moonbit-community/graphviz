@@ -68,6 +68,7 @@ pub fn node_size(
     None => ""
   }
   let regular_shape = shape == "msquare" ||
+    shape == "square" ||
     shape == "mcircle" ||
     shape == "circle" ||
     shape == "doublecircle"

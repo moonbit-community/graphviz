@@ -203,3 +203,44 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
   assert_eq(leader_ranks.get("a0"), Some(1))
   assert_eq(leader_ranks.get("b0"), Some(0))
 }
+
+///|
+test "solve_clustered_leader_ranks keeps reciprocal cluster edges on slack nodes" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a0 = graph.node("a0")
+  let a1 = graph.node("a1")
+  let b0 = graph.node("b0")
+  let b3 = graph.node("b3")
+  let forward = graph.edge(a1, b3)
+  let backward = graph.edge(b3, a1)
+
+  let node_cluster : Map[String, String] = Map([])
+  node_cluster["a0"] = "cluster_a"
+  node_cluster["a1"] = "cluster_a"
+  node_cluster["b0"] = "cluster_b"
+  node_cluster["b3"] = "cluster_b"
+
+  let cluster_leaders : Map[String, String] = Map([])
+  cluster_leaders["cluster_a"] = "a0"
+  cluster_leaders["cluster_b"] = "b0"
+
+  let local_ranks : Map[String, Int] = Map([])
+  local_ranks["a0"] = 0
+  local_ranks["a1"] = 1
+  local_ranks["b0"] = 0
+  local_ranks["b3"] = 3
+
+  let leader_ranks = solve_clustered_leader_ranks(
+    [a0, a1, b0, b3],
+    [forward, backward],
+    node_cluster,
+    cluster_leaders,
+    local_ranks,
+    false,
+    10,
+    identity_cluster_solver_orient_edges,
+  )
+
+  assert_eq(leader_ranks.get("a0"), Some(3))
+  assert_eq(leader_ranks.get("b0"), Some(0))
+}

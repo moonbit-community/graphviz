@@ -128,6 +128,20 @@ test "render_xdot fills cluster background" {
 }
 
 ///|
+test "render_xdot hides cluster outlines with zero peripheries" {
+  let graph = @dot.parse_dot(
+    "digraph { subgraph cluster_0 { style=filled; peripheries=0; a; } }",
+  )
+  let output_graph = @dot.parse_dot(render_xdot(@layout_dot.layout_dot(graph)))
+  let cluster = find_subgraph(output_graph, "cluster_0")
+  let draw = match cluster.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing cluster _draw_")
+  }
+  assert_true(draw.contains("c 9 -#fffffe00"))
+}
+
+///|
 test "render_xdot skips empty cluster draw ops" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
@@ -216,6 +230,26 @@ test "render_xdot emits linear gradients for multicolor node fills" {
   assert_true(draw.contains("-["))
   assert_true(draw.contains("-#ff0000"))
   assert_true(draw.contains("-#0000ff"))
+}
+
+///|
+test "render_xdot fills HTML table gradients" {
+  let graph = @dot.parse_dot(
+    "digraph { a [shape=plain label=<<TABLE style=\"rounded\" bgcolor=\"red:blue\"><TR><TD bgcolor=\"green:yellow\">x</TD></TR></TABLE>>]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let draw = match node_a.get_attr("_ldraw_") {
+    Some(value) => value
+    None => fail("missing node _ldraw_")
+  }
+  assert_true(draw.contains("-["))
+  assert_true(draw.contains("b 25"))
+  assert_true(draw.contains("P 4"))
 }
 
 ///|

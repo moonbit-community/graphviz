@@ -68,3 +68,47 @@ test "compute_rank_data assembles rank groups gaps and self-edge label heights" 
   assert_eq(data.all_ranks, [0, 1, 2])
   assert_eq(data.self_edge_labels.get("c"), Some(6.0))
 }
+
+///|
+test "compute_rank_data keeps a chain across sibling clusters on separate ranks" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let clusters : Array[@cgraph.Graph] = []
+  let nodes : Array[@cgraph.Node] = []
+  for i in 0..<6 {
+    let cluster = graph.subgraph(name="cluster\{i}")
+    clusters.push(cluster)
+    nodes.push(cluster.node("\{i}"))
+  }
+  let edges : Array[@cgraph.Edge] = []
+  for i in 0..<5 {
+    edges.push(graph.edge(nodes[i], nodes[i + 1]))
+  }
+
+  let data = compute_rank_data(
+    make_rank_data_input(graph, graph.nodes(), graph.edges(), false, CL_BACK, _ => {
+      0.0
+    }),
+  )
+
+  for i in 0..<6 {
+    assert_eq(data.ranks.get("\{i}"), Some(i))
+  }
+}
+
+///|
+test "compute_rank_data keeps parsed sibling-cluster chains on separate ranks" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { subgraph cluster0 { 0 } subgraph cluster1 { peripheries=0; 1 } subgraph cluster2 { 2 } subgraph cluster3 { peripheries=0; 3 } subgraph cluster4 { peripheries=0; 4 } subgraph cluster5 { 5 } 0 -> 1 -> 2 -> 3 -> 4; }",
+  )
+  let data = compute_rank_data(
+    make_rank_data_input(graph, graph.nodes(), graph.edges(), false, CL_BACK, _ => {
+      0.0
+    }),
+  )
+
+  assert_eq(data.edge_tail, ["0", "1", "2", "3"])
+  assert_eq(data.edge_head, ["1", "2", "3", "4"])
+  for i in 0..<5 {
+    assert_eq(data.ranks.get("\{i}"), Some(i))
+  }
+}

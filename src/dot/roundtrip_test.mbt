@@ -64,6 +64,34 @@ test "write_dot orders edge clip attrs around generated position" {
 }
 
 ///|
+test "write_dot orders graph peripheries before style" {
+  let graph = try
+    @dot.parse_dot(
+      "digraph { subgraph cluster_0 { fillcolor=red; style=filled; peripheries=0; a; } }",
+    )
+  catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  let fillcolor_index = match output.find("fillcolor=red") {
+    Some(value) => value
+    None => fail("missing fillcolor attr: \{output}")
+  }
+  let peripheries_index = match output.find("peripheries=0") {
+    Some(value) => value
+    None => fail("missing peripheries attr: \{output}")
+  }
+  let style_index = match output.find("style=filled") {
+    Some(value) => value
+    None => fail("missing style attr: \{output}")
+  }
+  assert_true(fillcolor_index < peripheries_index)
+  assert_true(peripheries_index < style_index)
+}
+
+///|
 test "write_dot preserves graph attr scope for earlier subgraphs" {
   let graph = try
     @dot.parse_dot("graph G { { a; } label=\"root\"; fontsize=20; }")
@@ -117,6 +145,48 @@ test "write_dot keeps image before generated node geometry attrs" {
   }
   assert_true(image_index < pos_index)
   assert_true(image_index < width_index)
+}
+
+///|
+test "write_dot orders gradientangle with its fill attributes" {
+  let graph = try
+    @dot.parse_dot(
+      "digraph { bgcolor=\"yellow:blue\" gradientangle=60 label=Graph; a [fillcolor=\"red:blue\" gradientangle=180 height=1]; }",
+    )
+  catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  let bgcolor_index = match output.find("bgcolor=\"yellow:blue\"") {
+    Some(value) => value
+    None => fail("missing graph bgcolor: \{output}")
+  }
+  let graph_gradient_index = match output.find("gradientangle=60") {
+    Some(value) => value
+    None => fail("missing graph gradientangle: \{output}")
+  }
+  let label_index = match output.find("label=\"Graph\"") {
+    Some(value) => value
+    None => fail("missing graph label: \{output}")
+  }
+  let fill_index = match output.find("fillcolor=\"red:blue\"") {
+    Some(value) => value
+    None => fail("missing node fillcolor: \{output}")
+  }
+  let node_gradient_index = match output.find("gradientangle=180") {
+    Some(value) => value
+    None => fail("missing node gradientangle: \{output}")
+  }
+  let height_index = match output.find("height=1") {
+    Some(value) => value
+    None => fail("missing node height: \{output}")
+  }
+  assert_true(bgcolor_index < graph_gradient_index)
+  assert_true(graph_gradient_index < label_index)
+  assert_true(fill_index < node_gradient_index)
+  assert_true(node_gradient_index < height_index)
 }
 
 ///|

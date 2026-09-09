@@ -5,3 +5,7 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_assignment/solver",
   "moonbit-community/graphviz/cgraph",
 }
+
+import {
+  "moonbit-community/graphviz/dot" @dot_parser,
+} for "wbtest"

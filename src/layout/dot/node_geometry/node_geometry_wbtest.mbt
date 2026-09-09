@@ -33,3 +33,15 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
   assert_close(size.width_in, 3.5833, 0.001)
   assert_close(size.height_in, 0.51042, 0.001)
 }
+
+///|
+test "node_size gives square nodes their regular half-inch default" {
+  let graph = @dot_parser.parse_dot("digraph { a [shape=square]; }")
+  let size = node_size(
+    graph.node("a"),
+    @layout_prep.RecordOrientation::Horizontal,
+  )
+
+  assert_close(size.width_in, 0.5, 0.0001)
+  assert_close(size.height_in, 0.5, 0.0001)
+}

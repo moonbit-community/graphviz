@@ -58,6 +58,18 @@ fn parse_int(value : String, fallback : Int) -> Int {
 }
 
 ///|
+fn centered_html_text_x(value : Double, font_name : String) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("avantgarde") || lower.contains("palatino") {
+    // Graphviz's PostScript text metrics retain enough sub-point precision to
+    // place these centered labels just above the two-decimal tie.
+    value + 0.0000001
+  } else {
+    value
+  }
+}
+
+///|
 priv struct LabelLine {
   text : String
   align : @render.TextAlign
@@ -934,6 +946,13 @@ fn gradient_shape_bounds(
   shape : String,
   fallback : @geom.Rect,
 ) -> @geom.Rect {
+  let raw_shape = node_attr(node, "shape").unwrap_or_default().to_lower()
+  if raw_shape == "doublecircle" {
+    return match inset_rect(fallback, DOUBLE_CIRCLE_GAP_PT) {
+      Some(inner) => inner
+      None => fallback
+    }
+  }
   match shape_polygon_paths(node, shape, fallback) {
     Some(paths) =>
       if paths.length() == 0 || paths[0].length() == 0 {
@@ -2778,6 +2797,8 @@ fn shape_polygon_paths(
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "cds" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "tab" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "component" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "square" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
   }
@@ -2795,6 +2816,10 @@ fn shape_polygon_paths(
         "folder" =>
           Some(polygon_paths_from_base(folder_points(rect), peripheries))
         "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
+        "tab" =>
+          Some(polygon_paths_from_base(tab_outline_points(rect), peripheries))
+        "component" =>
+          Some(polygon_paths_from_base(component_points(rect), peripheries))
         "square" =>
           Some(polygon_paths_from_base(rect_points(rect), peripheries))
         _ =>
@@ -3592,6 +3617,9 @@ fn html_fill_rect_gradient_ops(
       ops.push(@render.DrawOp::Style(name="solid"))
       ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
       ops.push(@render.DrawOp::GradFill(gradient~))
+      ops.push(
+        @render.DrawOp::Polygon(filled=true, points=outline_rect_points(rect)),
+      )
     }
     None => html_fill_rect_ops(ops, color, rect)
   }
@@ -4022,7 +4050,10 @@ fn html_text_ops(
       @html_label.HtmlAlign::Left => rect.llx
       @html_label.HtmlAlign::Right => rect.urx - line.width_pt
       @html_label.HtmlAlign::Center =>
-        (rect.llx + rect.urx - line.width_pt) / 2.0
+        centered_html_text_x(
+          (rect.llx + rect.urx - line.width_pt) / 2.0,
+          font.name,
+        )
     }
     let line_y = baseline + line.yoffset_centerline
     if line.text != "" {
@@ -4074,7 +4105,10 @@ fn html_styled_text_ops(
       @html_label.HtmlAlign::Left => rect.llx
       @html_label.HtmlAlign::Right => rect.urx - line.width_pt
       @html_label.HtmlAlign::Center =>
-        (rect.llx + rect.urx - line.width_pt) / 2.0
+        centered_html_text_x(
+          (rect.llx + rect.urx - line.width_pt) / 2.0,
+          font.name,
+        )
     }
     let line_y = baseline + line.yoffset_centerline
     let runs = if i < runs_by_line.length() { runs_by_line[i] } else { [] }
@@ -4134,16 +4168,33 @@ fn html_table_ops(
   let border_pt = html_table_border_pt(table)
   match table.bg_color {
     Some(color) =>
-      match html_fill_gradient(
-        color,
-        table.style,
-        table.gradient_angle,
-        border_rect(rect, border_pt),
-      ) {
+      match
+        html_fill_gradient(
+          color,
+          table.style,
+          table.gradient_angle,
+          border_rect(rect, border_pt),
+        ) {
         Some(gradient) => {
+          let fill_rect = border_rect(rect, border_pt)
           ops.push(@render.DrawOp::Style(name="solid"))
           ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
           ops.push(@render.DrawOp::GradFill(gradient~))
+          if table.rounded {
+            ops.push(
+              @render.DrawOp::Bezier(
+                filled=true,
+                points=rounded_rect_bezier_points(fill_rect),
+              ),
+            )
+          } else {
+            ops.push(
+              @render.DrawOp::Polygon(
+                filled=true,
+                points=outline_rect_points(fill_rect),
+              ),
+            )
+          }
         }
         None => html_fill_table_ops(ops, table, color, rect)
       }
@@ -5774,7 +5825,7 @@ fn graph_fill_gradient(
     let stop = stops[i]
     stops[i] = { offset: Double::from_int(i) / last, color: stop.color, }
   }
-  let gradient_angle = match graph.get_attr("gradientangle") {
+  let gradient_angle = match inherited_graph_attr(graph, "gradientangle") {
     Some(value) => parse_double(value, 0.0)
     None => 0.0
   }
@@ -5787,7 +5838,8 @@ fn graph_fill_gradient(
     let radius_y = (rect.ury - rect.lly) / 2.0
     let end_radius = @math.hypot(radius_x, radius_y)
     let start_radius = end_radius / 4.0
-    let start_center : @geom.Point = match graph.get_attr("gradientangle") {
+    let start_center : @geom.Point = match
+      inherited_graph_attr(graph, "gradientangle") {
       Some(_) if gradient_angle != 0.0 => {
         let radians = gradient_angle * @math.PI / 180.0
         {
@@ -5877,7 +5929,14 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
       "pencolor",
       graph_color(graph, "color", "black"),
     )
-    ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(color)))
+    let outline_color = if graph
+      .get_attr("peripheries")
+      .map_or(false, value => parse_int(value, 1) <= 0) {
+      "#fffffe00"
+    } else {
+      @attrs.normalize_color(color)
+    }
+    ops.push(@render.DrawOp::PenColor(color=outline_color))
     let fill = if style.filled || radial {
       Some(graph.get_attr("fillcolor").unwrap_or(color))
     } else {

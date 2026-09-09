@@ -71,6 +71,15 @@ fn polygon_shape_attrs(node : @cgraph.Node) -> PolygonShapeAttrs {
 /// Graphviz parity: built-in polygon shape defaults mirror shapes.c polygon_t.
 fn builtin_polygon_shape_attrs(shape : String) -> PolygonShapeAttrs? {
   match shape {
+    "square" =>
+      Some({
+        sides: 4,
+        peripheries: 1,
+        orientation: 0.0,
+        distortion: 0.0,
+        skew: 0.0,
+        regular: true,
+      })
     "diamond" =>
       Some({
         sides: 4,

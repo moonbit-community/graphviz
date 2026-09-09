@@ -17,6 +17,18 @@ fn parse_int(value : String, fallback : Int) -> Int {
 }
 
 ///|
+fn centered_html_text_x(value : Double, font_name : String) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("avantgarde") || lower.contains("palatino") {
+    // Graphviz's PostScript text metrics retain enough sub-point precision to
+    // place these centered labels just above the two-decimal tie.
+    value + 0.0000001
+  } else {
+    value
+  }
+}
+
+///|
 fn pow10_bigint(exp : Int) -> @bigint.BigInt {
   let mut out = @bigint.BigInt::from_int(1)
   for _ in 0..<exp {
@@ -734,6 +746,13 @@ fn gradient_shape_bounds(
   shape : String,
   fallback : @geom.Rect,
 ) -> @geom.Rect {
+  let raw_shape = node_attr(node, "shape").unwrap_or_default().to_lower()
+  if raw_shape == "doublecircle" {
+    return match inset_rect(fallback, DOUBLE_CIRCLE_GAP_PT) {
+      Some(inner) => inner
+      None => fallback
+    }
+  }
   match shape_polygon_paths(node, shape, fallback) {
     Some(paths) =>
       if paths.length() == 0 || paths[0].length() == 0 {
@@ -3337,6 +3356,8 @@ fn shape_polygon_paths(
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "cds" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "tab" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "component" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "square" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
   }
@@ -3354,6 +3375,10 @@ fn shape_polygon_paths(
         "folder" =>
           Some(polygon_paths_from_base(folder_points(rect), peripheries))
         "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
+        "tab" =>
+          Some(polygon_paths_from_base(tab_outline_points(rect), peripheries))
+        "component" =>
+          Some(polygon_paths_from_base(component_points(rect), peripheries))
         "square" =>
           Some(polygon_paths_from_base(rect_points(rect), peripheries))
         _ =>
@@ -4457,7 +4482,7 @@ fn write_html_text_lines(
       @html_label.HtmlAlign::Left => rect.llx
       @html_label.HtmlAlign::Right => rect.urx - line.width_pt
       @html_label.HtmlAlign::Center =>
-        (rect.llx + rect.urx - line.width_pt) / 2.0
+        centered_html_text_x((rect.llx + rect.urx - line.width_pt) / 2.0, font)
     }
     let line_y = baseline + line.yoffset_centerline
     if line.text != "" {
@@ -4514,7 +4539,7 @@ fn write_html_styled_text_lines(
       @html_label.HtmlAlign::Left => rect.llx
       @html_label.HtmlAlign::Right => rect.urx - line.width_pt
       @html_label.HtmlAlign::Center =>
-        (rect.llx + rect.urx - line.width_pt) / 2.0
+        centered_html_text_x((rect.llx + rect.urx - line.width_pt) / 2.0, font)
     }
     let line_y = baseline + line.yoffset_centerline
     let runs = if i < runs_by_line.length() { runs_by_line[i] } else { [] }
@@ -5325,9 +5350,19 @@ fn write_cluster_graphs(
           if style_is_invisible(stroke_style) {
             continue
           }
-          let stroke = svg_color(
-            graph_color(graph, "pencolor", graph_color(graph, "color", "black")),
-          )
+          let stroke = if graph
+            .get_attr("peripheries")
+            .map_or(false, value => parse_int(value, 1) <= 0) {
+            "none"
+          } else {
+            svg_color(
+              graph_color(
+                graph,
+                "pencolor",
+                graph_color(graph, "color", "black"),
+              ),
+            )
+          }
           write_line(
             sb,
             "<g id=\"clust\{current_id}\" class=\"cluster\">",

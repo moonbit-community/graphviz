@@ -17,6 +17,35 @@ priv struct LeaderRankEdge {
 }
 
 ///|
+fn leader_has_path(
+  leader_edges : Array[(String, String)],
+  start : String,
+  target : String,
+) -> Bool {
+  let seen : Map[String, Bool] = Map([])
+  let pending = [start]
+  let mut next = 0
+  while next < pending.length() {
+    let current = pending[next]
+    next = next + 1
+    if current == target {
+      return true
+    }
+    if seen.get(current) is Some(_) {
+      continue
+    }
+    seen[current] = true
+    for edge in leader_edges {
+      let (tail, head) = edge
+      if tail == current && seen.get(head) is None {
+        pending.push(head)
+      }
+    }
+  }
+  false
+}
+
+///|
 pub fn compute_local_cluster_ranks_and_leaders(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -127,6 +156,29 @@ pub fn solve_clustered_leader_ranks(
   let direct_minlen : Array[Int] = []
   let direct_weight : Array[Int] = []
   let direct_active : Array[Bool] = []
+  let leader_edges : Array[(String, String)] = []
+  for edge in edges {
+    if !@edge_semantics.edge_is_constraint(edge) {
+      continue
+    }
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    let tail_cluster = node_cluster.get(tail_name).unwrap_or("")
+    let head_cluster = node_cluster.get(head_name).unwrap_or("")
+    let tail_leader = if tail_cluster == "" {
+      tail_name
+    } else {
+      cluster_leaders.get(tail_cluster).unwrap_or(tail_name)
+    }
+    let head_leader = if head_cluster == "" {
+      head_name
+    } else {
+      cluster_leaders.get(head_cluster).unwrap_or(head_name)
+    }
+    if tail_leader != head_leader {
+      leader_edges.push((tail_leader, head_leader))
+    }
+  }
   let mut slack_id = 0
   for edge in edges {
     if !@edge_semantics.edge_is_constraint(edge) {
@@ -171,6 +223,14 @@ pub fn solve_clustered_leader_ranks(
         None => head_name
       }
     }
+    let tail_idx = match rank_index.get(tail_leader) {
+      Some(value) => value
+      None => continue
+    }
+    let head_idx = match rank_index.get(head_leader) {
+      Some(value) => value
+      None => continue
+    }
     let tail_local = match local_ranks.get(tail_name) {
       Some(value) => value
       None => 0
@@ -180,6 +240,17 @@ pub fn solve_clustered_leader_ranks(
       None => 0
     }
     let offset = minlen + tail_local - head_local
+    if offset >= 0 && !leader_has_path(leader_edges, head_leader, tail_leader) {
+      // The slack-node construction below represents this same relation, but
+      // native simplex can leave adjacent positive-offset cluster leaders
+      // level when several such edges form an acyclic chain.  A direct leader
+      // edge preserves that constraint exactly; cycles must retain Graphviz's
+      // slack construction so their competing offsets can be balanced.
+      let _ = @network_simplex.add_edge(
+        rank_graph, tail_idx, head_idx, offset, weight,
+      )
+      continue
+    }
     let tail_slack_len = if offset > 0 { 0 } else { -offset }
     let head_slack_len = if offset > 0 { offset } else { 0 }
     let slack_name = "_mbt_rank_slack_\{slack_id}"
@@ -189,14 +260,6 @@ pub fn solve_clustered_leader_ranks(
       slack_name,
       kind=@network_simplex.NodeKind::Slack,
     )
-    let tail_idx = match rank_index.get(tail_leader) {
-      Some(value) => value
-      None => continue
-    }
-    let head_idx = match rank_index.get(head_leader) {
-      Some(value) => value
-      None => continue
-    }
     let _ = @network_simplex.add_edge(
       rank_graph,
       slack_idx,
