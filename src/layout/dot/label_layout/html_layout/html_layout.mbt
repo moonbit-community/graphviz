@@ -74,6 +74,14 @@ fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
 }
 
 ///|
+fn html_cell_border_pt(
+  table : @html_label.HtmlTable,
+  cell : @html_label.HtmlCell,
+) -> Double {
+  cell.border_pt.unwrap_or(html_table_cell_border_pt(table))
+}
+
+///|
 fn html_cell_size(
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
@@ -85,7 +93,7 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let cell_border_pt = html_table_cell_border_pt(table)
+  let cell_border_pt = html_cell_border_pt(table, cell)
   let mut width = content_size.width_pt +
     table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0

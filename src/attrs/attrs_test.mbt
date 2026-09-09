@@ -32,11 +32,20 @@ test "attrs font size fallback on invalid or non-positive" {
 test "attrs color defaults and normalization" {
   assert_eq(color(None), "black")
   assert_eq(normalize_color("pink"), "#ffc0cb")
+  assert_eq(normalize_color("antiquewhite"), "#faebd7")
+  assert_eq(normalize_color("cadetblue1"), "#98f5ff")
+  assert_eq(normalize_color("gray24"), "#3d3d3d")
+  assert_eq(normalize_color("grey88"), "#e0e0e0")
   assert_eq(normalize_color("maroon1"), "#ff34b3")
   assert_eq(normalize_color("salmon2"), "#ee8262")
   assert_eq(normalize_color("deepskyblue"), "#00bfff")
+  assert_eq(normalize_color("darkorchid3"), "#9a32cd")
   assert_eq(normalize_color("darkorchid4"), "#68228b")
+  assert_eq(normalize_color("grey75"), "#bfbfbf")
+  assert_eq(normalize_color("lightcyan1"), "#e0ffff")
   assert_eq(normalize_color("lightblue"), "#add8e6")
+  assert_eq(normalize_color("palegoldenrod"), "#eee8aa")
+  assert_eq(normalize_color("palegreen1"), "#9aff9a")
   assert_eq(normalize_color("thistle"), "#d8bfd8")
   assert_eq(normalize_color("indigo"), "#4b0082")
   assert_eq(normalize_color("indianred"), "#cd5c5c")
@@ -54,6 +63,12 @@ test "attrs color defaults and normalization" {
   assert_eq(normalize_color("HotPink"), "#ff69b4")
   assert_eq(normalize_color("#ABCDEF"), "#abcdef")
   assert_eq(normalize_color("invis"), "#fffffe00")
+}
+
+///|
+test "attrs decodes Graphviz plain-label entities" {
+  assert_eq(decode_label_entities("&alpha;&forall;&infin;"), "α∀∞")
+  assert_eq(decode_label_entities("&amp;alpha; &lt;x&gt;"), "&alpha; <x>")
 }
 
 ///|

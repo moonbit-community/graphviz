@@ -29,21 +29,17 @@ digraph G {
 		e -> f	[pos="e,27,124.1 27,159.7 27,152.41 27,143.73 27,135.54"];
 	}
 	{
-		{
-			{
-				subgraph cluster_x {
-					graph [bb="142,144,292,212"];
-					subgraph cluster_y {
-						graph [bb="214,152,284,204"];
-						y	[height=0.5,
-							pos="249,178",
-							width=0.75];
-					}
-					x	[height=0.5,
-						pos="177,178",
-						width=0.75];
-				}
+		subgraph cluster_x {
+			graph [bb="142,144,292,212"];
+			subgraph cluster_y {
+				graph [bb="150,152,220,204"];
+				y	[height=0.5,
+					pos="185,178",
+					width=0.75];
 			}
+			x	[height=0.5,
+				pos="257,178",
+				width=0.75];
 		}
 	}
 }

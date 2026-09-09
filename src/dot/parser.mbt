@@ -112,6 +112,31 @@ fn compass_from_string(value : String) -> @cgraph.Compass? {
 }
 
 ///|
+fn edge_port_from_attr(value : String) -> @cgraph.Port? {
+  let trimmed = value.trim().to_owned()
+  if trimmed == "" {
+    return None
+  }
+  let parts : Array[String] = []
+  for part in trimmed.split(":") {
+    parts.push(part.to_owned())
+  }
+  if parts.length() == 1 {
+    return match compass_from_string(parts[0]) {
+      Some(compass) => Some({ name: None, compass: Some(compass), })
+      None => Some({ name: Some(parts[0]), compass: None, })
+    }
+  }
+  let name = if parts[0] == "" { None } else { Some(parts[0]) }
+  let compass = compass_from_string(parts[1])
+  if name is None && compass is None {
+    None
+  } else {
+    Some({ name, compass, })
+  }
+}
+
+///|
 fn Parser::parse_node_id(self : Parser) -> NodeId raise DotParseError {
   let name = self.parse_id()
   let mut port : @cgraph.Port? = None
@@ -419,6 +444,14 @@ fn Parser::parse_edge_stmt(
     endpoints.push(self.parse_endpoint(graph))
   }
   let attrs = self.parse_attr_list()
+  let attr_tail_port = match attrs.get("tailport") {
+    Some(value) => edge_port_from_attr(value)
+    None => None
+  }
+  let attr_head_port = match attrs.get("headport") {
+    Some(value) => edge_port_from_attr(value)
+    None => None
+  }
   for i in 0..<(endpoints.length() - 1) {
     let (left_nodes, left_port) = Parser::endpoint_nodes(graph, endpoints[i])
     let (right_nodes, right_port) = Parser::endpoint_nodes(
@@ -427,20 +460,31 @@ fn Parser::parse_edge_stmt(
     )
     for tail in left_nodes {
       for head in right_nodes {
-        let edge = match left_port {
+        let effective_tail_port = match left_port {
+          Some(port) => Some(port)
+          None => attr_tail_port
+        }
+        let effective_head_port = match right_port {
+          Some(port) => Some(port)
+          None => attr_head_port
+        }
+        let edge = match effective_tail_port {
           Some(tail_port) =>
-            match right_port {
+            match effective_head_port {
               Some(head_port) => graph.edge(tail, head, tail_port~, head_port~)
               None => graph.edge(tail, head, tail_port~)
             }
           None =>
-            match right_port {
+            match effective_head_port {
               Some(head_port) => graph.edge(tail, head, head_port~)
               None => graph.edge(tail, head)
             }
         }
         for key, value in attrs {
-          edge.set_attr(key, value)
+          if (key != "tailport" || attr_tail_port is None) &&
+            (key != "headport" || attr_head_port is None) {
+            edge.set_attr(key, value)
+          }
         }
       }
     }

@@ -6,13 +6,13 @@
 
 set -euo pipefail
 
-dot_bin="${DOT_BIN:-dot}"
-if ! command -v "${dot_bin}" >/dev/null 2>&1; then
-  echo "dot CLI not found; install Graphviz or set DOT_BIN to generate svg snapshots" >&2
+if [[ -z "${DOT_BIN:-}" ]]; then
+  echo "set DOT_BIN to an external Graphviz 14.1.1 dot binary" >&2
   exit 1
 fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+dot_bin="$("${repo_root}/scripts/require_graphviz_14_1_1.sh" "${DOT_BIN}")"
 fixture_dir="${repo_root}/tests/render/svg_snapshot"
 manifest_path="${fixture_dir}/cases.txt"
 
@@ -47,6 +47,6 @@ for case_name in "${case_names[@]}"; do
   input_path="$(resolve_input_for_case "${case_name}")"
   output_path="${fixture_dir}/${fixture}"
 
-  "${dot_bin}" -Tsvg "${input_path}" -o "${output_path}"
+  "${dot_bin}" -Tsvg "${input_path}" > "${output_path}"
   echo "wrote ${output_path#${repo_root}/}"
 done

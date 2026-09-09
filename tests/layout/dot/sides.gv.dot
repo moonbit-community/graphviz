@@ -1,5 +1,5 @@
 graph {
-	graph [bb="0,0,128.77,475"];
+	graph [bb="0,0,126.5,475"];
 	node [label="\N"];
 	abc	[height=6.5972,
 		label=<<TABLE CELLSPACING="10">
@@ -18,7 +18,7 @@ graph {
     <TR><TD SIDES="TB">topbottom</TD></TR>
     <TR><TD SIDES="LR">leftright</TD></TR>
   </TABLE>>,
-		pos="64.383,237.5",
+		pos="63.25,237.5",
 		shape=none,
-		width=1.7884];
+		width=1.7569];
 }

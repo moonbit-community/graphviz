@@ -19,7 +19,7 @@
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_y</title>
-<polygon fill="none" stroke="black" points="214,-152 214,-204 284,-204 284,-152 214,-152"/>
+<polygon fill="none" stroke="black" points="150,-152 150,-204 220,-204 220,-152 150,-152"/>
 </g>
 <!-- e -->
 <g id="node1" class="node">
@@ -72,14 +72,14 @@
 <!-- x -->
 <g id="node6" class="node">
 <title>x</title>
-<ellipse fill="#00ff00" fill-opacity="0.372549" stroke="#00ff00" stroke-opacity="0.372549" cx="177" cy="-178" rx="27" ry="18"/>
-<text xml:space="preserve" text-anchor="middle" x="177" y="-172.95" font-family="Times,serif" font-size="14.00">x</text>
+<ellipse fill="#00ff00" fill-opacity="0.372549" stroke="#00ff00" stroke-opacity="0.372549" cx="257" cy="-178" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="257" y="-172.95" font-family="Times,serif" font-size="14.00">x</text>
 </g>
 <!-- y -->
 <g id="node7" class="node">
 <title>y</title>
-<ellipse fill="#00ff00" fill-opacity="0.372549" stroke="#00ff00" stroke-opacity="0.372549" cx="249" cy="-178" rx="27" ry="18"/>
-<text xml:space="preserve" text-anchor="middle" x="249" y="-172.95" font-family="Times,serif" font-size="14.00">y</text>
+<ellipse fill="#00ff00" fill-opacity="0.372549" stroke="#00ff00" stroke-opacity="0.372549" cx="185" cy="-178" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="185" y="-172.95" font-family="Times,serif" font-size="14.00">y</text>
 </g>
 </g>
 </svg>

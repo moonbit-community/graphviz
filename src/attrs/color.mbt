@@ -121,6 +121,21 @@ pub fn normalize_color(value : String) -> String {
   if lower.has_prefix("#") {
     return lower
   }
+  if lower.has_prefix("gray") || lower.has_prefix("grey") {
+    let suffix = lower.unsafe_substring(start=4, end=lower.length())
+    if suffix != "" {
+      let parsed = @string.parse_double(suffix) catch { _ => -1.0 }
+      if parsed >= 0.0 && parsed <= 100.0 {
+        let channel = (parsed * 255.0 / 100.0).floor().to_int()
+        let sb = StringBuilder()
+        sb.write_char('#')
+        append_hex_byte(sb, channel)
+        append_hex_byte(sb, channel)
+        append_hex_byte(sb, channel)
+        return sb.to_string()
+      }
+    }
+  }
   match lower {
     "black" => "#000000"
     "white" => "#ffffff"
@@ -136,8 +151,20 @@ pub fn normalize_color(value : String) -> String {
     "cyan" => "#00ffff"
     "magenta" => "#ff00ff"
     "pink" => "#ffc0cb"
+    "antiquewhite" => "#faebd7"
+    "aquamarine" => "#7fffd4"
+    "bisque" => "#ffe4c4"
+    "bisque4" => "#8b7d6b"
+    "blue2" => "#0000ee"
+    "brown" => "#a52a2a"
+    "cadetblue1" => "#98f5ff"
+    "chocolate1" => "#ff7f24"
+    "cyan4" => "#008b8b"
+    "darkorchid" => "#9932cc"
+    "deepskyblue2" => "#00b2ee"
     "hotpink" => "#ff69b4"
     "salmon2" => "#ee8262"
+    "salmon" => "#fa8072"
     "deepskyblue" => "#00bfff"
     "goldenrod2" => "#eeb422"
     "burlywood2" => "#eec591"
@@ -158,21 +185,21 @@ pub fn normalize_color(value : String) -> String {
     "coral3" => "#cd5b45"
     "blanchedalmond" => "#ffebcd"
     "lightskyblue1" => "#b0e2ff"
-    "aquamarine" => "#7fffd4"
     "aquamarine2" => "#76eec6"
     "lemonchiffon" => "#fffacd"
     "darkorange1" => "#ff7f00"
     "lightyellow1" => "#ffffe0"
+    "darkorchid3" => "#9a32cd"
     "darkorchid4" => "#68228b"
+    "grey75" => "#bfbfbf"
+    "lightcyan1" => "#e0ffff"
     "lemonchiffon2" => "#eee9bf"
     "goldenrod3" => "#cd9b1d"
     "firebrick" => "#b22222"
     "grey" => "#c0c0c0"
     "gray" => "#c0c0c0"
     "chartreuse4" => "#458b00"
-    "bisque4" => "#8b7d6b"
     "mistyrose2" => "#eed5d2"
-    "cadetblue1" => "#98f5ff"
     "bisque2" => "#eed5b7"
     "orangered" => "#ff4500"
     "crimson" => "#dc143c"
@@ -182,14 +209,20 @@ pub fn normalize_color(value : String) -> String {
     "lightgrey" => "#d3d3d3"
     "lightgray" => "#d3d3d3"
     "lightblue" => "#add8e6"
+    "lightseagreen" => "#20b2aa"
+    "palegoldenrod" => "#eee8aa"
+    "palegreen1" => "#9aff9a"
     "purple" => "#a020f0"
     "slateblue" => "#6a5acd"
+    "snow" => "#fffafa"
     "lightblue2" => "#b2dfee"
     "thistle" => "#d8bfd8"
     "indigo" => "#4b0082"
     "indianred" => "#cd5c5c"
     "forestgreen" => "#228b22"
     "limegreen" => "#32cd32"
+    "turquoise" => "#40e0d0"
+    "violet" => "#ee82ee"
     "invis" => "#fffffe00"
     _ =>
       match normalize_hsv_color(lower) {

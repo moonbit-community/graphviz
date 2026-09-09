@@ -1,14 +1,14 @@
 digraph TopLevel {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#000000 P 4 0 0 0 103.2 92 103.2 92 0 ",
-		_ldraw_="F 8 5 -Arial c 7 -#000000 T 46 6.4 0 19.77 7 -test.rb ",
-		bb="0,0,92,103.2",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#e0ffff P 4 0 0 0 103.5 98 103.5 98 0 ",
+		_ldraw_="F 8 5 -Arial c 7 -#000000 T 49 6.15 0 22.5 7 -test.rb ",
+		bb="0,0,98,103.5",
 		bgcolor=lightcyan1,
 		fontname=Arial,
 		fontsize=8,
 		label="test.rb",
-		lheight=0.13,
-		lp="46,8.8",
-		lwidth=0.27,
+		lheight=0.14,
+		lp="49,8.875",
+		lwidth=0.31,
 		xdotversion=1.7
 	];
 	node [color=black,
@@ -17,26 +17,26 @@ digraph TopLevel {
 		label="\N"
 	];
 	subgraph cluster_1 {
-		graph [_draw_="c 7 -#0000ff C 7 -#000000 P 4 8 25.6 8 95.2 84 95.2 84 25.6 ",
-			_ldraw_="F 8 5 -Arial c 7 -#000000 T 46 84 0 43.99 10 -ModuleName ",
-			bb="8,25.6,84,95.2",
+		graph [_draw_="c 7 -#0000ff C 7 -#9aff9a P 4 8 25.75 8 95.5 90 95.5 90 25.75 ",
+			_ldraw_="F 8 5 -Arial c 7 -#000000 T 49 83.9 0 48 10 -ModuleName ",
+			bb="8,25.75,90,95.5",
 			bgcolor=palegreen1,
 			color=blue,
 			fontname=Arial,
 			label=ModuleName,
-			lheight=0.13,
-			lp="46,86.4",
-			lwidth=0.61
+			lheight=0.14,
+			lp="49,86.625",
+			lwidth=0.67
 		];
 		ClassName	[URL="classes/ModuleName/ClassName.html",
-			_draw_="c 7 -#000000 C 7 -#000000 E 46 51.6 30.06 18 ",
-			_ldraw_="F 8 5 -Arial c 7 -#000000 T 46 49.2 0 36.44 9 -ClassName ",
+			_draw_="c 7 -#eee8aa C 7 -#eee8aa E 49 51.75 32.9 18 ",
+			_ldraw_="F 8 5 -Arial c 7 -#000000 T 49 49.02 0 41.25 9 -ClassName ",
 			color=palegoldenrod,
 			fontcolor=black,
 			height=0.5,
 			label=ClassName,
-			pos="46,51.6",
+			pos="49,51.75",
 			style=filled,
-			width=0.83487];
+			width=0.91396];
 	}
 }

@@ -109,10 +109,12 @@ Strict parity fixtures are reference artifacts, not self-generated expectations.
 
 Manual snapshot regeneration helpers include:
 
-- `bash scripts/generate_dot_snapshots.sh`
-- `bash scripts/generate_xdot_snapshots.sh`
-- `bash scripts/generate_svg_snapshots.sh`
-- `bash scripts/generate_svg_renderer_snapshots.sh`
+- `DOT_BIN=/opt/homebrew/opt/graphviz@14.1.1/bin/dot bash scripts/generate_dot_snapshots.sh`
+- `DOT_BIN=/opt/homebrew/opt/graphviz@14.1.1/bin/dot bash scripts/generate_xdot_snapshots.sh`
+- `DOT_BIN=/opt/homebrew/opt/graphviz@14.1.1/bin/dot bash scripts/generate_svg_snapshots.sh`
+- `DOT_BIN=/opt/homebrew/opt/graphviz@14.1.1/bin/dot bash scripts/generate_svg_renderer_snapshots.sh`
+
+These helpers reject missing or non-14.1.1 binaries.
 
 Some layout assets are intentionally pre-generated to avoid expensive pre-build steps. See:
 

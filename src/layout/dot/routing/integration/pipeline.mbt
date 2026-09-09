@@ -211,6 +211,7 @@ pub(all) struct DotRoutingStageInput {
 pub(all) struct DotRoutingStageOutput {
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
+  bbox_sizes : Map[String, NodeSize]
   port_pad_below : Double
   port_pad_above : Double
 }
@@ -274,6 +275,7 @@ pub fn compute_dot_routing_stage(
   let port_pad_above = precompute_data.port_pad_above
   let head_port_metrics = precompute_data.head_port_metrics
   let path_groups = precompute_data.path_groups
+  let bbox_sizes = precompute_data.pathplan_sizes
   let routing_context = precompute_data.routing_context
   let edges_routed = route_edges_for_dot({
     graph,
@@ -302,5 +304,5 @@ pub fn compute_dot_routing_stage(
   } else {
     edges_routed
   }
-  { nodes_out, edges_out, port_pad_below, port_pad_above, }
+  { nodes_out, edges_out, bbox_sizes, port_pad_below, port_pad_above, }
 }

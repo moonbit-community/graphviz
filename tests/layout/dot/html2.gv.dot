@@ -1,5 +1,5 @@
 digraph G {
-	graph [bb="0,0,922.82,234.5",
+	graph [bb="0,0,438.29,282.27",
 		rankdir=LR
 	];
 	node [label="\N",
@@ -7,8 +7,8 @@ digraph G {
 	];
 	{
 		graph [rank=same];
-		b	[href="http://www.graphviz.org/content/node-shapes",
-			height=1.6944,
+		b	[height=2.3963,
+			href="http://www.graphviz.org/content/node-shapes",
 			label=<
 <TABLE BGCOLOR="bisque" href="http://www.graphviz.org/content/node-shapes#html">
   <TR><TD COLSPAN="3" BGCOLOR="bisque" href="http://go/wiki/Elephant">elephant</TD> 
@@ -24,14 +24,14 @@ digraph G {
   </TR> 
   <TR> <TD COLSPAN="2" BORDER="4" ALIGN="right" PORT="there">4</TD> </TR>
 </TABLE>>,
-			pos="684.25,173.5",
+			pos="336.65,86.267",
 			shape=ellipse,
 			style=filled,
-			width=2.031];
-		c	[height=0.5,
-			label="<long line 1<BR/>line 2<BR ALIGN=\"LEFT\"/>line 3<BR ALIGN=\"RIGHT\"/>>",
-			pos="684.25,59.5",
-			width=6.6271];
+			width=2.8235];
+		c	[height=0.79861,
+			label=<long line 1<BR/>line 2<BR ALIGN="LEFT"/>line 3<BR ALIGN="RIGHT"/>>,
+			pos="336.65,237.27",
+			width=1.0347];
 	}
 	a	[height=0.5,
 		label=<
@@ -39,14 +39,14 @@ digraph G {
   <TR><TD ROWSPAN="3" BGCOLOR="yellow">class</TD></TR>
   <TR><TD PORT="here" BGCOLOR="lightblue">qualifier</TD></TR>
 </TABLE>>,
-		pos="50.935,158.5",
-		width=1.4148];
+		pos="50,54.267",
+		width=1.3889];
 	a:here -> b:there	[arrowtail=diamond,
 		dir=both,
-		pos="s,101.87,155.12 e,666.96,139.33 114.66,155.11 316.38,154.7 551.56,144.76 655.53,139.88"];
-	c -> b	[pos="e,684.25,112.26 684.25,77.312 684.25,85.138 684.25,92.964 684.25,100.79"];
+		pos="s,93,54.267 e,358.65,31.267 105.75,53.358 171.66,45.227 330.97,-13.896 355.46,20.437"];
+	c -> b	[pos="e,336.65,172.97 336.65,208.64 336.65,200.56 336.65,192.48 336.65,184.4"];
 	d	[height=0.68056,
-		pos="50.935,24.5",
+		pos="50,237.27",
 		shape=triangle,
 		width=0.86249];
 	d -> c	[label=<
@@ -56,6 +56,6 @@ digraph G {
       <TD BGCOLOR="blue" WIDTH="10"> </TD>
   </TR>
 </TABLE>>,
-		lp="273.77,87.75",
-		pos="e,549.51,41.503 72.328,24.081 128.85,23.075 292.26,21.216 427.67,30 463.62,32.332 502.29,36.123 538.39,40.222"];
+		lp="167.5,259.77",
+		pos="e,299.62,237.27 71.016,237.27 115.81,237.27 225.15,237.27 288.38,237.27"];
 }

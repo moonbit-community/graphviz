@@ -8,47 +8,95 @@
  viewBox="0.00 0.00 470.00 138.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 134)">
 <title>G</title>
-<polygon fill="#000000" stroke="none" points="-4,4 -4,-134 466,-134 466,4 -4,4"/>
+<defs>
+<radialGradient id="graph0_r_0" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:yellow;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:blue;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#graph0_r_0)" stroke="none" points="-4,4 -4,-134 466,-134 466,4 -4,4"/>
 <text xml:space="preserve" text-anchor="middle" x="231" y="-7.2" font-family="Times,serif" font-size="14.00">Graph</text>
 <g id="clust1" class="cluster">
 <title>cluster_1</title>
-<polygon fill="none" stroke="black" points="8,-32.5 8,-122 454,-122 454,-32.5 8,-32.5"/>
+<defs>
+<radialGradient id="clust1_r_1" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:green;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:magenta;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#clust1_r_1)" stroke="black" points="8,-32.5 8,-122 454,-122 454,-32.5 8,-32.5"/>
 <text xml:space="preserve" text-anchor="middle" x="231" y="-104.7" font-family="Times,serif" font-size="14.00" fill="white">Cluster</text>
 </g>
 <!-- n5 -->
 <g id="node1" class="node">
 <title>n5</title>
-<polygon fill="none" stroke="black" points="70,-83 16,-83 16,-47 70,-47 70,-83"/>
+<defs>
+<radialGradient id="node1_r_2" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:antiquewhite;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:aquamarine;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#node1_r_2)" stroke="black" points="70,-83 16,-83 16,-47 70,-47 70,-83"/>
 <text xml:space="preserve" text-anchor="middle" x="43" y="-59.95" font-family="Times,serif" font-size="14.00">n5</text>
 </g>
 <!-- n4 -->
 <g id="node2" class="node">
 <title>n4</title>
-<ellipse fill="none" stroke="black" cx="115" cy="-65" rx="27" ry="18"/>
+<defs>
+<radialGradient id="node2_r_3" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:#8b7d6b;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:#0000ee;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<ellipse fill="url(#node2_r_3)" stroke="black" cx="115" cy="-65" rx="27" ry="18"/>
 <text xml:space="preserve" text-anchor="middle" x="115" y="-59.95" font-family="Times,serif" font-size="14.00">n4</text>
 </g>
 <!-- n3 -->
 <g id="node3" class="node">
 <title>n3</title>
-<ellipse fill="none" stroke="black" cx="180" cy="-65" rx="20.13" ry="20.13"/>
+<defs>
+<radialGradient id="node3_r_4" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:#98f5ff;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:#ff7f24;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<ellipse fill="url(#node3_r_4)" stroke="black" cx="180" cy="-65" rx="20.13" ry="20.13"/>
 <text xml:space="preserve" text-anchor="middle" x="180" y="-59.95" font-family="Times,serif" font-size="14.00">n3</text>
 </g>
 <!-- n2 -->
 <g id="node4" class="node">
 <title>n2</title>
-<polygon fill="none" stroke="black" points="247,-83 218.53,-65 247,-47 275.47,-65 247,-83"/>
+<defs>
+<radialGradient id="node4_r_5" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:crimson;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:#008b8b;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#node4_r_5)" stroke="black" points="247,-83 218.53,-65 247,-47 275.47,-65 247,-83"/>
 <text xml:space="preserve" text-anchor="middle" x="247" y="-59.95" font-family="Times,serif" font-size="14.00">n2</text>
 </g>
 <!-- n1 -->
 <g id="node5" class="node">
 <title>n1</title>
-<polygon fill="none" stroke="black" points="334,-89.5 293.74,-52.75 374.26,-52.75 334,-89.5"/>
+<defs>
+<radialGradient id="node5_r_6" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:#00b2ee;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:firebrick;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#node5_r_6)" stroke="black" points="334,-89.5 293.74,-52.75 374.26,-52.75 334,-89.5"/>
 <text xml:space="preserve" text-anchor="middle" x="334" y="-59.95" font-family="Times,serif" font-size="14.00">n1</text>
 </g>
 <!-- n0 -->
 <g id="node6" class="node">
 <title>n0</title>
-<polygon fill="none" stroke="black" points="446,-70.56 419,-83 392,-70.56 402.31,-50.44 435.69,-50.44 446,-70.56"/>
+<defs>
+<radialGradient id="node6_r_7" cx="50%" cy="50%" r="75%" fx="50%" fy="50%">
+<stop offset="0" style="stop-color:#3d3d3d;stop-opacity:1.;"/>
+<stop offset="1" style="stop-color:#e0e0e0;stop-opacity:1.;"/>
+</radialGradient>
+</defs>
+<polygon fill="url(#node6_r_7)" stroke="black" points="446,-70.56 419,-83 392,-70.56 402.31,-50.44 435.69,-50.44 446,-70.56"/>
 <text xml:space="preserve" text-anchor="middle" x="419" y="-59.95" font-family="Times,serif" font-size="14.00">n0</text>
 </g>
 </g>

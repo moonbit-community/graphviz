@@ -14,48 +14,18 @@ fn adjusted_self_edge_compass_clip_size(
   size : NodeSize,
   is_record_shape : (@cgraph.Node) -> Bool,
 ) -> NodeSize {
-  if !self_edge || is_record_shape(node) {
-    return size
-  }
-  match port {
-    Some(value) =>
-      match value.compass {
-        Some(@cgraph.Compass::C) => size
-        Some(compass) =>
-          if sameport_shape_has_outline(node) {
-            let penwidth = sameport_node_penwidth_pt(node)
-            if penwidth > 0.0 {
-              let pad = penwidth * 0.33055
-              let width_pt = match compass {
-                @cgraph.Compass::NE
-                | @cgraph.Compass::NW
-                | @cgraph.Compass::SE
-                | @cgraph.Compass::SW =>
-                  max_double(
-                    size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
-                    size.height_pt,
-                  )
-                _ => size.width_pt
-              }
-              @node_primitives.node_size_from_points(
-                width_pt,
-                size.height_pt + pad * 2.0,
-              )
-            } else {
-              size
-            }
-          } else {
-            size
-          }
-        None => size
-      }
-    None => size
-  }
+  // Graphviz selfTop/selfBottom/selfRight/selfLeft route against ND_lw,
+  // ND_rw, and ND_ht directly. Compass ports select the side but do not
+  // shrink the node's clipping box.
+  ignore(self_edge)
+  ignore(node)
+  ignore(port)
+  ignore(is_record_shape)
+  size
 }
 
 ///|
 priv struct CompassClipPointInput {
-  self_edge : Bool
   is_record_shape : (@cgraph.Node) -> Bool
   node : @cgraph.Node
   port : @cgraph.Port?
@@ -66,7 +36,7 @@ priv struct CompassClipPointInput {
 
 ///|
 fn compass_clip_point_if_needed(input : CompassClipPointInput) -> @geom.Point? {
-  if input.self_edge || (input.is_record_shape)(input.node) {
+  if (input.is_record_shape)(input.node) {
     return None
   }
   match input.port {

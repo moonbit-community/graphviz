@@ -1,8 +1,8 @@
 digraph {
-	graph [bb="0,0,268.66,534"];
+	graph [bb="0,0,470.25,468"];
 	node [label="\N"];
 	30	[fontname="Times-Bold",
-		height=1.4792,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Times-Bold"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -10,11 +10,11 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,480.75",
+		pos="235.12,423",
 		shape=box,
-		width=3.7314];
+		width=6.5312];
 	31	[fontname="Times-BoldItalic",
-		height=1.4792,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Times-BoldItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -22,12 +22,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,338.25",
+		pos="235.12,297",
 		shape=box,
-		width=3.7314];
-	30 -> 31	[pos="e,134.33,391.79 134.33,427.03 134.33,419.29 134.33,411.24 134.33,403.3"];
+		width=6.1667];
+	30 -> 31	[pos="e,235.12,342.11 235.12,377.58 235.12,369.74 235.12,361.49 235.12,353.4"];
 	32	[fontname="Times-Italic",
-		height=1.4792,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Times-Italic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -35,12 +35,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,195.75",
+		pos="235.12,171",
 		shape=box,
-		width=3.7314];
-	31 -> 32	[pos="e,134.33,249.29 134.33,284.53 134.33,276.79 134.33,268.74 134.33,260.8"];
+		width=5.8229];
+	31 -> 32	[pos="e,235.12,216.11 235.12,251.58 235.12,243.74 235.12,235.49 235.12,227.4"];
 	33	[fontname="Times-Roman",
-		height=1.4792,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Times-Roman"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -48,8 +48,8 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,53.25",
+		pos="235.12,45",
 		shape=box,
-		width=3.7314];
-	32 -> 33	[pos="e,134.33,106.79 134.33,142.03 134.33,134.29 134.33,126.24 134.33,118.3"];
+		width=6.0833];
+	32 -> 33	[pos="e,235.12,90.106 235.12,125.58 235.12,117.74 235.12,109.49 235.12,101.4"];
 }

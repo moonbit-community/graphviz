@@ -21,9 +21,84 @@ fn make_text_cell(text : String, col_span : Int, row_span : Int) -> HtmlCell {
     align: HtmlAlign::Center,
     valign: HtmlVAlign::Middle,
     bg_color: None,
+    border_pt: None,
+    style: None,
+    gradient_angle: None,
+    sides: None,
+    vruled: false,
     min_width_pt: None,
     min_height_pt: None,
   }
+}
+
+///|
+test "html labels preserve td sides for renderers" {
+  let label = "<<table><tr><td sides=\"TLB\">x</td></tr></table>>"
+  let parsed = match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => table
+    Some(_) => fail("expected table label")
+    None => fail("expected parsed HTML label")
+  }
+  assert_eq(parsed.rows[0].cells[0].sides, Some("TLB"))
+}
+
+///|
+test "html labels expand rows and columns rules into cells" {
+  let label = "<<table rows=\"*\" columns=\"*\"><tr><td>x</td><td>y</td></tr><tr><td>z</td><td>w</td></tr></table>>"
+  let parsed = match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => table
+    Some(_) => fail("expected table label")
+    None => fail("expected parsed HTML label")
+  }
+  assert_true(parsed.hruled)
+  assert_true(parsed.vruled)
+  assert_true(parsed.rows[0].ruled)
+  assert_true(parsed.rows[0].cells[0].vruled)
+  assert_true(parsed.rows[0].cells[1].vruled)
+  let layout = html_table_layout(
+    parsed,
+    { llx: 0.0, lly: 0.0, urx: 40.0, ury: 40.0, },
+    _cell => (10.0, 10.0),
+  )
+  assert_true(layout.cells[0].cell.vruled)
+  assert_true(layout.cells[0].hruled)
+  assert_true(layout.cells[1].hruled)
+}
+
+///|
+test "html labels preserve rounded table style" {
+  let label = "<<table style=\"rounded\"><tr><td>x</td></tr></table>>"
+  let parsed = match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => table
+    Some(_) => fail("expected table label")
+    None => fail("expected parsed HTML label")
+  }
+  assert_true(parsed.rounded)
+}
+
+///|
+test "html labels preserve cell border widths" {
+  let label = "<<table border=\"10\"><tr><td border=\"3\">x</td></tr></table>>"
+  let parsed = match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => table
+    Some(_) => fail("expected table label")
+    None => fail("expected parsed HTML label")
+  }
+  assert_eq(parsed.rows[0].cells[0].border_pt, Some(3.0))
+}
+
+///|
+test "html labels preserve gradient attributes" {
+  let label = "<<table bgcolor=\"red:blue\" gradientangle=\"315\"><tr><td style=\"radial\" bgcolor=\"green:yellow\" gradientangle=\"60\">x</td></tr></table>>"
+  let parsed = match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => table
+    Some(_) => fail("expected table label")
+    None => fail("expected parsed HTML label")
+  }
+  assert_eq(parsed.gradient_angle, Some("315"))
+  let cell = parsed.rows[0].cells[0]
+  assert_eq(cell.style, Some("radial"))
+  assert_eq(cell.gradient_angle, Some("60"))
 }
 
 ///|
@@ -68,8 +143,8 @@ fn row_span_table() -> HtmlTable {
   let tall = make_text_cell("Tall", 1, 2)
   let top = make_text_cell("Top", 1, 1)
   let bottom = make_text_cell("Bottom", 1, 1)
-  let row0 = HtmlRow::{ cells: [tall, top], }
-  let row1 = HtmlRow::{ cells: [bottom], }
+  let row0 = HtmlRow::{ cells: [tall, top], ruled: false, }
+  let row1 = HtmlRow::{ cells: [bottom], ruled: false, }
   HtmlTable::{
     rows: [row0, row1],
     border_pt: 0.0,
@@ -77,6 +152,11 @@ fn row_span_table() -> HtmlTable {
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
     bg_color: None,
+    style: None,
+    gradient_angle: None,
+    hruled: false,
+    vruled: false,
+    rounded: false,
   }
 }
 
@@ -102,8 +182,8 @@ fn col_span_table() -> HtmlTable {
   let wide = make_text_cell("Wide", 2, 1)
   let left = make_text_cell("Left", 1, 1)
   let right = make_text_cell("Right", 1, 1)
-  let row0 = HtmlRow::{ cells: [wide], }
-  let row1 = HtmlRow::{ cells: [left, right], }
+  let row0 = HtmlRow::{ cells: [wide], ruled: false, }
+  let row1 = HtmlRow::{ cells: [left, right], ruled: false, }
   HtmlTable::{
     rows: [row0, row1],
     border_pt: 0.0,
@@ -111,6 +191,11 @@ fn col_span_table() -> HtmlTable {
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
     bg_color: None,
+    style: None,
+    gradient_angle: None,
+    hruled: false,
+    vruled: false,
+    rounded: false,
   }
 }
 
@@ -288,7 +373,7 @@ test "html label parses sizing attributes" {
 ///|
 test "html table size includes border and spacing" {
   let cell = make_text_cell("x", 1, 1)
-  let row = HtmlRow::{ cells: [cell, cell], }
+  let row = HtmlRow::{ cells: [cell, cell], ruled: false, }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 1.0,
@@ -296,6 +381,11 @@ test "html table size includes border and spacing" {
     cell_spacing_pt: 2.0,
     cell_padding_pt: 0.0,
     bg_color: None,
+    style: None,
+    gradient_angle: None,
+    hruled: false,
+    vruled: false,
+    rounded: false,
   }
   let (width, height) = html_table_size(table, fixed_cell_size)
   assert_true(Double::is_close(width, 28.0, absolute_tolerance=0.01))
@@ -305,7 +395,7 @@ test "html table size includes border and spacing" {
 ///|
 test "html table size respects colspan" {
   let cell = make_text_cell("x", 2, 1)
-  let row = HtmlRow::{ cells: [cell], }
+  let row = HtmlRow::{ cells: [cell], ruled: false, }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 1.0,
@@ -313,6 +403,11 @@ test "html table size respects colspan" {
     cell_spacing_pt: 2.0,
     cell_padding_pt: 0.0,
     bg_color: None,
+    style: None,
+    gradient_angle: None,
+    hruled: false,
+    vruled: false,
+    rounded: false,
   }
   let cell_size = (_cell : HtmlCell) => (30.0, 20.0)
   let (width, height) = html_table_size(table, cell_size)
@@ -338,7 +433,7 @@ test "html table size includes padding and min size" {
 ///|
 test "html table layout scales cell rect" {
   let cell = make_text_cell("x", 1, 1)
-  let row = HtmlRow::{ cells: [cell], }
+  let row = HtmlRow::{ cells: [cell], ruled: false, }
   let table = HtmlTable::{
     rows: [row],
     border_pt: 0.0,
@@ -346,6 +441,11 @@ test "html table layout scales cell rect" {
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
     bg_color: None,
+    style: None,
+    gradient_angle: None,
+    hruled: false,
+    vruled: false,
+    rounded: false,
   }
   let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 40.0, }
   let layout = html_table_layout(table, rect, fixed_cell_size)

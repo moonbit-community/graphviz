@@ -1,17 +1,17 @@
 graph {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 108 268.66 108 268.66 0 ",
-		bb="0,0,268.66,108",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 93 390.75 93 390.75 0 ",
+		bb="0,0,390.75,93",
 		xdotversion=1.7
 	];
 	node [label="\N"];
-	35	[_draw_="c 7 -#000000 p 4 268.66 108 0 108 0 0 268.66 0 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 81 0 108 443.23 108 443.23 81 F 14 12 -ZapfDingbats c 7 -#000000 T 177.41 89.6 -1 88.41 14 -\"ZapfDingbats\" \
-S 5 -solid c 7 -#000000 p 4 0 54 0 81 443.23 81 443.23 54 F 14 12 -ZapfDingbats c 7 -#000000 T 90.29 62.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" \
-S 5 -solid c 7 -#000000 p 4 0 27 0 54 443.23 54 443.23 27 F 14 12 -ZapfDingbats c 7 -#000000 T 130.36 35.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" \
-S 5 -solid c 7 -#000000 p 4 0 0 0 27 443.23 27 443.23 0 F 14 12 -ZapfDingbats c 7 -#000000 T 3 8.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ \
-abcdefghijlklmnopqrstuvwxyz\" ",
+	35	[_draw_="c 7 -#000000 p 4 390.75 93 0 93 0 0 390.75 0 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 69.75 0 93 390.75 93 390.75 69.75 F 14 12 -ZapfDingbats c 7 -#000000 T 152.62 76.7 -1 85.5 14 -\"ZapfDingbats\" \
+S 5 -solid c 7 -#000000 p 4 0 46.5 0 69.75 390.75 69.75 390.75 46.5 F 14 12 -ZapfDingbats c 7 -#000000 T 96.38 53.45 -1 198 29 -\"\
+ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 23.25 0 46.5 390.75 46.5 390.75 23.25 F 14 12 -ZapfDingbats c 7 -#000000 \
+T 103.12 30.2 -1 184.5 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 0 0 23.25 390.75 23.25 390.75 0 F 14 12 -ZapfDingbats \
+c 7 -#000000 T 3 6.95 -1 384.75 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname=ZapfDingbats,
-		height=1.5,
+		height=1.2917,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"ZapfDingbats"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -19,7 +19,7 @@ abcdefghijlklmnopqrstuvwxyz\" ",
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,54",
+		pos="195.38,46.5",
 		shape=box,
-		width=3.7314];
+		width=5.4271];
 }

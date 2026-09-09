@@ -91,12 +91,14 @@ pub(all) struct RoutingPrecomputePipelineInput {
 
 ///|
 /// Graphviz parity: routing precompute pipeline output keeps padding metrics,
-/// selected path groups, and assembled routing context for Stage E solve.
+/// selected path groups, self-edge-expanded bbox sizes, and assembled routing
+/// context for Stage E solve.
 pub struct RoutingPrecomputePipelineOutput {
   port_pad_below : Double
   port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   path_groups : Map[Int, Array[String]]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
   routing_context : RoutingContext
 }
 
@@ -134,6 +136,7 @@ pub fn build_routing_precompute_pipeline(
     port_pad_above: input.port_pad_above,
     head_port_metrics: input.head_port_metrics,
     path_groups,
+    pathplan_sizes: input.pathplan_sizes,
     routing_context,
   }
 }

@@ -1,8 +1,8 @@
 digraph {
-	graph [bb="0,0,268.66,540"];
+	graph [bb="0,0,438,468"];
 	node [label="\N"];
 	5	[fontname="Bookman-Demi",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-Demi"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -10,11 +10,11 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,486",
+		pos="219,423",
 		shape=box,
-		width=3.7314];
+		width=6.0833];
 	6	[fontname="Bookman-DemiItalic",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-DemiItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -22,12 +22,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,342",
+		pos="219,297",
 		shape=box,
-		width=3.7314];
-	5 -> 6	[pos="e,134.33,396.11 134.33,431.72 134.33,423.8 134.33,415.57 134.33,407.46"];
+		width=5.8229];
+	5 -> 6	[pos="e,219,342.11 219,377.58 219,369.74 219,361.49 219,353.4"];
 	7	[fontname="Bookman-Light",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-Light"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -35,12 +35,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,198",
+		pos="219,171",
 		shape=box,
-		width=3.7314];
-	6 -> 7	[pos="e,134.33,252.11 134.33,287.72 134.33,279.8 134.33,271.57 134.33,263.46"];
+		width=6.0833];
+	6 -> 7	[pos="e,219,216.11 219,251.58 219,243.74 219,235.49 219,227.4"];
 	8	[fontname="Bookman-LightItalic",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-LightItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -48,8 +48,8 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,54",
+		pos="219,45",
 		shape=box,
-		width=3.7314];
-	7 -> 8	[pos="e,134.33,108.11 134.33,143.72 134.33,135.8 134.33,127.57 134.33,119.46"];
+		width=5.8229];
+	7 -> 8	[pos="e,219,90.106 219,125.58 219,117.74 219,109.49 219,101.4"];
 }

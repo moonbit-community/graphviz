@@ -1,14 +1,15 @@
 digraph G {
-	graph [bb="0,0,654,668.5",
+	graph [bb="0,0,754,753.96",
 		bgcolor="purple:pink"
 	];
 	node [label="\N"];
 	subgraph cluster1 {
-		graph [bb="8,8,646,660.5",
+		graph [bb="8,8,746,745.96",
 			bgcolor="blue:green"
 		];
 		a0	[fillcolor="gold:brown",
-			height=8.8403,
+			gradientangle=180,
+			height=10.027,
 			label=<
  <TABLE border="10" cellspacing="10" cellpadding="10" style="rounded"  bgcolor="yellow:violet" gradientangle="315">
 <TR><TD border="3"  bgcolor="yellow">00</TD>
@@ -102,10 +103,9 @@ digraph G {
 <TD border="3"  bgcolor="brown:violet">88</TD></TR>
   
 </TABLE>>,
-			pos="327,334.25",
+			pos="377,376.98",
 			shape=circle,
 			style=filled,
-			width=8.6389,
-			gradientangle=180];
+			width=10.027];
 	}
 }

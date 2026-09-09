@@ -1,8 +1,8 @@
 digraph {
-	graph [bb="0,0,273.91,519"];
+	graph [bb="0,0,496.5,468"];
 	node [label="\N"];
 	25	[fontname="Palatino-Bold",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Bold"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -10,11 +10,11 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,467.62",
+		pos="248.25,423",
 		shape=box,
-		width=3.8043];
+		width=6.8958];
 	26	[fontname="Palatino-BoldItalic",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-BoldItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -22,12 +22,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,328.88",
+		pos="248.25,297",
 		shape=box,
-		width=3.8043];
-	25 -> 26	[pos="e,136.96,380.66 136.96,416.09 136.96,408.23 136.96,400.03 136.96,391.95"];
+		width=6.6667];
+	25 -> 26	[pos="e,248.25,342.11 248.25,377.58 248.25,369.74 248.25,361.49 248.25,353.4"];
 	27	[fontname="Palatino-Italic",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Italic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -35,12 +35,12 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,190.12",
+		pos="248.25,171",
 		shape=box,
-		width=3.8043];
-	26 -> 27	[pos="e,136.96,241.91 136.96,277.34 136.96,269.48 136.96,261.28 136.96,253.2"];
+		width=6.2708];
+	26 -> 27	[pos="e,248.25,216.11 248.25,251.58 248.25,243.74 248.25,235.49 248.25,227.4"];
 	28	[fontname="Palatino-Roman",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Roman"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -48,8 +48,8 @@ digraph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,51.375",
+		pos="248.25,45",
 		shape=box,
-		width=3.8043];
-	27 -> 28	[pos="e,136.96,103.16 136.96,138.59 136.96,130.73 136.96,122.53 136.96,114.45"];
+		width=6.625];
+	27 -> 28	[pos="e,248.25,90.106 248.25,125.58 248.25,117.74 248.25,109.49 248.25,101.4"];
 }

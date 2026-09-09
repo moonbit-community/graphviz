@@ -1,8 +1,8 @@
 graph {
-	graph [bb="0,0,268.66,108"];
+	graph [bb="0,0,390.75,93"];
 	node [label="\N"];
 	35	[fontname=ZapfDingbats,
-		height=1.5,
+		height=1.2917,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"ZapfDingbats"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -10,7 +10,7 @@ graph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,54",
+		pos="195.38,46.5",
 		shape=box,
-		width=3.7314];
+		width=5.4271];
 }

@@ -412,7 +412,6 @@ fn build_edge_route_base(
     route_base_deps.is_record_shape,
   )
   let tail_compass_clip = compass_clip_point_if_needed({
-    self_edge,
     is_record_shape: route_base_deps.is_record_shape,
     node: tail_node,
     port: tail_port,
@@ -421,7 +420,6 @@ fn build_edge_route_base(
     rankdir,
   })
   let head_compass_clip = compass_clip_point_if_needed({
-    self_edge,
     is_record_shape: route_base_deps.is_record_shape,
     node: head_node,
     port: head_port,

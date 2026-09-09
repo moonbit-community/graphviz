@@ -1098,22 +1098,28 @@ fn compass_target_offset(
 }
 
 ///|
-fn clip_line_to_rect(
+fn compass_point_on_rect(
   center : @geom.Point,
   size : NodeSize,
-  target : @geom.Point,
+  target_offset : @geom.Point,
 ) -> @geom.Point {
-  let dx = target.x - center.x
-  let dy = target.y - center.y
-  if dx == 0.0 && dy == 0.0 {
-    return center
-  }
   let half_w = size.width_pt / 2.0
   let half_h = size.height_pt / 2.0
-  let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
-  let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
-  let t = if tx < ty { tx } else { ty }
-  point(center.x + dx * t, center.y + dy * t)
+  let x = if target_offset.x > 0.0 {
+    center.x + half_w
+  } else if target_offset.x < 0.0 {
+    center.x - half_w
+  } else {
+    center.x
+  }
+  let y = if target_offset.y > 0.0 {
+    center.y + half_h
+  } else if target_offset.y < 0.0 {
+    center.y - half_h
+  } else {
+    center.y
+  }
+  point(x, y)
 }
 
 ///|
@@ -1182,8 +1188,10 @@ pub fn compass_port_point_on_shape(
   }
   let target = point_add(center, target_offset)
   match shape {
-    // Graphviz box-ish compass ports are direct, not insidefn-clipped.
-    ClipShape::Rect => clip_line_to_rect(center, clip_size, target)
+    // Graphviz compassPort uses a direct bounding-box corner for box-like
+    // nodes. In particular, a diagonal compass point does not use the
+    // short-side ray intersection of a non-square rectangle.
+    ClipShape::Rect => compass_point_on_rect(center, base_size, target_offset)
     ClipShape::None => center
     _ => {
       let inside = build_point_inside_shape_fn(

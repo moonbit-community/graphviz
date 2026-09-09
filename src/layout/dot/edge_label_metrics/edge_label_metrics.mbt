@@ -61,7 +61,7 @@ pub fn edge_label_metrics_for_attr(
           base_font
         }
         let (width, height) = @label_metrics.label_text_dimensions(
-          text, font, font_size_pt,
+          @attrs.decode_label_entities(text), font, font_size_pt,
         )
         Some({ width, height, })
       }

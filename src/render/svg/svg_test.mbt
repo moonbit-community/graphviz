@@ -95,6 +95,20 @@ test "render_svg falls back unknown node shapes to box polygons" {
 }
 
 ///|
+test "render_svg draws shapefile nodes with a box outline" {
+  let graph = @dot.parse_dot(
+    "digraph { a [label=\"\" shapefile=\"shape.gif\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("<polygon fill=\"none\" stroke=\"black\""))
+  assert_false(svg.contains("<ellipse fill=\"none\" stroke=\"black\""))
+}
+
+///|
 test "render_svg preserves forestgreen label color" {
   let graph = @dot.parse_dot("digraph { a [fontcolor=forestgreen]; }")
   let layout = @layout_dot.layout_dot(graph)
@@ -103,6 +117,83 @@ test "render_svg preserves forestgreen label color" {
     include_xml_decl: Some(false),
   })
   assert_true(svg.contains("fill=\"forestgreen\""))
+}
+
+///|
+test "render_svg preserves standard palegoldenrod color names" {
+  let graph = @dot.parse_dot(
+    "digraph { a [color=palegoldenrod style=filled]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("fill=\"palegoldenrod\""))
+  assert_true(svg.contains("stroke=\"palegoldenrod\""))
+}
+
+///|
+test "render_svg emits linear gradients for multicolor node fills" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=filled fillcolor=\"red:blue\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("<linearGradient id=\"node1_l_0\""))
+  assert_true(svg.contains("stop-color:red"))
+  assert_true(svg.contains("stop-color:blue"))
+  assert_true(svg.contains("fill=\"url(#node1_l_0)\""))
+}
+
+///|
+test "render_svg emits radial gradients for radial node styles" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=radial fillcolor=\"red:blue\" gradientangle=90]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("<radialGradient id=\"node1_r_0\""))
+  assert_true(svg.contains("fx=\"50%\" fy=\"0%\""))
+  assert_true(svg.contains("stop-color:red"))
+  assert_true(svg.contains("stop-color:blue"))
+  assert_true(svg.contains("fill=\"url(#node1_r_0)\""))
+}
+
+///|
+test "render_svg emits radial gradients for graph and cluster backgrounds" {
+  let graph = @dot.parse_dot(
+    "digraph { style=radial bgcolor=\"red:blue\"; subgraph cluster_0 { style=radial fillcolor=\"green:yellow\"; a; } }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("<radialGradient id=\"graph0_r_0\""))
+  assert_true(svg.contains("<radialGradient id=\"clust1_r_1\""))
+  assert_true(svg.contains("fill=\"url(#graph0_r_0)\""))
+  assert_true(svg.contains("fill=\"url(#clust1_r_1)\""))
+}
+
+///|
+test "render_svg applies labelfontcolor to endpoint labels" {
+  let graph = @dot.parse_dot(
+    "digraph { a -> b [headlabel=head labelfontcolor=chocolate]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains(">head</text>"))
+  assert_true(svg.contains("fill=\"chocolate\""))
 }
 
 ///|

@@ -93,7 +93,10 @@ fn build_finalize_layout_input_from_sources(
     splines: sources.prep.splines,
     all_ranks: sources.rank_data.all_ranks,
     ranks: sources.rank_data.ranks,
-    sizes: sources.prep.sizes,
+    // dot_compute_bb observes the right-side reservation accumulated for
+    // self-edges during positioning; rendering still uses each node's
+    // unexpanded output dimensions.
+    sizes: sources.routing_stage_output.bbox_sizes,
     cluster_ln_x: sources.positions_state.cluster_ln_x,
     cluster_rn_x: sources.positions_state.cluster_rn_x,
     cluster_bbox_heights: sources.positions_state.cluster_bbox_heights,

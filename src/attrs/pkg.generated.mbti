@@ -8,6 +8,8 @@ import {
 // Values
 pub fn color(String?, default? : String) -> String
 
+pub fn decode_label_entities(String) -> String
+
 pub fn font_name(String?, default? : String) -> String
 
 pub fn font_size(String?, default? : Double) -> Double

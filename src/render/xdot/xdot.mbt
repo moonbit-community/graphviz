@@ -456,7 +456,8 @@ fn format_double(value : Double) -> String {
 ///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\N", new=name)
-  with_name.replace_all(old="\\n", new="\n")
+  let with_breaks = with_name.replace_all(old="\\n", new="\n")
+  @attrs.decode_label_entities(with_breaks)
 }
 
 ///|
@@ -468,6 +469,14 @@ fn resolve_record_label(text : String, name : String) -> String {
 fn label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_label(text, fallback)
+    None => fallback
+  }
+}
+
+///|
+fn html_label_text(value : String?, fallback : String) -> String {
+  match value {
+    Some(text) => text.replace_all(old="\\N", new=fallback)
     None => fallback
   }
 }
@@ -592,6 +601,120 @@ fn colorscheme_index_color(scheme : String, index : Int) -> String? {
         7 => Some("#005a32")
         _ => None
       }
+    "accent3" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        _ => None
+      }
+    "accent4" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        _ => None
+      }
+    "accent5" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        _ => None
+      }
+    "accent6" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        _ => None
+      }
+    "accent7" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        7 => Some("#bf5b17")
+        _ => None
+      }
+    "accent8" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        7 => Some("#bf5b17")
+        8 => Some("#666666")
+        _ => None
+      }
+    "blues3" =>
+      match index {
+        1 => Some("#deebf7")
+        2 => Some("#9ecae1")
+        3 => Some("#3182bd")
+        _ => None
+      }
+    "blues4" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#bdd7e7")
+        3 => Some("#6baed6")
+        4 => Some("#2171b5")
+        _ => None
+      }
+    "blues5" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#bdd7e7")
+        3 => Some("#6baed6")
+        4 => Some("#3182bd")
+        5 => Some("#08519c")
+        _ => None
+      }
+    "blues6" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#c6dbef")
+        3 => Some("#9ecae1")
+        4 => Some("#6baed6")
+        5 => Some("#3182bd")
+        6 => Some("#08519c")
+        _ => None
+      }
+    "blues7" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#c6dbef")
+        3 => Some("#9ecae1")
+        4 => Some("#6baed6")
+        5 => Some("#4292c6")
+        6 => Some("#2171b5")
+        7 => Some("#084594")
+        _ => None
+      }
+    "blues8" =>
+      match index {
+        1 => Some("#f7fbff")
+        2 => Some("#deebf7")
+        3 => Some("#c6dbef")
+        4 => Some("#9ecae1")
+        5 => Some("#6baed6")
+        6 => Some("#4292c6")
+        7 => Some("#2171b5")
+        8 => Some("#084594")
+        _ => None
+      }
     _ => None
   }
 }
@@ -644,6 +767,200 @@ fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
     Some(value) =>
       resolve_colorscheme_color(value, node_attr(node, "colorscheme"))
     None => node_color(node, "color", fallback)
+  }
+}
+
+///|
+fn node_gradient_stops(node : @cgraph.Node) -> Array[@render.GradientStop]? {
+  let raw = match node_attr(node, "fillcolor") {
+    Some(value) => value
+    None => return None
+  }
+  if raw.find(":") is None {
+    return None
+  }
+  let stops : Array[@render.GradientStop] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_owned()
+    if token != "" {
+      let color = resolve_colorscheme_color(
+        token,
+        node_attr(node, "colorscheme"),
+      )
+      stops.push({ offset: 0.0, color: @attrs.normalize_color(color), })
+    }
+  }
+  if stops.length() < 2 {
+    return None
+  }
+  let last = Double::from_int(stops.length() - 1)
+  for i in 0..<stops.length() {
+    let stop = stops[i]
+    stops[i] = { offset: Double::from_int(i) / last, color: stop.color, }
+  }
+  Some(stops)
+}
+
+///|
+fn gradient_linear_points(
+  rect : @geom.Rect,
+  gradient_angle : Double,
+) -> (@geom.Point, @geom.Point) {
+  let center_x = (rect.llx + rect.urx) / 2.0
+  let center_y = (rect.lly + rect.ury) / 2.0
+  let radius_x = (rect.urx - rect.llx) / 2.0
+  let radius_y = (rect.ury - rect.lly) / 2.0
+  let radians = gradient_angle * @math.PI / 180.0
+  let offset_x = radius_x * @math.cos(radians)
+  let offset_y = radius_y * @math.sin(radians)
+  (
+    { x: center_x - offset_x, y: center_y - offset_y, },
+    { x: center_x + offset_x, y: center_y + offset_y, },
+  )
+}
+
+///|
+fn node_fill_gradient(
+  node : @cgraph.Node,
+  shape : String,
+  rect : @geom.Rect,
+  style : @attrs.StyleFlags,
+) -> @render.Gradient? {
+  let stops = match node_gradient_stops(node) {
+    Some(value) => value
+    None => return None
+  }
+  let gradient_rect = gradient_shape_bounds(node, shape, rect)
+  let gradient_angle = node_attr_double(node, "gradientangle", 0.0)
+  if style_has_token(style, "radial") {
+    let center = @geom.Point::{
+      x: (gradient_rect.llx + gradient_rect.urx) / 2.0,
+      y: (gradient_rect.lly + gradient_rect.ury) / 2.0,
+    }
+    let radius_x = (gradient_rect.urx - gradient_rect.llx) / 2.0
+    let radius_y = (gradient_rect.ury - gradient_rect.lly) / 2.0
+    let end_radius = @math.hypot(radius_x, radius_y)
+    let start_radius = end_radius / 4.0
+    let start_center : @geom.Point = match node_attr(node, "gradientangle") {
+      Some(_) if gradient_angle != 0.0 => {
+        let radians = gradient_angle * @math.PI / 180.0
+        {
+          x: center.x + start_radius * @math.cos(radians),
+          y: center.y + start_radius * @math.sin(radians),
+        }
+      }
+      _ => center
+    }
+    Some(
+      @render.Gradient::Radial({
+        start_center,
+        start_radius,
+        end_center: center,
+        end_radius,
+        stops,
+      }),
+    )
+  } else {
+    let (start, end) = gradient_linear_points(gradient_rect, gradient_angle)
+    Some(@render.Gradient::Linear({ start, end, stops, }))
+  }
+}
+
+///|
+fn html_fill_gradient(
+  raw_color : String,
+  style : String?,
+  gradient_angle : String?,
+  rect : @geom.Rect,
+) -> @render.Gradient? {
+  if raw_color.find(":") is None {
+    return None
+  }
+  let stops : Array[@render.GradientStop] = []
+  for part in raw_color.split(":") {
+    let token = part.trim().to_owned()
+    if token != "" {
+      let color = resolve_colorscheme_color(token, None)
+      stops.push({ offset: 0.0, color: @attrs.normalize_color(color), })
+    }
+  }
+  if stops.length() < 2 {
+    return None
+  }
+  let last = Double::from_int(stops.length() - 1)
+  for i in 0..<stops.length() {
+    let stop = stops[i]
+    stops[i] = { offset: Double::from_int(i) / last, color: stop.color, }
+  }
+  let angle = gradient_angle.map_or(0.0, value => parse_double(value, 0.0))
+  let style = @attrs.parse_style(style)
+  if style_has_token(style, "radial") {
+    let center = @geom.Point::{
+      x: (rect.llx + rect.urx) / 2.0,
+      y: (rect.lly + rect.ury) / 2.0,
+    }
+    let radius_x = (rect.urx - rect.llx) / 2.0
+    let radius_y = (rect.ury - rect.lly) / 2.0
+    let end_radius = @math.hypot(radius_x, radius_y)
+    let start_radius = end_radius / 4.0
+    let start_center : @geom.Point = match gradient_angle {
+      Some(_) if angle != 0.0 => {
+        let radians = angle * @math.PI / 180.0
+        {
+          x: center.x + start_radius * @math.cos(radians),
+          y: center.y + start_radius * @math.sin(radians),
+        }
+      }
+      _ => center
+    }
+    Some(
+      @render.Gradient::Radial({
+        start_center,
+        start_radius,
+        end_center: center,
+        end_radius,
+        stops,
+      }),
+    )
+  } else {
+    let (start, end) = gradient_linear_points(rect, angle)
+    Some(@render.Gradient::Linear({ start, end, stops, }))
+  }
+}
+
+///|
+fn gradient_shape_bounds(
+  node : @cgraph.Node,
+  shape : String,
+  fallback : @geom.Rect,
+) -> @geom.Rect {
+  match shape_polygon_paths(node, shape, fallback) {
+    Some(paths) =>
+      if paths.length() == 0 || paths[0].length() == 0 {
+        fallback
+      } else {
+        let points = paths[0]
+        let mut llx = points[0].x
+        let mut lly = points[0].y
+        let mut urx = points[0].x
+        let mut ury = points[0].y
+        for point in points {
+          if point.x < llx {
+            llx = point.x
+          }
+          if point.y < lly {
+            lly = point.y
+          }
+          if point.x > urx {
+            urx = point.x
+          }
+          if point.y > ury {
+            ury = point.y
+          }
+        }
+        { llx, lly, urx, ury, }
+      }
+    None => fallback
   }
 }
 
@@ -3067,8 +3384,47 @@ fn html_text_metrics(
   font_name : String,
   font_size_pt : Double,
 ) -> (Array[LabelLine], Double, Double) {
-  let resolved = resolve_label(text, name)
-  label_metrics(resolved, font_name, font_size_pt)
+  // HTML text does not interpret DOT's \n/\l/\r line-break escapes. Only
+  // explicit <BR> tags, represented here as actual newlines, split a cell.
+  let resolved = text.replace_all(old="\\N", new=name)
+  let lines : Array[LabelLine] = []
+  let mut max_width = 0.0
+  let mut total_height = 0.0
+  let mut current = StringBuilder()
+  let emit_line = fn() -> Unit {
+    let line = current.to_string()
+    let metrics_text = if line == "" { " " } else { line }
+    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
+    let height_pt = if line == "" {
+      font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
+    } else {
+      raw_height_pt
+    }
+    let visible_width_pt = if line == "" { 0.0 } else { width_pt }
+    if visible_width_pt > max_width {
+      max_width = visible_width_pt
+    }
+    total_height = total_height + height_pt
+    lines.push({
+      text: line,
+      align: @render.TextAlign::Center,
+      width_pt: visible_width_pt,
+      height_pt,
+      yoffset_centerline,
+    })
+  }
+  for ch in resolved {
+    if ch == '\n' || ch == '\r' {
+      emit_line()
+      current = StringBuilder()
+    } else {
+      current.write_char(ch)
+    }
+  }
+  emit_line()
+  (lines, max_width, total_height)
 }
 
 ///|
@@ -3182,6 +3538,14 @@ fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
 }
 
 ///|
+fn html_cell_border_pt(
+  table : @html_label.HtmlTable,
+  cell : @html_label.HtmlCell,
+) -> Double {
+  cell.border_pt.unwrap_or(html_table_cell_border_pt(table))
+}
+
+///|
 fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
   if border_pt > 1.0 {
     let delta = border_pt / 2.0
@@ -3216,6 +3580,43 @@ fn html_fill_rect_ops(
 }
 
 ///|
+fn html_fill_rect_gradient_ops(
+  ops : Array[@render.DrawOp],
+  color : String,
+  style : String?,
+  gradient_angle : String?,
+  rect : @geom.Rect,
+) -> Unit {
+  match html_fill_gradient(color, style, gradient_angle, rect) {
+    Some(gradient) => {
+      ops.push(@render.DrawOp::Style(name="solid"))
+      ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
+      ops.push(@render.DrawOp::GradFill(gradient~))
+    }
+    None => html_fill_rect_ops(ops, color, rect)
+  }
+}
+
+///|
+fn html_fill_table_ops(
+  ops : Array[@render.DrawOp],
+  table : @html_label.HtmlTable,
+  color : String,
+  rect : @geom.Rect,
+) -> Unit {
+  if !table.rounded {
+    html_fill_rect_ops(ops, color, rect)
+    return ()
+  }
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
+  ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(color)))
+  ops.push(
+    @render.DrawOp::Bezier(filled=true, points=rounded_rect_bezier_points(rect)),
+  )
+}
+
+///|
 fn html_stroke_rect_ops(
   ops : Array[@render.DrawOp],
   rect : @geom.Rect,
@@ -3245,6 +3646,274 @@ fn html_stroke_rect_ops(
 }
 
 ///|
+fn html_stroke_table_border_ops(
+  ops : Array[@render.DrawOp],
+  table : @html_label.HtmlTable,
+  rect : @geom.Rect,
+  border_pt : Double,
+  stroke : String,
+  current_linewidth : Double,
+) -> Double {
+  if !table.rounded {
+    return html_stroke_rect_ops(ops, rect, border_pt, stroke, current_linewidth)
+  }
+  if border_pt <= 0.0 {
+    return current_linewidth
+  }
+  let mut line_width = current_linewidth
+  if !same_linewidth(line_width, border_pt) {
+    ops.push(
+      @render.DrawOp::Style(name="setlinewidth(\{format_double(border_pt)})"),
+    )
+    line_width = border_pt
+  }
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color=stroke))
+  ops.push(
+    @render.DrawOp::Bezier(
+      filled=false,
+      points=rounded_rect_bezier_points(border_rect(rect, border_pt)),
+    ),
+  )
+  line_width
+}
+
+///|
+fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
+  let sides = cell.sides.unwrap_or_default().to_lower()
+  if sides == "" {
+    return 15
+  }
+  let mut mask = 0
+  if sides.contains("b") {
+    mask = mask | 1
+  }
+  if sides.contains("r") {
+    mask = mask | 2
+  }
+  if sides.contains("t") {
+    mask = mask | 4
+  }
+  if sides.contains("l") {
+    mask = mask | 8
+  }
+  mask
+}
+
+///|
+fn html_side_points(rect : @geom.Rect, side : Int) -> Array[@geom.Point] {
+  match side {
+    0 => [{ x: rect.llx, y: rect.lly, }, { x: rect.urx, y: rect.lly, }]
+    1 => [{ x: rect.urx, y: rect.lly, }, { x: rect.urx, y: rect.ury, }]
+    2 => [{ x: rect.urx, y: rect.ury, }, { x: rect.llx, y: rect.ury, }]
+    _ => [{ x: rect.llx, y: rect.ury, }, { x: rect.llx, y: rect.lly, }]
+  }
+}
+
+///|
+fn html_stroke_cell_sides_ops(
+  ops : Array[@render.DrawOp],
+  cell : @html_label.HtmlCell,
+  rect : @geom.Rect,
+  border_pt : Double,
+  stroke : String,
+  current_linewidth : Double,
+) -> Double {
+  let mask = html_cell_side_mask(cell)
+  if mask == 15 {
+    return html_stroke_rect_ops(ops, rect, border_pt, stroke, current_linewidth)
+  }
+  if mask == 0 || border_pt <= 0.0 {
+    return current_linewidth
+  }
+  let mut line_width = current_linewidth
+  if !same_linewidth(line_width, border_pt) {
+    ops.push(
+      @render.DrawOp::Style(name="setlinewidth(\{format_double(border_pt)})"),
+    )
+    line_width = border_pt
+  }
+  let border = border_rect(rect, border_pt)
+  let visited : Array[Bool] = [false, false, false, false]
+  let start_order : Array[Int] = [0, 2, 3, 1]
+  for index in 0..<start_order.length() {
+    let start = start_order[index]
+    let start_bit = 1 << start
+    let previous = (start + 3) % 4
+    let previous_bit = 1 << previous
+    if (mask & start_bit) == 0 || (mask & previous_bit) != 0 || visited[start] {
+      continue
+    }
+    let points : Array[@geom.Point] = []
+    let mut side = start
+    while (mask & (1 << side)) != 0 && !visited[side] {
+      let segment = html_side_points(border, side)
+      if points.length() == 0 {
+        points.push(segment[0])
+      }
+      points.push(segment[1])
+      visited[side] = true
+      side = (side + 1) % 4
+    }
+    ops.push(@render.DrawOp::Style(name="solid"))
+    ops.push(@render.DrawOp::PenColor(color=stroke))
+    ops.push(@render.DrawOp::Polyline(points~))
+  }
+  line_width
+}
+
+///|
+fn html_rule_rect(
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  cell_layout : @html_label.HtmlCellLayout,
+  next : @html_label.HtmlCellLayout?,
+  vertical : Bool,
+) -> @geom.Rect {
+  let rect = cell_layout.rect
+  let space = table.cell_spacing_pt
+  let border = html_table_border_pt(table)
+  if vertical {
+    let last_row = cell_layout.row + cell_layout.cell.row_span ==
+      layout.row_count
+    let base = if cell_layout.row == 0 || last_row {
+      border + space / 2.0
+    } else {
+      0.0
+    }
+    let lly = if last_row {
+      rect.lly - space / 2.0 - base
+    } else {
+      rect.lly - space / 2.0
+    }
+    {
+      llx: rect.urx + space / 2.0,
+      lly,
+      urx: rect.urx + space / 2.0,
+      ury: lly + base + rect.ury - rect.lly + space,
+    }
+  } else {
+    let last_col = cell_layout.col + cell_layout.cell.col_span ==
+      layout.col_count
+    let mut base = 0.0
+    let x = if cell_layout.col == 0 {
+      base = border + space / 2.0
+      let x = rect.llx - base - space / 2.0
+      if last_col {
+        base = base * 2.0
+      } else {
+        match next {
+          Some(next_cell) =>
+            if next_cell.row != cell_layout.row {
+              base = base +
+                table_rect_urx(table, layout, rect) -
+                (rect.urx + space / 2.0)
+            }
+          None => ()
+        }
+      }
+      x
+    } else if last_col {
+      base = border + space / 2.0
+      rect.llx - space / 2.0
+    } else {
+      match next {
+        Some(next_cell) =>
+          if next_cell.row != cell_layout.row {
+            base = table_rect_urx(table, layout, rect) -
+              (rect.urx + space / 2.0)
+          }
+        None => ()
+      }
+      rect.llx - space / 2.0
+    }
+    {
+      llx: x,
+      lly: rect.lly - space / 2.0,
+      urx: x + base + rect.urx - rect.llx + space,
+      ury: rect.lly - space / 2.0,
+    }
+  }
+}
+
+///|
+fn table_rect_urx(
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  fallback : @geom.Rect,
+) -> Double {
+  let mut right = fallback.urx
+  for cell_layout in layout.cells {
+    if cell_layout.rect.urx > right {
+      right = cell_layout.rect.urx
+    }
+  }
+  right + html_table_border_pt(table) + table.cell_spacing_pt
+}
+
+///|
+fn html_draw_rule_ops(
+  ops : Array[@render.DrawOp],
+  rect : @geom.Rect,
+  stroke : String,
+) -> Unit {
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color=stroke))
+  ops.push(@render.DrawOp::FillColor(color=stroke))
+  ops.push(
+    @render.DrawOp::Polygon(filled=true, points=outline_rect_points(rect)),
+  )
+}
+
+///|
+fn html_table_rule_ops(
+  ops : Array[@render.DrawOp],
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  stroke : String,
+  current_linewidth : Double,
+) -> Double {
+  let mut line_width = current_linewidth
+  let mut has_rule = false
+  for cell_layout in layout.cells {
+    if cell_layout.cell.vruled || cell_layout.hruled {
+      has_rule = true
+      break
+    }
+  }
+  if !has_rule {
+    return line_width
+  }
+  if !same_linewidth(line_width, 1.0) {
+    ops.push(@render.DrawOp::Style(name="setlinewidth(1)"))
+    line_width = 1.0
+  }
+  for i in 0..<layout.cells.length() {
+    let cell_layout = layout.cells[i]
+    let next = if i + 1 < layout.cells.length() {
+      Some(layout.cells[i + 1])
+    } else {
+      None
+    }
+    if cell_layout.cell.vruled {
+      html_draw_rule_ops(
+        ops,
+        html_rule_rect(table, layout, cell_layout, next, true),
+        stroke,
+      )
+    }
+    if cell_layout.hruled {
+      html_draw_rule_ops(
+        ops,
+        html_rule_rect(table, layout, cell_layout, next, false),
+        stroke,
+      )
+    }
+  }
+  line_width
+}
+
+///|
 fn html_cell_size(
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
@@ -3258,7 +3927,7 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let cell_border_pt = html_table_cell_border_pt(table)
+  let cell_border_pt = html_cell_border_pt(table, cell)
   let mut width = content_width +
     table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
@@ -3299,6 +3968,27 @@ fn html_table_layout(
   @html_label.html_table_layout(table, rect, cell => {
     html_cell_size(table, cell, name, font_name, font_size_pt)
   })
+}
+
+///|
+fn centered_html_table_rect(
+  table : @html_label.HtmlTable,
+  rect : @geom.Rect,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> @geom.Rect {
+  let (width_pt, height_pt) = html_table_size(
+    table, name, font_name, font_size_pt,
+  )
+  let center_x = (rect.llx + rect.urx) / 2.0
+  let center_y = (rect.lly + rect.ury) / 2.0
+  {
+    llx: center_x - width_pt / 2.0,
+    lly: center_y - height_pt / 2.0,
+    urx: center_x + width_pt / 2.0,
+    ury: center_y + height_pt / 2.0,
+  }
 }
 
 ///|
@@ -3439,28 +4129,54 @@ fn html_table_ops(
   current_linewidth : Double,
 ) -> Double {
   let mut line_width = current_linewidth
+  let rect = centered_html_table_rect(table, rect, name, font.name, font.size)
   let layout = html_table_layout(table, rect, name, font.name, font.size)
   let border_pt = html_table_border_pt(table)
-  let cell_border_pt = html_table_cell_border_pt(table)
   match table.bg_color {
-    Some(color) => html_fill_rect_ops(ops, color, rect)
+    Some(color) =>
+      match html_fill_gradient(
+        color,
+        table.style,
+        table.gradient_angle,
+        border_rect(rect, border_pt),
+      ) {
+        Some(gradient) => {
+          ops.push(@render.DrawOp::Style(name="solid"))
+          ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
+          ops.push(@render.DrawOp::GradFill(gradient~))
+        }
+        None => html_fill_table_ops(ops, table, color, rect)
+      }
     None => ()
   }
-  let pad_x = table.cell_padding_pt * layout.scale_x +
-    cell_border_pt * layout.scale_x
-  let pad_y = table.cell_padding_pt * layout.scale_y +
-    cell_border_pt * layout.scale_y
   for cell_layout in layout.cells {
     let cell_rect = cell_layout.rect
+    let cell_border_pt = html_cell_border_pt(table, cell_layout.cell)
     match cell_layout.cell.bg_color {
-      Some(color) => html_fill_rect_ops(ops, color, cell_rect)
+      Some(color) =>
+        html_fill_rect_gradient_ops(
+          ops,
+          color,
+          cell_layout.cell.style,
+          cell_layout.cell.gradient_angle,
+          cell_rect,
+        )
       None => ()
     }
     if cell_border_pt > 0.0 {
-      line_width = html_stroke_rect_ops(
-        ops, cell_rect, cell_border_pt, stroke, line_width,
+      line_width = html_stroke_cell_sides_ops(
+        ops,
+        cell_layout.cell,
+        cell_rect,
+        cell_border_pt,
+        stroke,
+        line_width,
       )
     }
+    let pad_x = table.cell_padding_pt * layout.scale_x +
+      cell_border_pt * layout.scale_x
+    let pad_y = table.cell_padding_pt * layout.scale_y +
+      cell_border_pt * layout.scale_y
     let content_rect : @geom.Rect = {
       llx: cell_rect.llx + pad_x,
       lly: cell_rect.lly + pad_y,
@@ -3500,8 +4216,11 @@ fn html_table_ops(
         }
     }
   }
+  line_width = html_table_rule_ops(ops, table, layout, stroke, line_width)
   if border_pt > 0.0 {
-    line_width = html_stroke_rect_ops(ops, rect, border_pt, stroke, line_width)
+    line_width = html_stroke_table_border_ops(
+      ops, table, rect, border_pt, stroke, line_width,
+    )
   }
   line_width
 }
@@ -3510,7 +4229,7 @@ fn html_table_ops(
 fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let label = label_text(node_attr(node, "label"), node.name())
+  let label = html_label_text(node_attr(node, "label"), node.name())
   let outer_rect = node_rect(layout)
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let inset_x = pad_x_pt / 2.0
@@ -3591,7 +4310,8 @@ fn node_draw_ops(
   let pen = node_color(node, "color", "black")
   let normalized_pen = @attrs.normalize_color(pen)
   let style = @attrs.parse_style(node_attr(node, "style"))
-  let rounded = style_has_token(style, "rounded")
+  let diagonals = style_has_token(style, "diagonals")
+  let rounded = style_has_token(style, "rounded") && !diagonals
   if style_is_invisible(style) {
     return ops
   }
@@ -3599,14 +4319,23 @@ fn node_draw_ops(
     Some(value) => value.to_lower()
     None => ""
   }
-  let kind = shape_kind(node_attr(node, "shape"))
+  let has_shapefile = node_attr(node, "shapefile").unwrap_or_default() != ""
+  let kind = if has_shapefile {
+    "box"
+  } else {
+    shape_kind(node_attr(node, "shape"))
+  }
   if kind == "unknown" && node_attr_int(node, "peripheries", 1) <= 0 {
     return ops
   }
   // Graphviz falls back to box geometry for unknown node shapes.
   let shape = if kind == "unknown" { "box" } else { kind }
   let is_doublecircle = raw_shape == "doublecircle"
-  let filled = if shape == "point" { true } else { style.filled }
+  let filled = if shape == "point" {
+    true
+  } else {
+    style.filled || style_has_token(style, "radial")
+  }
   let no_outline = node_attr_int(node, "peripheries", 1) <= 0 &&
     shape != "record" &&
     shape != "plaintext" &&
@@ -3627,22 +4356,34 @@ fn node_draw_ops(
   if no_outline && !filled {
     return ops
   }
+  let explicit_solid = match node_attr(node, "style") {
+    Some(value) => value != "" && style_has_token(style, "solid")
+    None => false
+  }
+  if explicit_solid {
+    ops.push(@render.DrawOp::Style(name="solid"))
+  }
   push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   let outline_pen = if no_outline { "#fffffe00" } else { normalized_pen }
   if shape != "underline" {
     ops.push(@render.DrawOp::PenColor(color=outline_pen))
   }
-  if filled {
-    let fill = if shape == "point" {
-      pen
-    } else {
-      node_fill_color(node, "lightgrey")
-    }
-    ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
-  }
   let rect = match draw_rect {
     Some(value) => value
     None => node_rect(layout)
+  }
+  if filled {
+    match node_fill_gradient(node, shape, rect, style) {
+      Some(gradient) => ops.push(@render.DrawOp::GradFill(gradient~))
+      None => {
+        let fill = if shape == "point" {
+          pen
+        } else {
+          node_fill_color(node, "lightgrey")
+        }
+        ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
+      }
+    }
   }
   match shape {
     _ if is_doublecircle =>
@@ -4047,6 +4788,41 @@ fn node_draw_ops(
         }
       }
   }
+  if diagonals &&
+    !no_outline &&
+    !is_doublecircle &&
+    shape != "msquare" &&
+    shape != "mdiamond" &&
+    shape != "mcircle" {
+    let segments = match shape {
+      "ellipse" => mcircle_segments(rect)
+      "box" =>
+        diagonal_segments(
+          rect_points(
+            inner_rect_for_peripheries(rect, node_peripheries(node, 1)),
+          ),
+        )
+      _ =>
+        match shape_polygon_paths(node, shape, rect) {
+          Some(paths) =>
+            if paths.length() > 0 {
+              diagonal_segments(paths[0])
+            } else {
+              []
+            }
+          None => []
+        }
+    }
+    for segment in segments {
+      let (start, end) = segment
+      match dash_style_name(style) {
+        Some(name) => ops.push(@render.DrawOp::Style(name~))
+        None => ()
+      }
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Polyline(points=[start, end]))
+    }
+  }
   ops
 }
 
@@ -4119,13 +4895,14 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
         ops.push(op)
       }
     } else {
-      let text = label_text(node_attr(node, "label"), node.name())
-      match @html_label.parse_html_label(text) {
+      let raw_text = node_attr(node, "label").unwrap_or(node.name())
+      match @html_label.parse_html_label(raw_text) {
         Some(_) =>
           for op in html_label_ops(layout) {
             ops.push(op)
           }
         None => {
+          let text = label_text(node_attr(node, "label"), node.name())
           let label_pos = match layout.label_pos {
             Some(value) => Some(value)
             None => Some(layout.pos)
@@ -4526,7 +5303,10 @@ fn edge_multicolor_spline_points(
 }
 
 ///|
-fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
+fn edge_draw_ops(
+  layout : @layout_dot.DotLayoutEdge,
+  reset_solid_style : Bool,
+) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
   let style = @attrs.parse_style(edge.get_attr("style"))
@@ -4535,12 +5315,6 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let raw_color = @attrs.color(edge.get_attr("color"), default="black")
-  let has_explicit_stroke_style = stroke_width_style_name(
-      style,
-      edge.get_attr("penwidth"),
-    )
-    is Some(_) ||
-    dash_style_name(style) is Some(_)
   let has_explicit_solid = match edge.get_attr("style") {
     Some(raw_style) => {
       let mut explicit = false
@@ -4554,7 +5328,8 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
     }
     None => false
   }
-  if has_explicit_solid || has_explicit_stroke_style {
+  if has_explicit_solid &&
+    (@attrs.normalize_color(raw_color) != "#000000" || reset_solid_style) {
     ops.push(@render.DrawOp::Style(name="solid"))
   }
   let has_colon = raw_color.find(":") is Some(_)
@@ -4974,6 +5749,70 @@ fn graph_color(
 }
 
 ///|
+fn graph_fill_gradient(
+  graph : @cgraph.Graph,
+  raw : String,
+  rect : @geom.Rect,
+  radial : Bool,
+) -> @render.Gradient? {
+  if raw.find(":") is None {
+    return None
+  }
+  let stops : Array[@render.GradientStop] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_owned()
+    if token != "" {
+      let color = resolve_colorscheme_color(token, graph_colorscheme(graph))
+      stops.push({ offset: 0.0, color: @attrs.normalize_color(color), })
+    }
+  }
+  if stops.length() < 2 {
+    return None
+  }
+  let last = Double::from_int(stops.length() - 1)
+  for i in 0..<stops.length() {
+    let stop = stops[i]
+    stops[i] = { offset: Double::from_int(i) / last, color: stop.color, }
+  }
+  let gradient_angle = match graph.get_attr("gradientangle") {
+    Some(value) => parse_double(value, 0.0)
+    None => 0.0
+  }
+  if radial {
+    let center = @geom.Point::{
+      x: (rect.llx + rect.urx) / 2.0,
+      y: (rect.lly + rect.ury) / 2.0,
+    }
+    let radius_x = (rect.urx - rect.llx) / 2.0
+    let radius_y = (rect.ury - rect.lly) / 2.0
+    let end_radius = @math.hypot(radius_x, radius_y)
+    let start_radius = end_radius / 4.0
+    let start_center : @geom.Point = match graph.get_attr("gradientangle") {
+      Some(_) if gradient_angle != 0.0 => {
+        let radians = gradient_angle * @math.PI / 180.0
+        {
+          x: center.x + start_radius * @math.cos(radians),
+          y: center.y + start_radius * @math.sin(radians),
+        }
+      }
+      _ => center
+    }
+    Some(
+      @render.Gradient::Radial({
+        start_center,
+        start_radius,
+        end_center: center,
+        end_radius,
+        stops,
+      }),
+    )
+  } else {
+    let (start, end) = gradient_linear_points(rect, gradient_angle)
+    Some(@render.Gradient::Linear({ start, end, stops, }))
+  }
+}
+
+///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
@@ -5005,9 +5844,22 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
   let graph = layout.graph
   let bbox = layout.bbox
   if graph.is_root() {
-    let fill = graph_color(graph, "bgcolor", "white")
+    let raw_fill = graph.get_attr("bgcolor").unwrap_or("white")
+    let style = @attrs.parse_style(graph.get_attr("style"))
     ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
-    ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
+    match
+      graph_fill_gradient(
+        graph,
+        raw_fill,
+        bbox,
+        style_has_token(style, "radial"),
+      ) {
+      Some(gradient) => ops.push(@render.DrawOp::GradFill(gradient~))
+      None => {
+        let fill = graph_color(graph, "bgcolor", "white")
+        ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
+      }
+    }
     ops.push(
       @render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)),
     )
@@ -5017,13 +5869,19 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     let style = @attrs.parse_style(graph.get_attr("style"))
     let stroke_style = @attrs.parse_style(inherited_graph_attr(graph, "style"))
     let stroke_penwidth = inherited_graph_attr(graph, "penwidth")
+    let rounded = style_has_token(stroke_style, "rounded")
+    let radial = style_has_token(style, "radial")
     push_stroke_style_ops(ops, stroke_style, stroke_penwidth)
-    let color = graph_color(graph, "color", "black")
+    let color = graph_color(
+      graph,
+      "pencolor",
+      graph_color(graph, "color", "black"),
+    )
     ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(color)))
-    let fill = if style.filled {
-      Some(graph_color(graph, "fillcolor", color))
+    let fill = if style.filled || radial {
+      Some(graph.get_attr("fillcolor").unwrap_or(color))
     } else {
-      match graph.get_attr("bgcolor") {
+      match inherited_graph_attr(graph, "bgcolor") {
         Some(value) =>
           Some(resolve_colorscheme_color(value, graph_colorscheme(graph)))
         None => None
@@ -5031,18 +5889,50 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     }
     match fill {
       Some(value) => {
-        ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(value)))
-        ops.push(
-          @render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)),
-        )
+        match graph_fill_gradient(graph, value, bbox, radial) {
+          Some(gradient) => ops.push(@render.DrawOp::GradFill(gradient~))
+          None => {
+            let color = resolve_colorscheme_color(
+              value,
+              graph_colorscheme(graph),
+            )
+            ops.push(
+              @render.DrawOp::FillColor(color=@attrs.normalize_color(color)),
+            )
+          }
+        }
+        if rounded {
+          ops.push(
+            @render.DrawOp::Bezier(
+              filled=true,
+              points=rounded_rect_bezier_points(bbox),
+            ),
+          )
+        } else {
+          ops.push(
+            @render.DrawOp::Polygon(
+              filled=true,
+              points=outline_rect_points(bbox),
+            ),
+          )
+        }
       }
       None =>
-        ops.push(
-          @render.DrawOp::Polygon(
-            filled=false,
-            points=outline_rect_points(bbox),
-          ),
-        )
+        if rounded {
+          ops.push(
+            @render.DrawOp::Bezier(
+              filled=false,
+              points=rounded_rect_bezier_points(bbox),
+            ),
+          )
+        } else {
+          ops.push(
+            @render.DrawOp::Polygon(
+              filled=false,
+              points=outline_rect_points(bbox),
+            ),
+          )
+        }
     }
   }
   ops
@@ -5376,8 +6266,9 @@ fn attach_xdot_attrs_internal(
       node_layout.node.set_attr("_ldraw_", encode_xdot_ops(label_ops))
     }
   }
+  let mut reset_solid_style = false
   for edge_layout in layout.edges {
-    let draw_ops = edge_draw_ops(edge_layout)
+    let draw_ops = edge_draw_ops(edge_layout, reset_solid_style)
     if draw_ops.length() > 0 {
       edge_layout.edge.set_attr("_draw_", encode_xdot_ops(draw_ops))
     }
@@ -5404,6 +6295,16 @@ fn attach_xdot_attrs_internal(
     let edge_style = @attrs.parse_style(edge_layout.edge.get_attr("style"))
     if style_is_invisible(edge_style) {
       continue
+    }
+    if style_has_token(edge_style, "solid") {
+      reset_solid_style = false
+    } else if stroke_width_style_name(
+        edge_style,
+        edge_layout.edge.get_attr("penwidth"),
+      )
+      is Some(_) ||
+      dash_style_name(edge_style) is Some(_) {
+      reset_solid_style = true
     }
     let flags = arrow_flags(edge_layout.edge, kind)
     if flags.head {

@@ -1,30 +1,30 @@
 graph G {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 62 1012.16 62 1012.16 0 ",
-		bb="0,0,1012.2,62",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 90.5 1525.75 90.5 1525.75 0 ",
+		bb="0,0,1525.8,90.5",
 		imagepath="imagepath_test/imagepath_dir/",
 		xdotversion=1.7
 	];
 	node [label="\N"];
-	a	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 16 36.7 -1 233.25 41 -image attribute (valid absolute pathname) F 14 11 -Times-Roman c 7 -#000000 \
-T 16 15.2 -1 257.35 45 -imagepath attribute (valid absolute pathname) ",
-		height=0.86111,
+	a	[_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 16 50 -1 586.5 41 -image attribute (valid absolute pathname) F 30 14 -Helvetica-Bold c 7 \
+-#000000 T 16 14.25 -1 648.75 45 -imagepath attribute (valid absolute pathname) ",
+		height=1.2569,
 		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
 CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
 CELLBORDER="0">
 <TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (valid absolute pathname)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (valid absolute pathname)</FONT></TD></TR>
 </TABLE></TD></TR></TABLE>>,
-		pos="144.68,31",
+		pos="340.38,45.25",
 		shape=plaintext,
-		width=4.0188];
-	b	[_draw_="c 7 -#000000 p 4 1012.16 53 307.2 53 307.2 9 1012.16 9 ",
-		_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 659.68 22 0 688.96 56 -image from image attribute directory should be displayed ",
+		width=9.4549];
+	b	[_draw_="c 7 -#000000 p 4 1525.75 64.62 699 64.62 699 25.88 1525.75 25.88 ",
+		_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 1112.38 28.12 0 810.75 56 -image from image attribute directory should be displayed ",
 		fontname="Helvetica-Bold",
 		fontsize=30,
-		height=0.61111,
+		height=0.53819,
 		image="imagepath_test/image_dir/image.jpg",
 		label="image from image attribute directory should be displayed",
-		pos="659.68,31",
+		labelloc=b,
+		pos="1112.4,45.25",
 		shape=box,
-		width=9.7911,
-		labelloc=b];
+		width=11.483];
 }

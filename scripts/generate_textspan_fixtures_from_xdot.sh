@@ -14,4 +14,4 @@ if [ ! -d "$xdot_dir" ]; then
   exit 1
 fi
 
-python3 "$repo_root/scripts/generate_textspan_fixtures_from_xdot.py"
+python3 "$repo_root/scripts/generate_textspan_fixtures_from_xdot.py" "$@"

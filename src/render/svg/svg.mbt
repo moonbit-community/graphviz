@@ -382,6 +382,120 @@ fn colorscheme_index_color(scheme : String, index : Int) -> String? {
         7 => Some("#005a32")
         _ => None
       }
+    "accent3" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        _ => None
+      }
+    "accent4" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        _ => None
+      }
+    "accent5" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        _ => None
+      }
+    "accent6" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        _ => None
+      }
+    "accent7" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        7 => Some("#bf5b17")
+        _ => None
+      }
+    "accent8" =>
+      match index {
+        1 => Some("#7fc97f")
+        2 => Some("#beaed4")
+        3 => Some("#fdc086")
+        4 => Some("#ffff99")
+        5 => Some("#386cb0")
+        6 => Some("#f0027f")
+        7 => Some("#bf5b17")
+        8 => Some("#666666")
+        _ => None
+      }
+    "blues3" =>
+      match index {
+        1 => Some("#deebf7")
+        2 => Some("#9ecae1")
+        3 => Some("#3182bd")
+        _ => None
+      }
+    "blues4" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#bdd7e7")
+        3 => Some("#6baed6")
+        4 => Some("#2171b5")
+        _ => None
+      }
+    "blues5" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#bdd7e7")
+        3 => Some("#6baed6")
+        4 => Some("#3182bd")
+        5 => Some("#08519c")
+        _ => None
+      }
+    "blues6" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#c6dbef")
+        3 => Some("#9ecae1")
+        4 => Some("#6baed6")
+        5 => Some("#3182bd")
+        6 => Some("#08519c")
+        _ => None
+      }
+    "blues7" =>
+      match index {
+        1 => Some("#eff3ff")
+        2 => Some("#c6dbef")
+        3 => Some("#9ecae1")
+        4 => Some("#6baed6")
+        5 => Some("#4292c6")
+        6 => Some("#2171b5")
+        7 => Some("#084594")
+        _ => None
+      }
+    "blues8" =>
+      match index {
+        1 => Some("#f7fbff")
+        2 => Some("#deebf7")
+        3 => Some("#c6dbef")
+        4 => Some("#9ecae1")
+        5 => Some("#6baed6")
+        6 => Some("#4292c6")
+        7 => Some("#2171b5")
+        8 => Some("#084594")
+        _ => None
+      }
     _ => None
   }
 }
@@ -480,6 +594,173 @@ fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
   match node_attr(node, "fillcolor") {
     Some(value) => resolve_colorscheme_color(value, node_colorscheme(node))
     None => node_color(node, "color", fallback)
+  }
+}
+
+///|
+fn node_gradient_stops(node : @cgraph.Node) -> Array[String]? {
+  let raw = match node_attr(node, "fillcolor") {
+    Some(value) => value
+    None => return None
+  }
+  if raw.find(":") is None {
+    return None
+  }
+  let stops : Array[String] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_owned()
+    if token != "" {
+      let color = resolve_colorscheme_color(token, node_colorscheme(node))
+      stops.push(svg_color(color))
+    }
+  }
+  if stops.length() < 2 {
+    None
+  } else {
+    Some(stops)
+  }
+}
+
+///|
+fn gradient_linear_points(
+  rect : @geom.Rect,
+  gradient_angle : Double,
+) -> (@geom.Point, @geom.Point) {
+  let center_x = (rect.llx + rect.urx) / 2.0
+  let center_y = (rect.lly + rect.ury) / 2.0
+  let radius_x = (rect.urx - rect.llx) / 2.0
+  let radius_y = (rect.ury - rect.lly) / 2.0
+  let radians = gradient_angle * @math.PI / 180.0
+  let offset_x = radius_x * @math.cos(radians)
+  let offset_y = radius_y * @math.sin(radians)
+  (
+    { x: center_x - offset_x, y: center_y - offset_y, },
+    { x: center_x + offset_x, y: center_y + offset_y, },
+  )
+}
+
+///|
+fn radial_focus_percent(gradient_angle : String?) -> (Int, Int) {
+  match gradient_angle {
+    Some(value) => {
+      let radians = parse_double(value, 0.0) * @math.PI / 180.0
+      if radians == 0.0 {
+        (50, 50)
+      } else {
+        let focus_x = (50.0 + 50.0 * @math.cos(radians)).round().to_int()
+        let focus_y = (50.0 - 50.0 * @math.sin(radians)).round().to_int()
+        (focus_x, focus_y)
+      }
+    }
+    None => (50, 50)
+  }
+}
+
+///|
+fn graph_gradient_stops(graph : @cgraph.Graph, raw : String) -> Array[String]? {
+  if raw.find(":") is None {
+    return None
+  }
+  let stops : Array[String] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_owned()
+    if token != "" {
+      let color = resolve_colorscheme_color(token, graph_colorscheme(graph))
+      stops.push(svg_color(color))
+    }
+  }
+  if stops.length() < 2 {
+    None
+  } else {
+    Some(stops)
+  }
+}
+
+///|
+fn write_svg_gradient_definition(
+  sb : StringBuilder,
+  gradient_id : String,
+  stops : Array[String],
+  radial : Bool,
+  gradient_angle : String?,
+  gradient_rect : @geom.Rect,
+  bbox : @geom.Rect,
+  pretty : Bool,
+) -> Unit {
+  write_line(sb, "<defs>", "", pretty)
+  if radial {
+    let (focus_x, focus_y) = radial_focus_percent(gradient_angle)
+    write_line(
+      sb,
+      "<radialGradient id=\"\{gradient_id}\" cx=\"50%\" cy=\"50%\" r=\"75%\" fx=\"\{focus_x}%\" fy=\"\{focus_y}%\">",
+      "",
+      pretty,
+    )
+  } else {
+    let angle = gradient_angle.map_or(0.0, value => parse_double(value, 0.0))
+    let (start, end) = gradient_linear_points(gradient_rect, angle)
+    let x1 = svg_x(start.x, bbox.llx)
+    let y1 = svg_y(start.y, bbox.lly)
+    let x2 = svg_x(end.x, bbox.llx)
+    let y2 = svg_y(end.y, bbox.lly)
+    write_line(
+      sb,
+      "<linearGradient id=\"\{gradient_id}\" gradientUnits=\"userSpaceOnUse\" x1=\"\{format_double(x1)}\" y1=\"\{format_double(y1)}\" x2=\"\{format_double(x2)}\" y2=\"\{format_double(y2)}\" >",
+      "",
+      pretty,
+    )
+  }
+  let last = Double::from_int(stops.length() - 1)
+  for i in 0..<stops.length() {
+    let offset = Double::from_int(i) / last
+    write_line(
+      sb,
+      "<stop offset=\"\{format_double(offset)}\" style=\"stop-color:\{stops[i]};stop-opacity:1.;\"/>",
+      "",
+      pretty,
+    )
+  }
+  if radial {
+    write_line(sb, "</radialGradient>", "", pretty)
+  } else {
+    write_line(sb, "</linearGradient>", "", pretty)
+  }
+  write_line(sb, "</defs>", "", pretty)
+}
+
+///|
+fn gradient_shape_bounds(
+  node : @cgraph.Node,
+  shape : String,
+  fallback : @geom.Rect,
+) -> @geom.Rect {
+  match shape_polygon_paths(node, shape, fallback) {
+    Some(paths) =>
+      if paths.length() == 0 || paths[0].length() == 0 {
+        fallback
+      } else {
+        let points = paths[0]
+        let mut llx = points[0].x
+        let mut lly = points[0].y
+        let mut urx = points[0].x
+        let mut ury = points[0].y
+        for point in points {
+          if point.x < llx {
+            llx = point.x
+          }
+          if point.y < lly {
+            lly = point.y
+          }
+          if point.x > urx {
+            urx = point.x
+          }
+          if point.y > ury {
+            ury = point.y
+          }
+        }
+        { llx, lly, urx, ury, }
+      }
+    None => fallback
   }
 }
 
@@ -633,6 +914,11 @@ fn is_svg_named_color(color : String) -> Bool {
     | "blue"
     | "yellow"
     | "orange"
+    | "antiquewhite"
+    | "bisque"
+    | "brown"
+    | "darkorchid"
+    | "palegoldenrod"
     | "gold"
     | "cyan"
     | "magenta"
@@ -660,8 +946,13 @@ fn is_svg_named_color(color : String) -> Bool {
     | "forestgreen"
     | "limegreen"
     | "lemonchiffon"
+    | "lightseagreen"
     | "firebrick"
     | "orangered"
+    | "salmon"
+    | "snow"
+    | "turquoise"
+    | "violet"
     | "indigo"
     | "indianred" => true
     _ => false
@@ -1152,7 +1443,8 @@ fn stroke_width_attr(style : @attrs.StyleFlags, penwidth : String?) -> String {
 ///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\N", new=name)
-  with_name.replace_all(old="\\n", new="\n")
+  let with_breaks = with_name.replace_all(old="\\n", new="\n")
+  @attrs.decode_label_entities(with_breaks)
 }
 
 ///|
@@ -1164,6 +1456,14 @@ fn resolve_record_label(text : String, name : String) -> String {
 fn label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_label(text, fallback)
+    None => fallback
+  }
+}
+
+///|
+fn html_label_text(value : String?, fallback : String) -> String {
+  match value {
+    Some(text) => text.replace_all(old="\\N", new=fallback)
     None => fallback
   }
 }
@@ -1287,33 +1587,6 @@ fn shape_kind(value : String?) -> String {
     "mcircle" => "mcircle"
     "ellipse" | "oval" | "circle" | "doublecircle" => "ellipse"
     _ => "unknown"
-  }
-}
-
-///|
-fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
-  let style = @attrs.parse_style(graph.get_attr("style"))
-  if style.filled {
-    let fill = svg_color(
-      resolve_colorscheme_color(
-        @attrs.color(
-          graph.get_attr("fillcolor"),
-          default=@attrs.color(graph.get_attr("color"), default="black"),
-        ),
-        graph.get_attr("colorscheme"),
-      ),
-    )
-    Some(fill)
-  } else {
-    match graph.get_attr("bgcolor") {
-      Some(value) =>
-        Some(
-          svg_color(
-            resolve_colorscheme_color(value, graph.get_attr("colorscheme")),
-          ),
-        )
-      None => None
-    }
   }
 }
 
@@ -3683,8 +3956,47 @@ fn html_text_metrics(
   font_name : String,
   font_size_pt : Double,
 ) -> (Array[LabelLine], Double, Double) {
-  let resolved = resolve_label(text, name)
-  label_metrics(resolved, font_name, font_size_pt)
+  // HTML text does not interpret DOT's \n/\l/\r line-break escapes. Only
+  // explicit <BR> tags, represented here as actual newlines, split a cell.
+  let resolved = text.replace_all(old="\\N", new=name)
+  let lines : Array[LabelLine] = []
+  let mut max_width = 0.0
+  let mut total_height = 0.0
+  let mut current = StringBuilder()
+  let emit_line = fn() -> Unit {
+    let line = current.to_string()
+    let metrics_text = if line == "" { " " } else { line }
+    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
+      metrics_text, font_name, font_size_pt,
+    )
+    let height_pt = if line == "" {
+      font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
+    } else {
+      raw_height_pt
+    }
+    let visible_width_pt = if line == "" { 0.0 } else { width_pt }
+    if visible_width_pt > max_width {
+      max_width = visible_width_pt
+    }
+    total_height = total_height + height_pt
+    lines.push({
+      text: line,
+      align: @render.TextAlign::Center,
+      width_pt: visible_width_pt,
+      height_pt,
+      yoffset_centerline,
+    })
+  }
+  for ch in resolved {
+    if ch == '\n' || ch == '\r' {
+      emit_line()
+      current = StringBuilder()
+    } else {
+      current.write_char(ch)
+    }
+  }
+  emit_line()
+  (lines, max_width, total_height)
 }
 
 ///|
@@ -3797,6 +4109,14 @@ fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
 }
 
 ///|
+fn html_cell_border_pt(
+  table : @html_label.HtmlTable,
+  cell : @html_label.HtmlCell,
+) -> Double {
+  cell.border_pt.unwrap_or(html_table_cell_border_pt(table))
+}
+
+///|
 fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
   if border_pt > 1.0 {
     let delta = border_pt / 2.0
@@ -3808,6 +4128,221 @@ fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
     }
   } else {
     rect
+  }
+}
+
+///|
+fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
+  let sides = cell.sides.unwrap_or_default().to_lower()
+  if sides == "" {
+    return 15
+  }
+  let mut mask = 0
+  if sides.contains("b") {
+    mask = mask | 1
+  }
+  if sides.contains("r") {
+    mask = mask | 2
+  }
+  if sides.contains("t") {
+    mask = mask | 4
+  }
+  if sides.contains("l") {
+    mask = mask | 8
+  }
+  mask
+}
+
+///|
+fn html_side_points(rect : @geom.Rect, side : Int) -> Array[@geom.Point] {
+  match side {
+    0 => [{ x: rect.llx, y: rect.lly, }, { x: rect.urx, y: rect.lly, }]
+    1 => [{ x: rect.urx, y: rect.lly, }, { x: rect.urx, y: rect.ury, }]
+    2 => [{ x: rect.urx, y: rect.ury, }, { x: rect.llx, y: rect.ury, }]
+    _ => [{ x: rect.llx, y: rect.ury, }, { x: rect.llx, y: rect.lly, }]
+  }
+}
+
+///|
+fn write_html_cell_sides(
+  sb : StringBuilder,
+  cell : @html_label.HtmlCell,
+  rect : @geom.Rect,
+  border_pt : Double,
+  stroke : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  let mask = html_cell_side_mask(cell)
+  let border = border_rect(rect, border_pt)
+  let width_attr = if border_pt > 1.0 {
+    " stroke-width=\"\{format_double(border_pt)}\""
+  } else {
+    ""
+  }
+  if mask == 15 {
+    let attrs = polygon_points(outline_rect_points(border), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
+      indent,
+      pretty,
+    )
+    return ()
+  }
+  let visited : Array[Bool] = [false, false, false, false]
+  let start_order : Array[Int] = [0, 2, 3, 1]
+  for index in 0..<start_order.length() {
+    let start = start_order[index]
+    let start_bit = 1 << start
+    let previous = (start + 3) % 4
+    let previous_bit = 1 << previous
+    if (mask & start_bit) == 0 || (mask & previous_bit) != 0 || visited[start] {
+      continue
+    }
+    let points : Array[@geom.Point] = []
+    let mut side = start
+    while (mask & (1 << side)) != 0 && !visited[side] {
+      let segment = html_side_points(border, side)
+      if points.length() == 0 {
+        points.push(segment[0])
+      }
+      points.push(segment[1])
+      visited[side] = true
+      side = (side + 1) % 4
+    }
+    let attrs = polyline_points(points, bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
+      indent,
+      pretty,
+    )
+  }
+}
+
+///|
+fn table_rect_urx(
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  fallback : @geom.Rect,
+) -> Double {
+  let mut right = fallback.urx
+  for cell_layout in layout.cells {
+    if cell_layout.rect.urx > right {
+      right = cell_layout.rect.urx
+    }
+  }
+  right + html_table_border_pt(table) + table.cell_spacing_pt
+}
+
+///|
+fn html_rule_rect(
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  cell_layout : @html_label.HtmlCellLayout,
+  next : @html_label.HtmlCellLayout?,
+  vertical : Bool,
+) -> @geom.Rect {
+  let rect = cell_layout.rect
+  let space = table.cell_spacing_pt
+  let border = html_table_border_pt(table)
+  if vertical {
+    let last_row = cell_layout.row + cell_layout.cell.row_span ==
+      layout.row_count
+    let base = if cell_layout.row == 0 || last_row {
+      border + space / 2.0
+    } else {
+      0.0
+    }
+    let lly = if last_row {
+      rect.lly - space / 2.0 - base
+    } else {
+      rect.lly - space / 2.0
+    }
+    {
+      llx: rect.urx + space / 2.0,
+      lly,
+      urx: rect.urx + space / 2.0,
+      ury: lly + base + rect.ury - rect.lly + space,
+    }
+  } else {
+    let last_col = cell_layout.col + cell_layout.cell.col_span ==
+      layout.col_count
+    let mut base = 0.0
+    let x = if cell_layout.col == 0 {
+      base = border + space / 2.0
+      let x = rect.llx - base - space / 2.0
+      if last_col {
+        base = base * 2.0
+      } else {
+        match next {
+          Some(next_cell) =>
+            if next_cell.row != cell_layout.row {
+              base = base +
+                table_rect_urx(table, layout, rect) -
+                (rect.urx + space / 2.0)
+            }
+          None => ()
+        }
+      }
+      x
+    } else if last_col {
+      base = border + space / 2.0
+      rect.llx - space / 2.0
+    } else {
+      match next {
+        Some(next_cell) =>
+          if next_cell.row != cell_layout.row {
+            base = table_rect_urx(table, layout, rect) -
+              (rect.urx + space / 2.0)
+          }
+        None => ()
+      }
+      rect.llx - space / 2.0
+    }
+    {
+      llx: x,
+      lly: rect.lly - space / 2.0,
+      urx: x + base + rect.urx - rect.llx + space,
+      ury: rect.lly - space / 2.0,
+    }
+  }
+}
+
+///|
+fn write_html_table_rules(
+  sb : StringBuilder,
+  table : @html_label.HtmlTable,
+  layout : @html_label.HtmlTableLayout,
+  stroke : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  for i in 0..<layout.cells.length() {
+    let cell_layout = layout.cells[i]
+    let next = if i + 1 < layout.cells.length() {
+      Some(layout.cells[i + 1])
+    } else {
+      None
+    }
+    let write_rule = (rect : @geom.Rect) => {
+      let attrs = polygon_points(outline_rect_points(rect), bbox.llx, bbox.lly)
+      write_line(
+        sb,
+        "<polygon fill=\"\{stroke}\" stroke=\"\{stroke}\" points=\"\{attrs}\"/>",
+        indent,
+        pretty,
+      )
+    }
+    if cell_layout.cell.vruled {
+      write_rule(html_rule_rect(table, layout, cell_layout, next, true))
+    }
+    if cell_layout.hruled {
+      write_rule(html_rule_rect(table, layout, cell_layout, next, false))
+    }
   }
 }
 
@@ -3825,7 +4360,7 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let cell_border_pt = html_table_cell_border_pt(table)
+  let cell_border_pt = html_cell_border_pt(table, cell)
   let mut width = content_width +
     table.cell_padding_pt * 2.0 +
     cell_border_pt * 2.0
@@ -3866,6 +4401,27 @@ fn html_table_layout(
   @html_label.html_table_layout(table, rect, cell => {
     html_cell_size(table, cell, name, font_name, font_size_pt)
   })
+}
+
+///|
+fn centered_html_table_rect(
+  table : @html_label.HtmlTable,
+  rect : @geom.Rect,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> @geom.Rect {
+  let (width_pt, height_pt) = html_table_size(
+    table, name, font_name, font_size_pt,
+  )
+  let center_x = (rect.llx + rect.urx) / 2.0
+  let center_y = (rect.lly + rect.ury) / 2.0
+  {
+    llx: center_x - width_pt / 2.0,
+    lly: center_y - height_pt / 2.0,
+    urx: center_x + width_pt / 2.0,
+    ury: center_y + height_pt / 2.0,
+  }
 }
 
 ///|
@@ -4012,6 +4568,47 @@ fn write_html_styled_text_lines(
 }
 
 ///|
+fn write_html_gradient_fill(
+  sb : StringBuilder,
+  raw_color : String,
+  style : String?,
+  gradient_angle : String?,
+  rect : @geom.Rect,
+  bbox : @geom.Rect,
+  linear_gradient_index : Ref[Int],
+  radial_gradient_index : Ref[Int],
+  pretty : Bool,
+) -> String {
+  if raw_color.find(":") is None {
+    return svg_color(raw_color)
+  }
+  let stops : Array[String] = []
+  for part in raw_color.split(":") {
+    let color = part.trim().to_owned()
+    if color != "" {
+      stops.push(svg_color(color))
+    }
+  }
+  if stops.length() < 2 {
+    return svg_color(raw_color)
+  }
+  let radial = style_has_token(@attrs.parse_style(style), "radial")
+  let gradient_id = if radial {
+    let id = "r_\{radial_gradient_index.val}"
+    radial_gradient_index.val = radial_gradient_index.val + 1
+    id
+  } else {
+    let id = "l_\{linear_gradient_index.val}"
+    linear_gradient_index.val = linear_gradient_index.val + 1
+    id
+  }
+  write_svg_gradient_definition(
+    sb, gradient_id, stops, radial, gradient_angle, rect, bbox, pretty,
+  )
+  "url(#\{gradient_id})"
+}
+
+///|
 fn write_html_table(
   sb : StringBuilder,
   table : @html_label.HtmlTable,
@@ -4024,40 +4621,89 @@ fn write_html_table(
   stroke_dash : String,
   bbox : @geom.Rect,
   indent : String,
+  linear_gradient_index : Ref[Int],
+  radial_gradient_index : Ref[Int],
   pretty : Bool,
 ) -> Unit {
   let _ = stroke_dash
+  let rect = centered_html_table_rect(table, rect, name, font, size)
   let layout = html_table_layout(table, rect, name, font, size)
   let border_pt = html_table_border_pt(table)
-  let cell_border_pt = html_table_cell_border_pt(table)
+  let background_rect = border_rect(rect, border_pt)
   match table.bg_color {
     Some(color) => {
-      let attrs = polygon_points(outline_rect_points(rect), bbox.llx, bbox.lly)
-      write_line(
+      let fill = write_html_gradient_fill(
         sb,
-        "<polygon fill=\"\{svg_color(color)}\" stroke=\"none\" points=\"\{attrs}\"/>",
-        indent,
+        color,
+        table.style,
+        table.gradient_angle,
+        background_rect,
+        bbox,
+        linear_gradient_index,
+        radial_gradient_index,
         pretty,
       )
-    }
-    None => ()
-  }
-  let pad_x = table.cell_padding_pt * layout.scale_x +
-    cell_border_pt * layout.scale_x
-  let pad_y = table.cell_padding_pt * layout.scale_y +
-    cell_border_pt * layout.scale_y
-  for cell_layout in layout.cells {
-    let cell_rect = cell_layout.rect
-    match cell_layout.cell.bg_color {
-      Some(color) => {
-        let attrs = polygon_points(
-          outline_rect_points(cell_rect),
+      if table.rounded {
+        let path = spline_path(
+          @geom.Spline::{
+            start: None,
+            end: None,
+            points: rounded_rect_bezier_points(background_rect),
+          },
           bbox.llx,
           bbox.lly,
         )
         write_line(
           sb,
-          "<polygon fill=\"\{svg_color(color)}\" stroke=\"none\" points=\"\{attrs}\"/>",
+          "<path fill=\"\{fill}\" stroke=\"none\" d=\"\{path}\"/>",
+          indent,
+          pretty,
+        )
+      } else {
+        let attrs = polygon_points(
+          outline_rect_points(background_rect),
+          bbox.llx,
+          bbox.lly,
+        )
+        write_line(
+          sb,
+          "<polygon fill=\"\{fill}\" stroke=\"none\" points=\"\{attrs}\"/>",
+          indent,
+          pretty,
+        )
+      }
+    }
+    None => ()
+  }
+  for index, cell_layout in layout.cells {
+    let cell_rect = cell_layout.rect
+    let cell_border_pt = html_cell_border_pt(table, cell_layout.cell)
+    match cell_layout.cell.bg_color {
+      Some(color) => {
+        let fill = write_html_gradient_fill(
+          sb,
+          color,
+          cell_layout.cell.style,
+          cell_layout.cell.gradient_angle,
+          cell_rect,
+          bbox,
+          linear_gradient_index,
+          radial_gradient_index,
+          pretty,
+        )
+        let attrs = polygon_points(
+          outline_rect_points(cell_rect),
+          bbox.llx,
+          bbox.lly,
+        )
+        let width_attr = if index > 0 && cell_border_pt > 1.0 {
+          " stroke-width=\"\{format_double(cell_border_pt)}\""
+        } else {
+          ""
+        }
+        write_line(
+          sb,
+          "<polygon fill=\"\{fill}\" stroke=\"none\"\{width_attr} points=\"\{attrs}\"/>",
           indent,
           pretty,
         )
@@ -4065,24 +4711,21 @@ fn write_html_table(
       None => ()
     }
     if cell_border_pt > 0.0 {
-      let border = border_rect(cell_rect, cell_border_pt)
-      let attrs = polygon_points(
-        outline_rect_points(border),
-        bbox.llx,
-        bbox.lly,
-      )
-      let width_attr = if cell_border_pt > 1.0 {
-        " stroke-width=\"\{format_double(cell_border_pt)}\""
-      } else {
-        ""
-      }
-      write_line(
+      write_html_cell_sides(
         sb,
-        "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
+        cell_layout.cell,
+        cell_rect,
+        cell_border_pt,
+        stroke,
+        bbox,
         indent,
         pretty,
       )
     }
+    let pad_x = table.cell_padding_pt * layout.scale_x +
+      cell_border_pt * layout.scale_x
+    let pad_y = table.cell_padding_pt * layout.scale_y +
+      cell_border_pt * layout.scale_y
     let content_rect : @geom.Rect = {
       llx: cell_rect.llx + pad_x,
       lly: cell_rect.lly + pad_y,
@@ -4093,7 +4736,7 @@ fn write_html_table(
       @html_label.HtmlCellContent::Table(nested) =>
         write_html_table(
           sb, nested, content_rect, name, font, size, text_color, stroke, stroke_dash,
-          bbox, indent, pretty,
+          bbox, indent, linear_gradient_index, radial_gradient_index, pretty,
         )
       @html_label.HtmlCellContent::StyledText(spans) =>
         if spans.length() > 0 {
@@ -4131,20 +4774,43 @@ fn write_html_table(
         }
     }
   }
+  write_html_table_rules(sb, table, layout, stroke, bbox, indent, pretty)
   if border_pt > 0.0 {
     let border = border_rect(rect, border_pt)
-    let attrs = polygon_points(outline_rect_points(border), bbox.llx, bbox.lly)
     let width_attr = if border_pt > 1.0 {
       " stroke-width=\"\{format_double(border_pt)}\""
     } else {
       ""
     }
-    write_line(
-      sb,
-      "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
-      indent,
-      pretty,
-    )
+    if table.rounded {
+      let path = spline_path(
+        @geom.Spline::{
+          start: None,
+          end: None,
+          points: rounded_rect_bezier_points(border),
+        },
+        bbox.llx,
+        bbox.lly,
+      )
+      write_line(
+        sb,
+        "<path fill=\"none\" stroke=\"\{stroke}\"\{width_attr} d=\"\{path}\"/>",
+        indent,
+        pretty,
+      )
+    } else {
+      let attrs = polygon_points(
+        outline_rect_points(border),
+        bbox.llx,
+        bbox.lly,
+      )
+      write_line(
+        sb,
+        "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
+        indent,
+        pretty,
+      )
+    }
   }
 }
 
@@ -4406,6 +5072,31 @@ fn write_line_segment(
 }
 
 ///|
+fn write_line_segment_with_width(
+  sb : StringBuilder,
+  start : @geom.Point,
+  end : @geom.Point,
+  stroke : String,
+  stroke_dash : String,
+  stroke_width : String,
+  llx : Double,
+  lly : Double,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  let x1 = svg_x(start.x, llx)
+  let y1 = svg_y(start.y, lly)
+  let x2 = svg_x(end.x, llx)
+  let y2 = svg_y(end.y, lly)
+  write_line(
+    sb,
+    "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash}\{stroke_width} points=\"\{format_double(x1)},\{format_double(y1)} \{format_double(x2)},\{format_double(y2)}\"/>",
+    indent,
+    pretty,
+  )
+}
+
+///|
 fn write_arrow_ops(
   sb : StringBuilder,
   ops : Array[@render.DrawOp],
@@ -4584,6 +5275,8 @@ fn write_cluster_graphs(
   indent : String,
   pretty : Bool,
   next_cluster_id : Int,
+  linear_gradient_index : Ref[Int],
+  radial_gradient_index : Ref[Int],
 ) -> Int {
   let mut cluster_id = next_cluster_id
   let rendered_subgraphs = layout.subgraphs
@@ -4627,18 +5320,13 @@ fn write_cluster_graphs(
           let stroke_style = @attrs.parse_style(
             inherited_graph_attr(graph, "style"),
           )
+          let local_style = @attrs.parse_style(graph.get_attr("style"))
+          let rounded = style_has_token(stroke_style, "rounded")
           if style_is_invisible(stroke_style) {
             continue
           }
-          let stroke = svg_color(graph_color(graph, "color", "black"))
-          let fill = match cluster_fill_color(graph) {
-            Some(value) => value
-            None => "none"
-          }
-          let dash = stroke_dash_attr(stroke_style)
-          let width_attr = stroke_width_attr(
-            stroke_style,
-            inherited_graph_attr(graph, "penwidth"),
+          let stroke = svg_color(
+            graph_color(graph, "pencolor", graph_color(graph, "color", "black")),
           )
           write_line(
             sb,
@@ -4647,12 +5335,77 @@ fn write_cluster_graphs(
             pretty,
           )
           write_line(sb, "<title>\{graph_title}</title>", indent, pretty)
-          write_line(
-            sb,
-            "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{points}\"/>",
-            indent,
-            pretty,
+          let radial = style_has_token(local_style, "radial")
+          let raw_fill = if local_style.filled || radial {
+            Some(
+              graph
+              .get_attr("fillcolor")
+              .unwrap_or(graph_color(graph, "color", "black")),
+            )
+          } else {
+            inherited_graph_attr(graph, "bgcolor")
+          }
+          let fill = match raw_fill {
+            Some(value) =>
+              match graph_gradient_stops(graph, value) {
+                Some(stops) => {
+                  let gradient_id = if radial {
+                    let id = "clust\{current_id}_r_\{radial_gradient_index.val}"
+                    radial_gradient_index.val = radial_gradient_index.val + 1
+                    id
+                  } else {
+                    let id = "clust\{current_id}_l_\{linear_gradient_index.val}"
+                    linear_gradient_index.val = linear_gradient_index.val + 1
+                    id
+                  }
+                  write_svg_gradient_definition(
+                    sb,
+                    gradient_id,
+                    stops,
+                    radial,
+                    inherited_graph_attr(graph, "gradientangle"),
+                    rect,
+                    bbox,
+                    pretty,
+                  )
+                  "url(#\{gradient_id})"
+                }
+                None =>
+                  svg_color(
+                    resolve_colorscheme_color(value, graph_colorscheme(graph)),
+                  )
+              }
+            None => "none"
+          }
+          let dash = stroke_dash_attr(stroke_style)
+          let width_attr = stroke_width_attr(
+            stroke_style,
+            inherited_graph_attr(graph, "penwidth"),
           )
+          if rounded {
+            let path = spline_path(
+              @geom.Spline::{
+                start: None,
+                end: None,
+                points: rounded_rect_bezier_points(rect),
+              },
+              bbox.llx,
+              bbox.lly,
+            )
+            write_line(
+              sb,
+              "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+              indent,
+              pretty,
+            )
+          } else {
+            write_line(
+              sb,
+              "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{points}\"/>",
+              indent,
+              pretty,
+            )
+          }
           match graph_label_metrics(graph) {
             Some((text, _width_pt, height_pt)) => {
               let font = @attrs.font_name(
@@ -4675,7 +5428,8 @@ fn write_cluster_graphs(
           write_line(sb, "</g>", indent, pretty)
         }
         cluster_id = write_cluster_graphs(
-          sb, subgraph, bbox, indent, pretty, cluster_id,
+          sb, subgraph, bbox, indent, pretty, cluster_id, linear_gradient_index,
+          radial_gradient_index,
         )
       }
     }
@@ -5335,9 +6089,20 @@ fn write_svg_edge_group(
   }
   match edge_layout.head_label_pos {
     Some(pos) => {
-      let font = @attrs.font_name(edge_attr(edge, "fontname"))
-      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
+      let default_name = @attrs.font_name(edge_attr(edge, "fontname"))
+      let default_size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let default_color = edge_color(edge, "fontcolor", "black")
+      let font = @attrs.font_name(
+        edge_attr(edge, "labelfontname"),
+        default=default_name,
+      )
+      let size = @attrs.font_size(
+        edge_attr(edge, "labelfontsize"),
+        default=default_size,
+      )
+      let font_color = svg_color(
+        @attrs.color(edge_attr(edge, "labelfontcolor"), default=default_color),
+      )
       write_label_lines(
         sb, head_label_text, font, size, font_color, pos, bbox, "", pretty,
       )
@@ -5350,9 +6115,20 @@ fn write_svg_edge_group(
   }
   match edge_layout.tail_label_pos {
     Some(pos) => {
-      let font = @attrs.font_name(edge_attr(edge, "fontname"))
-      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
-      let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
+      let default_name = @attrs.font_name(edge_attr(edge, "fontname"))
+      let default_size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let default_color = edge_color(edge, "fontcolor", "black")
+      let font = @attrs.font_name(
+        edge_attr(edge, "labelfontname"),
+        default=default_name,
+      )
+      let size = @attrs.font_size(
+        edge_attr(edge, "labelfontsize"),
+        default=default_size,
+      )
+      let font_color = svg_color(
+        @attrs.color(edge_attr(edge, "labelfontcolor"), default=default_color),
+      )
       write_label_lines(
         sb, tail_label_text, font, size, font_color, pos, bbox, "", pretty,
       )
@@ -5369,6 +6145,8 @@ fn write_svg_node_group(
   fixedshape_draw_sizes : Map[String, (Double, Double)],
   bbox : @geom.Rect,
   node_index : Int,
+  linear_gradient_index : Ref[Int],
+  radial_gradient_index : Ref[Int],
   pretty : Bool,
 ) -> Unit {
   let node = node_layout.node
@@ -5383,7 +6161,12 @@ fn write_svg_node_group(
     Some(value) => value.to_lower()
     None => ""
   }
-  let raw_kind = shape_kind(node_attr(node, "shape"))
+  let has_shapefile = node_attr(node, "shapefile").unwrap_or_default() != ""
+  let raw_kind = if has_shapefile {
+    "box"
+  } else {
+    shape_kind(node_attr(node, "shape"))
+  }
   let skip_unknown_shape_outline = raw_kind == "unknown" &&
     node_attr_int(node, "peripheries", 1) <= 0
   // Graphviz falls back to box geometry for unknown node shapes.
@@ -5391,7 +6174,8 @@ fn write_svg_node_group(
   let is_doublecircle = raw_shape == "doublecircle"
   let stroke = svg_color(node_color(node, "color", "black"))
   let style = @attrs.parse_style(node_attr(node, "style"))
-  let rounded = style_has_token(style, "rounded")
+  let diagonals = style_has_token(style, "diagonals")
+  let rounded = style_has_token(style, "rounded") && !diagonals
   if style_is_invisible(style) {
     return
   }
@@ -5417,7 +6201,16 @@ fn write_svg_node_group(
     pretty,
   )
   write_line(sb, "<title>\{node_title}</title>", "", pretty)
-  let text = label_text(node_attr(node, "label"), node.name())
+  let raw_label = node_attr(node, "label")
+  let text = match raw_label {
+    Some(value) =>
+      if @html_label.is_html_label_text(value) {
+        html_label_text(raw_label, node.name())
+      } else {
+        label_text(raw_label, node.name())
+      }
+    None => node.name()
+  }
   let link_href = node_link_href(node)
   let mut has_link = false
   match link_href {
@@ -5435,7 +6228,11 @@ fn write_svg_node_group(
     }
     None => ()
   }
-  let filled = if kind == "point" { true } else { style.filled }
+  let filled = if kind == "point" {
+    true
+  } else {
+    style.filled || style_has_token(style, "radial")
+  }
   let dash = stroke_dash_attr(style)
   let width_attr = stroke_width_attr(style, node_attr(node, "penwidth"))
   let no_outline = node_attr_int(node, "peripheries", 1) <= 0 &&
@@ -5449,14 +6246,41 @@ fn write_svg_node_group(
     None => 1.0
   }
   let fill = if filled {
-    match node_attr(node, "fillcolor") {
-      Some(value) =>
-        svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
-      None =>
-        if kind == "point" {
-          stroke
+    match node_gradient_stops(node) {
+      Some(stops) => {
+        let radial = style_has_token(style, "radial")
+        let gradient_id = if radial {
+          let id = "node\{node_index}_r_\{radial_gradient_index.val}"
+          radial_gradient_index.val = radial_gradient_index.val + 1
+          id
         } else {
-          svg_color(node_fill_color(node, "lightgrey"))
+          let id = "node\{node_index}_l_\{linear_gradient_index.val}"
+          linear_gradient_index.val = linear_gradient_index.val + 1
+          id
+        }
+        let gradient_rect = gradient_shape_bounds(node, kind, rect)
+        write_svg_gradient_definition(
+          sb,
+          gradient_id,
+          stops,
+          radial,
+          node_attr(node, "gradientangle"),
+          gradient_rect,
+          bbox,
+          pretty,
+        )
+        "url(#\{gradient_id})"
+      }
+      None =>
+        match node_attr(node, "fillcolor") {
+          Some(value) =>
+            svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
+          None =>
+            if kind == "point" {
+              stroke
+            } else {
+              svg_color(node_fill_color(node, "lightgrey"))
+            }
         }
     }
   } else {
@@ -6461,6 +7285,47 @@ fn write_svg_node_group(
         }
     }
   }
+  if diagonals &&
+    !no_outline &&
+    !is_doublecircle &&
+    kind != "msquare" &&
+    kind != "mdiamond" &&
+    kind != "mcircle" {
+    let segments = match kind {
+      "ellipse" => mcircle_segments(rect)
+      "box" =>
+        diagonal_segments(
+          rect_points(
+            inner_rect_for_peripheries(rect, node_peripheries(node, 1)),
+          ),
+        )
+      _ =>
+        match shape_polygon_paths(node, kind, rect) {
+          Some(paths) =>
+            if paths.length() > 0 {
+              diagonal_segments(paths[0])
+            } else {
+              []
+            }
+          None => []
+        }
+    }
+    for segment in segments {
+      let (start, end) = segment
+      write_line_segment_with_width(
+        sb,
+        start,
+        end,
+        stroke,
+        dash,
+        width_attr,
+        bbox.llx,
+        bbox.lly,
+        "",
+        pretty,
+      )
+    }
+  }
   if kind == "point" {
     let font = @attrs.font_name(node_attr(node, "fontname"))
     let size = @attrs.font_size(node_attr(node, "fontsize"))
@@ -6516,6 +7381,8 @@ fn write_svg_node_group(
         dash,
         bbox,
         "",
+        linear_gradient_index,
+        radial_gradient_index,
         pretty,
       )
     Some(@html_label.HtmlLabel::Text(html_text)) =>
@@ -6643,6 +7510,8 @@ pub fn render_svg(
   let bottom = format_double(-(bbox.ury - bbox.lly + pad_y))
   let bg_points = "\{left},\{top} \{left},\{bottom} \{right},\{bottom} \{right},\{top} \{left},\{top}"
   let sb = StringBuilder()
+  let linear_gradient_index = Ref(0)
+  let radial_gradient_index = Ref(0)
   if include_xml_decl {
     write_line(
       sb, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>", "", pretty,
@@ -6696,9 +7565,40 @@ pub fn render_svg(
     None => ()
   }
   if layout.graph.is_root() {
+    let root_fill = match layout.graph.get_attr("bgcolor") {
+      Some(value) =>
+        match graph_gradient_stops(layout.graph, value) {
+          Some(stops) => {
+            let style = @attrs.parse_style(layout.graph.get_attr("style"))
+            let radial = style_has_token(style, "radial")
+            let gradient_id = if radial {
+              let id = "graph0_r_\{radial_gradient_index.val}"
+              radial_gradient_index.val = radial_gradient_index.val + 1
+              id
+            } else {
+              let id = "graph0_l_\{linear_gradient_index.val}"
+              linear_gradient_index.val = linear_gradient_index.val + 1
+              id
+            }
+            write_svg_gradient_definition(
+              sb,
+              gradient_id,
+              stops,
+              radial,
+              layout.graph.get_attr("gradientangle"),
+              padded_bbox,
+              bbox,
+              pretty,
+            )
+            "url(#\{gradient_id})"
+          }
+          None => bg_fill
+        }
+      None => bg_fill
+    }
     write_line(
       sb,
-      "<polygon fill=\"\{bg_fill}\" stroke=\"none\" points=\"\{bg_points}\"/>",
+      "<polygon fill=\"\{root_fill}\" stroke=\"none\" points=\"\{bg_points}\"/>",
       "",
       pretty,
     )
@@ -6725,7 +7625,9 @@ pub fn render_svg(
     None => ()
   }
   let cluster_indent = ""
-  let _ = write_cluster_graphs(sb, layout, bbox, cluster_indent, pretty, 1)
+  let _ = write_cluster_graphs(
+    sb, layout, bbox, cluster_indent, pretty, 1, linear_gradient_index, radial_gradient_index,
+  )
   let kind = layout.graph.kind()
   let root_nodes = layout.graph.nodes()
   let root_edges = layout.graph.edges()
@@ -6757,7 +7659,8 @@ pub fn render_svg(
             None => 1
           }
           write_svg_node_group(
-            sb, node_layout, fixedshape_draw_sizes, bbox, node_id, pretty,
+            sb, node_layout, fixedshape_draw_sizes, bbox, node_id, linear_gradient_index,
+            radial_gradient_index, pretty,
           )
           written_nodes[node_name] = true
         }
@@ -6788,7 +7691,8 @@ pub fn render_svg(
               None => 1
             }
             write_svg_node_group(
-              sb, node_layout, fixedshape_draw_sizes, bbox, node_id, pretty,
+              sb, node_layout, fixedshape_draw_sizes, bbox, node_id, linear_gradient_index,
+              radial_gradient_index, pretty,
             )
             written_nodes[head_name] = true
           }

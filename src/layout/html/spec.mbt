@@ -67,6 +67,11 @@ pub(all) struct HtmlCell {
   align : HtmlAlign
   valign : HtmlVAlign
   bg_color : String?
+  border_pt : Double?
+  style : String?
+  gradient_angle : String?
+  sides : String?
+  vruled : Bool
   min_width_pt : Double?
   min_height_pt : Double?
 } derive(Debug, Eq)
@@ -81,6 +86,7 @@ pub extend HtmlCell with Eq::{not_equal, equal}
 /// HTML-like table row.
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
+  ruled : Bool
 } derive(Debug, Eq)
 
 ///|
@@ -98,6 +104,11 @@ pub(all) struct HtmlTable {
   cell_spacing_pt : Double
   cell_padding_pt : Double
   bg_color : String?
+  style : String?
+  gradient_angle : String?
+  hruled : Bool
+  vruled : Bool
+  rounded : Bool
 } derive(Debug, Eq)
 
 ///|
@@ -154,6 +165,9 @@ pub extend HtmlTableMetrics with Eq::{not_equal, equal}
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
+  row : Int
+  col : Int
+  hruled : Bool
 } derive(Debug, Eq)
 
 ///|
@@ -166,6 +180,8 @@ pub extend HtmlCellLayout with Eq::{not_equal, equal}
 /// Table layout output.
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
+  row_count : Int
+  col_count : Int
   scale_x : Double
   scale_y : Double
 } derive(Debug, Eq)

@@ -1,24 +1,24 @@
 graph G {
-	graph [bb="0,0,690.42,62",
+	graph [bb="0,0,1164,90.5",
 		imagepath="/inv_dir/"
 	];
 	node [label="\N"];
-	a	[height=0.86111,
+	a	[height=1.2569,
 		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
 CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
 CELLBORDER="0">
 <TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (invalid absolute pathname)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (invalid absolute pathname)</FONT></TD></TR>
 </TABLE></TD></TR></TABLE>>,
-		pos="150.12,31",
+		pos="353.5,45.25",
 		shape=plaintext,
-		width=4.17];
+		width=9.8194];
 	b	[fontname="Helvetica-Bold",
 		fontsize=30,
-		height=0.61111,
+		height=0.53819,
 		image="/inv_dir/image.jpg",
 		label="no image should be displayed",
-		pos="504.12,31",
+		labelloc=b,
+		pos="944.5,45.25",
 		shape=box,
-		width=5.175,
-		labelloc=b];
+		width=6.0972];
 }

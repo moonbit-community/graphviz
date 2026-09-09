@@ -6,6 +6,7 @@ Detailed algorithm documentation:
 Manual regeneration:
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_font_metrics.sh` (updates `src/layout/dot/font_metrics/font_metrics.generated.mbt` with text widths + kerning; requires Graphviz build + `python3`).
 - `bash scripts/generate_textspan_fixtures_from_xdot.sh` (updates `src/layout/dot/font_metrics/textspan_overrides.jsonl` from xdot snapshots; requires `python3`).
+- `bash scripts/generate_textspan_fixtures_from_xdot.sh --capture-jsonl /path/to/graphviz-14.1.1-textspan.jsonl` (merges exact textspan metrics captured from the external 14.1.1 reference; captured keys supersede older values).
 - `bash scripts/generate_textspan_overrides.sh` (updates `src/layout/dot/font_metrics/textspan_overrides.generated.mbt` from `src/layout/dot/font_metrics/textspan_overrides.jsonl`).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_dot_snapshots.sh` (refreshes `tests/layout/dot/*.gv.dot`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_xdot_snapshots.sh` (refreshes `tests/render/xdot/*.xdot` from `tests/render/xdot/cases.txt`; requires Graphviz build or `dot` on PATH).

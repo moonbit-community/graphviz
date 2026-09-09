@@ -1,17 +1,17 @@
 digraph {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 519 273.91 519 273.91 0 ",
-		bb="0,0,273.91,519",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 468 496.5 468 496.5 0 ",
+		bb="0,0,496.5,468",
 		xdotversion=1.7
 	];
 	node [label="\N"];
-	25	[_draw_="c 7 -#000000 p 4 273.91 519 0 519 0 416.25 273.91 416.25 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 493.31 0 519 451.98 519 451.98 493.31 F 14 13 -Palatino-Bold c 7 -#000000 T 180.5 500.73 -1 90.99 \
-15 -\"Palatino-Bold\" S 5 -solid c 7 -#000000 p 4 0 467.62 0 493.31 451.98 493.31 451.98 467.62 F 14 13 -Palatino-Bold c 7 -#000000 \
-T 92.03 475.04 -1 267.91 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 441.94 0 467.62 451.98 467.62 451.98 441.94 \
-F 14 13 -Palatino-Bold c 7 -#000000 T 132.91 449.36 -1 186.16 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 416.25 \
-0 441.94 451.98 441.94 451.98 416.25 F 14 13 -Palatino-Bold c 7 -#000000 T 3 423.67 -1 445.98 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+	25	[_draw_="c 7 -#000000 p 4 496.5 468 0 468 0 378 496.5 378 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 445.5 0 468 496.5 468 496.5 445.5 F 14 13 -Palatino-Bold c 7 -#000000 T 199.88 451.7 -1 96.75 15 -\"\
+Palatino-Bold\" S 5 -solid c 7 -#000000 p 4 0 423 0 445.5 496.5 445.5 496.5 423 F 14 13 -Palatino-Bold c 7 -#000000 T 107.63 429.2 \
+-1 281.25 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 400.5 0 423 496.5 423 496.5 400.5 F 14 13 -Palatino-Bold \
+c 7 -#000000 T 145.88 406.7 -1 204.75 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 378 0 400.5 496.5 400.5 496.5 \
+378 F 14 13 -Palatino-Bold c 7 -#000000 T 3 384.2 -1 490.5 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Palatino-Bold",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Bold"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -19,18 +19,17 @@ F 14 13 -Palatino-Bold c 7 -#000000 T 132.91 449.36 -1 186.16 29 -\"abcdefghijlk
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,467.62",
+		pos="248.25,423",
 		shape=box,
-		width=3.8043];
-	26	[_draw_="c 7 -#000000 p 4 273.91 380.25 0 380.25 0 277.5 273.91 277.5 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 354.56 0 380.25 451.98 380.25 451.98 354.56 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 165.83 361.98 \
--1 120.32 21 -\"Palatino-BoldItalic\" S 5 -solid c 7 -#000000 p 4 0 328.88 0 354.56 451.98 354.56 451.98 328.88 F 14 19 -Palatino-BoldItalic \
-c 7 -#000000 T 92.03 336.29 -1 267.91 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 303.19 0 328.88 451.98 328.88 \
-451.98 303.19 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 132.91 310.61 -1 186.16 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c \
-7 -#000000 p 4 0 277.5 0 303.19 451.98 303.19 451.98 277.5 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 3 284.92 -1 445.98 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ \
-abcdefghijlklmnopqrstuvwxyz\" ",
+		width=6.8958];
+	26	[_draw_="c 7 -#000000 p 4 488.25 342 8.25 342 8.25 252 488.25 252 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 8.25 319.5 8.25 342 488.25 342 488.25 319.5 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 181.5 325.7 \
+-1 133.5 21 -\"Palatino-BoldItalic\" S 5 -solid c 7 -#000000 p 4 8.25 297 8.25 319.5 488.25 319.5 488.25 297 F 14 19 -Palatino-BoldItalic \
+c 7 -#000000 T 111.75 303.2 -1 273 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 8.25 274.5 8.25 297 488.25 297 \
+488.25 274.5 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 148.88 280.7 -1 198.75 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 \
+-#000000 p 4 8.25 252 8.25 274.5 488.25 274.5 488.25 252 F 14 19 -Palatino-BoldItalic c 7 -#000000 T 11.25 258.2 -1 474 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Palatino-BoldItalic",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-BoldItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -38,21 +37,20 @@ abcdefghijlklmnopqrstuvwxyz\" ",
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,328.88",
+		pos="248.25,297",
 		shape=box,
-		width=3.8043];
-	25 -> 26	[_draw_="c 7 -#000000 B 4 136.96 416.09 136.96 408.23 136.96 400.03 136.96 391.95 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 140.46 392.17 136.96 382.17 133.46 392.17 ",
-		pos="e,136.96,380.66 136.96,416.09 136.96,408.23 136.96,400.03 136.96,391.95"];
-	27	[_draw_="c 7 -#000000 p 4 273.91 241.5 0 241.5 0 138.75 273.91 138.75 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 215.81 0 241.5 451.98 241.5 451.98 215.81 F 14 15 -Palatino-Italic c 7 -#000000 T 179.71 223.23 -1 \
-92.55 17 -\"Palatino-Italic\" S 5 -solid c 7 -#000000 p 4 0 190.12 0 215.81 451.98 215.81 451.98 190.12 F 14 15 -Palatino-Italic c \
-7 -#000000 T 92.03 197.54 -1 267.91 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 164.44 0 190.12 451.98 190.12 \
-451.98 164.44 F 14 15 -Palatino-Italic c 7 -#000000 T 132.91 171.86 -1 186.16 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#\
-000000 p 4 0 138.75 0 164.44 451.98 164.44 451.98 138.75 F 14 15 -Palatino-Italic c 7 -#000000 T 3 146.17 -1 445.98 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ \
-abcdefghijlklmnopqrstuvwxyz\" ",
+		width=6.6667];
+	25 -> 26	[_draw_="c 7 -#000000 B 4 248.25 377.58 248.25 369.74 248.25 361.49 248.25 353.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 251.75 353.62 248.25 343.62 244.75 353.62 ",
+		pos="e,248.25,342.11 248.25,377.58 248.25,369.74 248.25,361.49 248.25,353.4"];
+	27	[_draw_="c 7 -#000000 p 4 474 216 22.5 216 22.5 126 474 126 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 22.5 193.5 22.5 216 474 216 474 193.5 F 14 15 -Palatino-Italic c 7 -#000000 T 202.13 199.7 -1 92.25 \
+17 -\"Palatino-Italic\" S 5 -solid c 7 -#000000 p 4 22.5 171 22.5 193.5 474 193.5 474 171 F 14 15 -Palatino-Italic c 7 -#000000 T \
+116.25 177.2 -1 264 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 22.5 148.5 22.5 171 474 171 474 148.5 F 14 15 \
+-Palatino-Italic c 7 -#000000 T 158.63 154.7 -1 179.25 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 22.5 126 22.5 \
+148.5 474 148.5 474 126 F 14 15 -Palatino-Italic c 7 -#000000 T 25.5 132.2 -1 445.5 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Palatino-Italic",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Italic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -60,20 +58,20 @@ abcdefghijlklmnopqrstuvwxyz\" ",
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,190.12",
+		pos="248.25,171",
 		shape=box,
-		width=3.8043];
-	26 -> 27	[_draw_="c 7 -#000000 B 4 136.96 277.34 136.96 269.48 136.96 261.28 136.96 253.2 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 140.46 253.42 136.96 243.42 133.46 253.42 ",
-		pos="e,136.96,241.91 136.96,277.34 136.96,269.48 136.96,261.28 136.96,253.2"];
-	28	[_draw_="c 7 -#000000 p 4 273.91 102.75 0 102.75 0 0 273.91 0 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 77.06 0 102.75 451.98 102.75 451.98 77.06 F 14 14 -Palatino-Roman c 7 -#000000 T 173.76 84.48 -1 104.46 \
-16 -\"Palatino-Roman\" S 5 -solid c 7 -#000000 p 4 0 51.38 0 77.06 451.98 77.06 451.98 51.38 F 14 14 -Palatino-Roman c 7 -#000000 \
-T 92.03 58.79 -1 267.91 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 25.69 0 51.38 451.98 51.38 451.98 25.69 \
-F 14 14 -Palatino-Roman c 7 -#000000 T 132.91 33.11 -1 186.16 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 0 \
-0 25.69 451.98 25.69 451.98 0 F 14 14 -Palatino-Roman c 7 -#000000 T 3 7.42 -1 445.98 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+		width=6.2708];
+	26 -> 27	[_draw_="c 7 -#000000 B 4 248.25 251.58 248.25 243.74 248.25 235.49 248.25 227.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 251.75 227.62 248.25 217.62 244.75 227.62 ",
+		pos="e,248.25,216.11 248.25,251.58 248.25,243.74 248.25,235.49 248.25,227.4"];
+	28	[_draw_="c 7 -#000000 p 4 486.75 90 9.75 90 9.75 0 486.75 0 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 9.75 67.5 9.75 90 486.75 90 486.75 67.5 F 14 14 -Palatino-Roman c 7 -#000000 T 194.25 73.7 -1 108 16 \
+-\"Palatino-Roman\" S 5 -solid c 7 -#000000 p 4 9.75 45 9.75 67.5 486.75 67.5 486.75 45 F 14 14 -Palatino-Roman c 7 -#000000 T 114.38 \
+51.2 -1 267.75 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 9.75 22.5 9.75 45 486.75 45 486.75 22.5 F 14 14 -Palatino-Roman \
+c 7 -#000000 T 149.63 28.7 -1 197.25 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 9.75 0 9.75 22.5 486.75 22.5 \
+486.75 0 F 14 14 -Palatino-Roman c 7 -#000000 T 12.75 6.2 -1 471 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Palatino-Roman",
-		height=1.4271,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Palatino-Roman"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -81,10 +79,10 @@ F 14 14 -Palatino-Roman c 7 -#000000 T 132.91 33.11 -1 186.16 29 -\"abcdefghijlk
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="136.96,51.375",
+		pos="248.25,45",
 		shape=box,
-		width=3.8043];
-	27 -> 28	[_draw_="c 7 -#000000 B 4 136.96 138.59 136.96 130.73 136.96 122.53 136.96 114.45 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 140.46 114.67 136.96 104.67 133.46 114.67 ",
-		pos="e,136.96,103.16 136.96,138.59 136.96,130.73 136.96,122.53 136.96,114.45"];
+		width=6.625];
+	27 -> 28	[_draw_="c 7 -#000000 B 4 248.25 125.58 248.25 117.74 248.25 109.49 248.25 101.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 251.75 101.62 248.25 91.62 244.75 101.62 ",
+		pos="e,248.25,90.106 248.25,125.58 248.25,117.74 248.25,109.49 248.25,101.4"];
 }

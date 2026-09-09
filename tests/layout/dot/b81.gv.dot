@@ -1,5 +1,5 @@
 digraph G {
-	graph [bb="0,0,37341,78109"];
+	graph [bb="0,0,36418,78040"];
 	node [label="\N"];
 	128	[color=yellow,
 		height=10.204,
@@ -13,8 +13,8 @@ running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 \
 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss running_on ['axd301@cp1-1'],\nomFrs1 \
 running_on ['axd301@cp1-1']",
-		pos="429.65,3554.7",
-		width=7.7741];
+		pos="418.08,3554.7",
+		width=7.5768];
 	129	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -26,12 +26,12 @@ gt; \nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 
 axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_\
 on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_\
 on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss running_on ['axd301@cp1-1'],\nomFrs1 running_on ['axd301@cp1-1']",
-		pos="429.65,2762.7",
-		width=7.7741];
+		pos="418.08,2762.7",
+		width=7.5768];
 	128 -> 129	[label="[{handle_info,{gd_app_started,{chStandby,{ch,1}},'axd301@cp1-1'}},\n{send,application_controller,{ac_change_application_req,chStandby,{\
 started,'axd301@cp1-1'}}}]",
-		lp="705.1,3152.9",
-		pos="e,429.65,3118.6 429.65,3187.1 429.65,3168.1 429.65,3149.1 429.65,3130.1"];
+		lp="685.45,3152.9",
+		pos="e,418.08,3118.6 418.08,3187.1 418.08,3168.1 418.08,3149.1 418.08,3130.1"];
 	96	[color=yellow,
 		height=10.204,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -45,8 +45,8 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1'",
-		pos="429.65,31480",
-		width=7.7741];
+		pos="418.08,31480",
+		width=7.5768];
 	97	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -60,11 +60,11 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master",
-		pos="429.65,30681",
-		width=7.7741];
+		pos="418.08,30681",
+		width=7.5768];
 	96 -> 97	[label="[{handle_info,{gd_app_started,{chTraffic,{ch,1}},'axd301@cp1-19'}}]",
-		lp="630.55,31087",
-		pos="e,429.65,31061 429.65,31113 429.65,31099 429.65,31086 429.65,31072"];
+		lp="614.58,31087",
+		pos="e,418.08,31061 418.08,31113 418.08,31099 418.08,31086 418.08,31072"];
 	64	[color=yellow,
 		height=5.6667,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -72,8 +72,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-1'],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\nchStandbyFrs1 running_on ['axd301@cp2-1'],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,53146",
-		width=8.9665];
+		pos="418.08,53100",
+		width=8.7112];
 	65	[color=yellow,
 		height=5.6667,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -81,38 +81,38 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-1'],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\nchStandbyFrs1 running_on ['axd301@cp2-1'],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,52669",
-		width=8.9665];
+		pos="418.08,52623",
+		width=8.7112];
 	64 -> 65	[label="[{handle_info,{gd_start_app_req,chLss,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{chLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="680.06,52908",
-		pos="e,429.65,52874 429.65,52942 429.65,52923 429.65,52904 429.65,52885"];
+		lp="662.58,52861",
+		pos="e,418.08,52827 418.08,52895 418.08,52876 418.08,52857 418.08,52838"];
 	32	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 \
 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_\
 on [master],\nchStandbyFrs1 running_on [master],\nomLss running_on [master]",
-		pos="429.65,67924",
-		width=4.4773];
+		pos="418.08,67877",
+		width=4.3949];
 	33	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 \
 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_\
 on [master],\nchStandbyFrs1 running_on [master],\nomLss running_on [master]",
-		pos="429.65,67587",
-		width=4.4773];
+		pos="418.08,67540",
+		width=4.3949];
 	32 -> 33	[label="[{handle_info,{ac_start_application_req,chLss}},\n{send,application_controller,{ac_start_application_reply,chLss,start_it}}]",
-		lp="636.36,67755",
-		pos="e,429.65,67721 429.65,67789 429.65,67771 429.65,67751 429.65,67733"];
+		lp="618.7,67709",
+		pos="e,418.08,67675 418.08,67743 418.08,67724 418.08,67705 418.08,67686"];
 	0	[color=yellow,
 		height=0.5,
 		label="",
-		pos="429.65,78091",
+		pos="418.08,78022",
 		width=0.75];
 	1	[color=yellow,
-		height=0.80532,
+		height=0.5,
 		label="&lt; 122.2141.0&gt; \n",
-		pos="429.65,77018",
-		width=2.6365];
+		pos="418.08,76960",
+		width=1.924];
 	0 -> 1	[label="[{send,&lt; 122.11.0&gt; ,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.27690&gt; },{whereis,rcmDAC}}},\n{send,&lt; 122.11.0&\
 gt; ,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.27691&gt; },get_known}},\n{send,{global_name_server,'axd301@cp1-19'},{'$\
 gen_call',{&lt; 122.2141.0&gt; ,{#Ref&lt; 122.0.0.27692&gt; ,'axd301@cp1-19'}},{set_lock,{global,&lt; 122.2141.0&gt; }}}},\n{send,{\
@@ -189,8 +189,8 @@ send,{rcmDAC,'axd301@cp1-19'},{gd_start_app,{omLss,{ch,1}},[{'axd301@cp1-19',nor
 send,{rcmDAC,'axd301@cp1-1'},{gd_start_app,{omLss,{ch,1}},[{'axd301@cp1-19',normal,[{{omAxd301,{ch,1}},['axd301@cp1-19']}]}]}},\n{\
 send,{rcmDAC,'axd301@cp1-19'},{gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-19',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp1-1'},{\
 gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-19',normal,[]}]}}]",
-		lp="3165,77560",
-		pos="e,429.65,77047 429.65,78072 429.65,77952 429.65,77236 429.65,77058"];
+		lp="3095.6,77491",
+		pos="e,418.08,76978 418.08,78004 418.08,77882 418.08,77145 418.08,76990"];
 	115	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -204,8 +204,8 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,15258",
-		width=7.7741];
+		pos="418.08,15258",
+		width=7.5768];
 	116	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -219,11 +219,11 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,14360",
-		width=7.7741];
+		pos="418.08,14360",
+		width=7.5768];
 	115 -> 116	[label="[{handle_info,{ac_start_application_req,chLss}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,chLss,'axd301@cp1-1'}}]",
-		lp="634.81,14809",
-		pos="e,429.65,14775 429.65,14843 429.65,14824 429.65,14805 429.65,14786"];
+		lp="602.95,14809",
+		pos="e,418.08,14775 418.08,14843 418.08,14824 418.08,14805 418.08,14786"];
 	83	[color=yellow,
 		height=9.5558,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -236,8 +236,8 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,41564",
-		width=7.7741];
+		pos="418.08,41564",
+		width=7.5768];
 	84	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -251,11 +251,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric pending_on [{'axd301@\
 cp1-1',normal}]",
-		pos="429.65,40812",
-		width=7.7741];
+		pos="418.08,40812",
+		width=7.5768];
 	83 -> 84	[label="[{handle_info,{gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-1',normal,[]}]}}]",
-		lp="664.46,41194",
-		pos="e,429.65,41168 429.65,41220 429.65,41207 429.65,41193 429.65,41180"];
+		lp="647.58,41194",
+		pos="e,418.08,41168 418.08,41220 418.08,41207 418.08,41193 418.08,41180"];
 	51	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -263,8 +263,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,59105",
-		width=11.935];
+		pos="418.08,59058",
+		width=11.613];
 	52	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -272,29 +272,29 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,58674",
-		width=11.935];
+		pos="418.08,58628",
+		width=11.613];
 	51 -> 52	[label="[{handle_info,{gd_start_app_req,chTraffic,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chTraffic,{ch,1}},'\
 axd301@cp1-19'}}]",
-		lp="692.51,58890",
-		pos="e,429.65,58855 429.65,58924 429.65,58905 429.65,58886 429.65,58867"];
+		lp="675.33,58843",
+		pos="e,418.08,58809 418.08,58877 418.08,58858 418.08,58839 418.08,58820"];
 	19	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss \
 pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master]",
-		pos="429.65,72272",
-		width=5.4857];
+		pos="418.08,72225",
+		width=5.3671];
 	20	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss \
 pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master]",
-		pos="429.65,71951",
-		width=5.4857];
+		pos="418.08,71905",
+		width=5.3671];
 	19 -> 20	[label="[{handle_info,{nodeup,'axd301@cp2-19'}}]",
-		lp="554.31,72111",
-		pos="e,429.65,72086 429.65,72137 429.65,72124 429.65,72110 429.65,72097"];
+		lp="539.2,72065",
+		pos="e,418.08,72039 418.08,72091 418.08,72077 418.08,72064 418.08,72050"];
 	102	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -308,8 +308,8 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,26438",
-		width=7.7741];
+		pos="418.08,26438",
+		width=7.5768];
 	103	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -323,12 +323,12 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,25588",
-		width=7.7741];
+		pos="418.08,25588",
+		width=7.5768];
 	102 -> 103	[label="[{handle_info,{gd_start_app_req,chFrs1,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="682.78,26013",
-		pos="e,429.65,25979 429.65,26047 429.65,26028 429.65,26009 429.65,25991"];
+		lp="665.2,26013",
+		pos="e,418.08,25979 418.08,26047 418.08,26028 418.08,26009 418.08,25991"];
 	70	[color=yellow,
 		height=5.6667,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -336,8 +336,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}]",
-		pos="429.65,50074",
-		width=6.8606];
+		pos="418.08,50074",
+		width=6.6488];
 	71	[color=yellow,
 		height=5.9908,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -345,47 +345,47 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,49602",
-		width=6.8958];
+		pos="418.08,49602",
+		width=6.7372];
 	70 -> 71	[label="[{handle_info,{gd_start_app,{omFrs1,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{omAxd301,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="834.59,49843",
-		pos="e,429.65,49818 429.65,49869 429.65,49856 429.65,49842 429.65,49829"];
+		lp="813.7,49843",
+		pos="e,418.08,49818 418.08,49869 418.08,49856 418.08,49842 418.08,49829"];
 	38	[color=yellow,
 		height=4.6944,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandby pending_on [{'axd301@cp2-1',normal}],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-1',normal}]",
-		pos="429.65,65087",
-		width=6.5515];
+		pos="418.08,65041",
+		width=6.3836];
 	39	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandby pending_on [{'axd301@cp2-1',normal}],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-1',normal}],\nchTraffic pending_on [{'axd301@cp2-1',normal}]",
-		pos="429.65,64685",
-		width=6.5515];
+		pos="418.08,64638",
+		width=6.3836];
 	38 -> 39	[label="[{handle_info,{gd_start_app,{chTraffic,{ch,2}},[{'axd301@cp2-1',normal,[{{atsGeneric,{ch,2}},['axd301@cp2-1']},{{omAxd301,{ch,1}},['\
 axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="945.14,64892",
-		pos="e,429.65,64866 429.65,64918 429.65,64905 429.65,64891 429.65,64877"];
+		lp="922.45,64845",
+		pos="e,418.08,64819 418.08,64871 418.08,64858 418.08,64844 418.08,64831"];
 	6	[color=yellow,
 		height=2.1017,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}]",
-		pos="429.65,76278",
-		width=5.0045];
+		pos="418.08,76232",
+		width=4.9105];
 	7	[color=yellow,
 		height=2.4258,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}]",
-		pos="429.65,76063",
-		width=5.0732];
+		pos="418.08,76016",
+		width=4.9841];
 	6 -> 7	[label="[{handle_info,{gd_start_app,{chStandby,{ch,1}},[{'axd301@cp1-19',normal,[{{atsGeneric,{ch,1}},['axd301@cp1-19']},{{chTraffic,{ch,\
 1}},['axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="949.74,76177",
-		pos="e,429.65,76150 429.65,76202 429.65,76189 429.65,76175 429.65,76162"];
+		lp="926.58,76130",
+		pos="e,418.08,76104 418.08,76156 418.08,76143 418.08,76129 418.08,76115"];
 	121	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -399,8 +399,8 @@ cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,mas
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric \
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master",
-		pos="429.65,9845.2",
-		width=7.7741];
+		pos="418.08,9845.2",
+		width=7.5768];
 	122	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -414,12 +414,12 @@ cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,mas
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric \
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master",
-		pos="429.65,8948.2",
-		width=7.7741];
+		pos="418.08,8948.2",
+		width=7.5768];
 	121 -> 122	[label="[{handle_call,{{is_app_started,omFrs1},{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.54606&gt; }}},\n{send,&lt; 49.13876.0&gt; ,{#Ref&lt; \
 49.0.0.54606&gt; ,true}}]",
-		lp="698.79,9396.7",
-		pos="e,429.65,9362.6 429.65,9430.8 429.65,9411.9 429.65,9393 429.65,9374.1"];
+		lp="651.7,9396.7",
+		pos="e,418.08,9362.6 418.08,9430.8 418.08,9411.9 418.08,9393 418.08,9374.1"];
 	89	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -433,8 +433,8 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@\
 cp1-1']",
-		pos="429.65,36845",
-		width=7.7741];
+		pos="418.08,36845",
+		width=7.5768];
 	90	[color=yellow,
 		height=9.5558,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -447,11 +447,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,36092",
-		width=7.7741];
+		pos="418.08,36092",
+		width=7.5768];
 	89 -> 90	[label="[{handle_info,{gd_app_started,{atsGeneric,{ch,1}},'axd301@cp1-1'}}]",
-		lp="631.69,36463",
-		pos="e,429.65,36437 429.65,36488 429.65,36475 429.65,36461 429.65,36448"];
+		lp="614.95,36463",
+		pos="e,418.08,36437 418.08,36488 418.08,36475 418.08,36461 418.08,36448"];
 	57	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -459,8 +459,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,56523",
-		width=11.935];
+		pos="418.08,56476",
+		width=11.613];
 	58	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -468,29 +468,29 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,56092",
-		width=11.935];
+		pos="418.08,56046",
+		width=11.613];
 	57 -> 58	[label="[{handle_info,{gd_start_app_req,chLss,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chLss,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="683.56,56308",
-		pos="e,429.65,56273 429.65,56342 429.65,56323 429.65,56304 429.65,56285"];
+		lp="665.95,56261",
+		pos="e,418.08,56227 418.08,56295 418.08,56276 418.08,56257 418.08,56238"];
 	25	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{\
 master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 \
 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master]",
-		pos="429.65,70283",
-		width=5.4857];
+		pos="418.08,70236",
+		width=5.3671];
 	26	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,\
 normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [\
 master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_on [master]",
-		pos="429.65,69946",
-		width=5.4857];
+		pos="418.08,69899",
+		width=5.3671];
 	25 -> 26	[label="[{handle_info,{ac_application_run,chStandby,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chStandby,{ch,1}},'axd301@cp1-19'}}]",
-		lp="692.82,70114",
-		pos="e,429.65,70080 429.65,70148 429.65,70130 429.65,70110 429.65,70092"];
+		lp="674.95,70068",
+		pos="e,418.08,70034 418.08,70102 418.08,70083 418.08,70064 418.08,70045"];
 	108	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -504,8 +504,8 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['\
 axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_\
 on ['axd301@cp1-1']",
-		pos="429.65,21348",
-		width=7.7741];
+		pos="418.08,21348",
+		width=7.5768];
 	109	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -519,12 +519,12 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['\
 axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_\
 on ['axd301@cp1-1']",
-		pos="429.65,20504",
-		width=7.7741];
+		pos="418.08,20504",
+		width=7.5768];
 	108 -> 109	[label="[{handle_info,{ac_start_application_req,chStandbyFrs1}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,chStandbyFrs1,'axd301@cp1-1'}},\n{\
 send,application_controller,{ac_start_application_reply,chStandbyFrs1,{started,[]}}}]",
-		lp="674.37,20926",
-		pos="e,429.65,20884 429.65,20969 429.65,20944 429.65,20920 429.65,20895"];
+		lp="655.83,20926",
+		pos="e,418.08,20884 418.08,20969 418.08,20944 418.08,20920 418.08,20895"];
 	76	[color=yellow,
 		height=7.2871,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -534,8 +534,8 @@ on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric r
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,46176",
-		width=7.7741];
+		pos="418.08,46176",
+		width=7.5768];
 	77	[color=yellow,
 		height=7.6112,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -546,11 +546,11 @@ pending_on [{'axd301@cp1-1',normal}]\n&lt; 49.13876.0&gt; \nbasicLss pending_on 
 axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{\
 takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,\
 master}}]",
-		pos="429.65,45587",
-		width=7.7741];
+		pos="418.08,45587",
+		width=7.5768];
 	76 -> 77	[label="[{handle_info,{gd_start_app,{basicLss,{ch,1}},[{'axd301@cp1-1',normal,[]}]}}]",
-		lp="658.64,45888",
-		pos="e,429.65,45862 429.65,45914 429.65,45900 429.65,45887 429.65,45873"];
+		lp="641.95,45888",
+		pos="e,418.08,45862 418.08,45914 418.08,45900 418.08,45887 418.08,45873"];
 	44	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -558,8 +558,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-19',normal},{'axd301@cp2-1',normal}]",
-		pos="429.65,62154",
-		width=11.935];
+		pos="418.08,62107",
+		width=11.613];
 	45	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -567,31 +567,31 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-19',normal},{'axd301@cp2-1',normal}]",
-		pos="429.65,61724",
-		width=11.935];
+		pos="418.08,61677",
+		width=11.613];
 	44 -> 45	[label="[{handle_info,{gd_start_app_req,megaco,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started_dummy,megaco}}]",
-		lp="635.62,61939",
-		pos="e,429.65,61905 429.65,61973 429.65,61954 429.65,61935 429.65,61916"];
+		lp="619.83,61892",
+		pos="e,418.08,61858 418.08,61926 418.08,61907 418.08,61888 418.08,61870"];
 	12	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric pending_on [{\
 master,normal}]",
-		pos="429.65,74631",
-		width=5.4857];
+		pos="418.08,74584",
+		width=5.3671];
 	13	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric pending_on [{\
 master,normal}]",
-		pos="429.65,74294",
-		width=5.4857];
+		pos="418.08,74247",
+		width=5.3671];
 	12 -> 13	[label="[{handle_info,{ac_start_application_req,atsGeneric}},\n{send,application_controller,{ac_start_application_reply,atsGeneric,start_\
 it}}]",
-		lp="649.95,74462",
-		pos="e,429.65,74428 429.65,74496 429.65,74478 429.65,74458 429.65,74439"];
+		lp="631.83,74415",
+		pos="e,418.08,74381 418.08,74450 418.08,74431 418.08,74412 418.08,74393"];
 	127	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -604,12 +604,12 @@ cp1-1',{takeover,master}}],\nchStandbyFrs1 running_on [master],\nchStandbyFrs1 p
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@\
 cp1-1'],\nomLss running_on ['axd301@cp1-1'],\nomFrs1 running_on ['axd301@cp1-1']",
-		pos="429.65,4370.1",
-		width=7.7741];
+		pos="418.08,4370.1",
+		width=7.5768];
 	127 -> 128	[label="[{handle_info,{gd_app_started,{omFrs1,{ch,1}},'axd301@cp1-1'}},\n{send,application_controller,{ac_change_application_req,omFrs1,{\
 started,'axd301@cp1-1'}}}]",
-		lp="697.4,3956.6",
-		pos="e,429.65,3922.5 429.65,3990.7 429.65,3971.8 429.65,3952.8 429.65,3933.9"];
+		lp="678.33,3956.6",
+		pos="e,418.08,3922.5 418.08,3990.7 418.08,3971.8 418.08,3952.8 418.08,3933.9"];
 	95	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -622,12 +622,12 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,32272",
-		width=7.7741];
+		pos="418.08,32272",
+		width=7.5768];
 	95 -> 96	[label="[{handle_info,{gd_app_started,{chTraffic,{ch,2}},'axd301@cp2-1'}},\n{send,application_controller,{ac_start_application_reply,chTraffic,{\
 started,'axd301@cp2-1'}}}]",
-		lp="698.51,31882",
-		pos="e,429.65,31848 429.65,31916 429.65,31897 429.65,31878 429.65,31859"];
+		lp="679.83,31882",
+		pos="e,418.08,31848 418.08,31916 418.08,31897 418.08,31878 418.08,31859"];
 	63	[color=yellow,
 		height=5.6667,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -635,21 +635,21 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-1'],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\nchStandbyFrs1 running_on ['axd301@cp2-1'],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,53623",
-		width=8.9665];
+		pos="418.08,53577",
+		width=8.7112];
 	63 -> 64	[label="[{handle_info,{gd_start_app_req,omLss,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{omLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="682.4,53385",
-		pos="e,429.65,53351 429.65,53419 429.65,53400 429.65,53381 429.65,53362"];
+		lp="665.2,53338",
+		pos="e,418.08,53304 418.08,53372 418.08,53353 418.08,53334 418.08,53315"];
 	31	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 \
 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_\
 on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_on [master]",
-		pos="429.65,68261",
-		width=4.5692];
+		pos="418.08,68214",
+		width=4.498];
 	31 -> 32	[label="[{handle_info,{ac_application_run,omLss,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{omLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="682.4,68092",
-		pos="e,429.65,68058 429.65,68126 429.65,68108 429.65,68088 429.65,68070"];
+		lp="665.2,68046",
+		pos="e,418.08,68012 418.08,68080 418.08,68061 418.08,68042 418.08,68023"];
 	114	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -663,11 +663,11 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,16155",
-		width=7.7741];
+		pos="418.08,16155",
+		width=7.5768];
 	114 -> 115	[label="[{handle_info,{gd_start_app_req,omLss,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{omLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="682.4,15706",
-		pos="e,429.65,15672 429.65,15740 429.65,15721 429.65,15702 429.65,15683"];
+		lp="665.2,15706",
+		pos="e,418.08,15672 418.08,15740 418.08,15721 418.08,15702 418.08,15683"];
 	82	[color=yellow,
 		height=9.2317,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_\
@@ -680,11 +680,11 @@ master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]\n&lt; 49.13876.0
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{\
 takeover,master}}]",
-		pos="429.65,42293",
-		width=7.7741];
+		pos="418.08,42293",
+		width=7.5768];
 	82 -> 83	[label="[{handle_info,{gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-1',normal,[]}]}}]",
-		lp="664.46,41935",
-		pos="e,429.65,41909 429.65,41960 429.65,41947 429.65,41934 429.65,41920"];
+		lp="647.58,41935",
+		pos="e,418.08,41909 418.08,41960 418.08,41947 418.08,41934 418.08,41920"];
 	50	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -692,22 +692,22 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,59535",
-		width=11.935];
+		pos="418.08,59488",
+		width=11.613];
 	50 -> 51	[label="[{handle_info,{gd_start_app_req,omFrs1,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="688.62,59320",
-		pos="e,429.65,59286 429.65,59354 429.65,59335 429.65,59316 429.65,59297"];
+		lp="671.2,59273",
+		pos="e,418.08,59239 418.08,59307 418.08,59288 418.08,59269 418.08,59251"];
 	18	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss \
 pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master]",
-		pos="429.65,72609",
-		width=5.4857];
+		pos="418.08,72562",
+		width=5.3671];
 	18 -> 19	[label="[{handle_info,{ac_start_application_req,chTraffic}},\n{send,application_controller,{ac_start_application_reply,chTraffic,start_it}}]",
-		lp="645.31,72440",
-		pos="e,429.65,72406 429.65,72474 429.65,72456 429.65,72436 429.65,72418"];
+		lp="628.08,72394",
+		pos="e,418.08,72359 418.08,72428 418.08,72409 418.08,72390 418.08,72371"];
 	101	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -721,45 +721,45 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,27322",
-		width=7.7741];
+		pos="418.08,27322",
+		width=7.5768];
 	101 -> 102	[label="[{handle_info,{ac_start_application_req,chStandby}},\n{send,{rcmDAC,'axd301@cp1-19'},{'$gen_call',{&lt; 49.13876.0&gt; ,#Ref&lt; \
 49.0.0.40596&gt; },{is_app_started,chStandby}}},\n{send,application_controller,{ac_start_application_reply,chStandby,{started,'axd301@\
 cp1-19'}}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_takeover,{chStandby,{ch,1}},'axd301@cp1-1'}}]",
-		lp="801.56,26880",
-		pos="e,429.65,26829 429.65,26931 429.65,26901 429.65,26871 429.65,26841"];
+		lp="751.45,26880",
+		pos="e,418.08,26829 418.08,26931 418.08,26901 418.08,26871 418.08,26841"];
 	69	[color=yellow,
-		height=5.6667,
+		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \n",
-		pos="429.65,50534",
-		width=6.8606];
+		pos="418.08,50523",
+		width=6.6488];
 	69 -> 70	[label="[{handle_info,{gd_start_app,{basicLss,{ch,1}},[{'axd301@cp1-1',normal,[]}]}}]",
-		lp="658.64,50304",
-		pos="e,429.65,50278 429.65,50330 429.65,50316 429.65,50303 429.65,50289"];
+		lp="641.95,50304",
+		pos="e,418.08,50278 418.08,50330 418.08,50316 418.08,50303 418.08,50289"];
 	37	[color=yellow,
 		height=4.3703,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandby pending_on [{'axd301@cp2-1',normal}],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-1',normal}]",
-		pos="429.65,65466",
-		width=6.4828];
+		pos="418.08,65419",
+		width=6.3099];
 	37 -> 38	[label="[{handle_info,{gd_start_app,{atsGeneric,{ch,2}},[{'axd301@cp2-1',normal,[]}]}}]",
-		lp="664.46,65283",
-		pos="e,429.65,65257 429.65,65308 429.65,65295 429.65,65281 429.65,65268"];
+		lp="647.58,65236",
+		pos="e,418.08,65210 418.08,65262 418.08,65248 418.08,65235 418.08,65221"];
 	5	[color=yellow,
 		height=1.7776,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}]",
-		pos="429.65,76471",
-		width=4.8291];
+		pos="418.08,76424",
+		width=4.7631];
 	5 -> 6	[label="[{handle_info,{gd_start_app,{omAxd301,{ch,1}},[{'axd301@cp1-19',normal,[]}]}}]",
-		lp="669.53,76380",
-		pos="e,429.65,76354 429.65,76406 429.65,76393 429.65,76379 429.65,76366"];
+		lp="652.83,76334",
+		pos="e,418.08,76308 418.08,76360 418.08,76347 418.08,76333 418.08,76319"];
 	120	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -773,11 +773,11 @@ cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,mas
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric \
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master",
-		pos="429.65,10726",
-		width=7.7741];
+		pos="418.08,10726",
+		width=7.5768];
 	120 -> 121	[label="[{handle_info,{gd_start_takeover,{omLss,{ch,1}},'axd301@cp1-1'}}]",
-		lp="627.54,10285",
-		pos="e,429.65,10260 429.65,10312 429.65,10298 429.65,10285 429.65,10271"];
+		lp="611.2,10285",
+		pos="e,418.08,10260 418.08,10312 418.08,10298 418.08,10285 418.08,10271"];
 	88	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -791,13 +791,13 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@\
 cp1-1']",
-		pos="429.65,37658",
-		width=7.7741];
+		pos="418.08,37658",
+		width=7.5768];
 	88 -> 89	[label="[{handle_info,{ac_start_application_req,omAxd301}},\n{send,{rcmDAC,'axd301@cp1-19'},{'$gen_call',{&lt; 49.13876.0&gt; ,#Ref&lt; \
 49.0.0.40020&gt; },{is_app_started,omAxd301}}},\n{send,application_controller,{ac_start_application_reply,omAxd301,{started,'axd301@\
 cp1-19'}}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_takeover,{omAxd301,{ch,1}},'axd301@cp1-1'}}]",
-		lp="803.51,37251",
-		pos="e,429.65,37200 429.65,37302 429.65,37272 429.65,37242 429.65,37212"];
+		lp="753.7,37251",
+		pos="e,418.08,37200 418.08,37302 418.08,37272 418.08,37242 418.08,37212"];
 	56	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -805,22 +805,22 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,56953",
-		width=11.935];
+		pos="418.08,56906",
+		width=11.613];
 	56 -> 57	[label="[{handle_info,{gd_start_app_req,omLss,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omLss,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="685.9,56738",
-		pos="e,429.65,56704 429.65,56772 429.65,56753 429.65,56734 429.65,56715"];
+		lp="668.58,56691",
+		pos="e,418.08,56657 418.08,56725 418.08,56707 418.08,56687 418.08,56669"];
 	24	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{\
 master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 \
 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master]",
-		pos="429.65,70620",
-		width=5.4857];
+		pos="418.08,70573",
+		width=5.3671];
 	24 -> 25	[label="[{handle_info,{ac_start_application_req,chStandby}},\n{send,application_controller,{ac_start_application_reply,chStandby,start_it}}]",
-		lp="649.12,70451",
-		pos="e,429.65,70417 429.65,70485 429.65,70467 429.65,70447 429.65,70429"];
+		lp="631.08,70405",
+		pos="e,418.08,70371 418.08,70439 418.08,70420 418.08,70401 418.08,70382"];
 	107	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -834,11 +834,11 @@ master],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pend
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1']",
-		pos="429.65,22170",
-		width=7.7741];
+		pos="418.08,22170",
+		width=7.5768];
 	107 -> 108	[label="[{handle_info,{gd_app_started,{basicLss,{ch,1}},'axd301@cp1-1'}}]",
-		lp="625.87,21753",
-		pos="e,429.65,21727 429.65,21779 429.65,21766 429.65,21752 429.65,21739"];
+		lp="609.33,21753",
+		pos="e,418.08,21727 418.08,21779 418.08,21766 418.08,21752 418.08,21739"];
 	75	[color=yellow,
 		height=7.2871,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -848,8 +848,8 @@ on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric r
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,47480",
-		width=7.7741];
+		pos="418.08,47480",
+		width=7.5768];
 	75 -> 76	[label="[{handle_info,{gd_nodeup,'axd301@cp1-1'}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.86829&gt; },{creq,{\
 set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,wait}}}},\n{send,{rex,'axd301@cp1-1'},{'$gen_call',{&lt; 122.2141.0&gt; ,{#Ref&lt; \
 122.0.0.86830&gt; ,'axd301@cp1-1'}},{call,rcmLib,perform_write,[dynamic,[{live_processors,[{node,'axd301@cp1-1',base,'cp1-1'},{node,'\
@@ -953,8 +953,8 @@ omAxd301,{ch,1}},['axd301@cp1-1']}]}]}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_star
 send,{rcmDAC,'axd301@cp2-19'},{gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-1',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp2-1'},{\
 gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-1',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_app,{atsGeneric,{ch,1}},[{'\
 axd301@cp1-1',normal,[]}]}}]",
-		lp="18885,46828",
-		pos="e,429.65,46439 429.65,47217 429.65,46994 429.65,46676 429.65,46450"];
+		lp="18418,46828",
+		pos="e,418.08,46439 418.08,47217 418.08,46994 418.08,46676 418.08,46450"];
 	43	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -962,22 +962,22 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-19',normal},{'axd301@cp2-1',normal}]",
-		pos="429.65,62584",
-		width=11.935];
+		pos="418.08,62538",
+		width=11.613];
 	43 -> 44	[label="[{handle_info,{gd_start_app_req,megaco,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started_dummy,megaco}}]",
-		lp="632.12,62369",
-		pos="e,429.65,62335 429.65,62403 429.65,62384 429.65,62365 429.65,62347"];
+		lp="616.45,62323",
+		pos="e,418.08,62288 418.08,62357 418.08,62338 418.08,62319 418.08,62300"];
 	11	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric pending_on [{\
 master,normal}]",
-		pos="429.65,74968",
-		width=5.4857];
+		pos="418.08,74921",
+		width=5.3671];
 	11 -> 12	[label="[{handle_info,{ac_start_application_req,megaco}},\n{send,application_controller,{ac_start_application_reply,megaco,{started,[]}}}]",
-		lp="654.14,74799",
-		pos="e,429.65,74765 429.65,74833 429.65,74815 429.65,74795 429.65,74776"];
+		lp="636.7,74752",
+		pos="e,418.08,74718 418.08,74787 418.08,74768 418.08,74749 418.08,74730"];
 	126	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -990,13 +990,13 @@ pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301
 on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 \
 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss running_on ['axd301@cp1-1']",
-		pos="429.65,5258.3",
-		width=7.7741];
+		pos="418.08,5258.3",
+		width=7.5768];
 	126 -> 127	[label="[{handle_info,{ac_application_run,omFrs1,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{omFrs1,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omFrs1,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{\
 omFrs1,{ch,1}},'axd301@cp1-1'}},\n{send,&lt; 49.27992.0&gt; ,app_started}]",
-		lp="684.54,4808.4",
-		pos="e,429.65,4749.5 429.65,4867.3 429.65,4832 429.65,4796.2 429.65,4760.9"];
+		lp="667.45,4808.4",
+		pos="e,418.08,4749.5 418.08,4867.3 418.08,4832 418.08,4796.2 418.08,4760.9"];
 	94	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1009,11 +1009,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,33053",
-		width=7.7741];
+		pos="418.08,33053",
+		width=7.5768];
 	94 -> 95	[label="[{handle_info,{ac_start_application_req,chTraffic}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,chTraffic,'axd301@cp1-1'}}]",
-		lp="643.77,32662",
-		pos="e,429.65,32628 429.65,32697 429.65,32678 429.65,32659 429.65,32640"];
+		lp="612.33,32662",
+		pos="e,418.08,32628 418.08,32697 418.08,32678 418.08,32659 418.08,32640"];
 	62	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1021,8 +1021,8 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-1'],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{\
 takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,54369",
-		width=11.935];
+		pos="418.08,54322",
+		width=11.613];
 	62 -> 63	[label="[{handle_info,{gd_app_started,{chStandbyFrs1,{ch,2}},'axd301@cp2-1'}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&\
 lt; 122.0.0.71996&gt; },{creq,{set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,wait}}}},\n{send,{rex,'axd301@cp2-19'},{'$gen_call',{&\
 lt; 122.2141.0&gt; ,{#Ref&lt; 122.0.0.71997&gt; ,'axd301@cp2-19'}},{call,rcmLib,perform_write,[dynamic,[{{pool,{ch,2}},{mated_pair,{\
@@ -1050,18 +1050,18 @@ enabled}],&lt; 122.2141.0&gt; ],&lt; 122.2126.0&gt; }}},\n{send,{rex,'axd301@cp1
 122.2126.0&gt; }}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.72017&gt; },{creq,{unset,&lt; 122.2141.0&\
 gt; ,rcm_config}}}},\n{send,rcmEventDispatch,{'$gen_cast',distribute}},\n{send,{rex,'axd301@cp2-1'},{'$gen_cast',{cast,rcmLib,set_\
 node_restart_reason,[no_restart],&lt; 122.2126.0&gt; }}}]",
-		lp="1512,54002",
-		pos="e,429.65,53827 429.65,54176 429.65,54073 429.65,53945 429.65,53839"];
+		lp="1416.7,53955",
+		pos="e,418.08,53781 418.08,54130 418.08,54026 418.08,53899 418.08,53792"];
 	30	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 \
 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_\
 on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_on [master]",
-		pos="429.65,68598",
-		width=4.5692];
+		pos="418.08,68551",
+		width=4.498];
 	30 -> 31	[label="[{handle_info,{ac_start_application_req,omLss}},\n{send,application_controller,{ac_start_application_reply,omLss,start_it}}]",
-		lp="638.69,68429",
-		pos="e,429.65,68395 429.65,68463 429.65,68445 429.65,68425 429.65,68407"];
+		lp="621.33,68383",
+		pos="e,418.08,68349 418.08,68417 418.08,68398 418.08,68379 418.08,68360"];
 	130	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1073,12 +1073,12 @@ gt; \nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 
 axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_\
 on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_\
 on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss running_on ['axd301@cp1-1'],\nomFrs1 running_on ['axd301@cp1-1']",
-		pos="429.65,1982.4",
-		width=7.7741];
+		pos="418.08,1982.4",
+		width=7.5768];
 	129 -> 130	[label="[{handle_call,{{is_app_started,chStandbyFrs1},{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.63835&gt; }}},\n{send,&lt; 49.13876.0&gt; ,{#\
 Ref&lt; 49.0.0.63835&gt; ,true}}]",
-		lp="719.4,2372.5",
-		pos="e,429.65,2338.3 429.65,2406.7 429.65,2387.8 429.65,2368.7 429.65,2349.8"];
+		lp="671.2,2372.5",
+		pos="e,418.08,2338.3 418.08,2406.7 418.08,2387.8 418.08,2368.7 418.08,2349.8"];
 	113	[color=yellow,
 		height=11.176,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1092,12 +1092,12 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 \
 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,17040",
-		width=7.7741];
+		pos="418.08,17040",
+		width=7.5768];
 	113 -> 114	[label="[{handle_info,{gd_app_started,{omLss,{ch,1}},'axd301@cp1-19'}},\n{send,application_controller,{ac_change_application_req,omLss,{\
 started,'axd301@cp1-19'}}}]",
-		lp="698.17,16603",
-		pos="e,429.65,16569 429.65,16637 429.65,16618 429.65,16599 429.65,16580"];
+		lp="679.08,16603",
+		pos="e,418.08,16569 418.08,16637 418.08,16618 418.08,16599 418.08,16580"];
 	98	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1111,12 +1111,12 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master",
-		pos="429.65,29854",
-		width=7.7741];
+		pos="418.08,29854",
+		width=7.5768];
 	97 -> 98	[label="[{handle_info,{gd_start_app_req,omFrs1,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{omFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="685.12,30268",
-		pos="e,429.65,30234 429.65,30302 429.65,30283 429.65,30264 429.65,30245"];
+		lp="667.83,30268",
+		pos="e,418.08,30234 418.08,30302 418.08,30283 418.08,30264 418.08,30245"];
 	81	[color=yellow,
 		height=8.9076,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nomLss running_\
@@ -1128,11 +1128,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 running_on [master],\nch
 master}}]\n&lt; 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,42999",
-		width=7.7741];
+		pos="418.08,42999",
+		width=7.5768];
 	81 -> 82	[label="[{handle_info,{gd_start_app,{omLss,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{omAxd301,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="831.87,42652",
-		pos="e,429.65,42626 429.65,42678 429.65,42664 429.65,42651 429.65,42637"];
+		lp="811.08,42652",
+		pos="e,418.08,42626 418.08,42678 418.08,42664 418.08,42651 418.08,42637"];
 	66	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1140,11 +1140,11 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-1'],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'axd301@\
 cp2-1'}}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,52220",
-		width=8.9665];
+		pos="418.08,52174",
+		width=8.7112];
 	65 -> 66	[label="[{handle_info,{gd_app_started,{chStandby,{ch,2}},'axd301@cp2-19'}}]",
-		lp="634.36,52439",
-		pos="e,429.65,52413 429.65,52465 429.65,52451 429.65,52438 429.65,52424"];
+		lp="617.58,52392",
+		pos="e,418.08,52367 418.08,52418 418.08,52405 418.08,52391 418.08,52378"];
 	49	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1152,19 +1152,19 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,59965",
-		width=11.935];
+		pos="418.08,59919",
+		width=11.613];
 	49 -> 50	[label="[{handle_info,{gd_start_app_req,omAxd301,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omAxd301,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="698.73,59750",
-		pos="e,429.65,59716 429.65,59784 429.65,59765 429.65,59746 429.65,59728"];
+		lp="680.95,59704",
+		pos="e,418.08,59669 418.08,59738 418.08,59719 418.08,59700 418.08,59681"];
 	34	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master]",
-		pos="429.65,66920",
-		width=4.3545];
+		pos="418.08,66873",
+		width=4.2476];
 	33 -> 34	[label="[{handle_info,{ac_application_run,chLss,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chLss,{ch,1}},'axd301@cp1-19'}},\n{\
 send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.61937&gt; },{creq,{set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,\
 wait}}}},\n{send,{rex,'axd301@cp1-19'},{'$gen_call',{&lt; 122.2141.0&gt; ,{#Ref&lt; 122.0.0.61939&gt; ,'axd301@cp1-19'}},{call,rcmLib,\
@@ -1190,26 +1190,26 @@ single}],&lt; 122.2141.0&gt; ],&lt; 122.2126.0&gt; }}},\n{send,{rex,'axd301@cp1-
 gt; }}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.61968&gt; },{creq,{unset,&lt; 122.2141.0&gt; ,rcm_\
 config}}}},\n{send,rcmEventDispatch,{'$gen_cast',{rcmEvent,global,{1007,629058,122640},{system_status,single}}}},\n{send,rcmEventDispatch,{'$\
 gen_cast',distribute}}]",
-		lp="1521.8,67253",
-		pos="e,429.65,67054 429.65,67452 429.65,67340 429.65,67181 429.65,67066"];
+		lp="1427.2,67207",
+		pos="e,418.08,67008 418.08,67406 418.08,67294 418.08,67134 418.08,67019"];
 	17	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss \
 pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master]",
-		pos="429.65,72946",
-		width=5.4857];
+		pos="418.08,72899",
+		width=5.3671];
 	17 -> 18	[label="[{handle_info,{ac_application_run,omFrs1,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{omFrs1,{ch,1}},'axd301@cp1-19'}}]",
-		lp="685.12,72777",
-		pos="e,429.65,72743 429.65,72811 429.65,72793 429.65,72773 429.65,72755"];
+		lp="667.83,72731",
+		pos="e,418.08,72696 418.08,72765 418.08,72746 418.08,72727 418.08,72708"];
 	2	[color=yellow,
 		height=0.80532,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}]",
-		pos="429.65,76907",
-		width=4.714];
+		pos="418.08,76860",
+		width=4.6158];
 	1 -> 2	[label="[{handle_info,{gd_start_app,{basicLss,{ch,1}},[{'axd301@cp1-19',normal,[]}]}}]",
-		lp="662.14,76962",
-		pos="e,429.65,76937 429.65,76988 429.65,76976 429.65,76961 429.65,76948"];
+		lp="645.33,76916",
+		pos="e,418.08,76890 418.08,76941 418.08,76930 418.08,76915 418.08,76901"];
 	132	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1221,8 +1221,8 @@ gt; \nchStandbyFrs1 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1
 axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_\
 on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss \
 running_on ['axd301@cp1-1'],\nomFrs1 running_on ['axd301@cp1-1'],\nchStandby running_on ['axd301@cp1-1']",
-		pos="429.65,355.67",
-		width=7.7741];
+		pos="418.08,355.67",
+		width=7.5768];
 	117	[color=yellow,
 		height=11.824,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1237,12 +1237,12 @@ running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss \
 running_on master",
-		pos="429.65,13452",
-		width=7.7741];
+		pos="418.08,13452",
+		width=7.5768];
 	116 -> 117	[label="[{handle_info,{gd_app_started,{chLss,{ch,1}},'axd301@cp1-19'}},\n{send,application_controller,{ac_start_application_reply,chLss,{\
 started,'axd301@cp1-19'}}}]",
-		lp="693.06,13912",
-		pos="e,429.65,13878 429.65,13946 429.65,13927 429.65,13908 429.65,13889"];
+		lp="673.83,13912",
+		pos="e,418.08,13878 418.08,13946 418.08,13927 418.08,13908 418.08,13889"];
 	100	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1256,12 +1256,12 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,28189",
-		width=7.7741];
+		pos="418.08,28189",
+		width=7.5768];
 	100 -> 101	[label="[{handle_info,{gd_start_app_req,chTraffic,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chTraffic,{ch,2}},'axd301@\
 cp2-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chTraffic,{ch,1}},'axd301@cp1-19'}}]",
-		lp="689.01,27755",
-		pos="e,429.65,27713 429.65,27798 429.65,27773 429.65,27748 429.65,27724"];
+		lp="671.95,27755",
+		pos="e,418.08,27713 418.08,27798 418.08,27773 418.08,27748 418.08,27724"];
 	85	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1275,23 +1275,23 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric pending_on [{'axd301@\
 cp1-1',normal}]",
-		pos="429.65,40032",
-		width=7.7741];
+		pos="418.08,40032",
+		width=7.5768];
 	84 -> 85	[label="[{handle_info,{gd_app_started_dummy,megaco}},\n{send,application_controller,{ac_start_application_reply,megaco,{started,[]}}}]",
-		lp="654.14,40422",
-		pos="e,429.65,40388 429.65,40456 429.65,40437 429.65,40418 429.65,40399"];
+		lp="636.7,40422",
+		pos="e,418.08,40388 418.08,40456 418.08,40437 418.08,40418 418.08,40399"];
 	68	[color=yellow,
-		height=5.6667,
+		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \n",
-		pos="429.65,51011",
-		width=6.8606];
+		pos="418.08,50976",
+		width=6.6488];
 	68 -> 69	[label="[{handle_info,{ac_start_application_req,megaco}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,megaco,'axd301@cp1-1'}}]",
-		lp="640.25,50773",
-		pos="e,429.65,50739 429.65,50807 429.65,50788 429.65,50769 429.65,50750"];
+		lp="608.58,50749",
+		pos="e,418.08,50715 418.08,50784 418.08,50765 418.08,50746 418.08,50726"];
 	53	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1299,41 +1299,41 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,58244",
-		width=11.935];
+		pos="418.08,58197",
+		width=11.613];
 	52 -> 53	[label="[{handle_info,{gd_start_app_req,chFrs1,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="686.28,58459",
-		pos="e,429.65,58425 429.65,58493 429.65,58474 429.65,58455 429.65,58437"];
+		lp="668.58,58413",
+		pos="e,418.08,58378 418.08,58447 418.08,58428 418.08,58409 418.08,58390"];
 	36	[color=yellow,
 		height=4.0462,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandby pending_on [{'axd301@cp2-1',normal}]",
-		pos="429.65,65822",
-		width=5.9938];
+		pos="418.08,65775",
+		width=5.8385];
 	36 -> 37	[label="[{handle_info,{gd_start_app,{chStandbyFrs1,{ch,2}},[{'axd301@cp2-1',normal,[{{chStandby,{ch,2}},['axd301@cp2-1']}]}]}}]",
-		lp="791.32,65650",
-		pos="e,429.65,65624 429.65,65676 429.65,65662 429.65,65649 429.65,65635"];
+		lp="771.33,65603",
+		pos="e,418.08,65577 418.08,65629 418.08,65616 418.08,65602 418.08,65589"];
 	21	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss \
 pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master]",
-		pos="429.65,71631",
-		width=5.4857];
+		pos="418.08,71584",
+		width=5.3671];
 	20 -> 21	[label="[{handle_info,{nodeup,'axd301@cp2-1'}}]",
-		lp="550.81,71791",
-		pos="e,429.65,71765 429.65,71817 429.65,71804 429.65,71790 429.65,71776"];
+		lp="535.83,71744",
+		pos="e,418.08,71719 418.08,71770 418.08,71757 418.08,71743 418.08,71730"];
 	4	[color=yellow,
 		height=1.4535,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}]",
-		pos="429.65,76639",
-		width=4.8291];
+		pos="418.08,76593",
+		width=4.7631];
 	4 -> 5	[label="[{handle_info,{gd_start_app,{omFrs1,{ch,1}},[{'axd301@cp1-19',normal,[{{omAxd301,{ch,1}},['axd301@cp1-19']}]}]}}]",
-		lp="780.12,76561",
-		pos="e,429.65,76535 429.65,76587 429.65,76574 429.65,76560 429.65,76546"];
+		lp="761.2,76514",
+		pos="e,418.08,76488 418.08,76540 418.08,76527 418.08,76513 418.08,76500"];
 	119	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1347,12 +1347,12 @@ cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,mas
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric \
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master",
-		pos="429.65,11623",
-		width=7.7741];
+		pos="418.08,11623",
+		width=7.5768];
 	119 -> 120	[label="[{handle_call,{{is_app_started,omLss},{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.54570&gt; }}},\n{send,&lt; 49.13876.0&gt; ,{#Ref&lt; \
 49.0.0.54570&gt; ,true}}]",
-		lp="696.06,11174",
-		pos="e,429.65,11140 429.65,11208 429.65,11189 429.65,11170 429.65,11152"];
+		lp="649.08,11174",
+		pos="e,418.08,11140 418.08,11208 418.08,11189 418.08,11170 418.08,11152"];
 	104	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1366,12 +1366,12 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,24738",
-		width=7.7741];
+		pos="418.08,24738",
+		width=7.5768];
 	103 -> 104	[label="[{handle_call,{{is_app_started,chStandby},{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.40596&gt; }}},\n{send,&lt; 49.13876.0&gt; ,{#Ref&\
 lt; 49.0.0.40596&gt; ,true}}]",
-		lp="706.95,25163",
-		pos="e,429.65,25129 429.65,25197 429.65,25178 429.65,25159 429.65,25140"];
+		lp="659.2,25163",
+		pos="e,418.08,25129 418.08,25197 418.08,25178 418.08,25159 418.08,25140"];
 	87	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1385,11 +1385,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@\
 cp1-1']",
-		pos="429.65,38438",
-		width=7.7741];
+		pos="418.08,38438",
+		width=7.5768];
 	87 -> 88	[label="[{handle_info,{gd_start_app_req,megaco,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started_dummy,megaco}}]",
-		lp="632.12,38048",
-		pos="e,429.65,38014 429.65,38082 429.65,38063 429.65,38044 429.65,38025"];
+		lp="616.45,38048",
+		pos="e,418.08,38014 418.08,38082 418.08,38063 418.08,38044 418.08,38025"];
 	72	[color=yellow,
 		height=6.3149,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1398,11 +1398,11 @@ on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic 
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,49106",
-		width=7.2928];
+		pos="418.08,49106",
+		width=7.1202];
 	71 -> 72	[label="[{handle_info,{gd_start_app,{omAxd301,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[]}]}}]",
-		lp="727.51,49360",
-		pos="e,429.65,49334 429.65,49386 429.65,49372 429.65,49359 429.65,49345"];
+		lp="708.7,49360",
+		pos="e,418.08,49334 418.08,49386 418.08,49372 418.08,49359 418.08,49345"];
 	55	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1410,20 +1410,20 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,57383",
-		width=11.935];
+		pos="418.08,57337",
+		width=11.613];
 	55 -> 56	[label="[{handle_info,{gd_start_app_req,chStandbyFrs1,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chStandbyFrs1,{\
 ch,1}},'axd301@cp1-19'}}]",
-		lp="709.23,57168",
-		pos="e,429.65,57134 429.65,57202 429.65,57184 429.65,57164 429.65,57146"];
+		lp="690.7,57122",
+		pos="e,418.08,57087 418.08,57156 418.08,57137 418.08,57118 418.08,57099"];
 	40	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandby pending_on [{'axd301@cp2-1',normal}],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-1',normal}],\natsGeneric pending_on [{'axd301@cp2-1',normal}],\nchTraffic pending_on [{'axd301@cp2-1',normal}]",
-		pos="429.65,63826",
-		width=6.5515];
+		pos="418.08,63779",
+		width=6.3836];
 	39 -> 40	[label="[{handle_info,{gd_nodeup,'axd301@cp2-19'}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.63190&gt; },{creq,{\
 set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,wait}}}},\n{send,{rex,'axd301@cp2-19'},{'$gen_call',{&lt; 122.2141.0&gt; ,{#Ref&lt; \
 122.0.0.63191&gt; ,'axd301@cp2-19'}},{call,rcmLib,perform_write,[dynamic,[{live_processors,[{node,'axd301@cp2-19',expansion,'cp2-19'},{\
@@ -1508,28 +1508,28 @@ axd301@cp2-19']}]}]}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_start_app,{atsGeneric
 rcmDAC,'axd301@cp2-1'},{gd_start_app,{atsGeneric,{ch,2}},[{'axd301@cp2-19',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_\
 app,{atsGeneric,{ch,2}},[{'axd301@cp2-19',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_start_app,{atsGeneric,{ch,2}},[{'axd301@\
 cp2-19',normal,[]}]}}]",
-		lp="18406,64255",
-		pos="e,429.65,64007 429.65,64504 429.65,64362 429.65,64163 429.65,64018"];
+		lp="17949,64209",
+		pos="e,418.08,63960 418.08,64458 418.08,64315 418.08,64117 418.08,63972"];
 	23	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchFrs1 pending_on [{master,normal}],\nchStandby pending_on [{master,\
 normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric \
 running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master]",
-		pos="429.65,70957",
-		width=5.4857];
+		pos="418.08,70910",
+		width=5.3671];
 	23 -> 24	[label="[{handle_info,{ac_application_run,chFrs1,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chFrs1,{ch,1}},'axd301@cp1-19'}}]",
-		lp="682.78,70788",
-		pos="e,429.65,70754 429.65,70822 429.65,70804 429.65,70784 429.65,70766"];
+		lp="665.2,70742",
+		pos="e,418.08,70708 418.08,70776 418.08,70757 418.08,70738 418.08,70719"];
 	8	[color=yellow,
 		height=2.7499,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}]",
-		pos="429.65,75824",
-		width=5.417];
+		pos="418.08,75777",
+		width=5.2935];
 	7 -> 8	[label="[{handle_info,{gd_start_app,{chStandbyFrs1,{ch,1}},[{'axd301@cp1-19',normal,[{{chStandby,{ch,1}},['axd301@cp1-19']}]}]}}]",
-		lp="798.32,75949",
-		pos="e,429.65,75923 429.65,75975 429.65,75962 429.65,75948 429.65,75935"];
+		lp="778.08,75903",
+		pos="e,418.08,75877 418.08,75929 418.08,75916 418.08,75902 418.08,75888"];
 	123	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1543,16 +1543,16 @@ cp1-1',{takeover,master}}],\nchStandbyFrs1 running_on [master],\nchStandbyFrs1 p
 running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 \
 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1']",
-		pos="429.65,7935.7",
-		width=7.7741];
+		pos="418.08,7935.7",
+		width=7.5768];
 	122 -> 123	[label="[{handle_info,{ac_application_run,omAxd301,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{omAxd301,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omAxd301,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{\
 omAxd301,{ch,1}},'axd301@cp1-1'}},\n{send,&lt; 49.14054.0&gt; ,app_started},\n{send,{rcmDAC,'axd301@cp1-19'},{'$gen_call',{&lt; \
 49.13876.0&gt; ,#Ref&lt; 49.0.0.54570&gt; },{is_app_started,omLss}}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_takeover,{omLss,{\
 ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-19'},{'$gen_call',{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.54606&gt; },{is_app_\
 started,omFrs1}}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_takeover,{omFrs1,{ch,1}},'axd301@cp1-1'}}]",
-		lp="793.4,8441.9",
-		pos="e,429.65,8350.1 429.65,8534 429.65,8477.1 429.65,8418.6 429.65,8361.5"];
+		lp="743.95,8441.9",
+		pos="e,418.08,8350.1 418.08,8534 418.08,8477.1 418.08,8418.6 418.08,8361.5"];
 	106	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1566,13 +1566,13 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,23054",
-		width=7.7741];
+		pos="418.08,23054",
+		width=7.5768];
 	106 -> 107	[label="[{handle_info,{ac_application_run,basicLss,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{basicLss,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{basicLss,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{\
 basicLss,{ch,1}},'axd301@cp1-1'}}]",
-		lp="687.25,22612",
-		pos="e,429.65,22561 429.65,22662 429.65,22633 429.65,22602 429.65,22573"];
+		lp="669.7,22612",
+		pos="e,418.08,22561 418.08,22662 418.08,22633 418.08,22602 418.08,22573"];
 	91	[color=yellow,
 		height=9.5558,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1585,12 +1585,12 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,35319",
-		width=7.7741];
+		pos="418.08,35319",
+		width=7.5768];
 	90 -> 91	[label="[{handle_info,{ac_start_application_req,omFrs1}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,omFrs1,'axd301@cp1-1'}},\n{send,\
 application_controller,{ac_start_application_reply,omFrs1,{started,[]}}}]",
-		lp="653.77,35706",
-		pos="e,429.65,35663 429.65,35748 429.65,35723 429.65,35699 429.65,35674"];
+		lp="636.33,35706",
+		pos="e,418.08,35663 418.08,35748 418.08,35723 418.08,35699 418.08,35674"];
 	74	[color=yellow,
 		height=6.963,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1600,11 +1600,11 @@ on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric r
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,48045",
-		width=7.7053];
+		pos="418.08,48045",
+		width=7.5032];
 	74 -> 75	[label="[{handle_info,{gd_start_app,{omLss,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{omAxd301,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="831.87,47768",
-		pos="e,429.65,47742 429.65,47794 429.65,47781 429.65,47767 429.65,47753"];
+		lp="811.08,47768",
+		pos="e,418.08,47742 418.08,47794 418.08,47781 418.08,47767 418.08,47753"];
 	59	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1612,11 +1612,11 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby pending_\
 on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,55679",
-		width=11.935];
+		pos="418.08,55632",
+		width=11.613];
 	58 -> 59	[label="[{handle_info,{gd_app_started,{chTraffic,{ch,2}},'axd301@cp2-1'}}]",
-		lp="627.05,55885",
-		pos="e,429.65,55859 429.65,55911 429.65,55898 429.65,55884 429.65,55871"];
+		lp="611.2,55839",
+		pos="e,418.08,55813 418.08,55865 418.08,55851 418.08,55838 418.08,55824"];
 	42	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1624,31 +1624,31 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\natsGeneric pending_on [{'axd301@cp2-1',normal}],\nchTraffic \
 pending_on [{'axd301@cp2-1',normal}],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}]",
-		pos="429.65,62998",
-		width=11.866];
+		pos="418.08,62951",
+		width=11.54];
 	42 -> 43	[label="[{handle_info,{gd_start_app,{atsGeneric,{ch,2}},[{'axd301@cp2-19',normal,[]}]}}]",
-		lp="667.96,62791",
-		pos="e,429.65,62765 429.65,62817 429.65,62804 429.65,62790 429.65,62777"];
+		lp="650.95,62745",
+		pos="e,418.08,62719 418.08,62770 418.08,62757 418.08,62743 418.08,62730"];
 	27	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,\
 normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [\
 master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_on [master]",
-		pos="429.65,69609",
-		width=5.4857];
+		pos="418.08,69562",
+		width=5.3671];
 	26 -> 27	[label="[{handle_info,{ac_start_application_req,basicLss}},\n{send,application_controller,{ac_start_application_reply,basicLss,start_it}}]",
-		lp="644.13,69777",
-		pos="e,429.65,69743 429.65,69811 429.65,69793 429.65,69773 429.65,69755"];
+		lp="626.2,69731",
+		pos="e,418.08,69697 418.08,69765 418.08,69746 418.08,69727 418.08,69708"];
 	10	[color=yellow,
 		height=3.398,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}]",
-		pos="429.65,75276",
-		width=5.4857];
+		pos="418.08,75230",
+		width=5.3671];
 	10 -> 11	[label="[{handle_info,{gd_start_app,{atsGeneric,{ch,1}},[{'axd301@cp1-19',normal,[]}]}}]",
-		lp="667.96,75128",
-		pos="e,429.65,75102 429.65,75154 429.65,75141 429.65,75127 429.65,75113"];
+		lp="650.95,75081",
+		pos="e,418.08,75055 418.08,75107 418.08,75094 418.08,75080 418.08,75067"];
 	125	[color=yellow,
 		height=11.176,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1662,12 +1662,12 @@ cp1-1',{takeover,master}}],\nchStandbyFrs1 running_on [master],\nchStandbyFrs1 p
 running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss \
 running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@\
 cp1-1'],\nomLss running_on ['axd301@cp1-1']",
-		pos="429.65,6120.3",
-		width=7.7741];
+		pos="418.08,6120.3",
+		width=7.5768];
 	125 -> 126	[label="[{handle_info,{gd_app_started,{omLss,{ch,1}},'axd301@cp1-1'}},\n{send,application_controller,{ac_change_application_req,omLss,{started,'\
 axd301@cp1-1'}}}]",
-		lp="694.67,5683.5",
-		pos="e,429.65,5649.3 429.65,5717.6 429.65,5698.7 429.65,5679.7 429.65,5660.7"];
+		lp="675.7,5683.5",
+		pos="e,418.08,5649.3 418.08,5717.6 418.08,5698.7 418.08,5679.7 418.08,5660.7"];
 	110	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1681,12 +1681,12 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 \
 running_on master,\nbasicLss running_on ['axd301@cp1-1']",
-		pos="429.65,19666",
-		width=7.7741];
+		pos="418.08,19666",
+		width=7.5768];
 	109 -> 110	[label="[{handle_info,{gd_app_started,{chStandbyFrs1,{ch,1}},'axd301@cp1-19'}},\n{send,application_controller,{ac_change_application_req,\
 chStandbyFrs1,{started,'axd301@cp1-19'}}}]",
-		lp="721.5,20091",
-		pos="e,429.65,20057 429.65,20125 429.65,20106 429.65,20087 429.65,20068"];
+		lp="701.2,20091",
+		pos="e,418.08,20057 418.08,20125 418.08,20106 418.08,20087 418.08,20068"];
 	93	[color=yellow,
 		height=9.5558,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1699,12 +1699,12 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,33821",
-		width=7.7741];
+		pos="418.08,33821",
+		width=7.5768];
 	93 -> 94	[label="[{handle_info,{gd_app_started,{omFrs1,{ch,1}},'axd301@cp1-19'}},\n{send,application_controller,{ac_change_application_req,omFrs1,{\
 started,'axd301@cp1-19'}}}]",
-		lp="700.9,33443",
-		pos="e,429.65,33409 429.65,33477 429.65,33458 429.65,33439 429.65,33420"];
+		lp="681.7,33443",
+		pos="e,418.08,33409 418.08,33477 418.08,33458 418.08,33439 418.08,33420"];
 	78	[color=yellow,
 		height=7.9353,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nchTraffic running_on [master],\nchFrs1 running_\
@@ -1715,11 +1715,11 @@ running_on [master],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}]\n&l
 cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,44975",
-		width=7.7741];
+		pos="418.08,44975",
+		width=7.5768];
 	77 -> 78	[label="[{handle_info,{gd_start_app,{omFrs1,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{omAxd301,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="834.59,45287",
-		pos="e,429.65,45261 429.65,45313 429.65,45300 429.65,45286 429.65,45272"];
+		lp="813.7,45287",
+		pos="e,418.08,45261 418.08,45313 418.08,45300 418.08,45286 418.08,45272"];
 	61	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1727,12 +1727,12 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-1'],\nchStandby pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{\
 takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,54823",
-		width=11.935];
+		pos="418.08,54776",
+		width=11.613];
 	61 -> 62	[label="[{handle_info,{gd_start_app_req,basicLss,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{basicLss,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="687.83,54596",
-		pos="e,429.65,54562 429.65,54630 429.65,54611 429.65,54592 429.65,54573"];
+		lp="670.08,54549",
+		pos="e,418.08,54515 418.08,54583 418.08,54565 418.08,54545 418.08,54526"];
 	46	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1740,33 +1740,33 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-1'],\natsGeneric pending_on [{'axd301@cp2-19',normal}]",
-		pos="429.65,61298",
-		width=11.935];
+		pos="418.08,61252",
+		width=11.613];
 	45 -> 46	[label="[{handle_info,{gd_app_started,{atsGeneric,{ch,2}},'axd301@cp2-1'}}]",
-		lp="631.69,61517",
-		pos="e,429.65,61491 429.65,61543 429.65,61529 429.65,61516 429.65,61502"];
+		lp="614.95,61470",
+		pos="e,418.08,61444 418.08,61496 418.08,61483 418.08,61469 418.08,61455"];
 	29	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,\
 normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 \
 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master]",
-		pos="429.65,68935",
-		width=5.4857];
+		pos="418.08,68888",
+		width=5.3671];
 	29 -> 30	[label="[{handle_info,{ac_application_run,chStandbyFrs1,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chStandbyFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="705.73,68766",
-		pos="e,429.65,68732 429.65,68800 429.65,68782 429.65,68762 429.65,68744"];
+		lp="687.33,68720",
+		pos="e,418.08,68686 418.08,68754 418.08,68735 418.08,68716 418.08,68697"];
 	14	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [\
 master]",
-		pos="429.65,73957",
-		width=5.4857];
+		pos="418.08,73910",
+		width=5.3671];
 	13 -> 14	[label="[{handle_info,{ac_application_run,atsGeneric,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{atsGeneric,{ch,1}},'axd301@cp1-19'}}]",
-		lp="693.65,74125",
-		pos="e,429.65,74091 429.65,74159 429.65,74141 429.65,74121 429.65,74102"];
+		lp="675.7,74079",
+		pos="e,418.08,74044 418.08,74113 418.08,74094 418.08,74075 418.08,74056"];
 	112	[color=yellow,
 		height=11.176,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1780,12 +1780,12 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 \
 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,17930",
-		width=7.7741];
+		pos="418.08,17930",
+		width=7.5768];
 	112 -> 113	[label="[{handle_info,{ac_start_application_req,omLss}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,omLss,'axd301@cp1-1'}},\n{send,application_\
 controller,{ac_start_application_reply,omLss,{started,[]}}}]",
-		lp="651.04,17485",
-		pos="e,429.65,17443 429.65,17528 429.65,17503 429.65,17478 429.65,17454"];
+		lp="633.7,17485",
+		pos="e,418.08,17443 418.08,17528 418.08,17503 418.08,17478 418.08,17454"];
 	80	[color=yellow,
 		height=8.5835,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandbyFrs1 \
@@ -1797,11 +1797,11 @@ on [master],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}]\n&lt; 49
 normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_\
 on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,43681",
-		width=7.7741];
+		pos="418.08,43681",
+		width=7.5768];
 	80 -> 81	[label="[{handle_info,{gd_start_app,{chStandbyFrs1,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{chStandby,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="852.8,43346",
-		pos="e,429.65,43320 429.65,43372 429.65,43358 429.65,43345 429.65,43331"];
+		lp="830.58,43346",
+		pos="e,418.08,43320 418.08,43372 418.08,43358 418.08,43345 418.08,43331"];
 	48	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1809,21 +1809,21 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-1'],\natsGeneric pending_on [{'axd301@cp2-19',normal}]",
-		pos="429.65,60391",
-		width=11.935];
+		pos="418.08,60344",
+		width=11.613];
 	48 -> 49	[label="[{handle_info,{gd_app_started,{atsGeneric,{ch,2}},'axd301@cp2-19'}}]",
-		lp="635.19,60172",
-		pos="e,429.65,60146 429.65,60198 429.65,60185 429.65,60171 429.65,60158"];
+		lp="618.33,60126",
+		pos="e,418.08,60100 418.08,60152 418.08,60138 418.08,60124 418.08,60111"];
 	16	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss \
 pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master]",
-		pos="429.65,73283",
-		width=5.4857];
+		pos="418.08,73236",
+		width=5.3671];
 	16 -> 17	[label="[{handle_info,{ac_start_application_req,omFrs1}},\n{send,application_controller,{ac_start_application_reply,omFrs1,start_it}}]",
-		lp="641.42,73114",
-		pos="e,429.65,73080 429.65,73148 429.65,73130 429.65,73110 429.65,73092"];
+		lp="623.95,73068",
+		pos="e,418.08,73033 418.08,73102 418.08,73083 418.08,73064 418.08,73045"];
 	131	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1835,11 +1835,11 @@ gt; \nchStandbyFrs1 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1
 axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_\
 on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1'],\nomLss \
 running_on ['axd301@cp1-1'],\nomFrs1 running_on ['axd301@cp1-1'],\nchStandby running_on ['axd301@cp1-1']",
-		pos="429.65,1119.5",
-		width=7.7741];
+		pos="418.08,1119.5",
+		width=7.5768];
 	131 -> 132	[label="[{handle_info,{gd_start_takeover,{chStandbyFrs1,{ch,1}},'axd301@cp1-1'}}]",
-		lp="650.87,737.6",
-		pos="e,429.65,711.65 429.65,763.53 429.65,750.04 429.65,736.5 429.65,722.99"];
+		lp="633.33,737.6",
+		pos="e,418.08,711.65 418.08,763.53 418.08,750.04 418.08,736.5 418.08,722.99"];
 	99	[color=yellow,
 		height=10.528,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1853,44 +1853,44 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master",
-		pos="429.65,29027",
-		width=7.7741];
+		pos="418.08,29027",
+		width=7.5768];
 	99 -> 100	[label="[{handle_info,{gd_app_started,{chFrs1,{ch,1}},'axd301@cp1-19'}},\n{send,application_controller,{ac_start_application_reply,chFrs1,{\
 started,'axd301@cp1-19'}}}]",
-		lp="695.78,28614",
-		pos="e,429.65,28580 429.65,28648 429.65,28629 429.65,28610 429.65,28591"];
+		lp="676.45,28614",
+		pos="e,418.08,28580 418.08,28648 418.08,28629 418.08,28610 418.08,28591"];
 	67	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby running_\
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,51498",
-		width=6.8606];
+		pos="418.08,51451",
+		width=6.6488];
 	67 -> 68	[label="[{send,&lt; 49.11.0&gt; ,{'$gen_call',{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.39748&gt; },{whereis,rcmDAC}}},\n{send,&lt; 122.2141.0&\
 gt; ,{gd_nodeup,'axd301@cp1-1'}},\n{send,&lt; 49.13864.0&gt; ,go_ready},\n{send,&lt; 49.13866.0&gt; ,{ack,&lt; 49.13876.0&gt; ,{\
 ok,&lt; 49.13876.0&gt; }}}]",
-		lp="746.55,51266",
-		pos="e,429.65,51216 429.65,51317 429.65,51287 429.65,51257 429.65,51227"];
+		lp="683.95,51220",
+		pos="e,418.08,51169 418.08,51270 418.08,51241 418.08,51210 418.08,51180"];
 	35	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
 on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master],\nchStandbyFrs1 running_\
 on [master],\nomLss running_on [master],\nchLss running_on [master]",
-		pos="429.65,66154",
-		width=4.3545];
+		pos="418.08,66107",
+		width=4.2476];
 	35 -> 36	[label="[{handle_info,{gd_start_app,{chStandby,{ch,2}},[{'axd301@cp2-1',normal,[{{atsGeneric,{ch,2}},['axd301@cp2-1']},{{chTraffic,{ch,2}},['\
 axd301@cp2-1','axd301@cp2-19']}]}]}}]",
-		lp="942.74,65994",
-		pos="e,429.65,65968 429.65,66019 429.65,66006 429.65,65992 429.65,65979"];
+		lp="919.83,65947",
+		pos="e,418.08,65921 418.08,65973 418.08,65959 418.08,65946 418.08,65932"];
 	3	[color=yellow,
 		height=1.1294,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}]",
-		pos="429.65,76785",
-		width=4.7828];
+		pos="418.08,76738",
+		width=4.6895];
 	3 -> 4	[label="[{handle_info,{gd_start_app,{chFrs1,{ch,1}},[{'axd301@cp1-19',normal,[{{chTraffic,{ch,1}},['axd301@cp1-19']}]}]}}]",
-		lp="771.56,76718",
-		pos="e,429.65,76692 429.65,76744 429.65,76731 429.65,76717 429.65,76703"];
+		lp="752.95,76671",
+		pos="e,418.08,76645 418.08,76697 418.08,76685 418.08,76670 418.08,76657"];
 	118	[color=yellow,
 		height=11.824,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1905,12 +1905,12 @@ running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master
 on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic \
 running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19',\nchLss \
 running_on master",
-		pos="429.65,12531",
-		width=7.7741];
+		pos="418.08,12531",
+		width=7.5768];
 	118 -> 119	[label="[{handle_info,{gd_app_started,{omAxd301,{ch,1}},'axd301@cp1-1'}},\n{send,application_controller,{ac_change_application_req,omAxd301,{\
 started,'axd301@cp1-1'}}}]",
-		lp="707.5,12071",
-		pos="e,429.65,12037 429.65,12105 429.65,12086 429.65,12068 429.65,12049"];
+		lp="688.08,12071",
+		pos="e,418.08,12037 418.08,12105 418.08,12086 418.08,12068 418.08,12049"];
 	86	[color=yellow,
 		height=9.8799,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1924,13 +1924,13 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on [master],\natsGe
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric pending_on [{'axd301@\
 cp1-1',normal}]",
-		pos="429.65,39252",
-		width=7.7741];
+		pos="418.08,39252",
+		width=7.5768];
 	86 -> 87	[label="[{handle_info,{ac_application_run,atsGeneric,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{atsGeneric,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{atsGeneric,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{\
 atsGeneric,{ch,1}},'axd301@cp1-1'}}]",
-		lp="693.07,38845",
-		pos="e,429.65,38794 429.65,38896 429.65,38866 429.65,38835 429.65,38806"];
+		lp="675.33,38845",
+		pos="e,418.08,38794 418.08,38896 418.08,38866 418.08,38835 418.08,38806"];
 	54	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1938,22 +1938,22 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,57814",
-		width=11.935];
+		pos="418.08,57767",
+		width=11.613];
 	54 -> 55	[label="[{handle_info,{gd_start_app_req,basicLss,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{basicLss,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="691.33,57599",
-		pos="e,429.65,57564 429.65,57633 429.65,57614 429.65,57595 429.65,57576"];
+		lp="673.45,57552",
+		pos="e,418.08,57518 418.08,57586 418.08,57567 418.08,57548 418.08,57529"];
 	22	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchFrs1 pending_on [{master,normal}],\nchStandby pending_on [{master,\
 normal}],\nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric \
 running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master]",
-		pos="429.65,71294",
-		width=5.4857];
+		pos="418.08,71247",
+		width=5.3671];
 	22 -> 23	[label="[{handle_info,{ac_start_application_req,chFrs1}},\n{send,application_controller,{ac_start_application_reply,chFrs1,start_it}}]",
-		lp="639.08,71125",
-		pos="e,429.65,71091 429.65,71159 429.65,71141 429.65,71121 429.65,71103"];
+		lp="621.33,71079",
+		pos="e,418.08,71045 418.08,71113 418.08,71094 418.08,71075 418.08,71056"];
 	105	[color=yellow,
 		height=10.852,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -1967,11 +1967,11 @@ on [{'axd301@cp1-1',normal}],\nomFrs1 running_on [master],\nomFrs1 pending_on [{
 on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'\
 axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master",
-		pos="429.65,23887",
-		width=7.7741];
+		pos="418.08,23887",
+		width=7.5768];
 	105 -> 106	[label="[{handle_info,{gd_start_takeover,{chStandby,{ch,1}},'axd301@cp1-1'}}]",
-		lp="637.97,23470",
-		pos="e,429.65,23445 429.65,23496 429.65,23483 429.65,23469 429.65,23456"];
+		lp="620.95,23470",
+		pos="e,418.08,23445 418.08,23496 418.08,23483 418.08,23469 418.08,23456"];
 	73	[color=yellow,
 		height=6.6389,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1980,11 +1980,11 @@ on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic 
 on ['axd301@cp2-19'],\nchStandbyFrs1 running_on ['axd301@cp2-19'],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']\n&lt; \
 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,48587",
-		width=7.3616];
+		pos="418.08,48587",
+		width=7.1938];
 	73 -> 74	[label="[{handle_info,{gd_start_app,{chStandbyFrs1,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{chStandby,{ch,1}},['axd301@cp1-1']}]}]}}]",
-		lp="852.8,48322",
-		pos="e,429.65,48296 429.65,48348 429.65,48334 429.65,48321 429.65,48307"];
+		lp="830.58,48322",
+		pos="e,418.08,48296 418.08,48348 418.08,48334 418.08,48321 418.08,48307"];
 	41	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -1992,21 +1992,21 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp2-1',normal}],\natsGeneric \
 pending_on [{'axd301@cp2-1',normal}],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby pending_on [{'axd301@cp2-19',{\
 takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}]",
-		pos="429.65,63412",
-		width=11.377];
+		pos="418.08,63365",
+		width=11.068];
 	41 -> 42	[label="[{handle_info,{gd_start_app,{chStandbyFrs1,{ch,2}},[{'axd301@cp2-19',{takeover,'axd301@cp2-1'},[{{chStandby,{ch,2}},['axd301@cp2-19']}]}]}}]",
-		lp="856.3,63205",
-		pos="e,429.65,63179 429.65,63231 429.65,63218 429.65,63204 429.65,63190"];
+		lp="833.95,63158",
+		pos="e,418.08,63132 418.08,63184 418.08,63171 418.08,63157 418.08,63144"];
 	9	[color=yellow,
 		height=3.074,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}]",
-		pos="429.65,75562",
-		width=5.4857];
+		pos="418.08,75515",
+		width=5.3671];
 	9 -> 10	[label="[{handle_info,{gd_start_app,{omLss,{ch,1}},[{'axd301@cp1-19',normal,[{{omAxd301,{ch,1}},['axd301@cp1-19']}]}]}}]",
-		lp="777.39,75425",
-		pos="e,429.65,75399 429.65,75451 429.65,75438 429.65,75424 429.65,75411"];
+		lp="758.58,75378",
+		pos="e,418.08,75353 418.08,75404 418.08,75391 418.08,75377 418.08,75364"];
 	124	[color=yellow,
 		height=11.5,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -2020,13 +2020,13 @@ cp1-1',{takeover,master}}],\nchStandbyFrs1 running_on [master],\nchStandbyFrs1 p
 running_on [master],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic \
 running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 \
 running_on 'axd301@cp2-19',\nchLss running_on master,\nomAxd301 running_on ['axd301@cp1-1']",
-		pos="429.65,7055.2",
-		width=7.7741];
+		pos="418.08,7055.2",
+		width=7.5768];
 	124 -> 125	[label="[{handle_info,{ac_application_run,omLss,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{omLss,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{omLss,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{omLss,{\
 ch,1}},'axd301@cp1-1'}},\n{send,&lt; 49.27991.0&gt; ,app_started}]",
-		lp="681.82,6581.9",
-		pos="e,429.65,6522.8 429.65,6640.9 429.65,6605.5 429.65,6569.7 429.65,6534.3"];
+		lp="664.83,6581.9",
+		pos="e,418.08,6522.8 418.08,6640.9 418.08,6605.5 418.08,6569.7 418.08,6534.3"];
 	92	[color=yellow,
 		height=9.5558,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -2039,11 +2039,11 @@ on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1',
 on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\natsGeneric running_on ['axd301@cp1-1']",
-		pos="429.65,34562",
-		width=7.7741];
+		pos="418.08,34562",
+		width=7.5768];
 	92 -> 93	[label="[{handle_info,{gd_start_takeover,{omAxd301,{ch,1}},'axd301@cp1-1'}}]",
-		lp="640.37,34192",
-		pos="e,429.65,34166 429.65,34217 429.65,34204 429.65,34191 429.65,34177"];
+		lp="623.58,34192",
+		pos="e,418.08,34166 418.08,34217 418.08,34204 418.08,34191 418.08,34177"];
 	60	[color=yellow,
 		height=5.0185,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -2051,22 +2051,22 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic running_on ['axd301@cp2-1'],\nchStandby pending_\
 on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-19','axd301@cp2-1']",
-		pos="429.65,55248",
-		width=11.935];
+		pos="418.08,55202",
+		width=11.613];
 	60 -> 61	[label="[{handle_info,{gd_app_started,{chStandby,{ch,2}},'axd301@cp2-1'}}]",
-		lp="630.86,55041",
-		pos="e,429.65,55015 429.65,55067 429.65,55054 429.65,55040 429.65,55027"];
+		lp="614.2,54995",
+		pos="e,418.08,54969 418.08,55021 418.08,55007 418.08,54994 418.08,54980"];
 	28	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nchStandbyFrs1 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,\
 normal}],\natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_on [master],\nchFrs1 \
 running_on [master],\nchStandby running_on [master],\nbasicLss running_on [master]",
-		pos="429.65,69272",
-		width=5.4857];
+		pos="418.08,69225",
+		width=5.3671];
 	28 -> 29	[label="[{handle_info,{ac_start_application_req,chStandbyFrs1}},\n{send,application_controller,{ac_start_application_reply,chStandbyFrs1,\
 start_it}}]",
-		lp="662.02,69103",
-		pos="e,429.65,69069 429.65,69137 429.65,69119 429.65,69099 429.65,69081"];
+		lp="643.45,69057",
+		pos="e,418.08,69023 418.08,69091 418.08,69072 418.08,69053 418.08,69034"];
 	111	[color=yellow,
 		height=11.176,
 		label="&lt; 122.2141.0&gt; \nchTraffic running_on [master],\nchFrs1 running_on [master],\nchLss running_on [master],\nchTraffic running_\
@@ -2080,12 +2080,12 @@ master}}],\nomAxd301 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby
 running_on [master],\nchStandbyFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,\
 master}}],\natsGeneric running_on ['axd301@cp1-1'],\nchTraffic running_on 'axd301@cp2-1',\nchTraffic running_on master,\nchFrs1 \
 running_on master,\nbasicLss running_on ['axd301@cp1-1'],\nchStandbyFrs1 running_on 'axd301@cp2-19'",
-		pos="429.65,18820",
-		width=7.7741];
+		pos="418.08,18820",
+		width=7.5768];
 	111 -> 112	[label="[{handle_info,{gd_start_app_req,chStandbyFrs1,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chStandbyFrs1,{ch,\
 1}},'axd301@cp1-19'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chStandbyFrs1,{ch,2}},'axd301@cp2-19'}}]",
-		lp="705.73,18375",
-		pos="e,429.65,18333 429.65,18418 429.65,18393 429.65,18369 429.65,18344"];
+		lp="687.33,18375",
+		pos="e,418.08,18333 418.08,18418 418.08,18393 418.08,18369 418.08,18344"];
 	79	[color=yellow,
 		height=8.2594,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nchTraffic running_on [master],\nchFrs1 running_on [master],\nchStandby running_\
@@ -2096,12 +2096,12 @@ pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 running_on [master],\
 master}}]\n&lt; 49.13876.0&gt; \nbasicLss pending_on [{'axd301@cp1-1',normal}],\nomFrs1 pending_on [{'axd301@cp1-1',{takeover,master}}],\nomAxd301 \
 pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandby pending_on [{'axd301@cp1-1',{takeover,master}}],\nchStandbyFrs1 pending_\
 on [{'axd301@cp1-1',{takeover,master}}],\nomLss pending_on [{'axd301@cp1-1',{takeover,master}}]",
-		pos="429.65,44340",
-		width=7.7741];
+		pos="418.08,44340",
+		width=7.5768];
 	79 -> 80	[label="[{handle_info,{gd_start_app,{chStandby,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{atsGeneric,{ch,1}},['axd301@cp1-1']},{{\
 chTraffic,{ch,1}},['axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="1004.2,44016",
-		pos="e,429.65,43990 429.65,44042 429.65,44029 429.65,44015 429.65,44002"];
+		lp="979.08,44016",
+		pos="e,418.08,43990 418.08,44042 418.08,44029 418.08,44015 418.08,44002"];
 	47	[color=yellow,
 		height=5.3426,
 		label="&lt; 122.2141.0&gt; \natsGeneric running_on [master],\nomAxd301 running_on [master],\nomFrs1 running_on [master],\nchTraffic running_\
@@ -2109,33 +2109,33 @@ on [master],\nchFrs1 running_on [master],\nchStandby running_on [master],\nbasic
 on [master],\nomLss running_on [master],\nchLss running_on [master],\nchTraffic pending_on [{'axd301@cp2-1',normal}],\nchStandby \
 pending_on [{'axd301@cp2-19',{takeover,'axd301@cp2-1'}},{'axd301@cp2-1',normal}],\nchStandbyFrs1 pending_on [{'axd301@cp2-19',{takeover,'\
 axd301@cp2-1'}},{'axd301@cp2-1',normal}],\natsGeneric running_on ['axd301@cp2-1'],\natsGeneric pending_on [{'axd301@cp2-19',normal}]",
-		pos="429.65,60845",
-		width=11.935];
+		pos="418.08,60798",
+		width=11.613];
 	47 -> 48	[label="[{handle_info,{gd_start_app_req,omFrs1,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{omFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="685.12,60618",
-		pos="e,429.65,60583 429.65,60652 429.65,60633 429.65,60614 429.65,60595"];
+		lp="667.83,60571",
+		pos="e,418.08,60537 418.08,60605 418.08,60586 418.08,60567 418.08,60548"];
 	15	[color=yellow,
 		height=3.7221,
 		label="&lt; 122.2141.0&gt; \nbasicLss pending_on [{master,normal}],\nchTraffic pending_on [{master,normal}],\nchFrs1 pending_on [{master,\
 normal}],\nomFrs1 pending_on [{master,normal}],\nomAxd301 pending_on [{master,normal}],\nchStandby pending_on [{master,normal}],\nchStandbyFrs1 \
 pending_on [{master,normal}],\nchLss pending_on [{master,normal}],\nomLss pending_on [{master,normal}],\natsGeneric running_on [\
 master]",
-		pos="429.65,73620",
-		width=5.4857];
+		pos="418.08,73573",
+		width=5.3671];
 	15 -> 16	[label="[{handle_info,{ac_application_run,omAxd301,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{omAxd301,{ch,1}},'axd301@cp1-19'}}]",
-		lp="695.23,73451",
-		pos="e,429.65,73417 429.65,73485 429.65,73467 429.65,73447 429.65,73429"];
+		lp="677.58,73405",
+		pos="e,418.08,73370 418.08,73439 418.08,73420 418.08,73401 418.08,73382"];
 	130 -> 131	[label="[{handle_info,{ac_application_run,chStandby,ok}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_app_started,{chStandby,{ch,1}},'axd301@cp1-1'}},\n{\
 send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chStandby,{ch,1}},'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{\
 chStandby,{ch,1}},'axd301@cp1-1'}},\n{send,&lt; 49.14569.0&gt; ,app_started},\n{send,{rcmDAC,'axd301@cp1-19'},{'$gen_call',{&lt; \
 49.13876.0&gt; ,#Ref&lt; 49.0.0.63835&gt; },{is_app_started,chStandbyFrs1}}},\n{send,{rcmDAC,'axd301@cp1-19'},{gd_start_takeover,{\
 chStandbyFrs1,{ch,1}},'axd301@cp1-1'}}]",
-		lp="814.01,1550.9",
-		pos="e,429.65,1475.5 429.65,1626.3 429.65,1580.3 429.65,1533.1 429.65,1486.9"];
+		lp="763.45,1550.9",
+		pos="e,418.08,1475.5 418.08,1626.3 418.08,1580.3 418.08,1533.1 418.08,1486.9"];
 	98 -> 99	[label="[{handle_info,{ac_start_application_req,chFrs1}},\n{send,&lt; 122.2141.0&gt; ,{gd_start_app_req,chFrs1,'axd301@cp1-1'}}]",
-		lp="637.54,29441",
-		pos="e,429.65,29407 429.65,29475 429.65,29456 429.65,29437 429.65,29418"];
+		lp="605.58,29441",
+		pos="e,418.08,29407 418.08,29475 418.08,29456 418.08,29437 418.08,29418"];
 	66 -> 67	[label="[{handle_info,{gd_app_started,{chStandbyFrs1,{ch,2}},'axd301@cp2-19'}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&\
 lt; 122.0.0.78381&gt; },{creq,{set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,wait}}}},\n{send,{rex,'axd301@cp2-19'},{'$gen_call',{&\
 lt; 122.2141.0&gt; ,{#Ref&lt; 122.0.0.78382&gt; ,'axd301@cp2-19'}},{call,rcmLib,perform_write,[dynamic,[{{pool,{ch,2}},{mated_pair,{\
@@ -2163,8 +2163,8 @@ enabled}],&lt; 122.2141.0&gt; ],&lt; 122.2126.0&gt; }}},\n{send,{rex,'axd301@cp1
 122.2126.0&gt; }}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.78401&gt; },{creq,{unset,&lt; 122.2141.0&\
 gt; ,rcm_config}}}},\n{send,rcmEventDispatch,{'$gen_cast',distribute}},\n{send,{rex,'axd301@cp2-19'},{'$gen_cast',{cast,rcmLib,set_\
 node_restart_reason,[no_restart],&lt; 122.2126.0&gt; }}}]",
-		lp="1515.5,51853",
-		pos="e,429.65,51679 429.65,52028 429.65,51923 429.65,51795 429.65,51690"];
+		lp="1420.1,51807",
+		pos="e,418.08,51632 418.08,51981 418.08,51877 418.08,51748 418.08,51644"];
 	34 -> 35	[label="[{handle_info,{gd_nodeup,'axd301@cp2-1'}},\n{send,rcmLocker,{'$gen_call',{&lt; 122.2141.0&gt; ,#Ref&lt; 122.0.0.63156&gt; },{creq,{\
 set,&lt; 122.2141.0&gt; ,rcm_config,exclusive,wait}}}},\n{send,{rex,'axd301@cp2-1'},{'$gen_call',{&lt; 122.2141.0&gt; ,{#Ref&lt; \
 122.0.0.63168&gt; ,'axd301@cp2-1'}},{call,rcmLib,perform_write,[dynamic,[{live_processors,[{node,'axd301@cp2-1',expansion,'cp2-1'},{\
@@ -2241,66 +2241,66 @@ cp2-1',normal,[]}]}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_start_app,{chTraffic,{c
 chTraffic,{ch,2}},[{'axd301@cp2-1',normal,[{{atsGeneric,{ch,2}},['axd301@cp2-1']},{{omAxd301,{ch,1}},['axd301@cp1-1','axd301@cp1-19']}]}]}},\n{\
 send,{rcmDAC,'axd301@cp1-1'},{gd_start_app,{chTraffic,{ch,2}},[{'axd301@cp2-1',normal,[{{atsGeneric,{ch,2}},['axd301@cp2-1']},{{\
 omAxd301,{ch,1}},['axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="16758,66537",
-		pos="e,429.65,66288 429.65,66786 429.65,66650 429.65,66439 429.65,66299"];
+		lp="16332,66490",
+		pos="e,418.08,66242 418.08,66739 418.08,66603 418.08,66393 418.08,66253"];
 	2 -> 3	[label="[{handle_info,{gd_start_app,{chTraffic,{ch,1}},[{'axd301@cp1-19',normal,[{{atsGeneric,{ch,1}},['axd301@cp1-19']},{{omAxd301,{ch,\
 1}},['axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="952.14,76852",
-		pos="e,429.65,76826 429.65,76878 429.65,76866 429.65,76851 429.65,76837"];
+		lp="929.2,76805",
+		pos="e,418.08,76779 418.08,76831 418.08,76819 418.08,76804 418.08,76791"];
 	117 -> 118	[label="[{handle_info,{gd_start_app_req,chLss,'axd301@cp1-1'}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="680.06,12992",
-		pos="e,429.65,12957 429.65,13026 429.65,13007 429.65,12988 429.65,12969"];
+		lp="662.58,12992",
+		pos="e,418.08,12957 418.08,13026 418.08,13007 418.08,12988 418.08,12969"];
 	85 -> 86	[label="[{handle_info,{ac_start_application_req,atsGeneric}},\n{send,application_controller,{ac_start_application_reply,atsGeneric,start_\
 it}}]",
-		lp="649.95,39642",
-		pos="e,429.65,39607 429.65,39676 429.65,39657 429.65,39638 429.65,39619"];
+		lp="631.83,39642",
+		pos="e,418.08,39607 418.08,39676 418.08,39657 418.08,39638 418.08,39619"];
 	53 -> 54	[label="[{handle_info,{gd_start_app_req,chStandby,'axd301@cp2-19'}},\n{send,{rcmDAC,'axd301@cp2-19'},{gd_app_started,{chStandby,{ch,1}},'\
 axd301@cp1-19'}}]",
-		lp="696.32,58029",
-		pos="e,429.65,57995 429.65,58063 429.65,58044 429.65,58025 429.65,58006"];
+		lp="678.33,57982",
+		pos="e,418.08,57948 418.08,58016 418.08,57997 418.08,57978 418.08,57960"];
 	21 -> 22	[label="[{handle_info,{ac_application_run,chTraffic,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{chTraffic,{ch,1}},'axd301@cp1-19'}}]",
-		lp="689.01,71462",
-		pos="e,429.65,71428 429.65,71496 429.65,71478 429.65,71458 429.65,71440"];
+		lp="671.95,71416",
+		pos="e,418.08,71382 418.08,71450 418.08,71431 418.08,71412 418.08,71393"];
 	104 -> 105	[label="[{handle_info,{ac_start_application_req,basicLss}},\n{send,application_controller,{ac_start_application_reply,basicLss,start_it}}]",
-		lp="644.13,24313",
-		pos="e,429.65,24278 429.65,24347 429.65,24328 429.65,24309 429.65,24290"];
+		lp="626.2,24313",
+		pos="e,418.08,24278 418.08,24347 418.08,24328 418.08,24309 418.08,24290"];
 	72 -> 73	[label="[{handle_info,{gd_start_app,{chStandby,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[{{atsGeneric,{ch,1}},['axd301@cp1-1']},{{\
 chTraffic,{ch,1}},['axd301@cp1-1','axd301@cp1-19']}]}]}}]",
-		lp="1004.2,48852",
-		pos="e,429.65,48826 429.65,48878 429.65,48865 429.65,48851 429.65,48838"];
+		lp="979.08,48852",
+		pos="e,418.08,48826 418.08,48878 418.08,48865 418.08,48851 418.08,48838"];
 	40 -> 41	[label="[{handle_info,{gd_start_app,{chStandby,{ch,2}},[{'axd301@cp2-19',{takeover,'axd301@cp2-1'},[{{atsGeneric,{ch,2}},['axd301@cp2-19']},{{\
 chTraffic,{ch,2}},['axd301@cp2-1','axd301@cp2-19']}]}]}}]",
-		lp="1007.7,63619",
-		pos="e,429.65,63593 429.65,63645 429.65,63631 429.65,63618 429.65,63604"];
+		lp="982.45,63572",
+		pos="e,418.08,63546 418.08,63598 418.08,63585 418.08,63571 418.08,63558"];
 	8 -> 9	[label="[{handle_info,{gd_start_app,{chLss,{ch,1}},[{'axd301@cp1-19',normal,[{{chTraffic,{ch,1}},['axd301@cp1-19']},{{basicLss,{ch,1}},['\
 axd301@cp1-19']}]}]}}]",
-		lp="883.89,75699",
-		pos="e,429.65,75673 429.65,75725 429.65,75712 429.65,75698 429.65,75684"];
+		lp="862.83,75652",
+		pos="e,418.08,75626 418.08,75678 418.08,75665 418.08,75651 418.08,75638"];
 	123 -> 124	[label="[{handle_info,{gd_start_takeover,{omFrs1,{ch,1}},'axd301@cp1-1'}}]",
-		lp="630.27,7495.4",
-		pos="e,429.65,7469.6 429.65,7521.5 429.65,7508 429.65,7494.5 429.65,7481"];
+		lp="613.83,7495.4",
+		pos="e,418.08,7469.6 418.08,7521.5 418.08,7508 418.08,7494.5 418.08,7481"];
 	91 -> 92	[label="[{handle_call,{{is_app_started,omAxd301},{&lt; 49.13876.0&gt; ,#Ref&lt; 49.0.0.40020&gt; }}},\n{send,&lt; 49.13876.0&gt; ,{#Ref&\
 lt; 49.0.0.40020&gt; ,true}}]",
-		lp="708.9,34940",
-		pos="e,429.65,34906 429.65,34975 429.65,34956 429.65,34937 429.65,34918"];
+		lp="661.45,34940",
+		pos="e,418.08,34906 418.08,34975 418.08,34956 418.08,34937 418.08,34918"];
 	59 -> 60	[label="[{handle_info,{gd_start_app_req,chFrs1,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{chFrs1,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="682.78,55463",
-		pos="e,429.65,55429 429.65,55497 429.65,55479 429.65,55460 429.65,55441"];
+		lp="665.2,55417",
+		pos="e,418.08,55383 418.08,55451 418.08,55432 418.08,55413 418.08,55394"];
 	27 -> 28	[label="[{handle_info,{ac_application_run,basicLss,ok}},\n{send,{rcmDAC,'axd301@cp1-1'},{gd_app_started,{basicLss,{ch,1}},'axd301@cp1-19'}}]",
-		lp="687.83,69440",
-		pos="e,429.65,69406 429.65,69474 429.65,69456 429.65,69436 429.65,69418"];
+		lp="670.08,69394",
+		pos="e,418.08,69360 418.08,69428 418.08,69409 418.08,69390 418.08,69371"];
 	110 -> 111	[label="[{handle_info,{gd_app_started,{chStandbyFrs1,{ch,2}},'axd301@cp2-19'}}]",
-		lp="647.27,19249",
-		pos="e,429.65,19223 429.65,19275 429.65,19261 429.65,19248 429.65,19234"];
+		lp="629.95,19249",
+		pos="e,418.08,19223 418.08,19275 418.08,19261 418.08,19248 418.08,19234"];
 	78 -> 79	[label="[{handle_info,{gd_start_app,{omAxd301,{ch,1}},[{'axd301@cp1-1',{takeover,'axd301@cp1-19'},[]}]}}]",
-		lp="727.51,44663",
-		pos="e,429.65,44638 429.65,44690 429.65,44676 429.65,44662 429.65,44649"];
+		lp="708.7,44663",
+		pos="e,418.08,44638 418.08,44690 418.08,44676 418.08,44662 418.08,44649"];
 	46 -> 47	[label="[{handle_info,{gd_start_app_req,omAxd301,'axd301@cp2-1'}},\n{send,{rcmDAC,'axd301@cp2-1'},{gd_app_started,{omAxd301,{ch,1}},'axd301@\
 cp1-19'}}]",
-		lp="695.23,61071",
-		pos="e,429.65,61037 429.65,61106 429.65,61087 429.65,61067 429.65,61048"];
+		lp="677.58,61025",
+		pos="e,418.08,60990 418.08,61059 418.08,61040 418.08,61021 418.08,61002"];
 	14 -> 15	[label="[{handle_info,{ac_start_application_req,omAxd301}},\n{send,application_controller,{ac_start_application_reply,omAxd301,start_it}}]",
-		lp="651.52,73788",
-		pos="e,429.65,73754 429.65,73822 429.65,73804 429.65,73784 429.65,73766"];
+		lp="633.7,73742",
+		pos="e,418.08,73707 418.08,73776 418.08,73757 418.08,73738 418.08,73719"];
 }

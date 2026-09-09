@@ -1,17 +1,16 @@
 digraph {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 540 268.66 540 268.66 0 ",
-		bb="0,0,268.66,540",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 468 438 468 438 0 ",
+		bb="0,0,438,468",
 		xdotversion=1.7
 	];
 	node [label="\N"];
-	5	[_draw_="c 7 -#000000 p 4 268.66 540 0 540 0 432 268.66 432 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 513 0 540 443.23 540 443.23 513 F 14 12 -Bookman-Demi c 7 -#000000 T 170.8 521.6 -1 101.64 14 -\"Bookman-Demi\" \
-S 5 -solid c 7 -#000000 p 4 0 486 0 513 443.23 513 443.23 486 F 14 12 -Bookman-Demi c 7 -#000000 T 90.29 494.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" \
-S 5 -solid c 7 -#000000 p 4 0 459 0 486 443.23 486 443.23 459 F 14 12 -Bookman-Demi c 7 -#000000 T 130.36 467.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" \
-S 5 -solid c 7 -#000000 p 4 0 432 0 459 443.23 459 443.23 432 F 14 12 -Bookman-Demi c 7 -#000000 T 3 440.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ \
-abcdefghijlklmnopqrstuvwxyz\" ",
+	5	[_draw_="c 7 -#000000 p 4 438 468 0 468 0 378 438 378 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 445.5 0 468 438 468 438 445.5 F 14 12 -Bookman-Demi c 7 -#000000 T 168.75 451.7 -1 100.5 14 -\"Bookman-Demi\" \
+S 5 -solid c 7 -#000000 p 4 0 423 0 445.5 438 445.5 438 423 F 14 12 -Bookman-Demi c 7 -#000000 T 91.12 429.2 -1 255.75 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" \
+S 5 -solid c 7 -#000000 p 4 0 400.5 0 423 438 423 438 400.5 F 14 12 -Bookman-Demi c 7 -#000000 T 130.12 406.7 -1 177.75 29 -\"abcdefghijlklmnopqrstuvwxyz\" \
+S 5 -solid c 7 -#000000 p 4 0 378 0 400.5 438 400.5 438 378 F 14 12 -Bookman-Demi c 7 -#000000 T 3 384.2 -1 432 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Bookman-Demi",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-Demi"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -19,17 +18,17 @@ abcdefghijlklmnopqrstuvwxyz\" ",
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,486",
+		pos="219,423",
 		shape=box,
-		width=3.7314];
-	6	[_draw_="c 7 -#000000 p 4 268.66 396 0 396 0 288 268.66 288 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 369 0 396 443.23 396 443.23 369 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 156.42 377.6 -1 130.4 20 \
--\"Bookman-DemiItalic\" S 5 -solid c 7 -#000000 p 4 0 342 0 369 443.23 369 443.23 342 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 90.29 \
-350.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 315 0 342 443.23 342 443.23 315 F 14 18 -Bookman-DemiItalic \
-c 7 -#000000 T 130.36 323.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 288 0 315 443.23 315 443.23 \
-288 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 3 296.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+		width=6.0833];
+	6	[_draw_="c 7 -#000000 p 4 428.62 342 9.38 342 9.38 252 428.62 252 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 9.38 319.5 9.38 342 428.62 342 428.62 319.5 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 156.38 325.7 \
+-1 125.25 20 -\"Bookman-DemiItalic\" S 5 -solid c 7 -#000000 p 4 9.38 297 9.38 319.5 428.62 319.5 428.62 297 F 14 18 -Bookman-DemiItalic \
+c 7 -#000000 T 97.88 303.2 -1 242.25 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 9.38 274.5 9.38 297 428.62 297 \
+428.62 274.5 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 132.75 280.7 -1 172.5 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#\
+000000 p 4 9.38 252 9.38 274.5 428.62 274.5 428.62 252 F 14 18 -Bookman-DemiItalic c 7 -#000000 T 12.38 258.2 -1 413.25 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Bookman-DemiItalic",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-DemiItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -37,20 +36,19 @@ c 7 -#000000 T 130.36 323.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -s
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,342",
+		pos="219,297",
 		shape=box,
-		width=3.7314];
-	5 -> 6	[_draw_="c 7 -#000000 B 4 134.33 431.72 134.33 423.8 134.33 415.57 134.33 407.46 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 137.83 407.62 134.33 397.62 130.83 407.62 ",
-		pos="e,134.33,396.11 134.33,431.72 134.33,423.8 134.33,415.57 134.33,407.46"];
-	7	[_draw_="c 7 -#000000 p 4 268.66 252 0 252 0 144 268.66 144 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 225 0 252 443.23 252 443.23 225 F 14 13 -Bookman-Light c 7 -#000000 T 171.18 233.6 -1 100.86 15 -\"\
-Bookman-Light\" S 5 -solid c 7 -#000000 p 4 0 198 0 225 443.23 225 443.23 198 F 14 13 -Bookman-Light c 7 -#000000 T 90.29 206.6 -1 \
-262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 171 0 198 443.23 198 443.23 171 F 14 13 -Bookman-Light c \
-7 -#000000 T 130.36 179.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 144 0 171 443.23 171 443.23 \
-144 F 14 13 -Bookman-Light c 7 -#000000 T 3 152.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+		width=5.8229];
+	5 -> 6	[_draw_="c 7 -#000000 B 4 219 377.58 219 369.74 219 361.49 219 353.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 222.5 353.62 219 343.62 215.5 353.62 ",
+		pos="e,219,342.11 219,377.58 219,369.74 219,361.49 219,353.4"];
+	7	[_draw_="c 7 -#000000 p 4 438 216 0 216 0 126 438 126 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 193.5 0 216 438 216 438 193.5 F 14 13 -Bookman-Light c 7 -#000000 T 169.5 199.7 -1 99 15 -\"Bookman-Light\" \
+S 5 -solid c 7 -#000000 p 4 0 171 0 193.5 438 193.5 438 171 F 14 13 -Bookman-Light c 7 -#000000 T 91.12 177.2 -1 255.75 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" \
+S 5 -solid c 7 -#000000 p 4 0 148.5 0 171 438 171 438 148.5 F 14 13 -Bookman-Light c 7 -#000000 T 130.12 154.7 -1 177.75 29 -\"abcdefghijlklmnopqrstuvwxyz\" \
+S 5 -solid c 7 -#000000 p 4 0 126 0 148.5 438 148.5 438 126 F 14 13 -Bookman-Light c 7 -#000000 T 3 132.2 -1 432 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Bookman-Light",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-Light"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -58,20 +56,20 @@ Bookman-Light\" S 5 -solid c 7 -#000000 p 4 0 198 0 225 443.23 225 443.23 198 F 
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,198",
+		pos="219,171",
 		shape=box,
-		width=3.7314];
-	6 -> 7	[_draw_="c 7 -#000000 B 4 134.33 287.72 134.33 279.8 134.33 271.57 134.33 263.46 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 137.83 263.62 134.33 253.62 130.83 263.62 ",
-		pos="e,134.33,252.11 134.33,287.72 134.33,279.8 134.33,271.57 134.33,263.46"];
-	8	[_draw_="c 7 -#000000 p 4 268.66 108 0 108 0 0 268.66 0 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 81 0 108 443.23 108 443.23 81 F 14 19 -Bookman-LightItalic c 7 -#000000 T 156.81 89.6 -1 129.62 21 \
--\"Bookman-LightItalic\" S 5 -solid c 7 -#000000 p 4 0 54 0 81 443.23 81 443.23 54 F 14 19 -Bookman-LightItalic c 7 -#000000 T 90.29 \
-62.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 27 0 54 443.23 54 443.23 27 F 14 19 -Bookman-LightItalic \
-c 7 -#000000 T 130.36 35.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 0 0 0 27 443.23 27 443.23 0 F \
-14 19 -Bookman-LightItalic c 7 -#000000 T 3 8.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+		width=6.0833];
+	6 -> 7	[_draw_="c 7 -#000000 B 4 219 251.58 219 243.74 219 235.49 219 227.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 222.5 227.62 219 217.62 215.5 227.62 ",
+		pos="e,219,216.11 219,251.58 219,243.74 219,235.49 219,227.4"];
+	8	[_draw_="c 7 -#000000 p 4 428.62 90 9.38 90 9.38 0 428.62 0 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 9.38 67.5 9.38 90 428.62 90 428.62 67.5 F 14 19 -Bookman-LightItalic c 7 -#000000 T 156.75 73.7 -1 124.5 \
+21 -\"Bookman-LightItalic\" S 5 -solid c 7 -#000000 p 4 9.38 45 9.38 67.5 428.62 67.5 428.62 45 F 14 19 -Bookman-LightItalic c 7 -#\
+000000 T 97.88 51.2 -1 242.25 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 9.38 22.5 9.38 45 428.62 45 428.62 22.5 \
+F 14 19 -Bookman-LightItalic c 7 -#000000 T 132.75 28.7 -1 172.5 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 9.38 \
+0 9.38 22.5 428.62 22.5 428.62 0 F 14 19 -Bookman-LightItalic c 7 -#000000 T 12.38 6.2 -1 413.25 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="Bookman-LightItalic",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"Bookman-LightItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -79,10 +77,10 @@ c 7 -#000000 T 130.36 35.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -so
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,54",
+		pos="219,45",
 		shape=box,
-		width=3.7314];
-	7 -> 8	[_draw_="c 7 -#000000 B 4 134.33 143.72 134.33 135.8 134.33 127.57 134.33 119.46 ",
-		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 137.83 119.62 134.33 109.62 130.83 119.62 ",
-		pos="e,134.33,108.11 134.33,143.72 134.33,135.8 134.33,127.57 134.33,119.46"];
+		width=5.8229];
+	7 -> 8	[_draw_="c 7 -#000000 B 4 219 125.58 219 117.74 219 109.49 219 101.4 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 222.5 101.62 219 91.62 215.5 101.62 ",
+		pos="e,219,90.106 219,125.58 219,117.74 219,109.49 219,101.4"];
 }

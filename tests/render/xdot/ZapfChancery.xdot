@@ -1,17 +1,17 @@
 graph {
-	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 108 268.66 108 268.66 0 ",
-		bb="0,0,268.66,108",
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 90 419.25 90 419.25 0 ",
+		bb="0,0,419.25,90",
 		xdotversion=1.7
 	];
 	node [label="\N"];
-	34	[_draw_="c 7 -#000000 p 4 268.66 108 0 108 0 0 268.66 0 ",
-		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 81 0 108 443.23 108 443.23 81 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 135.44 89.6 -1 172.36 \
-27 -\"ZapfChancery-MediumItalic\" S 5 -solid c 7 -#000000 p 4 0 54 0 81 443.23 81 443.23 54 F 14 25 -ZapfChancery-MediumItalic c 7 \
--#000000 T 90.29 62.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 27 0 54 443.23 54 443.23 27 F 14 \
-25 -ZapfChancery-MediumItalic c 7 -#000000 T 130.36 35.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 \
-0 0 0 27 443.23 27 443.23 0 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 3 8.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+	34	[_draw_="c 7 -#000000 p 4 419.25 90 0 90 0 0 419.25 0 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 67.5 0 90 419.25 90 419.25 67.5 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 126 73.7 -1 167.25 \
+27 -\"ZapfChancery-MediumItalic\" S 5 -solid c 7 -#000000 p 4 0 45 0 67.5 419.25 67.5 419.25 45 F 14 25 -ZapfChancery-MediumItalic \
+c 7 -#000000 T 88.5 51.2 -1 242.25 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 22.5 0 45 419.25 45 419.25 22.5 \
+F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 123.38 28.7 -1 172.5 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 \
+p 4 0 0 0 22.5 419.25 22.5 419.25 0 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 3 6.2 -1 413.25 58 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\" ",
 		fontname="ZapfChancery-MediumItalic",
-		height=1.5,
+		height=1.25,
 		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
 	<TR><TD>"ZapfChancery-MediumItalic"</TD></TR>
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
@@ -19,7 +19,7 @@ graph {
 	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
 	</TABLE>>,
 		margin="0,0",
-		pos="134.33,54",
+		pos="209.62,45",
 		shape=box,
-		width=3.7314];
+		width=5.8229];
 }

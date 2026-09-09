@@ -77,7 +77,14 @@ pub fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
 ///|
 pub fn label_text(node : @cgraph.Node) -> String {
   match node.get_attr("label") {
-    Some(value) => if value == "\\N" { node.name() } else { value }
+    Some(value) =>
+      if value == "\\N" {
+        node.name()
+      } else if @html_label.is_html_label_text(value) {
+        value
+      } else {
+        @attrs.decode_label_entities(value)
+      }
     None => node.name()
   }
 }

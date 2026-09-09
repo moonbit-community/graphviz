@@ -1,5 +1,5 @@
 digraph G {
-	graph [bb="0,0,540,720",
+	graph [bb="0,0,77.5,198",
 		center=1,
 		rankdir=LR,
 		ratio=fill,
@@ -12,26 +12,26 @@ digraph G {
 		graph [rank=same];
 		dc1	[height=0.5,
 			label="DC 1",
-			pos="270,65.455",
+			pos="38.75,18",
 			shape=plaintext,
 			width=0.75];
 		dc10	[height=0.5,
 			label="DC 10",
-			pos="270,261.45",
+			pos="38.75,72",
 			shape=plaintext,
 			width=0.75];
 		dc100	[height=0.5,
 			label="DC 100",
-			pos="270,458.45",
+			pos="38.75,126",
 			shape=plaintext,
-			width=0.83261];
+			width=0.81597];
 	}
 	{
 		graph [rank=min];
 		no_dc	[height=0.5,
 			label=NOTHING,
-			pos="270,654.45",
+			pos="38.75,180",
 			shape=plaintext,
-			width=1.1079];
+			width=1.0764];
 	}
 }

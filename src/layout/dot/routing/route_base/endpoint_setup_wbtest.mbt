@@ -12,6 +12,30 @@ fn route_dynamic_anchor(
 }
 
 ///|
+test "compass clip resolves explicit self-edge ports to their fixed point" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let node = graph.node("n")
+  node.set_attr("shape", "box")
+  let size = @node_primitives.node_size_from_points(60.0, 36.0)
+  let center = @edge_spline.point(100.0, 200.0)
+  let port = Some(@cgraph.Port::{
+    name: None,
+    compass: Some(@cgraph.Compass::SE),
+  })
+
+  let clip = compass_clip_point_if_needed({
+    is_record_shape: _ => false,
+    node,
+    port,
+    center,
+    size,
+    rankdir: RankDir::TB,
+  })
+
+  assert_eq(clip, Some(@edge_spline.point(130.0, 182.0)))
+}
+
+///|
 test "clip_point_for_route_endpoint prefers cluster bbox over other clip sources" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("n")

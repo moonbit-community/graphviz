@@ -301,6 +301,8 @@ fn graph_attr_rank(name : String) -> Int {
     "charset" => 3
     "bgcolor" => 3
     "color" => 4
+    "fillcolor" => 4
+    "pencolor" => 5
     "concentrate" => 5
     "colorscheme" => 5
     "center" => 6
@@ -328,6 +330,7 @@ fn graph_attr_rank(name : String) -> Int {
     "size" => 26
     "root" => 26
     "splines" => 27
+    "style" => 28
     "xdotversion" => 1000
     _ => 200
   }
@@ -369,6 +372,7 @@ fn node_attr_rank(name : String) -> Int {
     "sides" => 21
     "skew" => 22
     "style" => 23
+    "shapefile" => 24
     "subkind" => 24
     "root" => 24
     "width" => 25
@@ -414,16 +418,19 @@ fn edge_attr_rank(name : String) -> Int {
     "headlabel" => 16
     "id" => 17
     "label" => 18
+    "labelfontcolor" => 19
     "labelangle" => 19
     "labeldistance" => 20
     "len" => 20
     "lp" => 21
     "lhead" => 22
     "ltail" => 23
+    "headclip" => 24
     "minlen" => 24
     "pos" => 25
     "radius" => 26
     "samearrowhead" => 26
+    "tailclip" => 26
     "samearrowtail" => 27
     "samehead" => 28
     "sametail" => 29

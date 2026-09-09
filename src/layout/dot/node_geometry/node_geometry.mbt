@@ -147,34 +147,43 @@ pub fn node_size(
           padding.pad_x_pt,
           padding.pad_y_pt,
         )
-        let (width_pt, height_pt) = match fixedsize_mode {
-          NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
-          NodeFixedSizeMode::Shape =>
-            (
-              if padded_dims.width_pt > base_width_pt {
-                padded_dims.width_pt
-              } else {
-                base_width_pt
-              },
-              if padded_dims.height_pt > base_height_pt {
-                padded_dims.height_pt
-              } else {
-                base_height_pt
-              },
-            )
-          NodeFixedSizeMode::None =>
-            (
-              if padded_dims.width_pt > base_width_pt {
-                padded_dims.width_pt
-              } else {
-                base_width_pt
-              },
-              if padded_dims.height_pt > base_height_pt {
-                padded_dims.height_pt
-              } else {
-                base_height_pt
-              },
-            )
+        let mut label_width_pt = padded_dims.width_pt
+        let mut label_height_pt = padded_dims.height_pt
+        if fixedsize_mode == NodeFixedSizeMode::None && scale_ellipse {
+          let sqrt2 = Double::sqrt(2.0)
+          let scaled_height = label_height_pt * sqrt2
+          if base_height_pt > scaled_height {
+            let ratio = label_height_pt / base_height_pt
+            let denominator = 1.0 - ratio * ratio
+            if denominator > 0.0 {
+              label_width_pt = label_width_pt * Double::sqrt(1.0 / denominator)
+            } else {
+              label_width_pt = label_width_pt * sqrt2
+              label_height_pt = scaled_height
+            }
+          } else {
+            label_width_pt = label_width_pt * sqrt2
+            label_height_pt = scaled_height
+          }
+        }
+        let mut width_pt = if label_width_pt > base_width_pt {
+          label_width_pt
+        } else {
+          base_width_pt
+        }
+        let mut height_pt = if label_height_pt > base_height_pt {
+          label_height_pt
+        } else {
+          base_height_pt
+        }
+        if fixedsize_mode == NodeFixedSizeMode::True {
+          width_pt = base_width_pt
+          height_pt = base_height_pt
+        }
+        if regular_shape && fixedsize_mode != NodeFixedSizeMode::Shape {
+          let size_pt = if width_pt > height_pt { width_pt } else { height_pt }
+          width_pt = size_pt
+          height_pt = size_pt
         }
         return @node_primitives.node_size_from_points(width_pt, height_pt)
       }

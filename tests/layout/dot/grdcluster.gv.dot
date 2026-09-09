@@ -1,63 +1,63 @@
 digraph G {
-	graph [bb="0,0,320,140"];
+	graph [bb="0,0,164,356"];
 	node [label="\N"];
 	subgraph cluster0 {
-		graph [bb="8,80,78,132",
+		graph [bb="8,296,78,348",
 			fillcolor="blue:red",
 			style="filled,rounded"
 		];
 		0	[height=0.5,
-			pos="43,106",
+			pos="43,322",
 			width=0.75];
 	}
 	subgraph cluster1 {
-		graph [bb="8,8,78,60",
-			peripheries=0,
+		graph [bb="8,224,78,276",
 			fillcolor="blue:red",
+			peripheries=0,
 			style=filled
 		];
 		1	[height=0.5,
-			pos="43,34",
+			pos="43,250",
 			width=0.75];
 	}
 	subgraph cluster2 {
-		graph [bb="86,8,156,60",
+		graph [bb="8,152,78,204",
 			fillcolor=blue,
 			style=filled
 		];
 		2	[height=0.5,
-			pos="121,34",
+			pos="43,178",
 			width=0.75];
 	}
 	subgraph cluster3 {
-		graph [bb="164,8,234,60",
-			peripheries=0,
+		graph [bb="8,80,78,132",
 			fillcolor=red,
+			peripheries=0,
 			style="filled,rounded"
 		];
 		3	[height=0.5,
-			pos="199,34",
+			pos="43,106",
 			width=0.75];
 	}
 	subgraph cluster4 {
-		graph [bb="242,8,312,60",
+		graph [bb="8,8,78,60",
 			bgcolor="red:blue",
 			peripheries=0
 		];
 		4	[height=0.5,
-			pos="277,34",
+			pos="43,34",
 			width=0.75];
 	}
 	subgraph cluster5 {
-		graph [bb="164,80,234,132",
+		graph [bb="86,296,156,348",
 			bgcolor="red:blue"
 		];
 		5	[height=0.5,
-			pos="199,106",
+			pos="121,322",
 			width=0.75];
 	}
-	0 -> 1	[pos="e,43,52.104 43,87.697 43,80.407 43,71.726 43,63.536"];
-	1 -> 2	[pos="e,93.735,34 70.422,34 74.429,34 78.436,34 82.443,34"];
-	2 -> 3	[pos="e,171.74,34 148.42,34 152.43,34 156.44,34 160.44,34"];
-	3 -> 4	[pos="e,249.74,34 226.42,34 230.43,34 234.44,34 238.44,34"];
+	0 -> 1	[pos="e,43,268.1 43,303.7 43,296.41 43,287.73 43,279.54"];
+	1 -> 2	[pos="e,43,196.1 43,231.7 43,224.41 43,215.73 43,207.54"];
+	2 -> 3	[pos="e,43,124.1 43,159.7 43,152.41 43,143.73 43,135.54"];
+	3 -> 4	[pos="e,43,52.104 43,87.697 43,80.407 43,71.726 43,63.536"];
 }

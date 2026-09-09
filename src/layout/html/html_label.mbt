@@ -459,6 +459,13 @@ fn parse_html_cell_from_attrs(
   let align = html_align_from(attrs.get("align"))
   let valign = html_valign_from(attrs.get("valign"))
   let bg_color = attrs.get("bgcolor")
+  let border_pt = match attrs.get("border") {
+    Some(value) => Some(parse_double(value, 0.0))
+    None => None
+  }
+  let style = attrs.get("style")
+  let gradient_angle = attrs.get("gradientangle")
+  let sides = attrs.get("sides")
   let min_width_pt = match attrs.get("width") {
     Some(value) => Some(parse_double(value, 0.0))
     None => None
@@ -476,13 +483,18 @@ fn parse_html_cell_from_attrs(
     align,
     valign,
     bg_color,
+    border_pt,
+    style,
+    gradient_angle,
+    sides,
+    vruled: false,
     min_width_pt,
     min_height_pt,
   }
 }
 
 ///|
-fn parse_html_row(parser : HtmlParser) -> HtmlRow {
+fn parse_html_row(parser : HtmlParser, hruled : Bool, vruled : Bool) -> HtmlRow {
   let cells : Array[HtmlCell] = []
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
@@ -492,7 +504,44 @@ fn parse_html_row(parser : HtmlParser) -> HtmlRow {
           Some(HtmlTag::End(name)) => if name == "tr" { break }
           Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "td" || name == "th" {
-              cells.push(parse_html_cell_from_attrs(parser, attrs))
+              let cell = parse_html_cell_from_attrs(parser, attrs)
+              cells.push({
+                content: cell.content,
+                port: cell.port,
+                col_span: cell.col_span,
+                row_span: cell.row_span,
+                align: cell.align,
+                valign: cell.valign,
+                bg_color: cell.bg_color,
+                border_pt: cell.border_pt,
+                style: cell.style,
+                gradient_angle: cell.gradient_angle,
+                sides: cell.sides,
+                vruled,
+                min_width_pt: cell.min_width_pt,
+                min_height_pt: cell.min_height_pt,
+              })
+            } else if name == "vr" {
+              if cells.length() > 0 {
+                let last = cells.length() - 1
+                let cell = cells[last]
+                cells[last] = {
+                  content: cell.content,
+                  port: cell.port,
+                  col_span: cell.col_span,
+                  row_span: cell.row_span,
+                  align: cell.align,
+                  valign: cell.valign,
+                  bg_color: cell.bg_color,
+                  border_pt: cell.border_pt,
+                  style: cell.style,
+                  gradient_angle: cell.gradient_angle,
+                  sides: cell.sides,
+                  vruled: true,
+                  min_width_pt: cell.min_width_pt,
+                  min_height_pt: cell.min_height_pt,
+                }
+              }
             } else if name == "tr" {
               break
             } else {
@@ -508,7 +557,7 @@ fn parse_html_row(parser : HtmlParser) -> HtmlRow {
       }
     }
   }
-  HtmlRow::{ cells, }
+  HtmlRow::{ cells, ruled: hruled, }
 }
 
 ///|
@@ -533,6 +582,15 @@ fn parse_html_table_from_attrs(
     DEFAULT_CELLPADDING_PT,
   )
   let bg_color = attrs.get("bgcolor")
+  let style = attrs.get("style")
+  let gradient_angle = attrs.get("gradientangle")
+  let hruled = attrs.get("rows").unwrap_or_default().trim() == "*"
+  let vruled = attrs.get("columns").unwrap_or_default().trim() == "*"
+  let rounded = attrs
+    .get("style")
+    .unwrap_or_default()
+    .to_lower()
+    .contains("rounded")
   let rows : Array[HtmlRow] = []
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
@@ -542,7 +600,13 @@ fn parse_html_table_from_attrs(
           Some(HtmlTag::End(name)) => if name == "table" { break }
           Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "tr" {
-              rows.push(parse_html_row(parser))
+              rows.push(parse_html_row(parser, hruled, vruled))
+            } else if name == "hr" {
+              if rows.length() > 0 {
+                let last = rows.length() - 1
+                let row = rows[last]
+                rows[last] = { cells: row.cells, ruled: true, }
+              }
             } else if name == "table" {
               let _ = parse_html_table_from_attrs(parser, attrs)
             } else {
@@ -565,6 +629,11 @@ fn parse_html_table_from_attrs(
     cell_spacing_pt,
     cell_padding_pt,
     bg_color,
+    style,
+    gradient_angle,
+    hruled,
+    vruled,
+    rounded,
   }
 }
 
@@ -790,7 +859,13 @@ pub fn html_table_layout(
 ) -> HtmlTableLayout {
   let metrics = html_table_metrics(table, cell_size)
   if metrics.total_width <= 0.0 || metrics.total_height <= 0.0 {
-    return { cells: [], scale_x: 1.0, scale_y: 1.0, }
+    return {
+      cells: [],
+      row_count: 0,
+      col_count: 0,
+      scale_x: 1.0,
+      scale_y: 1.0,
+    }
   }
   let border_pt = table_border_pt(table)
   let spacing = table.cell_spacing_pt
@@ -852,7 +927,40 @@ pub fn html_table_layout(
     let urx = col_positions[end_col].1
     let ury = row_positions[start_row].0
     let lly = row_positions[end_row].1
-    cells.push({ rect: { llx, lly, urx, ury, }, cell: placement.cell, })
+    let end_row = placement.row + placement.cell.row_span - 1
+    let end_col = placement.col + placement.cell.col_span - 1
+    let hruled = end_row + 1 < metrics.row_heights.length() &&
+      table.rows[end_row].ruled
+    let vruled = end_col + 1 < metrics.col_widths.length() &&
+      placement.cell.vruled
+    cells.push({
+      rect: { llx, lly, urx, ury, },
+      cell: {
+        content: placement.cell.content,
+        port: placement.cell.port,
+        col_span: placement.cell.col_span,
+        row_span: placement.cell.row_span,
+        align: placement.cell.align,
+        valign: placement.cell.valign,
+        bg_color: placement.cell.bg_color,
+        border_pt: placement.cell.border_pt,
+        style: placement.cell.style,
+        gradient_angle: placement.cell.gradient_angle,
+        sides: placement.cell.sides,
+        vruled,
+        min_width_pt: placement.cell.min_width_pt,
+        min_height_pt: placement.cell.min_height_pt,
+      },
+      row: placement.row,
+      col: placement.col,
+      hruled,
+    })
   }
-  { cells, scale_x: 1.0, scale_y: 1.0, }
+  {
+    cells,
+    row_count: metrics.row_heights.length(),
+    col_count: metrics.col_widths.length(),
+    scale_x: 1.0,
+    scale_y: 1.0,
+  }
 }

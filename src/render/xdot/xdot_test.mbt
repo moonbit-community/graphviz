@@ -164,6 +164,7 @@ test "render_xdot encodes dashed and dotted styles" {
     None => fail("missing edge _draw_")
   }
   assert_true(edge_draw.contains("S 6 -dotted"))
+  assert_false(edge_draw.contains("S 5 -solid"))
 }
 
 ///|
@@ -182,7 +183,7 @@ test "render_xdot omits redundant solid edge style for color-only edges" {
 }
 
 ///|
-test "render_xdot keeps explicit solid edge style" {
+test "render_xdot keeps explicit solid edge style for non-default colors" {
   let graph = @dot.parse_dot("digraph { a -> b [color=blue style=solid]; }")
   let output = render_xdot(@layout_dot.layout_dot(graph))
   let output_graph = @dot.parse_dot(output)
@@ -194,6 +195,88 @@ test "render_xdot keeps explicit solid edge style" {
   }
   assert_true(edge_draw.contains("S 5 -solid"))
   assert_true(edge_draw.contains("c 7 -#0000ff"))
+}
+
+///|
+test "render_xdot emits linear gradients for multicolor node fills" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=filled fillcolor=\"red:blue\"]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let draw = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(draw.contains("C "))
+  assert_true(draw.contains("-["))
+  assert_true(draw.contains("-#ff0000"))
+  assert_true(draw.contains("-#0000ff"))
+}
+
+///|
+test "render_xdot respects radial fill gradients and gradient angles" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=radial fillcolor=\"red:blue\" gradientangle=90]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let draw = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(draw.contains("C "))
+  assert_true(draw.contains("-("))
+  assert_true(draw.contains("-#ff0000"))
+  assert_true(draw.contains("-#0000ff"))
+}
+
+///|
+test "render_xdot applies radial gradients to graph and cluster backgrounds" {
+  let graph = @dot.parse_dot(
+    "digraph { style=radial bgcolor=\"red:blue\"; subgraph cluster_0 { style=radial fillcolor=\"green:yellow\"; a; } }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let graph_draw = match output_graph.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing graph _draw_")
+  }
+  let cluster = find_subgraph(output_graph, "cluster_0")
+  let cluster_draw = match cluster.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing cluster _draw_")
+  }
+  assert_true(graph_draw.contains("C "))
+  assert_true(graph_draw.contains("-("))
+  assert_true(cluster_draw.contains("C "))
+  assert_true(cluster_draw.contains("-("))
+}
+
+///|
+test "render_xdot omits redundant solid edge styles" {
+  let graph = @dot.parse_dot(
+    "digraph { a -> b [style=solid]; a -> c [style=bold]; a -> d [style=\"setlinewidth(3)\"]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let edges = output_graph.edges()
+  assert_eq(edges.length(), 3)
+  for edge in edges {
+    let edge_draw = match edge.get_attr("_draw_") {
+      Some(value) => value
+      None => fail("missing edge _draw_")
+    }
+    assert_false(edge_draw.contains("S 5 -solid"))
+  }
 }
 
 ///|
@@ -238,8 +321,27 @@ test "render_xdot falls back unknown node shapes to box draw ops" {
     Some(value) => value
     None => fail("missing node _draw_")
   }
-  assert_true(draw.contains("P 4 "))
+  assert_true(draw.contains("P 4 ") || draw.contains("p 4 "))
   assert_true(draw.contains("-#d3d3d3"))
+}
+
+///|
+test "render_xdot draws shapefile nodes with a box outline" {
+  let graph = @dot.parse_dot(
+    "digraph { a [label=\"\" shapefile=\"shape.gif\"]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let draw = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(draw.contains("P 4 ") || draw.contains("p 4 "))
+  assert_false(draw.contains("E "))
 }
 
 ///|

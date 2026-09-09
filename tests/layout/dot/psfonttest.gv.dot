@@ -167,11 +167,11 @@ digraph G {
 	ZapfDingbats	[fontname=ZapfDingbats,
 		height=0.5,
 		pos="259.5,314",
-		width=1.1146];
-	ZapfDingbats -> "ZapfChancery-MediumItalic"	[pos="e,379.22,314 299.54,314 319.24,314 343.98,314 367.93,314"];
+		width=1.0417];
+	ZapfDingbats -> "ZapfChancery-MediumItalic"	[pos="e,379.24,314 296.77,314 316.85,314 342.76,314 367.81,314"];
 	Symbol	[fontname=Symbol,
 		height=0.5,
 		pos="75.375,314",
 		width=0.75];
-	Symbol -> ZapfDingbats	[pos="e,219.55,314 102.08,314 129.57,314 173.84,314 208.28,314"];
+	Symbol -> ZapfDingbats	[pos="e,222.25,314 102.08,314 130.27,314 176.12,314 210.91,314"];
 }

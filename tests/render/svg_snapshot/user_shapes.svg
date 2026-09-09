@@ -12,12 +12,12 @@
 <!-- n -->
 <g id="node1" class="node">
 <title>n</title>
-<ellipse fill="none" stroke="black" cx="108" cy="-270" rx="27" ry="18"/>
+<polygon fill="none" stroke="black" points="135,-288 81,-288 81,-252 135,-252 135,-288"/>
 </g>
 <!-- x -->
 <g id="node2" class="node">
 <title>x</title>
-<ellipse fill="none" stroke="black" cx="108" cy="-108" rx="108" ry="108"/>
+<polygon fill="none" stroke="black" points="216,-216 0,-216 0,0 216,0 216,-216"/>
 </g>
 <!-- n&#45;&gt;x -->
 <g id="edge2" class="edge">

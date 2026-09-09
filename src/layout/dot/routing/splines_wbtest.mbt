@@ -19,6 +19,23 @@ test "layout_dot accepts non-spline modes" {
 }
 
 ///|
+test "layout_dot retains right self-edge reservation in graph bbox" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { a [shape=box]; a -> a [label=wide tailport=se headport=ne]; a -> a [label=wide tailport=se headport=ne]; }",
+  )
+  let layout = @dot_layout.layout_dot(graph)
+  let node = layout.nodes[0]
+  let label_width = @edge_label_metrics.edge_mid_label_width_pt(
+    graph.edges()[0],
+  )
+  let expected_right = node.pos.x +
+    node.width_in * 36.0 +
+    2.0 * (18.0 + label_width)
+
+  assert_eq(layout.bbox.urx, expected_right)
+}
+
+///|
 fn count_numbers(text : String) -> Int {
   let mut count = 0
   let mut in_num = false

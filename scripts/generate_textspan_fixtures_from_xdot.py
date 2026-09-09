@@ -5,6 +5,7 @@
 
 import json
 import re
+import sys
 from pathlib import Path
 
 
@@ -16,6 +17,21 @@ overrides_output_path = repo_root / "src" / "layout" / "dot" / "font_metrics" / 
 draw_attr_re = re.compile(r'_(?:l|h|t)?draw_="')
 float_re = re.compile(r"[+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?")
 int_re = re.compile(r"[+-]?\d+")
+
+
+def parse_capture_path() -> Path | None:
+    args = sys.argv[1:]
+    if not args:
+        return None
+    if len(args) != 2 or args[0] != "--capture-jsonl":
+        raise SystemExit(
+            "usage: generate_textspan_fixtures_from_xdot.py "
+            "[--capture-jsonl <graphviz-14.1.1-capture.jsonl>]"
+        )
+    path = Path(args[1])
+    if not path.is_file():
+        raise SystemExit(f"textspan capture file not found: {path}")
+    return path
 
 
 def skip_ws(text: str, index: int) -> int:
@@ -189,6 +205,39 @@ def line_height_scale(font_name: str, font_size: float) -> float:
     return 1.2
 
 
+def load_capture_entries(path: Path) -> dict[tuple[str, float, str], dict]:
+    entries = {}
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line:
+            continue
+        try:
+            data = json.loads(line)
+            font = str(data["font"])
+            size = float(data["size"])
+            text = str(data["text"])
+            entry = {
+                "width": float(data["width"]),
+                "height": float(data["height"]),
+                "flags": int(data.get("flags", 0)),
+                "yoffset_layout": float(data["yoffset_layout"]),
+                "yoffset_centerline": float(data["yoffset_centerline"]),
+                "has_capture": True,
+                "xdot_width": float(data["width"]),
+                "xdot_height": float(data["height"]),
+            }
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise SystemExit(f"invalid capture entry at {path}:{line_number}: {exc}") from exc
+        key = (font, size, text)
+        previous = entries.get(key)
+        if previous is not None and previous != entry:
+            raise SystemExit(
+                "conflicting capture metrics for "
+                f"font={font!r} size={size!r} text={text!r}"
+            )
+        entries[key] = entry
+    return entries
+
+
 entries = {}
 if overrides_output_path.exists():
     for line in overrides_output_path.read_text(encoding="utf-8").splitlines():
@@ -208,6 +257,13 @@ if overrides_output_path.exists():
             "yoffset_centerline": float(data.get("yoffset_centerline", 0.0)),
             "has_capture": has_capture,
         }
+
+capture_path = parse_capture_path()
+if capture_path is not None:
+    # This capture records the renderer's exact width, height, and offsets.
+    # It supersedes older values for the same strict-parity text span.
+    entries.update(load_capture_entries(capture_path))
+
 for path in sorted(xdot_dir.glob("*.xdot")):
     content = read_snapshot_text(path)
     for draw in extract_draw_strings(content):
