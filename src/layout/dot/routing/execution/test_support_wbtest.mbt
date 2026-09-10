@@ -216,6 +216,7 @@ fn sample_regular_pass_input(
       path_cluster_keys: Map([]),
       path_vnode_clusters: Map([]),
       parallel_offsets: Map([]),
+      concentrated_ignored_edge_ids: Map([]),
       cluster_bboxes: Map([]),
     },
     enable_complex_tuning: false,

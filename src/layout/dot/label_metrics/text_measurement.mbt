@@ -285,6 +285,41 @@ fn split_label_lines(
 }
 
 ///|
+/// `make_simple_label` stores a line when it sees a break, but does not add a
+/// second empty line after a terminal `\\n`, `\\l`, `\\r`, or physical newline.
+/// Keep that renderer-visible rule shared by override and fallback metrics.
+fn label_ends_with_break(label : String) -> Bool {
+  let mut escaping = false
+  let mut ended_with_break = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      ended_with_break = ch == 'n' || ch == 'l' || ch == 'r'
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    ended_with_break = ch == '\n' || ch == '\r'
+  }
+  if escaping { false } else { ended_with_break }
+}
+
+///|
+
+///|
+/// Graphviz record labels collapse a trailing horizontal-whitespace run to one
+/// space before measuring or rendering a text span.
+pub fn normalize_label_line_trailing_whitespace(line : String) -> String {
+  let trimmed = line.trim_end(chars=" \t")
+  if trimmed.length() == line.length() {
+    return line
+  }
+  trimmed.to_owned() + " "
+}
+
+///|
 fn try_multiline_override(
   label : String,
   font_name : String,
@@ -306,12 +341,15 @@ fn try_multiline_override(
   // for empty lines, while non-empty lines use renderer-provided span height.
   let empty_line_height = (font_size_pt * LINE_SPACING).trunc()
   for line in lines {
-    if line == "" {
+    let measurement_line = normalize_label_line_trailing_whitespace(line)
+    if measurement_line == "" {
       total_height = total_height + empty_line_height
       continue
     }
     match
-      @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
+      @font_metrics.lookup_textspan_override(
+        measurement_line, font_name, font_size_pt,
+      ) {
       Some((width, height)) => {
         if width > max_width {
           max_width = width
@@ -343,7 +381,7 @@ pub fn label_text_metrics(
       label,
       font_name,
       font_size_pt,
-      trim_trailing_break=false,
+      trim_trailing_break=true,
     ) {
     Some(dims) => {
       let offsets = text_offsets(font_name, font_size_pt)
@@ -404,6 +442,9 @@ pub fn label_text_metrics(
       text_scale *
       width_scale /
       1000.0
+    if label_ends_with_break(label) && lines > 1 {
+      lines = lines - 1
+    }
     let height_pt = lines.to_double() * line_height
     let offsets = text_offsets(font_name, font_size_pt)
     return (width_pt, height_pt, offsets.layout, offsets.centerline)
@@ -491,6 +532,9 @@ pub fn label_text_metrics(
   let width_scale = font_width_scale(font_name)
   let text_scale = if @font_metrics.HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
   let width_pt = max_units * font_size_pt * text_scale * width_scale / 1000.0
+  if label_ends_with_break(label) && lines > 1 {
+    lines = lines - 1
+  }
   let height_pt = lines.to_double() * line_height
   let offsets = text_offsets(font_name, font_size_pt)
   (width_pt, height_pt, offsets.layout, offsets.centerline)

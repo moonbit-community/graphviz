@@ -331,12 +331,18 @@ pub fn compute_ordering_pipeline(
     cluster_meta,
     pipeline_context,
   })
+  let ordering = @setup.build_ordering_result_from_pipeline_context(
+    pipeline_context,
+    dispatch_output.ordered_groups,
+    dispatch_output.ordered_with_vnodes,
+  )
   {
     cluster_meta,
-    ordering: @setup.build_ordering_result_from_pipeline_context(
-      pipeline_context,
-      dispatch_output.ordered_groups,
-      dispatch_output.ordered_with_vnodes,
+    ordering: @setup.concentrate_ordering_result(
+      input.graph,
+      input.edges,
+      input.ranks,
+      ordering,
     ),
   }
 }

@@ -14,6 +14,18 @@ test "write_dot omits implicit node label defaults" {
 }
 
 ///|
+test "parser removes escaped quoted-string line continuations" {
+  let source = "digraph { a [label=\"left\\" + "\n" + "right\\nend\"]; }"
+  let graph = try @dot.parse_dot(source) catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+
+  assert_eq(graph.node("a").get_attr("label"), Some("leftright\\nend"))
+}
+
+///|
 test "parser promotes tailport and headport attrs to edge ports" {
   let graph = try
     @dot.parse_dot("digraph { a -> a [tailport=se, headport=se]; }")

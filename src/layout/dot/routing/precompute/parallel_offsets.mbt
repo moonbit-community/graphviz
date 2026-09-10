@@ -70,6 +70,105 @@ pub(all) struct ParallelOffsetsBuildInput {
   nodesep_pt : Double
   edge_reversed_by_id : Map[Int, Bool]
   cluster_keys : Map[String, String]
+  concentrated_ignored_edge_ids : Map[Int, Bool]
+}
+
+///|
+/// Graphviz parity: `concentrate=true` keeps the first unlabelled regular
+/// edge in an endpoint/port class as its routed representative. Later members
+/// are retained in DOT output without a `pos` attribute.
+pub fn collect_concentrated_edge_ids(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  concentrate : Bool,
+) -> Map[Int, Bool] {
+  let ignored_edge_ids : Map[Int, Bool] = Map([])
+  if !concentrate {
+    return ignored_edge_ids
+  }
+  let groups : Map[String, Array[Int]] = Map([])
+  for edge in edges {
+    if @edge_semantics.edge_has_label(edge) {
+      continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if tail == head ||
+      ranks.get(tail).unwrap_or_default() == ranks.get(head).unwrap_or_default() {
+      continue
+    }
+    let key = @edge_ops.edge_parallel_key(
+      tail,
+      head,
+      edge.tail_port(),
+      edge.head_port(),
+    )
+    match groups.get(key) {
+      Some(ids) => ids.push(edge.id())
+      None => groups[key] = [edge.id()]
+    }
+  }
+  for _key, ids in groups {
+    for i in 1..<ids.length() {
+      ignored_edge_ids[ids[i]] = true
+    }
+  }
+  ignored_edge_ids
+}
+
+///|
+/// After `dot_concentrate` absorbs part of an original class2 chain, Graphviz
+/// keeps the original edge in DOT but gives it no spline. Exact parallel
+/// edges are handled above; this records only edges marked by the post-
+/// mincross concentrate pass, rather than guessing from endpoint equality.
+pub fn mark_absorbed_concentrated_edge_ids(
+  edges : Array[@cgraph.Edge],
+  concentrate : Bool,
+  ignored_edge_ids : Map[Int, Bool],
+) -> Unit {
+  if !concentrate {
+    return
+  }
+  for edge in edges {
+    if edge.get_attr("_concentrated_absorbed") == Some("true") {
+      ignored_edge_ids[edge.id()] = true
+    }
+  }
+}
+
+///|
+fn matching_reverse_concentrated_edge(
+  edge : @cgraph.Edge,
+  candidate : @cgraph.Edge,
+) -> Bool {
+  edge.tail().name() == candidate.head().name() &&
+  edge.head().name() == candidate.tail().name() &&
+  @edge_identity.port_key(edge.tail_port()) ==
+  @edge_identity.port_key(candidate.head_port()) &&
+  @edge_identity.port_key(edge.head_port()) ==
+  @edge_identity.port_key(candidate.tail_port())
+}
+
+///|
+/// A concentrated reverse edge contributes the second arrowhead to its routed
+/// representative. Keep that relationship internal so the original `dir`
+/// attribute remains unchanged in DOT output.
+pub fn mark_concentrated_reverse_representatives(
+  edges : Array[@cgraph.Edge],
+  ignored_edge_ids : Map[Int, Bool],
+) -> Unit {
+  for edge in edges {
+    if ignored_edge_ids.get(edge.id()) is Some(_) {
+      continue
+    }
+    for candidate in edges {
+      if ignored_edge_ids.get(candidate.id()) is Some(_) &&
+        matching_reverse_concentrated_edge(edge, candidate) {
+        edge.set_attr("_concentrated_reverse", "true")
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -82,6 +181,7 @@ pub fn build_edge_parallel_offsets(
   let nodesep_pt = input.nodesep_pt
   let edge_reversed_by_id = input.edge_reversed_by_id
   let cluster_keys = input.cluster_keys
+  let concentrated_ignored_edge_ids = input.concentrated_ignored_edge_ids
   let groups : Map[String, Array[Int]] = Map([])
   let group_first_dir_attr : Map[String, String] = Map([])
   let group_has_mixed_dir_attr : Map[String, Bool] = Map([])
@@ -97,6 +197,9 @@ pub fn build_edge_parallel_offsets(
     }
   }
   for edge in edges {
+    if concentrated_ignored_edge_ids.get(edge.id()) is Some(_) {
+      continue
+    }
     let has_label = match edge_has_label_by_id.get(edge.id()) {
       Some(value) => value
       None => false

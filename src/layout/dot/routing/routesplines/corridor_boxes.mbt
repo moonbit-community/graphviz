@@ -41,6 +41,35 @@ fn order_for(name : String, order_index : Map[String, Int]) -> Int {
 }
 
 ///|
+fn path_neighbors(
+  name : String,
+  adjacency : Map[String, Array[String]],
+  vnode_sizes : Map[String, NodeSize],
+) -> Array[String] {
+  let neighbors = match adjacency.get(name) {
+    Some(list) => list
+    None => []
+  }
+  if !is_virtual_node(name, vnode_sizes) {
+    return neighbors
+  }
+  let unique : Array[String] = []
+  for neighbor in neighbors {
+    let mut already_seen = false
+    for existing in unique {
+      if existing == neighbor {
+        already_seen = true
+        break
+      }
+    }
+    if !already_seen {
+      unique.push(neighbor)
+    }
+  }
+  unique
+}
+
+///|
 fn pathscross(
   candidate : String,
   current : String,
@@ -51,14 +80,8 @@ fn pathscross(
   order_index : Map[String, Int],
   vnode_sizes : Map[String, NodeSize],
 ) -> Bool {
-  let out0 = match out_edges.get(candidate) {
-    Some(list) => list
-    None => []
-  }
-  let out1 = match out_edges.get(current) {
-    Some(list) => list
-    None => []
-  }
+  let out0 = path_neighbors(candidate, out_edges, vnode_sizes)
+  let out1 = path_neighbors(current, out_edges, vnode_sizes)
   if out0.length() != 1 && out1.length() != 1 {
     return false
   }
@@ -79,17 +102,11 @@ fn pathscross(
           if order != order_head {
             return true
           }
-          let e0_out = match out_edges.get(e0_head) {
-            Some(list) => list
-            None => []
-          }
+          let e0_out = path_neighbors(e0_head, out_edges, vnode_sizes)
           if e0_out.length() != 1 || !is_virtual_node(e0_head, vnode_sizes) {
             break
           }
-          let e1_out = match out_edges.get(e1_head) {
-            Some(list) => list
-            None => []
-          }
+          let e1_out = path_neighbors(e1_head, out_edges, vnode_sizes)
           if e1_out.length() != 1 || !is_virtual_node(e1_head, vnode_sizes) {
             break
           }
@@ -100,10 +117,7 @@ fn pathscross(
       }
     None => ()
   }
-  let in0 = match in_edges.get(candidate) {
-    Some(list) => list
-    None => []
-  }
+  let in0 = path_neighbors(candidate, in_edges, vnode_sizes)
   match path_prev {
     Some(prev) =>
       if in0.length() == 1 {
@@ -119,17 +133,11 @@ fn pathscross(
           if order != order_tail {
             return true
           }
-          let e0_in = match in_edges.get(e0_tail) {
-            Some(list) => list
-            None => []
-          }
+          let e0_in = path_neighbors(e0_tail, in_edges, vnode_sizes)
           if e0_in.length() != 1 || !is_virtual_node(e0_tail, vnode_sizes) {
             break
           }
-          let e1_in = match in_edges.get(e1_tail) {
-            Some(list) => list
-            None => []
-          }
+          let e1_in = path_neighbors(e1_tail, in_edges, vnode_sizes)
           if e1_in.length() != 1 || !is_virtual_node(e1_tail, vnode_sizes) {
             break
           }

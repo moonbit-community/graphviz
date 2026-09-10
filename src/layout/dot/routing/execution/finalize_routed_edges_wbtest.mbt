@@ -20,12 +20,37 @@ test "finalize_routed_edges preserves input order for layouts that remain after 
     ranks: { "a": 0, "b": 1, "c": 2 },
     edges_out_by_id,
     edge_port_label_pos_fn: _ => None,
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(output.map(fn(layout) { layout.edge.id() }), [
     edge_1.id(),
     edge_3.id(),
   ])
+}
+
+///|
+test "finalize_routed_edges omits concentrated nonrepresentative edges" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let representative = graph.edge(a, b)
+  let ignored = graph.edge(a, b)
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
+  edges_out_by_id[representative.id()] = build_layout_edge(representative, 10.0)
+  edges_out_by_id[ignored.id()] = build_layout_edge(ignored, 20.0)
+  let ignored_edge_ids : Map[Int, Bool] = Map([])
+  ignored_edge_ids[ignored.id()] = true
+
+  let output = finalize_routed_edges({
+    edges: [representative, ignored],
+    ranks: { "a": 0, "b": 1 },
+    edges_out_by_id,
+    edge_port_label_pos_fn: _ => None,
+    concentrated_ignored_edge_ids: ignored_edge_ids,
+  })
+
+  assert_eq(output.map(fn(layout) { layout.edge.id() }), [representative.id()])
 }
 
 ///|
@@ -66,6 +91,7 @@ test "finalize_routed_edges remaps parallel layouts before output order and reap
         None
       }
     },
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(output.map(fn(layout) { layout.edge.id() }), [

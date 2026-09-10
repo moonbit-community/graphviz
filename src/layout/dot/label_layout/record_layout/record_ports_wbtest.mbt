@@ -130,3 +130,51 @@ test "record_port_padding_y tracks explicit top and bottom label ports" {
   assert_true(padding.above > 0.0)
   assert_true(padding.below > 0.0)
 }
+
+///|
+test "record_port_padding_y ignores an interior record field" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=record]; source; target; source -> target:interior; }",
+  )
+  let target = graph.node("target")
+  let positions : Map[String, @geom.Point] = { "target": { x: 0.0, y: 0.0, } }
+  let ports : Map[String, RecordPort] = {
+    "interior": {
+      center: { x: 0.0, y: 20.0, },
+      size: @node_primitives.node_size_from_points(20.0, 100.0),
+      sides: @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT,
+    },
+  }
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
+  label_ports_map[target.name()] = ports
+
+  let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)
+
+  assert_eq(padding.above, 0.0)
+  assert_eq(padding.below, 0.0)
+}
+
+///|
+test "record_port_padding_y ignores self-edge record ports" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=record]; a [label=\"<p>a|b\"]; a:p -> a; }",
+  )
+  let node = graph.node("a")
+  let positions : Map[String, @geom.Point] = { "a": { x: 0.0, y: 0.0, } }
+  let ports : Map[String, RecordPort] = {
+    "p": {
+      center: { x: -10.0, y: 0.0, },
+      size: @node_primitives.node_size_from_points(20.0, 30.0),
+      sides: @port_geometry.PORT_SIDE_LEFT |
+      @port_geometry.PORT_SIDE_TOP |
+      @port_geometry.PORT_SIDE_BOTTOM,
+    },
+  }
+  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
+  label_ports_map[node.name()] = ports
+
+  let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)
+
+  assert_eq(padding.above, 0.0)
+  assert_eq(padding.below, 0.0)
+}

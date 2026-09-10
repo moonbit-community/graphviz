@@ -154,6 +154,36 @@ fn decode_bytes(view : BytesView) -> String {
 }
 
 ///|
+fn remove_escaped_line_continuations(value : String) -> String {
+  let chars : Array[Char] = []
+  for ch in value {
+    chars.push(ch)
+  }
+  let out = StringBuilder()
+  let mut index = 0
+  while index < chars.length() {
+    let current = chars[index]
+    if current == '\\' && index + 1 < chars.length() {
+      let next = chars[index + 1]
+      if next == '\n' {
+        index = index + 2
+        continue
+      }
+      if next == '\r' {
+        index = index + 2
+        if index < chars.length() && chars[index] == '\n' {
+          index = index + 1
+        }
+        continue
+      }
+    }
+    out.write_char(current)
+    index = index + 1
+  }
+  out.to_string()
+}
+
+///|
 fn Lexer::read_quoted_string(self : Lexer) -> String raise DotParseError {
   let start = self.position()
   self.advance()
@@ -166,7 +196,7 @@ fn Lexer::read_quoted_string(self : Lexer) -> String raise DotParseError {
         let end_index = self.index
         self.advance()
         let view = self.bytes[start_index:end_index]
-        return decode_bytes(view)
+        return remove_escaped_line_continuations(decode_bytes(view))
       }
       Some(value) if value == b'\\' => {
         self.advance()

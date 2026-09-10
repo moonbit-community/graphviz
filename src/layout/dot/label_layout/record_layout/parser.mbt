@@ -48,6 +48,12 @@ pub fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       parser.index = parser.index + 1
       continue
     }
+    // Graphviz parse_reclbl ignores unescaped ASCII control bytes.  In
+    // particular, a literal tab is not part of a record field's text span.
+    if ch.to_int() > 0 && ch.to_int() < ' '.to_int() {
+      parser.index = parser.index + 1
+      continue
+    }
     if ch == '<' {
       in_port = true
       sb.write_char(ch)
@@ -138,14 +144,25 @@ fn record_field_from_text(field : String) -> RecordField {
 fn normalize_record_text(text : String) -> String {
   let sb = StringBuilder()
   let mut escaping = false
+  let mut previous_space = false
+  let mut has_hard_space = false
   for ch in text {
     if escaping {
       escaping = false
       if ch == 'n' || ch == 'l' || ch == 'r' {
         sb.write_char('\\')
         sb.write_char(ch)
+        previous_space = false
       } else {
         sb.write_char(ch)
+        if ch == ' ' {
+          // Graphviz parse_reclbl treats an escaped space as hard space.
+          // Subsequent spaces in the field must then remain distinct.
+          has_hard_space = true
+          previous_space = true
+        } else {
+          previous_space = false
+        }
       }
       continue
     }
@@ -153,7 +170,13 @@ fn normalize_record_text(text : String) -> String {
       escaping = true
       continue
     }
+    // parse_reclbl compacts adjacent ordinary spaces in a record field.
+    // This happens before labels.c measures and renders the text span.
+    if ch == ' ' && previous_space && !has_hard_space {
+      continue
+    }
     sb.write_char(ch)
+    previous_space = ch == ' '
   }
   if escaping {
     sb.write_char('\\')

@@ -636,9 +636,14 @@ pub fn record_port_padding_y(
                         } else {
                           half_height * 0.5
                         }
-                        if dy < 0.0 && adjusted > extra_below {
+                        if dy < 0.0 &&
+                          (port_info.sides & @port_geometry.PORT_SIDE_BOTTOM) !=
+                          0 &&
+                          adjusted > extra_below {
                           extra_below = adjusted
-                        } else if dy > 0.0 && adjusted > extra_above {
+                        } else if dy > 0.0 &&
+                          (port_info.sides & @port_geometry.PORT_SIDE_TOP) != 0 &&
+                          adjusted > extra_above {
                           extra_above = adjusted
                         }
                       }
@@ -654,6 +659,12 @@ pub fn record_port_padding_y(
     }
   }
   for edge in edges {
+    // Graphviz set_ycoords accounts for a self-edge's label but does not add
+    // record-port rank padding for the loop itself. makeSelfEdge resolves its
+    // port geometry later, after the rank bbox has already been established.
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
     if @edge_identity.port_is_explicit(edge.tail_port()) &&
       @record_geometry.is_record_shape(edge.tail()) {
       update_padding(edge.tail().name(), edge.tail_port())

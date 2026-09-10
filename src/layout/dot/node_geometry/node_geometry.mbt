@@ -233,8 +233,9 @@ pub fn node_size(
     let bordered_height = height_pt + @record_geometry.RECORD_BORDER_PT * 2.0
     return @node_primitives.node_size_from_points(width_pt, bordered_height)
   }
+  let simple_label = @label_attrs.simple_label_text(node)
   let (text_width_pt, text_height_pt) = @label_metrics.label_text_dimensions(
-    label, font, font_size_pt,
+    simple_label, font, font_size_pt,
   )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
   let label_dims = if has_label {

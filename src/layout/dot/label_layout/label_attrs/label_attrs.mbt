@@ -75,6 +75,33 @@ pub fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
 }
 
 ///|
+fn unescape_simple_label_text(value : String) -> String {
+  let chars : Array[Char] = []
+  for ch in value {
+    chars.push(ch)
+  }
+  let text = StringBuilder()
+  let mut index = 0
+  while index < chars.length() {
+    let ch = chars[index]
+    if ch != '\\' || index + 1 >= chars.length() {
+      text.write_char(ch)
+      index = index + 1
+      continue
+    }
+    let escaped = chars[index + 1]
+    // labels.c/make_simple_label retains these layout escapes for its line
+    // splitter, while every other escaped byte is rendered literally.
+    if escaped == 'n' || escaped == 'l' || escaped == 'r' {
+      text.write_char('\\')
+    }
+    text.write_char(escaped)
+    index = index + 2
+  }
+  text.to_string()
+}
+
+///|
 pub fn label_text(node : @cgraph.Node) -> String {
   match node.get_attr("label") {
     Some(value) =>
@@ -87,6 +114,20 @@ pub fn label_text(node : @cgraph.Node) -> String {
       }
     None => node.name()
   }
+}
+
+///|
+pub fn simple_label_text(node : @cgraph.Node) -> String {
+  let label = match node.get_attr("label") {
+    Some(value) =>
+      if value == "\\N" {
+        node.name()
+      } else {
+        value.replace_all(old="\\N", new=node.name())
+      }
+    None => node.name()
+  }
+  @attrs.decode_label_entities(unescape_simple_label_text(label))
 }
 
 ///|

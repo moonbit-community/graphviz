@@ -49,6 +49,36 @@ test "build_path_adjacency uses overridden tail and head order" {
 }
 
 ///|
+test "pathscross coalesces duplicate virtual neighbors" {
+  let vnode_sizes : Map[String, @node_primitives.NodeSize] = {
+    "candidate": @node_primitives.vnode_size_from_widths(0.0, 0.0),
+  }
+  let out_edges : Map[String, Array[String]] = {
+    "candidate": ["other", "other"],
+    "current": ["next", "extra"],
+  }
+  let order_index : Map[String, Int] = {
+    "candidate": 0,
+    "current": 1,
+    "next": 0,
+    "other": 2,
+  }
+
+  assert_true(
+    pathscross(
+      "candidate",
+      "current",
+      None,
+      Some("next"),
+      out_edges,
+      Map([]),
+      order_index,
+      vnode_sizes,
+    ),
+  )
+}
+
+///|
 test "pathplan_bounds merges vnode positions and expands each rank by route width" {
   let positions : Map[String, @geom.Point] = Map([])
   positions["a"] = { x: 10.0, y: 0.0, }

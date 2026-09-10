@@ -159,6 +159,16 @@ fn resolve_dynamic_port_anchor(
   rankdir : RankDir,
 ) -> DynamicPortAnchor {
   let sides = raw_port.sides
+  // Graphviz runs makeSelfEdge before resolvePort. Thus a record self-edge
+  // uses the field's original center and complete exposed-side mask, rather
+  // than the dynamically selected compass point used by ordinary edges.
+  if node_pos == other_pos {
+    let offset = layout_port_offset(raw_port.center, rankdir)
+    return {
+      anchor: Some(@edge_spline.point_add(node_pos, offset)),
+      side: invflip_side(sides, rankdir),
+    }
+  }
   if sides == 0 || sides == PORT_SIDE_ALL {
     return { anchor: None, side: 0, }
   }

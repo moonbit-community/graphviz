@@ -62,6 +62,15 @@ test "render_xdot attaches draw ops" {
 }
 
 ///|
+test "render_xdot decodes plain-label entities in edge draw ops" {
+  let graph = @dot.parse_dot("digraph { a -> b [label=\"&lt;x&gt;\"]; }")
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+
+  assert_true(output.contains("3 -<x>"))
+  assert_true(!output.contains("&amp;lt;x"))
+}
+
+///|
 fn parse_double_or_fail(value : StringView) -> Double raise {
   @string.parse_double(value) catch {
     _ => fail("invalid number: \{value}")

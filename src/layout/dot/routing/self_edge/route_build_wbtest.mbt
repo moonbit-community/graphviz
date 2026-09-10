@@ -97,6 +97,21 @@ fn build_self_edge_base(
 }
 
 ///|
+test "self_edge_rank_spacing uses the node height for one-rank graphs" {
+  assert_close(
+    self_edge_rank_spacing({
+      rank: 0,
+      rank_y: { 0: 0.0 },
+      node_y: 0.0,
+      node_height: 20.0,
+      min_rank: 0,
+      max_rank: 0,
+    }),
+    20.0,
+  )
+}
+
+///|
 test "build_self_edge_routes sends implicit self-edge loops to the right" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("n")

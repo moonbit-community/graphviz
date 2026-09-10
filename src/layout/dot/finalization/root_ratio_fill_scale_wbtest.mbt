@@ -63,7 +63,12 @@ test "apply_ratio_fill_scale scales only root layouts, rounds node positions, an
     subgraphs=[cluster_layout],
   )
 
-  let scaled = apply_ratio_fill_scale(layout, @rankdir.RankDir::TB, layout.bbox)
+  let scaled = apply_ratio_fill_scale(
+    layout,
+    @rankdir.RankDir::TB,
+    layout.bbox,
+    true,
+  )
   let scaled_cluster = scaled.subgraphs[0]
   let scaled_edge = scaled.edges[0].splines[0]
 
@@ -89,7 +94,35 @@ test "apply_ratio_fill_scale scales only root layouts, rounds node positions, an
   assert_eq(scaled_cluster.nodes[0].pos, { x: 25.0, y: 25.0, })
   assert_eq(scaled_cluster.nodes[0].label_pos, Some({ x: 22.0, y: 21.0, }))
   assert_eq(
-    apply_ratio_fill_scale(cluster_layout, @rankdir.RankDir::TB, layout.bbox).bbox,
+    apply_ratio_fill_scale(
+      cluster_layout,
+      @rankdir.RankDir::TB,
+      layout.bbox,
+      true,
+    ).bbox,
     cluster_layout.bbox,
   )
+}
+
+///|
+test "apply_ratio_fill_scale preserves a single-rank graph's natural size" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  root.set_attr("ratio", "fill")
+  root.set_attr("size", "2,1")
+  let a = root.node("a")
+  let layout = root_coordinates_make_layout_tree(
+    root,
+    { llx: 0.0, lly: 0.0, urx: 36.0, ury: 18.0, },
+    nodes=[root_coordinates_make_node_layout(a, { x: 18.0, y: 9.0, }, 1.0, 1.0)],
+  )
+
+  let unchanged = apply_ratio_fill_scale(
+    layout,
+    @rankdir.RankDir::TB,
+    layout.bbox,
+    false,
+  )
+
+  assert_eq(unchanged.bbox, layout.bbox)
+  assert_eq(unchanged.nodes[0].pos, layout.nodes[0].pos)
 }

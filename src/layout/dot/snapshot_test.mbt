@@ -47,6 +47,13 @@ async test "snapshot input path resolves representative local and Graphviz cases
   )
 }
 
+///|
+async test "biglabel interior record port does not enlarge the root bbox" {
+  let graph = @dot_fs.parse_dot_file("refs/graphviz/tests/graphs/biglabel.gv")
+  let layout = layout_dot(graph)
+  assert_eq(layout.bbox.ury, 1429.5)
+}
+
 //|
 
 ///|

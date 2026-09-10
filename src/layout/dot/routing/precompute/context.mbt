@@ -17,6 +17,7 @@ pub(all) struct RoutingContext {
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
   parallel_offsets : Map[Int, Double]
+  concentrated_ignored_edge_ids : Map[Int, Bool]
   cluster_bboxes : Map[String, @geom.Rect]
 }
 
@@ -113,6 +114,7 @@ pub(all) struct PrepareRoutingContextInput {
   vnode_sizes : Map[String, NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
+  concentrate : Bool
 }
 
 ///|
@@ -163,6 +165,20 @@ pub fn prepare_routing_context(
     input.edge_tail,
     input.edge_head,
   )
+  let concentrated_ignored_edge_ids = collect_concentrated_edge_ids(
+    input.edges,
+    input.ranks,
+    input.concentrate,
+  )
+  mark_absorbed_concentrated_edge_ids(
+    input.edges,
+    input.concentrate,
+    concentrated_ignored_edge_ids,
+  )
+  mark_concentrated_reverse_representatives(
+    input.edges,
+    concentrated_ignored_edge_ids,
+  )
   let parallel_offsets = build_edge_parallel_offsets({
     edges: input.edges,
     edge_has_label_by_id,
@@ -170,6 +186,7 @@ pub fn prepare_routing_context(
     nodesep_pt: input.nodesep_pt,
     edge_reversed_by_id,
     cluster_keys: input.path_cluster_keys,
+    concentrated_ignored_edge_ids,
   })
   {
     order_index,
@@ -182,6 +199,7 @@ pub fn prepare_routing_context(
     path_cluster_keys: input.path_cluster_keys,
     path_vnode_clusters,
     parallel_offsets,
+    concentrated_ignored_edge_ids,
     cluster_bboxes: input.cluster_bboxes,
   }
 }

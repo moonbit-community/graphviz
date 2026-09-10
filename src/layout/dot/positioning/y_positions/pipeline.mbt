@@ -103,6 +103,54 @@ priv struct YPositionsWithFlipOutput {
 }
 
 ///|
+fn ranksep_equally_enabled(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("ranksep") {
+    Some(value) => value.to_lower().contains("equally")
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: position.c first assigns the minimum feasible rank gaps,
+/// then ranksep=equally replaces every gap with the largest one.
+fn equalize_rank_positions(
+  all_ranks : Array[Int],
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  y_positions : Map[String, Double],
+  rank_y : Map[Int, Double],
+) -> Unit {
+  if all_ranks.length() < 2 {
+    return ()
+  }
+  let mut max_gap = 0.0
+  let mut idx = all_ranks.length() - 1
+  while idx > 0 {
+    let upper = all_ranks[idx]
+    let lower = all_ranks[idx - 1]
+    let gap = Double::abs(
+      rank_y.get(lower).unwrap_or_default() -
+      rank_y.get(upper).unwrap_or_default(),
+    )
+    if gap > max_gap {
+      max_gap = gap
+    }
+    idx = idx - 1
+  }
+  idx = all_ranks.length() - 1
+  while idx > 0 {
+    let upper = all_ranks[idx]
+    let lower = all_ranks[idx - 1]
+    rank_y[lower] = rank_y.get(upper).unwrap_or_default() + max_gap
+    idx = idx - 1
+  }
+  let rebuilt = build_y_positions_from_rank_groups(rank_keys, groups, rank_y)
+  for name, value in rebuilt {
+    y_positions[name] = value
+  }
+}
+
+///|
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
@@ -148,6 +196,15 @@ fn build_y_positions_with_flip(
         rank_y,
       )
     }
+  }
+  if ranksep_equally_enabled(input.graph) {
+    equalize_rank_positions(
+      input.y_all_ranks,
+      input.rank_keys,
+      input.groups,
+      y_positions,
+      rank_y,
+    )
   }
   { y_positions, rank_y, }
 }

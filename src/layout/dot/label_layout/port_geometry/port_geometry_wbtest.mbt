@@ -80,3 +80,45 @@ test "dynamic_port_anchor_for_edge falls back when the port resolves to a compas
   assert_eq(result.side, 0)
   assert_eq(result.anchor, None)
 }
+
+///|
+test "dynamic_port_anchor_for_edge keeps the complete self-edge record side mask" {
+  let raw_ports : Map[String, Map[String, RecordPort]] = Map([])
+  let node_ports : Map[String, RecordPort] = Map([])
+  node_ports["left"] = {
+    center: @geom.Point::{ x: -13.625, y: 0.0, },
+    size: @node_primitives.node_size_from_points(27.25, 35.5),
+    sides: PORT_SIDE_LEFT | PORT_SIDE_TOP | PORT_SIDE_BOTTOM,
+  }
+  node_ports["middle"] = {
+    center: @geom.Point::{ x: 0.0, y: 0.0, },
+    size: @node_primitives.node_size_from_points(22.75, 35.5),
+    sides: PORT_SIDE_TOP | PORT_SIDE_BOTTOM,
+  }
+  raw_ports["n"] = node_ports
+  let node_pos = @geom.Point::{ x: 100.0, y: 100.0, }
+
+  let left = dynamic_port_anchor_for_edge(
+    Some({ name: Some("left"), compass: None, }),
+    "n",
+    raw_ports,
+    node_pos,
+    node_pos,
+    @rankdir.RankDir::TB,
+    0.0,
+  )
+  assert_eq(left.side, PORT_SIDE_LEFT | PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
+  assert_eq(left.anchor, Some(@geom.Point::{ x: 86.375, y: 100.0, }))
+
+  let middle = dynamic_port_anchor_for_edge(
+    Some({ name: Some("middle"), compass: None, }),
+    "n",
+    raw_ports,
+    node_pos,
+    node_pos,
+    @rankdir.RankDir::TB,
+    0.0,
+  )
+  assert_eq(middle.side, PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
+  assert_eq(middle.anchor, Some(@geom.Point::{ x: 100.0, y: 100.0, }))
+}

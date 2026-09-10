@@ -35,6 +35,20 @@ test "label_text falls back to node name and resolves Graphviz slash-N" {
 }
 
 ///|
+test "simple_label_text renders escaped plain-label bytes literally" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let node = graph.node("\\<base\\>")
+
+  assert_eq(simple_label_text(node), "<base>")
+
+  node.set_attr("label", "prefix \\<value\\> \\N")
+  assert_eq(simple_label_text(node), "prefix <value> <base>")
+
+  node.set_attr("label", "top\\nbase")
+  assert_eq(simple_label_text(node), "top\\nbase")
+}
+
+///|
 test "node_padding uses defaults and margin overrides in points" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("n")

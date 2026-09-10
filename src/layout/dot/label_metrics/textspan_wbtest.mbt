@@ -21,10 +21,10 @@ test "multiline overrides use widest line total height and font offsets" {
 }
 
 ///|
-test "regular labels keep a trailing break as an empty line" {
+test "regular labels trim a trailing break line" {
   assert_eq(
     label_text_metrics("a\\n", "Times-Roman", 14.0),
-    (6.0, 32.5, 12.75, 0.7000000000000001),
+    (6.0, 16.5, 12.75, 0.7000000000000001),
   )
 }
 
@@ -33,6 +33,17 @@ test "record labels trim a trailing break line" {
   assert_eq(
     record_label_text_dimensions("a\\n", "Times-Roman", 14.0),
     (6.0, 16.5),
+  )
+}
+
+///|
+test "record measurement collapses trailing whitespace runs to one space" {
+  assert_eq(
+    record_label_text_dimensions(
+      "flowering plants and the incredible changes                    \\nAugust.",
+      "Times-Roman", 14.0,
+    ),
+    (240.75, 33.0),
   )
 }
 

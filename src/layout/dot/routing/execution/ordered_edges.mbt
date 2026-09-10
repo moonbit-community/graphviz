@@ -74,6 +74,12 @@ fn route_ordered_edge(
   callbacks : RoutingCallbacks,
 ) -> Unit {
   let edge_id = edge.id()
+  if input.regular_pass_input.routing_context.concentrated_ignored_edge_ids.get(
+      edge_id,
+    )
+    is Some(_) {
+    return ()
+  }
   if state.edges_out_by_id.get(edge_id) is Some(_) {
     return ()
   }

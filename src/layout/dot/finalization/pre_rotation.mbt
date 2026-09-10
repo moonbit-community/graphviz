@@ -190,7 +190,12 @@ fn apply_pre_rotation_layout_postprocess(
     edges: layout_with_root_pad.edges,
     subgraphs: layout_with_root_pad.subgraphs,
   }
-  let layout = apply_ratio_fill_scale(layout, rankdir, root_padded.ratio_bbox)
+  let layout = apply_ratio_fill_scale(
+    layout,
+    rankdir,
+    root_padded.ratio_bbox,
+    input.all_ranks.length() > 1,
+  )
   let adjusted = adjust_edge_labels_if_enabled(
     layout,
     input.nodesep_pt,

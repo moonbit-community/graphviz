@@ -100,6 +100,7 @@ pub(all) struct FinalizeRoutedEdgesInput {
   ranks : Map[String, Int]
   edges_out_by_id : Map[Int, DotLayoutEdge]
   edge_port_label_pos_fn : EdgePortLabelPosFn
+  concentrated_ignored_edge_ids : Map[Int, Bool]
 }
 
 ///|
@@ -109,6 +110,7 @@ fn finalize_routed_edges(
   let edges = input.edges
   let ranks = input.ranks
   let edges_out_by_id = input.edges_out_by_id
+  let concentrated_ignored_edge_ids = input.concentrated_ignored_edge_ids
   remap_parallel_edge_layouts({
     edges,
     ranks,
@@ -116,6 +118,7 @@ fn finalize_routed_edges(
     edge_port_label_pos_fn: input.edge_port_label_pos_fn,
   })
   let ordered_output_edge_ids = collect_input_order_edge_ids(edges, edge_id => {
+    concentrated_ignored_edge_ids.get(edge_id) is None &&
     edges_out_by_id.get(edge_id) is Some(_)
   })
   let edges_out : Array[DotLayoutEdge] = []

@@ -46,6 +46,7 @@ test "build_edge_parallel_offsets keeps sameport-marked edges on the outer slot"
     nodesep_pt: 10.0,
     edge_reversed_by_id: Map([]),
     cluster_keys: Map([]),
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(offsets.get(sameport.id()), Some(5.0))
@@ -76,6 +77,7 @@ test "build_edge_parallel_offsets prefers the reverse pair whose tail lacks a se
     nodesep_pt: 12.0,
     edge_reversed_by_id,
     cluster_keys: Map([]),
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(offsets.get(ba.id()), Some(6.0))
@@ -102,6 +104,7 @@ test "build_edge_parallel_offsets reverses slot order when parallel edges mix di
     nodesep_pt: 10.0,
     edge_reversed_by_id: Map([]),
     cluster_keys: Map([]),
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(offsets.get(back.id()), Some(5.0))
@@ -135,8 +138,59 @@ test "build_edge_parallel_offsets keeps intercluster reverse pairs in cluster-co
     nodesep_pt: 12.0,
     edge_reversed_by_id,
     cluster_keys,
+    concentrated_ignored_edge_ids: Map([]),
   })
 
   assert_eq(offsets.get(ab.id()), Some(6.0))
   assert_eq(offsets.get(ba.id()), Some(-6.0))
+}
+
+///|
+test "concentrate keeps the first regular parallel edge as the representative" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let forward = graph.edge(a, b)
+  let reverse = graph.edge(b, a)
+  let ranks : Map[String, Int] = { "a": 0, "b": 1 }
+  let ignored_edge_ids = collect_concentrated_edge_ids(
+    [forward, reverse],
+    ranks,
+    true,
+  )
+
+  assert_eq(ignored_edge_ids.get(forward.id()), None)
+  assert_eq(ignored_edge_ids.get(reverse.id()), Some(true))
+  mark_concentrated_reverse_representatives(
+    [forward, reverse],
+    ignored_edge_ids,
+  )
+  assert_eq(forward.get_attr("_concentrated_reverse"), Some("true"))
+
+  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  edge_has_label_by_id[forward.id()] = false
+  edge_has_label_by_id[reverse.id()] = false
+  let offsets = build_edge_parallel_offsets({
+    edges: [forward, reverse],
+    edge_has_label_by_id,
+    ranks,
+    nodesep_pt: 12.0,
+    edge_reversed_by_id: Map([]),
+    cluster_keys: Map([]),
+    concentrated_ignored_edge_ids: ignored_edge_ids,
+  })
+  assert_eq(offsets.get(forward.id()), None)
+  assert_eq(offsets.get(reverse.id()), None)
+}
+
+///|
+test "concentrate omits an edge whose virtual chain was absorbed after mincross" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let edge = graph.edge(graph.node("tail"), graph.node("head"))
+  edge.set_attr("_concentrated_absorbed", "true")
+  let ignored_edge_ids : Map[Int, Bool] = Map([])
+
+  mark_absorbed_concentrated_edge_ids([edge], true, ignored_edge_ids)
+
+  assert_eq(ignored_edge_ids.get(edge.id()), Some(true))
 }

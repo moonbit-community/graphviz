@@ -292,6 +292,11 @@ fn is_internal_graph_attr(name : String) -> Bool {
 }
 
 ///|
+fn is_internal_edge_attr(name : String) -> Bool {
+  name == "_concentrated_reverse" || name == "_concentrated_absorbed"
+}
+
+///|
 fn graph_attr_rank(name : String) -> Int {
   match name {
     "URL" | "url" | "href" => -1
@@ -633,6 +638,9 @@ fn filter_nondefault_edge_attrs(
   let filtered : Array[(String, String)] = []
   for pair in edge.attrs() {
     let (key, value) = pair
+    if is_internal_edge_attr(key) {
+      continue
+    }
     match graph.get_default_attr(@cgraph.AttrKind::Edge, key) {
       Some(default_value) =>
         if default_value != value {

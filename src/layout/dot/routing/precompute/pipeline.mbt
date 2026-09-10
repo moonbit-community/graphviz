@@ -87,6 +87,7 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
+  concentrate : Bool
 }
 
 ///|
@@ -130,6 +131,7 @@ pub fn build_routing_precompute_pipeline(
     vnode_sizes: input.vnode_sizes,
     vnode_positions: input.vnode_positions,
     cluster_bboxes: input.cluster_bboxes,
+    concentrate: input.concentrate,
   })
   {
     port_pad_below: input.port_pad_below,

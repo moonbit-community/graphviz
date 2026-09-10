@@ -1247,7 +1247,13 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
             'r' => @render.TextAlign::Right
             _ => @render.TextAlign::Center
           }
-          push_label_line(lines, sb.to_string(), align)
+          push_label_line(
+            lines,
+            @label_metrics.normalize_label_line_trailing_whitespace(
+              sb.to_string(),
+            ),
+            align,
+          )
           sb = StringBuilder()
           has_chars = false
         }
@@ -1263,7 +1269,11 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
+      push_label_line(
+        lines,
+        @label_metrics.normalize_label_line_trailing_whitespace(sb.to_string()),
+        @render.TextAlign::Center,
+      )
       sb = StringBuilder()
       has_chars = false
       continue
@@ -1276,7 +1286,11 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
+    push_label_line(
+      lines,
+      @label_metrics.normalize_label_line_trailing_whitespace(sb.to_string()),
+      @render.TextAlign::Center,
+    )
   }
   lines
 }
@@ -1291,6 +1305,7 @@ fn record_label_metrics(
   let lines : Array[LabelLine] = []
   let mut max_width = 0.0
   let mut total_height = 0.0
+  let mut has_nonempty_line = false
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, base_height_pt) = @label_metrics.record_label_text_dimensions(
@@ -1301,7 +1316,11 @@ fn record_label_metrics(
     )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     let height_pt = if line.text == "" {
-      layout_height_pt
+      if has_nonempty_line {
+        (font_size_pt * 1.2).trunc()
+      } else {
+        layout_height_pt
+      }
     } else {
       base_height_pt
     }
@@ -1309,6 +1328,9 @@ fn record_label_metrics(
       max_width = width_pt
     }
     total_height = total_height + height_pt
+    if line.text != "" {
+      has_nonempty_line = true
+    }
     lines.push({
       text: line.text,
       align: line.align,
@@ -1653,6 +1675,9 @@ fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
     }
     _ => ()
   }
+  if edge.get_attr("_concentrated_reverse") is Some(_) {
+    tail = true
+  }
   let head_shape = match edge.get_attr("arrowhead") {
     Some(value) => value.to_lower()
     None => ""
@@ -1787,7 +1812,7 @@ fn escape_xml(text : String) -> String {
       '<' => sb.write_string("&lt;")
       '>' => sb.write_string("&gt;")
       '"' => sb.write_string("&quot;")
-      '\'' => sb.write_string("&apos;")
+      '\'' => sb.write_string("&#39;")
       _ => sb.write_char(ch)
     }
   }
@@ -1826,7 +1851,7 @@ fn escape_xml_text_with_dash(text : String) -> String {
       '<' => sb.write_string("&lt;")
       '>' => sb.write_string("&gt;")
       '"' => sb.write_string("&quot;")
-      '\'' => sb.write_string("&apos;")
+      '\'' => sb.write_string("&#39;")
       '-' => sb.write_string("&#45;")
       _ => sb.write_char(ch)
     }
@@ -3468,6 +3493,12 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       parser.index = parser.index + 1
       continue
     }
+    // Keep record rendering aligned with parse_reclbl: literal ASCII control
+    // bytes, including tabs, do not enter a field text span.
+    if ch.to_int() > 0 && ch.to_int() < ' '.to_int() {
+      parser.index = parser.index + 1
+      continue
+    }
     if ch == '<' {
       in_port = true
       sb.write_char(ch)
@@ -3540,9 +3571,51 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     trimmed
   }
-  let normalized = raw_text.trim(chars=" \n\r\t").to_owned()
+  let normalized = normalize_record_text(raw_text)
+    .trim(chars=" \n\r\t")
+    .to_owned()
   let text = if normalized == "" { " " } else { normalized }
   { text, }
+}
+
+///|
+fn normalize_record_text(text : String) -> String {
+  let sb = StringBuilder()
+  let mut escaping = false
+  let mut previous_space = false
+  let mut has_hard_space = false
+  for ch in text {
+    if escaping {
+      escaping = false
+      if ch == 'n' || ch == 'l' || ch == 'r' {
+        sb.write_char('\\')
+        sb.write_char(ch)
+        previous_space = false
+      } else {
+        sb.write_char(ch)
+        if ch == ' ' {
+          has_hard_space = true
+          previous_space = true
+        } else {
+          previous_space = false
+        }
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == ' ' && previous_space && !has_hard_space {
+      continue
+    }
+    sb.write_char(ch)
+    previous_space = ch == ' '
+  }
+  if escaping {
+    sb.write_char('\\')
+  }
+  sb.to_string()
 }
 
 ///|

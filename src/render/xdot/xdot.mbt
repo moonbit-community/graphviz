@@ -200,7 +200,13 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
             'r' => @render.TextAlign::Right
             _ => @render.TextAlign::Center
           }
-          push_label_line(lines, sb.to_string(), align)
+          push_label_line(
+            lines,
+            @label_metrics.normalize_label_line_trailing_whitespace(
+              sb.to_string(),
+            ),
+            align,
+          )
           sb = StringBuilder()
           has_chars = false
         }
@@ -216,7 +222,11 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
+      push_label_line(
+        lines,
+        @label_metrics.normalize_label_line_trailing_whitespace(sb.to_string()),
+        @render.TextAlign::Center,
+      )
       sb = StringBuilder()
       has_chars = false
       continue
@@ -229,7 +239,11 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
-    push_label_line(lines, sb.to_string(), @render.TextAlign::Center)
+    push_label_line(
+      lines,
+      @label_metrics.normalize_label_line_trailing_whitespace(sb.to_string()),
+      @render.TextAlign::Center,
+    )
   }
   lines
 }
@@ -244,6 +258,7 @@ fn record_label_metrics(
   let lines : Array[LabelLine] = []
   let mut max_width = 0.0
   let mut total_height = 0.0
+  let mut has_nonempty_line = false
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, base_height_pt) = @label_metrics.record_label_text_dimensions(
@@ -254,7 +269,11 @@ fn record_label_metrics(
     )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     let height_pt = if line.text == "" {
-      layout_height_pt
+      if has_nonempty_line {
+        (font_size_pt * 1.2).trunc()
+      } else {
+        layout_height_pt
+      }
     } else {
       base_height_pt
     }
@@ -262,6 +281,9 @@ fn record_label_metrics(
       max_width = width_pt
     }
     total_height = total_height + height_pt
+    if line.text != "" {
+      has_nonempty_line = true
+    }
     lines.push({
       text: line.text,
       align: line.align,
@@ -1214,6 +1236,9 @@ fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
       tail = true
     }
     _ => ()
+  }
+  if edge.get_attr("_concentrated_reverse") is Some(_) {
+    tail = true
   }
   let head_shape = match edge.get_attr("arrowhead") {
     Some(value) => value.to_lower()
@@ -2909,6 +2934,12 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
       parser.index = parser.index + 1
       continue
     }
+    // Keep record rendering aligned with parse_reclbl: literal ASCII control
+    // bytes, including tabs, do not enter a field text span.
+    if ch.to_int() > 0 && ch.to_int() < ' '.to_int() {
+      parser.index = parser.index + 1
+      continue
+    }
     if ch == '<' {
       in_port = true
       sb.write_char(ch)
@@ -2981,9 +3012,51 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     trimmed
   }
-  let normalized = raw_text.trim(chars=" \n\r\t").to_owned()
+  let normalized = normalize_record_text(raw_text)
+    .trim(chars=" \n\r\t")
+    .to_owned()
   let text = if normalized == "" { " " } else { normalized }
   { text, }
+}
+
+///|
+fn normalize_record_text(text : String) -> String {
+  let sb = StringBuilder()
+  let mut escaping = false
+  let mut previous_space = false
+  let mut has_hard_space = false
+  for ch in text {
+    if escaping {
+      escaping = false
+      if ch == 'n' || ch == 'l' || ch == 'r' {
+        sb.write_char('\\')
+        sb.write_char(ch)
+        previous_space = false
+      } else {
+        sb.write_char(ch)
+        if ch == ' ' {
+          has_hard_space = true
+          previous_space = true
+        } else {
+          previous_space = false
+        }
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == ' ' && previous_space && !has_hard_space {
+      continue
+    }
+    sb.write_char(ch)
+    previous_space = ch == ' '
+  }
+  if escaping {
+    sb.write_char('\\')
+  }
+  sb.to_string()
 }
 
 ///|
@@ -3195,6 +3268,9 @@ fn record_separator_ops(
   orientation : RecordOrientation,
   rect : @geom.Rect,
   color : String,
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+  explicit_solid : Bool,
 ) -> Unit {
   for i, layout in layouts {
     match layout.node {
@@ -3205,6 +3281,9 @@ fn record_separator_ops(
           toggle_record_orientation(orientation),
           layout.rect,
           color,
+          style,
+          penwidth,
+          explicit_solid,
         )
       _ => ()
     }
@@ -3216,6 +3295,10 @@ fn record_separator_ops(
         let x1 = rect.llx
         let x2 = rect.urx
         let y = layouts[i + 1].rect.ury
+        if explicit_solid {
+          ops.push(@render.DrawOp::Style(name="solid"))
+        }
+        push_stroke_style_ops(ops, style, penwidth)
         ops.push(@render.DrawOp::PenColor(color~))
         ops.push(
           @render.DrawOp::Polyline(points=[{ x: x1, y, }, { x: x2, y, }]),
@@ -3225,6 +3308,10 @@ fn record_separator_ops(
         let y1 = rect.lly
         let y2 = rect.ury
         let x = layouts[i + 1].rect.llx
+        if explicit_solid {
+          ops.push(@render.DrawOp::Style(name="solid"))
+        }
+        push_stroke_style_ops(ops, style, penwidth)
         ops.push(@render.DrawOp::PenColor(color~))
         ops.push(
           @render.DrawOp::Polyline(points=[{ x, y: y1, }, { x, y: y2, }]),
@@ -3309,6 +3396,13 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     Some(value) => value.to_lower() == "mrecord"
     None => false
   }
+  let explicit_solid = match node_attr(node, "style") {
+    Some(value) => value != "" && style_has_token(style, "solid")
+    None => false
+  }
+  if explicit_solid {
+    ops.push(@render.DrawOp::Style(name="solid"))
+  }
   push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   let color = @attrs.normalize_color(pen)
   let filled = style.filled
@@ -3354,7 +3448,16 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     pad_x_pt,
     pad_y_pt,
   )
-  record_separator_ops(ops, layouts, orientation, inner_rect, color)
+  record_separator_ops(
+    ops,
+    layouts,
+    orientation,
+    inner_rect,
+    color,
+    style,
+    node_attr(node, "penwidth"),
+    explicit_solid,
+  )
   ops
 }
 
@@ -4935,7 +5038,7 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
   let xlabel = match node_attr(node, "xlabel") {
-    Some(value) => value
+    Some(value) => resolve_label(value, node.name())
     None => ""
   }
   let shape = shape_kind(node_attr(node, "shape"))
@@ -5488,7 +5591,7 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let color = @attrs.color(edge.get_attr("fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
   let text = match edge.get_attr("label") {
-    Some(value) => value
+    Some(value) => resolve_label(value, "")
     None => ""
   }
   let label_pos = match layout.label_pos {
@@ -5501,7 +5604,7 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   append_text_label_ops(ops, text, label_pos, font, pen_color)
   let xlabel = match edge.get_attr("xlabel") {
-    Some(value) => value
+    Some(value) => resolve_label(value, "")
     None => ""
   }
   append_text_label_ops(ops, xlabel, layout.xlabel_pos, font, pen_color)
@@ -5521,7 +5624,7 @@ fn edge_side_label_ops(
     return ops
   }
   let text = match edge.get_attr(label_attr) {
-    Some(value) => value
+    Some(value) => resolve_label(value, "")
     None => ""
   }
   if text == "" {

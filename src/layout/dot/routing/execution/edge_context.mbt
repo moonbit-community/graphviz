@@ -72,5 +72,6 @@ fn route_edges(
     ranks: input.ranks,
     edges_out_by_id,
     edge_port_label_pos_fn: callbacks.edge_port_label_pos_fn,
+    concentrated_ignored_edge_ids: input.routing_context.concentrated_ignored_edge_ids,
   })
 }

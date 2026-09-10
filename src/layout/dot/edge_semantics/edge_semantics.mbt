@@ -37,6 +37,9 @@ pub fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
   if kind == @cgraph.GraphKind::Undirected {
     return EdgeDir::None
   }
+  if edge.get_attr("_concentrated_reverse") is Some(_) {
+    return EdgeDir::Both
+  }
   match edge.get_attr("dir") {
     Some(value) =>
       match parse_edge_dir(value) {

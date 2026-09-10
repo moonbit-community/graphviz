@@ -150,8 +150,12 @@ fn apply_ratio_fill_scale(
   layout : LayoutTree,
   rankdir : RankDir,
   ratio_bbox : @geom.Rect,
+  has_multiple_ranks : Bool,
 ) -> LayoutTree {
-  if !layout.graph.is_root() {
+  // set_aspect only applies a ratio adjustment when maxrank > 0.  A graph
+  // whose nodes all occupy the sole rank must retain its natural dimensions,
+  // even when it requests ratio=fill and supplies a larger `size`.
+  if !layout.graph.is_root() || !has_multiple_ranks {
     return layout
   }
   match

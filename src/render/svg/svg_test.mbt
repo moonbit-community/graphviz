@@ -373,6 +373,7 @@ fn normalize_text(text : String) -> String {
   out = out.replace_all(old="&gt;", new=">")
   out = out.replace_all(old="&quot;", new="\"")
   out = out.replace_all(old="&apos;", new="'")
+  out = out.replace_all(old="&#39;", new="'")
   out = out.replace_all(old="&#160;", new=" ")
   out = out.replace_all(old="&#xA0;", new=" ")
   out = out.replace_all(old="&#xa0;", new=" ")

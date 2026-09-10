@@ -54,3 +54,35 @@ test "record_nodes parses nested braces" {
     _ => fail("expected top-level group")
   }
 }
+
+///|
+test "record_nodes ignores unescaped ASCII control characters in field text" {
+  let nodes = record_nodes("<p0>1571 \tas Ref: 1338 \tD")
+  guard nodes.length() == 1 else { fail("expected one field") }
+  match nodes[0] {
+    RecordNode::Field(field) => {
+      assert_eq(field.name, Some("p0"))
+      assert_eq(field.text, "1571 as Ref: 1338 D")
+    }
+    _ => fail("expected field")
+  }
+}
+
+///|
+test "record_nodes compacts ordinary spaces but retains hard spaces" {
+  let compacted = record_nodes("Honey   subscription")
+  guard compacted.length() == 1 else { fail("expected one compacted field") }
+  match compacted[0] {
+    RecordNode::Field(field) => assert_eq(field.text, "Honey subscription")
+    _ => fail("expected a compacted field")
+  }
+
+  let hard_spaced = record_nodes("Honey\\  subscription")
+  guard hard_spaced.length() == 1 else {
+    fail("expected one hard-spaced field")
+  }
+  match hard_spaced[0] {
+    RecordNode::Field(field) => assert_eq(field.text, "Honey  subscription")
+    _ => fail("expected a hard-spaced field")
+  }
+}

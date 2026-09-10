@@ -35,6 +35,41 @@ type RankHeights = @rank_heights.RankHeights
 type ClusterMetadata = @setup.DotClusterMetadata
 
 ///|
+fn graphviz_mapbool_default_false(value : String) -> Bool {
+  let lower = value.trim().to_lower()
+  if lower == "" || lower == "false" || lower == "no" {
+    return false
+  }
+  if lower == "true" || lower == "yes" {
+    return true
+  }
+  match lower.get_char(0) {
+    Some(ch) =>
+      if ch.is_ascii_digit() {
+        let mut number = 0
+        for digit in lower {
+          if !digit.is_ascii_digit() {
+            break
+          }
+          number = number * 10 + digit.to_int() - '0'.to_int()
+        }
+        number != 0
+      } else {
+        false
+      }
+    None => false
+  }
+}
+
+///|
+fn graph_concentrate_enabled(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("concentrate") {
+    Some(value) => graphviz_mapbool_default_false(value)
+    None => false
+  }
+}
+
+///|
 type OrderingResult = @setup.OrderingResult
 
 ///|
@@ -54,6 +89,7 @@ pub(all) struct RoutingPrecomputeInput {
   cluster_bboxes : Map[String, @geom.Rect]
   sizes : Map[String, NodeSize]
   enable_complex_tuning : Bool
+  concentrate : Bool
 }
 
 ///|
@@ -116,6 +152,7 @@ pub fn build_routing_precompute_data(
     vnode_sizes: input.ordering.vnode_info.vnode_sizes,
     vnode_positions: input.positions_state.vnode_positions,
     cluster_bboxes: input.cluster_bboxes,
+    concentrate: input.concentrate,
   })
 }
 
@@ -270,6 +307,7 @@ pub fn compute_dot_routing_stage(
     cluster_bboxes: routing_cluster_bboxes,
     sizes: prep.sizes,
     enable_complex_tuning,
+    concentrate: graph_concentrate_enabled(graph),
   })
   let port_pad_below = precompute_data.port_pad_below
   let port_pad_above = precompute_data.port_pad_above

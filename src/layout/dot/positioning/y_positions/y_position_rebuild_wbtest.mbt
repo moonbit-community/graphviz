@@ -103,3 +103,41 @@ test "build_y_positions_with_flip rebuilds node y positions after cluster flip a
   assert_true(output.y_positions.get("a") != initial_y_positions.get("a"))
   assert_true(output.y_positions.get("b") != initial_y_positions.get("b"))
 }
+
+///|
+test "build_y_positions_with_flip equalizes rank gaps for ranksep equally" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  root.set_attr("ranksep", "0.5 equally")
+  let groups : Map[Int, Array[String]] = {
+    0: ["top"],
+    1: ["middle"],
+    2: ["bottom"],
+  }
+  let ranks : Map[String, Int] = { "top": 0, "middle": 1, "bottom": 2 }
+  let rank_pht : Map[Int, Double] = { 0: 1.0, 1: 3.0, 2: 2.0 }
+  let rank_ht1 : Map[Int, Double] = { 2: 1.0 }
+  let rank_ht2 : Map[Int, Double] = Map([])
+
+  let output = build_y_positions_with_flip({
+    graph: root,
+    rankdir: @rankdir.RankDir::TB,
+    rank_keys: [0, 1, 2],
+    groups,
+    ranks,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+    ranksep_pt: 1.0,
+    cluster_bbox_heights: Map([]),
+    y_all_ranks: [0, 1, 2],
+    cluster_margin_pt_for: _graph => 0.0,
+    cluster_label_width_pt_for: _graph => None,
+  })
+
+  assert_eq(output.rank_y.get(2), Some(1.0))
+  assert_eq(output.rank_y.get(1), Some(9.0))
+  assert_eq(output.rank_y.get(0), Some(17.0))
+  assert_eq(output.y_positions.get("top"), Some(17.0))
+  assert_eq(output.y_positions.get("middle"), Some(9.0))
+  assert_eq(output.y_positions.get("bottom"), Some(1.0))
+}
