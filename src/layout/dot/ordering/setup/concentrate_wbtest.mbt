@@ -51,3 +51,33 @@ test "concentrate absorbs the right virtual chain sharing a head port" {
   )
   assert_eq(concentrated.vnode_info.vnode_ranks.length(), 2)
 }
+
+///|
+test "concentrate does not reuse a representative that already branches" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let tail = graph.node("tail")
+  let left_head = graph.node("left_head")
+  let right_head = graph.node("right_head")
+  let left_edge = graph.edge(tail, left_head)
+  let right_edge = graph.edge(tail, right_head)
+  let ranks : Map[String, Int] = { "tail": 0, "left_head": 2, "right_head": 2 }
+  let vnode_info = build_edge_vnodes_for_test(
+    graph,
+    ranks,
+    18.0,
+    @rankdir.RankDir::TB,
+  )
+  let left_vnode = edge_vnode_chain_for_test(vnode_info, left_edge)[0]
+  let right_vnode = edge_vnode_chain_for_test(vnode_info, right_edge)[0]
+  let aliases : Map[String, String] = Map([])
+  aliases[right_vnode] = left_vnode
+
+  let degrees = build_concentrated_vnode_degrees(
+    [left_edge, right_edge],
+    ranks,
+    vnode_info,
+    aliases,
+  )
+
+  assert_false(is_concentrate_candidate(left_vnode, degrees))
+}

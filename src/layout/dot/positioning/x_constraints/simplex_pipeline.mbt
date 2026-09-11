@@ -11,6 +11,7 @@ pub(all) struct XposNlistOrderInput {
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   cluster_keys : Map[String, String]
+  cluster_order : Array[String]
   rank_keys : Array[Int]
   groups : Map[Int, Array[String]]
 }
@@ -35,11 +36,20 @@ fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
   let cluster_seen : Map[String, Bool] = Map([])
   let prefer_source_for_lr = input.rankdir == @rankdir.RankDir::LR ||
     input.rankdir == @rankdir.RankDir::RL
-  for name in nlist_reversed {
-    let cluster = input.cluster_keys.get(name).unwrap_or_default()
-    if cluster != "" && cluster_seen.get(cluster) is None {
-      cluster_seen[cluster] = true
-      cluster_order.push(cluster)
+  if input.cluster_order.length() > 0 {
+    for cluster in input.cluster_order {
+      if cluster != "" && cluster_seen.get(cluster) is None {
+        cluster_seen[cluster] = true
+        cluster_order.push(cluster)
+      }
+    }
+  } else {
+    for name in nlist_reversed {
+      let cluster = input.cluster_keys.get(name).unwrap_or_default()
+      if cluster != "" && cluster_seen.get(cluster) is None {
+        cluster_seen[cluster] = true
+        cluster_order.push(cluster)
+      }
     }
   }
   if prefer_source_for_lr || cluster_order.length() == 0 {
@@ -85,7 +95,7 @@ fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
       }
     }
   }
-  for name in nlist_reversed {
+  for name in nlist_source {
     if xpos_seen.get(name) is None {
       xpos_nlist_order.push(name)
       xpos_seen[name] = true
@@ -707,11 +717,20 @@ priv struct XSimplexInput {
 
 ///|
 fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
+  let cluster_preorder : Array[String] = []
+  collect_cluster_preorder(input.graph_root, cluster_preorder)
+  let cluster_order : Array[String] = []
+  let mut cluster_idx = cluster_preorder.length()
+  while cluster_idx > 0 {
+    cluster_idx = cluster_idx - 1
+    cluster_order.push(cluster_preorder[cluster_idx])
+  }
   let xpos_nlist_order = build_xpos_nlist_order({
     rankdir: @rankdir.graph_rankdir(input.graph_root),
     nlist_order: input.nlist_order,
     gdnlist_order: input.gdnlist_order,
     cluster_keys: input.cluster_keys,
+    cluster_order,
     rank_keys: input.rank_keys,
     groups: input.groups,
   })

@@ -82,32 +82,97 @@ fn edge_vnodes_in_direction(
 }
 
 ///|
-/// Each concentrator candidate must have one incoming and one outgoing virtual
-/// segment. Counting class2-chain ownership is the local equivalent: already
-/// shared parallel chains are not candidates for a second merge.
-fn build_vnode_chain_use_count(
-  edges : Array[@cgraph.Edge],
-  vnode_info : EdgeVnodeInfo,
-) -> Map[String, Int] {
-  let counts : Map[String, Int] = Map([])
-  for edge in edges {
-    let vnodes = vnode_info.edge_vnodes
-      .get(@edge_identity.edge_vnode_key(edge))
-      .unwrap_or_default()
-    for vnode in vnodes {
-      counts[vnode] = counts.get(vnode).unwrap_or_default() + 1
-    }
-  }
-  counts
-}
-
-///|
 /// Resolve a previously merged virtual node to the leftmost retained member.
 fn resolve_vnode_alias(aliases : Map[String, String], name : String) -> String {
   match aliases.get(name) {
-    Some(next) => if next == name { name } else { resolve_vnode_alias(aliases, next) }
+    Some(next) =>
+      if next == name {
+        name
+      } else {
+        resolve_vnode_alias(aliases, next)
+      }
     None => name
   }
+}
+
+///|
+/// Concentrator candidacy is based on the current virtual graph rather than
+/// original chain ownership. A retained representative can enter the opposite
+/// pass only when it still has exactly one distinct predecessor and successor.
+priv struct ConcentratedVNodeDegrees {
+  incoming : Map[String, Map[String, Bool]]
+  outgoing : Map[String, Map[String, Bool]]
+}
+
+///|
+fn add_concentrated_vnode_segment(
+  incoming : Map[String, Map[String, Bool]],
+  outgoing : Map[String, Map[String, Bool]],
+  tail : String,
+  head : String,
+) -> Unit {
+  if tail == head {
+    return
+  }
+  match outgoing.get(tail) {
+    Some(neighbors) => neighbors[head] = true
+    None => {
+      let neighbors : Map[String, Bool] = Map([])
+      neighbors[head] = true
+      outgoing[tail] = neighbors
+    }
+  }
+  match incoming.get(head) {
+    Some(neighbors) => neighbors[tail] = true
+    None => {
+      let neighbors : Map[String, Bool] = Map([])
+      neighbors[tail] = true
+      incoming[head] = neighbors
+    }
+  }
+}
+
+///|
+/// Reconstruct live virtual adjacency after aliases are applied. Parallel
+/// paths share a neighbor entry, matching merge_oneway in conc.c.
+fn build_concentrated_vnode_degrees(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  aliases : Map[String, String],
+) -> ConcentratedVNodeDegrees {
+  let incoming : Map[String, Map[String, Bool]] = Map([])
+  let outgoing : Map[String, Map[String, Bool]] = Map([])
+  for edge in edges {
+    let mut previous = edge.tail().name()
+    let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, true)
+    for vnode in chain {
+      let current = resolve_vnode_alias(aliases, vnode)
+      add_concentrated_vnode_segment(incoming, outgoing, previous, current)
+      previous = current
+    }
+    add_concentrated_vnode_segment(
+      incoming,
+      outgoing,
+      previous,
+      edge.head().name(),
+    )
+  }
+  { incoming, outgoing, }
+}
+
+///|
+fn is_concentrate_candidate(
+  vnode : String,
+  degrees : ConcentratedVNodeDegrees,
+) -> Bool {
+  let incoming_count = degrees.incoming
+    .get(vnode)
+    .map_or(0, neighbors => neighbors.length())
+  let outgoing_count = degrees.outgoing
+    .get(vnode)
+    .map_or(0, neighbors => neighbors.length())
+  incoming_count == 1 && outgoing_count == 1
 }
 
 ///|
@@ -121,7 +186,6 @@ fn merge_adjacent_vnode_run(
   from_tail : Bool,
   step : Int,
   ordered_groups_with_vnodes : Map[Int, Array[String]],
-  chain_use_count : Map[String, Int],
   aliases : Map[String, String],
 ) -> Unit {
   let order_index : Map[String, Int] = Map([])
@@ -134,6 +198,9 @@ fn merge_adjacent_vnode_run(
       }
     }
   }
+  let degrees = build_concentrated_vnode_degrees(
+    edges, ranks, vnode_info, aliases,
+  )
   let candidates : Array[(String, Int)] = []
   for edge in edges {
     let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail)
@@ -141,7 +208,7 @@ fn merge_adjacent_vnode_run(
       continue
     }
     let vnode = resolve_vnode_alias(aliases, chain[step])
-    if chain_use_count.get(vnode).unwrap_or_default() != 1 {
+    if !is_concentrate_candidate(vnode, degrees) {
       continue
     }
     match order_index.get(vnode) {
@@ -213,7 +280,6 @@ fn merge_concentrated_vnode_groups(
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
   ordered_groups_with_vnodes : Map[Int, Array[String]],
-  chain_use_count : Map[String, Int],
   aliases : Map[String, String],
 ) -> Unit {
   for _key, edges in groups {
@@ -229,14 +295,7 @@ fn merge_concentrated_vnode_groups(
     }
     for step in 0..<max_depth {
       merge_adjacent_vnode_run(
-        edges,
-        ranks,
-        vnode_info,
-        from_tail,
-        step,
-        ordered_groups_with_vnodes,
-        chain_use_count,
-        aliases,
+        edges, ranks, vnode_info, from_tail, step, ordered_groups_with_vnodes, aliases,
       )
     }
   }
@@ -337,8 +396,7 @@ fn mark_edges_with_absorbed_vnodes(
   aliases : Map[String, String],
 ) -> Unit {
   for edge in edges {
-    let vnodes = vnode_info
-      .edge_vnodes
+    let vnodes = vnode_info.edge_vnodes
       .get(@edge_identity.edge_vnode_key(edge))
       .unwrap_or_default()
     let mut absorbed = false
@@ -350,7 +408,11 @@ fn mark_edges_with_absorbed_vnodes(
     }
     edge.set_attr(
       "_concentrated_absorbed",
-      if absorbed { "true" } else { "false" },
+      if absorbed {
+        "true"
+      } else {
+        "false"
+      },
     )
   }
 }
@@ -381,7 +443,6 @@ fn concentrate_vnode_data(
   if !enabled || ordered_groups_with_vnodes.length() == 0 {
     return { vnode_info, ordered_groups_with_vnodes, aliases: Map([]), }
   }
-  let chain_use_count = build_vnode_chain_use_count(edges, vnode_info)
   let aliases : Map[String, String] = Map([])
   merge_concentrated_vnode_groups(
     build_concentrate_edge_groups(edges, ranks, vnode_info, true),
@@ -389,7 +450,6 @@ fn concentrate_vnode_data(
     vnode_info,
     true,
     ordered_groups_with_vnodes,
-    chain_use_count,
     aliases,
   )
   merge_concentrated_vnode_groups(
@@ -398,7 +458,6 @@ fn concentrate_vnode_data(
     vnode_info,
     false,
     ordered_groups_with_vnodes,
-    chain_use_count,
     aliases,
   )
   mark_edges_with_absorbed_vnodes(edges, vnode_info, aliases)

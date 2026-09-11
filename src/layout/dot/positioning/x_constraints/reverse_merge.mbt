@@ -51,6 +51,33 @@ priv struct ReverseMergeMetadataInput {
 }
 
 ///|
+/// Graphviz uses mapbool for concentrate: empty and invalid values are false,
+/// while non-zero numeric values are true.
+fn graphviz_concentrate_enabled(edges : Array[@cgraph.Edge]) -> Bool {
+  guard edges.length() > 0 else { false }
+  let graph = @membership.root_graph_for_node(edges[0].tail())
+  let value = graph
+    .get_attr("concentrate")
+    .unwrap_or_default()
+    .trim()
+    .to_lower()
+  if value == "true" || value == "yes" {
+    true
+  } else if value == "" || value == "false" || value == "no" {
+    false
+  } else if value.get_char(0) is Some(first) && first.is_ascii_digit() {
+    let mut number = 0
+    for digit in value {
+      guard digit.is_ascii_digit() else { break }
+      number = number * 10 + digit.to_int() - '0'.to_int()
+    }
+    number != 0
+  } else {
+    false
+  }
+}
+
+///|
 /// Graphviz parity: reversed edges merge into their forward representative
 /// unless excluded (labels/self-edge), matching constraint-graph assembly.
 fn build_reverse_merge_metadata(

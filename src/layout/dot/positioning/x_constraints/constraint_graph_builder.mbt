@@ -453,6 +453,7 @@ pub(all) struct SlackSegment {
   weight : Int
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
+  concentrated_absorbed : Bool
 }
 
 ///|
@@ -463,12 +464,67 @@ fn push_slack_segment(
   weight : Int,
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
+  concentrated_absorbed : Bool,
 ) -> Unit {
-  let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port, }
+  let entry = {
+    tail: seg_tail,
+    head: seg_head,
+    weight,
+    tail_port,
+    head_port,
+    concentrated_absorbed,
+  }
   match segments_by_tail.get(seg_tail) {
     Some(list) => list.push(entry)
     None => segments_by_tail[seg_tail] = [entry]
   }
+}
+
+///|
+/// Graphviz parity: conc.c's merge_oneway accumulates equivalent live
+/// normal-to-virtual and virtual-to-normal fast edges before position.c
+/// creates their slack-node pairs. Virtual-to-virtual segments stay distinct:
+/// they still participate in the retained chain topology.
+fn coalesce_concentrated_segments(
+  segments_by_tail : Map[String, Array[SlackSegment]],
+) -> Map[String, Array[SlackSegment]] {
+  let coalesced_by_tail : Map[String, Array[SlackSegment]] = Map([])
+  for tail, segments in segments_by_tail {
+    let coalesced : Array[SlackSegment] = []
+    let index_by_head : Map[String, Int] = Map([])
+    for segment in segments {
+      let has_virtual_endpoint = @edge_identity.is_edge_vnode_name(segment.tail) ||
+        @edge_identity.is_edge_vnode_name(segment.head)
+      let is_virtual_to_virtual = @edge_identity.is_edge_vnode_name(
+          segment.tail,
+        ) &&
+        @edge_identity.is_edge_vnode_name(segment.head)
+      if index_by_head.get(segment.head) is Some(index) {
+        let representative = coalesced[index]
+        let is_concentrated_pair = representative.concentrated_absorbed ||
+          segment.concentrated_absorbed
+        if has_virtual_endpoint &&
+          !is_virtual_to_virtual &&
+          is_concentrated_pair {
+          coalesced[index] = {
+            tail: representative.tail,
+            head: representative.head,
+            weight: representative.weight + segment.weight,
+            tail_port: representative.tail_port,
+            head_port: representative.head_port,
+            concentrated_absorbed: true,
+          }
+        } else {
+          coalesced.push(segment)
+        }
+      } else {
+        index_by_head[segment.head] = coalesced.length()
+        coalesced.push(segment)
+      }
+    }
+    coalesced_by_tail[tail] = coalesced
+  }
+  coalesced_by_tail
 }
 
 ///|
@@ -797,6 +853,10 @@ fn build_constraint_segment_pass(
                 chain.push(head_name)
               }
               let base_weight = @edge_semantics.edge_weight(edge)
+              let concentrated_absorbed = edge
+                .get_attr("_concentrated_absorbed")
+                .unwrap_or_default() ==
+                "true"
               let orig_tail = edge.tail().name()
               let mut chain_idx = 0
               while chain_idx + 1 < chain.length() {
@@ -862,6 +922,7 @@ fn build_constraint_segment_pass(
                 }
                 push_slack_segment(
                   segments_by_tail, seg_tail, seg_head, weight, tail_port, head_port,
+                  concentrated_absorbed,
                 )
               }
             }
@@ -870,7 +931,12 @@ fn build_constraint_segment_pass(
       }
     },
   )
-  { segments_by_tail, flat_minlen_constraints, }
+  let output_segments_by_tail = if graphviz_concentrate_enabled(input.edges) {
+    coalesce_concentrated_segments(segments_by_tail)
+  } else {
+    segments_by_tail
+  }
+  { segments_by_tail: output_segments_by_tail, flat_minlen_constraints, }
 }
 
 ///|

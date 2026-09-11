@@ -18,6 +18,7 @@ test "build_xpos_nlist_order visits clustered ranks in reverse with vnodes first
     nlist_order: ["unused"],
     gdnlist_order: ["a", "b", "v", "x"],
     cluster_keys,
+    cluster_order: [],
     rank_keys: [0, 1],
     groups,
   })
@@ -41,6 +42,7 @@ test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback"
     nlist_order: ["unused"],
     gdnlist_order: ["a", "b", "v", "x"],
     cluster_keys,
+    cluster_order: [],
     rank_keys: [0, 1],
     groups: grouped,
   })
@@ -52,6 +54,7 @@ test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback"
     nlist_order: ["m", "n"],
     gdnlist_order: [],
     cluster_keys: Map([]),
+    cluster_order: [],
     rank_keys: [0],
     groups: no_cluster_groups,
   })
@@ -79,9 +82,36 @@ test "build_xpos_nlist_order processes multiple clusters from reversed source di
     nlist_order: ["unused"],
     gdnlist_order: ["a1", "u", vnode_a, "b1", vnode_b],
     cluster_keys,
+    cluster_order: [],
     rank_keys: [0, 1],
     groups,
   })
 
   assert_eq(order, [vnode_b, "b1", vnode_a, "a1", "u"])
+}
+
+///|
+test "build_xpos_nlist_order honors reversed cluster declaration order" {
+  let vnode_a = "\{@edge_identity.EDGE_VNODE_PREFIX}a"
+  let vnode_b = "\{@edge_identity.EDGE_VNODE_PREFIX}b"
+  let cluster_keys : Map[String, String] = Map([])
+  cluster_keys["a"] = "clusterA"
+  cluster_keys[vnode_a] = "clusterA"
+  cluster_keys["b"] = "clusterB"
+  cluster_keys[vnode_b] = "clusterB"
+  let groups : Map[Int, Array[String]] = Map([])
+  groups[0] = ["a", "b", "u"]
+  groups[1] = [vnode_a, vnode_b]
+
+  let order = build_xpos_nlist_order({
+    rankdir: @rankdir.RankDir::TB,
+    nlist_order: ["a", "u", vnode_a, "b", vnode_b],
+    gdnlist_order: ["a", "u", vnode_a, "b", vnode_b],
+    cluster_keys,
+    cluster_order: ["clusterA", "clusterB"],
+    rank_keys: [0, 1],
+    groups,
+  })
+
+  assert_eq(order, [vnode_a, "a", vnode_b, "b", "u"])
 }

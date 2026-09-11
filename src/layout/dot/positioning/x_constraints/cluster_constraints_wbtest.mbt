@@ -95,3 +95,47 @@ test "build_cluster_constraints adds boundary nodes containment and keepout edge
   assert_eq(keepout_left.minlen, 15)
   assert_eq(keepout_left.weight, 0)
 }
+
+///|
+test "build_cluster_constraints stops containment at an outside normal rank peer" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster = graph.subgraph(name="cluster_0")
+  let a = cluster.node("a")
+  let b = cluster.node("b")
+  let outside = graph.node("outside")
+
+  let ranks : Map[String, Int] = { "a": 0, "b": 0, "outside": 0 }
+  let groups : Map[Int, Array[String]] = { 0: ["a", "outside", "b"] }
+  let sizes : Map[String, @node_primitives.NodeSize] = {
+    "a": @node_primitives.vnode_size_from_widths_with_h(2.0, 2.0, 8.0),
+    "b": @node_primitives.vnode_size_from_widths_with_h(2.0, 2.0, 8.0),
+    "outside": @node_primitives.vnode_size_from_widths_with_h(2.0, 2.0, 8.0),
+  }
+  let cluster_keys : Map[String, String] = {
+    "a": "cluster_0",
+    "b": "cluster_0",
+  }
+
+  let build = build_cluster_constraints(
+    graph,
+    [a, b, outside],
+    [],
+    ranks,
+    [0],
+    groups,
+    sizes,
+    cluster_keys,
+    10.0,
+    false,
+    Map([]),
+  )
+
+  let right_name = @cluster_identity.cluster_right_boundary_name("cluster_0")
+  ignore(require_cluster_constraint_edge(build.extra_edges, "a", right_name))
+  ignore(
+    require_cluster_constraint_edge(build.extra_edges, right_name, "outside"),
+  )
+  for edge in build.extra_edges {
+    assert_false(edge.tail == "b" && edge.head == right_name)
+  }
+}

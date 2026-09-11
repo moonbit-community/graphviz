@@ -23,6 +23,24 @@ priv struct ClusterBoundaryNodes {
 }
 
 ///|
+/// Graphviz parity: cluster passes in position.c recurse through GD_clust in
+/// declaration order. Preserve that preorder instead of relying on Map
+/// iteration when creating auxiliary nodes and constraints.
+fn collect_cluster_preorder(
+  graph : @cgraph.Graph,
+  cluster_order : Array[String],
+) -> Unit {
+  if @cluster_graph.is_cluster_graph(graph) {
+    if graph.name() is Some(name) {
+      cluster_order.push(name)
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_preorder(child, cluster_order)
+  }
+}
+
+///|
 /// Graphviz parity: cluster constraints aligned to refs/graphviz/lib/dotgen/position.c
 /// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
 /// Do not change behavior without updating fixtures/tests.
@@ -42,6 +60,8 @@ fn build_cluster_constraints(
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_graphs = cluster_maps.cluster_graphs
   let cluster_parents = cluster_maps.cluster_parents
+  let cluster_order : Array[String] = []
+  collect_cluster_preorder(graph, cluster_order)
   if cluster_graphs.length() == 0 {
     return {
       extra_nodes: [],
@@ -146,8 +166,13 @@ fn build_cluster_constraints(
   let cluster_border_right : Map[String, Double] = Map([])
   let cluster_min_rank : Map[String, Int] = Map([])
   let cluster_max_rank : Map[String, Int] = Map([])
+  let cluster_left_seed_rank : Map[String, Int] = Map([])
+  let cluster_right_seed_rank : Map[String, Int] = Map([])
   let extra_nodes : Array[ExtraConstraintNode] = []
-  let extra_edges : Array[ConstraintEdge] = []
+  let containment_and_compaction_edges : Array[ConstraintEdge] = []
+  let keepout_edges : Array[ConstraintEdge] = []
+  let subcluster_containment_edges : Array[ConstraintEdge] = []
+  let sibling_separation_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
     let (left_border, right_border) = @cluster_geometry.cluster_label_borders_for_xpos_constraints(
@@ -216,14 +241,12 @@ fn build_cluster_constraints(
           Some(value) => value
           None => 0.0
         }
-        extra_nodes.push({
-          name: ln_name,
-          rank: @numeric.trunc_int(left - margin - left_border),
-        })
-        extra_nodes.push({
-          name: rn_name,
-          rank: @numeric.trunc_int(right + margin + right_border),
-        })
+        cluster_left_seed_rank[name] = @numeric.trunc_int(
+          left - margin - left_border,
+        )
+        cluster_right_seed_rank[name] = @numeric.trunc_int(
+          right + margin + right_border,
+        )
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
           None => ()
@@ -244,7 +267,8 @@ fn build_cluster_constraints(
       root_rn_targets: [],
     }
   }
-  for name, pair in cluster_nodes {
+  for name in cluster_order {
+    guard cluster_nodes.get(name) is Some(pair) else { continue }
     let ln_name = pair.left_node
     let rn_name = pair.right_node
     let mut label_minlen : Int? = None
@@ -270,7 +294,7 @@ fn build_cluster_constraints(
     }
     match label_minlen {
       Some(minlen) =>
-        extra_edges.push({
+        containment_and_compaction_edges.push({
           tail: ln_name,
           head: rn_name,
           minlen,
@@ -278,15 +302,7 @@ fn build_cluster_constraints(
           tail_port: None,
           head_port: None,
         })
-      None =>
-        extra_edges.push({
-          tail: ln_name,
-          head: rn_name,
-          minlen: 1,
-          weight: CLUSTER_COMPACT_WEIGHT,
-          tail_port: None,
-          head_port: None,
-        })
+      None => ()
     }
     let margin = match cluster_margins.get(name) {
       Some(value) => value
@@ -312,12 +328,23 @@ fn build_cluster_constraints(
           let mut i = 0
           while i < names.length() {
             let node_name = names[i]
-            if members.get(node_name) is Some(_) &&
-              @cluster_identity.cluster_key_from_skeleton(node_name) is None {
+            let is_skeleton = @cluster_identity.cluster_key_from_skeleton(
+                node_name,
+              )
+              is Some(_)
+            let is_member = members.get(node_name) is Some(_)
+            if is_member && !is_skeleton {
               if left_idx < 0 {
                 left_idx = i
               }
               right_idx = i
+            } else if left_idx >= 0 &&
+              !is_skeleton &&
+              !@edge_identity.is_edge_vnode_name(node_name) {
+              // Cluster rank lists are a single contiguous normal-node span.
+              // Crossing-edge vnodes can occur within that span, but a normal
+              // node outside the cluster terminates it (dotgen/rebuild_vlists).
+              break
             }
             i = i + 1
           }
@@ -331,7 +358,7 @@ fn build_cluster_constraints(
             margin +
             left_border,
           )
-          extra_edges.push({
+          containment_and_compaction_edges.push({
             tail: ln_name,
             head: left_name,
             minlen: left_minlen,
@@ -344,7 +371,7 @@ fn build_cluster_constraints(
             margin +
             right_border,
           )
-          extra_edges.push({
+          containment_and_compaction_edges.push({
             tail: right_name,
             head: rn_name,
             minlen: right_minlen,
@@ -361,7 +388,7 @@ fn build_cluster_constraints(
               let minlen = @numeric.round_int(
                 @node_primitives.node_right_pt(outside, sizes) + margin,
               )
-              extra_edges.push({
+              keepout_edges.push({
                 tail: outside,
                 head: ln_name,
                 minlen,
@@ -382,7 +409,7 @@ fn build_cluster_constraints(
               let minlen = @numeric.round_int(
                 @node_primitives.node_left_pt(outside, sizes) + margin,
               )
-              extra_edges.push({
+              keepout_edges.push({
                 tail: rn_name,
                 head: outside,
                 minlen,
@@ -397,68 +424,64 @@ fn build_cluster_constraints(
         }
       _ => ()
     }
+    guard label_minlen is None else { continue }
+    containment_and_compaction_edges.push({
+      tail: ln_name,
+      head: rn_name,
+      minlen: 1,
+      weight: CLUSTER_COMPACT_WEIGHT,
+      tail_port: None,
+      head_port: None,
+    })
   }
-  for name, parent in cluster_parents {
-    match parent {
-      Some(parent_name) =>
-        match cluster_nodes.get(parent_name) {
-          Some(parent_pair) =>
-            match cluster_nodes.get(name) {
-              Some(child_pair) => {
-                let parent_ln = parent_pair.left_node
-                let parent_rn = parent_pair.right_node
-                let child_ln = child_pair.left_node
-                let child_rn = child_pair.right_node
-                let margin = match cluster_margins.get(parent_name) {
-                  Some(value) => value
-                  None => CLUSTER_MARGIN_PT
-                }
-                let parent_left_border = match
-                  cluster_border_left.get(parent_name) {
-                  Some(value) => value
-                  None => 0.0
-                }
-                let parent_right_border = match
-                  cluster_border_right.get(parent_name) {
-                  Some(value) => value
-                  None => 0.0
-                }
-                let left_minlen = @numeric.round_int(
-                  margin + parent_left_border,
-                )
-                let right_minlen = @numeric.round_int(
-                  margin + parent_right_border,
-                )
-                extra_edges.push({
-                  tail: parent_ln,
-                  head: child_ln,
-                  minlen: left_minlen,
-                  weight: 0,
-                  tail_port: None,
-                  head_port: None,
-                })
-                extra_edges.push({
-                  tail: child_rn,
-                  head: parent_rn,
-                  minlen: right_minlen,
-                  weight: 0,
-                  tail_port: None,
-                  head_port: None,
-                })
-              }
-              None => ()
-            }
-          None => ()
+  for name in cluster_order {
+    let parent = cluster_parents.get(name).unwrap_or_default()
+    if parent is Some(parent_name) {
+      if cluster_nodes.get(parent_name) is Some(parent_pair) {
+        if cluster_nodes.get(name) is Some(child_pair) {
+          let parent_ln = parent_pair.left_node
+          let parent_rn = parent_pair.right_node
+          let child_ln = child_pair.left_node
+          let child_rn = child_pair.right_node
+          let margin = match cluster_margins.get(parent_name) {
+            Some(value) => value
+            None => CLUSTER_MARGIN_PT
+          }
+          let parent_left_border = match cluster_border_left.get(parent_name) {
+            Some(value) => value
+            None => 0.0
+          }
+          let parent_right_border = match
+            cluster_border_right.get(parent_name) {
+            Some(value) => value
+            None => 0.0
+          }
+          let left_minlen = @numeric.round_int(margin + parent_left_border)
+          let right_minlen = @numeric.round_int(margin + parent_right_border)
+          subcluster_containment_edges.push({
+            tail: parent_ln,
+            head: child_ln,
+            minlen: left_minlen,
+            weight: 0,
+            tail_port: None,
+            head_port: None,
+          })
+          subcluster_containment_edges.push({
+            tail: child_rn,
+            head: parent_rn,
+            minlen: right_minlen,
+            weight: 0,
+            tail_port: None,
+            head_port: None,
+          })
         }
-      None => ()
+      }
     }
   }
   let parent_children : Map[String, Array[String]] = Map([])
-  for name, parent in cluster_parents {
-    let key = match parent {
-      Some(value) => value
-      None => ""
-    }
+  for name in cluster_order {
+    let parent = cluster_parents.get(name).unwrap_or_default()
+    let key = parent.unwrap_or_default()
     match parent_children.get(key) {
       Some(list) => list.push(name)
       None => parent_children[key] = [name]
@@ -589,7 +612,7 @@ fn build_cluster_constraints(
                                             let minlen = @numeric.round_int(
                                               margin,
                                             )
-                                            extra_edges.push({
+                                            sibling_separation_edges.push({
                                               tail: left_rn,
                                               head: right_ln,
                                               minlen,
@@ -615,17 +638,36 @@ fn build_cluster_constraints(
       i = i + 1
     }
   }
+  for name in cluster_order {
+    guard cluster_nodes.get(name) is Some(pair) else { continue }
+    guard cluster_left_seed_rank.get(name) is Some(left_rank) else { continue }
+    guard cluster_right_seed_rank.get(name) is Some(right_rank) else {
+      continue
+    }
+    extra_nodes.push({ name: pair.left_node, rank: left_rank, })
+    extra_nodes.push({ name: pair.right_node, rank: right_rank, })
+  }
+  let extra_edges : Array[ConstraintEdge] = []
+  for edge in containment_and_compaction_edges {
+    extra_edges.push(edge)
+  }
+  for edge in keepout_edges {
+    extra_edges.push(edge)
+  }
+  for edge in subcluster_containment_edges {
+    extra_edges.push(edge)
+  }
+  for edge in sibling_separation_edges {
+    extra_edges.push(edge)
+  }
   let root_ln_targets : Array[String] = []
   let root_rn_targets : Array[String] = []
-  for name, parent in cluster_parents {
-    if parent is None {
-      match cluster_nodes.get(name) {
-        Some(pair) => {
-          root_ln_targets.push(pair.left_node)
-          root_rn_targets.push(pair.right_node)
-        }
-        None => ()
-      }
+  for name in cluster_order {
+    let parent = cluster_parents.get(name).unwrap_or_default()
+    guard parent is None else { continue }
+    if cluster_nodes.get(name) is Some(pair) {
+      root_ln_targets.push(pair.left_node)
+      root_rn_targets.push(pair.right_node)
     }
   }
   { extra_nodes, extra_edges, root_ln_targets, root_rn_targets, }
