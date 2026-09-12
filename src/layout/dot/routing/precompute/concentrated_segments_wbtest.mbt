@@ -16,6 +16,24 @@ test "concentrated port comparison distinguishes undefined from a defined center
 }
 
 ///|
+test "concentrated route sort fixes equal-priority ordering for large inputs" {
+  @test.assert_eq(sort_concentrated_route_indices([2, 0, 2, 0, 1]), [
+    1, 3, 4, 0, 2,
+  ])
+  @test.assert_eq(
+    sort_concentrated_route_indices([
+      3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3,
+      3, 8, 3, 2, 7, 9, 5, 0, 2, 8, 8, 4, 6, 2, 6, 4, 3, 3, 8, 3, 2, 7, 9,
+    ]),
+    [
+      32, 3, 1, 6, 38, 21, 33, 28, 45, 16, 9, 41, 0, 27, 44, 15, 25, 24, 42, 17,
+      36, 40, 2, 19, 23, 31, 8, 4, 10, 37, 20, 7, 39, 22, 29, 13, 46, 35, 11, 18,
+      26, 34, 43, 47, 14, 12, 5, 30,
+    ],
+  )
+}
+
+///|
 test "concentrated entries compare inherited ports before installation identity" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))

@@ -21,11 +21,3 @@ import {
 import {
   "moonbitlang/core/test",
 } for "wbtest"
-
-options(
-  "native-stub": [ "concentrated_sort_stub.c" ],
-  targets: {
-    "concentrated_sort_native.mbt": [ "native" ],
-    "concentrated_sort_non_native.mbt": [ "not", "native" ],
-  },
-)
