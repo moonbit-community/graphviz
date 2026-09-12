@@ -20,9 +20,7 @@ pub fn apply_root_label_bbox(@cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> Roo
 
 pub fn apply_root_margin_x(@cgraph.Graph, @geom.Rect) -> @geom.Rect
 
-pub fn apply_root_port_padding(@cgraph.Graph, @geom.Rect, @rankdir.RankDir, Double, Double) -> @geom.Rect
-
-pub fn compute_root_cluster_padding(@cgraph.Graph, Array[@cgraph.Node], Array[Int], Map[String, Int]) -> RootClusterPadding
+pub fn compute_root_cluster_padding(@cgraph.Graph, @geom.Rect, Array[@layout_tree.LayoutTree]) -> RootClusterPadding
 
 pub fn finalize_layout_from_sources(FinalizeLayoutBuildSources) -> @layout_tree.LayoutTree
 
@@ -39,8 +37,6 @@ pub fn format_point(@geom.Point) -> String
 pub fn format_rect(@geom.Rect) -> String
 
 pub fn format_rects(Array[@geom.Rect]) -> String
-
-pub fn root_cluster_padding_for_rankdir(@rankdir.RankDir, RootClusterPadding) -> (Double, Double)
 
 pub fn root_label_pos_for_bbox(@cgraph.Graph, @geom.Rect) -> @geom.Point?
 

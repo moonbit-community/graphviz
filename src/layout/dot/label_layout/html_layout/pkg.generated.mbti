@@ -15,7 +15,7 @@ pub fn html_label_size(@html.HtmlLabel, String, Double) -> @numeric.GraphSizePt
 
 pub fn html_ports(@cgraph.Node, String, @geom.Point, @node_primitives.NodeSize) -> Map[String, @record_geometry.RecordPort]
 
-pub fn parse_html_label_cached(String) -> @html.HtmlLabel?
+pub fn parse_html_label_cached(String, html? : Bool?) -> @html.HtmlLabel?
 
 pub fn reset_html_label_caches() -> Unit
 

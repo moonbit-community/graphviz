@@ -38,25 +38,10 @@ pub fn trim_trailing_zeros(text : String) -> String {
 
 ///|
 fn round_half_even(value : Double, decimals : Int) -> Double {
-  if decimals <= 0 {
-    let floored = value.floor()
-    let frac = value - floored
-    let eps = 0.000000000001
-    if frac < 0.5 - eps {
-      return floored
-    }
-    if frac > 0.5 + eps {
-      return floored + 1.0
-    }
-    let int_floor = floored.to_int()
-    if int_floor % 2 == 0 {
-      return floored
-    } else {
-      return floored + 1.0
-    }
-  }
-  let scale = pow10_double(decimals)
-  let scaled = value * scale
+  let digits = if decimals > 0 { decimals } else { 0 }
+  let scale = pow10_double(digits)
+  let abs_value = if value < 0.0 { -value } else { value }
+  let scaled = abs_value * scale
   let floored = scaled.floor()
   let frac = scaled - floored
   let eps = 0.000000000001
@@ -64,15 +49,41 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
     floored
   } else if frac > 0.5 + eps {
     floored + 1.0
+  } else if decimal_tie_rounds_up(abs_value, digits) {
+    floored + 1.0
   } else {
-    let int_floor = floored.to_int()
-    if int_floor % 2 == 0 {
-      floored
-    } else {
-      floored + 1.0
-    }
+    floored
   }
-  rounded / scale
+  if value < 0.0 {
+    -rounded / scale
+  } else {
+    rounded / scale
+  }
+}
+
+///|
+// Multiplication by 10^digits can erase which side of a decimal tie a
+// binary64 value occupies. Resolve only that ambiguous case using its exact
+// significand, as printf does, rather than treating a tolerance as equality.
+fn decimal_tie_rounds_up(abs_value : Double, digits : Int) -> Bool {
+  let bits = abs_value.reinterpret_as_uint64()
+  let exponent = ((bits >> 52) & 0x7ffUL).to_int()
+  let fraction = bits & 0x000fffffffffffffUL
+  let (significand, exp2) = if exponent == 0 {
+    (fraction, -1074)
+  } else {
+    (fraction | 0x0010000000000000UL, exponent - 1075)
+  }
+  guard exp2 < 0 else { return false }
+  let numerator = for numerator = @bigint.BigInt::from_uint64(significand), i = 0 {
+    guard i < digits else { break numerator }
+    continue numerator * @bigint.BigInt::from_int(10), i + 1
+  }
+  let denominator = @bigint.BigInt::from_int(1) << -exp2
+  let remainder = numerator % denominator
+  let doubled = remainder + remainder
+  guard doubled == denominator else { return doubled > denominator }
+  !(numerator / denominator % @bigint.BigInt::from_int(2)).is_zero()
 }
 
 ///|

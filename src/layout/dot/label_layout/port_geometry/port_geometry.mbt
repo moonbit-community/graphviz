@@ -77,7 +77,8 @@ fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
 }
 
 ///|
-fn invflip_side(side : Int, rankdir : RankDir) -> Int {
+/// Maps output-facing port sides into dot's internal top-to-bottom coordinates.
+pub fn invflip_side(side : Int, rankdir : RankDir) -> Int {
   let mut out = 0
   let add = (from : Int, to : Int) => if (side & from) != 0 { out = out | to }
   match rankdir {
@@ -381,6 +382,20 @@ pub fn port_side_mask_from_anchor(
     return PORT_SIDE_TOP
   }
   0
+}
+
+///|
+pub fn label_port_compass_side(
+  node_name : String,
+  port : @cgraph.Port?,
+  ports_map : Map[String, Map[String, RecordPort]],
+) -> Int? {
+  let resolved = resolve_label_port_for_graph(node_name, port, ports_map)
+  guard resolved.name is Some(name) else { return None }
+  guard resolved.effective_compass is Some(compass) else { return None }
+  guard ports_map.get(node_name) is Some(ports) else { return None }
+  guard ports.get(name) is Some(info) else { return None }
+  Some(info.sides & compass_side_mask(compass))
 }
 
 ///|

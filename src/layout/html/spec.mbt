@@ -35,6 +35,9 @@ pub extend HtmlVAlign with Eq::{not_equal, equal}
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
+  font_name : String?
+  font_size_pt : Double?
+  break_alignment : HtmlAlign?
 } derive(Debug, Eq)
 
 ///|
@@ -60,6 +63,9 @@ pub extend HtmlCellContent with Eq::{not_equal, equal}
 ///|
 /// HTML-like table cell.
 pub(all) struct HtmlCell {
+  href : String?
+  tooltip : String?
+  target : String?
   content : HtmlCellContent
   port : String?
   col_span : Int
@@ -98,6 +104,10 @@ pub extend HtmlRow with Eq::{not_equal, equal}
 ///|
 /// HTML-like table.
 pub(all) struct HtmlTable {
+  port : String?
+  href : String?
+  tooltip : String?
+  target : String?
   rows : Array[HtmlRow]
   border_pt : Double
   cell_border_pt : Double
@@ -121,6 +131,7 @@ pub extend HtmlTable with Eq::{not_equal, equal}
 /// HTML-like label.
 pub(all) enum HtmlLabel {
   Text(String)
+  StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
 } derive(Debug, Eq)
 
@@ -202,14 +213,14 @@ pub fn is_html_label_text(label : String) -> Bool {
 ///|
 /// Strip `<<` and `>>` wrappers from an HTML-like label.
 #declaration_only
-pub fn strip_html_wrappers(label : String) -> String? {
+pub fn strip_html_wrappers(label : String, html? : Bool?) -> String? {
   ...
 }
 
 ///|
 /// Parse an HTML-like label string.
 #declaration_only
-pub fn parse_html_label(label : String) -> HtmlLabel? {
+pub fn parse_html_label(label : String, html? : Bool?) -> HtmlLabel? {
   ...
 }
 

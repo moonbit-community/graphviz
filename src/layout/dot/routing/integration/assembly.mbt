@@ -12,6 +12,7 @@
 /// Stage E.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_route_base_deps(
+  rankdir : @rankdir.RankDir,
   record_orientation : @layout_prep.RecordOrientation,
   routing_label_ports_map : Map[
     String,
@@ -90,13 +91,22 @@ pub fn build_dot_route_base_deps(
     },
     dynamic_port_anchor_for_edge: route_dynamic_port_anchor,
     port_side_mask_from_anchor: @port_geometry.port_side_mask_from_anchor,
-    port_side_for_edge: (port, port_rect, node_pos, node_size) => {
-      @port_geometry.port_side_for_edge(
-        port,
-        port_rect,
-        node_pos,
-        node_size,
-        None,
+    port_side_for_edge: (node_name, port, port_rect, node_pos, node_size) => {
+      if @port_geometry.label_port_compass_side(
+          node_name, port, routing_label_ports_raw,
+        )
+        is Some(side) {
+        return @port_geometry.invflip_side(side, rankdir)
+      }
+      @port_geometry.invflip_side(
+        @port_geometry.port_side_for_edge(
+          port,
+          port_rect,
+          node_pos,
+          node_size,
+          None,
+        ),
+        rankdir,
       )
     },
     layout_port_offset: @port_geometry.layout_port_offset,

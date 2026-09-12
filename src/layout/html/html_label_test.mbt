@@ -15,6 +15,9 @@ fn assert_text_label(label : String, expected : String) -> Unit raise {
 fn make_text_cell(text : String, col_span : Int, row_span : Int) -> HtmlCell {
   {
     content: HtmlCellContent::Text(text),
+    href: None,
+    tooltip: None,
+    target: None,
     port: None,
     col_span,
     row_span,
@@ -151,6 +154,10 @@ fn row_span_table() -> HtmlTable {
     cell_border_pt: 0.0,
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
+    port: None,
+    href: None,
+    tooltip: None,
+    target: None,
     bg_color: None,
     style: None,
     gradient_angle: None,
@@ -190,6 +197,10 @@ fn col_span_table() -> HtmlTable {
     cell_border_pt: 0.0,
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
+    port: None,
+    href: None,
+    tooltip: None,
+    target: None,
     bg_color: None,
     style: None,
     gradient_angle: None,
@@ -261,9 +272,9 @@ test "html label parses table cell" {
 }
 
 ///|
-test "html label collapses whitespace" {
+test "html label preserves visible spaces" {
   let label = "<<b>  hello   world  </b>>"
-  assert_text_label(label, "hello world")
+  assert_text_label(label, "  hello   world  ")
 }
 
 ///|
@@ -273,8 +284,11 @@ test "html label br creates newline" {
     Some(HtmlLabel::Table(table)) => {
       let cell = table.rows[0].cells[0]
       match cell.content {
-        HtmlCellContent::Text(text) => assert_eq(text, "Line1\nLine2")
-        _ => fail("expected text cell")
+        HtmlCellContent::StyledText(spans) => {
+          @test.assert_eq(spans.map(span => span.text), ["Line1", "\n", "Line2"])
+          @test.assert_eq(spans[1].break_alignment, Some(HtmlAlign::Center))
+        }
+        _ => fail("expected text and break spans")
       }
     }
     _ => fail("expected table label")
@@ -289,11 +303,13 @@ test "html label keeps font color spans" {
       let cell = table.rows[0].cells[0]
       match cell.content {
         HtmlCellContent::StyledText(spans) => {
-          assert_eq(spans.length(), 2)
-          assert_eq(spans[0].text, "hello")
-          assert_eq(spans[0].color, Some("red"))
-          assert_eq(spans[1].text, "\nworld")
-          assert_eq(spans[1].color, None)
+          @test.assert_eq(spans.length(), 3)
+          @test.assert_eq(spans[0].text, "hello")
+          @test.assert_eq(spans[0].color, Some("red"))
+          @test.assert_eq(spans[1].text, "\n")
+          @test.assert_eq(spans[1].break_alignment, Some(HtmlAlign::Center))
+          @test.assert_eq(spans[2].text, "world")
+          @test.assert_eq(spans[2].color, None)
         }
         _ => fail("expected styled text cell")
       }
@@ -380,6 +396,10 @@ test "html table size includes border and spacing" {
     cell_border_pt: 0.0,
     cell_spacing_pt: 2.0,
     cell_padding_pt: 0.0,
+    port: None,
+    href: None,
+    tooltip: None,
+    target: None,
     bg_color: None,
     style: None,
     gradient_angle: None,
@@ -402,6 +422,10 @@ test "html table size respects colspan" {
     cell_border_pt: 0.0,
     cell_spacing_pt: 2.0,
     cell_padding_pt: 0.0,
+    port: None,
+    href: None,
+    tooltip: None,
+    target: None,
     bg_color: None,
     style: None,
     gradient_angle: None,
@@ -440,6 +464,10 @@ test "html table layout scales cell rect" {
     cell_border_pt: 0.0,
     cell_spacing_pt: 0.0,
     cell_padding_pt: 0.0,
+    port: None,
+    href: None,
+    tooltip: None,
+    target: None,
     bg_color: None,
     style: None,
     gradient_angle: None,

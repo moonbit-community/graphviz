@@ -144,6 +144,7 @@ priv struct RegularSplineLayoutBuildInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_spline_layout(
   layout_input : RegularSplineLayoutBuildInput,
+  install_base? : EdgeRouteBase? = None,
 ) -> RegularSplineLayoutResult {
   let spline_result = @curve_mode.build_edge_spline({
     base: layout_input.base,
@@ -167,10 +168,22 @@ fn build_regular_spline_layout(
     routing_context: layout_input.input.routing_context,
     enable_complex_tuning: layout_input.input.enable_complex_tuning,
   })
-  let layout_spline_result = @emit.rebuild_spline_for_render(
-    layout_input.base,
-    spline_result,
-  )
+  let layout_spline_result = if install_base is Some(clip_base) &&
+    spline_result.using_pathplan {
+    {
+      ..spline_result,
+      spline: @emit.build_bezier_points_spline({
+        base: clip_base,
+        bezier_points: spline_result.raw_bezier,
+        tail_clip_enabled: clip_base.tail_clip_enabled,
+        head_clip_enabled: clip_base.head_clip_enabled,
+        clip_swapped: clip_base.swap_ends,
+        arrow_swapped: clip_base.swap_ends,
+      }),
+    }
+  } else {
+    @emit.rebuild_spline_for_render(layout_input.base, spline_result)
+  }
   let spline = @emit.finalize_edge_spline(
     layout_input.base,
     layout_spline_result,
@@ -200,6 +213,7 @@ fn collect_parallel_reuse_siblings(
   edge : @cgraph.Edge,
   raw_bezier : Array[@geom.Point],
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]],
+  ignored_edge_ids : Map[Int, Bool],
 ) -> Array[@cgraph.Edge] {
   if raw_bezier.length() == 0 {
     return []
@@ -214,7 +228,8 @@ fn collect_parallel_reuse_siblings(
   }
   let siblings : Array[@cgraph.Edge] = []
   for group_edge in group_edges {
-    if group_edge.id() != edge.id() {
+    if group_edge.id() != edge.id() &&
+      ignored_edge_ids.get(group_edge.id()) is None {
       siblings.push(group_edge)
     }
   }
@@ -231,6 +246,7 @@ priv struct RegularParallelReuseLayoutsInput {
   base_cache : Map[Int, EdgeRouteBase]
   edges_out_by_id : Map[Int, DotLayoutEdge]
   callbacks : RoutingCallbacks
+  ignored_edge_ids : Map[Int, Bool]
 }
 
 ///|
@@ -244,6 +260,7 @@ fn apply_regular_parallel_reuse_layouts(
     reuse_input.edge,
     reuse_input.regular_layout.spline_result.raw_bezier,
     reuse_input.regular_parallel_groups,
+    reuse_input.ignored_edge_ids,
   )
   if sibling_edges.length() == 0 {
     return ()
@@ -306,5 +323,6 @@ fn build_regular_layouts_for_edge(
     base_cache: regular_input.base_cache,
     edges_out_by_id: regular_input.edges_out_by_id,
     callbacks: regular_input.callbacks,
+    ignored_edge_ids: regular_input.input.routing_context.concentrated_ignored_edge_ids,
   })
 }

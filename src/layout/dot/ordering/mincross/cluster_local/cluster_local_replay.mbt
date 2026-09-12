@@ -81,40 +81,44 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_cluster_local_rank_replay_after_root_from_sources(
   sources : ClusterLocalRankReplayAfterRootSources,
+  expansion_order? : Array[String] = [],
 ) -> Unit {
   if !sources.order_with_clusters {
     return ()
   }
-  run_cluster_local_rank_replay({
-    groups: sources.groups,
-    graph: sources.graph,
-    cluster_order: sources.cluster_order,
-    cluster_parents: sources.cluster_parents,
-    rank_same_groups: sources.rank_same_groups,
-    rank_same_order: sources.rank_same_order,
-    intercluster_keys: sources.intercluster_keys,
-    flat_constraints: sources.flat_constraints,
-    node_order: sources.node_order,
-    order_edges: sources.order_edges,
-    order_edge_tail: sources.order_edge_tail,
-    order_edge_head: sources.order_edge_head,
-    order_edge_tail_port_x: sources.order_edge_tail_port_x,
-    order_edge_head_port_x: sources.order_edge_head_port_x,
-    order_edge_tail_port_order: sources.order_edge_tail_port_order,
-    order_edge_head_port_order: sources.order_edge_head_port_order,
-    graphviz_out_neighbors: sources.graphviz_out_neighbors,
-    graphviz_in_neighbors: sources.graphviz_in_neighbors,
-    ranks: sources.ranks,
-    order_sizes: sources.order_sizes,
-    nodesep_pt: sources.nodesep_pt,
-    has_edge_labels: sources.has_edge_labels,
-    port_order_positions: sources.port_order_positions,
-    port_order_contrib: sources.port_order_contrib,
-    vnode_ranks: sources.vnode_ranks,
-    vnode_clusters: sources.vnode_clusters,
-    vnode_sizes: sources.vnode_sizes,
-    order_with_vnodes: sources.order_with_vnodes,
-  })
+  run_cluster_local_rank_replay(
+    {
+      groups: sources.groups,
+      graph: sources.graph,
+      cluster_order: sources.cluster_order,
+      cluster_parents: sources.cluster_parents,
+      rank_same_groups: sources.rank_same_groups,
+      rank_same_order: sources.rank_same_order,
+      intercluster_keys: sources.intercluster_keys,
+      flat_constraints: sources.flat_constraints,
+      node_order: sources.node_order,
+      order_edges: sources.order_edges,
+      order_edge_tail: sources.order_edge_tail,
+      order_edge_head: sources.order_edge_head,
+      order_edge_tail_port_x: sources.order_edge_tail_port_x,
+      order_edge_head_port_x: sources.order_edge_head_port_x,
+      order_edge_tail_port_order: sources.order_edge_tail_port_order,
+      order_edge_head_port_order: sources.order_edge_head_port_order,
+      graphviz_out_neighbors: sources.graphviz_out_neighbors,
+      graphviz_in_neighbors: sources.graphviz_in_neighbors,
+      ranks: sources.ranks,
+      order_sizes: sources.order_sizes,
+      nodesep_pt: sources.nodesep_pt,
+      has_edge_labels: sources.has_edge_labels,
+      port_order_positions: sources.port_order_positions,
+      port_order_contrib: sources.port_order_contrib,
+      vnode_ranks: sources.vnode_ranks,
+      vnode_clusters: sources.vnode_clusters,
+      vnode_sizes: sources.vnode_sizes,
+      order_with_vnodes: sources.order_with_vnodes,
+    },
+    expansion_order~,
+  )
 }
 
 ///|
@@ -138,7 +142,10 @@ fn merge_ranks_with_vnodes(
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
+fn run_cluster_local_rank_replay(
+  input : ClusterLocalRankReplayInput,
+  expansion_order? : Array[String] = [],
+) -> Unit {
   if input.cluster_order.length() == 0 {
     return ()
   }
@@ -191,5 +198,6 @@ fn run_cluster_local_rank_replay(input : ClusterLocalRankReplayInput) -> Unit {
     input.groups,
     fixed_positions,
     dispatch_context,
+    expansion_order~,
   )
 }

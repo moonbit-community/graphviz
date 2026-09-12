@@ -3,6 +3,98 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "compound head clipping moves only the arrow when the curve ends outside the cluster" {
+  let points = [
+    point(0.0, 0.0),
+    point(2.0, 0.0),
+    point(4.0, 0.0),
+    point(6.0, 0.0),
+  ]
+  let clipped = clip_compound_spline(
+    { points, start_point: None, end_point: Some(point(10.0, 0.0)), },
+    point(0.0, 0.0),
+    point(10.0, 0.0),
+    None,
+    Some({ llx: 8.0, lly: -2.0, urx: 12.0, ury: 2.0, }),
+    0.0,
+    10.0,
+  )
+  @test.assert_eq(clipped.points, points)
+  @test.assert_eq(clipped.end_point, Some(point(8.0, 0.0)))
+}
+
+///|
+test "compound short tail exits use the arrow endpoint to construct the degenerate curve" {
+  let clipped = clip_compound_spline(
+    {
+      points: [
+        point(0.0, 12.0),
+        point(0.0, 11.0),
+        point(0.0, 10.0),
+        point(0.0, 9.0),
+      ],
+      start_point: None,
+      end_point: Some(point(0.0, 0.0)),
+    },
+    point(0.0, 15.0),
+    point(0.0, 0.0),
+    Some({ llx: -2.0, lly: 8.0, urx: 2.0, ury: 20.0, }),
+    None,
+    0.0,
+    10.0,
+  )
+  @test.assert_eq(clipped.points, [
+    point(0.0, 8.0),
+    point(0.0, 6.0),
+    point(0.0, 4.0),
+    point(0.0, 2.0),
+  ])
+  @test.assert_eq(clipped.end_point, Some(point(0.0, 0.0)))
+}
+
+///|
+test "compound target clusters not containing the endpoint leave the spline unchanged" {
+  let points = [
+    point(0.0, 0.0),
+    point(2.0, 0.0),
+    point(4.0, 0.0),
+    point(6.0, 0.0),
+  ]
+  let clipped = clip_compound_spline(
+    { points, start_point: None, end_point: Some(point(10.0, 0.0)), },
+    point(0.0, 0.0),
+    point(10.0, 0.0),
+    None,
+    Some({ llx: 3.0, lly: -2.0, urx: 5.0, ury: 2.0, }),
+    0.0,
+    10.0,
+  )
+  @test.assert_eq(clipped.points, points)
+  @test.assert_eq(clipped.end_point, Some(point(10.0, 0.0)))
+}
+
+///|
+fn clip_spline_start_to_bbox(
+  points : Array[@geom.Point],
+  rect : @geom.Rect,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  let reversed = reverse_points(points)
+  let clipped = clip_spline_end_to_bbox(reversed, rect)
+  reverse_points(clipped)
+}
+
+///|
+fn clip_spline_end_to_bbox(
+  points : Array[@geom.Point],
+  rect : @geom.Rect,
+) -> Array[@geom.Point] {
+  find_spline_end_bbox_cut(points, rect).unwrap_or(points)
+}
+
+///|
 fn assert_bbox_close(
   actual : Double,
   expected : Double,

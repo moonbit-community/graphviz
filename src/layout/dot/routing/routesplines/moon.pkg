@@ -8,3 +8,7 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

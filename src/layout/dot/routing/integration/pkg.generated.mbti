@@ -12,12 +12,13 @@ import {
   "moonbit-community/graphviz/layout/dot/positioning",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/layout/dot/routing/precompute",
 }
 
 // Values
-pub fn build_dot_route_base_deps(@layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, Map[String, @record_geometry.RecordPort]]) -> @routing.RouteBaseDeps
+pub fn build_dot_route_base_deps(@rankdir.RankDir, @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, Map[String, @record_geometry.RecordPort]]) -> @routing.RouteBaseDeps
 
 pub fn build_dot_routing_callbacks(@routing.EdgeLayoutInput) -> @routing.RoutingCallbacks
 
@@ -43,8 +44,7 @@ pub(all) struct DotRoutingStageInput {
 pub(all) struct DotRoutingStageOutput {
   nodes_out : Array[@layout_tree.DotLayoutNode]
   edges_out : Array[@layout_tree.DotLayoutEdge]
-  port_pad_below : Double
-  port_pad_above : Double
+  bbox_sizes : Map[String, @node_primitives.NodeSize]
 }
 
 pub(all) struct RouteEdgesForDotInput {
@@ -77,6 +77,7 @@ pub(all) struct RoutingPrecomputeInput {
   cluster_bboxes : Map[String, @geom.Rect]
   sizes : Map[String, @node_primitives.NodeSize]
   enable_complex_tuning : Bool
+  concentrate : Bool
 }
 
 // Type aliases

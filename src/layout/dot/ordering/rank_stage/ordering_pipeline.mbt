@@ -343,6 +343,14 @@ pub fn compute_ordering_pipeline(
       input.edges,
       input.ranks,
       ordering,
+      edge_ports_equal=@ports.build_initial_edge_port_comparator(
+        input.nodes,
+        Map([]),
+      ),
+      node_ports_equal=@ports.build_initial_node_port_comparator(
+        input.nodes,
+        Map([]),
+      ),
     ),
   }
 }

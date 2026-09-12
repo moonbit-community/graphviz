@@ -71,7 +71,12 @@ fn collect_flat_adjacent_beziers(
       !base.head_clip_enabled {
       continue
     }
-    let key = "\{edge.tail().name()}|\{@edge_identity.port_key(edge.tail_port())}|\{edge.head().name()}|\{@edge_identity.port_key(edge.head_port())}"
+    let key = @edge_ops.edge_parallel_key(
+      edge.tail().name(),
+      edge.head().name(),
+      edge.tail_port(),
+      edge.head_port(),
+    )
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]
@@ -131,7 +136,11 @@ fn collect_flat_adjacent_beziers(
       }
       let c1 = @edge_spline.point_add(base_one_third, shift)
       let c2 = @edge_spline.point_add(base_two_third, shift)
-      out[edge.id()] = [edge_base.tail_anchor, c1, c2, edge_base.head_anchor]
+      out[edge.id()] = if edge_base.tail_name == rep.tail_name {
+        [edge_base.tail_anchor, c1, c2, edge_base.head_anchor]
+      } else {
+        [edge_base.tail_anchor, c2, c1, edge_base.head_anchor]
+      }
     }
   }
   out
@@ -157,6 +166,7 @@ pub(all) struct RoutePrepassInput {
   ranks : Map[String, Int]
   order_index : Map[String, Int]
   path_order_index : Map[String, Int]
+  concentrated_route_order : Map[Int, Int]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   sizes : Map[String, @node_primitives.NodeSize]
@@ -190,6 +200,7 @@ fn build_route_prepass_state(input : RoutePrepassInput) -> RoutePrepassState {
     input.edges,
     input.base_cache,
     input.path_order_index,
+    concentrated_route_order=input.concentrated_route_order,
   )
   let regular_recover_plan = build_regular_recover_routing_plan(
     ordered_edges,

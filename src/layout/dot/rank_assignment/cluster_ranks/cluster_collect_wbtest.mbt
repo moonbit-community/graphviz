@@ -3,6 +3,16 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "overlapping siblings retain the first cluster owner" {
+  let owners = build_node_cluster_index(["cluster_first", "cluster_second"], {
+    "cluster_first": { "shared": true, "a": true },
+    "cluster_second": { "shared": true, "b": true },
+  })
+  @test.assert_eq(owners.get("shared"), Some("cluster_first"))
+  @test.assert_eq(owners.get("b"), Some("cluster_second"))
+}
+
+///|
 test "collect_top_clusters keeps only top-level clusters and excludes the cluster source itself" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let outer = root.subgraph(name="cluster_outer")
@@ -23,7 +33,7 @@ test "collect_top_clusters keeps only top-level clusters and excludes the cluste
   assert_eq(root_top.get("cluster_inner"), None)
 
   let cluster_collected = collect_top_clusters(outer)
-  assert_eq(cluster_collected.top_clusters.length(), 0)
+  @test.assert_eq(cluster_collected.top_clusters, ["cluster_inner"])
   assert_eq(cluster_collected.cluster_graphs.length(), 2)
   match cluster_collected.cluster_graphs.get("cluster_outer") {
     Some(_) => ()

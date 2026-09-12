@@ -872,8 +872,6 @@ fn clip_spline_to_nodes(
   head_port_side? : Int = 0,
   tail_clip_enabled_override~ : Bool?,
   head_clip_enabled_override~ : Bool?,
-  tail_cluster_bbox~ : @geom.Rect?,
-  head_cluster_bbox~ : @geom.Rect?,
   clip_swapped? : Bool = false,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
@@ -1044,14 +1042,7 @@ fn clip_spline_to_nodes(
         )
     }
   }
-  let head_cluster_clipped = match head_cluster_bbox {
-    Some(rect) => clip_spline_end_to_bbox(head_clipped, rect)
-    None => head_clipped
-  }
-  match tail_cluster_bbox {
-    Some(rect) => clip_spline_start_to_bbox(head_cluster_clipped, rect)
-    None => head_cluster_clipped
-  }
+  head_clipped
 }
 
 ///|

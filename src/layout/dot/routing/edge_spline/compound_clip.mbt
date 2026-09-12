@@ -3,6 +3,97 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+// compound.c runs after ordinary node and arrow clipping. If only the arrow
+// intersects the cluster, move its marker without trimming the curve again.
+fn clip_compound_end(
+  spline : SplineArrowClipResult,
+  rect : @geom.Rect,
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  arrow_len : Double,
+) -> SplineArrowClipResult {
+  guard spline.points.length() >= 4 && point_in_rect(head_center, rect) else {
+    return spline
+  }
+  let points = if point_in_rect(spline.points[0], rect) {
+    guard !point_in_rect(tail_center, rect) &&
+      spline.start_point is Some(start) &&
+      !point_in_rect(start, rect) else {
+      return spline
+    }
+    let end = line_rect_intersection_from_inside(spline.points[0], start, rect)
+    let middle = point((start.x + end.x) / 2.0, (start.y + end.y) / 2.0)
+    [
+      point((start.x + middle.x) / 2.0, (start.y + middle.y) / 2.0),
+      middle,
+      point((end.x + middle.x) / 2.0, (end.y + middle.y) / 2.0),
+      end,
+    ]
+  } else {
+    guard find_spline_end_bbox_cut(spline.points, rect) is Some(cut) else {
+      guard spline.end_point is Some(end) else { return spline }
+      return {
+        points: spline.points,
+        start_point: spline.start_point,
+        end_point: Some(
+          line_rect_intersection_from_inside(
+            end,
+            spline.points[spline.points.length() - 1],
+            rect,
+          ),
+        ),
+      }
+    }
+    cut
+  }
+  let clipped = clip_spline_arrows(
+    points,
+    0.0,
+    arrow_len,
+    false,
+    spline.end_point is Some(_),
+    ARROW_CLIP_EPS,
+  )
+  {
+    points: clipped.points,
+    start_point: spline.start_point,
+    end_point: clipped.end_point,
+  }
+}
+
+///|
+fn clip_compound_spline(
+  spline : SplineArrowClipResult,
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  tail_bbox : @geom.Rect?,
+  head_bbox : @geom.Rect?,
+  tail_arrow_len : Double,
+  head_arrow_len : Double,
+) -> SplineArrowClipResult {
+  let head_clipped = head_bbox.map_or(spline, rect => {
+    clip_compound_end(spline, rect, tail_center, head_center, head_arrow_len)
+  })
+  guard tail_bbox is Some(rect) else { return head_clipped }
+  let reversed = clip_compound_end(
+    {
+      points: reverse_points(head_clipped.points),
+      start_point: head_clipped.end_point,
+      end_point: head_clipped.start_point,
+    },
+    rect,
+    head_center,
+    tail_center,
+    tail_arrow_len,
+  )
+  {
+    points: reverse_points(reversed.points),
+    start_point: reversed.end_point,
+    end_point: reversed.start_point,
+  }
+}
+
+///|
 /// Compound and bbox clipping owner for edge splines: intersect Bezier
 /// segments with cluster boxes and adjust short compound exits.
 fn cmp_double(a : Double, b : Double) -> Int {
@@ -138,12 +229,12 @@ fn spline_intersect_bbox(
 }
 
 ///|
-fn clip_spline_end_to_bbox(
+fn find_spline_end_bbox_cut(
   points : Array[@geom.Point],
   rect : @geom.Rect,
-) -> Array[@geom.Point] {
+) -> Array[@geom.Point]? {
   if points.length() < 4 {
-    return points
+    return None
   }
   let mut idx = 0
   while idx + 3 < points.length() {
@@ -162,13 +253,13 @@ fn clip_spline_end_to_bbox(
         for point in clipped {
           out.push(point)
         }
-        return out
+        return Some(out)
       }
       None => ()
     }
     idx += 3
   }
-  points
+  None
 }
 
 ///|
@@ -180,19 +271,6 @@ fn reverse_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
     out.push(points[idx])
   }
   out
-}
-
-///|
-fn clip_spline_start_to_bbox(
-  points : Array[@geom.Point],
-  rect : @geom.Rect,
-) -> Array[@geom.Point] {
-  if points.length() < 4 {
-    return points
-  }
-  let reversed = reverse_points(points)
-  let clipped = clip_spline_end_to_bbox(reversed, rect)
-  reverse_points(clipped)
 }
 
 ///|
@@ -249,44 +327,4 @@ fn line_rect_intersection_from_inside(
     }
   }
   inside
-}
-
-///|
-fn adjust_tail_cluster_compound_segment(
-  points : Array[@geom.Point],
-  end_point : @geom.Point?,
-  include_tail : Bool,
-  include_head : Bool,
-  tail_cluster_bbox : @geom.Rect?,
-) -> Array[@geom.Point] {
-  if include_tail || !include_head || points.length() != 4 {
-    return points
-  }
-  let tail_rect = match tail_cluster_bbox {
-    Some(rect) => rect
-    None => return points
-  }
-  let ep = match end_point {
-    Some(point) => point
-    None => return points
-  }
-  let p0 = points[0]
-  if !point_in_rect(p0, tail_rect) || point_in_rect(ep, tail_rect) {
-    return points
-  }
-  let p3 = points[3]
-  // Keep longer compound exits unchanged to match Graphviz's bezier control
-  // points; only retune very short exits that collapse near the tail cluster.
-  if point_dist(p0, p3) > 7.0 {
-    return points
-  }
-  let p = if point_in_rect(p3, tail_rect) {
-    line_rect_intersection_from_inside(p3, ep, tail_rect)
-  } else {
-    p0
-  }
-  let c2 : @geom.Point = { x: (p.x + ep.x) / 2.0, y: (p.y + ep.y) / 2.0, }
-  let c3 : @geom.Point = { x: (c2.x + ep.x) / 2.0, y: (c2.y + ep.y) / 2.0, }
-  let c1 : @geom.Point = { x: (c2.x + p.x) / 2.0, y: (c2.y + p.y) / 2.0, }
-  [p, c1, c2, c3]
 }

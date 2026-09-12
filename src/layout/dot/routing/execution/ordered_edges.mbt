@@ -67,6 +67,15 @@ fn maybe_build_self_edge_layout(input : OrderedEdgeLayoutAttemptInput) -> Bool {
 }
 
 ///|
+fn unsupported_record_flat_edge(base : EdgeRouteBase) -> Bool {
+  base.is_flat_adjacent &&
+  (
+    @record_geometry.is_record_shape(base.tail_node) ||
+    @record_geometry.is_record_shape(base.head_node)
+  )
+}
+
+///|
 fn route_ordered_edge(
   edge : @cgraph.Edge,
   input : OrderedRoutingInput,
@@ -74,6 +83,11 @@ fn route_ordered_edge(
   callbacks : RoutingCallbacks,
 ) -> Unit {
   let edge_id = edge.id()
+  if input.regular_pass_input.routing_context.concentrated_segments.get(edge_id)
+    is Some(segments) {
+    route_concentrated_segments(edge, segments, input, state, callbacks)
+    return
+  }
   if input.regular_pass_input.routing_context.concentrated_ignored_edge_ids.get(
       edge_id,
     )
@@ -87,6 +101,8 @@ fn route_ordered_edge(
     Some(value) => value
     None => return ()
   }
+  // dotsplines.make_flat_adj_edges does not route record-shaped endpoints.
+  guard !unsupported_record_flat_edge(base) else { return () }
   let layout_attempt : OrderedEdgeLayoutAttemptInput = {
     edge,
     edge_id,
@@ -95,6 +111,7 @@ fn route_ordered_edge(
     state,
     callbacks,
   }
+  guard !maybe_build_flat_labeled_group(layout_attempt) else { return () }
   if maybe_build_flat_adjacent_layout(layout_attempt) {
     return ()
   }

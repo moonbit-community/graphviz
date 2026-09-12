@@ -97,26 +97,12 @@ pub type RoutingPrecomputeData = @precompute.RoutingPrecomputePipelineOutput
 
 ///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
-/// derivation in fixed order from typed edge/padding inputs before solve wiring.
+/// derivation in fixed order from typed edge/geometry inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_routing_precompute_data(
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
-  let port_padding = @precompute.resolve_routing_port_padding(
-    input.cluster_meta.has_clusters,
-    prep.has_port_edges,
-    () => {
-      let padding = @record_layout.record_port_padding_y(
-        prep.edges,
-        input.positions_state.positions,
-        input.label_ports_map,
-      )
-      (padding.below, padding.above)
-    },
-  )
-  let port_pad_below = port_padding.0
-  let port_pad_above = port_padding.1
   let head_port_metrics = @precompute.build_dot_head_port_metrics(
     prep.edges,
     input.enable_complex_tuning,
@@ -132,28 +118,40 @@ pub fn build_routing_precompute_data(
     prep.rankdir,
     prep.record_orientation,
   )
-  @precompute.build_routing_precompute_pipeline({
-    edges: prep.edges,
-    positions: input.positions_state.positions,
-    x_groups: input.positions_state.x_groups,
-    ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
-    ordered_groups: input.ordering.ordered_groups,
-    port_pad_below,
-    port_pad_above,
-    head_port_metrics,
-    edge_tail: input.rank_data.edge_tail,
-    edge_head: input.rank_data.edge_head,
-    ranks: input.rank_data.ranks,
-    nodesep_pt: input.rank_heights.nodesep_pt,
-    sizes: input.sizes,
-    edge_vnodes: input.ordering.vnode_info.edge_vnodes,
-    pathplan_sizes,
-    path_cluster_keys: input.cluster_meta.intercluster_keys,
-    vnode_sizes: input.ordering.vnode_info.vnode_sizes,
-    vnode_positions: input.positions_state.vnode_positions,
-    cluster_bboxes: input.cluster_bboxes,
-    concentrate: input.concentrate,
-  })
+  let initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)] = Map([])
+  if input.ordering.live_graph is Some(_) {
+    let sample = @ports.build_initial_port_sampler(prep.nodes, input.sizes)
+    for edge in prep.edges {
+      initial_port_points[edge.id()] = (
+        sample(edge.tail(), edge.tail_port()),
+        sample(edge.head(), edge.head_port()),
+      )
+    }
+  }
+  @precompute.build_routing_precompute_pipeline(
+    {
+      edges: prep.edges,
+      positions: input.positions_state.positions,
+      x_groups: input.positions_state.x_groups,
+      ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
+      ordered_groups: input.ordering.ordered_groups,
+      head_port_metrics,
+      edge_tail: input.rank_data.edge_tail,
+      edge_head: input.rank_data.edge_head,
+      ranks: input.rank_data.ranks,
+      nodesep_pt: input.rank_heights.nodesep_pt,
+      sizes: input.sizes,
+      edge_vnodes: input.ordering.vnode_info.edge_vnodes,
+      pathplan_sizes,
+      path_cluster_keys: input.cluster_meta.intercluster_keys,
+      vnode_sizes: input.ordering.vnode_info.vnode_sizes,
+      vnode_positions: input.positions_state.vnode_positions,
+      cluster_bboxes: input.cluster_bboxes,
+      concentrate: input.concentrate,
+      initial_port_points,
+    },
+    live_graph=input.ordering.live_graph,
+  )
 }
 
 ///|
@@ -193,6 +191,7 @@ pub fn route_edges_for_dot(
   }
   let pipeline_deps : @routing.RouteEdgesPipelineDeps = {
     route_base_deps: build_dot_route_base_deps(
+      input.prep.rankdir,
       input.prep.record_orientation,
       input.routing_label_ports_map,
       input.routing_label_ports_raw,
@@ -249,8 +248,6 @@ pub(all) struct DotRoutingStageOutput {
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
   bbox_sizes : Map[String, NodeSize]
-  port_pad_below : Double
-  port_pad_above : Double
 }
 
 ///|
@@ -309,8 +306,6 @@ pub fn compute_dot_routing_stage(
     enable_complex_tuning,
     concentrate: graph_concentrate_enabled(graph),
   })
-  let port_pad_below = precompute_data.port_pad_below
-  let port_pad_above = precompute_data.port_pad_above
   let head_port_metrics = precompute_data.head_port_metrics
   let path_groups = precompute_data.path_groups
   let bbox_sizes = precompute_data.pathplan_sizes
@@ -342,5 +337,5 @@ pub fn compute_dot_routing_stage(
   } else {
     edges_routed
   }
-  { nodes_out, edges_out, bbox_sizes, port_pad_below, port_pad_above, }
+  { nodes_out, edges_out, bbox_sizes, }
 }

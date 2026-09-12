@@ -3,6 +3,67 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "intercluster cycles retain soft constraints on acyclic branches" {
+  // External Graphviz 14.1.1 b53 rank trace. Even an acyclic branch must
+  // retain class1/interclust1's pair of weighted slack edges.
+  let graph = @dot_parser.parse_dot(
+    "digraph { subgraph cluster_57 { n57; n58; n50 -> n58; n48 -> n58; } subgraph cluster_43 { n43; n50; n45 -> n50; n49; n45 -> n49; n48; n45 -> n48; n45; n51; n45 -> n51; } subgraph cluster_52 { n52; n56; n54 -> n56; n53; n48 -> n53; n49 -> n53; n54; n53 -> n54; n55; n54 -> n55; } subgraph cluster_60 { n60; n61; n50 -> n61; n49 -> n61; } subgraph cluster_44 { n44; n46; } n56 -> n60; n51 -> n52; n55 -> n57; n58 -> n44; n61 -> n44; }",
+  )
+  let ranks = compute_ranks_directed_with_clusters(
+    graph,
+    graph.nodes(),
+    graph.edges(),
+    true,
+    CL_BACK,
+  )
+  @test.assert_eq(ranks, {
+    "n57": 2,
+    "n58": 4,
+    "n50": 2,
+    "n48": 2,
+    "n43": 0,
+    "n45": 0,
+    "n49": 2,
+    "n51": 2,
+    "n52": 4,
+    "n56": 8,
+    "n54": 6,
+    "n53": 4,
+    "n55": 8,
+    "n60": 10,
+    "n61": 10,
+    "n44": 12,
+    "n46": 12,
+  })
+}
+
+///|
+test "nested cluster ranks retain local offsets across reciprocal boundary edges" {
+  // Graphviz 14.1.1 rank.c: rank the inner chain before class1 constructs
+  // slack edges between its leader and the outer states.
+  let graph = @dot_parser.parse_dot(
+    "digraph { subgraph cluster_outer { init; idle; disabled; subgraph cluster_inner { a -> b -> c -> d; } fault; } init -> idle; idle -> a; idle -> disabled; disabled -> a; disabled -> idle; a -> fault; c -> idle; d -> idle; d -> idle; fault -> a; }",
+  )
+  let ranks = compute_ranks_directed_with_clusters(
+    graph,
+    graph.nodes(),
+    graph.edges(),
+    false,
+    CL_BACK,
+  )
+  @test.assert_eq(ranks, {
+    "init": 2,
+    "idle": 3,
+    "disabled": 4,
+    "a": 0,
+    "b": 1,
+    "c": 2,
+    "d": 3,
+    "fault": 1,
+  })
+}
+
+///|
 test "build_rank_groups assigns missing ranks to zero and preserves node order within each rank" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")

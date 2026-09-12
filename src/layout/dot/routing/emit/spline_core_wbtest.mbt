@@ -3,6 +3,37 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "pathplan side ports retain upstream no-clip decisions in route orientation" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed)
+  let edge = graph.edge(graph.node("a"), graph.node("b"))
+  let base = {
+    ..build_emit_base(edge, tail_clip_enabled=true, head_clip_enabled=true),
+    tail_port_side: 4,
+    head_port_side: 0,
+    is_flat_edge: false,
+  }
+  let flags = edge_render_clip_flags(base, using_pathplan=true)
+  @test.assert_eq(flags.tail_clip_enabled, false)
+  @test.assert_eq(flags.head_clip_enabled, true)
+  let swapped = {
+    ..base,
+    swap_ends: true,
+    tail_port_side: 0,
+    head_port_side: 1,
+  }
+  let flags = edge_render_clip_flags(swapped, using_pathplan=true)
+  @test.assert_eq(flags.tail_clip_enabled, true)
+  @test.assert_eq(flags.head_clip_enabled, false)
+  let fallback = edge_render_clip_flags(base)
+  @test.assert_eq(fallback.tail_clip_enabled, true)
+  let flat = edge_render_clip_flags(
+    { ..base, is_flat_edge: true, },
+    using_pathplan=true,
+  )
+  @test.assert_eq(flat.tail_clip_enabled, false)
+}
+
+///|
 test "finalize_edge_spline reverses output and applies dotted anchor bias" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))

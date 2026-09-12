@@ -43,7 +43,14 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
 /// with fixed rank slots, startpass=2, and coalesced parallel-edge handling.
 pub fn run_cluster_local_rank_reorder_call(
   call_inputs : ClusterLocalRankReorderCallInputs,
+  crossing_counter? : ((Map[Int, Array[String]]) -> Int)? = None,
 ) -> Map[Int, Array[String]] {
+  let skeletons : Map[String, Bool] = Map([])
+  for name, _ in call_inputs.cluster_node_order {
+    if @cluster_identity.is_cluster_skeleton_name(name) {
+      skeletons[name] = true
+    }
+  }
   @reorder.reorder_rank_groups(
     call_inputs.cluster_rank_keys,
     call_inputs.seeded_cluster_groups,
@@ -67,7 +74,7 @@ pub fn run_cluster_local_rank_reorder_call(
     call_inputs.port_order_positions,
     call_inputs.port_order_contrib,
     Map([]),
-    Map([]),
+    skeletons,
     call_inputs.cluster_flat_constraints,
     graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
     graphviz_in_neighbors=call_inputs.graphviz_in_neighbors,
@@ -80,6 +87,7 @@ pub fn run_cluster_local_rank_reorder_call(
     coalesce_parallel_edges=true,
     startpass=2,
     startpass_init_infinite=false,
+    crossing_counter~,
   )
 }
 
@@ -91,44 +99,55 @@ fn run_cluster_rank_reorder(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   dispatch_context : ClusterLocalReorderDispatchContext,
+  expansion_order? : Array[String] = [],
+  crossing_counter? : ((Map[Int, Array[String]]) -> Int)? = None,
 ) -> Map[Int, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
-    return None
+    for rank in local_context.cluster_rank_keys {
+      for name in local_context.cluster_groups.get(rank).unwrap_or_default() {
+        expansion_order.push(name)
+      }
+    }
+    return Some(local_context.cluster_groups)
   }
   let seeded_cluster_groups = build_cluster_rank_seeded_groups(
     local_context,
     input_phase_output,
     dispatch_context.fixed_ranks,
+    expansion_order~,
   )
-  let ordered_cluster = run_cluster_local_rank_reorder_call({
-    cluster_rank_keys: local_context.cluster_rank_keys,
-    seeded_cluster_groups,
-    cluster_edges: input_phase_output.cluster_edges,
-    cluster_edge_tail: input_phase_output.cluster_edge_tail,
-    cluster_edge_head: input_phase_output.cluster_edge_head,
-    cluster_edge_tail_port_x: input_phase_output.cluster_edge_tail_port_x,
-    cluster_edge_head_port_x: input_phase_output.cluster_edge_head_port_x,
-    cluster_edge_tail_port_order: input_phase_output.cluster_edge_tail_port_order,
-    cluster_edge_head_port_order: input_phase_output.cluster_edge_head_port_order,
-    parents: input_phase_output.parents,
-    children: input_phase_output.children,
-    cluster_keys: input_phase_output.cluster_keys,
-    rank_same_groups: dispatch_context.rank_same_groups,
-    rank_same_order: dispatch_context.rank_same_order,
-    edge_order: input_phase_output.edge_order,
-    cluster_node_order: local_context.cluster_node_order,
-    cluster_sizes: input_phase_output.cluster_sizes,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    cluster_flat_constraints: input_phase_output.cluster_flat_constraints,
-    graphviz_out_neighbors: input_phase_output.graphviz_out_neighbors,
-    graphviz_in_neighbors: input_phase_output.graphviz_in_neighbors,
-    cluster_fixed_positions: local_context.cluster_fixed_positions,
-    fixed_ranks: dispatch_context.fixed_ranks,
-  })
+  let ordered_cluster = run_cluster_local_rank_reorder_call(
+    {
+      cluster_rank_keys: local_context.cluster_rank_keys,
+      seeded_cluster_groups,
+      cluster_edges: input_phase_output.cluster_edges,
+      cluster_edge_tail: input_phase_output.cluster_edge_tail,
+      cluster_edge_head: input_phase_output.cluster_edge_head,
+      cluster_edge_tail_port_x: input_phase_output.cluster_edge_tail_port_x,
+      cluster_edge_head_port_x: input_phase_output.cluster_edge_head_port_x,
+      cluster_edge_tail_port_order: input_phase_output.cluster_edge_tail_port_order,
+      cluster_edge_head_port_order: input_phase_output.cluster_edge_head_port_order,
+      parents: input_phase_output.parents,
+      children: input_phase_output.children,
+      cluster_keys: input_phase_output.cluster_keys,
+      rank_same_groups: dispatch_context.rank_same_groups,
+      rank_same_order: dispatch_context.rank_same_order,
+      edge_order: input_phase_output.edge_order,
+      cluster_node_order: local_context.cluster_node_order,
+      cluster_sizes: input_phase_output.cluster_sizes,
+      nodesep_pt: dispatch_context.nodesep_pt,
+      has_edge_labels: dispatch_context.has_edge_labels,
+      port_order_positions: dispatch_context.port_order_positions,
+      port_order_contrib: dispatch_context.port_order_contrib,
+      cluster_flat_constraints: input_phase_output.cluster_flat_constraints,
+      graphviz_out_neighbors: input_phase_output.graphviz_out_neighbors,
+      graphviz_in_neighbors: input_phase_output.graphviz_in_neighbors,
+      cluster_fixed_positions: local_context.cluster_fixed_positions,
+      fixed_ranks: dispatch_context.fixed_ranks,
+    },
+    crossing_counter~,
+  )
   Some(ordered_cluster)
 }
 
@@ -143,6 +162,52 @@ fn reorder_cluster_rank_group(
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
+  expansion_order? : Array[String] = [],
+) -> Unit {
+  guard build_child_skeleton_view(
+      cluster, cluster_graph, groups, dispatch_context,
+    )
+    is Some(view) else {
+    reorder_expanded_cluster_rank_group(
+      cluster,
+      expanded_clusters,
+      cluster_graph,
+      groups,
+      fixed_positions,
+      dispatch_context,
+      expansion_order~,
+    )
+    return
+  }
+  reorder_expanded_cluster_rank_group(
+    cluster,
+    expanded_clusters,
+    view.graph,
+    view.groups,
+    @rank_groups.order_positions_from_groups(view.groups),
+    view.dispatch,
+    expansion_order~,
+  )
+  for rank, names in view.groups {
+    let expanded : Array[String] = []
+    for name in names {
+      for original in view.members.get(name).unwrap_or([name]) {
+        expanded.push(original)
+      }
+    }
+    groups[rank] = expanded
+  }
+}
+
+///|
+fn reorder_expanded_cluster_rank_group(
+  cluster : String,
+  expanded_clusters : Map[String, Bool],
+  cluster_graph : @cgraph.Graph,
+  groups : Map[Int, Array[String]],
+  fixed_positions : Map[String, Double],
+  dispatch_context : ClusterLocalReorderDispatchContext,
+  expansion_order? : Array[String] = [],
 ) -> Unit {
   let local_context = match
     build_cluster_local_reorder_context({
@@ -185,9 +250,34 @@ fn reorder_cluster_rank_group(
     flat_constraints: dispatch_context.flat_constraints,
   }
   let input_phase_output = build_local_reorder_inputs(input_context)
+  // ncross() evaluates Root, even while mincross mutates only this cluster.
+  // Unrelated crossings must remain in the objective: a zero local count
+  // would otherwise stop the equal-cost sweeps that Graphviz still performs.
+  let crossing_counter = candidate => {
+    let root_groups = @rank_groups.clone_rank_groups(groups)
+    apply_cluster_rank_reorder_output(
+      root_groups,
+      local_context.cluster_rank_keys,
+      candidate,
+      local_context.cluster_node_set,
+    )
+    @reorder.count_crossings_port_aware(
+      root_groups,
+      dispatch_context.fixed_ranks,
+      dispatch_context.order_edges,
+      dispatch_context.order_edge_tail,
+      dispatch_context.order_edge_head,
+      edge_tail_port_x=dispatch_context.order_edge_tail_port_x,
+      edge_head_port_x=dispatch_context.order_edge_head_port_x,
+    )
+  }
   let ordered_cluster = match
     run_cluster_rank_reorder(
-      local_context, input_phase_output, dispatch_context,
+      local_context,
+      input_phase_output,
+      dispatch_context,
+      expansion_order~,
+      crossing_counter=Some(crossing_counter),
     ) {
     Some(value) => value
     None => return ()
@@ -197,6 +287,7 @@ fn reorder_cluster_rank_group(
     local_context.cluster_rank_keys,
     ordered_cluster,
     local_context.cluster_node_set,
+    replaced_cluster=cluster,
   )
 }
 
@@ -210,6 +301,7 @@ fn reorder_cluster_rank_groups(
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
+  expansion_order? : Array[String] = [],
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map([])
   let mut current_fixed_positions = fixed_positions
@@ -219,8 +311,13 @@ fn reorder_cluster_rank_groups(
       None => continue
     }
     reorder_cluster_rank_group(
-      cluster, expanded_clusters, cluster_graph, groups, current_fixed_positions,
+      cluster,
+      expanded_clusters,
+      cluster_graph,
+      groups,
+      current_fixed_positions,
       dispatch_context,
+      expansion_order~,
     )
     expanded_clusters[cluster] = true
     current_fixed_positions = @rank_groups.order_positions_from_groups(groups)
@@ -465,7 +562,7 @@ fn build_local_reorder_cluster_keys(
     // Graphviz parity: mincross_clust() runs on the expanded subgraph where
     // ND_clust is cleared, so local reorder/transpose should not see
     // cross-cluster barriers for these nodes.
-    cluster_keys[name] = ""
+    cluster_keys[name] = @cluster_identity.cluster_key_from_skeleton(name).unwrap_or_default()
   }
   cluster_keys
 }
@@ -548,33 +645,39 @@ fn build_local_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder writes only cluster members back to
-/// existing rank slots, preserving non-cluster node positions.
-/// Do not change behavior without updating fixtures/tests.
+/// merge_ranks installs each expanded cluster as one contiguous rank block.
+/// Preserve the relative order of outside nodes, not gaps between members.
 fn apply_cluster_rank_reorder_output(
   groups : Map[Int, Array[String]],
   cluster_rank_keys : Array[Int],
   ordered_cluster : Map[Int, Array[String]],
   cluster_node_set : Map[String, Bool],
+  replaced_cluster? : String = "",
 ) -> Unit {
   for rank in cluster_rank_keys {
     let desired = ordered_cluster.get(rank).unwrap_or_default()
-    if desired.length() <= 1 {
-      continue
-    }
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => continue
-    }
-    let mut idx = 0
-    let mut pos = 0
-    while pos < names.length() && idx < desired.length() {
-      if cluster_node_set.get(names[pos]) is Some(_) {
-        names[pos] = desired[idx]
-        idx = idx + 1
+    guard !desired.is_empty() else { continue }
+    guard groups.get(rank) is Some(names) else { continue }
+    let placeholder = @cluster_identity.cluster_skeleton_name(
+      replaced_cluster, rank,
+    )
+    let has_placeholder = replaced_cluster != "" && names.contains(placeholder)
+    let merged : Array[String] = []
+    let mut inserted = false
+    for name in names {
+      if cluster_node_set.get(name) is Some(_) ||
+        (has_placeholder && name == placeholder) {
+        if !inserted && (!has_placeholder || name == placeholder) {
+          for cluster_name in desired {
+            merged.push(cluster_name)
+          }
+          inserted = true
+        }
+      } else {
+        merged.push(name)
       }
-      pos = pos + 1
     }
+    groups[rank] = merged
   }
 }
 
@@ -665,17 +768,41 @@ fn build_cluster_node_order_context(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder preserves fixed slots outside the
-/// active cluster node subset.
-/// Do not change behavior without updating fixtures/tests.
+/// Local ranks start at zero after extraction from the root rank array.
+/// Translate external anchors by the same rank offset before using medians.
 fn build_cluster_fixed_positions(
   fixed_positions : Map[String, Double],
   cluster_node_set : Map[String, Bool],
+  groups : Map[Int, Array[String]],
 ) -> Map[String, Double] {
+  let expanded_positions = fixed_positions.copy()
+  for _rank, names in groups {
+    let mut skeleton_count = 0
+    for name in names {
+      if @cluster_identity.is_cluster_skeleton_name(name) &&
+        cluster_node_set.get(name) is None {
+        skeleton_count = skeleton_count + 1
+      } else if fixed_positions.get(name) is Some(position) {
+        expanded_positions[name] = position - skeleton_count.to_double()
+      }
+    }
+  }
+  let offsets : Map[Int, Double] = Map([])
+  for rank, names in groups {
+    for index, name in names {
+      guard cluster_node_set.get(name) is Some(_) else { continue }
+      offsets[rank] = expanded_positions.get(name).unwrap_or(index.to_double())
+      break
+    }
+  }
+  let ranks = @rank_groups.build_node_ranks(groups)
   let cluster_fixed_positions : Map[String, Double] = Map([])
-  for name, value in fixed_positions {
+  for name, value in expanded_positions {
     if cluster_node_set.get(name) is None {
-      cluster_fixed_positions[name] = value
+      let offset = ranks
+        .get(name)
+        .map_or(0.0, rank => offsets.get(rank).unwrap_or(0.0))
+      cluster_fixed_positions[name] = value - offset
     }
   }
   cluster_fixed_positions
@@ -701,6 +828,49 @@ priv struct ClusterLocalReorderContextBuildInputs {
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
+fn append_child_cluster_seed_nodes(
+  graph : @cgraph.Graph,
+  names : Array[String],
+) -> Unit {
+  for child in graph.subgraphs() {
+    if child.name().unwrap_or_default().has_prefix("cluster") {
+      for node in child.nodes() {
+        names.push(node.name())
+      }
+    } else {
+      append_child_cluster_seed_nodes(child, names)
+    }
+  }
+}
+
+///|
+/// class2 installs child skeletons before ordinary fast nodes. build_ranks
+/// walks that prepended list backwards, so children seed before direct nodes.
+fn cluster_class2_seed_order(
+  graph : @cgraph.Graph,
+  node_order : Map[String, Int],
+) -> Map[String, Int] {
+  let names : Array[String] = []
+  append_child_cluster_seed_nodes(graph, names)
+  // class2 prepends real nodes in graph iteration order; build_ranks walks
+  // that list backwards, not in the enclosing root's DFS order.
+  for node in graph.nodes() {
+    names.push(node.name())
+  }
+  let remaining : Array[String] = []
+  for name, _ in node_order {
+    remaining.push(name)
+  }
+  remaining.sort_by((a, b) => compare_by_order_then_name(node_order, a, b))
+  let result : Map[String, Int] = Map([])
+  for name in [..names, ..remaining] {
+    guard result.get(name) is None else { continue }
+    result[name] = result.length()
+  }
+  result
+}
+
+///|
 fn build_cluster_local_reorder_context(
   inputs : ClusterLocalReorderContextBuildInputs,
 ) -> ClusterLocalReorderContext? {
@@ -711,12 +881,12 @@ fn build_cluster_local_reorder_context(
     inputs.vnode_clusters,
     inputs.order_with_vnodes,
   )
-  if cluster_node_set.length() <= 1 {
+  if cluster_node_set.length() == 0 {
     return None
   }
   let node_order_context = build_cluster_node_order_context(
     cluster_node_set,
-    inputs.node_order,
+    cluster_class2_seed_order(inputs.cluster_graph, inputs.node_order),
   )
   let cluster_nodes = node_order_context.cluster_nodes
   let cluster_node_order = node_order_context.cluster_node_order
@@ -730,6 +900,7 @@ fn build_cluster_local_reorder_context(
   let cluster_fixed_positions = build_cluster_fixed_positions(
     inputs.fixed_positions,
     cluster_node_set,
+    inputs.groups,
   )
   Some({
     cluster_node_set,
@@ -742,186 +913,35 @@ fn build_cluster_local_reorder_context(
 }
 
 ///|
-/// Ordering domain: vnode interpolation seeding for clustered local reorder
-/// passes before flat-constraint application.
-
-///|
-/// Graphviz parity: vnode interpolation picks the first neighbor that crosses
-/// the current rank boundary and falls back to the first incident endpoint.
-fn select_vnode_anchor_neighbor(
-  neighbors : Array[String],
-  ranks : Map[String, Int],
-  vnode_rank : Int,
-  select_lower : Bool,
-) -> String {
-  for candidate in neighbors {
-    let candidate_rank = match ranks.get(candidate) {
-      Some(value) => value
-      None => if select_lower { vnode_rank - 1 } else { vnode_rank + 1 }
-    }
-    if select_lower {
-      if candidate_rank < vnode_rank {
-        return candidate
-      }
-    } else if candidate_rank > vnode_rank {
-      return candidate
-    }
-  }
-  if neighbors.length() > 0 {
-    neighbors[0]
-  } else {
-    ""
-  }
-}
-
-///|
-/// Graphviz parity: vnode interpolation key falls back to base order when
-/// anchors are missing, and otherwise interpolates between anchor orders.
-fn compute_vnode_interpolation_key(
-  name : String,
-  rank : Int,
-  base_order : Int,
-  order_index : Map[String, Int],
-  ranks : Map[String, Int],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-) -> Double {
-  if !@edge_identity.is_edge_vnode_name(name) {
-    return Double::from_int(base_order)
-  }
-  let vnode_rank = ranks.get(name).unwrap_or(rank)
-  let parent_name = match parents.get(name) {
-    Some(list) => select_vnode_anchor_neighbor(list, ranks, vnode_rank, true)
-    None => ""
-  }
-  let child_name = match children.get(name) {
-    Some(list) => select_vnode_anchor_neighbor(list, ranks, vnode_rank, false)
-    None => ""
-  }
-  if parent_name == "" || child_name == "" {
-    return Double::from_int(base_order)
-  }
-  let parent_rank = ranks.get(parent_name).unwrap_or(vnode_rank - 1)
-  let child_rank = ranks.get(child_name).unwrap_or(vnode_rank + 1)
-  let parent_order = order_index.get(parent_name).unwrap_or(base_order)
-  let child_order = order_index.get(child_name).unwrap_or(base_order)
-  let (low_rank, high_rank, low_order, high_order) = if parent_rank <=
-    child_rank {
-    (parent_rank, child_rank, parent_order, child_order)
-  } else {
-    (child_rank, parent_rank, child_order, parent_order)
-  }
-  let span = high_rank - low_rank
-  if span <= 0 {
-    return Double::from_int(base_order)
-  }
-  let t = Double::from_int(vnode_rank - low_rank) / Double::from_int(span)
-  if low_order == high_order {
-    Double::from_int(low_order) - (1.0 - t)
-  } else {
-    Double::from_int(low_order) + Double::from_int(high_order - low_order) * t
-  }
-}
-
-///|
-const SEEDED_RANK_KEY_EPS : Double = 0.000000001
-
-///|
-fn sort_seeded_rank_items(items : Array[(Double, Int, String)]) -> Unit {
-  items.sort_by((a, b) => {
-    let (a_key, a_idx, _a_name) = a
-    let (b_key, b_idx, _b_name) = b
-    let diff = a_key - b_key
-    if diff < -SEEDED_RANK_KEY_EPS {
-      -1
-    } else if diff > SEEDED_RANK_KEY_EPS {
-      1
-    } else if a_idx < b_idx {
-      -1
-    } else if a_idx > b_idx {
-      1
-    } else {
-      0
-    }
-  })
-}
-
-///|
-fn build_cluster_group_order_index(
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-) -> Map[String, Int] {
-  let order_index : Map[String, Int] = Map([])
-  for rank in cluster_rank_keys {
-    let names = cluster_groups.get(rank).unwrap_or_default()
-    for idx, name in names {
-      order_index[name] = idx
-    }
-  }
-  order_index
-}
-
-///|
-/// Graphviz parity: cluster-local ND_order seeds vnode positions by
-/// interpolating between current tail/head orders inside the cluster.
-/// Do not change behavior without updating fixtures/tests.
-fn seed_local_groups_by_vnode(
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-) -> Map[Int, Array[String]] {
-  let order_index = build_cluster_group_order_index(
-    cluster_rank_keys, cluster_groups,
-  )
-  let seeded : Map[Int, Array[String]] = Map([])
-  for rank in cluster_rank_keys {
-    let names = cluster_groups.get(rank).unwrap_or_default()
-    if names.length() <= 1 {
-      if names.length() > 0 {
-        seeded[rank] = names.copy()
-      }
-      continue
-    }
-    let items : Array[(Double, Int, String)] = []
-    for idx, name in names {
-      let key = compute_vnode_interpolation_key(
-        name, rank, idx, order_index, ranks, parents, children,
-      )
-      items.push((key, idx, name))
-    }
-    sort_seeded_rank_items(items)
-    let reordered : Array[String] = []
-    for item in items {
-      let (_key, _idx, name) = item
-      reordered.push(name)
-    }
-    seeded[rank] = reordered
-  }
-  seeded
-}
-
-///|
-/// Graphviz parity: cluster-local mincross seeds ND_order by vnode
-/// interpolation, then applies same-rank flat constraints before startpass=2.
-/// Do not change behavior without updating fixtures/tests.
+/// expand_cluster calls build_ranks with pass 0 before mincross_clust applies
+/// flat_reorder. Real and virtual nodes share the same breadth-first walk.
 fn build_cluster_rank_seeded_groups(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   fixed_ranks : Map[String, Int],
+  expansion_order? : Array[String] = [],
 ) -> Map[Int, Array[String]] {
-  let seeded_by_vnode_interp = seed_local_groups_by_vnode(
+  let seeded_groups = @reorder.build_neighbor_rank_groups(
     local_context.cluster_rank_keys,
     local_context.cluster_groups,
-    fixed_ranks,
-    input_phase_output.parents,
-    input_phase_output.children,
+    input_phase_output.cluster_edge_tail,
+    input_phase_output.cluster_edge_head,
+    @rank_groups.build_node_ranks(local_context.cluster_groups),
+    local_context.cluster_node_order,
+    input_phase_output.cluster_keys,
+    local_cluster_skeleton_flags(local_context.cluster_node_set),
+    0,
   )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
+  // merge_ranks has already prepended this initial rank walk to GD_nlist.
+  for rank in local_context.cluster_rank_keys {
+    for name in seeded_groups.get(rank).unwrap_or_default() {
+      expansion_order.push(name)
+    }
+  }
   @reorder.flat_reorder_rank_groups(
     local_context.cluster_rank_keys,
-    seeded_by_vnode_interp,
+    seeded_groups,
     fixed_ranks,
     input_phase_output.cluster_flat_constraints,
     false,
@@ -1018,6 +1038,24 @@ priv struct LocalClusterGraphOrderOutput {
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
+fn append_cluster_preorder(
+  cluster : String,
+  cluster_names : Array[String],
+  parents : Map[String, String],
+  visited : Map[String, Bool],
+  ordered : Array[String],
+) -> Unit {
+  guard visited.get(cluster) is None else { return }
+  visited[cluster] = true
+  ordered.push(cluster)
+  for child in cluster_names {
+    if parents.get(child) == Some(cluster) {
+      append_cluster_preorder(child, cluster_names, parents, visited, ordered)
+    }
+  }
+}
+
+///|
 fn build_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
@@ -1061,7 +1099,26 @@ fn build_cluster_graph_order(
       }
     })
   }
-  { cluster_graphs, cluster_names, }
+  let parents : Map[String, String] = Map([])
+  for name in cluster_names {
+    parents[name] = cluster_parents_hint
+      .get(name)
+      .unwrap_or(cluster_parents.get(name).unwrap_or(None))
+      .unwrap_or("")
+  }
+  let ordered : Array[String] = []
+  let visited : Map[String, Bool] = Map([])
+  for name in cluster_names {
+    let parent = parents.get(name).unwrap_or_default()
+    if parent == name || cluster_graphs.get(parent) is None {
+      append_cluster_preorder(name, cluster_names, parents, visited, ordered)
+    }
+  }
+  // Invalid parent cycles must not drop clusters or recurse indefinitely.
+  for name in cluster_names {
+    append_cluster_preorder(name, cluster_names, parents, visited, ordered)
+  }
+  { cluster_graphs, cluster_names: ordered, }
 }
 
 ///|

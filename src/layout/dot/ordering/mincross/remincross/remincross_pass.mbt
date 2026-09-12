@@ -258,25 +258,17 @@ pub(all) struct ReMincrossGroupInputs {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross rank groups can seed from current
-/// vnode-inclusive order for single-cluster or ratio=fill scenarios, with
-/// fallback to full rebuild when seeded output is empty.
+/// ReMincross continues from the expanded vnode-inclusive rank lists. Rebuild
+/// only when that state is unavailable, not based on cluster count or ratio.
 pub fn build_remincross_groups(
   inputs : ReMincrossGroupInputs,
 ) -> Map[Int, Array[String]] {
-  // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
-  // in clustered ReMincross (Graphviz fill-specific branch behavior).
-  let prefer_seeded_from_ordered_with_vnodes = inputs.ratio == "fill"
-  // Graphviz parity: seeded-group path is considered only when vnode ordering
-  // is enabled and graph shape matches single-cluster or ratio=fill scenarios.
-  let should_try_seeded = inputs.vnode_group_inputs.order_with_vnodes &&
-    (
-      inputs.cluster_order.length() == 1 ||
-      prefer_seeded_from_ordered_with_vnodes
-    )
+  let should_try_seeded = inputs.vnode_group_inputs.order_with_vnodes
   if should_try_seeded {
+    // Preserve the expanded rank lists instead of moving virtual nodes around
+    // a separately regrouped real-node order.
     let seeded = build_seeded_remincross(
-      inputs.vnode_group_inputs.final_groups,
+      Map([]),
       inputs.ordered_with_vnodes,
       inputs.cluster_keys,
     )
@@ -495,9 +487,9 @@ pub fn run_remincross_cleanup_reorder(
     Map([]),
     reorder_inputs.rem_flat_constraints,
     graphviz_flip=reorder_inputs.graphviz_flip,
-    // Graphviz parity: ReMincross counts parallel chain segments once
-    // with summed xpenalty before startpass=2 transposition.
-    coalesce_parallel_edges=true,
+    // The materialized graph has already applied class2 merging, including
+    // concentrated chains whose surviving parallel edges must stay distinct.
+    coalesce_parallel_edges=false,
     startpass=2,
     remincross_mode=true,
   )

@@ -17,5 +17,6 @@ import {
 
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbitlang/core/test",
   "moonbit-community/graphviz/layout/dot/node_geometry",
 } for "wbtest"

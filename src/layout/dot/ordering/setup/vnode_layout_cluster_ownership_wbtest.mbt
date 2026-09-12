@@ -3,6 +3,31 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "nested long-edge virtual nodes belong to the deepest common cluster" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let outer = graph.subgraph(name="cluster_outer")
+  let inner = outer.subgraph(name="cluster_inner")
+  let sibling = outer.subgraph(name="cluster_sibling")
+  let a = inner.node("a")
+  let b = inner.node("b")
+  let c = sibling.node("c")
+  let internal = graph.edge(a, b)
+  let between = graph.edge(a, c)
+  let info = build_edge_vnodes_for_test(
+    graph,
+    { "a": 0, "b": 2, "c": 2 },
+    20.0,
+    @rankdir.RankDir::TB,
+  )
+  for name in edge_vnode_chain_for_test(info, internal) {
+    @test.assert_eq(info.vnode_clusters.get(name), Some("cluster_inner"))
+  }
+  for name in edge_vnode_chain_for_test(info, between) {
+    @test.assert_eq(info.vnode_clusters.get(name), Some("cluster_outer"))
+  }
+}
+
+///|
 test "build_edge_vnodes keeps cluster-local parallel chains at plain virtual width" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let cluster = graph.subgraph(name="cluster_0")

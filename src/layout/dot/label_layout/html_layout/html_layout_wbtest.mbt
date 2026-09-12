@@ -59,6 +59,35 @@ test "html_ports recurse into nested tables and preserve nested cell geometry" {
 }
 
 ///|
+test "HTML ports use natural table size and inherited boundary sides" {
+  reset_html_label_caches()
+  let graph = @dot_parser.parse_dot(
+    "digraph { a [label=<<TABLE PORT=\"root\"><TR><TD><TABLE PORT=\"nested\"><TR><TD PORT=\"leaf\">x</TD></TR></TABLE></TD><TD>y</TD></TR></TABLE>>]; }",
+  )
+  let node = graph.node("a")
+  let label = @label_attrs.label_text(node)
+  let ports = html_ports(
+    node,
+    label,
+    { x: 10.0, y: 20.0, },
+    @node_primitives.node_size_from_points(500.0, 500.0),
+  )
+  guard ports.get("root") is Some(root) else { fail("missing root port") }
+  guard ports.get("nested") is Some(nested) else { fail("missing nested port") }
+  guard ports.get("leaf") is Some(leaf) else { fail("missing leaf port") }
+  @test.assert_eq(root.center, { x: 10.0, y: 20.0, })
+  assert_true(root.size.width_pt < 500.0)
+  assert_true(root.size.height_pt < 500.0)
+  @test.assert_eq(root.sides, @port_geometry.PORT_SIDE_ALL)
+  let expected_sides = @port_geometry.PORT_SIDE_LEFT |
+    @port_geometry.PORT_SIDE_TOP |
+    @port_geometry.PORT_SIDE_BOTTOM
+  @test.assert_eq(nested.sides, expected_sides)
+  @test.assert_eq(leaf.sides, expected_sides)
+  assert_true(nested.size.width_pt < root.size.width_pt)
+}
+
+///|
 test "html table sizing honors cell borders" {
   reset_html_label_caches()
   let label = "<<TABLE border=\"10\" cellspacing=\"10\" cellpadding=\"10\"><TR><TD border=\"3\">00</TD></TR></TABLE>>"

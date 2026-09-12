@@ -1,4 +1,6 @@
 import {
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
+  "moonbit-community/graphviz/layout/dot/positioning/ports",
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/rank_groups",
   "moonbit-community/graphviz/layout/dot/ordering/order_graph",
@@ -16,3 +18,7 @@ import {
   "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
   "moonbit-community/graphviz/layout/dot/numeric",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

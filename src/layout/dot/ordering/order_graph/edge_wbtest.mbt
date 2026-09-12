@@ -137,15 +137,15 @@ test "build_order_edges_by_tail expands vnode chains into segment edges" {
   assert_eq(output.edge_creation_order, [("a", "v1"), ("v1", "v2"), ("v2", "b")])
   assert_eq(
     output.order_edges_by_tail.get("a"),
-    Some([("a", "v1", 1, true, 1.0, 0.5, 0.2, 0.0)]),
+    Some([("a", "v1", 1, true, 1.0, 0.0, 0.2, 0.0)]),
   )
   assert_eq(
     output.order_edges_by_tail.get("v1"),
-    Some([("v1", "v2", 1, true, 0.5, 0.5, 0.0, 0.0)]),
+    Some([("v1", "v2", 1, true, 0.0, 0.0, 0.0, 0.0)]),
   )
   assert_eq(
     output.order_edges_by_tail.get("v2"),
-    Some([("v2", "b", 1, true, 0.5, 3.0, 0.0, 0.8)]),
+    Some([("v2", "b", 1, true, 0.0, 3.0, 0.0, 0.8)]),
   )
 }
 
@@ -198,7 +198,7 @@ test "build_order_edges_by_tail maps intercluster edges to cluster skeletons" {
   assert_eq(output.edge_creation_order, [(tail_skeleton, head_skeleton)])
   assert_eq(
     output.order_edges_by_tail.get(tail_skeleton),
-    Some([(tail_skeleton, head_skeleton, 5, true, 0.5, 0.5, 0.0, 0.0)]),
+    Some([(tail_skeleton, head_skeleton, 5, true, 0.0, 0.0, 0.0, 0.0)]),
   )
 }
 

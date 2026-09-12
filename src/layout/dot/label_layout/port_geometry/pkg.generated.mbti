@@ -24,6 +24,10 @@ pub fn compass_side_mask(@cgraph.Compass) -> Int
 
 pub fn dynamic_port_anchor_for_edge(@cgraph.Port?, String, Map[String, Map[String, @record_geometry.RecordPort]], @geom.Point, @geom.Point, @rankdir.RankDir, Double) -> DynamicPortAnchorForEdge
 
+pub fn invflip_side(Int, @rankdir.RankDir) -> Int
+
+pub fn label_port_compass_side(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]]) -> Int?
+
 pub fn layout_port_offset(@geom.Point, @rankdir.RankDir) -> @geom.Point
 
 pub fn layout_ports_from_final(Map[String, @record_geometry.RecordPort], @geom.Point, @rankdir.RankDir) -> Map[String, @record_geometry.RecordPort]

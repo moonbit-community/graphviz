@@ -10,3 +10,7 @@ import {
   "moonbit-community/graphviz/layout/dot/cluster_graph",
   "moonbitlang/core/env",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

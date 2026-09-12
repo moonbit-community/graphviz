@@ -35,7 +35,7 @@ test "cluster_depth_for_order prefers explicit hints, ignores self-parent hints,
 }
 
 ///|
-test "build_cluster_graph_order sorts same-depth clusters by cluster_order and keeps nested clusters after their parents" {
+test "build_cluster_graph_order visits descendants before the next sibling" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let cluster_a = root.subgraph(name="cluster_a")
   let plain = root.subgraph(name="plain")
@@ -45,13 +45,13 @@ test "build_cluster_graph_order sorts same-depth clusters by cluster_order and k
 
   let ordered = build_cluster_graph_order(
     root,
-    ["cluster_c", "cluster_b", "cluster_a", "cluster_d"],
+    ["cluster_a", "cluster_c", "cluster_b", "cluster_d"],
     Map([]),
   )
 
-  assert_eq(ordered.cluster_graphs.length(), 4)
-  assert_eq(ordered.cluster_names, [
-    "cluster_c", "cluster_b", "cluster_a", "cluster_d",
+  @test.assert_eq(ordered.cluster_graphs.length(), 4)
+  @test.assert_eq(ordered.cluster_names, [
+    "cluster_a", "cluster_d", "cluster_c", "cluster_b",
   ])
 }
 

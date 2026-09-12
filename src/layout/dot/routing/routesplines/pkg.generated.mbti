@@ -9,9 +9,9 @@ import {
 }
 
 // Values
-pub fn build_path_adjacency(Array[@cgraph.Edge], Map[String, Array[String]], Array[String], Array[String]) -> PathAdjacency
+pub fn build_path_adjacency(Array[@cgraph.Edge], Map[String, Array[String]], Array[String], Array[String], ranks? : Map[String, Int]) -> PathAdjacency
 
-pub fn edge_pathplan_polyline(@cgraph.Edge, String, String, @geom.Point, @geom.Point, @rankdir.RankDir, Int, Int, @geom.Rect?, @geom.Rect?, Double, Map[String, Int], Map[String, Int], Map[String, Array[String]], Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, String], Map[String, String], Map[String, @geom.Rect], Map[Int, Array[String]], Map[String, Int], Map[String, Array[String]], Map[String, Array[String]], Map[Int, Double], Map[Int, Double], Map[Int, Double], Double, Double, Double, Bool) -> PathplanResult?
+pub fn edge_pathplan_polyline(@cgraph.Edge, String, String, @geom.Point, @geom.Point, @rankdir.RankDir, Int, Int, @geom.Rect?, @geom.Rect?, Double, Map[String, Int], Map[String, Int], Map[String, Array[String]], Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, @node_primitives.NodeSize], Map[String, String], Map[String, String], Map[String, @geom.Rect], Map[Int, Array[String]], Map[String, Int], Map[String, Array[String]], Map[String, Array[String]], Map[Int, Double], Map[Int, Double], Map[Int, Double], Double, Double, Double, Bool, vnode_origin_clusters? : Map[String, (String, String)]) -> PathplanResult?
 
 pub fn limit_boxes_for_spline(Array[@geom.Rect], Array[@geom.Point], fallback_polyline? : Array[@geom.Point]) -> Array[@geom.Rect]
 
@@ -20,7 +20,7 @@ pub fn pathplan_bounds(Map[String, @geom.Point], Map[String, @geom.Point], Map[S
 // Errors
 
 // Types and methods
-pub struct PathAdjacency {
+pub(all) struct PathAdjacency {
   out_edges : Map[String, Array[String]]
   in_edges : Map[String, Array[String]]
 }

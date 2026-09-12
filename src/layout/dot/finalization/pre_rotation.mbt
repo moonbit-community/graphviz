@@ -62,8 +62,6 @@ priv struct FinalLayoutGeometryInput {
 /// Do not change behavior without updating fixtures/tests.
 priv struct PreRotationLayoutData {
   layout : LayoutTree
-  rank_bbox : @geom.Rect
-  subgraph_base_bbox : @geom.Rect
 }
 
 ///|
@@ -121,7 +119,7 @@ fn build_final_layout_geometry(
 }
 
 ///|
-/// Graphviz parity: root port padding + root cluster padding are assembled in
+/// Graphviz parity: root cluster padding is assembled in
 /// pre-rotation dot coordinates before ratio/label postprocessing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_padded_layout_data(
@@ -130,22 +128,11 @@ fn build_root_padded_layout_data(
   subgraphs_and_bbox : SubgraphsAndBBox,
 ) -> RootPaddedLayoutData {
   let graph = input.graph
-  let rankdir = input.rankdir
-  let (root_cluster_pad_top, root_cluster_pad_bottom) = root_cluster_padding_for_rankdir(
-    rankdir,
-    compute_root_cluster_padding(
-      graph,
-      input.nodes,
-      input.all_ranks,
-      input.ranks,
-    ),
-  )
-  let bbox = apply_root_port_padding(
+  let bbox = subgraphs_and_bbox.base_bbox
+  let padding = compute_root_cluster_padding(
     graph,
-    subgraphs_and_bbox.base_bbox,
-    rankdir,
-    input.port_pad_below,
-    input.port_pad_above,
+    bbox,
+    subgraphs_and_bbox.subgraphs,
   )
   let layout_with_root_pad = apply_root_cluster_padding({
     layout: {
@@ -156,8 +143,8 @@ fn build_root_padded_layout_data(
       edges: final_geometry.final_edges,
       subgraphs: subgraphs_and_bbox.subgraphs,
     },
-    root_cluster_pad_top,
-    root_cluster_pad_bottom,
+    root_cluster_pad_top: padding.root_cluster_pad_top,
+    root_cluster_pad_bottom: padding.root_cluster_pad_bottom,
   })
   // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
   // padding that is part of set_ycoords before final edge bbox expansion.
@@ -253,9 +240,5 @@ fn build_pre_rotation_layout_data(
   let root_padded = build_root_padded_layout_data(
     input, final_geometry, subgraphs_and_bbox,
   )
-  {
-    layout: apply_pre_rotation_layout_postprocess(input, root_padded),
-    rank_bbox: final_geometry.rank_bbox,
-    subgraph_base_bbox: subgraphs_and_bbox.base_bbox,
-  }
+  { layout: apply_pre_rotation_layout_postprocess(input, root_padded), }
 }

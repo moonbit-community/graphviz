@@ -3,6 +3,58 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "reverse edges on one complete virtual chain share routing and slack recovery" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let forward = graph.edge(a, b)
+  let backward = graph.edge(b, a)
+  let bases = Map([
+    (forward.id(), build_route_base(forward, vnodes=["v1", "v2"])),
+    (backward.id(), build_route_base(backward, vnodes=["v2", "v1"])),
+  ])
+  let plan = build_regular_recover_routing_plan([forward, backward], bases)
+  for edge in [forward, backward] {
+    @test.assert_eq(
+      plan.regular_parallel_groups
+      .get(@edge_identity.edge_vnode_key(edge))
+      .map(edges => edges.map(edge => edge.id())),
+      Some([forward.id(), backward.id()]),
+    )
+    @test.assert_eq(
+      plan.recover_edge_id_for_routing.get(recover_slack_key_for_edge(edge)),
+      Some(forward.id()),
+    )
+  }
+}
+
+///|
+test "reverse edges sharing only a virtual prefix remain separate routing classes" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let a = graph.node("a")
+  let b = graph.node("b")
+  let forward = graph.edge(a, b)
+  let backward = graph.edge(b, a)
+  let bases = Map([
+    (forward.id(), build_route_base(forward, vnodes=["v1", "v2"])),
+    (backward.id(), build_route_base(backward, vnodes=["v1", "v3"])),
+  ])
+  let plan = build_regular_recover_routing_plan([forward, backward], bases)
+  for edge in [forward, backward] {
+    @test.assert_eq(
+      plan.regular_parallel_groups
+      .get(@edge_identity.edge_vnode_key(edge))
+      .map(edges => edges.map(edge => edge.id())),
+      Some([edge.id()]),
+    )
+    @test.assert_eq(
+      plan.recover_edge_id_for_routing.get(recover_slack_key_for_edge(edge)),
+      Some(edge.id()),
+    )
+  }
+}
+
+///|
 test "recover_slack_key_for_edge uses parallel keys only for unlabeled undirected edges" {
   let undir = @cgraph.Graph::new(@cgraph.GraphKind::Undirected, strict=false)
   let undir_edge = undir.edge(undir.node("a"), undir.node("b"))

@@ -18,6 +18,7 @@ test "build_dot_route_base_deps applies record border adjust only to non-html re
   plain_box.set_attr("label", "plain")
 
   let deps = build_dot_route_base_deps(
+    @rankdir.RankDir::TB,
     @layout_prep.RecordOrientation::Horizontal,
     Map([]),
     Map([]),
@@ -41,6 +42,7 @@ test "build_dot_route_base_deps converts edge mid label metrics into routing met
   let unlabeled = graph.edge(b, a)
 
   let deps = build_dot_route_base_deps(
+    @rankdir.RankDir::TB,
     @layout_prep.RecordOrientation::Horizontal,
     Map([]),
     Map([]),

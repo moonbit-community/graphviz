@@ -12,17 +12,17 @@ priv struct GraphState {
   nodes_set : Map[Int, Bool]
   edges : Array[Int]
   edges_set : Map[Int, Bool]
-  attrs : Map[String, String]
-  defaults_graph : Map[String, String]
-  defaults_node : Map[String, String]
-  defaults_edge : Map[String, String]
+  attrs : Map[String, AttrValue]
+  defaults_graph : Map[String, AttrValue]
+  defaults_node : Map[String, AttrValue]
+  defaults_edge : Map[String, AttrValue]
 }
 
 ///|
 priv struct NodeState {
   name : String
   home_graph_id : Int
-  attrs : Map[String, String]
+  attrs : Map[String, AttrValue]
 }
 
 ///|
@@ -32,7 +32,7 @@ priv struct EdgeState {
   name : String?
   tail_port : Port?
   head_port : Port?
-  attrs : Map[String, String]
+  attrs : Map[String, AttrValue]
 }
 
 ///|
@@ -141,7 +141,7 @@ fn resolve_default(
   graph_id : Int,
   kind : AttrKind,
   name : String,
-) -> String? {
+) -> AttrValue? {
   let mut current : Int? = Some(graph_id)
   while current is Some(id) {
     let defaults = match kind {
@@ -163,8 +163,8 @@ fn collect_defaults(
   root : Root,
   graph_id : Int,
   kind : AttrKind,
-) -> Map[String, String] {
-  let resolved : Map[String, String] = Map([])
+) -> Map[String, AttrValue] {
+  let resolved : Map[String, AttrValue] = Map([])
   let mut current : Int? = Some(graph_id)
   while current is Some(id) {
     let defaults = match kind {
@@ -407,7 +407,7 @@ pub fn Graph::declare_attr(
     AttrKind::Edge => self.root.graphs[self.id].defaults_edge
   }
   if defaults.get(name) is None {
-    defaults[name] = default
+    defaults[name] = AttrValue::Text(default)
   }
 }
 
@@ -417,6 +417,17 @@ pub fn Graph::set_default_attr(
   kind : AttrKind,
   name : String,
   value : String,
+) -> Unit {
+  self.set_default_attr_value(kind, name, AttrValue::Text(value))
+}
+
+///|
+/// Stores a default attribute together with its DOT syntax.
+pub fn Graph::set_default_attr_value(
+  self : Graph,
+  kind : AttrKind,
+  name : String,
+  value : AttrValue,
 ) -> Unit {
   let defaults = match kind {
     AttrKind::Graph => self.root.graphs[self.id].defaults_graph
@@ -432,46 +443,117 @@ pub fn Graph::get_default_attr(
   kind : AttrKind,
   name : String,
 ) -> String? {
+  self.get_default_attr_value(kind, name).map(value => value.text())
+}
+
+///|
+/// Resolves an inherited default without discarding HTML syntax.
+pub fn Graph::get_default_attr_value(
+  self : Graph,
+  kind : AttrKind,
+  name : String,
+) -> AttrValue? {
   resolve_default(self.root, self.id, kind, name)
 }
 
 ///|
 pub fn Graph::set_attr(self : Graph, name : String, value : String) -> Unit {
+  self.set_attr_value(name, AttrValue::Text(value))
+}
+
+///|
+/// Stores an attribute together with its DOT syntax.
+pub fn Graph::set_attr_value(
+  self : Graph,
+  name : String,
+  value : AttrValue,
+) -> Unit {
   self.root.graphs[self.id].attrs[name] = value
 }
 
 ///|
 pub fn Graph::get_attr(self : Graph, name : String) -> String? {
-  let value = self.root.graphs[self.id].attrs.get(name)
-  match value {
-    Some(_) => value
-    None => resolve_default(self.root, self.id, AttrKind::Graph, name)
-  }
+  self.get_attr_value(name).map(value => value.text())
+}
+
+///|
+/// Returns an attribute without discarding HTML syntax.
+pub fn Graph::get_attr_value(self : Graph, name : String) -> AttrValue? {
+  self.root.graphs[self.id].attrs
+  .get(name)
+  .map_or_else(
+    () => resolve_default(self.root, self.id, AttrKind::Graph, name),
+    value => Some(value),
+  )
+}
+
+///|
+pub fn Graph::attrs(self : Graph) -> Array[(String, String)] {
+  self.root.graphs[self.id].attrs
+  .to_array()
+  .map(pair => (pair.0, pair.1.text()))
 }
 
 ///|
 pub fn Node::set_attr(self : Node, name : String, value : String) -> Unit {
+  self.set_attr_value(name, AttrValue::Text(value))
+}
+
+///|
+/// Stores an attribute together with its DOT syntax.
+pub fn Node::set_attr_value(
+  self : Node,
+  name : String,
+  value : AttrValue,
+) -> Unit {
   self.root.nodes[self.id].attrs[name] = value
 }
 
 ///|
 pub fn Node::get_attr(self : Node, name : String) -> String? {
+  self.get_attr_value(name).map(value => value.text())
+}
+
+///|
+/// Returns an attribute without discarding HTML syntax.
+pub fn Node::get_attr_value(self : Node, name : String) -> AttrValue? {
   self.root.nodes[self.id].attrs.get(name)
 }
 
 ///|
+pub fn Node::attrs(self : Node) -> Array[(String, String)] {
+  self.root.nodes[self.id].attrs.to_array().map(pair => (pair.0, pair.1.text()))
+}
+
+///|
 pub fn Edge::set_attr(self : Edge, name : String, value : String) -> Unit {
+  self.set_attr_value(name, AttrValue::Text(value))
+}
+
+///|
+/// Stores an attribute together with its DOT syntax.
+pub fn Edge::set_attr_value(
+  self : Edge,
+  name : String,
+  value : AttrValue,
+) -> Unit {
   self.root.edges[self.id].attrs[name] = value
 }
 
 ///|
 pub fn Edge::get_attr(self : Edge, name : String) -> String? {
+  self.get_attr_value(name).map(value => value.text())
+}
+
+///|
+/// Returns an attribute without discarding HTML syntax.
+pub fn Edge::get_attr_value(self : Edge, name : String) -> AttrValue? {
   self.root.edges[self.id].attrs.get(name)
 }
 
 ///|
-pub fn Graph::attrs(self : Graph) -> Array[(String, String)] {
-  self.root.graphs[self.id].attrs.to_array()
+pub fn Edge::attrs(self : Edge) -> Array[(String, String)] {
+  self.root.edges[self.id].attrs.to_array().map(pair => (pair.0, pair.1.text()))
 }
 
 ///|
@@ -484,15 +566,5 @@ pub fn Graph::default_attrs(
     AttrKind::Node => self.root.graphs[self.id].defaults_node
     AttrKind::Edge => self.root.graphs[self.id].defaults_edge
   }
-  defaults.to_array()
-}
-
-///|
-pub fn Node::attrs(self : Node) -> Array[(String, String)] {
-  self.root.nodes[self.id].attrs.to_array()
-}
-
-///|
-pub fn Edge::attrs(self : Edge) -> Array[(String, String)] {
-  self.root.edges[self.id].attrs.to_array()
+  defaults.to_array().map(pair => (pair.0, pair.1.text()))
 }

@@ -7,5 +7,6 @@ import {
 }
 
 import {
+  "moonbitlang/core/test",
   "moonbit-community/graphviz/dot" @dot_parser,
 } for "wbtest"

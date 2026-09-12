@@ -164,7 +164,7 @@ fn label_metrics(
       metrics_text, font_name, font_size_pt,
     )
     let height_pt = if line.text == "" {
-      font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
+      (font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE).trunc()
     } else {
       raw_height_pt
     }
@@ -1330,10 +1330,8 @@ fn arrow_ops(
   if layout.splines.length() == 0 {
     return ops
   }
-  let spline = if at_head {
-    layout.splines[layout.splines.length() - 1]
-  } else {
-    layout.splines[0]
+  guard @render.spline_with_arrow(layout.splines, at_head) is Some(spline) else {
+    return ops
   }
   if spline.points.length() < 2 {
     return ops
@@ -3329,6 +3327,7 @@ fn record_label_ops_from_layout(
   font : @render.Font,
   color : String,
   pad_x_pt : Double,
+  nojustify : Bool,
 ) -> Unit {
   for layout in layouts {
     match layout.node {
@@ -3337,15 +3336,23 @@ fn record_label_ops_from_layout(
         if text == "" {
           continue
         }
-        let (lines, _max_width, total_height) = record_label_metrics(
+        let (lines, max_width, total_height) = record_label_metrics(
           text,
           font.name,
           font.size,
         )
         let center_x = (layout.rect.llx + layout.rect.urx) / 2.0
         let center_y = (layout.rect.lly + layout.rect.ury) / 2.0
-        let left_x = layout.rect.llx + pad_x_pt / 2.0
-        let right_x = layout.rect.urx - pad_x_pt / 2.0
+        let left_x = if nojustify {
+          center_x - max_width / 2.0
+        } else {
+          layout.rect.llx + pad_x_pt / 2.0
+        }
+        let right_x = if nojustify {
+          center_x + max_width / 2.0
+        } else {
+          layout.rect.urx - pad_x_pt / 2.0
+        }
         let mut baseline = center_y + total_height / 2.0 - font.size
         if lines.length() > 0 && lines[0].text == "" {
           baseline = baseline + RECORD_BORDER_PT
@@ -3380,6 +3387,7 @@ fn record_label_ops_from_layout(
           font,
           color,
           pad_x_pt,
+          nojustify,
         )
     }
   }
@@ -3501,6 +3509,7 @@ fn record_label_ops(
     font,
     pen_color,
     pad_x_pt,
+    @attrs.graphviz_bool(node_attr(node, "nojustify")),
   )
   ops
 }
@@ -3556,71 +3565,6 @@ fn html_text_metrics(
 }
 
 ///|
-fn html_text_spans_plain_text(
-  spans : Array[@html_label.HtmlTextSpan],
-) -> String {
-  let text = StringBuilder()
-  for span in spans {
-    text.write_string(span.text)
-  }
-  text.to_string()
-}
-
-///|
-fn html_text_spans_by_line(
-  spans : Array[@html_label.HtmlTextSpan],
-) -> Array[Array[@html_label.HtmlTextSpan]] {
-  let append_span = fn(
-    line : Array[@html_label.HtmlTextSpan],
-    text : String,
-    color : String?,
-  ) -> Unit {
-    if text == "" {
-      return
-    }
-    if line.length() > 0 {
-      let last_index = line.length() - 1
-      let last = line[last_index]
-      if last.color == color {
-        line[last_index] = { text: last.text + text, color, }
-        return
-      }
-    }
-    line.push({ text, color, })
-  }
-  let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
-  for span in spans {
-    let mut part = StringBuilder()
-    for ch in span.text {
-      if ch == '\n' {
-        let line = lines[lines.length() - 1]
-        append_span(line, part.to_string(), span.color)
-        part = StringBuilder()
-        lines.push([])
-      } else {
-        part.write_char(ch)
-      }
-    }
-    let line = lines[lines.length() - 1]
-    append_span(line, part.to_string(), span.color)
-  }
-  lines
-}
-
-///|
-fn html_text_width(
-  text : String,
-  name : String,
-  font_name : String,
-  font_size_pt : Double,
-) -> Double {
-  let (_lines, width_pt, _height_pt) = html_text_metrics(
-    text, name, font_name, font_size_pt,
-  )
-  width_pt
-}
-
-///|
 fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
   name : String,
@@ -3635,11 +3579,10 @@ fn html_cell_content_size(
       (width_pt, height_pt)
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
-      let text = html_text_spans_plain_text(spans)
-      let (_lines, width_pt, height_pt) = html_text_metrics(
-        text, name, font_name, font_size_pt,
+      let metrics = @label_metrics.html_styled_text_metrics(
+        spans, name, font_name, font_size_pt,
       )
-      (width_pt, height_pt)
+      (metrics.width_pt, metrics.height_pt)
     }
     @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, name, font_name, font_size_pt)
@@ -4186,71 +4129,60 @@ fn html_styled_text_ops(
   font : @render.Font,
   default_color : String,
 ) -> Unit {
-  let text = html_text_spans_plain_text(spans)
-  let (lines, _max_width, total_height) = html_text_metrics(
-    text,
+  let metrics = @label_metrics.html_styled_text_metrics(
+    spans,
     name,
     font.name,
     font.size,
   )
-  if lines.length() == 0 {
-    return ()
+  let top = match valign {
+    @html_label.HtmlVAlign::Top => rect.ury
+    @html_label.HtmlVAlign::Bottom => rect.lly + metrics.height_pt
+    @html_label.HtmlVAlign::Middle =>
+      (rect.lly + rect.ury + metrics.height_pt) / 2.0
   }
-  let runs_by_line = html_text_spans_by_line(spans)
-  let center_y = match valign {
-    @html_label.HtmlVAlign::Top => rect.ury - total_height / 2.0
-    @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
-    @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
+  let mut baseline = top
+  let block_left = match align {
+    @html_label.HtmlAlign::Left => rect.llx
+    @html_label.HtmlAlign::Right => rect.urx - metrics.width_pt
+    @html_label.HtmlAlign::Center =>
+      (rect.llx + rect.urx - metrics.width_pt) / 2.0
   }
-  let mut baseline = center_y + total_height / 2.0 - font.size
-  for i, line in lines {
-    let line_x = match align {
-      @html_label.HtmlAlign::Left => rect.llx
-      @html_label.HtmlAlign::Right => rect.urx - line.width_pt
+  for line in metrics.lines {
+    baseline -= line.baseline_advance
+    let mut cursor_x = match
+      line.alignment.unwrap_or(@html_label.HtmlAlign::Center) {
+      @html_label.HtmlAlign::Left => block_left
+      @html_label.HtmlAlign::Right =>
+        block_left + metrics.width_pt - line.width_pt
       @html_label.HtmlAlign::Center =>
         centered_html_text_x(
-          (rect.llx + rect.urx - line.width_pt) / 2.0,
-          font.name,
+          block_left + (metrics.width_pt - line.width_pt) / 2.0,
+          line.runs[0].font_name,
         )
     }
-    let line_y = baseline + line.yoffset_centerline
-    let runs = if i < runs_by_line.length() { runs_by_line[i] } else { [] }
-    if runs.length() > 0 {
-      let mut cursor_x = line_x
-      for run in runs {
-        if run.text == "" {
-          continue
-        }
-        let width_pt = html_text_width(run.text, name, font.name, font.size)
-        let color = match run.color {
-          Some(value) => @attrs.normalize_color(value)
-          None => default_color
-        }
-        ops.push(@render.DrawOp::Font(font~))
-        ops.push(@render.DrawOp::PenColor(color~))
-        ops.push(
-          @render.DrawOp::Text(
-            pos={ x: cursor_x, y: line_y, },
-            align=@render.TextAlign::Left,
-            width=width_pt,
-            text=run.text,
-          ),
-        )
-        cursor_x = cursor_x + width_pt
-      }
-    } else if line.text != "" {
-      ops.push(@render.DrawOp::Font(font~))
-      ops.push(@render.DrawOp::PenColor(color=default_color))
+    for run in line.runs {
+      guard run.text != "" else { continue }
+      let line_y = baseline +
+        (if metrics.simple { run.yoffset_centerline } else { 1.0 })
+      let color = run.color.map_or(default_color, @attrs.normalize_color)
+      ops.push(
+        @render.DrawOp::Font(font={
+          name: run.font_name,
+          size: run.font_size_pt,
+        }),
+      )
+      ops.push(@render.DrawOp::PenColor(color~))
       ops.push(
         @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y, },
+          pos={ x: cursor_x, y: line_y, },
           align=@render.TextAlign::Left,
-          width=line.width_pt,
-          text=line.text,
+          width=run.width_pt,
+          text=run.text,
         ),
       )
+      cursor_x += run.width_pt
     }
-    baseline = baseline - line.height_pt
   }
 }
 
@@ -4407,7 +4339,24 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
   let stroke = @attrs.normalize_color(node_color(node, "color", "black"))
-  match @html_label.parse_html_label(label) {
+  match
+    @html_label.parse_html_label(
+      label,
+      html=node
+        .get_attr_value("label")
+        .map(value => value is @cgraph.AttrValue::Html(_)),
+    ) {
+    Some(@html_label.HtmlLabel::StyledText(spans)) =>
+      html_styled_text_ops(
+        ops,
+        spans,
+        @html_label.HtmlAlign::Center,
+        @html_label.HtmlVAlign::Middle,
+        inset_rect,
+        node.name(),
+        font,
+        pen_color,
+      )
     Some(@html_label.HtmlLabel::Table(table)) => {
       let rect = inset_rect
       let _ = html_table_ops(
@@ -4478,9 +4427,6 @@ fn node_draw_ops(
     "box"
   } else {
     shape_kind(node_attr(node, "shape"))
-  }
-  if kind == "unknown" && node_attr_int(node, "peripheries", 1) <= 0 {
-    return ops
   }
   // Graphviz falls back to box geometry for unknown node shapes.
   let shape = if kind == "unknown" { "box" } else { kind }
@@ -4987,6 +4933,8 @@ fn append_text_label_ops(
   pos : @geom.Point?,
   font : @render.Font,
   pen_color : String,
+  justification_width? : Double? = None,
+  html? : Bool? = None,
 ) -> Unit {
   if text == "" {
     return
@@ -4995,12 +4943,65 @@ fn append_text_label_ops(
     Some(value) => value
     None => return
   }
+  if @html_label.parse_html_label(text, html~) is Some(label) {
+    let content = match label {
+      @html_label.HtmlLabel::Table(table) =>
+        @html_label.HtmlCellContent::Table(table)
+      @html_label.HtmlLabel::Text(value) =>
+        @html_label.HtmlCellContent::Text(value)
+      @html_label.HtmlLabel::StyledText(spans) =>
+        @html_label.HtmlCellContent::StyledText(spans)
+    }
+    let (width, height) = html_cell_content_size(
+      content,
+      "",
+      font.name,
+      font.size,
+    )
+    let rect : @geom.Rect = {
+      llx: pos.x - width / 2.0,
+      lly: pos.y - height / 2.0,
+      urx: pos.x + width / 2.0,
+      ury: pos.y + height / 2.0,
+    }
+    match label {
+      @html_label.HtmlLabel::Table(table) => {
+        let _ = html_table_ops(
+          ops, table, rect, "", font, pen_color, pen_color, 1.0,
+        )
+      }
+      @html_label.HtmlLabel::Text(value) =>
+        html_text_ops(
+          ops,
+          value,
+          @html_label.HtmlAlign::Center,
+          @html_label.HtmlVAlign::Middle,
+          rect,
+          "",
+          font,
+          pen_color,
+        )
+      @html_label.HtmlLabel::StyledText(spans) =>
+        html_styled_text_ops(
+          ops,
+          spans,
+          @html_label.HtmlAlign::Center,
+          @html_label.HtmlVAlign::Middle,
+          rect,
+          "",
+          font,
+          pen_color,
+        )
+    }
+    return
+  }
   let (lines, max_width, total_height) = label_metrics(
     text,
     font.name,
     font.size,
   )
   let mut baseline = pos.y + total_height / 2.0 - font.size
+  let max_width = justification_width.unwrap_or(max_width)
   for line in lines {
     let line_x = match line.align {
       @render.TextAlign::Left => pos.x - max_width / 2.0
@@ -5050,7 +5051,13 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
       }
     } else {
       let raw_text = node_attr(node, "label").unwrap_or(node.name())
-      match @html_label.parse_html_label(raw_text) {
+      match
+        @html_label.parse_html_label(
+          raw_text,
+          html=node
+            .get_attr_value("label")
+            .map(value => value is @cgraph.AttrValue::Html(_)),
+        ) {
         Some(_) =>
           for op in html_label_ops(layout) {
             ops.push(op)
@@ -5061,12 +5068,33 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
             Some(value) => Some(value)
             None => Some(layout.pos)
           }
-          append_text_label_ops(ops, text, label_pos, font, pen_color)
+          let label_pos = label_pos.map(pos => {
+            ..pos,
+            y: pos.y + @node_geometry.node_label_y_offset(node),
+          })
+          append_text_label_ops(
+            ops,
+            text,
+            label_pos,
+            font,
+            pen_color,
+            justification_width=@node_geometry.node_label_space(node),
+            html=Some(false),
+          )
         }
       }
     }
   }
-  append_text_label_ops(ops, xlabel, layout.xlabel_pos, font, pen_color)
+  append_text_label_ops(
+    ops,
+    xlabel,
+    layout.xlabel_pos,
+    font,
+    pen_color,
+    html=node
+      .get_attr_value("xlabel")
+      .map(value => value is @cgraph.AttrValue::Html(_)),
+  )
   ops
 }
 
@@ -5542,6 +5570,13 @@ fn edge_draw_ops(
   for i, pen_color in pen_colors {
     let mut wrote_pen_color = false
     for spline_index in 0..<layout.splines.length() {
+      if spline_index > 0 {
+        let previous = layout.splines[spline_index - 1]
+        if previous.start is Some(_) || previous.end is Some(_) {
+          ops.push(@render.DrawOp::Style(name="solid"))
+        }
+        wrote_pen_color = false
+      }
       let points = if color_count <= 1 {
         layout.splines[spline_index].points
       } else {
@@ -5577,6 +5612,31 @@ fn edge_draw_ops(
 }
 
 ///|
+fn append_label_attachment_ops(
+  ops : Array[@render.DrawOp],
+  layout : @layout_dot.DotLayoutEdge,
+  text : String,
+  pos : @geom.Point?,
+  font : @render.Font,
+  color : String,
+) -> Unit {
+  guard @attrs.graphviz_bool(layout.edge.get_attr("decorate")) else { return }
+  guard pos is Some(pos) else { return }
+  let (_, width, height) = label_metrics(text, font.name, font.size)
+  let points = @render.label_attachment(
+    text,
+    pos,
+    width,
+    height,
+    layout.splines,
+  )
+  guard points.length() > 0 else { return }
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color~))
+  ops.push(@render.DrawOp::Polyline(points~))
+}
+
+///|
 fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
@@ -5602,12 +5662,39 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
         None => None
       }
   }
-  append_text_label_ops(ops, text, label_pos, font, pen_color)
+  append_text_label_ops(
+    ops,
+    text,
+    label_pos,
+    font,
+    pen_color,
+    html=edge
+      .get_attr_value("label")
+      .map(value => value is @cgraph.AttrValue::Html(_)),
+  )
+  append_label_attachment_ops(ops, layout, text, label_pos, font, pen_color)
   let xlabel = match edge.get_attr("xlabel") {
     Some(value) => resolve_label(value, "")
     None => ""
   }
-  append_text_label_ops(ops, xlabel, layout.xlabel_pos, font, pen_color)
+  append_text_label_ops(
+    ops,
+    xlabel,
+    layout.xlabel_pos,
+    font,
+    pen_color,
+    html=edge
+      .get_attr_value("xlabel")
+      .map(value => value is @cgraph.AttrValue::Html(_)),
+  )
+  append_label_attachment_ops(
+    ops,
+    layout,
+    xlabel,
+    layout.xlabel_pos,
+    font,
+    pen_color,
+  )
   ops
 }
 
@@ -5646,7 +5733,16 @@ fn edge_side_label_ops(
     default=default_color,
   )
   let pen_color = @attrs.normalize_color(color)
-  append_text_label_ops(ops, text, Some(pos), font, pen_color)
+  append_text_label_ops(
+    ops,
+    text,
+    Some(pos),
+    font,
+    pen_color,
+    html=edge
+      .get_attr_value(label_attr)
+      .map(value => value is @cgraph.AttrValue::Html(_)),
+  )
   ops
 }
 
@@ -5974,13 +6070,7 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
       let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
       let name = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
       let (width_pt, height_pt) = label_text_dimensions(text, name, size)
-      let adjusted_height = if name == "Helvetica-Oblique" {
-        // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
-        height_pt - 0.72
-      } else {
-        height_pt
-      }
-      Some((text, width_pt * GRAPH_LABEL_WIDTH_SCALE, adjusted_height))
+      Some((text, width_pt * GRAPH_LABEL_WIDTH_SCALE, height_pt))
     }
     None => None
   }
@@ -6133,17 +6223,7 @@ fn graph_label_ops(
         font.name,
         font.size,
       )
-      // Graphviz parity: PostScript italic graph labels (crazy.gv) sit ~0.4pt
-      // higher than the generic baseline formula.
-      let baseline_adjust = if font.name == "Helvetica-Oblique" {
-        0.4
-      } else {
-        0.0
-      }
-      let mut baseline = pos.y +
-        total_height / 2.0 -
-        font.size +
-        baseline_adjust
+      let mut baseline = pos.y + total_height / 2.0 - font.size
       for line in lines {
         let line_x = match line.align {
           @render.TextAlign::Left => pos.x - width_pt / 2.0

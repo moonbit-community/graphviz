@@ -3,6 +3,22 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "layout writer flattens empty anonymous scopes without losing descendants" {
+  let graph = @dot.parse_dot(
+    "digraph G { graph [bb=\"0,0,100,100\"]; { { { subgraph cluster_x { x; subgraph cluster_y { y } } } } } }",
+  )
+  let rewritten = @dot.parse_dot(@dot.write_dot(graph))
+  assert_eq(rewritten.subgraphs().length(), 1)
+  let wrapper = rewritten.subgraphs()[0]
+  assert_eq(wrapper.name(), None)
+  assert_eq(wrapper.subgraphs().length(), 1)
+  let outer_cluster = wrapper.subgraphs()[0]
+  assert_eq(outer_cluster.name(), Some("cluster_x"))
+  assert_eq(outer_cluster.subgraphs()[0].name(), Some("cluster_y"))
+  assert_eq(rewritten.nodes().length(), 2)
+}
+
+///|
 test "write_dot omits implicit node label defaults" {
   let graph = try @dot.parse_dot("digraph { a }") catch {
     err => fail("parse_dot failed: \{err}")

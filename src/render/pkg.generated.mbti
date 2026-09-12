@@ -9,7 +9,11 @@ import {
 // Values
 pub fn arrow_primitives(@geom.Point, @geom.Point, Double, Double, String?) -> Array[DrawOp]
 
+pub fn label_attachment(String, @geom.Point, Double, Double, Array[@geom.Spline]) -> Array[@geom.Point]
+
 pub fn rounded_ortho_polylines(Array[@geom.Point], Double) -> Array[Array[@geom.Point]]
+
+pub fn spline_with_arrow(Array[@geom.Spline], Bool) -> @geom.Spline?
 
 // Errors
 

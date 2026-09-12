@@ -3,6 +3,63 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "root links follow containment and precede sibling separation and compression" {
+  let graph = @network_simplex.new_graph()
+  let left = @cluster_identity.cluster_left_boundary_name("cluster_a")
+  let right = @cluster_identity.cluster_right_boundary_name("cluster_a")
+  let sibling = @cluster_identity.cluster_left_boundary_name("cluster_b")
+  let index : Map[String, Int] = Map([])
+  for name in [left, right, sibling, "n"] {
+    index[name] = @network_simplex.add_node(graph, name)
+  }
+  let edge = (tail, head, weight) => ConstraintEdge::{
+    tail,
+    head,
+    minlen: 8,
+    weight,
+    tail_port: None,
+    head_port: None,
+  }
+  add_root_boundary_constraints(
+    {
+      graph,
+      index,
+      root_ln_targets: [left, sibling, "n"],
+      root_rn_targets: [right, "n"],
+      sizes: Map([]),
+      root_margin: 8.0,
+      compress_width_minlen: Some(200),
+      root_compress_weight: 1000,
+    },
+    extra_edges=[
+      edge(left, "n", 0),
+      edge("n", right, 0),
+      edge(left, right, 128),
+      edge(right, sibling, 0),
+    ],
+  )
+  assert_eq(graph.edges.length(), 10)
+  assert_eq(graph.edges[0].tail, index[left])
+  assert_eq(graph.edges[0].head, index["n"])
+  assert_eq(graph.edges[2].weight, 128)
+  assert_eq(graph.edges[3].tail, 4)
+  assert_eq(graph.edges[3].head, index[left])
+  assert_eq(graph.edges[3].minlen, 8)
+  assert_eq(graph.edges[5].tail, index[right])
+  assert_eq(graph.edges[5].head, 5)
+  assert_eq(graph.edges[5].minlen, 8)
+  assert_eq(graph.edges[6].tail, index[right])
+  assert_eq(graph.edges[6].head, index[sibling])
+  assert_eq(graph.edges[7].tail, 4)
+  assert_eq(graph.edges[7].head, index["n"])
+  assert_eq(graph.edges[8].tail, index["n"])
+  assert_eq(graph.edges[8].head, 5)
+  assert_eq(graph.edges[9].tail, 4)
+  assert_eq(graph.edges[9].head, 5)
+  assert_eq(graph.edges[9].minlen, 200)
+}
+
+///|
 test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes once per non-empty rank" {
   let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["a", "b"]

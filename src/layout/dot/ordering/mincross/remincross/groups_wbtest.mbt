@@ -3,18 +3,18 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-test "build_remincross_groups prefers seeded vnode-inclusive replay for single-cluster cleanup" {
+test "build_remincross_groups preserves expanded rank order across multiple clusters" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_only", 0)
 
   let final_groups : Map[Int, Array[String]] = Map([])
-  final_groups[0] = ["a", "b"]
+  final_groups[0] = ["b", "a"]
 
   let ordered_with_vnodes : Map[Int, Array[String]] = Map([])
   ordered_with_vnodes[0] = [skeleton, "v_before", "a", "b"]
 
   let rem_groups = build_remincross_groups({
     ratio: "",
-    cluster_order: ["cluster_only"],
+    cluster_order: ["cluster_only", "cluster_other"],
     ordered_with_vnodes,
     cluster_keys: Map([]),
     vnode_group_inputs: {

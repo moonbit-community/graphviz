@@ -38,9 +38,8 @@ pub fn collect_top_clusters(source : @cgraph.Graph) -> TopClustersCollected {
   }
   let top_clusters : Array[String] = []
   for name, parent in cluster_parents {
-    match parent {
-      None => if name != root_cluster_name { top_clusters.push(name) }
-      Some(_) => ()
+    if name != root_cluster_name && parent.unwrap_or("") == root_cluster_name {
+      top_clusters.push(name)
     }
   }
   { cluster_graphs, top_clusters, }
@@ -56,12 +55,11 @@ pub fn build_node_cluster_index(
 ) -> Map[String, String] {
   let node_cluster : Map[String, String] = Map([])
   for cluster_name in top_clusters {
-    match cluster_members.get(cluster_name) {
-      Some(members) =>
-        for name, _ in members {
-          node_cluster[name] = cluster_name
-        }
-      None => ()
+    guard cluster_members.get(cluster_name) is Some(members) else { continue }
+    for name, _ in members {
+      // rank.c/node_induce removes nodes already owned by an earlier sibling.
+      guard node_cluster.get(name) is None else { continue }
+      node_cluster[name] = cluster_name
     }
   }
   node_cluster

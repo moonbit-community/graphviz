@@ -303,7 +303,11 @@ fn label_ends_with_break(label : String) -> Bool {
     }
     ended_with_break = ch == '\n' || ch == '\r'
   }
-  if escaping { false } else { ended_with_break }
+  if escaping {
+    false
+  } else {
+    ended_with_break
+  }
 }
 
 ///|

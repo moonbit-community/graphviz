@@ -3,6 +3,20 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+fn route_endpoint_neighbors(
+  vnodes : Array[String],
+  vnode_positions : Map[String, @geom.Point],
+  tail_pos : @geom.Point,
+  head_pos : @geom.Point,
+) -> (@geom.Point, @geom.Point) {
+  guard vnodes.length() > 0 else { (head_pos, tail_pos) }
+  (
+    vnode_positions.get(vnodes[0]).unwrap_or(head_pos),
+    vnode_positions.get(vnodes[vnodes.length() - 1]).unwrap_or(tail_pos),
+  )
+}
+
+///|
 /// Route endpoint setup owner: self-edge compass clip sizing, compass/dynamic
 /// endpoint clip resolution, flat dir=both nudges, and related clip policy.
 
@@ -26,7 +40,6 @@ fn adjusted_self_edge_compass_clip_size(
 
 ///|
 priv struct CompassClipPointInput {
-  is_record_shape : (@cgraph.Node) -> Bool
   node : @cgraph.Node
   port : @cgraph.Port?
   center : @geom.Point
@@ -36,27 +49,20 @@ priv struct CompassClipPointInput {
 
 ///|
 fn compass_clip_point_if_needed(input : CompassClipPointInput) -> @geom.Point? {
-  if (input.is_record_shape)(input.node) {
-    return None
-  }
-  match input.port {
-    Some(value) =>
-      match value.compass {
-        Some(@cgraph.Compass::C) => None
-        Some(compass) =>
-          Some(
-            @edge_spline.compass_port_point_on_shape(
-              input.node,
-              input.center,
-              input.size,
-              compass,
-              input.rankdir,
-            ),
-          )
-        None => None
-      }
-    None => None
-  }
+  guard input.port is Some(port) else { return None }
+  guard port.compass is Some(compass) else { return None }
+  guard compass != @cgraph.Compass::C else { return None }
+  // record_port also calls compassPort: an explicit compass belongs to
+  // the selected field box, including its corners, not a clipping ray.
+  Some(
+    @edge_spline.compass_port_point_on_shape(
+      input.node,
+      input.center,
+      input.size,
+      compass,
+      input.rankdir,
+    ),
+  )
 }
 
 ///|
@@ -96,6 +102,7 @@ fn anchor_base_for_route_endpoint(
 
 ///|
 priv struct RouteEndpointPortSideInput {
+  node_name : String
   sameport_anchor : @geom.Point?
   dynamic_anchor : RouteDynamicPortAnchor
   anchor_base : @geom.Point
@@ -104,7 +111,13 @@ priv struct RouteEndpointPortSideInput {
   pos : @geom.Point
   size : NodeSize
   port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int
-  port_side_for_edge : (@cgraph.Port?, @geom.Rect?, @geom.Point, NodeSize) -> Int
+  port_side_for_edge : (
+    String,
+    @cgraph.Port?,
+    @geom.Rect?,
+    @geom.Point,
+    NodeSize,
+  ) -> Int
 }
 
 ///|
@@ -115,6 +128,7 @@ fn port_side_for_route_endpoint(input : RouteEndpointPortSideInput) -> Int {
     input.dynamic_anchor.side
   } else {
     (input.port_side_for_edge)(
+      input.node_name,
       input.port,
       input.port_rect,
       input.pos,
@@ -137,47 +151,6 @@ fn compass_port_on_non_record_shape(
         None => false
       }
     None => false
-  }
-}
-
-///|
-priv struct ClusteredArrowLenOverrideInput {
-  edge : @cgraph.Edge
-  include_tail : Bool
-  include_head : Bool
-  tail_cluster_bbox : @geom.Rect?
-  head_cluster_bbox : @geom.Rect?
-  tail_clip : @geom.Point
-  head_clip : @geom.Point
-}
-
-///|
-fn clustered_edge_arrow_len_override(
-  input : ClusteredArrowLenOverrideInput,
-) -> Double? {
-  if !(input.include_tail || input.include_head) {
-    return None
-  }
-  if input.tail_cluster_bbox is None && input.head_cluster_bbox is None {
-    return None
-  }
-  let arrow_lengths = @edge_spline.arrow_length_for_edge(
-    input.edge,
-    input.include_tail,
-    input.include_head,
-    None,
-  )
-  let base = if arrow_lengths.tail > arrow_lengths.head {
-    arrow_lengths.tail
-  } else {
-    arrow_lengths.head
-  }
-  let span = @edge_spline.point_dist(input.tail_clip, input.head_clip)
-  let max_len = if span < 12.0 { span * 0.25 } else { span }
-  if max_len > 0.0 && max_len < base {
-    Some(max_len)
-  } else {
-    None
   }
 }
 

@@ -17,35 +17,6 @@ priv struct LeaderRankEdge {
 }
 
 ///|
-fn leader_has_path(
-  leader_edges : Array[(String, String)],
-  start : String,
-  target : String,
-) -> Bool {
-  let seen : Map[String, Bool] = Map([])
-  let pending = [start]
-  let mut next = 0
-  while next < pending.length() {
-    let current = pending[next]
-    next = next + 1
-    if current == target {
-      return true
-    }
-    if seen.get(current) is Some(_) {
-      continue
-    }
-    seen[current] = true
-    for edge in leader_edges {
-      let (tail, head) = edge
-      if tail == current && seen.get(head) is None {
-        pending.push(head)
-      }
-    }
-  }
-  false
-}
-
-///|
 pub fn compute_local_cluster_ranks_and_leaders(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -61,14 +32,11 @@ pub fn compute_local_cluster_ranks_and_leaders(
 ) -> LocalClusterRankResult {
   let local_ranks : Map[String, Int] = Map([])
   let cluster_leaders : Map[String, String] = Map([])
+  let node_cluster = build_node_cluster_index(top_clusters, cluster_members)
   for cluster_name in top_clusters {
-    let members = match cluster_members.get(cluster_name) {
-      Some(value) => value
-      None => continue
-    }
     let cluster_nodes : Array[@cgraph.Node] = []
     for node in nodes {
-      if members.get(node.name()) is Some(_) {
+      if node_cluster.get(node.name()) == Some(cluster_name) {
         cluster_nodes.push(node)
       }
     }
@@ -79,7 +47,8 @@ pub fn compute_local_cluster_ranks_and_leaders(
     for edge in edges {
       let tail = edge.tail().name()
       let head = edge.head().name()
-      if members.get(tail) is Some(_) && members.get(head) is Some(_) {
+      if node_cluster.get(tail) == Some(cluster_name) &&
+        node_cluster.get(head) == Some(cluster_name) {
         cluster_edges.push(edge)
       }
     }
@@ -156,29 +125,6 @@ pub fn solve_clustered_leader_ranks(
   let direct_minlen : Array[Int] = []
   let direct_weight : Array[Int] = []
   let direct_active : Array[Bool] = []
-  let leader_edges : Array[(String, String)] = []
-  for edge in edges {
-    if !@edge_semantics.edge_is_constraint(edge) {
-      continue
-    }
-    let tail_name = edge.tail().name()
-    let head_name = edge.head().name()
-    let tail_cluster = node_cluster.get(tail_name).unwrap_or("")
-    let head_cluster = node_cluster.get(head_name).unwrap_or("")
-    let tail_leader = if tail_cluster == "" {
-      tail_name
-    } else {
-      cluster_leaders.get(tail_cluster).unwrap_or(tail_name)
-    }
-    let head_leader = if head_cluster == "" {
-      head_name
-    } else {
-      cluster_leaders.get(head_cluster).unwrap_or(head_name)
-    }
-    if tail_leader != head_leader {
-      leader_edges.push((tail_leader, head_leader))
-    }
-  }
   let mut slack_id = 0
   for edge in edges {
     if !@edge_semantics.edge_is_constraint(edge) {
@@ -240,17 +186,6 @@ pub fn solve_clustered_leader_ranks(
       None => 0
     }
     let offset = minlen + tail_local - head_local
-    if offset >= 0 && !leader_has_path(leader_edges, head_leader, tail_leader) {
-      // The slack-node construction below represents this same relation, but
-      // native simplex can leave adjacent positive-offset cluster leaders
-      // level when several such edges form an acyclic chain.  A direct leader
-      // edge preserves that constraint exactly; cycles must retain Graphviz's
-      // slack construction so their competing offsets can be balanced.
-      let _ = @network_simplex.add_edge(
-        rank_graph, tail_idx, head_idx, offset, weight,
-      )
-      continue
-    }
     let tail_slack_len = if offset > 0 { 0 } else { -offset }
     let head_slack_len = if offset > 0 { offset } else { 0 }
     let slack_name = "_mbt_rank_slack_\{slack_id}"
@@ -318,7 +253,7 @@ pub fn solve_clustered_leader_ranks(
       entry.weight,
     )
   }
-  let _ = @network_simplex.network_simplex_pre_balance(rank_graph, 0x7fffffff)
+  solve_leader_components(rank_graph)
   let leader_ranks : Map[String, Int] = Map([])
   for name, idx in rank_index {
     leader_ranks[name] = @network_simplex.node_rank(rank_graph, idx)

@@ -192,7 +192,7 @@ fn short_route_detour_context_for_base(
   has_explicit_port : Bool,
   label_width_pt : Double,
 ) -> ShortRouteDetourContext {
-  short_route_detour_context({
+  let context = short_route_detour_context({
     using_pathplan,
     is_flat_edge: base.is_flat_edge,
     tail_node: base.tail_node,
@@ -209,6 +209,8 @@ fn short_route_detour_context_for_base(
     route_include_tail: base.route_include_tail,
     route_include_head: base.route_include_head,
   })
+  let (tail_slope_line, head_slope_line) = route_base_endpoint_slopes(base)
+  { ..context, tail_slope_line, head_slope_line, }
 }
 
 ///|

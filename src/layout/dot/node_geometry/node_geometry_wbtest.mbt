@@ -45,3 +45,19 @@ test "node_size gives square nodes their regular half-inch default" {
   assert_close(size.width_in, 0.5, 0.0001)
   assert_close(size.height_in, 0.5, 0.0001)
 }
+
+///|
+test "regular empty nodes use supplied dimensions without the other default" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [label=\"\" shape=circle]; a [width=.2]; b [height=.2]; c [width=.2 height=.3]; d [shape=square width=.2]; }",
+  )
+  for entry in [("a", 0.2), ("b", 0.2), ("c", 0.3), ("d", 0.2)] {
+    let (name, expected) = entry
+    let size = node_size(
+      graph.node(name),
+      @layout_prep.RecordOrientation::Horizontal,
+    )
+    assert_close(size.width_in, expected, 0.000001)
+    assert_close(size.height_in, expected, 0.000001)
+  }
+}

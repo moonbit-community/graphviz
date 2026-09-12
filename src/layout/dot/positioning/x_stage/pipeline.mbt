@@ -165,7 +165,11 @@ fn compute_layout_x_positions(
     output_sizes: pipeline.prep.output_sizes,
     flat_label_edges: x_data.flat_label_edges,
   })
-  compute_x_positions_for_stage(solve_input, pipeline.prep.has_port_edges)
+  compute_x_positions_for_stage(
+    solve_input,
+    pipeline.prep.has_port_edges,
+    pipeline.ordering.live_graph,
+  )
 }
 
 ///|
@@ -343,6 +347,7 @@ fn resolve_x_simplex_root_context(
 fn compute_x_positions_for_stage(
   input : @x_constraints.XPositionSolveInput,
   has_port_edges : Bool,
+  live_graph : @setup.ConcentrateFastGraph?,
 ) -> Map[String, Double] {
   let port_offsets = if has_port_edges {
     @ports.port_offsets_for_nodes(input.nodes, input.output_sizes)
@@ -367,15 +372,9 @@ fn compute_x_positions_for_stage(
       })
     },
     edge => @edge_label_metrics.edge_mid_label_metrics(edge) is Some(_),
-    edge => {
-      if @edge_semantics.edge_dir_for(edge, edge.tail().graph().kind())
-        is @edge_semantics.EdgeDir::Both {
-        2
-      } else {
-        1
-      }
-    },
+    _ => 1,
     @x_constraints.should_capture_xpos_snapshot(input.graph),
+    live_graph~,
   )
 }
 

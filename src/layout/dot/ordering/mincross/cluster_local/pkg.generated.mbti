@@ -7,9 +7,9 @@ import {
 }
 
 // Values
-pub fn run_cluster_local_rank_reorder_call(ClusterLocalRankReorderCallInputs) -> Map[Int, Array[String]]
+pub fn run_cluster_local_rank_reorder_call(ClusterLocalRankReorderCallInputs, crossing_counter? : ((Map[Int, Array[String]]) -> Int)?) -> Map[Int, Array[String]]
 
-pub fn run_cluster_local_rank_replay_after_root_from_sources(ClusterLocalRankReplayAfterRootSources) -> Unit
+pub fn run_cluster_local_rank_replay_after_root_from_sources(ClusterLocalRankReplayAfterRootSources, expansion_order? : Array[String]) -> Unit
 
 // Errors
 

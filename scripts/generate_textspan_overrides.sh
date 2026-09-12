@@ -51,12 +51,23 @@ def fmt_float(value: float) -> str:
         return text
     return text
 
+ordered_entries = sorted(entries.items(), key=sort_key)
+# Bound each top-level segment even after moon fmt expands long tuples.
+chunk_size = 512
+chunk_count = (len(ordered_entries) + chunk_size - 1) // chunk_size
+entry_type = "Array[(String, Double, String, Double, Double, Double, Double)]"
+
 with open(output_path, "w", encoding="ascii") as out:
     out.write("///|\n")
     out.write("/// Overrides captured from Graphviz textspan fixtures.\n")
     out.write("/// Regenerate with: bash scripts/generate_textspan_overrides.sh\n")
-    out.write("pub let textspan_overrides_data : Array[(String, Double, String, Double, Double, Double, Double)] = [\n")
-    for (font, size, text), (width, height, yoffset_layout, yoffset_centerline) in sorted(entries.items(), key=sort_key):
+    out.write(f"pub let textspan_overrides_data : {entry_type} = [\n")
+    for chunk in range(chunk_count):
+        out.write(f"  ..textspan_overrides_chunk_{chunk}(),\n")
+    out.write("]\n")
+    for index, ((font, size, text), (width, height, yoffset_layout, yoffset_centerline)) in enumerate(ordered_entries):
+        if index % chunk_size == 0:
+            out.write(f"\n///|\nfn textspan_overrides_chunk_{index // chunk_size}() -> {entry_type} {{\n[\n")
         out.write("  (")
         out.write(json.dumps(font))
         out.write(", ")
@@ -72,5 +83,8 @@ with open(output_path, "w", encoding="ascii") as out:
         out.write(", ")
         out.write(fmt_float(yoffset_centerline))
         out.write("),\n")
-    out.write("]\n")
+        if (index + 1) % chunk_size == 0 or index + 1 == len(ordered_entries):
+            out.write("]\n}\n")
 PY
+
+moon fmt "$output_path"

@@ -15,9 +15,9 @@ pub fn html_table_size(HtmlTable, (HtmlCell) -> (Double, Double)) -> (Double, Do
 
 pub fn is_html_label_text(String) -> Bool
 
-pub fn parse_html_label(String) -> HtmlLabel?
+pub fn parse_html_label(String, html? : Bool?) -> HtmlLabel?
 
-pub fn strip_html_wrappers(String) -> String?
+pub fn strip_html_wrappers(String, html? : Bool?) -> String?
 
 // Errors
 
@@ -35,6 +35,9 @@ pub fn HtmlAlign::to_string(Self) -> String
 pub impl Show for HtmlAlign
 
 pub(all) struct HtmlCell {
+  href : String?
+  tooltip : String?
+  target : String?
   content : HtmlCellContent
   port : String?
   col_span : Int
@@ -42,6 +45,11 @@ pub(all) struct HtmlCell {
   align : HtmlAlign
   valign : HtmlVAlign
   bg_color : String?
+  border_pt : Double?
+  style : String?
+  gradient_angle : String?
+  sides : String?
+  vruled : Bool
   min_width_pt : Double?
   min_height_pt : Double?
 } derive(Eq, @debug.Debug)
@@ -67,6 +75,9 @@ pub impl Show for HtmlCellContent
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
+  row : Int
+  col : Int
+  hruled : Bool
 } derive(Eq, @debug.Debug)
 pub fn HtmlCellLayout::equal(Self, Self) -> Bool
 pub fn HtmlCellLayout::not_equal(Self, Self) -> Bool
@@ -89,6 +100,7 @@ pub impl Show for HtmlCellPlacement
 
 pub(all) enum HtmlLabel {
   Text(String)
+  StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
 } derive(Eq, @debug.Debug)
 pub fn HtmlLabel::equal(Self, Self) -> Bool
@@ -100,6 +112,7 @@ pub impl Show for HtmlLabel
 
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
+  ruled : Bool
 } derive(Eq, @debug.Debug)
 pub fn HtmlRow::equal(Self, Self) -> Bool
 pub fn HtmlRow::not_equal(Self, Self) -> Bool
@@ -109,12 +122,21 @@ pub fn HtmlRow::to_string(Self) -> String
 pub impl Show for HtmlRow
 
 pub(all) struct HtmlTable {
+  port : String?
+  href : String?
+  tooltip : String?
+  target : String?
   rows : Array[HtmlRow]
   border_pt : Double
   cell_border_pt : Double
   cell_spacing_pt : Double
   cell_padding_pt : Double
   bg_color : String?
+  style : String?
+  gradient_angle : String?
+  hruled : Bool
+  vruled : Bool
+  rounded : Bool
 } derive(Eq, @debug.Debug)
 pub fn HtmlTable::equal(Self, Self) -> Bool
 pub fn HtmlTable::not_equal(Self, Self) -> Bool
@@ -125,6 +147,8 @@ pub impl Show for HtmlTable
 
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
+  row_count : Int
+  col_count : Int
   scale_x : Double
   scale_y : Double
 } derive(Eq, @debug.Debug)
@@ -152,6 +176,9 @@ pub impl Show for HtmlTableMetrics
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
+  font_name : String?
+  font_size_pt : Double?
+  break_alignment : HtmlAlign?
 } derive(Eq, @debug.Debug)
 pub fn HtmlTextSpan::equal(Self, Self) -> Bool
 pub fn HtmlTextSpan::not_equal(Self, Self) -> Bool

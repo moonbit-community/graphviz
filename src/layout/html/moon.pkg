@@ -3,3 +3,11 @@ import {
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/string",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"
+
+import {
+  "moonbitlang/core/test",
+} for "test"

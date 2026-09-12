@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-/// Root-graph geometry kernels: cluster/port padding, root label bbox
+/// Root-graph geometry kernels: cluster padding, root label bbox
 /// placement, and root margin expansion. These helpers do not mutate
 /// DotLayoutGraph trees directly.
 type LabelLoc = @graph_label.LabelLoc
@@ -21,104 +21,38 @@ pub struct RootClusterPadding {
 }
 
 ///|
-/// Graphviz parity: root cluster padding aligned to refs/graphviz/lib/dotgen/position.c
-/// (clust_ht/adjustRanks).
-/// Do not change behavior without updating fixtures/tests.
+/// Computes only the extra vertical space required by outer cluster bounds.
+/// position.c clust_ht takes a maximum with existing node extents; it does
+/// not add a margin to every rank containing a cluster member.
 pub fn compute_root_cluster_padding(
   graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  all_ranks : Array[Int],
-  ranks : Map[String, Int],
-) -> RootClusterPadding {
-  if graph.is_root() &&
-    @cluster_graph.graph_has_cluster(graph) &&
-    all_ranks.length() > 0 {
-    let min_rank = all_ranks[0]
-    let max_rank = all_ranks[all_ranks.length() - 1]
-    let mut cluster_at_min = false
-    let mut cluster_at_max = false
-    for node in nodes {
-      let cluster_key = @membership.node_local_cluster_key(node)
-      if cluster_key == "" {
-        continue
-      }
-      match ranks.get(node.name()) {
-        Some(rank) => {
-          if rank == min_rank {
-            cluster_at_min = true
-          }
-          if rank == max_rank {
-            cluster_at_max = true
-          }
-        }
-        None => ()
-      }
-      if cluster_at_min && cluster_at_max {
-        break
-      }
-    }
-    let pad = @clustering.cluster_margin_pt(graph)
-    {
-      root_cluster_pad_top: if cluster_at_min {
-        pad
-      } else {
-        0.0
-      },
-      root_cluster_pad_bottom: if cluster_at_max {
-        pad
-      } else {
-        0.0
-      },
-    }
-  } else {
-    { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0, }
-  }
-}
-
-///|
-/// Graphviz parity: rankdir=BT flips top/bottom root cluster padding because
-/// ranks are inverted before postprocess transform.
-pub fn root_cluster_padding_for_rankdir(
-  rankdir : RankDir,
-  root_cluster_padding : RootClusterPadding,
-) -> (Double, Double) {
-  if rankdir == RankDir::BT {
-    (
-      root_cluster_padding.root_cluster_pad_bottom,
-      root_cluster_padding.root_cluster_pad_top,
-    )
-  } else {
-    (
-      root_cluster_padding.root_cluster_pad_top,
-      root_cluster_padding.root_cluster_pad_bottom,
-    )
-  }
-}
-
-///|
-/// Graphviz parity: record port padding impact aligned to refs/graphviz/lib/dotgen/position.c.
-/// Do not change behavior without updating fixtures/tests.
-pub fn apply_root_port_padding(
-  graph : @cgraph.Graph,
   bbox : @geom.Rect,
-  rankdir : RankDir,
-  port_pad_below : Double,
-  port_pad_above : Double,
-) -> @geom.Rect {
-  if graph.is_root() && (rankdir == RankDir::TB || rankdir == RankDir::BT) {
-    if port_pad_below > 0.0 || port_pad_above > 0.0 {
-      {
-        llx: bbox.llx,
-        lly: bbox.lly - port_pad_below,
-        urx: bbox.urx,
-        ury: bbox.ury + port_pad_above,
-      }
-    } else {
-      bbox
-    }
-  } else {
-    bbox
+  subgraphs : Array[LayoutTree],
+) -> RootClusterPadding {
+  guard graph.is_root() else {
+    return { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0, }
   }
+  let pending = subgraphs.copy()
+  let mut top = 0.0
+  let mut bottom = 0.0
+  while pending.length() > 0 {
+    guard pending.pop() is Some(subgraph) else { break }
+    if @cluster_graph.is_cluster_graph(subgraph.graph) {
+      top = Double::max(
+        top,
+        subgraph.bbox.ury + @clustering.CLUSTER_MARGIN_PT - bbox.ury,
+      )
+      bottom = Double::max(
+        bottom,
+        bbox.lly - subgraph.bbox.lly + @clustering.CLUSTER_MARGIN_PT,
+      )
+    } else {
+      for child in subgraph.subgraphs {
+        pending.push(child)
+      }
+    }
+  }
+  { root_cluster_pad_top: top, root_cluster_pad_bottom: bottom, }
 }
 
 ///|

@@ -24,6 +24,10 @@ pub const SELF_EDGE_SIZE_PT : Double = 18.0
 
 pub fn compass_uses_shape_clipping(@cgraph.Node) -> Bool
 
+pub fn node_label_space(@cgraph.Node) -> Double?
+
+pub fn node_label_y_offset(@cgraph.Node) -> Double
+
 pub fn node_size(@cgraph.Node, @layout_prep.RecordOrientation) -> @node_primitives.NodeSize
 
 pub fn resolve_node_output_size(Map[String, @node_primitives.NodeSize], @cgraph.Node, @layout_prep.RecordOrientation) -> @node_primitives.NodeSize

@@ -25,50 +25,6 @@ test "build_root_reorder_node_order prefers nlist order for materialized nodes a
 }
 
 ///|
-test "has_multiple_non_empty_cluster_keys ignores empties and duplicates and detects when two real clusters are present" {
-  assert_false(
-    has_multiple_non_empty_cluster_keys({
-      "root": "",
-      "member_a": "cluster_a",
-      "member_a_dup": "cluster_a",
-    }),
-  )
-  assert_true(
-    has_multiple_non_empty_cluster_keys({
-      "member_a": "cluster_a",
-      "member_b": "cluster_b",
-      "root": "",
-    }),
-  )
-}
-
-///|
-test "should_enable_root_flip requires graphviz_flip and allows fixture mode to bypass cluster-count gating" {
-  let env_key = "DOT_CAPTURE_ORDERING_FIXTURE_MODE"
-  let original = @env.get_env_var(env_key)
-  let one_cluster = { "member_a": "cluster_a", "root": "" }
-  let two_clusters = { "member_a": "cluster_a", "member_b": "cluster_b" }
-
-  @env.unset_env_var(env_key)
-  let disabled = should_enable_root_flip(false, two_clusters)
-  let gated_off = should_enable_root_flip(true, one_cluster)
-  let gated_on = should_enable_root_flip(true, two_clusters)
-
-  @env.set_env_var(env_key, "1")
-  let forced_on = should_enable_root_flip(true, one_cluster)
-
-  match original {
-    Some(value) => @env.set_env_var(env_key, value)
-    None => @env.unset_env_var(env_key)
-  }
-
-  assert_false(disabled)
-  assert_false(gated_off)
-  assert_true(gated_on)
-  assert_true(forced_on)
-}
-
-///|
 test "finalize_root_rank_order_phase_output merges flip output back into seeded groups only when graphviz_flip is enabled" {
   let root_groups : Map[Int, Array[String]] = Map([])
   root_groups[0] = ["member", "skel_a", "root", "tail"]
@@ -177,12 +133,6 @@ test "build_root_reorder_edge_data replays root tails in nlist order and normali
   assert_eq(edge_data.root_edge_head_port_x, [2.0, 0.0])
   assert_eq(edge_data.root_edge_tail_port_order, [0.1, 0.0])
   assert_eq(edge_data.root_edge_head_port_order, [0.2, 0.0])
-  assert_eq(edge_data.root_children.get("root"), Some([]))
-  assert_eq(edge_data.root_children.get(vnode), Some(["leaf"]))
-  assert_eq(edge_data.root_children.get("leaf"), Some([]))
-  assert_eq(edge_data.root_parents.get("root"), Some([]))
-  assert_eq(edge_data.root_parents.get(vnode), Some([]))
-  assert_eq(edge_data.root_parents.get("leaf"), Some([vnode]))
 }
 
 ///|

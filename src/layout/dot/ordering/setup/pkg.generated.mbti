@@ -24,6 +24,8 @@ pub fn build_ordering_result_from_pipeline_context(OrderingPipelineContext, Map[
 
 pub fn build_ordering_runtime_context_from_sources(BuildOrderingRuntimeContextSources) -> OrderingRuntimeContext
 
+pub fn concentrate_ordering_result(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int], OrderingResult, edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool, node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool) -> OrderingResult
+
 // Errors
 
 // Types and methods
@@ -78,6 +80,24 @@ pub(all) struct ClusterNodeRankBounds {
   max_rank : Map[String, Int]
   first_order : Map[String, Int]
 }
+
+pub(all) struct ConcentrateFastEdge {
+  tail : String
+  head : String
+  mut weight : Int
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+  mut to_virtual : Int?
+  original : @cgraph.Edge?
+}
+
+pub(all) struct ConcentrateFastGraph {
+  edges : Array[ConcentrateFastEdge]
+  copied_from : Map[Int, Int]
+  incoming : Map[String, Array[Int]]
+  outgoing : Map[String, Array[Int]]
+}
+pub fn ConcentrateFastGraph::new() -> Self
 
 pub(all) struct DedupOrderingEdgesOutput {
   order_edges : Array[@cgraph.Edge]
@@ -214,6 +234,7 @@ pub(all) struct OrderingReorderSetupSources {
 }
 
 pub(all) struct OrderingResult {
+  live_graph : ConcentrateFastGraph?
   ordered_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   vnode_info : EdgeVnodeInfo

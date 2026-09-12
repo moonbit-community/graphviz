@@ -206,6 +206,8 @@ fn sample_regular_pass_input(
       head_port_max_dist: Map([]),
     },
     routing_context: {
+      concentrated_segments: {},
+      concentrated_route_order: {},
       order_index: Map([]),
       path_order_index: Map([]),
       path_adjacency: @routesplines.build_path_adjacency([], Map([]), [], []),
@@ -215,6 +217,7 @@ fn sample_regular_pass_input(
       pathplan_sizes: Map([]),
       path_cluster_keys: Map([]),
       path_vnode_clusters: Map([]),
+      path_vnode_origin_clusters: {},
       parallel_offsets: Map([]),
       concentrated_ignored_edge_ids: Map([]),
       cluster_bboxes: Map([]),

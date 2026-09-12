@@ -107,8 +107,6 @@ pub fn edge_spline_for_polyline(
     head_anchor_size,
     tail_clip_enabled_override=Some(tail_clip_enabled),
     head_clip_enabled_override=Some(head_clip_enabled),
-    tail_cluster_bbox~,
-    head_cluster_bbox~,
     clip_swapped~,
   )
   let trimmed = trim_degenerate_spline_segments(clipped)
@@ -127,13 +125,16 @@ pub fn edge_spline_for_polyline(
   } else {
     { points: trimmed, start_point: None, end_point: None, }
   }
-  let points = adjust_tail_cluster_compound_segment(
-    arrow_clipped.points,
-    arrow_clipped.end_point,
-    include_tail,
-    include_head,
+  let arrow_clipped = clip_compound_spline(
+    arrow_clipped,
+    tail_clip_center,
+    head_clip_center,
     tail_cluster_bbox,
+    head_cluster_bbox,
+    arrow_lengths.tail,
+    arrow_lengths.head,
   )
+  let points = arrow_clipped.points
   { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points, }
 }
 
@@ -191,8 +192,6 @@ pub fn edge_spline_for_points(
     head_clip_enabled_override=Some(head_clip_enabled),
     tail_port_side~,
     head_port_side~,
-    tail_cluster_bbox~,
-    head_cluster_bbox~,
     clip_swapped~,
   )
   let trimmed = trim_degenerate_spline_segments(spline_points)
@@ -210,13 +209,16 @@ pub fn edge_spline_for_points(
   } else {
     { points: trimmed, start_point: None, end_point: None, }
   }
-  let clipped = adjust_tail_cluster_compound_segment(
-    arrow_clipped.points,
-    arrow_clipped.end_point,
-    include_tail,
-    include_head,
+  let arrow_clipped = clip_compound_spline(
+    arrow_clipped,
+    tail_clip_center,
+    head_clip_center,
     tail_cluster_bbox,
+    head_cluster_bbox,
+    arrow_lengths.tail,
+    arrow_lengths.head,
   )
+  let clipped = arrow_clipped.points
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -278,8 +280,6 @@ pub fn edge_spline_for_bezier_points(
     head_anchor_size,
     tail_clip_enabled_override=Some(tail_clip_enabled),
     head_clip_enabled_override=Some(head_clip_enabled),
-    tail_cluster_bbox~,
-    head_cluster_bbox~,
     clip_swapped~,
   )
   let trimmed = trim_degenerate_spline_segments(spline_points)
@@ -297,13 +297,16 @@ pub fn edge_spline_for_bezier_points(
   } else {
     { points: trimmed, start_point: None, end_point: None, }
   }
-  let clipped = adjust_tail_cluster_compound_segment(
-    arrow_clipped.points,
-    arrow_clipped.end_point,
-    include_tail,
-    include_head,
+  let arrow_clipped = clip_compound_spline(
+    arrow_clipped,
+    tail_clip_center,
+    head_clip_center,
     tail_cluster_bbox,
+    head_cluster_bbox,
+    arrow_lengths.tail,
+    arrow_lengths.head,
   )
+  let clipped = arrow_clipped.points
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -409,8 +412,6 @@ pub fn edge_spline_for_line(
     head_anchor_size,
     tail_clip_enabled_override=Some(tail_clip_enabled),
     head_clip_enabled_override=Some(head_clip_enabled),
-    tail_cluster_bbox~,
-    head_cluster_bbox~,
     clip_swapped~,
   )
   points = trim_degenerate_spline_segments(points)
@@ -428,12 +429,15 @@ pub fn edge_spline_for_line(
   } else {
     { points, start_point: None, end_point: None, }
   }
-  points = adjust_tail_cluster_compound_segment(
-    arrow_clipped.points,
-    arrow_clipped.end_point,
-    include_tail,
-    include_head,
+  let arrow_clipped = clip_compound_spline(
+    arrow_clipped,
+    tail_clip_center,
+    head_clip_center,
     tail_cluster_bbox,
+    head_cluster_bbox,
+    arrow_lengths.tail,
+    arrow_lengths.head,
   )
+  points = arrow_clipped.points
   { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points, }
 }

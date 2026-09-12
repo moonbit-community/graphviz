@@ -1,4 +1,5 @@
 import {
+  "moonbit-community/graphviz/layout/dot/edge_semantics",
   "moonbit-community/graphviz/layout/dot/rank_groups",
   "moonbit-community/graphviz/layout/dot/ordering/mincross/cluster_local",
   "moonbit-community/graphviz/layout/dot/ordering/mincross/pre_root",
@@ -12,3 +13,7 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_constraints",
   "moonbitlang/core/env",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

@@ -60,7 +60,7 @@ test "build_root_reorder_groups keeps root and skeleton names and inserts only c
 }
 
 ///|
-test "collect_root_vnodes keeps only edge vnodes from edges that cross cluster boundaries when enabled" {
+test "collect_root_vnodes keeps root-local and cross-cluster chains but defers intra-cluster chains" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let root_a = graph.node("root_a")
   let cluster_member = graph.node("cluster_member")
@@ -101,7 +101,7 @@ test "collect_root_vnodes keeps only edge vnodes from edges that cross cluster b
   assert_eq(enabled.get("v_cross_0"), Some(true))
   assert_eq(enabled.get("v_cross_1"), Some(true))
   assert_true(enabled.get("v_local") is None)
-  assert_true(enabled.get("v_root") is None)
+  assert_eq(enabled.get("v_root"), Some(true))
   assert_eq(disabled.length(), 0)
 }
 

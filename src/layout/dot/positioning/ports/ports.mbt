@@ -71,6 +71,126 @@ fn compass_port_point_for_layout(
 }
 
 ///|
+/// Resolve the initial port coordinates used by dot's ports_eq, before
+/// dynamic ports are moved to a node side during routing. None is Center's
+/// undefined port; a defined port at (0, 0) is a distinct state.
+fn initial_port_point(
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+) -> @geom.Point? {
+  guard port is Some(port) else { None }
+  if port.name is Some(name) {
+    if offsets.get(node.name()) is Some(node_offsets) {
+      if node_offsets.get(name) is Some(info) {
+        guard port.compass is Some(compass) else { return Some(info.center) }
+        let output_size = if rankdir == @rankdir.RankDir::LR ||
+          rankdir == @rankdir.RankDir::RL {
+          @node_primitives.swap_node_size(info.size)
+        } else {
+          info.size
+        }
+        let displacement = record_port_point(
+          { ..info, center: { x: 0.0, y: 0.0, }, size: output_size, },
+          Some(compass),
+        )
+        let offset = @port_geometry.layout_port_offset(displacement, rankdir)
+        return Some({
+          x: info.center.x + offset.x,
+          y: info.center.y + offset.y,
+        })
+      }
+    }
+  }
+  let is_record = @record_geometry.is_record_shape(node)
+  if port.compass is Some(compass) {
+    if compass == @cgraph.Compass::C && !is_record {
+      return None
+    }
+    return Some(
+      compass_port_point_for_layout(
+        node.name(),
+        Some(node),
+        compass,
+        sizes,
+        rankdir,
+      ),
+    )
+  }
+  if is_record && port.name is Some(_) {
+    Some({ x: 0.0, y: 0.0, })
+  } else {
+    None
+  }
+}
+
+///|
+pub fn build_initial_port_sampler(
+  nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, NodeSize],
+) -> (@cgraph.Node, @cgraph.Port?) -> @geom.Point? {
+  let offsets = port_offsets_for_nodes(nodes, output_sizes)
+  let rankdir = if nodes.length() > 0 {
+    @rankdir.graph_rankdir(nodes[0].graph())
+  } else {
+    @rankdir.RankDir::TB
+  }
+  let sizes : Map[String, NodeSize] = Map([])
+  for node in nodes {
+    let size = output_sizes
+      .get(node.name())
+      .unwrap_or_else(() => {
+        @node_geometry.node_size(
+          node,
+          @layout_prep.record_layout_orientation(rankdir),
+        )
+      })
+    sizes[node.name()] = if rankdir == @rankdir.RankDir::LR ||
+      rankdir == @rankdir.RankDir::RL {
+      @node_primitives.swap_node_size(size)
+    } else {
+      size
+    }
+  }
+  (node, port) => initial_port_point(node, port, offsets, sizes, rankdir)
+}
+
+///|
+/// Compare a node's initial ports by definedness and coordinates (portcmp).
+pub fn build_initial_node_port_comparator(
+  nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, NodeSize],
+) -> (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool {
+  let sample = build_initial_port_sampler(nodes, output_sizes)
+  (node, first, second) => sample(node, first) == sample(node, second)
+}
+
+///|
+/// Compare initial edge ports using upstream's asymmetric ports_eq predicate.
+/// An undefined first tail ignores tail position. Endpoint ports are not swapped.
+pub fn build_initial_edge_port_comparator(
+  nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, NodeSize],
+) -> (@cgraph.Edge, @cgraph.Edge) -> Bool {
+  let sample = build_initial_port_sampler(nodes, output_sizes)
+  (first, second) => {
+    let first_head = sample(first.head(), first.head_port())
+    let second_head = sample(second.head(), second.head_port())
+    guard first_head == second_head else { false }
+    guard sample(first.tail(), first.tail_port()) is Some(first_tail) else {
+      true
+    }
+    let second_tail = sample(second.tail(), second.tail_port()).unwrap_or({
+      x: 0.0,
+      y: 0.0,
+    })
+    first_tail == second_tail
+  }
+}
+
+///|
 pub fn edge_port_offset(
   node_name : String,
   port : @cgraph.Port?,
@@ -79,6 +199,16 @@ pub fn edge_port_offset(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
+  // Named field geometry needs compass displacement in layout coordinates.
+  // Compass-only ports retain the shape-specific sampling path below.
+  if port is Some({ name: Some(name), .. }) &&
+    offsets.get(node_name) is Some(node_offsets) &&
+    node_offsets.get(name) is Some(_) &&
+    nodes_by_name.get(node_name) is Some(node) {
+    return initial_port_point(node, port, offsets, sizes, rankdir).map_or(0.0, point => {
+      point.x
+    })
+  }
   sample_edge_port_offset(node_name, port, offsets, compass => {
     sample_compass_port_offset(
       compass,

@@ -176,7 +176,7 @@ pub(all) struct RouteBaseDeps {
   record_border_adjust : (@cgraph.Node) -> Double
   dynamic_port_anchor_for_edge : (@cgraph.Port?, String, @geom.Point, @geom.Point, @rankdir.RankDir, Double) -> RouteDynamicPortAnchor
   port_side_mask_from_anchor : (@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
-  port_side_for_edge : (@cgraph.Port?, @geom.Rect?, @geom.Point, @node_primitives.NodeSize) -> Int
+  port_side_for_edge : (String, @cgraph.Port?, @geom.Rect?, @geom.Point, @node_primitives.NodeSize) -> Int
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point
   node_cluster_key : (@cgraph.Node) -> String
   node_local_cluster_key : (@cgraph.Node) -> String

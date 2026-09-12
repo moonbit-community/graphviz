@@ -481,10 +481,9 @@ fn push_slack_segment(
 }
 
 ///|
-/// Graphviz parity: conc.c's merge_oneway accumulates equivalent live
-/// normal-to-virtual and virtual-to-normal fast edges before position.c
-/// creates their slack-node pairs. Virtual-to-virtual segments stay distinct:
-/// they still participate in the retained chain topology.
+/// Graphviz parity: conc.c's mergevirtual reuses a fast edge with the same
+/// endpoints and merge_oneway accumulates its weight before make_edge_pairs.
+/// This also applies when both endpoints are retained virtual nodes.
 fn coalesce_concentrated_segments(
   segments_by_tail : Map[String, Array[SlackSegment]],
 ) -> Map[String, Array[SlackSegment]] {
@@ -495,17 +494,11 @@ fn coalesce_concentrated_segments(
     for segment in segments {
       let has_virtual_endpoint = @edge_identity.is_edge_vnode_name(segment.tail) ||
         @edge_identity.is_edge_vnode_name(segment.head)
-      let is_virtual_to_virtual = @edge_identity.is_edge_vnode_name(
-          segment.tail,
-        ) &&
-        @edge_identity.is_edge_vnode_name(segment.head)
       if index_by_head.get(segment.head) is Some(index) {
         let representative = coalesced[index]
         let is_concentrated_pair = representative.concentrated_absorbed ||
           segment.concentrated_absorbed
-        if has_virtual_endpoint &&
-          !is_virtual_to_virtual &&
-          is_concentrated_pair {
+        if has_virtual_endpoint && is_concentrated_pair {
           coalesced[index] = {
             tail: representative.tail,
             head: representative.head,
@@ -700,6 +693,7 @@ fn ordered_vnodes_for_ranks(
 fn build_node_degrees(
   edges : Array[@cgraph.Edge],
   edge_degree_increment : (@cgraph.Edge) -> Int,
+  cluster_keys : Map[String, String],
 ) -> Map[String, Int] {
   let node_degrees : Map[String, Int] = Map([])
   for edge in edges {
@@ -710,6 +704,14 @@ fn build_node_degrees(
     node_degrees[tail_name] = tail_degree + inc
     let head_degree = node_degrees.get(head_name).unwrap_or_default()
     node_degrees[head_name] = head_degree + inc
+  }
+  // Cluster-internal chains are weighted after another class2 pass. Boundary
+  // chains retain the ordinary skeleton endpoint's weight when remapped to
+  // their real endpoint; neither case gets singleton amplification.
+  for name, cluster in cluster_keys {
+    if cluster != "" && node_degrees.get(name) is Some(1) {
+      node_degrees[name] = 2
+    }
   }
   node_degrees
 }
@@ -733,20 +735,14 @@ fn same_rank_constraint_minlen(
   right : String,
   nodesep_pt : Double,
   sizes : Map[String, @node_primitives.NodeSize],
-  has_ordering : Bool,
+  has_edge_labels : Bool,
 ) -> Int {
   let width = node_side_pt(left, sizes, false) +
     node_side_pt(right, sizes, true)
-  let mut minlen_value = Double::from_int(@edge_semantics.edge_minlen(edge)) *
+  let minlen_value = Double::from_int(@edge_semantics.edge_minlen(edge)) *
+    (if has_edge_labels { 2.0 } else { 1.0 }) *
     nodesep_pt +
     width
-  let is_invis = match edge.get_attr("style") {
-    Some(style) => style.to_lower().contains("invis")
-    None => false
-  }
-  if is_invis && has_ordering {
-    minlen_value = minlen_value + nodesep_pt
-  }
   @numeric.trunc_int(minlen_value)
 }
 
@@ -755,23 +751,69 @@ fn same_rank_constraint_minlen(
 /// ND_out/ND_nlist order, including reverse-merge handling and same-rank flats.
 fn build_constraint_segment_pass(
   input : ConstraintSegmentPassInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintSegmentPassOutput {
   let node_degrees = build_node_degrees(
     input.edges,
     input.edge_degree_increment,
+    input.cluster_keys,
   )
-  let reverse_merge_metadata = build_reverse_merge_metadata({
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    edge_excluded_from_reverse_merge: edge => {
-      (input.edge_has_mid_label)(edge) || @edge_semantics.edge_is_self(edge)
+  let port_nodes : Array[@cgraph.Node] = []
+  let port_node_seen : Map[String, Bool] = Map([])
+  for edge in input.edges {
+    for node in [edge.tail(), edge.head()] {
+      guard port_node_seen.get(node.name()) is None else { continue }
+      port_node_seen[node.name()] = true
+      port_nodes.push(node)
+    }
+  }
+  let edge_ports_equal = @ports.build_initial_edge_port_comparator(
+    port_nodes,
+    Map([]),
+  )
+  let parallel_merge_metadata = @order_graph.build_parallel_merge_metadata(
+    input.edges,
+    input.ranks,
+    input.cluster_keys,
+    edge_ports_equal,
+  )
+  let reverse_merge_metadata = @order_graph.build_reverse_merge_metadata(
+    {
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_excluded_from_reverse_merge: edge => {
+        (input.edge_has_mid_label)(edge) || @edge_semantics.edge_is_self(edge)
+      },
+      edge_ports_equal,
     },
-  })
+    initial_metadata=parallel_merge_metadata,
+  )
   let merged_edge_weight_bonus = reverse_merge_metadata.merged_edge_weight_bonus
   let merged_edge_skip = reverse_merge_metadata.merged_edge_skip
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map([])
   let flat_minlen_constraints : Map[String, ConstraintEdge] = Map([])
+  // class2 merges same-direction flat multi-edges with merge_oneway before
+  // make_LR_constraints reads their accumulated weight.
+  let flat_weights : Map[String, Int] = Map([])
+  for edge in input.edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    guard tail != head && input.ranks.get(tail) == input.ranks.get(head) else {
+      continue
+    }
+    let key = "\{tail}|\{head}"
+    flat_weights[key] = flat_weights.get(key).unwrap_or_default() +
+      @edge_semantics.edge_weight(edge)
+  }
+  // rank.c reserves label ranks by doubling every input edge's minlen.
+  let has_edge_labels = for edge in input.edges {
+    if edge.get_attr("label").unwrap_or_default() != "" {
+      break true
+    }
+  } nobreak {
+    false
+  }
   for_each_edge_index_in_tail_order(
     input.edges,
     input.edge_out_order,
@@ -805,9 +847,10 @@ fn build_constraint_segment_pass(
               .unwrap_or_default()
             let has_ordering = edge_tail_ordering_is_out_or_in(edge)
             let has_mid_label = (input.edge_has_mid_label)(edge)
-            if tail_rank == head_rank &&
-              @edge_semantics.edge_is_constraint(edge) &&
-              !has_mid_label {
+            let has_label_chain = input.edge_vnodes
+              .get(@edge_identity.edge_vnode_key(edge))
+              .map_or(false, names => !names.is_empty())
+            if tail_rank == head_rank && (!has_mid_label || !has_label_chain) {
               let (left, right) = choose_flat_constraint_endpoints(
                 tail_name,
                 head_name,
@@ -819,9 +862,11 @@ fn build_constraint_segment_pass(
                 right,
                 input.nodesep_pt,
                 input.sizes,
-                has_ordering,
+                has_edge_labels,
               )
-              let weight = @edge_semantics.edge_weight(edge)
+              let weight = flat_weights
+                .get("\{edge.tail().name()}|\{edge.head().name()}")
+                .unwrap_or(@edge_semantics.edge_weight(edge))
               let flat_key = "\{left}|\{right}"
               if input.rank_adj_constraints.get(flat_key) is Some(_) {
                 upsert_constraint_with_max(
@@ -838,6 +883,12 @@ fn build_constraint_segment_pass(
                 )
               }
             } else {
+              // The retained fast graph owns all rank-to-rank segments after
+              // concentration. Rebuilding original chains loses transferred
+              // weights and resurrects edges removed by mergevirtual.
+              if live_graph is Some(_) && tail_rank != head_rank {
+                return ()
+              }
               let vnodes = input.edge_vnodes
                 .get(@edge_identity.edge_vnode_key(edge))
                 .unwrap_or_default()
@@ -920,10 +971,17 @@ fn build_constraint_segment_pass(
                     })
                   }
                 }
-                push_slack_segment(
-                  segments_by_tail, seg_tail, seg_head, weight, tail_port, head_port,
-                  concentrated_absorbed,
-                )
+                if tail_rank > head_rank {
+                  push_slack_segment(
+                    segments_by_tail, seg_head, seg_tail, weight, head_port, tail_port,
+                    concentrated_absorbed,
+                  )
+                } else {
+                  push_slack_segment(
+                    segments_by_tail, seg_tail, seg_head, weight, tail_port, head_port,
+                    concentrated_absorbed,
+                  )
+                }
               }
             }
           }
@@ -931,7 +989,35 @@ fn build_constraint_segment_pass(
       }
     },
   )
-  let output_segments_by_tail = if graphviz_concentrate_enabled(input.edges) {
+  if live_graph is Some(fast) {
+    for _, indices in fast.outgoing {
+      for index in indices {
+        let edge = fast.edges[index]
+        if input.skip_intercluster {
+          let tail_cluster = input.cluster_keys
+            .get(edge.tail)
+            .unwrap_or_default()
+          let head_cluster = input.cluster_keys
+            .get(edge.head)
+            .unwrap_or_default()
+          if tail_cluster != head_cluster {
+            continue
+          }
+        }
+        push_slack_segment(
+          segments_by_tail,
+          edge.tail,
+          edge.head,
+          edge.weight,
+          edge.tail_port,
+          edge.head_port,
+          false,
+        )
+      }
+    }
+  }
+  let output_segments_by_tail = if live_graph is None &&
+    @order_graph.graphviz_concentrate_enabled(input.edges) {
     coalesce_concentrated_segments(segments_by_tail)
   } else {
     segments_by_tail
@@ -995,7 +1081,8 @@ fn add_root_boundary_target_edges(input : RootBoundaryTargetEdgesInput) -> Unit 
   for name in input.target_names {
     match input.index.get(name) {
       Some(idx) => {
-        let minlen = if input.compress_mode {
+        let minlen = if input.compress_mode &&
+          !@cluster_identity.is_cluster_boundary_name(name) {
           if input.is_left_boundary {
             @numeric.round_int(
               @node_primitives.node_left_pt(name, input.sizes) +
@@ -1048,10 +1135,37 @@ priv struct RootBoundaryConstraintsInput {
 }
 
 ///|
-/// Graphviz parity: root boundary links mirror contain_nodes/create_aux_edges
-/// order and include the optional compress edge when size=... is active.
-fn add_root_boundary_constraints(input : RootBoundaryConstraintsInput) -> Unit {
+/// Box containment and sibling separation connect like boundaries or a
+/// right boundary to a left boundary; compaction connects left to right.
+fn is_cluster_box_relation(edge : ConstraintEdge) -> Bool {
+  @cluster_identity.is_cluster_boundary_name(edge.tail) &&
+  @cluster_identity.is_cluster_boundary_name(edge.head) &&
+  (
+    !@cluster_identity.is_cluster_left_boundary_name(edge.tail) ||
+    @cluster_identity.is_cluster_left_boundary_name(edge.head)
+  )
+}
+
+///|
+fn add_root_boundary_constraints(
+  input : RootBoundaryConstraintsInput,
+  extra_edges? : Array[ConstraintEdge] = [],
+) -> Unit {
+  // pos_clusters emits node containment/compaction and keepout first.
+  // Left->left/right->right containment and right->left sibling links
+  // belong to the later box-relation passes; left->right is compaction.
+  for edge in extra_edges {
+    guard !is_cluster_box_relation(edge) else { continue }
+    add_constraint_edge_if_present(input.graph, input.index, edge)
+  }
+  let add_box_relations = () => {
+    for edge in extra_edges {
+      guard is_cluster_box_relation(edge) else { continue }
+      add_constraint_edge_if_present(input.graph, input.index, edge)
+    }
+  }
   if input.root_ln_targets.length() == 0 && input.root_rn_targets.length() == 0 {
+    add_box_relations()
     return ()
   }
   let root_ln = @network_simplex.add_node(
@@ -1067,7 +1181,7 @@ fn add_root_boundary_constraints(input : RootBoundaryConstraintsInput) -> Unit {
   @network_simplex.set_node_rank(input.graph, root_ln, 0)
   @network_simplex.set_node_rank(input.graph, root_rn, 0)
   let compress_mode = input.compress_width_minlen is Some(_)
-  add_root_boundary_target_edges({
+  let left_targets : RootBoundaryTargetEdgesInput = {
     graph: input.graph,
     index: input.index,
     target_names: input.root_ln_targets,
@@ -1076,8 +1190,8 @@ fn add_root_boundary_constraints(input : RootBoundaryConstraintsInput) -> Unit {
     root_margin: input.root_margin,
     compress_mode,
     is_left_boundary: true,
-  })
-  add_root_boundary_target_edges({
+  }
+  let right_targets : RootBoundaryTargetEdgesInput = {
     graph: input.graph,
     index: input.index,
     target_names: input.root_rn_targets,
@@ -1086,19 +1200,34 @@ fn add_root_boundary_constraints(input : RootBoundaryConstraintsInput) -> Unit {
     root_margin: input.root_margin,
     compress_mode,
     is_left_boundary: false,
-  })
-  match input.compress_width_minlen {
-    Some(width_minlen) => {
-      let _ = @network_simplex.add_edge(
-        input.graph,
-        root_ln,
-        root_rn,
-        width_minlen,
-        input.root_compress_weight,
-      )
-    }
-    None => ()
   }
+  // contain_subclust runs during pos_clusters. Ordinary rank endpoints
+  // belong to contain_nodes(root), called later by compress_graph.
+  for targets in [left_targets, right_targets] {
+    add_root_boundary_target_edges({
+      ..targets,
+      target_names: targets.target_names.filter(name => {
+        !compress_mode || @cluster_identity.is_cluster_boundary_name(name)
+      }),
+    })
+  }
+  add_box_relations()
+  guard input.compress_width_minlen is Some(width_minlen) else { return }
+  for targets in [left_targets, right_targets] {
+    add_root_boundary_target_edges({
+      ..targets,
+      target_names: targets.target_names.filter(name => {
+        !@cluster_identity.is_cluster_boundary_name(name)
+      }),
+    })
+  }
+  let _ = @network_simplex.add_edge(
+    input.graph,
+    root_ln,
+    root_rn,
+    width_minlen,
+    input.root_compress_weight,
+  )
 }
 
 ///|
@@ -1141,6 +1270,7 @@ pub(all) struct ConstraintGraphBuildOutput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_constraint_graph(
   input : ConstraintGraphBuildInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintGraphBuildOutput {
   let graph = @network_simplex.new_graph()
   let skip_intercluster = @env.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS")
@@ -1169,22 +1299,40 @@ fn build_constraint_graph(
   )
   let rank_adj_constraints = rank_constraint_seed.rank_adj_constraints
   let rank_adj_order = rank_constraint_seed.rank_adj_order
-  let segment_pass = build_constraint_segment_pass({
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    edge_out_order: input.edge_out_order,
-    nlist_order: input.nlist_order,
-    ranks: input.ranks,
-    cluster_keys: input.cluster_keys,
-    edge_vnodes: input.edge_vnodes,
-    order_in_rank: rank_constraint_seed.order_in_rank,
-    nodesep_pt: input.nodesep_pt,
-    sizes: input.sizes,
-    skip_intercluster,
-    rank_adj_constraints,
-    edge_has_mid_label: input.edge_has_mid_label,
-    edge_degree_increment: input.edge_degree_increment,
+  let segment_pass = build_constraint_segment_pass(
+    {
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_out_order: input.edge_out_order,
+      nlist_order: input.nlist_order,
+      ranks: input.ranks,
+      cluster_keys: input.cluster_keys,
+      edge_vnodes: input.edge_vnodes,
+      order_in_rank: rank_constraint_seed.order_in_rank,
+      nodesep_pt: input.nodesep_pt,
+      sizes: input.sizes,
+      skip_intercluster,
+      rank_adj_constraints,
+      edge_has_mid_label: input.edge_has_mid_label,
+      edge_degree_increment: input.edge_degree_increment,
+    },
+    live_graph~,
+  )
+  // make_LR_constraints tightens an existing adjacent-node edge with the
+  // largest flat label; it does not add a parallel constraint edge.
+  let remaining_extra_edges = input.extra_edges.filter(edge => {
+    let key = "\{edge.tail}|\{edge.head}"
+    guard rank_adj_constraints.get(key) is Some(_) else { return true }
+    upsert_constraint_with_max(
+      rank_adj_constraints,
+      key,
+      edge.tail,
+      edge.head,
+      edge.minlen,
+      edge.weight,
+    )
+    false
   })
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
@@ -1209,20 +1357,18 @@ fn build_constraint_graph(
     index,
     late_extra_nodes: node_setup.late_extra_nodes,
   })
-  add_root_boundary_constraints({
-    graph,
-    index,
-    root_ln_targets: input.root_ln_targets,
-    root_rn_targets: input.root_rn_targets,
-    sizes: input.sizes,
-    root_margin: input.root_margin,
-    compress_width_minlen: input.compress_width_minlen,
-    root_compress_weight: input.root_compress_weight,
-  })
-  for edge in input.extra_edges {
-    let _ = edge.tail_port
-    let _ = edge.head_port
-    add_constraint_edge_if_present(graph, index, edge)
-  }
+  add_root_boundary_constraints(
+    {
+      graph,
+      index,
+      root_ln_targets: input.root_ln_targets,
+      root_rn_targets: input.root_rn_targets,
+      sizes: input.sizes,
+      root_margin: input.root_margin,
+      compress_width_minlen: input.compress_width_minlen,
+      root_compress_weight: input.root_compress_weight,
+    },
+    extra_edges=remaining_extra_edges,
+  )
   { graph, index, }
 }

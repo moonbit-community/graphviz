@@ -3,6 +3,27 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "record_ports resolves repeated names to the first depth-first field" {
+  reset_record_layout_caches()
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=record]; repeated [label=\"{<same>first|middle}|<same>last\"]; }",
+  )
+  let orientation = @layout_prep.record_layout_orientation(
+    @rankdir.graph_rankdir(graph),
+  )
+  let node = graph.node("repeated")
+  let size = @node_geometry.node_size(node, orientation)
+  let position = @geom.Point::{ x: 0.0, y: 0.0, }
+  let rects = record_rects(node, position, size, orientation)
+  let ports = record_ports(node, position, size, orientation)
+  guard ports.get("same") is Some(port) else {
+    @test.fail("missing repeated port")
+  }
+  @test.assert_eq(port.center.x, (rects[0].llx + rects[0].urx) / 2.0)
+  @test.assert_eq(port.center.y, (rects[0].lly + rects[0].ury) / 2.0)
+}
+
+///|
 test "record_ports include nested port names" {
   reset_record_layout_caches()
   let graph = @dot_parser.parse_dot(
@@ -106,75 +127,4 @@ test "record_port_path_box expands an explicit field port to the full field lane
   )
   assert_true(left_box.urx < 0.0)
   assert_true(right_box.llx > 0.0)
-}
-
-///|
-test "record_port_padding_y tracks explicit top and bottom label ports" {
-  reset_record_layout_caches()
-  let graph = @dot_parser.parse_dot(
-    "digraph { rankdir=LR; node [shape=record]; padding_record [label=\"<top>t|<mid>m|<bot>b\"]; up; down; up -> padding_record:top; padding_record:bot -> down; }",
-  )
-  let orientation = @layout_prep.record_layout_orientation(
-    @rankdir.graph_rankdir(graph),
-  )
-  let node = graph.node("padding_record")
-  let size = @node_geometry.node_size(node, orientation)
-  let ports = record_ports(node, { x: 0.0, y: 0.0, }, size, orientation)
-  let positions : Map[String, @geom.Point] = Map([])
-  positions["padding_record"] = { x: 0.0, y: 0.0, }
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
-  label_ports_map["padding_record"] = ports
-
-  let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)
-
-  assert_true(padding.above > 0.0)
-  assert_true(padding.below > 0.0)
-}
-
-///|
-test "record_port_padding_y ignores an interior record field" {
-  let graph = @dot_parser.parse_dot(
-    "digraph { node [shape=record]; source; target; source -> target:interior; }",
-  )
-  let target = graph.node("target")
-  let positions : Map[String, @geom.Point] = { "target": { x: 0.0, y: 0.0, } }
-  let ports : Map[String, RecordPort] = {
-    "interior": {
-      center: { x: 0.0, y: 20.0, },
-      size: @node_primitives.node_size_from_points(20.0, 100.0),
-      sides: @port_geometry.PORT_SIDE_LEFT | @port_geometry.PORT_SIDE_RIGHT,
-    },
-  }
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
-  label_ports_map[target.name()] = ports
-
-  let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)
-
-  assert_eq(padding.above, 0.0)
-  assert_eq(padding.below, 0.0)
-}
-
-///|
-test "record_port_padding_y ignores self-edge record ports" {
-  let graph = @dot_parser.parse_dot(
-    "digraph { node [shape=record]; a [label=\"<p>a|b\"]; a:p -> a; }",
-  )
-  let node = graph.node("a")
-  let positions : Map[String, @geom.Point] = { "a": { x: 0.0, y: 0.0, } }
-  let ports : Map[String, RecordPort] = {
-    "p": {
-      center: { x: -10.0, y: 0.0, },
-      size: @node_primitives.node_size_from_points(20.0, 30.0),
-      sides: @port_geometry.PORT_SIDE_LEFT |
-      @port_geometry.PORT_SIDE_TOP |
-      @port_geometry.PORT_SIDE_BOTTOM,
-    },
-  }
-  let label_ports_map : Map[String, Map[String, RecordPort]] = Map([])
-  label_ports_map[node.name()] = ports
-
-  let padding = record_port_padding_y(graph.edges(), positions, label_ports_map)
-
-  assert_eq(padding.above, 0.0)
-  assert_eq(padding.below, 0.0)
 }

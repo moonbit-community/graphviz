@@ -15,6 +15,16 @@ fn assert_double_close(
 }
 
 ///|
+test "decimal rounding distinguishes binary values on either side of a tie" {
+  @test.assert_eq(round_to(1232.65, 1), 1232.7)
+  @test.assert_eq(round_to(1232.6499999999999, 1), 1232.6)
+  @test.assert_eq(round_to(-1232.65, 1), -1232.7)
+  @test.assert_eq(round_to(2.675, 2), 2.67)
+  @test.assert_eq(round_to(1.25, 1), 1.2)
+  @test.assert_eq(round_to(1.75, 1), 1.8)
+}
+
+///|
 test "dot format helpers keep graphviz-like numeric strings" {
   assert_eq(trim_trailing_zeros("12.3400"), "12.34")
   assert_eq(trim_trailing_zeros("42"), "42")

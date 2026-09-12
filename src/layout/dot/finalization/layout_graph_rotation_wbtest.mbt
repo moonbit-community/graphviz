@@ -3,6 +3,20 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "single cluster LR finalization rotates without an extra reflection" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster = graph.subgraph(name="cluster_a")
+  let node = cluster.node("a")
+  let layout = transform_make_layout_tree(
+    graph,
+    { llx: 0.0, lly: 0.0, urx: 80.0, ury: 100.0, },
+    nodes=[transform_make_node_layout(node, { x: 20.0, y: 30.0, }, 1.0, 0.5)],
+  )
+  let rotated = rotate_final_layout(RankDir::LR, { layout, })
+  @test.assert_eq(rotated.nodes[0].pos, { x: 70.0, y: 20.0, })
+}
+
+///|
 test "rotate_layout_graph maps layout payloads through LR coordinates" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let cluster = graph.subgraph(name="cluster_0")

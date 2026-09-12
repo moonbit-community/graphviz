@@ -136,15 +136,9 @@ fn build_flat_rank_constraints(
 
 ///|
 /// Graphviz parity: GD_nlist follows decompose DFS order over fast graph
-/// edges, with optional creation-order reverse debug/flip override.
-/// Do not change behavior without updating fixtures/tests.
-fn build_gdnlist_order(
-  class2_data : OrderingClass2Data,
-  graphviz_flip : Bool,
-  cluster_order : Array[String],
-) -> Array[String] {
-  if @env.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
-    (graphviz_flip && cluster_order.length() > 1) {
+/// edges, with an optional creation-order reverse debug override.
+fn build_gdnlist_order(class2_data : OrderingClass2Data) -> Array[String] {
+  if @env.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) {
     let reversed_creation_order : Array[String] = []
     let mut creation_idx = class2_data.creation_order.length()
     while creation_idx > 0 {
@@ -153,7 +147,7 @@ fn build_gdnlist_order(
     }
     reversed_creation_order
   } else {
-    class2_data.nlist_order
+    class2_data.nlist_order.copy()
   }
 }
 
@@ -317,11 +311,7 @@ pub fn build_ordering_reorder_setup_from_sources(
     flat_rank_constraints,
     graphviz_flip,
   )
-  let gdnlist_order = build_gdnlist_order(
-    class2_data,
-    graphviz_flip,
-    sources.cluster_order,
-  )
+  let gdnlist_order = build_gdnlist_order(class2_data)
   let nlist_order_index : Map[String, Int] = Map([])
   let mut nlist_idx = 0
   for name in class2_data.nlist_order {

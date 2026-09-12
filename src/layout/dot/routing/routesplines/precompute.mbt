@@ -7,7 +7,7 @@
 /// global left/right pathplan bounds.
 
 ///|
-pub struct PathAdjacency {
+pub(all) struct PathAdjacency {
   out_edges : Map[String, Array[String]]
   in_edges : Map[String, Array[String]]
 }
@@ -20,6 +20,7 @@ pub fn build_path_adjacency(
   edge_vnodes : Map[String, Array[String]],
   edge_tail : Array[String],
   edge_head : Array[String],
+  ranks? : Map[String, Int] = {},
 ) -> PathAdjacency {
   let out_edges : Map[String, Array[String]] = Map([])
   let in_edges : Map[String, Array[String]] = Map([])
@@ -31,6 +32,12 @@ pub fn build_path_adjacency(
       None => []
     }
     let (tail, head) = edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let (tail, head) = if ranks.get(tail).unwrap_or_default() >
+      ranks.get(head).unwrap_or_default() {
+      (head, tail)
+    } else {
+      (tail, head)
+    }
     let path_nodes : Array[String] = []
     path_nodes.push(tail)
     for name in vnodes {

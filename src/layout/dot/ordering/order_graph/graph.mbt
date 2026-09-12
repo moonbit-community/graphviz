@@ -103,10 +103,12 @@ pub fn order_edge_merge_key(
   tail : String,
   head : String,
   constraint : Bool,
+  tail_port_x : Double,
+  head_port_x : Double,
   tail_port_order : Double,
   head_port_order : Double,
 ) -> String {
-  "\{tail}|\{head}|\{constraint}|\{tail_port_order.to_string()}|\{head_port_order.to_string()}"
+  "\{tail}|\{head}|\{constraint}|\{tail_port_x}|\{head_port_x}|\{tail_port_order}|\{head_port_order}"
 }
 
 ///|
@@ -115,6 +117,7 @@ pub fn order_edge_merge_key(
 /// Do not change behavior without updating fixtures/tests.
 fn coalesce_order_edges_for_tail(
   entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  should_merge : (String, String) -> Bool,
 ) -> Array[(String, String, Int, Bool, Double, Double, Double, Double)] {
   let coalesced : Array[
     (String, String, Int, Bool, Double, Double, Double, Double),
@@ -131,8 +134,12 @@ fn coalesce_order_edges_for_tail(
       tail_port_order,
       head_port_order,
     ) = entry
+    guard should_merge(tail, head) else {
+      coalesced.push(entry)
+      continue
+    }
     let key = order_edge_merge_key(
-      tail, head, constraint, tail_port_order, head_port_order,
+      tail, head, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order,
     )
     match key_index.get(key) {
       Some(rep_index) =>
@@ -188,6 +195,7 @@ pub fn coalesce_order_edges_by_tail(
     String,
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
   ],
+  should_merge? : (String, String) -> Bool = (_, _) => true,
 ) -> Map[
   String,
   Array[(String, String, Int, Bool, Double, Double, Double, Double)],
@@ -197,7 +205,7 @@ pub fn coalesce_order_edges_by_tail(
     Array[(String, String, Int, Bool, Double, Double, Double, Double)],
   ] = Map([])
   for tail_name, entries in order_edges_by_tail {
-    coalesced[tail_name] = coalesce_order_edges_for_tail(entries)
+    coalesced[tail_name] = coalesce_order_edges_for_tail(entries, should_merge)
   }
   coalesced
 }

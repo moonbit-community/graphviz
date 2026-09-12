@@ -420,6 +420,7 @@ pub(all) struct BuildOrderingPipelineContextSources {
 /// Graphviz parity: ordering stage result keeps reordered rank groups, vnode
 /// metadata, and derived edge-order snapshots grouped for downstream stages.
 pub(all) struct OrderingResult {
+  live_graph : ConcentrateFastGraph?
   ordered_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   vnode_info : EdgeVnodeInfo
@@ -499,6 +500,7 @@ pub fn build_ordering_result_from_pipeline_context(
   ordered_groups_with_vnodes : Map[Int, Array[String]],
 ) -> OrderingResult {
   {
+    live_graph: None,
     ordered_groups,
     ordered_groups_with_vnodes,
     vnode_info: pipeline_context.runtime_context.vnode_info,

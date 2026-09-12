@@ -20,8 +20,6 @@ pub fn record_nodes(String) -> Array[RecordNode]
 
 pub fn record_nodes_sizes(Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> Array[@numeric.GraphSizePt]
 
-pub fn record_port_padding_y(Array[@cgraph.Edge], Map[String, @geom.Point], Map[String, Map[String, @record_geometry.RecordPort]]) -> RecordPortPaddingY
-
 pub fn record_port_path_box(@cgraph.Node, @cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @rankdir.RankDir) -> @geom.Rect?
 
 pub fn record_ports(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
@@ -48,11 +46,6 @@ pub(all) enum RecordNode {
 pub(all) struct RecordParser {
   chars : Array[Char]
   mut index : Int
-}
-
-pub(all) struct RecordPortPaddingY {
-  below : Double
-  above : Double
 }
 
 // Type aliases

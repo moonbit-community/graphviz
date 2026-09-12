@@ -111,7 +111,7 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
 
   assert_eq(build.graph.edges[0].tail, a_idx)
   assert_eq(build.graph.edges[0].head, b_idx)
-  assert_eq(build.graph.edges[0].minlen, 40)
+  assert_eq(build.graph.edges[0].minlen, 30)
   assert_eq(build.graph.edges[0].weight, 7)
 
   assert_eq(build.graph.edges[1].tail, 4)
@@ -132,17 +132,17 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
   assert_eq(build.graph.edges[4].minlen, 1)
   assert_eq(build.graph.edges[4].weight, 10)
 
-  assert_eq(build.graph.edges[5].tail, 7)
-  assert_eq(build.graph.edges[5].head, a_idx)
-  assert_eq(build.graph.edges[5].minlen, 3)
-  assert_eq(build.graph.edges[5].weight, 0)
-  assert_eq(build.graph.edges[6].tail, c_idx)
-  assert_eq(build.graph.edges[6].head, 8)
+  assert_eq(build.graph.edges[5].tail, boundary_idx)
+  assert_eq(build.graph.edges[5].head, b_idx)
+  assert_eq(build.graph.edges[5].minlen, 9)
+  assert_eq(build.graph.edges[5].weight, 13)
+  assert_eq(build.graph.edges[6].tail, 7)
+  assert_eq(build.graph.edges[6].head, a_idx)
   assert_eq(build.graph.edges[6].minlen, 3)
   assert_eq(build.graph.edges[6].weight, 0)
 
-  assert_eq(build.graph.edges[7].tail, boundary_idx)
-  assert_eq(build.graph.edges[7].head, b_idx)
-  assert_eq(build.graph.edges[7].minlen, 9)
-  assert_eq(build.graph.edges[7].weight, 13)
+  assert_eq(build.graph.edges[7].tail, c_idx)
+  assert_eq(build.graph.edges[7].head, 8)
+  assert_eq(build.graph.edges[7].minlen, 3)
+  assert_eq(build.graph.edges[7].weight, 0)
 }

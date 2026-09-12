@@ -1,6 +1,5 @@
 import {
   "moonbit-community/graphviz/attrs",
   "moonbit-community/graphviz/cgraph",
-  "moonbit-community/graphviz/layout/html" @html_label,
   "moonbit-community/graphviz/layout/dot/numeric",
 }

@@ -132,6 +132,7 @@ pub(all) struct RouteBaseDeps {
     @node_primitives.NodeSize,
   ) -> Int
   port_side_for_edge : (
+    String,
     @cgraph.Port?,
     @geom.Rect?,
     @geom.Point,

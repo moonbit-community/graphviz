@@ -13,3 +13,7 @@ import {
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/runtime_flags",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

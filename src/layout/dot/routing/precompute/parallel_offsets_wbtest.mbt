@@ -3,6 +3,54 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "concentrated cluster copies advance from the negative main edge offset" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  graph.set_attr("concentrate", "true")
+  let a = graph.subgraph(name="cluster_a").node("a")
+  let b = graph.node("b")
+  let first = graph.edge(a, b)
+  let second = graph.edge(a, b)
+  let offsets = build_edge_parallel_offsets({
+    edges: [first, second],
+    edge_has_label_by_id: {},
+    ranks: { "a": 0, "b": 1 },
+    nodesep_pt: 18.0,
+    edge_reversed_by_id: {},
+    cluster_keys: { "a": "cluster_a" },
+    concentrated_ignored_edge_ids: {},
+  })
+  @test.assert_eq(offsets[first.id()], -9.0)
+  @test.assert_eq(offsets[second.id()], 9.0)
+}
+
+///|
+test "precreated forward chains survive concentrated filtering without offsets" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  graph.set_attr("concentrate", "true")
+  let high = graph.node("high")
+  let low = graph.node("low")
+  let backward = graph.edge(high, low)
+  backward.set_attr("label", "backward")
+  let first = graph.edge(low, high)
+  let second = graph.edge(low, high)
+  let edges = [backward, first, second]
+  let ranks : Map[String, Int] = { "low": 0, "high": 1 }
+  let ignored = collect_concentrated_edge_ids(edges, ranks, true)
+  @test.assert_eq(ignored.length(), 0)
+  let (_, labels) = collect_parallel_offset_edge_flags(edges, [], [])
+  let offsets = build_edge_parallel_offsets({
+    edges,
+    edge_has_label_by_id: labels,
+    ranks,
+    nodesep_pt: 18.0,
+    edge_reversed_by_id: {},
+    cluster_keys: {},
+    concentrated_ignored_edge_ids: ignored,
+  })
+  @test.assert_eq(offsets.length(), 0)
+}
+
+///|
 test "collect_parallel_offset_edge_flags respects staged orientation and labels" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
@@ -146,7 +194,7 @@ test "build_edge_parallel_offsets keeps intercluster reverse pairs in cluster-co
 }
 
 ///|
-test "concentrate keeps the first regular parallel edge as the representative" {
+test "concentrate keeps the forward regular edge as the representative" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
@@ -181,6 +229,27 @@ test "concentrate keeps the first regular parallel edge as the representative" {
   })
   assert_eq(offsets.get(forward.id()), None)
   assert_eq(offsets.get(reverse.id()), None)
+}
+
+///|
+test "concentrated opposite owner is independent of input direction order" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let low = graph.node("low")
+  let high = graph.node("high")
+  let backward = graph.edge(high, low)
+  let forward = graph.edge(low, high)
+  for edges in [[backward, forward], [forward, backward]] {
+    let ignored = collect_concentrated_edge_ids(
+      edges,
+      { "low": 0, "high": 1 },
+      true,
+    )
+    @test.assert_eq(ignored.get(forward.id()), None)
+    @test.assert_eq(ignored.get(backward.id()), Some(true))
+    mark_concentrated_reverse_representatives(edges, ignored)
+    @test.assert_eq(forward.get_attr("_concentrated_reverse"), Some("true"))
+    @test.assert_eq(backward.get_attr("_concentrated_reverse"), None)
+  }
 }
 
 ///|

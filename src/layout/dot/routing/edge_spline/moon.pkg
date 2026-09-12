@@ -3,11 +3,21 @@ import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/math",
+  "moonbitlang/core/bigint",
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"
+
+// bigint is used only by libm_non_native.mbt. Imports cannot be selected
+// per backend, so native builds intentionally leave this import unused.
+
+warnings = "-29"
 
 options(
   targets: {

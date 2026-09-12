@@ -44,7 +44,7 @@ pub fn layout_dot(
     cluster_meta,
     ordering,
   })
-  let routing_stage_output = @integration.compute_dot_routing_stage({
+  let routing_input : @integration.DotRoutingStageInput = {
     graph,
     prep,
     rank_data,
@@ -52,7 +52,11 @@ pub fn layout_dot(
     cluster_meta,
     ordering,
     positions_state,
-  })
+  }
+  let routing_stage_output = route_flat_adjacent_ports(
+    routing_input,
+    @integration.compute_dot_routing_stage(routing_input),
+  )
   dot_layout_graph_from_layout_tree(
     @finalization.finalize_layout_from_sources({
       graph,

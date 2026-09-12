@@ -18,4 +18,5 @@ import {
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot/cluster_graph",
+  "moonbitlang/core/test",
 } for "wbtest"

@@ -31,38 +31,6 @@ fn build_root_tail_order_seed(
 }
 
 ///|
-/// Graphviz parity: root tail visit order places source tails (no incoming
-/// edges) first while preserving original deduped tail sequence order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_source_first_tail_order(
-  tail_order_root : Array[String],
-  root_nodes : Array[String],
-  root_edge_creation_order : Array[(String, String)],
-) -> Array[String] {
-  let root_has_in : Map[String, Bool] = Map([])
-  for name in root_nodes {
-    root_has_in[name] = false
-  }
-  for edge in root_edge_creation_order {
-    let (_tail, head) = edge
-    if root_has_in.get(head) is Some(_) {
-      root_has_in[head] = true
-    }
-  }
-  let root_tail_order : Array[String] = []
-  let root_tail_seen : Map[String, Bool] = Map([])
-  for name in tail_order_root {
-    if root_has_in.get(name) == Some(false) {
-      @order_graph.append_creation_name(root_tail_order, root_tail_seen, name)
-    }
-  }
-  for name in tail_order_root {
-    @order_graph.append_creation_name(root_tail_order, root_tail_seen, name)
-  }
-  root_tail_order
-}
-
-///|
 /// Graphviz parity: root GD_nlist output keeps only materialized root nodes,
 /// then appends any missing root names in root_nodes order.
 /// Do not change behavior without updating fixtures/tests.
@@ -91,7 +59,7 @@ fn finalize_root_nlist_order(
 
 ///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
-/// sequence from input order, prioritizes source tails, then rebuilds nlist via
+/// sequence from input order, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_nlist_order(
@@ -110,18 +78,17 @@ fn build_root_nlist_order(
   let root_edge_creation_order = @order_graph.merge_edge_creation_sequences(
     skeleton_edge_creation, root_edge_creation,
   )
-  let root_tail_order = build_root_source_first_tail_order(
-    tail_order_root, root_nodes, root_edge_creation_order,
-  )
   let root_nlist_full = @rank_constraints.build_graphviz_nlist_order_from_edges(
-    root_tail_order, root_nodes, root_edge_creation_order, flat_rank_constraints,
+    tail_order_root, root_nodes, root_edge_creation_order, flat_rank_constraints,
   )
   finalize_root_nlist_order(root_nlist_full, root_nodes, root_node_map)
 }
 
 ///|
 /// Graphviz parity: root-vnode set for root cluster reorder includes only
-/// edge-vnodes on edges crossing cluster boundaries.
+/// edge-vnodes on edges crossing cluster boundaries and on edges whose
+/// endpoints both belong to the root graph. Only intra-cluster chains are
+/// deferred to cluster expansion.
 fn collect_root_vnodes(
   order_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],
@@ -141,7 +108,7 @@ fn collect_root_vnodes(
     )
     let tail_cluster = @order_graph.cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = @order_graph.cluster_key_or_empty(cluster_keys, head)
-    if tail_cluster != head_cluster {
+    if tail_cluster != head_cluster || tail_cluster == "" {
       let vnodes = edge_vnodes
         .get(@edge_identity.edge_vnode_key(edge))
         .unwrap_or_default()
@@ -396,8 +363,6 @@ priv struct RootReorderEdgeData {
   root_edge_head_port_x : Array[Double]
   root_edge_tail_port_order : Array[Double]
   root_edge_head_port_order : Array[Double]
-  root_parents : Map[String, Array[String]]
-  root_children : Map[String, Array[String]]
   root_edge_order : Map[String, Int]
 }
 
@@ -458,7 +423,9 @@ fn build_root_reorder_edge_data(
     root_context.root_graph,
     root_context.root_node_map,
   )
-  let normalized_root_ports = normalize_root_edge_ports(
+  let root_edges = collect_mincross_order_edges(
+    build_node_membership_set(root_context.root_nodes),
+    root_materialized.order_edges_out,
     root_materialized.order_edge_tail_out,
     root_materialized.order_edge_head_out,
     root_materialized.order_edge_tail_port_x,
@@ -466,24 +433,25 @@ fn build_root_reorder_edge_data(
     root_materialized.order_edge_tail_port_order,
     root_materialized.order_edge_head_port_order,
   )
-  let root_edge_indices = @order_graph.build_edge_indices_and_order(
-    root_context.root_nodes,
-    root_materialized.order_edge_tail_out,
-    root_materialized.order_edge_head_out,
-    root_context.root_ranks,
-    root_materialized.order_edges_out,
+  let normalized_root_ports = normalize_root_edge_ports(
+    root_edges.order_edge_tail_out_mincross,
+    root_edges.order_edge_head_out_mincross,
+    root_edges.order_edge_tail_port_x_mincross,
+    root_edges.order_edge_head_port_x_mincross,
+    root_edges.order_edge_tail_port_order_mincross,
+    root_edges.order_edge_head_port_order_mincross,
   )
   {
-    root_edges_out: root_materialized.order_edges_out,
-    root_edge_tail_out: root_materialized.order_edge_tail_out,
-    root_edge_head_out: root_materialized.order_edge_head_out,
+    root_edges_out: root_edges.order_edges_out_mincross,
+    root_edge_tail_out: root_edges.order_edge_tail_out_mincross,
+    root_edge_head_out: root_edges.order_edge_head_out_mincross,
     root_edge_tail_port_x: normalized_root_ports.edge_tail_port_x_norm,
     root_edge_head_port_x: normalized_root_ports.edge_head_port_x_norm,
     root_edge_tail_port_order: normalized_root_ports.edge_tail_port_order_norm,
     root_edge_head_port_order: normalized_root_ports.edge_head_port_order_norm,
-    root_parents: root_edge_indices.parents,
-    root_children: root_edge_indices.children,
-    root_edge_order: root_edge_indices.edge_order,
+    root_edge_order: @order_graph.collect_edge_order(
+      root_edges.order_edges_out_mincross,
+    ),
   }
 }
 
@@ -559,6 +527,18 @@ fn build_root_reorder_inputs(
   let root_edge_data = build_root_reorder_edge_data(
     root_context, order_edges_by_tail_root,
   )
+  // Replaying edges grouped by GD_nlist tail preserves ND_out order, but
+  // changes ND_in insertion order. Recover both from class2 creation order.
+  let creation = @order_graph.merge_edge_creation_sequences(
+    sources.skeleton_edge_creation,
+    sources.root_edge_creation,
+  )
+  let creation_index = @order_graph.build_edge_index_for_names(
+    root_context.root_nodes,
+    creation.map(edge => edge.0),
+    creation.map(edge => edge.1),
+    root_context.root_ranks,
+  )
   {
     root_groups: root_context.root_groups,
     root_rank_keys: root_context.root_rank_keys,
@@ -569,8 +549,16 @@ fn build_root_reorder_inputs(
     root_edge_head_port_x: root_edge_data.root_edge_head_port_x,
     root_edge_tail_port_order: root_edge_data.root_edge_tail_port_order,
     root_edge_head_port_order: root_edge_data.root_edge_head_port_order,
-    root_parents: root_edge_data.root_parents,
-    root_children: root_edge_data.root_children,
+    root_parents: project_root_neighbor_hints(
+      creation_index.parents,
+      root_edge_data.root_edge_head_out,
+      root_edge_data.root_edge_tail_out,
+    ),
+    root_children: project_root_neighbor_hints(
+      creation_index.children,
+      root_edge_data.root_edge_tail_out,
+      root_edge_data.root_edge_head_out,
+    ),
     root_edge_order: root_edge_data.root_edge_order,
     root_node_order: root_context.root_node_order,
   }
@@ -734,40 +722,6 @@ struct RootRankOrderCallInputs {
 }
 
 ///|
-fn has_multiple_non_empty_cluster_keys(
-  order_cluster_keys : Map[String, String],
-) -> Bool {
-  let seen_cluster_keys : Map[String, Bool] = Map([])
-  for _name, key in order_cluster_keys {
-    if key == "" || seen_cluster_keys.get(key) is Some(_) {
-      continue
-    }
-    seen_cluster_keys[key] = true
-    if seen_cluster_keys.length() > 1 {
-      return true
-    }
-  }
-  false
-}
-
-///|
-/// Graphviz parity: root-only graphviz_flip gating enables root flip only when
-/// capture-fixture mode is active or when at least two non-empty cluster keys
-/// exist in the current ordering key map.
-fn should_enable_root_flip(
-  graphviz_flip : Bool,
-  order_cluster_keys : Map[String, String],
-) -> Bool {
-  if !graphviz_flip {
-    return false
-  }
-  if @env.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
-    return true
-  }
-  has_multiple_non_empty_cluster_keys(order_cluster_keys)
-}
-
-///|
 fn build_root_rank_order_call_inputs(
   root_reorder_output : RootClusterReorderInputs,
   context : RootRankOrderPhaseContext,
@@ -832,6 +786,8 @@ pub fn run_root_rank_order_reorder(
     call_inputs.order_cluster_skeleton,
     call_inputs.order_flat_constraints,
     graphviz_flip=root_graphviz_flip,
+    graphviz_out_neighbors=call_inputs.root_children,
+    graphviz_in_neighbors=call_inputs.root_parents,
     coalesce_parallel_edges=true,
   )
 }
@@ -888,17 +844,13 @@ fn run_root_rank_order_phase(
   root_reorder_output : RootClusterReorderInputs,
   context : RootRankOrderPhaseContext,
 ) -> RootRankOrderPhaseOutput {
-  // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
-  // path as cluster-phase root bucket ordering, with root-flip guarding.
-  let root_graphviz_flip = should_enable_root_flip(
-    context.graphviz_flip,
-    context.order_cluster_keys,
-  )
+  // build_ranks applies GD_flip independently of the number of clusters.
   let call_inputs = build_root_rank_order_call_inputs(
     root_reorder_output, context,
   )
   let ordered_root = run_root_rank_order_reorder(
-    call_inputs, root_graphviz_flip,
+    call_inputs,
+    context.graphviz_flip,
   )
   finalize_root_rank_order_phase_output(
     call_inputs.root_rank_keys,

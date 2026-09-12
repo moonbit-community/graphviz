@@ -101,6 +101,11 @@ fn reorder_groups_by_local_cluster(
       }
       let local_sorted = local_order_in_rank.copy()
       local_sorted.sort_by((a, b) => {
+        // Child skeletons are installed before the parent's direct nodes.
+        // Do not undo that class2/build_ranks seed using parent preorder ids.
+        if a != b && (a == outer || b == outer) {
+          return if a == outer { 1 } else { -1 }
+        }
         let a_order = local_cluster_order.get(a).unwrap_or_default()
         let b_order = local_cluster_order.get(b).unwrap_or_default()
         if a_order < b_order {

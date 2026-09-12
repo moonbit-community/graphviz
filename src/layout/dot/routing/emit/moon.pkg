@@ -1,4 +1,5 @@
 import {
+  "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/layout/dot/routing/edge_ops",
   "moonbit-community/graphviz/layout/dot/routing/edge_spline",
@@ -7,6 +8,7 @@ import {
 }
 
 import {
+  "moonbitlang/core/test",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/rankdir",
 } for "wbtest"

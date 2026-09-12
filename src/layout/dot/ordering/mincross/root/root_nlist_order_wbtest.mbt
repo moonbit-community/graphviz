@@ -33,14 +33,23 @@ test "build_root_tail_order_seed replaces clustered names with rank-qualified sk
 }
 
 ///|
-test "build_root_source_first_tail_order moves source tails ahead while preserving original order within each bucket" {
-  let tail_order = build_root_source_first_tail_order(
+test "build_root_nlist_order starts DFS at the input seed even when it has incoming edges" {
+  let root_nodes = ["src1", "src2", "mid", "sink"]
+  let graph_output = @order_graph.build_order_graph_and_nodes(
+    "root_nlist_seed", root_nodes,
+  )
+  let nlist_order = build_root_nlist_order(
     ["mid", "src1", "sink", "src2"],
-    ["src1", "src2", "mid", "sink"],
+    Map([]),
+    Map([]),
+    root_nodes,
+    graph_output.order_node_map,
+    [],
     [("src1", "mid"), ("mid", "sink")],
+    Map([]),
   )
 
-  assert_eq(tail_order, ["src1", "src2", "mid", "sink"])
+  @test.assert_eq(nlist_order[0], "mid")
 }
 
 ///|

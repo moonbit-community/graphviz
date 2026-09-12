@@ -1,5 +1,4 @@
 import {
-  "moonbit-community/graphviz/layout/html" @html_label,
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/label_layout/label_attrs",
   "moonbit-community/graphviz/layout/dot/label_layout/record_layout",

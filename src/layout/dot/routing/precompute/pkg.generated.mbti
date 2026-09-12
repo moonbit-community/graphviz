@@ -7,6 +7,7 @@ import {
   "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/routing/routesplines",
 }
 
@@ -19,21 +20,31 @@ pub fn build_head_port_metrics(Array[@cgraph.Edge], Bool, (@cgraph.Edge) -> (Str
 
 pub fn build_label_edge_counts(Array[@cgraph.Edge], (@cgraph.Edge) -> Bool) -> Map[String, Int]
 
-pub fn build_routing_precompute_pipeline(RoutingPrecomputePipelineInput) -> RoutingPrecomputePipelineOutput
+pub fn build_routing_precompute_pipeline(RoutingPrecomputePipelineInput, live_graph? : @setup.ConcentrateFastGraph?) -> RoutingPrecomputePipelineOutput
+
+pub fn collect_concentrated_edge_ids(Array[@cgraph.Edge], Map[String, Int], Bool) -> Map[Int, Bool]
 
 pub fn collect_parallel_offset_edge_flags(Array[@cgraph.Edge], Array[String], Array[String]) -> (Map[Int, Bool], Map[Int, Bool])
 
 pub fn complex_tuning_enabled() -> Bool
 
-pub fn prepare_routing_context(PrepareRoutingContextInput) -> RoutingContext
+pub fn mark_absorbed_concentrated_edge_ids(Array[@cgraph.Edge], Bool, Map[Int, Bool]) -> Unit
 
-pub fn resolve_routing_port_padding(Bool, Bool, () -> (Double, Double)) -> (Double, Double)
+pub fn mark_concentrated_reverse_representatives(Array[@cgraph.Edge], Map[Int, Bool]) -> Unit
+
+pub fn prepare_routing_context(PrepareRoutingContextInput, live_graph? : @setup.ConcentrateFastGraph?) -> RoutingContext
 
 pub fn select_path_groups(Map[Int, Array[String]], Map[Int, Array[String]], Map[Int, Array[String]]) -> Map[Int, Array[String]]
 
 // Errors
 
 // Types and methods
+pub(all) struct ConcentratedSegment {
+  tail : String
+  head : String
+  vnodes : Array[String]
+}
+
 pub(all) struct HeadPortMetrics {
   head_port_counts : Map[String, Int]
   head_port_min_dist : Map[String, Double]
@@ -47,6 +58,7 @@ pub(all) struct ParallelOffsetsBuildInput {
   nodesep_pt : Double
   edge_reversed_by_id : Map[Int, Bool]
   cluster_keys : Map[String, String]
+  concentrated_ignored_edge_ids : Map[Int, Bool]
 }
 
 pub(all) struct PrepareRoutingContextInput {
@@ -65,6 +77,8 @@ pub(all) struct PrepareRoutingContextInput {
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
+  concentrate : Bool
+  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
 }
 
 pub(all) struct RoutePortGeometry {
@@ -82,7 +96,11 @@ pub(all) struct RoutingContext {
   pathplan_sizes : Map[String, @node_primitives.NodeSize]
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
+  path_vnode_origin_clusters : Map[String, (String, String)]
   parallel_offsets : Map[Int, Double]
+  concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_segments : Map[Int, Array[ConcentratedSegment]]
+  concentrated_route_order : Map[Int, Int]
   cluster_bboxes : Map[String, @geom.Rect]
 }
 
@@ -92,8 +110,6 @@ pub(all) struct RoutingPrecomputePipelineInput {
   x_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   ordered_groups : Map[Int, Array[String]]
-  port_pad_below : Double
-  port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -106,13 +122,14 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
+  concentrate : Bool
+  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
 }
 
 pub struct RoutingPrecomputePipelineOutput {
-  port_pad_below : Double
-  port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   path_groups : Map[Int, Array[String]]
+  pathplan_sizes : Map[String, @node_primitives.NodeSize]
   routing_context : RoutingContext
 }
 

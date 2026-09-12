@@ -127,6 +127,7 @@ fn edge_pathplan_polyline_core(
   splinesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
+  vnode_origin_clusters? : Map[String, (String, String)] = {},
 ) -> PathplanCoreResult? {
   let tail_cluster = cluster_key_for_name(
     path_tail_name, cluster_keys, vnode_clusters,
@@ -158,10 +159,30 @@ fn edge_pathplan_polyline_core(
   }
   let tail_max_box = match
     maximal_bbox_for_name(
-      path_tail_name, path_tail_rank, merged_positions, route_sizes, mval_route_sizes,
-      vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups, nodesep_pt,
-      splinesep_pt, left_bound, right_bound, rank_ht1, rank_ht2, tail_cluster, head_cluster,
-      path_out_edges, path_in_edges, order_index, path_tail_prev, tail_next,
+      path_tail_name,
+      path_tail_rank,
+      merged_positions,
+      route_sizes,
+      mval_route_sizes,
+      vnode_sizes,
+      cluster_keys,
+      vnode_clusters,
+      cluster_bboxes,
+      x_groups,
+      nodesep_pt,
+      splinesep_pt,
+      left_bound,
+      right_bound,
+      rank_ht1,
+      rank_ht2,
+      tail_cluster,
+      head_cluster,
+      path_out_edges,
+      path_in_edges,
+      order_index,
+      path_tail_prev,
+      tail_next,
+      origin_clusters=vnode_origin_clusters,
     ) {
     Some(box) => box
     None => return None
@@ -254,6 +275,7 @@ fn edge_pathplan_polyline_core(
         order_index,
         Some(prev_node),
         Some(next_node),
+        origin_clusters=vnode_origin_clusters,
       ) {
       Some(box) => path_boxes.push(box)
       None => ()
@@ -275,10 +297,30 @@ fn edge_pathplan_polyline_core(
   }
   let head_max_box = match
     maximal_bbox_for_name(
-      path_head_name, path_head_rank, merged_positions, route_sizes, mval_route_sizes,
-      vnode_sizes, cluster_keys, vnode_clusters, cluster_bboxes, x_groups, nodesep_pt,
-      splinesep_pt, left_bound, right_bound, rank_ht1, rank_ht2, tail_cluster, head_cluster,
-      path_out_edges, path_in_edges, order_index, head_prev, path_head_next,
+      path_head_name,
+      path_head_rank,
+      merged_positions,
+      route_sizes,
+      mval_route_sizes,
+      vnode_sizes,
+      cluster_keys,
+      vnode_clusters,
+      cluster_bboxes,
+      x_groups,
+      nodesep_pt,
+      splinesep_pt,
+      left_bound,
+      right_bound,
+      rank_ht1,
+      rank_ht2,
+      tail_cluster,
+      head_cluster,
+      path_out_edges,
+      path_in_edges,
+      order_index,
+      head_prev,
+      path_head_next,
+      origin_clusters=vnode_origin_clusters,
     ) {
     Some(box) => box
     None => return None
@@ -378,6 +420,7 @@ pub fn edge_pathplan_polyline(
   left_bound : Double,
   right_bound : Double,
   has_any_edge_label : Bool,
+  vnode_origin_clusters? : Map[String, (String, String)] = {},
 ) -> PathplanResult? {
   let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list.copy()
@@ -392,7 +435,91 @@ pub fn edge_pathplan_polyline(
     None => return None
   }
   if tail_rank == head_rank {
-    return None
+    let bounds_for = (name : String) => {
+      maximal_bbox_for_name(
+        name,
+        tail_rank,
+        merged_positions,
+        route_sizes,
+        mval_route_sizes,
+        vnode_sizes,
+        cluster_keys,
+        vnode_clusters,
+        cluster_bboxes,
+        x_groups,
+        nodesep_pt,
+        (@numeric.round_int(nodesep_pt) / 4).to_double(),
+        left_bound,
+        right_bound,
+        rank_ht1,
+        rank_ht2,
+        cluster_key_for_name(tail_name, cluster_keys, vnode_clusters),
+        cluster_key_for_name(head_name, cluster_keys, vnode_clusters),
+        path_out_edges,
+        path_in_edges,
+        order_index,
+        None,
+        // makeFlatEnd passes the flat edge as oe at both endpoints.
+        Some(head_name),
+        origin_clusters=vnode_origin_clusters,
+      )
+    }
+    guard bounds_for(tail_name) is Some(tail_bounds) else { return None }
+    guard bounds_for(head_name) is Some(head_bounds) else { return None }
+    guard merged_positions.get(tail_name) is Some(tail_pos) else { return None }
+    guard merged_positions.get(head_name) is Some(head_pos) else { return None }
+    let bottom = (tail_port_side == SIDE_BOTTOM && head_port_side != SIDE_TOP) ||
+      (head_port_side == SIDE_BOTTOM && tail_port_side != SIDE_TOP)
+    let route_side = if bottom { SIDE_BOTTOM } else { SIDE_TOP }
+    let ht2 = rank_ht2.get(tail_rank).unwrap_or(0.0)
+    let vspace = if bottom {
+      rank_y
+      .get(tail_rank + 1)
+      .map_or(ranksep_pt, y => {
+        tail_pos.y -
+        rank_ht1.get(tail_rank).unwrap_or(0.0) -
+        y -
+        rank_ht2.get(tail_rank + 1).unwrap_or(0.0)
+      })
+    } else {
+      let previous = tail_rank - (if has_any_edge_label { 2 } else { 1 })
+      rank_y
+      .get(previous)
+      .map_or(ranksep_pt, y => {
+        y - rank_ht1.get(previous).unwrap_or(0.0) - tail_pos.y - ht2
+      })
+    }
+    let tail_end = flat_endpoint_boxes(
+      tail_bounds,
+      tail_pos,
+      size_for_name(tail_name, route_sizes),
+      tail_anchor,
+      tail_port_side,
+      route_side,
+      true,
+      ranksep_pt,
+      ht2,
+      tail_port_box,
+    )
+    let head_end = flat_endpoint_boxes(
+      head_bounds,
+      head_pos,
+      size_for_name(head_name, route_sizes),
+      head_anchor,
+      head_port_side,
+      route_side,
+      false,
+      ranksep_pt,
+      ht2,
+      head_port_box,
+    )
+    return flat_corridor_route(
+      tail_end,
+      head_end,
+      route_side,
+      nodesep_pt / 2.0,
+      vspace / 2.0,
+    )
   }
   let forward = tail_rank <= head_rank
   let swap_path = !forward
@@ -409,38 +536,7 @@ pub fn edge_pathplan_polyline(
   let ordered = vnodes
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (@numeric.round_int(nodesep_pt) / 4).to_double()
-  let straight_eps = 0.01
   let label_threshold = if has_any_edge_label { 5 } else { 3 }
-  let straight_len_from = (names : Array[String], start_idx : Int) => {
-    if start_idx + 1 >= names.length() {
-      0
-    } else {
-      match merged_positions.get(names[start_idx]) {
-        Some(base) => {
-          let mut count = 0
-          let mut idx = start_idx + 1
-          while idx < names.length() {
-            let pos = match merged_positions.get(names[idx]) {
-              Some(value) => value
-              None => break
-            }
-            // Graphviz parity: straight_len checks x alignment in unflipped
-            // coords; keep the small epsilon used by the original MoonBit
-            // implementation because recovered vnode coordinates are not always
-            // integer-identical to Graphviz at this stage.
-            let aligned = Double::abs(pos.x - base.x) <= straight_eps
-            if !aligned {
-              break
-            }
-            count = count + 1
-            idx = idx + 1
-          }
-          count
-        }
-        None => 0
-      }
-    }
-  }
   let first_split_for = (names : Array[String]) => {
     let mut split_start_idx = -1
     let mut split_straight_len = 0
@@ -448,7 +544,13 @@ pub fn edge_pathplan_polyline(
     // the chain; a split can start at an interior vnode, not only the first.
     let mut start_idx = 0
     while start_idx + 1 < names.length() {
-      let straight_len = straight_len_from(names, start_idx)
+      let straight_len = straight_chain_length(
+        names[start_idx],
+        merged_positions,
+        vnode_sizes,
+        path_out_edges,
+        path_in_edges,
+      )
       if straight_len >= label_threshold {
         let sl = straight_len - 2
         if sl >= 1 {
@@ -569,6 +671,7 @@ pub fn edge_pathplan_polyline(
               splinesep_pt,
               left_bound,
               right_bound,
+              vnode_origin_clusters~,
             ) {
             Some(core_result) => {
               let recover_boxes = if current_tail_side == 0 &&
@@ -657,6 +760,7 @@ pub fn edge_pathplan_polyline(
               splinesep_pt,
               left_bound,
               right_bound,
+              vnode_origin_clusters~,
             ) {
             Some(core_result) => {
               let final_recover_vnodes : Array[String] = []
@@ -754,6 +858,7 @@ pub fn edge_pathplan_polyline(
       splinesep_pt,
       left_bound,
       right_bound,
+      vnode_origin_clusters~,
     ) {
     Some(core_result) => {
       let points = core_result.points

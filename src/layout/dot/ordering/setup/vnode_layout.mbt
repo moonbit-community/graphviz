@@ -124,7 +124,11 @@ pub fn build_edge_vnodes(
     // Graphviz parity: cluster-local vnodes use the virtual_node default width.
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster = if tail_cluster != "" || head_cluster != "" {
-      @membership.cluster_lca(tail_cluster, head_cluster, cluster_parents)
+      @membership.cluster_lca(
+        @membership.node_local_cluster_key(edge.tail()),
+        @membership.node_local_cluster_key(edge.head()),
+        cluster_parents,
+      )
     } else {
       match edge_cluster_keys.get(@edge_identity.edge_key(edge)) {
         Some(value) => value

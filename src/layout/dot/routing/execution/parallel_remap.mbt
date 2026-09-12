@@ -27,6 +27,10 @@ fn collect_parallel_remap_edge_ids(
   let groups : Map[String, Array[Int]] = Map([])
   let group_first_direction : Map[String, String] = Map([])
   let group_has_mixed_direction : Map[String, Bool] = Map([])
+  let concentrate = @order_graph.graphviz_concentrate_enabled(edges)
+  // Live concentrated main edges and their ND_other copies are already
+  // assigned in installation order; reversing slots also swaps clip state.
+  guard !concentrate else { [] }
   for edge in edges {
     if @edge_semantics.edge_has_label(edge) {
       continue

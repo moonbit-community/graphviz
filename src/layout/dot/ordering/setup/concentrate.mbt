@@ -144,8 +144,16 @@ fn build_concentrated_vnode_degrees(
   let incoming : Map[String, Map[String, Bool]] = Map([])
   let outgoing : Map[String, Map[String, Bool]] = Map([])
   for edge in edges {
-    let mut previous = edge.tail().name()
-    let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, true)
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let forward = ranks.get(tail).unwrap_or_default() <
+      ranks.get(head).unwrap_or_default()
+    // class2's fast edges point from low rank to high rank, even when the
+    // original edge points backwards. Its vnode chains already use this order.
+    let mut previous = if forward { tail } else { head }
+    let chain = vnode_info.edge_vnodes
+      .get(@edge_identity.edge_vnode_key(edge))
+      .unwrap_or_default()
     for vnode in chain {
       let current = resolve_vnode_alias(aliases, vnode)
       add_concentrated_vnode_segment(incoming, outgoing, previous, current)
@@ -155,7 +163,11 @@ fn build_concentrated_vnode_degrees(
       incoming,
       outgoing,
       previous,
-      edge.head().name(),
+      if forward {
+        head
+      } else {
+        tail
+      },
     )
   }
   { incoming, outgoing, }
@@ -176,17 +188,57 @@ fn is_concentrate_candidate(
 }
 
 ///|
-/// `dot_concentrate` only merges consecutive virtual nodes in the rank list.
-/// The ordering stage has already produced that list, so preserve its leftmost
-/// node as the representative and leave separated runs alone.
+/// Read the port from a retained chain, not an absorbed chain that now aliases
+/// it. At a real endpoint the retained fast edge keeps this chain's port.
+fn retained_endpoint_port(
+  vnode : String,
+  neighbor : String,
+  edges : Array[@cgraph.Edge],
+  vnode_info : EdgeVnodeInfo,
+) -> (@cgraph.Node, @cgraph.Port?)? {
+  guard !@edge_identity.is_edge_vnode_name(neighbor) else { None }
+  for edge in edges {
+    let chain = vnode_info.edge_vnodes
+      .get(@edge_identity.edge_vnode_key(edge))
+      .unwrap_or_default()
+    guard chain.contains(vnode) else { continue }
+    if edge.tail().name() == neighbor {
+      return Some((edge.tail(), edge.tail_port()))
+    }
+    if edge.head().name() == neighbor {
+      return Some((edge.head(), edge.head_port()))
+    }
+  }
+  None
+}
+
+///|
+fn same_retained_endpoint_ports(
+  first : (@cgraph.Node, @cgraph.Port?)?,
+  second : (@cgraph.Node, @cgraph.Port?)?,
+  ports_equal : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool,
+) -> Bool {
+  guard first is Some((node, first_port)) else { second is None }
+  guard second is Some((_, second_port)) else { false }
+  ports_equal(node, first_port, second_port)
+}
+
+///|
 fn merge_adjacent_vnode_run(
   edges : Array[@cgraph.Edge],
+  all_edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
   step : Int,
   ordered_groups_with_vnodes : Map[Int, Array[String]],
   aliases : Map[String, String],
+  live_graph? : ConcentrateFastGraph? = None,
+  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+    _,
+    a,
+    b,
+  ) => @edge_identity.port_key(a) == @edge_identity.port_key(b),
 ) -> Unit {
   let order_index : Map[String, Int] = Map([])
   for _rank, names in ordered_groups_with_vnodes {
@@ -199,9 +251,9 @@ fn merge_adjacent_vnode_run(
     }
   }
   let degrees = build_concentrated_vnode_degrees(
-    edges, ranks, vnode_info, aliases,
+    all_edges, ranks, vnode_info, aliases,
   )
-  let candidates : Array[(String, Int)] = []
+  let candidates : Array[(String, Int, String, (@cgraph.Node, @cgraph.Port?)?)] = []
   for edge in edges {
     let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail)
     if step >= chain.length() {
@@ -211,24 +263,62 @@ fn merge_adjacent_vnode_run(
     if !is_concentrate_candidate(vnode, degrees) {
       continue
     }
-    match order_index.get(vnode) {
-      Some(position) => candidates.push((vnode, position))
-      None => ()
+    guard order_index.get(vnode) is Some(position) else { continue }
+    let forward = ranks.get(edge.tail().name()).unwrap_or_default() <
+      ranks.get(edge.head().name()).unwrap_or_default()
+    let neighbors = if from_tail == forward {
+      degrees.incoming
+    } else {
+      degrees.outgoing
+    }
+    guard neighbors.get(vnode) is Some(adjacent) else { continue }
+    for neighbor, _ in adjacent {
+      candidates.push(
+        (
+          vnode,
+          position,
+          neighbor,
+          retained_endpoint_port(vnode, neighbor, all_edges, vnode_info),
+        ),
+      )
     }
   }
   candidates.sort_by((a, b) => a.1 - b.1)
   let mut leader = ""
+  let mut leader_neighbor = ""
+  let mut leader_port : (@cgraph.Node, @cgraph.Port?)? = None
   let mut previous_position = -2
   for candidate in candidates {
-    let (vnode, position) = candidate
+    let (vnode, position, neighbor, live_port) = candidate
     if vnode == leader {
       previous_position = position
       continue
     }
-    if leader != "" && position == previous_position + 1 {
+    // bothdowncandidates/bothupcandidates compare the live adjacent node,
+    // not just the original endpoint. A separated earlier rank must stop
+    // propagation of a merge into the following rank.
+    if leader != "" &&
+      position == previous_position + 1 &&
+      neighbor == leader_neighbor &&
+      same_retained_endpoint_ports(leader_port, live_port, node_ports_equal) {
       aliases[vnode] = resolve_vnode_alias(aliases, leader)
+      if live_graph is Some(fast) {
+        let forward = ranks.get(edges[0].tail().name()).unwrap_or_default() <
+          ranks.get(edges[0].head().name()).unwrap_or_default()
+        fast.merge_node(
+          leader,
+          vnode,
+          if from_tail == forward {
+            Down
+          } else {
+            Up
+          },
+        )
+      }
     } else {
       leader = vnode
+      leader_neighbor = neighbor
+      leader_port = live_port
     }
     previous_position = position
   }
@@ -241,15 +331,20 @@ fn build_concentrate_edge_groups(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
-  from_tail : Bool,
+  from_low_rank : Bool,
+  excluded_edges? : Map[String, Bool] = Map([]),
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
+    guard excluded_edges.get(@edge_identity.edge_vnode_key(edge)) is None else {
+      continue
+    }
     if !edge_can_concentrate(edge, ranks, vnode_info) {
       continue
     }
     let tail_rank = ranks.get(edge.tail().name()).unwrap_or_default()
     let head_rank = ranks.get(edge.head().name()).unwrap_or_default()
+    let from_tail = from_low_rank == (tail_rank < head_rank)
     let direction = if tail_rank < head_rank { "up" } else { "down" }
     let endpoint = if from_tail {
       edge.tail().name()
@@ -271,31 +366,101 @@ fn build_concentrate_edge_groups(
 }
 
 ///|
-/// Apply one directional concentrate pass.  In the upstream implementation
-/// each rank is scanned in order; stepping through every virtual-chain depth
-/// yields the same parent/child propagation for the local class2 model.
-fn merge_concentrated_vnode_groups(
-  groups : Map[String, Array[@cgraph.Edge]],
+/// class2 ignores a backward edge matching a forward edge's initial ports
+/// and marks the forward representative conc_opp_flag. Neither chain can
+/// participate in conc.c's samedir candidate test.
+fn concentrate_opposite_edges(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool,
+) -> Map[String, Bool] {
+  let excluded : Map[String, Bool] = Map([])
+  for backward in edges {
+    let tail = backward.tail().name()
+    let head = backward.head().name()
+    guard ranks.get(tail).unwrap_or_default() >
+      ranks.get(head).unwrap_or_default() else {
+      continue
+    }
+    guard backward.get_attr("label").unwrap_or_default() == "" else { continue }
+    for forward in edges {
+      guard forward.tail().name() == head && forward.head().name() == tail else {
+        continue
+      }
+      guard forward.get_attr("label").unwrap_or_default() == "" else {
+        continue
+      }
+      guard ports_equal(backward, forward) else { continue }
+      excluded[@edge_identity.edge_vnode_key(backward)] = true
+      excluded[@edge_identity.edge_vnode_key(forward)] = true
+      break
+    }
+  }
+  excluded
+}
+
+///|
+/// Find the chain position at the rank being scanned. Edges sharing an
+/// endpoint can have different lengths, so a short chain cannot end the scan.
+fn concentrate_step_at_rank(
+  edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  aliases : Map[String, String],
-) -> Unit {
-  for _key, edges in groups {
-    if edges.length() < 2 {
-      continue
-    }
-    let mut max_depth = 0
-    for edge in edges {
-      let depth = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail).length()
-      if depth > max_depth {
-        max_depth = depth
+  rank : Int,
+) -> Int? {
+  for edge in edges {
+    let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail)
+    for step, vnode in chain {
+      if vnode_info.vnode_ranks.get(vnode) == Some(rank) {
+        return Some(step)
       }
     }
-    for step in 0..<max_depth {
+  }
+  None
+}
+
+///|
+/// conc.c scans all groups at each rank, downwards first and upwards second.
+/// Rank direction is independent of an original edge's tail/head direction.
+fn merge_concentrated_vnode_groups(
+  groups : Map[String, Array[@cgraph.Edge]],
+  all_edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  from_low_rank : Bool,
+  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  aliases : Map[String, String],
+  node_ports_equal : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool,
+  live_graph : ConcentrateFastGraph?,
+) -> Unit {
+  let rank_order : Array[Int] = []
+  for rank, _ in ordered_groups_with_vnodes {
+    rank_order.push(rank)
+  }
+  rank_order.sort_by((a, b) => if from_low_rank { a - b } else { b - a })
+  for rank in rank_order {
+    for _key, edges in groups {
+      guard edges.length() >= 2 else { continue }
+      let first = edges[0]
+      let forward = ranks.get(first.tail().name()).unwrap_or_default() <
+        ranks.get(first.head().name()).unwrap_or_default()
+      let from_tail = from_low_rank == forward
+      guard concentrate_step_at_rank(edges, ranks, vnode_info, from_tail, rank)
+        is Some(step) else {
+        continue
+      }
       merge_adjacent_vnode_run(
-        edges, ranks, vnode_info, from_tail, step, ordered_groups_with_vnodes, aliases,
+        edges,
+        all_edges,
+        ranks,
+        vnode_info,
+        from_tail,
+        step,
+        ordered_groups_with_vnodes,
+        aliases,
+        node_ports_equal~,
+        live_graph~,
       )
     }
   }
@@ -435,6 +600,13 @@ fn concentrate_vnode_data(
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   ordered_groups_with_vnodes : Map[Int, Array[String]],
+  live_graph? : ConcentrateFastGraph? = None,
+  edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
+  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+    _,
+    a,
+    b,
+  ) => @edge_identity.port_key(a) == @edge_identity.port_key(b),
 ) -> ConcentratedVNodeData {
   let enabled = match graph.get_attr("concentrate") {
     Some(value) => graphviz_mapbool_default_false(value)
@@ -444,22 +616,50 @@ fn concentrate_vnode_data(
     return { vnode_info, ordered_groups_with_vnodes, aliases: Map([]), }
   }
   let aliases : Map[String, String] = Map([])
-  merge_concentrated_vnode_groups(
-    build_concentrate_edge_groups(edges, ranks, vnode_info, true),
-    ranks,
-    vnode_info,
-    true,
-    ordered_groups_with_vnodes,
-    aliases,
+  let excluded_edges = concentrate_opposite_edges(
+    edges, ranks, edge_ports_equal,
   )
-  merge_concentrated_vnode_groups(
-    build_concentrate_edge_groups(edges, ranks, vnode_info, false),
-    ranks,
-    vnode_info,
-    false,
-    ordered_groups_with_vnodes,
-    aliases,
-  )
+  if live_graph is Some(fast) {
+    concentrate_live_candidates(
+      fast, ordered_groups_with_vnodes, ranks, edges, vnode_info, excluded_edges,
+      aliases, node_ports_equal,
+    )
+  } else {
+    merge_concentrated_vnode_groups(
+      build_concentrate_edge_groups(
+        edges,
+        ranks,
+        vnode_info,
+        true,
+        excluded_edges~,
+      ),
+      edges,
+      ranks,
+      vnode_info,
+      true,
+      ordered_groups_with_vnodes,
+      aliases,
+      node_ports_equal,
+      live_graph,
+    )
+    merge_concentrated_vnode_groups(
+      build_concentrate_edge_groups(
+        edges,
+        ranks,
+        vnode_info,
+        false,
+        excluded_edges~,
+      ),
+      edges,
+      ranks,
+      vnode_info,
+      false,
+      ordered_groups_with_vnodes,
+      aliases,
+      node_ports_equal,
+      live_graph,
+    )
+  }
   mark_edges_with_absorbed_vnodes(edges, vnode_info, aliases)
   if aliases.length() == 0 {
     return { vnode_info, ordered_groups_with_vnodes, aliases, }
@@ -482,15 +682,39 @@ pub fn concentrate_ordering_result(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   ordering : OrderingResult,
+  edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
+  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+    _,
+    a,
+    b,
+  ) => @edge_identity.port_key(a) == @edge_identity.port_key(b),
 ) -> OrderingResult {
+  let live_graph = if graphviz_mapbool_default_false(
+      graph.get_attr("concentrate").unwrap_or_default(),
+    ) {
+    Some(
+      build_concentrate_fast_graph(
+        edges,
+        ranks,
+        ordering.vnode_info,
+        edge_ports_equal,
+      ),
+    )
+  } else {
+    None
+  }
   let concentrated = concentrate_vnode_data(
     graph,
     edges,
     ranks,
     ordering.vnode_info,
     ordering.ordered_groups_with_vnodes,
+    live_graph~,
+    edge_ports_equal~,
+    node_ports_equal~,
   )
   {
+    live_graph,
     ordered_groups: ordering.ordered_groups,
     ordered_groups_with_vnodes: concentrated.ordered_groups_with_vnodes,
     vnode_info: concentrated.vnode_info,

@@ -14,7 +14,7 @@ type RecordPort = @record_geometry.RecordPort
 type SizePt = @numeric.GraphSizePt
 
 ///|
-let html_label_cache : Ref[Map[String, @html_label.HtmlLabel]] = @ref.new(
+let html_label_cache : Ref[Map[(String, Bool?), @html_label.HtmlLabel]] = @ref.new(
   Map([]),
 )
 
@@ -45,16 +45,10 @@ fn html_cell_content_size(
       { width_pt, height_pt, }
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
-      let text = StringBuilder()
-      for span in spans {
-        text.write_string(span.text)
-      }
-      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
-        text.to_string(),
-        font_name,
-        font_size_pt,
+      let metrics = @label_metrics.html_styled_text_metrics(
+        spans, "", font_name, font_size_pt,
       )
-      { width_pt, height_pt, }
+      { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
     }
     @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, font_name, font_size_pt)
@@ -138,13 +132,18 @@ fn html_table_layout(
 }
 
 ///|
-pub fn parse_html_label_cached(label : String) -> @html_label.HtmlLabel? {
-  match html_label_cache.val.get(label) {
+pub fn parse_html_label_cached(
+  label : String,
+  html? : Bool? = None,
+) -> @html_label.HtmlLabel? {
+  guard html != Some(false) else { return None }
+  let key = (label, html)
+  match html_label_cache.val.get(key) {
     Some(cached) => Some(cached)
     None =>
-      match @html_label.parse_html_label(label) {
+      match @html_label.parse_html_label(label, html~) {
         Some(parsed) => {
-          html_label_cache.val[label] = parsed
+          html_label_cache.val[key] = parsed
           Some(parsed)
         }
         None => None
@@ -159,6 +158,12 @@ pub fn html_label_size(
   font_size_pt : Double,
 ) -> SizePt {
   match label {
+    @html_label.HtmlLabel::StyledText(spans) => {
+      let metrics = @label_metrics.html_styled_text_metrics(
+        spans, "", font_name, font_size_pt,
+      )
+      { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
+    }
     @html_label.HtmlLabel::Text(text) => {
       let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
         text, font_name, font_size_pt,
@@ -174,13 +179,47 @@ pub fn html_label_size(
 fn collect_html_ports(
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
-  node_rect : @geom.Rect,
+  inherited_sides : Int,
   font_name : String,
   font_size_pt : Double,
   ports : Map[String, RecordPort],
 ) -> Unit {
+  let dimensions = html_table_size(table, font_name, font_size_pt)
+  let center_x = (rect.llx + rect.urx) / 2.0
+  let center_y = (rect.lly + rect.ury) / 2.0
+  let rect : @geom.Rect = {
+    llx: center_x - dimensions.width_pt / 2.0,
+    lly: center_y - dimensions.height_pt / 2.0,
+    urx: center_x + dimensions.width_pt / 2.0,
+    ury: center_y + dimensions.height_pt / 2.0,
+  }
+  if table.port is Some(name) {
+    ports[name] = {
+      center: { x: center_x, y: center_y, },
+      size: @node_primitives.node_size_from_points(
+        dimensions.width_pt,
+        dimensions.height_pt,
+      ),
+      sides: inherited_sides,
+    }
+  }
   let layout = html_table_layout(table, rect, font_name, font_size_pt)
   for cell_layout in layout.cells {
+    let cell = cell_layout.cell
+    let mut sides = 0
+    if cell_layout.col == 0 {
+      sides = sides | @port_geometry.PORT_SIDE_LEFT
+    }
+    if cell_layout.row == 0 {
+      sides = sides | @port_geometry.PORT_SIDE_TOP
+    }
+    if cell_layout.col + cell.col_span == layout.col_count {
+      sides = sides | @port_geometry.PORT_SIDE_RIGHT
+    }
+    if cell_layout.row + cell.row_span == layout.row_count {
+      sides = sides | @port_geometry.PORT_SIDE_BOTTOM
+    }
+    let sides = sides & inherited_sides
     match cell_layout.cell.port {
       Some(name) => {
         let center = @geom.Point::{
@@ -191,24 +230,23 @@ fn collect_html_ports(
           cell_layout.rect.urx - cell_layout.rect.llx,
           cell_layout.rect.ury - cell_layout.rect.lly,
         )
-        let sides = @port_geometry.port_side_mask_from_rects(
-          cell_layout.rect,
-          node_rect,
-        )
         ports[name] = { center, size, sides, }
       }
       None => ()
     }
     match cell_layout.cell.content {
-      @html_label.HtmlCellContent::Table(nested) =>
+      @html_label.HtmlCellContent::Table(nested) => {
+        let padding = table.cell_padding_pt + html_cell_border_pt(table, cell)
+        let content_rect : @geom.Rect = {
+          llx: cell_layout.rect.llx + padding,
+          lly: cell_layout.rect.lly + padding,
+          urx: cell_layout.rect.urx - padding,
+          ury: cell_layout.rect.ury - padding,
+        }
         collect_html_ports(
-          nested,
-          cell_layout.rect,
-          node_rect,
-          font_name,
-          font_size_pt,
-          ports,
+          nested, content_rect, sides, font_name, font_size_pt, ports,
         )
+      }
       _ => ()
     }
   }
@@ -230,7 +268,13 @@ pub fn html_ports(
     }
   }
   let ports : Map[String, RecordPort] = Map([])
-  match parse_html_label_cached(label) {
+  match
+    parse_html_label_cached(
+      label,
+      html=node
+        .get_attr_value("label")
+        .map(value => value is @cgraph.AttrValue::Html(_)),
+    ) {
     Some(@html_label.HtmlLabel::Table(table)) => {
       let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
       let font = @attrs.font_name(node.get_attr("fontname"))
@@ -240,7 +284,14 @@ pub fn html_ports(
         urx: pos.x + size.width_pt / 2.0,
         ury: pos.y + size.height_pt / 2.0,
       }
-      collect_html_ports(table, rect, rect, font, font_size_pt, ports)
+      collect_html_ports(
+        table,
+        rect,
+        @port_geometry.PORT_SIDE_ALL,
+        font,
+        font_size_pt,
+        ports,
+      )
     }
     _ => ()
   }

@@ -111,3 +111,22 @@ test "pathplan_bounds returns zero bounds for empty rank groups" {
   assert_eq(bounds.left, 0.0)
   assert_eq(bounds.right, 0.0)
 }
+
+///|
+test "routing adjacency uses final ranks after cluster ranking reverses endpoints" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed)
+  let low = graph.node("low")
+  let high = graph.node("high")
+  let edge = graph.edge(low, high)
+  let adjacency = build_path_adjacency(
+    [edge],
+    Map([(@edge_identity.edge_vnode_key(edge), ["v1", "v2"])]),
+    ["low"],
+    ["high"],
+    ranks={ "high": 0, "low": 3 },
+  )
+  @test.assert_eq(adjacency.out_edges.get("high"), Some(["v1"]))
+  @test.assert_eq(adjacency.out_edges.get("v1"), Some(["v2"]))
+  @test.assert_eq(adjacency.out_edges.get("v2"), Some(["low"]))
+  @test.assert_eq(adjacency.in_edges.get("high"), None)
+}

@@ -30,7 +30,7 @@ pub fn raw_label_ports_for_node(
   record_orientation : RecordOrientation,
 ) -> Map[String, RecordPort] {
   let label = @label_attrs.label_text(node)
-  if @html_label.is_html_label_text(label) {
+  if node.get_attr_value("label") is Some(@cgraph.AttrValue::Html(_)) {
     @html_layout.html_ports(node, label, origin, base_size)
   } else if @record_geometry.is_record_shape(node) {
     @record_layout.record_ports(node, origin, base_size, record_orientation)

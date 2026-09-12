@@ -21,7 +21,7 @@ test "apply_intercluster_bonus adds the bonus only to the first representative o
     ("v1", "b", 5, true, 1.0, 1.0, 0.0, 0.0),
   ]
   let bonus : Map[String, Int] = Map([])
-  bonus[@order_graph.order_edge_merge_key("v1", "b", true, 0.0, 0.0)] = 3
+  bonus[@order_graph.order_edge_merge_key("v1", "b", true, 0.0, 0.0, 0.0, 0.0)] = 3
 
   let adjusted = apply_intercluster_bonus(coalesced, bonus)
   let entries = match adjusted.get("tail0") {
@@ -63,6 +63,8 @@ test "collect_intercluster_bonus counts duplicated vnode-tail intercluster segme
     [],
     [],
     [],
+    [],
+    [],
     { "a": 0, "b": 2 },
     edge_vnodes,
     true,
@@ -72,7 +74,7 @@ test "collect_intercluster_bonus counts duplicated vnode-tail intercluster segme
   )
 
   let bonus_key = @order_graph.order_edge_merge_key(
-    shared_vnode, "b", true, 0.0, 0.5,
+    shared_vnode, "b", true, 0.0, 0.0, 0.0, 0.5,
   )
   assert_eq(bonus.get(bonus_key), Some(1))
 }

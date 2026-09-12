@@ -1419,101 +1419,10 @@ fn tb_balance_bounds(
 }
 
 ///|
-/// Graphviz parity: TB_balance sorts by rank only via qsort (unstable).
-/// Stable tie ordering can invert adjacent sibling placements in tie-heavy DAGs
-/// (for example rowe: 12/13). Keep this narrow post-pass local to TB balance.
-fn tb_adjust_sibling_ties(
-  graph : NsGraph,
-  max_rank : Int,
-  initial_ranks : Array[Int],
-) -> Unit {
-  for tail_idx in 0..<graph.nodes.length() {
-    let tail = graph.nodes[tail_idx]
-    if tail.kind != NodeKind::Normal {
-      continue
-    }
-    let siblings : Array[Int] = []
-    for edge_idx in tail.out_edges {
-      let head_idx = graph.edges[edge_idx].head
-      if head_idx < 0 || head_idx >= graph.nodes.length() {
-        continue
-      }
-      let head = graph.nodes[head_idx]
-      if head.kind != NodeKind::Normal {
-        continue
-      }
-      if head.in_edges.length() != 1 || head.out_edges.length() != 1 {
-        continue
-      }
-      siblings.push(head_idx)
-    }
-    if siblings.length() < 2 {
-      continue
-    }
-    for i in 0..<siblings.length() {
-      for j in (i + 1)..<siblings.length() {
-        let a = siblings[i]
-        let b = siblings[j]
-        if a < 0 ||
-          a >= initial_ranks.length() ||
-          b < 0 ||
-          b >= initial_ranks.length() {
-          continue
-        }
-        if initial_ranks[a] != initial_ranks[b] {
-          continue
-        }
-        let rank_a = graph.nodes[a].rank
-        let rank_b = graph.nodes[b].rank
-        let rank_delta = if rank_a > rank_b {
-          rank_a - rank_b
-        } else {
-          rank_b - rank_a
-        }
-        if rank_delta != 1 {
-          continue
-        }
-        let bounds_a = tb_balance_bounds(graph, a, max_rank)
-        let bounds_b = tb_balance_bounds(graph, b, max_rank)
-        if bounds_a.inweight != bounds_a.outweight ||
-          bounds_b.inweight != bounds_b.outweight {
-          continue
-        }
-        if bounds_a.low != bounds_b.low || bounds_a.high == bounds_b.high {
-          continue
-        }
-        let should_swap = if bounds_a.high < bounds_b.high {
-          rank_a > rank_b
-        } else {
-          rank_b > rank_a
-        }
-        if !should_swap {
-          continue
-        }
-        let next_rank_a = rank_b
-        let next_rank_b = rank_a
-        if next_rank_a < bounds_a.low || next_rank_a > bounds_a.high {
-          continue
-        }
-        if next_rank_b < bounds_b.low || next_rank_b > bounds_b.high {
-          continue
-        }
-        graph.nodes[a].rank = next_rank_a
-        graph.nodes[b].rank = next_rank_b
-      }
-    }
-  }
-}
-
-///|
 fn tb_balance(graph : NsGraph) -> Unit {
   let max_rank = normalize_ranks(graph)
   if max_rank <= 0 {
     return ()
-  }
-  let initial_ranks : Array[Int] = []
-  for node in graph.nodes {
-    initial_ranks.push(node.rank)
   }
   let nrank : Array[Int] = []
   for _ in 0..<(max_rank + 1) {
@@ -1558,7 +1467,6 @@ fn tb_balance(graph : NsGraph) -> Unit {
       graph.nodes[idx].rank = choice
     }
   }
-  tb_adjust_sibling_ties(graph, max_rank, initial_ranks)
 }
 
 ///|

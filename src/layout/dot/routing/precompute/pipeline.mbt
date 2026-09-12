@@ -50,22 +50,7 @@ pub fn complex_tuning_enabled() -> Bool {
 }
 
 ///|
-/// Graphviz parity: clustered/port-edge gate for routing Y padding mirrors
-/// dotsplines branch before record-port padding sampling.
-pub fn resolve_routing_port_padding(
-  has_clusters : Bool,
-  has_port_edges : Bool,
-  compute_padding : () -> (Double, Double),
-) -> (Double, Double) {
-  if has_clusters || !has_port_edges {
-    (0.0, 0.0)
-  } else {
-    compute_padding()
-  }
-}
-
-///|
-/// Graphviz parity: routing precompute pipeline input keeps padding/metric
+/// Graphviz parity: routing precompute pipeline input keeps geometry/metric
 /// snapshots grouped before Stage E edge solve.
 pub(all) struct RoutingPrecomputePipelineInput {
   edges : Array[@cgraph.Edge]
@@ -73,8 +58,6 @@ pub(all) struct RoutingPrecomputePipelineInput {
   x_groups : Map[Int, Array[String]]
   ordered_groups_with_vnodes : Map[Int, Array[String]]
   ordered_groups : Map[Int, Array[String]]
-  port_pad_below : Double
-  port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -88,15 +71,14 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
+  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
 }
 
 ///|
-/// Graphviz parity: routing precompute pipeline output keeps padding metrics,
+/// Graphviz parity: routing precompute pipeline output keeps port metrics,
 /// selected path groups, self-edge-expanded bbox sizes, and assembled routing
 /// context for Stage E solve.
 pub struct RoutingPrecomputePipelineOutput {
-  port_pad_below : Double
-  port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   path_groups : Map[Int, Array[String]]
   pathplan_sizes : Map[String, @node_primitives.NodeSize]
@@ -109,33 +91,36 @@ pub struct RoutingPrecomputePipelineOutput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_routing_precompute_pipeline(
   input : RoutingPrecomputePipelineInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> RoutingPrecomputePipelineOutput {
   let path_groups = select_path_groups(
     input.x_groups,
     input.ordered_groups_with_vnodes,
     input.ordered_groups,
   )
-  let routing_context = prepare_routing_context({
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    ranks: input.ranks,
-    positions: input.positions,
-    ordered_groups: input.ordered_groups,
-    x_groups: path_groups,
-    nodesep_pt: input.nodesep_pt,
-    sizes: input.sizes,
-    edge_vnodes: input.edge_vnodes,
-    pathplan_sizes: input.pathplan_sizes,
-    path_cluster_keys: input.path_cluster_keys,
-    vnode_sizes: input.vnode_sizes,
-    vnode_positions: input.vnode_positions,
-    cluster_bboxes: input.cluster_bboxes,
-    concentrate: input.concentrate,
-  })
+  let routing_context = prepare_routing_context(
+    {
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      ranks: input.ranks,
+      positions: input.positions,
+      ordered_groups: input.ordered_groups,
+      x_groups: path_groups,
+      nodesep_pt: input.nodesep_pt,
+      sizes: input.sizes,
+      edge_vnodes: input.edge_vnodes,
+      pathplan_sizes: input.pathplan_sizes,
+      path_cluster_keys: input.path_cluster_keys,
+      vnode_sizes: input.vnode_sizes,
+      vnode_positions: input.vnode_positions,
+      cluster_bboxes: input.cluster_bboxes,
+      concentrate: input.concentrate,
+      initial_port_points: input.initial_port_points,
+    },
+    live_graph~,
+  )
   {
-    port_pad_below: input.port_pad_below,
-    port_pad_above: input.port_pad_above,
     head_port_metrics: input.head_port_metrics,
     path_groups,
     pathplan_sizes: input.pathplan_sizes,

@@ -45,8 +45,11 @@ test "raw_label_ports_for_node prefers html ports even on record-shaped nodes" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let node = graph.node("html_first")
   node.set_attr("shape", "record")
-  node.set_attr(
-    "label", "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD PORT=\"html\">one</TD></TR></TABLE>>",
+  node.set_attr_value(
+    "label",
+    @cgraph.AttrValue::Html(
+      "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD PORT=\"html\">one</TD></TR></TABLE>>",
+    ),
   )
   let origin = @geom.Point::{ x: 24.0, y: -12.0, }
   let base_size = sample_node_size(96.0, 48.0)

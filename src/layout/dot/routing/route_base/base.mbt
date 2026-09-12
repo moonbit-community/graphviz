@@ -288,14 +288,12 @@ fn build_edge_route_base(
   // Graphviz parity: label ports should not force segmented edge splines.
   let force_segmented_base = (!tail_label_port && tail_port_sides >= 3) ||
     (!head_label_port && head_port_sides >= 3)
-  let tail_cluster_name = match edge.get_attr("ltail") {
-    Some(value) => value
-    None => ""
-  }
-  let head_cluster_name = match edge.get_attr("lhead") {
-    Some(value) => value
-    None => ""
-  }
+  let tail_cluster_name = edge
+    .get_attr(if swap_ends { "lhead" } else { "ltail" })
+    .unwrap_or("")
+  let head_cluster_name = edge
+    .get_attr(if swap_ends { "ltail" } else { "lhead" })
+    .unwrap_or("")
   let tail_record_border_adjust = (route_base_deps.record_border_adjust)(
     tail_node,
   )
@@ -350,11 +348,19 @@ fn build_edge_route_base(
   let head_cluster_bbox = cluster_bbox_if_named(
     cluster_bboxes, head_cluster_name,
   )
+  // beginpath/endpath resolve dynamic ports against the adjacent fast node,
+  // which is a virtual node for a long edge, not the opposite original end.
+  let (tail_neighbor, head_neighbor) = route_endpoint_neighbors(
+    vnodes,
+    input.vnode_positions,
+    tail_pos,
+    head_pos,
+  )
   let tail_dynamic_anchor = (route_base_deps.dynamic_port_anchor_for_edge)(
-    tail_port, tail_name, tail_pos, head_pos, rankdir, tail_record_border_adjust,
+    tail_port, tail_name, tail_pos, tail_neighbor, rankdir, tail_record_border_adjust,
   )
   let head_dynamic_anchor = (route_base_deps.dynamic_port_anchor_for_edge)(
-    head_port, head_name, head_pos, tail_pos, rankdir, head_record_border_adjust,
+    head_port, head_name, head_pos, head_neighbor, rankdir, head_record_border_adjust,
   )
   let has_side_anchor = tail_dynamic_anchor.anchor is Some(_) ||
     head_dynamic_anchor.anchor is Some(_) ||
@@ -371,6 +377,7 @@ fn build_edge_route_base(
     head_geometry.center,
   )
   let tail_port_side = port_side_for_route_endpoint({
+    node_name: tail_name,
     sameport_anchor: tail_sameport_anchor,
     dynamic_anchor: tail_dynamic_anchor,
     anchor_base: tail_anchor_base,
@@ -382,6 +389,7 @@ fn build_edge_route_base(
     port_side_for_edge: route_base_deps.port_side_for_edge,
   })
   let head_port_side = port_side_for_route_endpoint({
+    node_name: head_name,
     sameport_anchor: head_sameport_anchor,
     dynamic_anchor: head_dynamic_anchor,
     anchor_base: head_anchor_base,
@@ -412,7 +420,6 @@ fn build_edge_route_base(
     route_base_deps.is_record_shape,
   )
   let tail_compass_clip = compass_clip_point_if_needed({
-    is_record_shape: route_base_deps.is_record_shape,
     node: tail_node,
     port: tail_port,
     center: tail_clip_center,
@@ -420,7 +427,6 @@ fn build_edge_route_base(
     rankdir,
   })
   let head_compass_clip = compass_clip_point_if_needed({
-    is_record_shape: route_base_deps.is_record_shape,
     node: head_node,
     port: head_port,
     center: head_clip_center,
@@ -538,14 +544,14 @@ fn build_edge_route_base(
   }
   let tail_anchor = if tail_sameport_anchor is None &&
     tail_dynamic_anchor.anchor is None &&
-    compass_tail_on_non_record {
+    tail_compass_clip is Some(_) {
     tail_clip
   } else {
     tail_anchor0
   }
   let head_anchor = if head_sameport_anchor is None &&
     head_dynamic_anchor.anchor is None &&
-    compass_head_on_non_record {
+    head_compass_clip is Some(_) {
     head_clip
   } else {
     head_anchor0
@@ -572,15 +578,6 @@ fn build_edge_route_base(
   let (route_include_tail, route_include_head) = route_include_arrowheads(
     include_tail, include_head, swap_ends,
   )
-  let arrow_len_override = clustered_edge_arrow_len_override({
-    edge,
-    include_tail,
-    include_head,
-    tail_cluster_bbox,
-    head_cluster_bbox,
-    tail_clip,
-    head_clip,
-  })
   let is_dotted = edge_style_is_dotted(edge, enable_complex_tuning)
   let same_outer_cluster = (route_base_deps.node_cluster_key)(tail_node) ==
     (route_base_deps.node_cluster_key)(head_node)
@@ -636,7 +633,7 @@ fn build_edge_route_base(
     use_pathplan,
     route_include_tail,
     route_include_head,
-    arrow_len_override,
+    arrow_len_override: None,
     is_dotted,
     same_outer_cluster,
     diff_local_cluster,

@@ -111,8 +111,7 @@ test "coalesce_concentrated_segments keeps one pair per retained live edge" {
 
   assert_eq(normal_segments.length(), 1)
   assert_eq(normal_segments[0].weight, 5)
-  assert_eq(virtual_segments.length(), 3)
+  assert_eq(virtual_segments.length(), 2)
   assert_eq(virtual_segments[0].weight, 12)
-  assert_eq(virtual_segments[1].weight, 11)
-  assert_eq(virtual_segments[2].weight, 13)
+  assert_eq(virtual_segments[1].weight, 24)
 }

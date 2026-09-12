@@ -3,60 +3,6 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-/// Graphviz parity: rank.c tb_balance uses qsort(rank-only), which can move
-/// tie-equivalent chain nodes one rank further than stable ordering.
-/// Keep this local post-pass scoped to rank assignment.
-fn tb_tie_adjust_rank_assignment(graph : @network_simplex.NsGraph) -> Unit {
-  let max_rank = @network_simplex.normalize_ranks_for_test(graph)
-  if max_rank <= 0 {
-    return ()
-  }
-  let nrank : Array[Int] = []
-  for _ in 0..<(max_rank + 1) {
-    nrank.push(0)
-  }
-  for node in graph.nodes {
-    if node.kind == @network_simplex.NodeKind::Normal {
-      let rank = node.rank
-      if rank >= 0 && rank <= max_rank {
-        nrank[rank] = nrank[rank] + 1
-      }
-    }
-  }
-  for idx in 0..<graph.nodes.length() {
-    let node = graph.nodes[idx]
-    if node.kind != @network_simplex.NodeKind::Normal {
-      continue
-    }
-    if node.in_edges.length() != 1 || node.out_edges.length() != 1 {
-      continue
-    }
-    let in_edge = graph.edges[node.in_edges[0]]
-    let out_edge = graph.edges[node.out_edges[0]]
-    if in_edge.weight != out_edge.weight {
-      continue
-    }
-    let mut low = graph.nodes[in_edge.tail].rank + in_edge.minlen
-    let high = graph.nodes[out_edge.head].rank - out_edge.minlen
-    let current = graph.nodes[idx].rank
-    if low < 0 {
-      low = 0
-    }
-    if current < 0 || current > max_rank || high < 0 || high > max_rank {
-      continue
-    }
-    if low != current || high != current + 1 {
-      continue
-    }
-    if nrank[high] == nrank[current] {
-      nrank[current] = nrank[current] - 1
-      nrank[high] = nrank[high] + 1
-      graph.nodes[idx].rank = high
-    }
-  }
-}
-
-///|
 priv struct MergedRankEdge {
   tail_idx : Int
   head_idx : Int
@@ -121,15 +67,26 @@ pub fn compute_ranks_directed_base(
     }
   }
   let edge_creation : Array[(String, String)] = []
-  for tail in tail_order {
-    let indices = match edges_by_tail.get(tail) {
-      Some(list) => list
-      None => []
+  let original_edges_by_tail : Map[String, Array[@cgraph.Edge]] = Map([])
+  for edge in edges {
+    guard @edge_semantics.edge_is_constraint(edge) else { continue }
+    let tail = edge.tail().name()
+    if original_edges_by_tail.get(tail) is Some(list) {
+      list.push(edge)
+    } else {
+      original_edges_by_tail[tail] = [edge]
     }
-    // Graphviz parity: agfstout/agnxtout use edge sequence (AGSEQ) order
-    // within a fixed tail. Do not change behavior without updating fixtures/tests.
-    for edge_idx in indices {
-      edge_creation.push((tail, edge_head[edge_idx]))
+  }
+  for tail in tail_order {
+    let original_edges = original_edges_by_tail.get(tail).unwrap_or_default()
+    original_edges.sort_by((a, b) => {
+      let a_order = node_order_index.get(a.head().name()).unwrap_or_default()
+      let b_order = node_order_index.get(b.head().name()).unwrap_or_default()
+      a_order.compare(b_order)
+    })
+    // rank.c decomposes before acyclic reverses the fast edges.
+    for edge in original_edges {
+      edge_creation.push((tail, edge.head().name()))
     }
   }
   // Graphviz parity: decompose ordering uses DFS over flat/in/out neighbors
@@ -246,8 +203,31 @@ pub fn compute_ranks_directed_base(
   let components : Array[Array[Int]] = []
   if has_rank_same_groups {
     let component : Array[Int] = []
-    for i in 0..<rep_order.length() {
-      component.push(i)
+    let collapsed_edges : Array[(String, String)] = []
+    let seen_edges : Map[String, Bool] = Map([])
+    // decompose visits the fast graph after rank-set representatives merge.
+    for tail in tail_order {
+      for edge_idx in edges_by_tail.get(tail).unwrap_or_default() {
+        guard @edge_semantics.edge_is_constraint(edges[edge_idx]) else {
+          continue
+        }
+        let head = edge_head[edge_idx]
+        let tail = rank_same_reps.get(tail).unwrap_or(tail)
+        let head = rank_same_reps.get(head).unwrap_or(head)
+        let key = "\{tail}|\{head}"
+        guard tail != head && seen_edges.get(key) is None else { continue }
+        seen_edges[key] = true
+        collapsed_edges.push((tail, head))
+      }
+    }
+    let collapsed_order = @rank_constraints.build_graphviz_nlist_order_from_edges(
+      rep_order,
+      rep_order,
+      collapsed_edges,
+      {},
+    )
+    for name in collapsed_order {
+      component.push(rep_index[name])
     }
     components.push(component)
   } else {
@@ -328,7 +308,6 @@ pub fn compute_ranks_directed_base(
       0x7fffffff,
       @network_simplex.BalanceMode::TB,
     )
-    tb_tie_adjust_rank_assignment(graph)
     let mut component_min_rank = 0
     let mut component_seen = false
     for rep_idx in component {

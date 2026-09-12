@@ -196,7 +196,10 @@ fn compute_pathplan_route_points(
   let mut pathplan_points : Array[@geom.Point] = []
   let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
   let (points, pathplan_used) = if input.base.use_pathplan &&
-    !input.base.is_flat_edge {
+    (
+      !input.base.is_flat_edge ||
+      (!input.base.is_flat_adjacent && input.base.mid_label_width_pt <= 0.0)
+    ) {
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
     let tail_port_box : @geom.Rect? = if !input.base.tail_clip_enabled &&
       input.base.tail_sameport_group_size > 0 {
@@ -260,6 +263,7 @@ fn compute_pathplan_route_points(
         input.path_left_bound,
         input.path_right_bound,
         input.has_any_edge_label,
+        vnode_origin_clusters=input.routing_context.path_vnode_origin_clusters,
       ) {
       Some(result) => {
         route_barriers = result.barriers

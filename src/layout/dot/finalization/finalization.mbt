@@ -57,7 +57,6 @@ pub(all) struct FinalizeLayoutBuildSources {
 /// options grouped so finalize pipeline wiring remains explicit and stable.
 priv struct FinalizeLayoutInput {
   graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
   rankdir : RankDir
@@ -72,8 +71,6 @@ priv struct FinalizeLayoutInput {
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
   nodesep_pt : Double
-  port_pad_below : Double
-  port_pad_above : Double
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -86,7 +83,6 @@ fn build_finalize_layout_input_from_sources(
 ) -> FinalizeLayoutInput {
   {
     graph: sources.graph,
-    nodes: sources.prep.nodes,
     nodes_out: sources.routing_stage_output.nodes_out,
     edges_out: sources.routing_stage_output.edges_out,
     rankdir: sources.prep.rankdir,
@@ -104,34 +100,23 @@ fn build_finalize_layout_input_from_sources(
     rank_ht1: sources.positions_state.rank_ht1,
     rank_ht2: sources.positions_state.rank_ht2,
     nodesep_pt: sources.rank_heights.nodesep_pt,
-    port_pad_below: sources.routing_stage_output.port_pad_below,
-    port_pad_above: sources.routing_stage_output.port_pad_above,
     flat_label_edge_vnodes: sources.positions_state.flat_label_edge_vnodes,
   }
 }
 
 ///|
 /// Graphviz parity: postprocess rankdir transform keeps TB passthrough,
-/// non-TB rotation, and LR cluster mirror policy in fixed order.
+/// and non-TB rotation without a cluster-dependent reflection.
 /// Do not change behavior without updating fixtures/tests.
-fn rotate_and_mirror_final_layout(
-  graph : @cgraph.Graph,
+fn rotate_final_layout(
   rankdir : RankDir,
   pre_rotation : PreRotationLayoutData,
 ) -> LayoutTree {
-  let rotated = if rankdir == RankDir::TB {
+  if rankdir == RankDir::TB {
     pre_rotation.layout
   } else {
     rotate_layout_graph(pre_rotation.layout, pre_rotation.layout.bbox, rankdir)
   }
-  apply_cluster_lr_mirror_after_rotation({
-    graph,
-    rankdir,
-    rotated,
-    pre_rotation_bbox: pre_rotation.layout.bbox,
-    rank_bbox: pre_rotation.rank_bbox,
-    subgraph_base_bbox: pre_rotation.subgraph_base_bbox,
-  })
 }
 
 ///|
@@ -142,8 +127,7 @@ pub fn finalize_layout_from_sources(
   sources : FinalizeLayoutBuildSources,
 ) -> LayoutTree {
   let input = build_finalize_layout_input_from_sources(sources)
-  let rotated = rotate_and_mirror_final_layout(
-    input.graph,
+  let rotated = rotate_final_layout(
     input.rankdir,
     build_pre_rotation_layout_data(input),
   )

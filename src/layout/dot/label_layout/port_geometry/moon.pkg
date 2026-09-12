@@ -13,4 +13,5 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry",
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
+  "moonbitlang/core/test",
 } for "wbtest"

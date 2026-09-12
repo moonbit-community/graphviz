@@ -64,7 +64,7 @@ test "build_constraint_segment_pass updates same-rank invis ordering constraints
 
   assert_eq(merged.tail, "a")
   assert_eq(merged.head, "b")
-  assert_eq(merged.minlen, 40)
+  assert_eq(merged.minlen, 30)
   assert_eq(merged.weight, 7)
   assert_eq(output.flat_minlen_constraints.length(), 0)
   assert_eq(output.segments_by_tail.length(), 0)
@@ -136,7 +136,7 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
 }
 
 ///|
-test "build_constraint_segment_pass reverses descending vnode chains and scales sparse segment weights" {
+test "descending chains use forward fast-edge tails and scale sparse weights" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
@@ -171,34 +171,27 @@ test "build_constraint_segment_pass reverses descending vnode chains and scales 
     edge_degree_increment: _ => 1,
   })
 
-  let first_segments = match output.segments_by_tail.get("a") {
-    Some(value) => value
-    None => fail("missing first descending segment")
+  guard output.segments_by_tail.get(vnode1) is Some(first_segments) else {
+    @test.fail("missing first forward segment")
   }
-  let middle_segments = match output.segments_by_tail.get(vnode1) {
-    Some(value) => value
-    None => fail("missing middle descending segment")
+  guard output.segments_by_tail.get(vnode0) is Some(middle_segments) else {
+    @test.fail("missing middle forward segment")
   }
-  let last_segments = match output.segments_by_tail.get(vnode0) {
-    Some(value) => value
-    None => fail("missing last descending segment")
+  guard output.segments_by_tail.get("b") is Some(last_segments) else {
+    @test.fail("missing last forward segment")
   }
-
-  assert_eq(output.flat_minlen_constraints.length(), 0)
-  assert_eq(output.segments_by_tail.length(), 3)
-
-  assert_eq(first_segments.length(), 1)
-  assert_eq(first_segments[0].tail, "a")
-  assert_eq(first_segments[0].head, vnode1)
-  assert_eq(first_segments[0].weight, 6)
-
-  assert_eq(middle_segments.length(), 1)
-  assert_eq(middle_segments[0].tail, vnode1)
-  assert_eq(middle_segments[0].head, vnode0)
-  assert_eq(middle_segments[0].weight, 12)
-
-  assert_eq(last_segments.length(), 1)
-  assert_eq(last_segments[0].tail, vnode0)
-  assert_eq(last_segments[0].head, "b")
-  assert_eq(last_segments[0].weight, 6)
+  @test.assert_eq(output.flat_minlen_constraints.length(), 0)
+  @test.assert_eq(output.segments_by_tail.length(), 3)
+  @test.assert_eq(first_segments.length(), 1)
+  @test.assert_eq(first_segments[0].tail, vnode1)
+  @test.assert_eq(first_segments[0].head, "a")
+  @test.assert_eq(first_segments[0].weight, 6)
+  @test.assert_eq(middle_segments.length(), 1)
+  @test.assert_eq(middle_segments[0].tail, vnode0)
+  @test.assert_eq(middle_segments[0].head, vnode1)
+  @test.assert_eq(middle_segments[0].weight, 12)
+  @test.assert_eq(last_segments.length(), 1)
+  @test.assert_eq(last_segments[0].tail, "b")
+  @test.assert_eq(last_segments[0].head, vnode0)
+  @test.assert_eq(last_segments[0].weight, 6)
 }

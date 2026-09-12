@@ -264,10 +264,18 @@ pub fn sorted_edges_for_routing(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
   order_index : Map[String, Int],
+  concentrated_route_order? : Map[Int, Int] = {},
 ) -> Array[@cgraph.Edge] {
   let ordered_edges = edges.copy()
   if ordered_edges.length() > 1 {
     ordered_edges.sort_by((a, b) => {
+      let a_order = concentrated_route_order
+        .get(a.id())
+        .unwrap_or(edges.length())
+      let b_order = concentrated_route_order
+        .get(b.id())
+        .unwrap_or(edges.length())
+      guard a_order == b_order else { a_order.compare(b_order) }
       route_edge_cmp(a, b, base_cache, order_index)
     })
   }

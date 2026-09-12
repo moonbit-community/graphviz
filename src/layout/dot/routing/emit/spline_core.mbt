@@ -214,22 +214,35 @@ fn edge_clip_attr_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
 }
 
 ///|
-fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
+fn edge_render_clip_flags(
+  base : EdgeRouteBase,
+  using_pathplan? : Bool = false,
+) -> EdgeRenderClipFlags {
   let sameport_direct_flags = edge_sameport_direct_flags(
     base.edge,
     base.swap_ends,
   )
   let attr_clip_flags = edge_clip_attr_flags(base)
-  let tail_clip_enabled = if !base.tail_clip_enabled &&
-    !attr_clip_flags.tail_clip_enabled {
+  // beginpath/endpath move explicit side ports outside the node and disable
+  // clipping on the original edge. Preserve that decision when installing the
+  // fitted path; clipping it again moves the endpoint back onto the shape.
+  let side_ports_unclipped = using_pathplan
+  let tail_clip_enabled = if @edge_identity.is_edge_vnode_name(base.tail_name) {
+    false
+  } else if side_ports_unclipped && base.tail_port_side != 0 {
+    false
+  } else if !base.tail_clip_enabled && !attr_clip_flags.tail_clip_enabled {
     false
   } else if !base.tail_clip_enabled && !sameport_direct_flags.tail_direct {
     true
   } else {
     base.tail_clip_enabled
   }
-  let head_clip_enabled = if !base.head_clip_enabled &&
-    !attr_clip_flags.head_clip_enabled {
+  let head_clip_enabled = if @edge_identity.is_edge_vnode_name(base.head_name) {
+    false
+  } else if side_ports_unclipped && base.head_port_side != 0 {
+    false
+  } else if !base.head_clip_enabled && !attr_clip_flags.head_clip_enabled {
     false
   } else if !base.head_clip_enabled && !sameport_direct_flags.head_direct {
     true
@@ -244,7 +257,10 @@ pub fn rebuild_spline_for_render(
   base : EdgeRouteBase,
   spline_result : EdgeSplineResult,
 ) -> EdgeSplineResult {
-  let edge_clip_flags = edge_render_clip_flags(base)
+  let edge_clip_flags = edge_render_clip_flags(
+    base,
+    using_pathplan=spline_result.using_pathplan,
+  )
   if edge_clip_flags.tail_clip_enabled == base.tail_clip_enabled &&
     edge_clip_flags.head_clip_enabled == base.head_clip_enabled {
     return spline_result

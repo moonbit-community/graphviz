@@ -3,6 +3,59 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "single-node clusters still participate in expansion" {
+  let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let cluster_graph = root.subgraph(name="cluster_single")
+  ignore(cluster_graph.node("only"))
+  guard build_cluster_local_reorder_context({
+      cluster: "cluster_single",
+      cluster_graph,
+      groups: { 2: ["outside", "only"] },
+      node_order: { "outside": 0, "only": 1 },
+      source_out_neighbors: Map([]),
+      vnode_clusters: Map([]),
+      fixed_positions: { "outside": 0.0, "only": 1.0 },
+      order_with_vnodes: true,
+    })
+    is Some(context) else {
+    @test.fail("missing single-node expansion")
+  }
+  @test.assert_eq(context.cluster_rank_keys, [2])
+  @test.assert_eq(context.cluster_groups.get(2), Some(["only"]))
+}
+
+///|
+test "external anchors share the extracted cluster rank coordinate system" {
+  let anchors = build_cluster_fixed_positions(
+    { "left": 0.0, "a": 1.0, "b": 2.0, "right": 3.0, "above": 4.0 },
+    { "a": true, "b": true },
+    { 0: ["above"], 1: ["left", "a", "b", "right"] },
+  )
+  @test.assert_eq(anchors.get("left"), Some(-1.0))
+  @test.assert_eq(anchors.get("right"), Some(2.0))
+  @test.assert_eq(anchors.get("above"), Some(4.0))
+  @test.assert_eq(anchors.get("a"), None)
+}
+
+///|
+test "expanded rank offsets exclude removed skeleton placeholders" {
+  let skeleton = @cluster_identity.cluster_skeleton_name("cluster_local", 0)
+  let anchors = build_cluster_fixed_positions(
+    {
+      "left": 0.0,
+      "_mbt_cluster_skel_cluster_local@0": 1.0,
+      "a": 2.0,
+      "b": 3.0,
+      "right": 4.0,
+    },
+    { "a": true, "b": true },
+    { 0: ["left", skeleton, "a", "b", "right"] },
+  )
+  @test.assert_eq(anchors.get("left"), Some(-1.0))
+  @test.assert_eq(anchors.get("right"), Some(2.0))
+}
+
+///|
 test "build_cluster_local_reorder_context keeps cluster members plus local vnodes, seeds later ranks from previous-rank reachability, and excludes local fixed slots" {
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let cluster_graph = root.subgraph(name="cluster_a")
@@ -79,7 +132,7 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
 }
 
 ///|
-test "apply_cluster_rank_reorder_output rewrites only cluster member slots and leaves other ranks unchanged when desired order is trivial" {
+test "apply_cluster_rank_reorder_output installs contiguous blocks and preserves outside order" {
   let groups : Map[Int, Array[String]] = Map([])
   groups[0] = ["left", "a", "middle", "b", "right"]
   groups[1] = ["keep", "c"]
@@ -100,8 +153,8 @@ test "apply_cluster_rank_reorder_output rewrites only cluster member slots and l
     cluster_node_set,
   )
 
-  assert_eq(groups.get(0), Some(["left", "b", "middle", "a", "right"]))
-  assert_eq(groups.get(1), Some(["keep", "c"]))
+  @test.assert_eq(groups.get(0), Some(["left", "b", "a", "middle", "right"]))
+  @test.assert_eq(groups.get(1), Some(["keep", "c"]))
 }
 
 ///|

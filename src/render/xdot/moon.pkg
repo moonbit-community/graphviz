@@ -1,4 +1,5 @@
 import {
+  "moonbit-community/graphviz/layout/dot/node_geometry",
   "moonbit-community/graphviz/layout/dot" @layout_dot,
   "moonbit-community/graphviz/layout/dot/label_metrics",
   "moonbit-community/graphviz/layout/dot/routing/edge_spline",
@@ -25,4 +26,5 @@ import {
 import {
   "moonbitlang/async",
   "moonbit-community/graphviz/dot/fs" @dot_fs,
+  "moonbitlang/core/test",
 } for "wbtest"

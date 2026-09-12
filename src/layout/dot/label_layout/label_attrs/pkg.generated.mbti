@@ -12,6 +12,8 @@ pub fn label_text(@cgraph.Node) -> String
 
 pub fn node_padding(@cgraph.Node) -> NodePadding
 
+pub fn simple_label_text(@cgraph.Node) -> String
+
 // Errors
 
 // Types and methods

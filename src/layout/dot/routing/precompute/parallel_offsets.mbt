@@ -74,9 +74,8 @@ pub(all) struct ParallelOffsetsBuildInput {
 }
 
 ///|
-/// Graphviz parity: `concentrate=true` keeps the first unlabelled regular
-/// edge in an endpoint/port class as its routed representative. Later members
-/// are retained in DOT output without a `pos` attribute.
+/// class2 keeps a forward chain when opposite concentrated edges meet,
+/// regardless of which direction appeared first in the input.
 pub fn collect_concentrated_edge_ids(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
@@ -86,32 +85,55 @@ pub fn collect_concentrated_edge_ids(
   if !concentrate {
     return ignored_edge_ids
   }
-  let groups : Map[String, Array[Int]] = Map([])
+  let cluster_keys : Map[String, String] = Map([])
+  let edge_tail : Array[String] = []
+  let edge_head : Array[String] = []
   for edge in edges {
-    if @edge_semantics.edge_has_label(edge) {
-      continue
-    }
     let tail = edge.tail().name()
     let head = edge.head().name()
-    if tail == head ||
-      ranks.get(tail).unwrap_or_default() == ranks.get(head).unwrap_or_default() {
+    cluster_keys[tail] = @membership.node_cluster_key(edge.tail())
+    cluster_keys[head] = @membership.node_cluster_key(edge.head())
+    let forward = ranks.get(tail).unwrap_or_default() <=
+      ranks.get(head).unwrap_or_default()
+    edge_tail.push(if forward { tail } else { head })
+    edge_head.push(if forward { head } else { tail })
+  }
+  let ports_equal = (a : @cgraph.Edge, b : @cgraph.Edge) => {
+    @edge_ops.edge_parallel_key(
+      a.tail().name(),
+      a.head().name(),
+      a.tail_port(),
+      a.head_port(),
+    ) ==
+    @edge_ops.edge_parallel_key(
+      b.tail().name(),
+      b.head().name(),
+      b.tail_port(),
+      b.head_port(),
+    )
+  }
+  let metadata = @order_graph.build_reverse_merge_metadata(
+    {
+      edges,
+      edge_tail,
+      edge_head,
+      edge_excluded_from_reverse_merge: edge => {
+        @edge_semantics.edge_has_label(edge) ||
+        ranks.get(edge.tail().name()) == ranks.get(edge.head().name())
+      },
+      edge_ports_equal: ports_equal,
+    },
+    initial_metadata=@order_graph.build_parallel_merge_metadata(
+      edges, ranks, cluster_keys, ports_equal,
+    ),
+  )
+  for index, _ in metadata.merged_edge_skip {
+    let edge = edges[index]
+    guard cluster_keys.get(edge.tail().name()) ==
+      cluster_keys.get(edge.head().name()) else {
       continue
     }
-    let key = @edge_ops.edge_parallel_key(
-      tail,
-      head,
-      edge.tail_port(),
-      edge.head_port(),
-    )
-    match groups.get(key) {
-      Some(ids) => ids.push(edge.id())
-      None => groups[key] = [edge.id()]
-    }
-  }
-  for _key, ids in groups {
-    for i in 1..<ids.length() {
-      ignored_edge_ids[ids[i]] = true
-    }
+    ignored_edge_ids[edge.id()] = true
   }
   ignored_edge_ids
 }
@@ -182,6 +204,7 @@ pub fn build_edge_parallel_offsets(
   let edge_reversed_by_id = input.edge_reversed_by_id
   let cluster_keys = input.cluster_keys
   let concentrated_ignored_edge_ids = input.concentrated_ignored_edge_ids
+  let concentrate = @order_graph.graphviz_concentrate_enabled(edges)
   let groups : Map[String, Array[Int]] = Map([])
   let group_first_dir_attr : Map[String, String] = Map([])
   let group_has_mixed_dir_attr : Map[String, Bool] = Map([])
@@ -250,6 +273,14 @@ pub fn build_edge_parallel_offsets(
   let offsets : Map[Int, Double] = Map([])
   for key, ids in groups {
     if ids.length() <= 1 {
+      continue
+    }
+    let first = edge_by_id[ids[0]]
+    // Ordinary concentrated edges that survived class2 own independent fast
+    // chains. They are separate MAINGRAPH routes, not offset multi-edge copies.
+    if concentrate &&
+      cluster_keys.get(first.tail().name()).unwrap_or_default() ==
+      cluster_keys.get(first.head().name()).unwrap_or_default() {
       continue
     }
     ids.sort_by((a, b) => {
@@ -344,7 +375,9 @@ pub fn build_edge_parallel_offsets(
     let dx = nodesep_pt * Double::from_int(count - 1) / 2.0
     for i in 0..<count {
       let offset = dx - Double::from_int(i) * nodesep_pt
-      offsets[ids[i]] = offset
+      // Concentrated cluster duplicates are ND_other copies of a live main
+      // edge: dotsplines installs the main at -dx, then advances by Multisep.
+      offsets[ids[i]] = if concentrate { -offset } else { offset }
     }
   }
   offsets

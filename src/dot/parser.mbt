@@ -112,6 +112,19 @@ fn compass_from_string(value : String) -> @cgraph.Compass? {
 }
 
 ///|
+fn Parser::parse_attr_value(
+  self : Parser,
+) -> @cgraph.AttrValue raise DotParseError {
+  let html = self.current.token is Html(_)
+  let value = self.parse_id()
+  if html {
+    @cgraph.AttrValue::Html(value)
+  } else {
+    @cgraph.AttrValue::Text(value)
+  }
+}
+
+///|
 fn edge_port_from_attr(value : String) -> @cgraph.Port? {
   let trimmed = value.trim().to_owned()
   if trimmed == "" {
@@ -165,8 +178,8 @@ fn Parser::parse_node_id(self : Parser) -> NodeId raise DotParseError {
 ///|
 fn Parser::parse_attr_list(
   self : Parser,
-) -> Map[String, String] raise DotParseError {
-  let attrs : Map[String, String] = Map([])
+) -> Map[String, @cgraph.AttrValue] raise DotParseError {
+  let attrs : Map[String, @cgraph.AttrValue] = Map([])
   while self.current.token == LBracket {
     self.advance()
     while self.current.token != RBracket && self.current.token != Eof {
@@ -175,10 +188,10 @@ fn Parser::parse_attr_list(
         continue
       }
       let key = self.parse_id()
-      let mut value = ""
+      let mut value = @cgraph.AttrValue::Text("")
       if self.current.token == Eq {
         self.advance()
-        value = self.parse_id()
+        value = self.parse_attr_value()
       }
       attrs[key] = value
       if self.current.token == Comma || self.current.token == Semi {
@@ -445,11 +458,11 @@ fn Parser::parse_edge_stmt(
   }
   let attrs = self.parse_attr_list()
   let attr_tail_port = match attrs.get("tailport") {
-    Some(value) => edge_port_from_attr(value)
+    Some(value) => edge_port_from_attr(value.text())
     None => None
   }
   let attr_head_port = match attrs.get("headport") {
-    Some(value) => edge_port_from_attr(value)
+    Some(value) => edge_port_from_attr(value.text())
     None => None
   }
   for i in 0..<(endpoints.length() - 1) {
@@ -483,7 +496,7 @@ fn Parser::parse_edge_stmt(
         for key, value in attrs {
           if (key != "tailport" || attr_tail_port is None) &&
             (key != "headport" || attr_head_port is None) {
-            edge.set_attr(key, value)
+            edge.set_attr_value(key, value)
           }
         }
       }
@@ -515,7 +528,7 @@ fn graph_has_local_default_attr(graph : @cgraph.Graph, key : String) -> Bool {
 fn freeze_existing_subgraph_graph_attr(
   graph : @cgraph.Graph,
   key : String,
-  frozen : String,
+  frozen : @cgraph.AttrValue,
 ) -> Unit {
   // Graphviz snapshots graph attrs into already-open subgraphs when later
   // root-level `key=value` assignments are canonicalized to `graph [...]`.
@@ -524,7 +537,7 @@ fn freeze_existing_subgraph_graph_attr(
       graph_has_local_default_attr(subgraph, key) {
       continue
     }
-    subgraph.set_default_attr(@cgraph.AttrKind::Graph, key, frozen)
+    subgraph.set_default_attr_value(@cgraph.AttrKind::Graph, key, frozen)
   }
 }
 
@@ -537,7 +550,7 @@ fn Parser::parse_stmt(
     self.advance()
     let attrs = self.parse_attr_list()
     for key, value in attrs {
-      graph.set_default_attr(@cgraph.AttrKind::Graph, key, value)
+      graph.set_default_attr_value(@cgraph.AttrKind::Graph, key, value)
     }
     return
   }
@@ -545,17 +558,17 @@ fn Parser::parse_stmt(
     self.advance()
     let attrs = self.parse_attr_list()
     for key, value in attrs {
-      let previous = graph.get_default_attr(@cgraph.AttrKind::Node, key)
+      let previous = graph.get_default_attr_value(@cgraph.AttrKind::Node, key)
       for node in graph.nodes() {
         if node.get_attr(key) is None {
           let frozen = match previous {
             Some(current) => current
-            None => ""
+            None => @cgraph.AttrValue::Text("")
           }
-          node.set_attr(key, frozen)
+          node.set_attr_value(key, frozen)
         }
       }
-      graph.set_default_attr(@cgraph.AttrKind::Node, key, value)
+      graph.set_default_attr_value(@cgraph.AttrKind::Node, key, value)
     }
     return
   }
@@ -563,17 +576,17 @@ fn Parser::parse_stmt(
     self.advance()
     let attrs = self.parse_attr_list()
     for key, value in attrs {
-      let previous = graph.get_default_attr(@cgraph.AttrKind::Edge, key)
+      let previous = graph.get_default_attr_value(@cgraph.AttrKind::Edge, key)
       for edge in graph.edges() {
         if edge.get_attr(key) is None {
           let frozen = match previous {
             Some(current) => current
-            None => ""
+            None => @cgraph.AttrValue::Text("")
           }
-          edge.set_attr(key, frozen)
+          edge.set_attr_value(key, frozen)
         }
       }
-      graph.set_default_attr(@cgraph.AttrKind::Edge, key, value)
+      graph.set_default_attr_value(@cgraph.AttrKind::Edge, key, value)
     }
     return
   }
@@ -588,13 +601,13 @@ fn Parser::parse_stmt(
   let node_id = self.parse_node_id()
   if self.current.token == Eq {
     self.advance()
-    let value = self.parse_id()
-    let previous = match graph.get_attr(node_id.name) {
+    let value = self.parse_attr_value()
+    let previous = match graph.get_attr_value(node_id.name) {
       Some(current) => current
-      None => ""
+      None => @cgraph.AttrValue::Text("")
     }
     freeze_existing_subgraph_graph_attr(graph, node_id.name, previous)
-    graph.set_attr(node_id.name, value)
+    graph.set_attr_value(node_id.name, value)
     return
   }
   if self.current.token == EdgeDirected || self.current.token == EdgeUndirected {
@@ -604,7 +617,7 @@ fn Parser::parse_stmt(
   let node = parser_resolve_node_for_graph(graph, node_id.name)
   let attrs = self.parse_attr_list()
   for key, value in attrs {
-    node.set_attr(key, value)
+    node.set_attr_value(key, value)
   }
 }
 

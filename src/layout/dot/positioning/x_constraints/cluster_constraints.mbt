@@ -31,7 +31,7 @@ fn collect_cluster_preorder(
   cluster_order : Array[String],
 ) -> Unit {
   if @cluster_graph.is_cluster_graph(graph) {
-    if graph.name() is Some(name) {
+    if graph.name() is Some(name) && !cluster_order.contains(name) {
       cluster_order.push(name)
     }
   }
@@ -56,6 +56,7 @@ fn build_cluster_constraints(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> ClusterConstraintBuild {
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_graphs = cluster_maps.cluster_graphs
@@ -128,7 +129,7 @@ fn build_cluster_constraints(
       for name, members in cluster_members {
         let tail_in = members.get(tail) is Some(_)
         let head_in = members.get(head) is Some(_)
-        if tail_in || head_in {
+        if live_graph is None && (tail_in || head_in) {
           match cluster_related.get(name) {
             Some(related) =>
               for vnode in vnodes {
@@ -145,6 +146,11 @@ fn build_cluster_constraints(
           }
         }
       }
+    }
+  }
+  if live_graph is Some(fast) {
+    for name, members in cluster_members {
+      cluster_related[name] = live_cluster_related_nodes(fast, members)
     }
   }
   let node_in_any_cluster : Map[String, Bool] = Map([])
@@ -317,7 +323,10 @@ fn build_cluster_constraints(
       None => 0.0
     }
     match (cluster_members.get(name), cluster_related.get(name)) {
-      (Some(members), Some(related)) =>
+      (Some(members), Some(related)) => {
+        let left_members = live_graph.map_or(members, fast => {
+          live_cluster_left_boundary_members(fast, edges, ranks, members)
+        })
         for rank in rank_keys {
           let names = match groups.get(rank) {
             Some(list) => list
@@ -332,12 +341,14 @@ fn build_cluster_constraints(
                 node_name,
               )
               is Some(_)
-            let is_member = members.get(node_name) is Some(_)
+            let is_member = left_members.get(node_name) is Some(_)
             if is_member && !is_skeleton {
               if left_idx < 0 {
                 left_idx = i
               }
-              right_idx = i
+              if live_graph is None {
+                right_idx = i
+              }
             } else if left_idx >= 0 &&
               !is_skeleton &&
               !@edge_identity.is_edge_vnode_name(node_name) {
@@ -346,9 +357,15 @@ fn build_cluster_constraints(
               // node outside the cluster terminates it (dotgen/rebuild_vlists).
               break
             }
+            if left_idx >= 0 &&
+              !is_skeleton &&
+              live_graph is Some(fast) &&
+              live_cluster_right_boundary_member(fast, node_name, members) {
+              right_idx = i
+            }
             i = i + 1
           }
-          if left_idx < 0 {
+          if left_idx < 0 || right_idx < left_idx {
             continue
           }
           let left_name = names[left_idx]
@@ -422,6 +439,7 @@ fn build_cluster_constraints(
             j = j + 1
           }
         }
+      }
       _ => ()
     }
     guard label_minlen is None else { continue }

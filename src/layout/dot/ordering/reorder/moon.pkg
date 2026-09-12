@@ -6,10 +6,10 @@ import {
   "moonbitlang/core/env",
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
-  "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
 }
 
 import {
   "moonbit-community/graphviz/layout/dot/input_stage",
   "moonbit-community/graphviz/layout/dot/ordering/order_graph",
+  "moonbitlang/core/test",
 } for "wbtest"

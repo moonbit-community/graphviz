@@ -5,6 +5,7 @@ import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/layout/dot/network_simplex",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbitlang/core/ref",
 }
@@ -18,7 +19,7 @@ pub fn compress_width_minlen_pt(@cgraph.Graph, @rankdir.RankDir) -> Int?
 
 pub fn compute_rank_positions(Array[Int], Map[Int, Array[String]], Map[String, @node_primitives.NodeSize], Double, Bool) -> Map[String, Double]
 
-pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int, (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int, Bool) -> Map[String, Double]
+pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int, (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int, Bool, live_graph? : @setup.ConcentrateFastGraph?) -> Map[String, Double]
 
 pub fn constraint_node_kind(String) -> @network_simplex.NodeKind
 
@@ -160,17 +161,13 @@ pub(all) struct ReorderConstraintGraphOutput {
   index : Map[String, Int]
 }
 
-pub(all) struct ReverseMergeMetadata {
-  merged_edge_weight_bonus : Map[Int, Int]
-  merged_edge_skip : Map[Int, Bool]
-}
-
 pub(all) struct SlackSegment {
   tail : String
   head : String
   weight : Int
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
+  concentrated_absorbed : Bool
 }
 
 pub(all) struct XPositionPipelineInput {
@@ -249,12 +246,8 @@ pub(all) struct XposConstraintSnapshot {
 }
 
 pub(all) struct XposNlistOrderInput {
-  rankdir : @rankdir.RankDir
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  cluster_keys : Map[String, String]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
 }
 
 // Type aliases

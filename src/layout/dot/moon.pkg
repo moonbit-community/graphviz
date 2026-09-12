@@ -9,6 +9,8 @@ import {
   "moonbit-community/graphviz/layout/dot/input_stage",
   "moonbit-community/graphviz/layout/dot/positioning",
   "moonbit-community/graphviz/layout/dot/routing/integration",
+  "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
+  "moonbit-community/graphviz/layout/dot/positioning/ports" @position_ports,
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/debug",
@@ -21,3 +23,7 @@ import {
   "moonbitlang/async/fs",
   "moonbitlang/core/string",
 } for "test"
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

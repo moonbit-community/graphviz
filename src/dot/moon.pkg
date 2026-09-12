@@ -4,3 +4,7 @@ import {
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/env",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

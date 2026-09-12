@@ -3,6 +3,25 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "execution preserves the live concentrated main edge order" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let first = graph.edge(graph.node("a"), graph.node("b"))
+  let second = graph.edge(graph.node("c"), graph.node("d"))
+  let bases = Map([
+    (first.id(), build_route_base(first, tail_rank=0, head_rank=3)),
+    (second.id(), build_route_base(second, tail_rank=0, head_rank=1)),
+  ])
+  let order = Map([(first.id(), 0), (second.id(), 1)])
+  let sorted = sorted_edges_for_routing(
+    [second, first],
+    bases,
+    {},
+    concentrated_route_order=order,
+  )
+  @test.assert_eq(sorted.map(edge => edge.id()), [first.id(), second.id()])
+}
+
+///|
 test "sorted_edges_for_routing prioritizes self edges then flat edges then regular edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))

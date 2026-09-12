@@ -937,6 +937,8 @@ fn is_svg_named_color(color : String) -> Bool {
     | "bisque"
     | "brown"
     | "darkorchid"
+    | "darkgreen"
+    | "dodgerblue"
     | "palegoldenrod"
     | "gold"
     | "cyan"
@@ -964,6 +966,7 @@ fn is_svg_named_color(color : String) -> Bool {
     | "aquamarine"
     | "forestgreen"
     | "limegreen"
+    | "chartreuse"
     | "lemonchiffon"
     | "lightseagreen"
     | "firebrick"
@@ -1211,7 +1214,7 @@ fn label_metrics(
       metrics_text, font_name, font_size_pt,
     )
     let height_pt = if line.text == "" {
-      font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
+      (font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE).trunc()
     } else {
       raw_height_pt
     }
@@ -1545,13 +1548,7 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
       let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
       let name = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
       let (_, width_pt, height_pt) = label_metrics(text, name, size)
-      let adjusted_height = if name == "Helvetica-Oblique" {
-        // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
-        height_pt - 0.72
-      } else {
-        height_pt
-      }
-      Some((text, width_pt, adjusted_height))
+      Some((text, width_pt, height_pt))
     }
     None => None
   }
@@ -1763,10 +1760,8 @@ fn arrow_primitives(
   if layout.splines.length() == 0 {
     return []
   }
-  let spline = if at_head {
-    layout.splines[layout.splines.length() - 1]
-  } else {
-    layout.splines[0]
+  guard @render.spline_with_arrow(layout.splines, at_head) is Some(spline) else {
+    return []
   }
   if spline.points.length() < 2 {
     return []
@@ -1952,38 +1947,12 @@ fn effective_edge_port(
 
 ///|
 fn port_title_suffix(port : @cgraph.Port?) -> String {
-  match port {
-    None => ""
-    Some(value) => {
-      let mut suffix = ""
-      match value.name {
-        Some(name) => if name != "" { suffix = ":\{name}" }
-        None => ()
-      }
-      match value.compass {
-        Some(compass) => {
-          let compass_text = match compass {
-            @cgraph.Compass::N => "n"
-            @cgraph.Compass::NE => "ne"
-            @cgraph.Compass::E => "e"
-            @cgraph.Compass::SE => "se"
-            @cgraph.Compass::S => "s"
-            @cgraph.Compass::SW => "sw"
-            @cgraph.Compass::W => "w"
-            @cgraph.Compass::NW => "nw"
-            @cgraph.Compass::C => "c"
-          }
-          if suffix == "" {
-            suffix = ":\{compass_text}"
-          } else {
-            suffix = "\{suffix}:\{compass_text}"
-          }
-        }
-        None => ()
-      }
-      suffix
-    }
+  guard port is Some(port) else { return "" }
+  // initPort stores the suffix after ':' as port.name for object titles.
+  if port.compass is Some(compass) {
+    return ":\{compass.to_string().to_lower()}"
   }
+  port.name.map_or("", name => if name == "" { "" } else { ":\{name}" })
 }
 
 ///|
@@ -3832,16 +3801,25 @@ fn write_record_field_lines(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
+  nojustify : Bool,
 ) -> Unit {
   if text == "" {
     return ()
   }
   let font_attrs = svg_text_font_attrs(font)
-  let (lines, _max_width, total_height) = record_label_metrics(text, font, size)
+  let (lines, max_width, total_height) = record_label_metrics(text, font, size)
   let center_x = (field_rect.llx + field_rect.urx) / 2.0
   let center_y = (field_rect.lly + field_rect.ury) / 2.0
-  let left_x = field_rect.llx + pad_x_pt / 2.0
-  let right_x = field_rect.urx - pad_x_pt / 2.0
+  let left_x = if nojustify {
+    center_x - max_width / 2.0
+  } else {
+    field_rect.llx + pad_x_pt / 2.0
+  }
+  let right_x = if nojustify {
+    center_x + max_width / 2.0
+  } else {
+    field_rect.urx - pad_x_pt / 2.0
+  }
   let mut baseline = center_y + total_height / 2.0 - size
   if lines.length() > 0 && lines[0].text == "" {
     baseline = baseline + RECORD_BORDER_PT
@@ -3893,6 +3871,7 @@ fn write_record_contents(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
+  nojustify : Bool,
 ) -> Unit {
   for i in 0..<layouts.length() {
     let layout = layouts[i]
@@ -3911,6 +3890,7 @@ fn write_record_contents(
             bbox,
             indent,
             pretty,
+            nojustify,
           )
         }
       }
@@ -3930,6 +3910,7 @@ fn write_record_contents(
           bbox,
           indent,
           pretty,
+          nojustify,
         )
     }
     if i + 1 < layouts.length() {
@@ -4044,6 +4025,7 @@ fn write_record_node(
     bbox,
     indent,
     pretty,
+    @attrs.graphviz_bool(node_attr(node, "nojustify")),
   )
 }
 
@@ -4098,71 +4080,6 @@ fn html_text_metrics(
 }
 
 ///|
-fn html_text_spans_plain_text(
-  spans : Array[@html_label.HtmlTextSpan],
-) -> String {
-  let text = StringBuilder()
-  for span in spans {
-    text.write_string(span.text)
-  }
-  text.to_string()
-}
-
-///|
-fn html_text_spans_by_line(
-  spans : Array[@html_label.HtmlTextSpan],
-) -> Array[Array[@html_label.HtmlTextSpan]] {
-  let append_span = fn(
-    line : Array[@html_label.HtmlTextSpan],
-    text : String,
-    color : String?,
-  ) -> Unit {
-    if text == "" {
-      return
-    }
-    if line.length() > 0 {
-      let last_index = line.length() - 1
-      let last = line[last_index]
-      if last.color == color {
-        line[last_index] = { text: last.text + text, color, }
-        return
-      }
-    }
-    line.push({ text, color, })
-  }
-  let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
-  for span in spans {
-    let mut part = StringBuilder()
-    for ch in span.text {
-      if ch == '\n' {
-        let line = lines[lines.length() - 1]
-        append_span(line, part.to_string(), span.color)
-        part = StringBuilder()
-        lines.push([])
-      } else {
-        part.write_char(ch)
-      }
-    }
-    let line = lines[lines.length() - 1]
-    append_span(line, part.to_string(), span.color)
-  }
-  lines
-}
-
-///|
-fn html_text_width(
-  text : String,
-  name : String,
-  font_name : String,
-  font_size_pt : Double,
-) -> Double {
-  let (_lines, width_pt, _height_pt) = html_text_metrics(
-    text, name, font_name, font_size_pt,
-  )
-  width_pt
-}
-
-///|
 fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
   name : String,
@@ -4177,11 +4094,10 @@ fn html_cell_content_size(
       (width_pt, height_pt)
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
-      let text = html_text_spans_plain_text(spans)
-      let (_lines, width_pt, height_pt) = html_text_metrics(
-        text, name, font_name, font_size_pt,
+      let metrics = @label_metrics.html_styled_text_metrics(
+        spans, name, font_name, font_size_pt,
       )
-      (width_pt, height_pt)
+      (metrics.width_pt, metrics.height_pt)
     }
     @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, name, font_name, font_size_pt)
@@ -4592,76 +4508,52 @@ fn write_html_styled_text_lines(
   indent : String,
   pretty : Bool,
 ) -> Unit {
-  let text = html_text_spans_plain_text(spans)
-  let (lines, _max_width, total_height) = html_text_metrics(
-    text, name, font, size,
-  )
-  if lines.length() == 0 {
-    return ()
+  let metrics = @label_metrics.html_styled_text_metrics(spans, name, font, size)
+  let top = match valign {
+    @html_label.HtmlVAlign::Top => rect.ury
+    @html_label.HtmlVAlign::Bottom => rect.lly + metrics.height_pt
+    @html_label.HtmlVAlign::Middle =>
+      (rect.lly + rect.ury + metrics.height_pt) / 2.0
   }
-  let runs_by_line = html_text_spans_by_line(spans)
-  let font_attrs = svg_text_font_attrs(font)
-  let center_y = match valign {
-    @html_label.HtmlVAlign::Top => rect.ury - total_height / 2.0
-    @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
-    @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
+  let mut baseline = top
+  let block_left = match align {
+    @html_label.HtmlAlign::Left => rect.llx
+    @html_label.HtmlAlign::Right => rect.urx - metrics.width_pt
+    @html_label.HtmlAlign::Center =>
+      (rect.llx + rect.urx - metrics.width_pt) / 2.0
   }
-  let mut baseline = center_y + total_height / 2.0 - size
-  for i, line in lines {
-    let line_x = match align {
-      @html_label.HtmlAlign::Left => rect.llx
-      @html_label.HtmlAlign::Right => rect.urx - line.width_pt
+  for line in metrics.lines {
+    baseline -= line.baseline_advance
+    let mut cursor_x = match
+      line.alignment.unwrap_or(@html_label.HtmlAlign::Center) {
+      @html_label.HtmlAlign::Left => block_left
+      @html_label.HtmlAlign::Right =>
+        block_left + metrics.width_pt - line.width_pt
       @html_label.HtmlAlign::Center =>
-        centered_html_text_x((rect.llx + rect.urx - line.width_pt) / 2.0, font)
-    }
-    let line_y = baseline + line.yoffset_centerline
-    let runs = if i < runs_by_line.length() { runs_by_line[i] } else { [] }
-    if runs.length() > 0 {
-      let mut cursor_x = line_x
-      for run in runs {
-        if run.text == "" {
-          continue
-        }
-        let width_pt = html_text_width(run.text, name, font, size)
-        let x = svg_x(cursor_x, bbox.llx)
-        let y = svg_y(line_y, bbox.lly)
-        let x_text = format_double(x)
-        let y_text = format_double(y)
-        let size_text = format_double_fixed(size, 2)
-        let escaped = escape_xml_text_with_dash(run.text)
-        let color = match run.color {
-          Some(value) => svg_color(value)
-          None => default_color
-        }
-        let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
-        write_line(
-          sb,
-          "<text xml:space=\"preserve\" text-anchor=\"start\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
-          indent,
-          pretty,
+        centered_html_text_x(
+          block_left + (metrics.width_pt - line.width_pt) / 2.0,
+          line.runs[0].font_name,
         )
-        cursor_x = cursor_x + width_pt
-      }
-    } else if line.text != "" {
-      let x = svg_x(line_x, bbox.llx)
-      let y = svg_y(line_y, bbox.lly)
-      let x_text = format_double(x)
-      let y_text = format_double(y)
-      let size_text = format_double_fixed(size, 2)
-      let escaped = escape_xml_text_with_dash(line.text)
-      let fill_attr = if default_color == "black" {
-        ""
-      } else {
-        " fill=\"\{default_color}\""
-      }
+    }
+    for run in line.runs {
+      guard run.text != "" else { continue }
+      let line_y = baseline +
+        (if metrics.simple { run.yoffset_centerline } else { 1.0 })
+      let x_text = format_double(svg_x(cursor_x, bbox.llx))
+      let y_text = format_double(svg_y(line_y, bbox.lly))
+      let size_text = format_double_fixed(run.font_size_pt, 2)
+      let font_attrs = svg_text_font_attrs(run.font_name)
+      let escaped = escape_xml_text_with_dash(run.text)
+      let color = run.color.map_or(default_color, svg_color)
+      let fill_attr = if color == "black" { "" } else { " fill=\"\{color}\"" }
       write_line(
         sb,
         "<text xml:space=\"preserve\" text-anchor=\"start\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
         indent,
         pretty,
       )
+      cursor_x += run.width_pt
     }
-    baseline = baseline - line.height_pt
   }
 }
 
@@ -4722,8 +4614,27 @@ fn write_html_table(
   linear_gradient_index : Ref[Int],
   radial_gradient_index : Ref[Int],
   pretty : Bool,
+  link_id_prefix : String,
+  link_index : Ref[Int],
 ) -> Unit {
   let _ = stroke_dash
+  let link = svg_link(
+    table.href,
+    table.tooltip,
+    table.target,
+    Some("<TABLE>"),
+    Map([]),
+  )
+  let opened = write_svg_link_start(
+    sb,
+    "\{link_id_prefix}_\{link_index.val}",
+    link,
+    indent,
+    pretty,
+  )
+  if opened {
+    link_index.val = link_index.val + 1
+  }
   let rect = centered_html_table_rect(table, rect, name, font, size)
   let layout = html_table_layout(table, rect, name, font, size)
   let border_pt = html_table_border_pt(table)
@@ -4774,6 +4685,23 @@ fn write_html_table(
     None => ()
   }
   for index, cell_layout in layout.cells {
+    let cell_link = svg_link(
+      cell_layout.cell.href,
+      cell_layout.cell.tooltip,
+      cell_layout.cell.target,
+      Some("<TABLE>"),
+      Map([]),
+    )
+    let cell_link_open = write_svg_link_start(
+      sb,
+      "\{link_id_prefix}_\{link_index.val}",
+      cell_link,
+      indent,
+      pretty,
+    )
+    if cell_link_open {
+      link_index.val += 1
+    }
     let cell_rect = cell_layout.rect
     let cell_border_pt = html_cell_border_pt(table, cell_layout.cell)
     match cell_layout.cell.bg_color {
@@ -4834,7 +4762,8 @@ fn write_html_table(
       @html_label.HtmlCellContent::Table(nested) =>
         write_html_table(
           sb, nested, content_rect, name, font, size, text_color, stroke, stroke_dash,
-          bbox, indent, linear_gradient_index, radial_gradient_index, pretty,
+          bbox, indent, linear_gradient_index, radial_gradient_index, pretty, link_id_prefix,
+          link_index,
         )
       @html_label.HtmlCellContent::StyledText(spans) =>
         if spans.length() > 0 {
@@ -4871,6 +4800,7 @@ fn write_html_table(
           )
         }
     }
+    write_svg_link_end(sb, cell_link_open, indent, pretty)
   }
   write_html_table_rules(sb, table, layout, stroke, bbox, indent, pretty)
   if border_pt > 0.0 {
@@ -4910,6 +4840,7 @@ fn write_html_table(
       )
     }
   }
+  write_svg_link_end(sb, opened, indent, pretty)
 }
 
 ///|
@@ -5290,12 +5221,14 @@ fn write_label_lines(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
+  justification_width? : Double? = None,
 ) -> Unit {
   if text == "" {
     return ()
   }
   let font_attrs = svg_text_font_attrs(font)
   let (lines, max_width, total_height) = label_metrics(text, font, size)
+  let max_width = justification_width.unwrap_or(max_width)
   let mut baseline = pos.y + total_height / 2.0 - size
   for line in lines {
     let line_x = match line.align {
@@ -5375,6 +5308,9 @@ fn write_cluster_graphs(
   next_cluster_id : Int,
   linear_gradient_index : Ref[Int],
   radial_gradient_index : Ref[Int],
+  layer_selection? : SvgLayerSelection? = None,
+  layer_number? : Int = 1,
+  layer_prefix? : String = "",
 ) -> Int {
   let mut cluster_id = next_cluster_id
   let rendered_subgraphs = layout.subgraphs
@@ -5400,6 +5336,12 @@ fn write_cluster_graphs(
         continue
       }
       Some(subgraph) => {
+        if is_cluster_graph(graph) &&
+          layer_selection is Some(selection) &&
+          !selection.cluster_visible(layer_number, graph) {
+          cluster_id = advance_cluster_graph_ids(source_subgraph, cluster_id)
+          continue
+        }
         if is_cluster_graph(graph) {
           let rect = subgraph.bbox
           let x1 = svg_x(rect.llx, bbox.llx)
@@ -5438,11 +5380,18 @@ fn write_cluster_graphs(
           }
           write_line(
             sb,
-            "<g id=\"clust\{current_id}\" class=\"cluster\">",
+            "<g id=\"\{escape_xml_with_dash(layer_prefix)}clust\{current_id}\" class=\"cluster\">",
             indent,
             pretty,
           )
           write_line(sb, "<title>\{graph_title}</title>", indent, pretty)
+          let graph_link_open = write_svg_link_start(
+            sb,
+            "\{layer_prefix}clust\{current_id}",
+            graph_svg_link(graph),
+            indent,
+            pretty,
+          )
           let radial = style_has_token(local_style, "radial")
           let raw_fill = if local_style.filled || radial {
             Some(
@@ -5533,11 +5482,21 @@ fn write_cluster_graphs(
             }
             None => ()
           }
+          write_svg_link_end(sb, graph_link_open, indent, pretty)
           write_line(sb, "</g>", indent, pretty)
         }
         cluster_id = write_cluster_graphs(
-          sb, subgraph, bbox, indent, pretty, cluster_id, linear_gradient_index,
+          sb,
+          subgraph,
+          bbox,
+          indent,
+          pretty,
+          cluster_id,
+          linear_gradient_index,
           radial_gradient_index,
+          layer_selection~,
+          layer_number~,
+          layer_prefix~,
         )
       }
     }
@@ -5939,6 +5898,8 @@ fn write_svg_edge_group(
   bbox : @geom.Rect,
   edge_id : String,
   pretty : Bool,
+  linear_gradient_index : Ref[Int],
+  radial_gradient_index : Ref[Int],
 ) -> Unit {
   let svg_group_class = (base : String, extra : String?) => {
     match extra {
@@ -5980,8 +5941,39 @@ fn write_svg_edge_group(
     pretty,
   )
   write_line(sb, "<title>\{edge_title}</title>", "", pretty)
+  let edge_link_open = write_svg_link_start(
+    sb,
+    edge_id,
+    edge_svg_link(edge, ""),
+    "",
+    pretty,
+  )
   let dash = stroke_dash_attr(style)
   let width_attr = stroke_width_attr(style, edge.get_attr("penwidth"))
+  let write_spline_arrows = (splines : Array[@geom.Spline]) => {
+    let layout = { ..edge_layout, splines, }
+    let flags = arrow_flags(edge, kind)
+    let (head_color, tail_color) = edge_arrow_colors(edge)
+    for (at_head, enabled) in [(false, flags.tail), (true, flags.head)] {
+      guard enabled else { continue }
+      write_arrow_ops(
+        sb,
+        arrow_primitives(layout, at_head),
+        if at_head {
+          head_color
+        } else {
+          tail_color
+        },
+        "",
+        width_attr,
+        bbox.llx,
+        bbox.lly,
+        "",
+        pretty,
+      )
+    }
+  }
+  let mut wrote_segment_arrows = false
   let raw_color = @attrs.color(edge.get_attr("color"), default="black")
   let has_colon = raw_color.find(":") is Some(_)
   let has_semicolon = raw_color.find(";") is Some(_)
@@ -6124,39 +6116,114 @@ fn write_svg_edge_group(
             }
           }
         }
+        if color_count == 1 && edge_layout.splines.length() > 1 {
+          write_spline_arrows([edge_layout.splines[spline_index]])
+          wrote_segment_arrows = true
+        }
       }
     }
   }
-  let flags = arrow_flags(edge, kind)
-  let (head_color, tail_color) = edge_arrow_colors(edge)
-  if flags.tail {
-    let ops = arrow_primitives(edge_layout, false)
-    write_arrow_ops(
+  if !wrote_segment_arrows {
+    write_spline_arrows(edge_layout.splines)
+  }
+  let html_link_index = Ref(0)
+  let write_edge_label = (
+    attr_name : String,
+    text : String,
+    font : String,
+    size : Double,
+    color : String,
+    pos : @geom.Point,
+  ) => {
+    guard @html_label.parse_html_label(
+        text,
+        html=edge
+          .get_attr_value(attr_name)
+          .map(value => value is @cgraph.AttrValue::Html(_)),
+      )
+      is Some(label) else {
+      write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
+      return
+    }
+    let content = match label {
+      @html_label.HtmlLabel::Table(table) =>
+        @html_label.HtmlCellContent::Table(table)
+      @html_label.HtmlLabel::Text(value) =>
+        @html_label.HtmlCellContent::Text(value)
+      @html_label.HtmlLabel::StyledText(spans) =>
+        @html_label.HtmlCellContent::StyledText(spans)
+    }
+    let (width, height) = html_cell_content_size(content, "", font, size)
+    let rect : @geom.Rect = {
+      llx: pos.x - width / 2.0,
+      lly: pos.y - height / 2.0,
+      urx: pos.x + width / 2.0,
+      ury: pos.y + height / 2.0,
+    }
+    match label {
+      @html_label.HtmlLabel::Table(table) =>
+        write_html_table(
+          sb, table, rect, "", font, size, color, color, "", bbox, "", linear_gradient_index,
+          radial_gradient_index, pretty, edge_id, html_link_index,
+        )
+      @html_label.HtmlLabel::Text(value) =>
+        write_html_text_lines(
+          sb,
+          value,
+          @html_label.HtmlAlign::Center,
+          @html_label.HtmlVAlign::Middle,
+          rect,
+          "",
+          font,
+          size,
+          color,
+          bbox,
+          "",
+          pretty,
+        )
+      @html_label.HtmlLabel::StyledText(spans) =>
+        write_html_styled_text_lines(
+          sb,
+          spans,
+          @html_label.HtmlAlign::Center,
+          @html_label.HtmlVAlign::Middle,
+          rect,
+          "",
+          font,
+          size,
+          color,
+          bbox,
+          "",
+          pretty,
+        )
+    }
+  }
+  let write_attachment = (
+    text : String,
+    pos : @geom.Point,
+    font : String,
+    size : Double,
+    color : String,
+  ) => {
+    guard @attrs.graphviz_bool(edge_attr(edge, "decorate")) else { return }
+    let (_, width, height) = label_metrics(text, font, size)
+    let points = @render.label_attachment(
+      text,
+      pos,
+      width,
+      height,
+      edge_layout.splines,
+    )
+    guard points.length() > 0 else { return }
+    let coordinates = polyline_points(points, bbox.llx, bbox.lly)
+    write_line(
       sb,
-      ops,
-      tail_color,
-      "",
-      width_attr,
-      bbox.llx,
-      bbox.lly,
+      "<polyline fill=\"none\" stroke=\"\{color}\" points=\"\{coordinates}\"/>",
       "",
       pretty,
     )
   }
-  if flags.head {
-    let ops = arrow_primitives(edge_layout, true)
-    write_arrow_ops(
-      sb,
-      ops,
-      head_color,
-      "",
-      width_attr,
-      bbox.llx,
-      bbox.lly,
-      "",
-      pretty,
-    )
-  }
+  write_svg_link_end(sb, edge_link_open, "", pretty)
   let label_text = match edge_attr(edge, "label") {
     Some(value) => resolve_label(value, "")
     None => ""
@@ -6167,9 +6234,16 @@ fn write_svg_edge_group(
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
       let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       if label_text != "" {
-        write_label_lines(
-          sb, label_text, font, size, font_color, pos, bbox, "", pretty,
+        let opened = write_svg_link_start(
+          sb,
+          "\{edge_id}-label",
+          edge_svg_link(edge, "label"),
+          "",
+          pretty,
         )
+        write_edge_label("label", label_text, font, size, font_color, pos)
+        write_attachment(label_text, pos, font, size, font_color)
+        write_svg_link_end(sb, opened, "", pretty)
       }
     }
     None => ()
@@ -6184,9 +6258,8 @@ fn write_svg_edge_group(
       let size = @attrs.font_size(edge_attr(edge, "fontsize"))
       let font_color = svg_color(edge_color(edge, "fontcolor", "black"))
       if xlabel_text != "" {
-        write_label_lines(
-          sb, xlabel_text, font, size, font_color, pos, bbox, "", pretty,
-        )
+        write_edge_label("xlabel", xlabel_text, font, size, font_color, pos)
+        write_attachment(xlabel_text, pos, font, size, font_color)
       }
     }
     None => ()
@@ -6211,9 +6284,17 @@ fn write_svg_edge_group(
       let font_color = svg_color(
         @attrs.color(edge_attr(edge, "labelfontcolor"), default=default_color),
       )
-      write_label_lines(
-        sb, head_label_text, font, size, font_color, pos, bbox, "", pretty,
+      let opened = write_svg_link_start(
+        sb,
+        "\{edge_id}-headlabel",
+        edge_svg_link(edge, "head"),
+        "",
+        pretty,
       )
+      write_edge_label(
+        "headlabel", head_label_text, font, size, font_color, pos,
+      )
+      write_svg_link_end(sb, opened, "", pretty)
     }
     None => ()
   }
@@ -6237,9 +6318,17 @@ fn write_svg_edge_group(
       let font_color = svg_color(
         @attrs.color(edge_attr(edge, "labelfontcolor"), default=default_color),
       )
-      write_label_lines(
-        sb, tail_label_text, font, size, font_color, pos, bbox, "", pretty,
+      let opened = write_svg_link_start(
+        sb,
+        "\{edge_id}-taillabel",
+        edge_svg_link(edge, "tail"),
+        "",
+        pretty,
       )
+      write_edge_label(
+        "taillabel", tail_label_text, font, size, font_color, pos,
+      )
+      write_svg_link_end(sb, opened, "", pretty)
     }
     None => ()
   }
@@ -6256,6 +6345,7 @@ fn write_svg_node_group(
   linear_gradient_index : Ref[Int],
   radial_gradient_index : Ref[Int],
   pretty : Bool,
+  layer_name? : String = "",
 ) -> Unit {
   let node = node_layout.node
   let node_title = escape_xml_with_dash(normalize_svg_title_text(node.name()))
@@ -6275,8 +6365,6 @@ fn write_svg_node_group(
   } else {
     shape_kind(node_attr(node, "shape"))
   }
-  let skip_unknown_shape_outline = raw_kind == "unknown" &&
-    node_attr_int(node, "peripheries", 1) <= 0
   // Graphviz falls back to box geometry for unknown node shapes.
   let kind = if raw_kind == "unknown" { "box" } else { raw_kind }
   let is_doublecircle = raw_shape == "doublecircle"
@@ -6302,6 +6390,12 @@ fn write_svg_node_group(
     Some(value) => escape_xml_with_dash(value)
     None => "node\{node_index}"
   }
+  let node_group_id = if layer_name == "" {
+    node_group_id
+  } else {
+    let layer = escape_xml_with_dash(layer_name)
+    "\{layer}_\{node_group_id}_\{layer}"
+  }
   write_line(
     sb,
     "<g id=\"\{node_group_id}\" class=\"\{node_group_class}\">",
@@ -6310,32 +6404,40 @@ fn write_svg_node_group(
   )
   write_line(sb, "<title>\{node_title}</title>", "", pretty)
   let raw_label = node_attr(node, "label")
+  let html = node
+    .get_attr_value("label")
+    .map(value => value is @cgraph.AttrValue::Html(_))
   let text = match raw_label {
     Some(value) =>
-      if @html_label.is_html_label_text(value) {
+      if html.unwrap_or_else(() => @html_label.is_html_label_text(value)) {
         html_label_text(raw_label, node.name())
       } else {
         label_text(raw_label, node.name())
       }
     None => node.name()
   }
-  let link_href = node_link_href(node)
-  let mut has_link = false
-  match link_href {
-    Some(href) => {
-      has_link = true
-      let link_title = node_link_title(node, text)
-      let link_target = node_link_target(node)
-      let anchor_open = match link_target {
-        Some(target) =>
-          "<g id=\"a_node\{node_index}\"><a xlink:href=\"\{escape_xml(href)}\" xlink:title=\"\{escape_xml_with_dash(link_title)}\" target=\"\{escape_xml(target)}\">"
-        None =>
-          "<g id=\"a_node\{node_index}\"><a xlink:href=\"\{escape_xml(href)}\" xlink:title=\"\{escape_xml_with_dash(link_title)}\">"
-      }
-      write_line(sb, anchor_open, "", pretty)
-    }
-    None => ()
+  let link_title = if @html_label.is_html_label_text(text) {
+    "<TABLE>"
+  } else {
+    text
   }
+  let has_link = write_svg_link_start(
+    sb,
+    "node\{node_index}",
+    svg_link(
+      node_link_href(node),
+      nonempty_attr_value(Some(node_link_title(node, ""))),
+      node_link_target(node),
+      Some(link_title),
+      {
+        'G': root_graph_for_node(node).name().unwrap_or_default(),
+        'N': node.name(),
+        'L': link_title,
+      },
+    ),
+    "",
+    pretty,
+  )
   let filled = if kind == "point" {
     true
   } else {
@@ -6394,9 +6496,7 @@ fn write_svg_node_group(
   } else {
     "none"
   }
-  if skip_unknown_shape_outline {
-    ()
-  } else if kind == "record" {
+  if kind == "record" {
     write_record_node(
       sb, node_layout, rect, stroke, fill, dash, bbox, "", pretty,
     )
@@ -7475,7 +7575,22 @@ fn write_svg_node_group(
   } else {
     rect
   }
-  match @html_label.parse_html_label(text) {
+  match @html_label.parse_html_label(text, html~) {
+    Some(@html_label.HtmlLabel::StyledText(spans)) =>
+      write_html_styled_text_lines(
+        sb,
+        spans,
+        @html_label.HtmlAlign::Center,
+        @html_label.HtmlVAlign::Middle,
+        label_rect,
+        node.name(),
+        font,
+        size,
+        color,
+        bbox,
+        "",
+        pretty,
+      )
     Some(@html_label.HtmlLabel::Table(table)) =>
       write_html_table(
         sb,
@@ -7492,6 +7607,8 @@ fn write_svg_node_group(
         linear_gradient_index,
         radial_gradient_index,
         pretty,
+        "node\{node_index}",
+        { val: 0, },
       )
     Some(@html_label.HtmlLabel::Text(html_text)) =>
       if html_text != "" {
@@ -7516,7 +7633,22 @@ fn write_svg_node_group(
           Some(value) => value
           None => node_layout.pos
         }
-        write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
+        let pos = {
+          ..pos,
+          y: pos.y + @node_geometry.node_label_y_offset(node),
+        }
+        write_label_lines(
+          sb,
+          text,
+          font,
+          size,
+          color,
+          pos,
+          bbox,
+          "",
+          pretty,
+          justification_width=@node_geometry.node_label_space(node),
+        )
       }
   }
   let xlabel = match node_attr(node, "xlabel") {
@@ -7573,13 +7705,7 @@ pub fn render_svg(
     width,
     height,
   )
-  let landscape = match layout.graph.get_attr("orientation") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower == "landscape" || lower == "land"
-    }
-    None => false
-  }
+  let landscape = svg_landscape(layout.graph)
   let display_width = if landscape {
     out_height.round().to_int()
   } else {
@@ -7656,186 +7782,262 @@ pub fn render_svg(
     "",
     pretty,
   )
-  write_line(
-    sb,
-    "<g id=\"graph0\" class=\"graph\" transform=\"\{transform}\">",
-    "",
-    pretty,
+  let layer_selection = SvgLayerSelection::new(
+    layout.graph.get_attr("layers").unwrap_or_default(),
+    layout.graph.get_attr("layersep").unwrap_or(" :\t"),
+    layout.graph.get_attr("layerlistsep").unwrap_or(","),
   )
-  match graph_title {
-    Some(value) =>
-      write_line(
-        sb,
-        "<title>\{escape_xml_with_dash(value)}</title>",
-        "",
-        pretty,
-      )
-    None => ()
+  let layer_count = if layer_selection.names.length() > 0 {
+    layer_selection.names.length()
+  } else {
+    1
   }
-  if layout.graph.is_root() {
-    let root_fill = match layout.graph.get_attr("bgcolor") {
-      Some(value) =>
-        match graph_gradient_stops(layout.graph, value) {
-          Some(stops) => {
-            let style = @attrs.parse_style(layout.graph.get_attr("style"))
-            let radial = style_has_token(style, "radial")
-            let gradient_id = if radial {
-              let id = "graph0_r_\{radial_gradient_index.val}"
-              radial_gradient_index.val = radial_gradient_index.val + 1
-              id
-            } else {
-              let id = "graph0_l_\{linear_gradient_index.val}"
-              linear_gradient_index.val = linear_gradient_index.val + 1
-              id
-            }
-            write_svg_gradient_definition(
-              sb,
-              gradient_id,
-              stops,
-              radial,
-              layout.graph.get_attr("gradientangle"),
-              padded_bbox,
-              bbox,
-              pretty,
-            )
-            "url(#\{gradient_id})"
-          }
-          None => bg_fill
-        }
-      None => bg_fill
+  let layer_select = layout.graph.get_attr("layerselect").unwrap_or_default()
+  let selected_layers : Array[Int] = []
+  for layer in 1..<=layer_count {
+    if layer_select == "" || layer_selection.selected(layer, layer_select) {
+      selected_layers.push(layer)
     }
+  }
+  if selected_layers.length() == 0 {
+    for layer in 1..<=layer_count {
+      selected_layers.push(layer)
+    }
+  }
+  for layer_number in selected_layers {
+    let layer_name = if layer_number > 1 {
+      layer_selection.names[layer_number - 1]
+    } else {
+      ""
+    }
+    let layer_prefix = if layer_name == "" { "" } else { "\{layer_name}_" }
+    if layer_count > 1 {
+      let id = escape_xml_with_dash(layer_selection.names[layer_number - 1])
+      write_line(sb, "<g id=\"\{id}\" class=\"layer\">", "", pretty)
+    }
+    let graph_id = escape_xml_with_dash("\{layer_prefix}graph0")
     write_line(
       sb,
-      "<polygon fill=\"\{root_fill}\" stroke=\"none\" points=\"\{bg_points}\"/>",
+      "<g id=\"\{graph_id}\" class=\"graph\" transform=\"\{transform}\">",
       "",
       pretty,
     )
-  }
-  match graph_label_metrics(layout.graph) {
-    Some((text, _width_pt, height_pt)) => {
-      let graph = layout.graph
-      let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
-      let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
-      let color = svg_color(graph_color(graph, "fontcolor", "black"))
-      let pos = match layout.label_pos {
-        Some(value) => value
-        None => graph_label_pos(bbox, height_pt)
+    match graph_title {
+      Some(value) =>
+        write_line(
+          sb,
+          "<title>\{escape_xml_with_dash(value)}</title>",
+          "",
+          pretty,
+        )
+      None => ()
+    }
+    let graph_link_open = write_svg_link_start(
+      sb,
+      "\{layer_prefix}graph0",
+      graph_svg_link(layout.graph),
+      "",
+      pretty,
+    )
+    if layout.graph.is_root() {
+      let root_fill = match layout.graph.get_attr("bgcolor") {
+        Some(value) =>
+          match graph_gradient_stops(layout.graph, value) {
+            Some(stops) => {
+              let style = @attrs.parse_style(layout.graph.get_attr("style"))
+              let radial = style_has_token(style, "radial")
+              let gradient_id = if radial {
+                let id = "graph0_r_\{radial_gradient_index.val}"
+                radial_gradient_index.val = radial_gradient_index.val + 1
+                id
+              } else {
+                let id = "graph0_l_\{linear_gradient_index.val}"
+                linear_gradient_index.val = linear_gradient_index.val + 1
+                id
+              }
+              write_svg_gradient_definition(
+                sb,
+                gradient_id,
+                stops,
+                radial,
+                layout.graph.get_attr("gradientangle"),
+                padded_bbox,
+                bbox,
+                pretty,
+              )
+              "url(#\{gradient_id})"
+            }
+            None => bg_fill
+          }
+        None => bg_fill
       }
-      let adjusted_pos = if font == "Helvetica-Oblique" {
-        @geom.Point::{ x: pos.x, y: pos.y + 0.4, }
-      } else {
-        pos
-      }
-      write_label_lines(
-        sb, text, font, size, color, adjusted_pos, bbox, "", pretty,
+      write_line(
+        sb,
+        "<polygon fill=\"\{root_fill}\" stroke=\"none\" points=\"\{bg_points}\"/>",
+        "",
+        pretty,
       )
     }
-    None => ()
-  }
-  let cluster_indent = ""
-  let _ = write_cluster_graphs(
-    sb, layout, bbox, cluster_indent, pretty, 1, linear_gradient_index, radial_gradient_index,
-  )
-  let kind = layout.graph.kind()
-  let root_nodes = layout.graph.nodes()
-  let root_edges = layout.graph.edges()
-  let node_order : Map[String, Int] = Map([])
-  for i, node in root_nodes {
-    node_order[node.name()] = i
-  }
-  let edge_order : Map[Int, Int] = Map([])
-  for i, edge in root_edges {
-    edge_order[edge.id()] = i
-  }
-  let layout_node_by_name : Map[String, @layout_dot.DotLayoutNode] = Map([])
-  for node_layout in layout.nodes {
-    layout_node_by_name[node_layout.node.name()] = node_layout
-  }
-  let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map([])
-  for edge_layout in layout.edges {
-    layout_edge_by_id[edge_layout.edge.id()] = edge_layout
-  }
-  let written_nodes : Map[String, Bool] = Map([])
-  let written_edges : Map[Int, Bool] = Map([])
-  for node in root_nodes {
-    let node_name = node.name()
-    if written_nodes.get(node_name) != Some(true) {
-      match layout_node_by_name.get(node_name) {
-        Some(node_layout) => {
-          let node_id = match node_order.get(node_name) {
-            Some(value) => value + 1
-            None => 1
-          }
-          write_svg_node_group(
-            sb, node_layout, fixedshape_draw_sizes, bbox, node_id, linear_gradient_index,
-            radial_gradient_index, pretty,
-          )
-          written_nodes[node_name] = true
+    match graph_label_metrics(layout.graph) {
+      Some((text, _width_pt, height_pt)) => {
+        let graph = layout.graph
+        let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
+        let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
+        let color = svg_color(graph_color(graph, "fontcolor", "black"))
+        let pos = match layout.label_pos {
+          Some(value) => value
+          None => graph_label_pos(bbox, height_pt)
         }
-        None => ()
+        write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
       }
+      None => ()
     }
-    let out_edges : Array[@cgraph.Edge] = []
-    for edge in root_edges {
-      if edge.tail().name() == node_name {
-        out_edges.push(edge)
-      }
+    let cluster_indent = ""
+    write_svg_link_end(sb, graph_link_open, "", pretty)
+    let _ = write_cluster_graphs(
+      sb,
+      layout,
+      bbox,
+      cluster_indent,
+      pretty,
+      1,
+      linear_gradient_index,
+      radial_gradient_index,
+      layer_selection=Some(layer_selection),
+      layer_number~,
+      layer_prefix~,
+    )
+    let kind = layout.graph.kind()
+    let root_nodes = layout.graph.nodes()
+    let root_edges = layout.graph.edges()
+    let node_order : Map[String, Int] = Map([])
+    for i, node in root_nodes {
+      node_order[node.name()] = i
     }
-    out_edges.sort_by_key(edge => {
-      let head_order = match node_order.get(edge.head().name()) {
-        Some(value) => value
-        None => 100000
-      }
-      head_order * 100000 + edge.id()
-    })
-    let mut prev_head = node_name
-    for edge in out_edges {
-      let head_name = edge.head().name()
-      if prev_head != head_name && written_nodes.get(head_name) != Some(true) {
-        match layout_node_by_name.get(head_name) {
+    let edge_order : Map[Int, Int] = Map([])
+    for i, edge in root_edges {
+      edge_order[edge.id()] = i
+    }
+    let layout_node_by_name : Map[String, @layout_dot.DotLayoutNode] = Map([])
+    for node_layout in layout.nodes {
+      layout_node_by_name[node_layout.node.name()] = node_layout
+    }
+    let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map([])
+    for edge_layout in layout.edges {
+      layout_edge_by_id[edge_layout.edge.id()] = edge_layout
+    }
+    let written_nodes : Map[String, Bool] = Map([])
+    let written_edges : Map[Int, Bool] = Map([])
+    for node in root_nodes {
+      let node_name = node.name()
+      if written_nodes.get(node_name) != Some(true) &&
+        layer_selection.node_visible(layer_number, layout.graph, node) {
+        match layout_node_by_name.get(node_name) {
           Some(node_layout) => {
-            let node_id = match node_order.get(head_name) {
+            let node_id = match node_order.get(node_name) {
               Some(value) => value + 1
               None => 1
             }
             write_svg_node_group(
-              sb, node_layout, fixedshape_draw_sizes, bbox, node_id, linear_gradient_index,
-              radial_gradient_index, pretty,
+              sb,
+              node_layout,
+              fixedshape_draw_sizes,
+              bbox,
+              node_id,
+              linear_gradient_index,
+              radial_gradient_index,
+              pretty,
+              layer_name~,
             )
-            written_nodes[head_name] = true
+            written_nodes[node_name] = true
           }
           None => ()
         }
-        prev_head = head_name
       }
-      if written_edges.get(edge.id()) != Some(true) {
-        match layout_edge_by_id.get(edge.id()) {
-          Some(edge_layout) => {
-            let edge_id = match edge_attr(edge, "id") {
-              Some(value) =>
-                if value != "" {
-                  value
-                } else {
+      let out_edges : Array[@cgraph.Edge] = []
+      for edge in root_edges {
+        if edge.tail().name() == node_name {
+          out_edges.push(edge)
+        }
+      }
+      out_edges.sort_by_key(edge => {
+        let head_order = match node_order.get(edge.head().name()) {
+          Some(value) => value
+          None => 100000
+        }
+        head_order * 100000 + edge.id()
+      })
+      let mut prev_head = node_name
+      for edge in out_edges {
+        let head_name = edge.head().name()
+        if prev_head != head_name &&
+          written_nodes.get(head_name) != Some(true) &&
+          layer_selection.node_visible(layer_number, layout.graph, edge.head()) {
+          match layout_node_by_name.get(head_name) {
+            Some(node_layout) => {
+              let node_id = match node_order.get(head_name) {
+                Some(value) => value + 1
+                None => 1
+              }
+              write_svg_node_group(
+                sb,
+                node_layout,
+                fixedshape_draw_sizes,
+                bbox,
+                node_id,
+                linear_gradient_index,
+                radial_gradient_index,
+                pretty,
+                layer_name~,
+              )
+              written_nodes[head_name] = true
+            }
+            None => ()
+          }
+          prev_head = head_name
+        }
+        if written_edges.get(edge.id()) != Some(true) &&
+          layer_selection.edge_visible(layer_number, edge) {
+          match layout_edge_by_id.get(edge.id()) {
+            Some(edge_layout) => {
+              let edge_id = match edge_attr(edge, "id") {
+                Some(value) =>
+                  if value != "" {
+                    value
+                  } else {
+                    match edge_order.get(edge.id()) {
+                      Some(order) => "edge\{order + 1}"
+                      None => "edge1"
+                    }
+                  }
+                None =>
                   match edge_order.get(edge.id()) {
                     Some(order) => "edge\{order + 1}"
                     None => "edge1"
                   }
-                }
-              None =>
-                match edge_order.get(edge.id()) {
-                  Some(order) => "edge\{order + 1}"
-                  None => "edge1"
-                }
+              }
+              write_svg_edge_group(
+                sb,
+                edge_layout,
+                kind,
+                bbox,
+                "\{layer_prefix}\{edge_id}",
+                pretty,
+                linear_gradient_index,
+                radial_gradient_index,
+              )
+              written_edges[edge.id()] = true
             }
-            write_svg_edge_group(sb, edge_layout, kind, bbox, edge_id, pretty)
-            written_edges[edge.id()] = true
+            None => ()
           }
-          None => ()
         }
       }
     }
+    write_line(sb, "</g>", "", pretty)
+    if layer_count > 1 {
+      write_line(sb, "</g>", "", pretty)
+    }
   }
-  write_line(sb, "</g>", "", pretty)
   write_line(sb, "</svg>", "", pretty)
   normalize_svg_alpha_attrs(sb.to_string())
 }

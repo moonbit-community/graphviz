@@ -107,7 +107,7 @@ pub fn label_text(node : @cgraph.Node) -> String {
     Some(value) =>
       if value == "\\N" {
         node.name()
-      } else if @html_label.is_html_label_text(value) {
+      } else if node.get_attr_value("label") is Some(@cgraph.AttrValue::Html(_)) {
         value
       } else {
         @attrs.decode_label_entities(value)

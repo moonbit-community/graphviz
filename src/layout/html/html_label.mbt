@@ -62,12 +62,15 @@ pub fn is_html_label_text(label : String) -> Bool {
 }
 
 ///|
-pub fn strip_html_wrappers(label : String) -> String? {
+pub fn strip_html_wrappers(label : String, html? : Bool? = None) -> String? {
   let trimmed = label.trim(chars=" \n\r\t").to_owned()
-  if !is_html_label_text(trimmed) {
+  if !html.unwrap_or_else(() => is_html_label_text(trimmed)) {
     return None
   }
   let len = trimmed.length()
+  guard len >= 2 && trimmed.has_prefix("<") && trimmed.has_suffix(">") else {
+    return None
+  }
   let inner = trimmed.unsafe_substring(start=1, end=len - 1)
   let unescaped = inner
     .replace_all(old="\\\"", new="\"")
@@ -253,51 +256,6 @@ fn html_parse_text(parser : HtmlParser) -> String {
 }
 
 ///|
-fn html_is_whitespace_only(text : String) -> Bool {
-  for ch in text {
-    if !ch.is_whitespace() {
-      return false
-    }
-  }
-  true
-}
-
-///|
-fn html_collapse_whitespace(text : String) -> String {
-  let sb = StringBuilder()
-  let mut in_space = false
-  for ch in text {
-    if ch.is_whitespace() {
-      if !in_space {
-        sb.write_char(' ')
-        in_space = true
-      }
-    } else {
-      sb.write_char(ch)
-      in_space = false
-    }
-  }
-  let collapsed = sb.to_string()
-  if html_is_whitespace_only(collapsed) {
-    ""
-  } else {
-    let mut start = 0
-    let mut end = collapsed.length()
-    while start < end && collapsed[start] == ' ' {
-      start = start + 1
-    }
-    while end > start && collapsed[end - 1] == ' ' {
-      end = end - 1
-    }
-    if start == 0 && end == collapsed.length() {
-      collapsed
-    } else {
-      collapsed.unsafe_substring(start~, end~)
-    }
-  }
-}
-
-///|
 fn html_align_from(value : String?) -> HtmlAlign {
   match value {
     Some(text) =>
@@ -350,52 +308,83 @@ fn html_parse_double(value : String?, fallback : Double) -> Double {
 fn append_html_text_span(
   spans : Array[HtmlTextSpan],
   text : String,
-  color : String?,
+  style : HtmlTextSpan,
 ) -> Unit {
-  if text == "" {
-    return
-  }
+  guard text != "" else { return }
   if spans.length() > 0 {
     let last_index = spans.length() - 1
     let last = spans[last_index]
-    if last.color == color {
-      spans[last_index] = { text: last.text + text, color, }
+    if last.color == style.color &&
+      last.font_name == style.font_name &&
+      last.font_size_pt == style.font_size_pt &&
+      last.break_alignment == style.break_alignment {
+      spans[last_index] = { ..last, text: last.text + text, }
       return
     }
   }
-  spans.push({ text, color, })
+  spans.push({ ..style, text, })
 }
 
 ///|
 fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
   let spans : Array[HtmlTextSpan] = []
-  let color_stack : Array[String?] = [None]
+  let style_stack : Array[HtmlTextSpan] = [
+    {
+      text: "",
+      color: None,
+      font_name: None,
+      font_size_pt: None,
+      break_alignment: None,
+    },
+  ]
   let mut nested : HtmlTable? = None
   while parser.index < parser.chars.length() {
-    html_parser_skip_whitespace(parser)
     match html_parser_peek(parser) {
       Some('<') =>
         match html_parse_tag(parser) {
           Some(HtmlTag::End(name)) =>
             if name == "td" || name == "th" {
               break
-            } else if name == "font" && color_stack.length() > 1 {
-              let _ = color_stack.pop()
+            } else if name == "font" && style_stack.length() > 1 {
+              let _ = style_stack.pop()
             }
           Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "br" {
-              append_html_text_span(
-                spans,
-                "\n",
-                color_stack[color_stack.length() - 1],
-              )
+              append_html_text_span(spans, "\n", {
+                ..style_stack[style_stack.length() - 1],
+                break_alignment: Some(html_align_from(attrs.get("align"))),
+              })
             } else if name == "font" {
-              let inherited = color_stack[color_stack.length() - 1]
-              let color = match attrs.get("color") {
-                Some(value) => if value == "" { inherited } else { Some(value) }
-                None => inherited
-              }
-              color_stack.push(color)
+              let inherited = style_stack[style_stack.length() - 1]
+              let color = attrs
+                .get("color")
+                .map_or(inherited.color, value => {
+                  if value == "" {
+                    inherited.color
+                  } else {
+                    Some(value)
+                  }
+                })
+              let font_name = attrs
+                .get("face")
+                .map_or(inherited.font_name, value => {
+                  if value == "" {
+                    inherited.font_name
+                  } else {
+                    Some(value)
+                  }
+                })
+              let size = html_parse_double(attrs.get("point-size"), -1.0)
+              style_stack.push({
+                ..inherited,
+                color,
+                font_name,
+                font_size_pt: if size > 0.0 {
+                  Some(size)
+                } else {
+                  inherited.font_size_pt
+                },
+              })
             } else if name == "table" {
               nested = Some(parse_html_table_from_attrs(parser, attrs))
             } else {
@@ -403,11 +392,11 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
             }
           None => {
             let text = html_parse_text(parser)
-            if !html_is_whitespace_only(text) {
+            if text != "" {
               append_html_text_span(
                 spans,
-                html_collapse_whitespace(text),
-                color_stack[color_stack.length() - 1],
+                html_cell_text(text),
+                style_stack[style_stack.length() - 1],
               )
             }
           }
@@ -415,11 +404,11 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
       None => break
       _ => {
         let text = html_parse_text(parser)
-        if !html_is_whitespace_only(text) {
+        if text != "" {
           append_html_text_span(
             spans,
-            html_collapse_whitespace(text),
-            color_stack[color_stack.length() - 1],
+            html_cell_text(text),
+            style_stack[style_stack.length() - 1],
           )
         }
       }
@@ -429,20 +418,35 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
     Some(table) => HtmlCellContent::Table(table)
     None => {
       let text_builder = StringBuilder()
-      let mut has_color = false
+      let mut has_style = false
       for span in spans {
         text_builder.write_string(span.text)
-        if span.color is Some(_) {
-          has_color = true
+        if span.color is Some(_) ||
+          span.font_name is Some(_) ||
+          span.font_size_pt is Some(_) ||
+          span.break_alignment is Some(_) {
+          has_style = true
         }
       }
-      if has_color {
+      if has_style {
         HtmlCellContent::StyledText(spans)
       } else {
         HtmlCellContent::Text(text_builder.to_string())
       }
     }
   }
+}
+
+///|
+// htmllex.c preserves spaces within cells, including whitespace-only labels.
+fn html_cell_text(text : String) -> String {
+  let result = StringBuilder()
+  for ch in text {
+    if ch >= ' ' {
+      result.write_char(ch)
+    }
+  }
+  result.to_string()
 }
 
 ///|
@@ -477,6 +481,9 @@ fn parse_html_cell_from_attrs(
   let content = parse_html_cell_content(parser)
   {
     content,
+    href: attrs.get("href"),
+    tooltip: attrs.get("tooltip"),
+    target: attrs.get("target"),
     port,
     col_span,
     row_span,
@@ -505,42 +512,12 @@ fn parse_html_row(parser : HtmlParser, hruled : Bool, vruled : Bool) -> HtmlRow 
           Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "td" || name == "th" {
               let cell = parse_html_cell_from_attrs(parser, attrs)
-              cells.push({
-                content: cell.content,
-                port: cell.port,
-                col_span: cell.col_span,
-                row_span: cell.row_span,
-                align: cell.align,
-                valign: cell.valign,
-                bg_color: cell.bg_color,
-                border_pt: cell.border_pt,
-                style: cell.style,
-                gradient_angle: cell.gradient_angle,
-                sides: cell.sides,
-                vruled,
-                min_width_pt: cell.min_width_pt,
-                min_height_pt: cell.min_height_pt,
-              })
+              cells.push({ ..cell, vruled, })
             } else if name == "vr" {
               if cells.length() > 0 {
                 let last = cells.length() - 1
                 let cell = cells[last]
-                cells[last] = {
-                  content: cell.content,
-                  port: cell.port,
-                  col_span: cell.col_span,
-                  row_span: cell.row_span,
-                  align: cell.align,
-                  valign: cell.valign,
-                  bg_color: cell.bg_color,
-                  border_pt: cell.border_pt,
-                  style: cell.style,
-                  gradient_angle: cell.gradient_angle,
-                  sides: cell.sides,
-                  vruled: true,
-                  min_width_pt: cell.min_width_pt,
-                  min_height_pt: cell.min_height_pt,
-                }
+                cells[last] = { ..cell, vruled: true, }
               }
             } else if name == "tr" {
               break
@@ -624,6 +601,10 @@ fn parse_html_table_from_attrs(
   }
   {
     rows,
+    port: attrs.get("port"),
+    href: attrs.get("href"),
+    tooltip: attrs.get("tooltip"),
+    target: attrs.get("target"),
     border_pt,
     cell_border_pt,
     cell_spacing_pt,
@@ -638,42 +619,20 @@ fn parse_html_table_from_attrs(
 }
 
 ///|
-pub fn parse_html_label(label : String) -> HtmlLabel? {
-  match strip_html_wrappers(label) {
-    Some(value) => {
-      let chars : Array[Char] = []
-      for ch in value {
-        chars.push(ch)
-      }
-      let parser = HtmlParser::{ chars, index: 0, }
-      html_parser_skip_whitespace(parser)
-      match html_parse_tag(parser) {
-        Some(HtmlTag::Start(name, attrs, _self_closing)) =>
-          if name == "table" {
-            Some(HtmlLabel::Table(parse_html_table_from_attrs(parser, attrs)))
-          } else if name == "br" {
-            Some(HtmlLabel::Text("\n"))
-          } else {
-            let mut text = html_parse_text(parser)
-            if html_is_whitespace_only(text) {
-              text = ""
-            } else {
-              text = html_collapse_whitespace(text)
-            }
-            Some(HtmlLabel::Text(text))
-          }
-        _ => {
-          let text = html_parse_text(parser)
-          if html_is_whitespace_only(text) {
-            Some(HtmlLabel::Text(""))
-          } else {
-            Some(HtmlLabel::Text(html_collapse_whitespace(text)))
-          }
-        }
-      }
-    }
-    None => None
+pub fn parse_html_label(label : String, html? : Bool? = None) -> HtmlLabel? {
+  guard strip_html_wrappers(label, html~) is Some(value) else { return None }
+  let chars : Array[Char] = []
+  for ch in value {
+    chars.push(ch)
   }
+  let parser = HtmlParser::{ chars, index: 0, }
+  Some(
+    match parse_html_cell_content(parser) {
+      HtmlCellContent::Table(table) => HtmlLabel::Table(table)
+      HtmlCellContent::Text(text) => HtmlLabel::Text(text)
+      HtmlCellContent::StyledText(spans) => HtmlLabel::StyledText(spans)
+    },
+  )
 }
 
 ///|
@@ -916,7 +875,10 @@ pub fn html_table_layout(
     let start_col = placement.col
     let end_col = placement.col + placement.cell.col_span - 1
     let start_row = placement.row
-    let end_row = placement.row + placement.cell.row_span - 1
+    let end_row = Int::min(
+      placement.row + placement.cell.row_span - 1,
+      row_positions.length() - 1,
+    )
     if start_col >= col_positions.length() || end_col >= col_positions.length() {
       continue
     }
@@ -927,30 +889,13 @@ pub fn html_table_layout(
     let urx = col_positions[end_col].1
     let ury = row_positions[start_row].0
     let lly = row_positions[end_row].1
-    let end_row = placement.row + placement.cell.row_span - 1
-    let end_col = placement.col + placement.cell.col_span - 1
     let hruled = end_row + 1 < metrics.row_heights.length() &&
       table.rows[end_row].ruled
     let vruled = end_col + 1 < metrics.col_widths.length() &&
       placement.cell.vruled
     cells.push({
       rect: { llx, lly, urx, ury, },
-      cell: {
-        content: placement.cell.content,
-        port: placement.cell.port,
-        col_span: placement.cell.col_span,
-        row_span: placement.cell.row_span,
-        align: placement.cell.align,
-        valign: placement.cell.valign,
-        bg_color: placement.cell.bg_color,
-        border_pt: placement.cell.border_pt,
-        style: placement.cell.style,
-        gradient_angle: placement.cell.gradient_angle,
-        sides: placement.cell.sides,
-        vruled,
-        min_width_pt: placement.cell.min_width_pt,
-        min_height_pt: placement.cell.min_height_pt,
-      },
+      cell: { ..placement.cell, vruled, },
       row: placement.row,
       col: placement.col,
       hruled,

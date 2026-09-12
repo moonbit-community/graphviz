@@ -27,11 +27,15 @@ pub fn build_order_graph_and_nodes(String, Array[String]) -> OrderGraphAndNodes
 
 pub fn build_order_nodes_from_groups(Map[Int, Array[String]], Array[Int]) -> Array[String]
 
+pub fn build_parallel_merge_metadata(Array[@cgraph.Edge], Map[String, Int], Map[String, String], (@cgraph.Edge, @cgraph.Edge) -> Bool) -> ReverseMergeMetadata
+
+pub fn build_reverse_merge_metadata(ReverseMergeMetadataInput, initial_metadata? : ReverseMergeMetadata) -> ReverseMergeMetadata
+
 pub fn build_sizes_for_order_graph(Map[String, @node_primitives.NodeSize], Bool, Map[String, @node_primitives.NodeSize]) -> Map[String, @node_primitives.NodeSize]
 
 pub fn cluster_key_or_empty(Map[String, String], String) -> String
 
-pub fn coalesce_order_edges_by_tail(Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+pub fn coalesce_order_edges_by_tail(Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]], should_merge? : (String, String) -> Bool) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
 
 pub fn collect_edge_order(Array[@cgraph.Edge]) -> Map[String, Int]
 
@@ -47,9 +51,11 @@ pub fn edge_tail_port_for_name(@cgraph.Edge, String, fallback_to_original? : Boo
 
 pub fn flat_constraint_rank_or_zero(Map[String, Int], String) -> Int
 
+pub fn graphviz_concentrate_enabled(Array[@cgraph.Edge]) -> Bool
+
 pub fn merge_edge_creation_sequences(Array[(String, String)], Array[(String, String)]) -> Array[(String, String)]
 
-pub fn order_edge_merge_key(String, String, Bool, Double, Double) -> String
+pub fn order_edge_merge_key(String, String, Bool, Double, Double, Double, Double) -> String
 
 // Errors
 
@@ -84,6 +90,19 @@ pub(all) struct OrderEdgesByTailOutput {
 pub(all) struct OrderGraphAndNodes {
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
+}
+
+pub(all) struct ReverseMergeMetadata {
+  merged_edge_weight_bonus : Map[Int, Int]
+  merged_edge_skip : Map[Int, Bool]
+}
+
+pub(all) struct ReverseMergeMetadataInput {
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_excluded_from_reverse_merge : (@cgraph.Edge) -> Bool
+  edge_ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool
 }
 
 // Type aliases

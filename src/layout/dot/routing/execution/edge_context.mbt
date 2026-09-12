@@ -34,6 +34,7 @@ fn build_ordered_routing_input(input : RouteEdgesInput) -> OrderedRoutingInput {
     ranks: input.ranks,
     order_index: input.routing_context.order_index,
     path_order_index: input.routing_context.path_order_index,
+    concentrated_route_order: input.routing_context.concentrated_route_order,
     positions: input.positions,
     vnode_positions: input.vnode_positions,
     sizes: input.sizes,

@@ -46,7 +46,7 @@ fn apply_intercluster_bonus(
         head_port_order,
       ) = entry
       let key = @order_graph.order_edge_merge_key(
-        tail, head, constraint, tail_port_order, head_port_order,
+        tail, head, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order,
       )
       let mut adjusted_penalty = penalty
       match remaining_bonus.get(key) {
@@ -78,6 +78,8 @@ fn collect_intercluster_bonus(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
   ranks : Map[String, Int],
@@ -163,6 +165,21 @@ fn collect_intercluster_bonus(
         let t = chain[i]
         let h = chain[i + 1]
         if t != h && @edge_identity.is_edge_vnode_name(t) {
+          let seg_head_x = if h == head && chain_head == head {
+            if idx < edge_head_port_x.length() {
+              edge_head_port_x[idx]
+            } else {
+              0.0
+            }
+          } else if h == tail && chain_tail == tail {
+            if idx < edge_tail_port_x.length() {
+              edge_tail_port_x[idx]
+            } else {
+              0.0
+            }
+          } else {
+            0.0
+          }
           let seg_tail_order = if t == tail && chain_tail == tail {
             tail_port_order
           } else if t == head && chain_head == head {
@@ -178,7 +195,7 @@ fn collect_intercluster_bonus(
             0.0
           }
           let key = @order_graph.order_edge_merge_key(
-            t, h, true, seg_tail_order, seg_head_order,
+            t, h, true, 0.0, seg_head_x, seg_tail_order, seg_head_order,
           )
           let prev = match count_by_key.get(key) {
             Some(value) => value
@@ -330,14 +347,22 @@ fn build_remincross_materialized_edges(
   )
   let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
   let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
+  let concentrated = @order_graph.graphviz_concentrate_enabled(inputs.edges)
   let rem_order_edges_by_tail_coalesced = @order_graph.coalesce_order_edges_by_tail(
     rem_order_edges_by_tail_raw,
+    should_merge=(tail, head) => {
+      !concentrated ||
+      @order_graph.cluster_key_or_empty(inputs.intercluster_keys, tail) !=
+      @order_graph.cluster_key_or_empty(inputs.intercluster_keys, head)
+    },
   )
   let intercluster_bonus = collect_intercluster_bonus(
     inputs.creation_order,
     inputs.edges,
     inputs.edge_tail,
     inputs.edge_head,
+    inputs.edge_tail_port_x,
+    inputs.edge_head_port_x,
     inputs.edge_tail_port_order,
     inputs.edge_head_port_order,
     inputs.ranks,

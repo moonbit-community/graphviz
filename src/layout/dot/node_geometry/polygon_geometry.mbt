@@ -248,6 +248,7 @@ fn polygon_scaled_label_bbox(
   base_height_pt : Double,
   sides : Int,
   is_box : Bool,
+  centered_label : Bool,
 ) -> ScaledLabelBBox {
   if is_box {
     return { width_pt: label_width_pt, height_pt: label_height_pt, }
@@ -256,7 +257,7 @@ fn polygon_scaled_label_bbox(
   let mut bb_width = label_width_pt
   let mut bb_height = label_height_pt
   let temp = bb_height * sqrt2
-  if base_height_pt > temp {
+  if base_height_pt > temp && centered_label {
     let ratio = if base_height_pt > 0.0 {
       bb_height / base_height_pt
     } else {

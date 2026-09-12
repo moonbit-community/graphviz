@@ -376,6 +376,30 @@ fn route_endpoint_slopes(
 }
 
 ///|
+fn route_base_endpoint_slopes(
+  base : EdgeRouteBase,
+) -> (@geom.Point, @geom.Point) {
+  let (tail, head) = route_endpoint_slopes(
+    base.tail_port,
+    base.head_port,
+    base.tail_slope,
+    base.head_slope,
+  )
+  (
+    if @edge_identity.is_edge_vnode_name(base.tail_name) {
+      base.tail_slope
+    } else {
+      tail
+    },
+    if @edge_identity.is_edge_vnode_name(base.head_name) {
+      base.head_slope
+    } else {
+      head
+    },
+  )
+}
+
+///|
 priv struct PathplanSegmentSlopesInput {
   seg_idx : Int
   segment_count : Int
@@ -492,12 +516,7 @@ fn limit_pathplan_segment_boxes(
   base : EdgeRouteBase,
   pathplan_segments : Array[@routesplines.PathplanSegment],
 ) -> Array[@routesplines.PathplanSegment] {
-  let (tail_slope_for, head_slope_for) = route_endpoint_slopes(
-    base.tail_port,
-    base.head_port,
-    base.tail_slope,
-    base.head_slope,
-  )
+  let (tail_slope_for, head_slope_for) = route_base_endpoint_slopes(base)
   let join_dir = straight_path_join_dir(base.layout_rankdir)
   let limited_segments : Array[@routesplines.PathplanSegment] = []
   let segment_count = pathplan_segments.length()
@@ -604,12 +623,7 @@ fn build_multi_point_routed_spline(
   let route_barriers = input.route_barriers
   let tail_clip_enabled = input.tail_clip_enabled
   let head_clip_enabled = input.head_clip_enabled
-  let (tail_slope_for, head_slope_for) = route_endpoint_slopes(
-    base.tail_port,
-    base.head_port,
-    base.tail_slope,
-    base.head_slope,
-  )
+  let (tail_slope_for, head_slope_for) = route_base_endpoint_slopes(base)
   // Graphviz parity: pathplan edges always allow spline fitting.
   let edge_force_segmented = if using_pathplan {
     false

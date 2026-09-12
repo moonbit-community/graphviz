@@ -292,6 +292,7 @@ fn maximal_bbox_for_name(
   order_index : Map[String, Int],
   path_prev : String?,
   path_next : String?,
+  origin_clusters? : Map[String, (String, String)] = {},
 ) -> @geom.Rect? {
   let pos = match positions.get(name) {
     Some(value) => value
@@ -300,8 +301,30 @@ fn maximal_bbox_for_name(
   let size = size_for_name(name, sizes)
   let vn_cluster = cluster_key_for_name(name, cluster_keys, vnode_clusters)
   let is_virtual = is_virtual_node(name, vnode_sizes)
-  let block_cluster_a = if is_virtual { tail_cluster } else { vn_cluster }
-  let block_cluster_b = if is_virtual { head_cluster } else { vn_cluster }
+  let (block_cluster_a, block_cluster_b) = if is_virtual {
+    origin_clusters.get(name).unwrap_or((tail_cluster, head_cluster))
+  } else {
+    (vn_cluster, vn_cluster)
+  }
+  let interfering_cluster = (neighbor : String) => {
+    let candidates = origin_clusters
+      .get(neighbor)
+      .map_or([cluster_key_for_name(neighbor, cluster_keys, vnode_clusters)], pair => {
+        [pair.0, pair.1]
+      })
+    for cluster in candidates {
+      guard cluster != "" &&
+        cluster != block_cluster_a &&
+        cluster != block_cluster_b else {
+        continue
+      }
+      if !is_virtual_node(neighbor, vnode_sizes) ||
+        vnode_inside_cluster(neighbor, cluster, positions, cluster_bboxes) {
+        return cluster
+      }
+    }
+    ""
+  }
   let rank_neighbors = neighbor_names_for_rank(
     name, rank, x_groups, vnode_sizes, out_edges, in_edges, order_index, path_prev,
     path_next,
@@ -321,18 +344,8 @@ fn maximal_bbox_for_name(
   let mut b = pos.x - size.left_pt - ROUTE_FUDGE
   match left_neighbor {
     Some(neighbor) => {
-      let neighbor_cluster = cluster_key_for_name(
-        neighbor, cluster_keys, vnode_clusters,
-      )
-      let use_cluster = neighbor_cluster != "" &&
-        neighbor_cluster != block_cluster_a &&
-        neighbor_cluster != block_cluster_b &&
-        (
-          !is_virtual_node(neighbor, vnode_sizes) ||
-          vnode_inside_cluster(
-            neighbor, neighbor_cluster, positions, cluster_bboxes,
-          )
-        )
+      let neighbor_cluster = interfering_cluster(neighbor)
+      let use_cluster = neighbor_cluster != ""
       if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
@@ -374,18 +387,8 @@ fn maximal_bbox_for_name(
   }
   match right_neighbor {
     Some(neighbor) => {
-      let neighbor_cluster = cluster_key_for_name(
-        neighbor, cluster_keys, vnode_clusters,
-      )
-      let use_cluster = neighbor_cluster != "" &&
-        neighbor_cluster != block_cluster_a &&
-        neighbor_cluster != block_cluster_b &&
-        (
-          !is_virtual_node(neighbor, vnode_sizes) ||
-          vnode_inside_cluster(
-            neighbor, neighbor_cluster, positions, cluster_bboxes,
-          )
-        )
+      let neighbor_cluster = interfering_cluster(neighbor)
+      let use_cluster = neighbor_cluster != ""
       if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {

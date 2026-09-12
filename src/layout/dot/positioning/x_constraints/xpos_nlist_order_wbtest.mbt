@@ -3,115 +3,20 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-test "build_xpos_nlist_order visits clustered ranks in reverse with vnodes first" {
-  let cluster_keys : Map[String, String] = Map([])
-  cluster_keys["a"] = "cluster0"
-  cluster_keys["b"] = "cluster0"
-  cluster_keys["v"] = "cluster0"
-
-  let groups : Map[Int, Array[String]] = Map([])
-  groups[0] = ["a", "b"]
-  groups[1] = ["v", "x"]
-
+test "xpos preserves captured expansion order instead of final rank order" {
+  let captured = ["v", "b", "a", "outside"]
   let order = build_xpos_nlist_order({
-    rankdir: @rankdir.RankDir::TB,
-    nlist_order: ["unused"],
-    gdnlist_order: ["a", "b", "v", "x"],
-    cluster_keys,
-    cluster_order: [],
-    rank_keys: [0, 1],
-    groups,
+    nlist_order: ["a", "outside", "b", "v"],
+    gdnlist_order: captured,
   })
-
-  assert_eq(order, ["v", "b", "a", "x"])
+  @test.assert_eq(order, captured)
 }
 
 ///|
-test "build_xpos_nlist_order keeps source order for LR and uncluttered fallback" {
-  let cluster_keys : Map[String, String] = Map([])
-  cluster_keys["a"] = "cluster0"
-  cluster_keys["b"] = "cluster0"
-  cluster_keys["v"] = "cluster0"
-
-  let grouped : Map[Int, Array[String]] = Map([])
-  grouped[0] = ["a", "b"]
-  grouped[1] = ["v", "x"]
-
-  let lr_order = build_xpos_nlist_order({
-    rankdir: @rankdir.RankDir::LR,
-    nlist_order: ["unused"],
-    gdnlist_order: ["a", "b", "v", "x"],
-    cluster_keys,
-    cluster_order: [],
-    rank_keys: [0, 1],
-    groups: grouped,
-  })
-
-  let no_cluster_groups : Map[Int, Array[String]] = Map([])
-  no_cluster_groups[0] = ["m", "n"]
-  let source_fallback = build_xpos_nlist_order({
-    rankdir: @rankdir.RankDir::TB,
-    nlist_order: ["m", "n"],
+test "xpos uses the source list when there is no captured expansion" {
+  let order = build_xpos_nlist_order({
+    nlist_order: ["outside", "b", "a"],
     gdnlist_order: [],
-    cluster_keys: Map([]),
-    cluster_order: [],
-    rank_keys: [0],
-    groups: no_cluster_groups,
   })
-
-  assert_eq(lr_order, ["a", "b", "v", "x"])
-  assert_eq(source_fallback, ["m", "n"])
-}
-
-///|
-test "build_xpos_nlist_order processes multiple clusters from reversed source discovery before unclustered leftovers" {
-  let vnode_a = "\{@edge_identity.EDGE_VNODE_PREFIX}a"
-  let vnode_b = "\{@edge_identity.EDGE_VNODE_PREFIX}b"
-  let cluster_keys : Map[String, String] = Map([])
-  cluster_keys["a1"] = "clusterA"
-  cluster_keys[vnode_a] = "clusterA"
-  cluster_keys["b1"] = "clusterB"
-  cluster_keys[vnode_b] = "clusterB"
-
-  let groups : Map[Int, Array[String]] = Map([])
-  groups[0] = ["a1", "b1", "u"]
-  groups[1] = [vnode_a, vnode_b]
-
-  let order = build_xpos_nlist_order({
-    rankdir: @rankdir.RankDir::TB,
-    nlist_order: ["unused"],
-    gdnlist_order: ["a1", "u", vnode_a, "b1", vnode_b],
-    cluster_keys,
-    cluster_order: [],
-    rank_keys: [0, 1],
-    groups,
-  })
-
-  assert_eq(order, [vnode_b, "b1", vnode_a, "a1", "u"])
-}
-
-///|
-test "build_xpos_nlist_order honors reversed cluster declaration order" {
-  let vnode_a = "\{@edge_identity.EDGE_VNODE_PREFIX}a"
-  let vnode_b = "\{@edge_identity.EDGE_VNODE_PREFIX}b"
-  let cluster_keys : Map[String, String] = Map([])
-  cluster_keys["a"] = "clusterA"
-  cluster_keys[vnode_a] = "clusterA"
-  cluster_keys["b"] = "clusterB"
-  cluster_keys[vnode_b] = "clusterB"
-  let groups : Map[Int, Array[String]] = Map([])
-  groups[0] = ["a", "b", "u"]
-  groups[1] = [vnode_a, vnode_b]
-
-  let order = build_xpos_nlist_order({
-    rankdir: @rankdir.RankDir::TB,
-    nlist_order: ["a", "u", vnode_a, "b", vnode_b],
-    gdnlist_order: ["a", "u", vnode_a, "b", vnode_b],
-    cluster_keys,
-    cluster_order: ["clusterA", "clusterB"],
-    rank_keys: [0, 1],
-    groups,
-  })
-
-  assert_eq(order, [vnode_a, "a", vnode_b, "b", "u"])
+  @test.assert_eq(order, ["outside", "b", "a"])
 }

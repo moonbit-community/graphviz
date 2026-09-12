@@ -3,105 +3,17 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-/// Graphviz parity: xpos nlist order keeps clustered reverse-rank traversal,
-/// vnode-first ordering, and LR/RL source-order fast path aligned with
-/// position.c/create_aux_edges.
+/// Graphviz parity: positioning consumes the fast-node list captured during
+/// cluster expansion, independently of the final rank ordering.
 pub(all) struct XposNlistOrderInput {
-  rankdir : @rankdir.RankDir
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  cluster_keys : Map[String, String]
-  cluster_order : Array[String]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
 }
 
 ///|
-/// Graphviz parity: class2/decompose creation order is consumed in reverse for
-/// clustered xpos (except LR/RL), with virtual nodes visited before rank peers.
 fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
-  let nlist_source = if input.gdnlist_order.length() > 0 {
-    input.gdnlist_order
-  } else {
-    input.nlist_order
-  }
-  let nlist_reversed : Array[String] = []
-  let mut nlist_idx = nlist_source.length()
-  while nlist_idx > 0 {
-    nlist_idx = nlist_idx - 1
-    nlist_reversed.push(nlist_source[nlist_idx])
-  }
-  let xpos_nlist_order : Array[String] = []
-  let cluster_order : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map([])
-  let prefer_source_for_lr = input.rankdir == @rankdir.RankDir::LR ||
-    input.rankdir == @rankdir.RankDir::RL
-  if input.cluster_order.length() > 0 {
-    for cluster in input.cluster_order {
-      if cluster != "" && cluster_seen.get(cluster) is None {
-        cluster_seen[cluster] = true
-        cluster_order.push(cluster)
-      }
-    }
-  } else {
-    for name in nlist_reversed {
-      let cluster = input.cluster_keys.get(name).unwrap_or_default()
-      if cluster != "" && cluster_seen.get(cluster) is None {
-        cluster_seen[cluster] = true
-        cluster_order.push(cluster)
-      }
-    }
-  }
-  if prefer_source_for_lr || cluster_order.length() == 0 {
-    for name in nlist_source {
-      xpos_nlist_order.push(name)
-    }
-    return xpos_nlist_order
-  }
-  let xpos_seen : Map[String, Bool] = Map([])
-  for cluster in cluster_order {
-    let mut rank_idx = input.rank_keys.length()
-    while rank_idx > 0 {
-      rank_idx = rank_idx - 1
-      let rank = input.rank_keys[rank_idx]
-      let names = input.groups.get(rank).unwrap_or_default()
-      // Graphviz parity: decompose-created virtual nodes are visited before
-      // their rank peers in clustered GD_nlist traversals.
-      let mut name_idx = names.length()
-      while name_idx > 0 {
-        name_idx = name_idx - 1
-        let name = names[name_idx]
-        if !@edge_identity.is_edge_vnode_name(name) {
-          continue
-        }
-        let name_cluster = input.cluster_keys.get(name).unwrap_or_default()
-        if name_cluster == cluster && xpos_seen.get(name) is None {
-          xpos_nlist_order.push(name)
-          xpos_seen[name] = true
-        }
-      }
-      name_idx = names.length()
-      while name_idx > 0 {
-        name_idx = name_idx - 1
-        let name = names[name_idx]
-        if @edge_identity.is_edge_vnode_name(name) {
-          continue
-        }
-        let name_cluster = input.cluster_keys.get(name).unwrap_or_default()
-        if name_cluster == cluster && xpos_seen.get(name) is None {
-          xpos_nlist_order.push(name)
-          xpos_seen[name] = true
-        }
-      }
-    }
-  }
-  for name in nlist_source {
-    if xpos_seen.get(name) is None {
-      xpos_nlist_order.push(name)
-      xpos_seen[name] = true
-    }
-  }
-  xpos_nlist_order
+  guard !input.gdnlist_order.is_empty() else { input.nlist_order }
+  input.gdnlist_order
 }
 
 ///|
@@ -139,18 +51,13 @@ fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
     order.push(node_idx)
     seen[node_idx] = true
   }
-  let mut nlist_idx = input.nlist_order.length()
-  while nlist_idx > 0 {
-    nlist_idx = nlist_idx - 1
-    let name = input.nlist_order[nlist_idx]
-    match input.index.get(name) {
-      Some(node_idx) =>
-        if !seen[node_idx] {
-          order.push(node_idx)
-          seen[node_idx] = true
-        }
-      None => ()
-    }
+  // virtual_node/fast_node prepend new helpers to GD_nlist; the existing
+  // list retains its traversal order after make_edge_pairs and pos_clusters.
+  for name in input.nlist_order {
+    guard input.index.get(name) is Some(node_idx) else { continue }
+    guard !seen[node_idx] else { continue }
+    order.push(node_idx)
+    seen[node_idx] = true
   }
   for i in 0..<total {
     if !seen[i] {
@@ -375,10 +282,21 @@ fn prepare_xpos_constraint_inputs(
   edge_vnodes : Map[String, Array[String]],
   base_extra_nodes : Array[ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints = build_cluster_constraints(
-    graph, nodes, edges, ranks, rank_keys, groups, sizes, cluster_keys, nodesep_pt,
-    has_edge_labels, edge_vnodes,
+    graph,
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    cluster_keys,
+    nodesep_pt,
+    has_edge_labels,
+    edge_vnodes,
+    live_graph~,
   )
   let all_extra_nodes = base_extra_nodes.copy()
   for pair in cluster_constraints.extra_nodes {
@@ -622,33 +540,37 @@ priv struct XposSimplexSolveInput {
 /// Do not change behavior without updating fixtures/tests.
 fn solve_xpos_with_simplex(
   input : XposSimplexSolveInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
-  let constraint_graph = build_constraint_graph({
-    nodes: input.nodes,
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    edge_out_order: input.edge_out_order,
-    nlist_order: input.nlist_order,
-    ranks: input.ranks,
-    rank_keys: input.rank_keys,
-    groups: input.groups,
-    sizes: input.sizes,
-    cluster_keys: input.cluster_keys,
-    nodesep_pt: input.nodesep_pt,
-    has_edge_labels: input.has_edge_labels,
-    extra_nodes: input.extra_nodes,
-    extra_edges: input.extra_edges,
-    edge_vnodes: input.edge_vnodes,
-    root_ln_targets: input.root_ln_targets,
-    root_rn_targets: input.root_rn_targets,
-    compress_width_minlen: input.compress_width_minlen,
-    segment_minlen: input.segment_minlen_fn,
-    edge_has_mid_label: input.edge_has_mid_label_fn,
-    edge_degree_increment: input.edge_degree_increment_fn,
-    root_margin: input.root_margin,
-    root_compress_weight: input.root_compress_weight,
-  })
+  let constraint_graph = build_constraint_graph(
+    {
+      nodes: input.nodes,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_out_order: input.edge_out_order,
+      nlist_order: input.nlist_order,
+      ranks: input.ranks,
+      rank_keys: input.rank_keys,
+      groups: input.groups,
+      sizes: input.sizes,
+      cluster_keys: input.cluster_keys,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      extra_nodes: input.extra_nodes,
+      extra_edges: input.extra_edges,
+      edge_vnodes: input.edge_vnodes,
+      root_ln_targets: input.root_ln_targets,
+      root_rn_targets: input.root_rn_targets,
+      compress_width_minlen: input.compress_width_minlen,
+      segment_minlen: input.segment_minlen_fn,
+      edge_has_mid_label: input.edge_has_mid_label_fn,
+      edge_degree_increment: input.edge_degree_increment_fn,
+      root_margin: input.root_margin,
+      root_compress_weight: input.root_compress_weight,
+    },
+    live_graph~,
+  )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
   let order = build_constraint_reorder({
     graph: constraint_graph.graph,
@@ -685,7 +607,6 @@ fn solve_xpos_with_simplex(
 ///|
 /// Positioning domain: x-position simplex solve pipeline bridge.
 priv struct XSimplexInput {
-  graph_root : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -716,62 +637,55 @@ priv struct XSimplexInput {
 }
 
 ///|
-fn x_positions_from_simplex(input : XSimplexInput) -> Map[String, Double] {
-  let cluster_preorder : Array[String] = []
-  collect_cluster_preorder(input.graph_root, cluster_preorder)
-  let cluster_order : Array[String] = []
-  let mut cluster_idx = cluster_preorder.length()
-  while cluster_idx > 0 {
-    cluster_idx = cluster_idx - 1
-    cluster_order.push(cluster_preorder[cluster_idx])
-  }
+fn x_positions_from_simplex(
+  input : XSimplexInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
+) -> Map[String, Double] {
   let xpos_nlist_order = build_xpos_nlist_order({
-    rankdir: @rankdir.graph_rankdir(input.graph_root),
     nlist_order: input.nlist_order,
     gdnlist_order: input.gdnlist_order,
-    cluster_keys: input.cluster_keys,
-    cluster_order,
-    rank_keys: input.rank_keys,
-    groups: input.groups,
   })
-  solve_xpos_with_simplex({
-    nodes: input.nodes,
-    edges: input.edges,
-    edge_tail: input.edge_tail,
-    edge_head: input.edge_head,
-    edge_out_order: input.edge_out_order,
-    nlist_order: xpos_nlist_order,
-    ranks: input.ranks,
-    rank_keys: input.rank_keys,
-    groups: input.groups,
-    sizes: input.sizes,
-    cluster_keys: input.cluster_keys,
-    nodesep_pt: input.nodesep_pt,
-    has_edge_labels: input.has_edge_labels,
-    extra_nodes: input.extra_nodes,
-    extra_edges: input.extra_edges,
-    edge_vnodes: input.edge_vnodes,
-    root_ln_targets: input.root_ln_targets,
-    root_rn_targets: input.root_rn_targets,
-    compress_width_minlen: input.compress_width_minlen,
-    segment_minlen_fn: input.segment_minlen_fn,
-    edge_has_mid_label_fn: input.edge_has_mid_label_fn,
-    edge_degree_increment_fn: input.edge_degree_increment_fn,
-    root_margin: input.root_margin,
-    root_compress_weight: input.root_compress_weight,
-    on_reordered_graph: (graph, index) => {
-      if input.capture_snapshot {
-        xpos_constraint_snapshot.val = Some(
-          build_constraint_snapshot(
-            graph,
-            index,
-            input.sizes,
-            input.order_index,
-          ),
-        )
-      }
+  solve_xpos_with_simplex(
+    {
+      nodes: input.nodes,
+      edges: input.edges,
+      edge_tail: input.edge_tail,
+      edge_head: input.edge_head,
+      edge_out_order: input.edge_out_order,
+      nlist_order: xpos_nlist_order,
+      ranks: input.ranks,
+      rank_keys: input.rank_keys,
+      groups: input.groups,
+      sizes: input.sizes,
+      cluster_keys: input.cluster_keys,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      extra_nodes: input.extra_nodes,
+      extra_edges: input.extra_edges,
+      edge_vnodes: input.edge_vnodes,
+      root_ln_targets: input.root_ln_targets,
+      root_rn_targets: input.root_rn_targets,
+      compress_width_minlen: input.compress_width_minlen,
+      segment_minlen_fn: input.segment_minlen_fn,
+      edge_has_mid_label_fn: input.edge_has_mid_label_fn,
+      edge_degree_increment_fn: input.edge_degree_increment_fn,
+      root_margin: input.root_margin,
+      root_compress_weight: input.root_compress_weight,
+      on_reordered_graph: (graph, index) => {
+        if input.capture_snapshot {
+          xpos_constraint_snapshot.val = Some(
+            build_constraint_snapshot(
+              graph,
+              index,
+              input.sizes,
+              input.order_index,
+            ),
+          )
+        }
+      },
     },
-  })
+    live_graph~,
+  )
 }
 
 ///|
@@ -786,6 +700,7 @@ pub fn compute_x_positions_with_prepared_constraints(
   edge_has_mid_label_fn : (@cgraph.Edge) -> Bool,
   edge_degree_increment_fn : (@cgraph.Edge) -> Int,
   capture_snapshot : Bool,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let prepared = prepare_xpos_constraint_inputs(
     solve_input.graph,
@@ -801,36 +716,39 @@ pub fn compute_x_positions_with_prepared_constraints(
     solve_input.edge_vnodes,
     solve_input.extra_nodes,
     solve_input.flat_label_edges,
+    live_graph~,
   )
   let order_index = @rank_groups.build_order_index(solve_input.groups)
-  x_positions_from_simplex({
-    graph_root: solve_input.graph,
-    nodes: solve_input.nodes,
-    edges: solve_input.edges,
-    edge_tail: solve_input.edge_tail,
-    edge_head: solve_input.edge_head,
-    edge_out_order: solve_input.edge_out_order,
-    nlist_order: solve_input.nlist_order,
-    gdnlist_order: solve_input.gdnlist_order,
-    ranks: solve_input.ranks,
-    rank_keys: solve_input.rank_keys,
-    groups: solve_input.groups,
-    sizes: solve_input.sizes,
-    cluster_keys: solve_input.cluster_keys,
-    nodesep_pt: solve_input.nodesep_pt,
-    has_edge_labels: solve_input.has_edge_labels,
-    extra_nodes: prepared.extra_nodes,
-    extra_edges: prepared.extra_edges,
-    edge_vnodes: solve_input.edge_vnodes,
-    root_ln_targets: prepared.root_ln_targets,
-    root_rn_targets: prepared.root_rn_targets,
-    compress_width_minlen: prepared.compress_width_minlen,
-    root_margin,
-    root_compress_weight,
-    segment_minlen_fn,
-    edge_has_mid_label_fn,
-    edge_degree_increment_fn,
-    capture_snapshot,
-    order_index,
-  })
+  x_positions_from_simplex(
+    {
+      nodes: solve_input.nodes,
+      edges: solve_input.edges,
+      edge_tail: solve_input.edge_tail,
+      edge_head: solve_input.edge_head,
+      edge_out_order: solve_input.edge_out_order,
+      nlist_order: solve_input.nlist_order,
+      gdnlist_order: solve_input.gdnlist_order,
+      ranks: solve_input.ranks,
+      rank_keys: solve_input.rank_keys,
+      groups: solve_input.groups,
+      sizes: solve_input.sizes,
+      cluster_keys: solve_input.cluster_keys,
+      nodesep_pt: solve_input.nodesep_pt,
+      has_edge_labels: solve_input.has_edge_labels,
+      extra_nodes: prepared.extra_nodes,
+      extra_edges: prepared.extra_edges,
+      edge_vnodes: solve_input.edge_vnodes,
+      root_ln_targets: prepared.root_ln_targets,
+      root_rn_targets: prepared.root_rn_targets,
+      compress_width_minlen: prepared.compress_width_minlen,
+      root_margin,
+      root_compress_weight,
+      segment_minlen_fn,
+      edge_has_mid_label_fn,
+      edge_degree_increment_fn,
+      capture_snapshot,
+      order_index,
+    },
+    live_graph~,
+  )
 }

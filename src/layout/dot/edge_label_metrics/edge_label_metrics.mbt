@@ -60,8 +60,23 @@ pub fn edge_label_metrics_for_attr(
         } else {
           base_font
         }
-        let (width, height) = @label_metrics.label_text_dimensions(
-          @attrs.decode_label_entities(text), font, font_size_pt,
+        let (width, height) = @html_layout.parse_html_label_cached(
+          text,
+          html=edge
+            .get_attr_value(attr_name)
+            .map(value => value is @cgraph.AttrValue::Html(_)),
+        ).map_or_else(
+          () => {
+            @label_metrics.label_text_dimensions(
+              @attrs.decode_label_entities(text),
+              font,
+              font_size_pt,
+            )
+          },
+          label => {
+            let size = @html_layout.html_label_size(label, font, font_size_pt)
+            (size.width_pt, size.height_pt)
+          },
         )
         Some({ width, height, })
       }

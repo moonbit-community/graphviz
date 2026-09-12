@@ -16,8 +16,11 @@ pub(all) struct RoutingContext {
   pathplan_sizes : Map[String, NodeSize]
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
+  path_vnode_origin_clusters : Map[String, (String, String)]
   parallel_offsets : Map[Int, Double]
   concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_segments : Map[Int, Array[ConcentratedSegment]]
+  concentrated_route_order : Map[Int, Int]
   cluster_bboxes : Map[String, @geom.Rect]
 }
 
@@ -115,6 +118,7 @@ pub(all) struct PrepareRoutingContextInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
+  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
 }
 
 ///|
@@ -123,15 +127,21 @@ pub(all) struct PrepareRoutingContextInput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn prepare_routing_context(
   input : PrepareRoutingContextInput,
+  live_graph? : @setup.ConcentrateFastGraph? = None,
 ) -> RoutingContext {
   let order_index = @rank_groups.build_order_index(input.ordered_groups)
   let path_order_index = @rank_groups.build_order_index(input.x_groups)
-  let path_adjacency = @routesplines.build_path_adjacency(
-    input.edges,
-    input.edge_vnodes,
-    input.edge_tail,
-    input.edge_head,
-  )
+  let path_adjacency = if live_graph is Some(fast) {
+    build_live_path_adjacency(fast)
+  } else {
+    @routesplines.build_path_adjacency(
+      input.edges,
+      input.edge_vnodes,
+      input.edge_tail,
+      input.edge_head,
+      ranks=input.ranks,
+    )
+  }
   let merged_positions : Map[String, @geom.Point] = Map([])
   for name, pos in input.positions {
     merged_positions[name] = pos
@@ -160,6 +170,15 @@ pub fn prepare_routing_context(
     cluster_keys: input.path_cluster_keys,
     cluster_bboxes: input.cluster_bboxes,
   })
+  let path_vnode_origin_clusters = if live_graph is Some(fast) {
+    live_vnode_origin_clusters(fast, input.path_cluster_keys)
+  } else {
+    original_vnode_origin_clusters(
+      input.edges,
+      input.edge_vnodes,
+      input.path_cluster_keys,
+    )
+  }
   let (edge_reversed_by_id, edge_has_label_by_id) = collect_parallel_offset_edge_flags(
     input.edges,
     input.edge_tail,
@@ -175,6 +194,21 @@ pub fn prepare_routing_context(
     input.concentrate,
     concentrated_ignored_edge_ids,
   )
+  let concentrated_route_order : Map[Int, Int] = Map([])
+  let concentrated_segments = live_graph.map_or({}, fast => {
+    collect_concentrated_segments(
+      fast,
+      input.x_groups,
+      input.ranks,
+      input.positions,
+      edges=input.edges,
+      initial_port_points=input.initial_port_points,
+      route_order=concentrated_route_order,
+    )
+  })
+  for owner, _ in concentrated_segments {
+    concentrated_ignored_edge_ids.remove(owner)
+  }
   mark_concentrated_reverse_representatives(
     input.edges,
     concentrated_ignored_edge_ids,
@@ -190,6 +224,8 @@ pub fn prepare_routing_context(
   })
   {
     order_index,
+    concentrated_segments,
+    concentrated_route_order,
     path_order_index,
     path_adjacency,
     merged_positions,
@@ -198,6 +234,7 @@ pub fn prepare_routing_context(
     pathplan_sizes: input.pathplan_sizes,
     path_cluster_keys: input.path_cluster_keys,
     path_vnode_clusters,
+    path_vnode_origin_clusters,
     parallel_offsets,
     concentrated_ignored_edge_ids,
     cluster_bboxes: input.cluster_bboxes,

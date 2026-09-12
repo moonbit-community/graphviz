@@ -6,3 +6,7 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_assignment/solver",
   "moonbit-community/graphviz/cgraph",
 }
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"

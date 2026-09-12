@@ -344,24 +344,22 @@ fn collect_record_ports(
   ports : Map[String, RecordPort],
 ) -> Unit {
   for node in nodes {
-    match node.field {
-      Some(field) =>
-        match field.name {
-          Some(name) => {
-            let center = @geom.Point::{
-              x: (node.rect.llx + node.rect.urx) / 2.0,
-              y: (node.rect.lly + node.rect.ury) / 2.0,
-            }
-            let field_size = @node_primitives.node_size_from_points(
-              node.rect.urx - node.rect.llx,
-              node.rect.ury - node.rect.lly,
-            )
-            ports[name] = { center, size: field_size, sides: node.sides, }
-          }
-          None => ()
-        }
-      None => collect_record_ports(node.children, ports)
+    guard node.field is Some(field) else {
+      collect_record_ports(node.children, ports)
+      continue
     }
+    guard field.name is Some(name) else { continue }
+    // map_rec_port returns the first depth-first match for duplicate names.
+    guard ports.get(name) is None else { continue }
+    let center = @geom.Point::{
+      x: (node.rect.llx + node.rect.urx) / 2.0,
+      y: (node.rect.lly + node.rect.ury) / 2.0,
+    }
+    let field_size = @node_primitives.node_size_from_points(
+      node.rect.urx - node.rect.llx,
+      node.rect.ury - node.rect.lly,
+    )
+    ports[name] = { center, size: field_size, sides: node.sides, }
   }
 }
 
@@ -603,82 +601,4 @@ pub fn record_port_path_box(
     }
   }
   Some({ llx: minx, lly: miny, urx: maxx, ury: maxy, })
-}
-
-///|
-/// Graphviz parity: record label-port padding reserves extra half-heights for
-/// explicit record ports near node borders.
-/// Do not change behavior without updating fixtures/tests.
-pub fn record_port_padding_y(
-  edges : Array[@cgraph.Edge],
-  positions : Map[String, @geom.Point],
-  label_ports_map : Map[String, Map[String, RecordPort]],
-) -> RecordPortPaddingY {
-  let mut extra_below = 0.0
-  let mut extra_above = 0.0
-  let update_padding = (node_name : String, port : @cgraph.Port?) => {
-    match port {
-      Some(value) =>
-        match value.name {
-          Some(port_name) =>
-            match label_ports_map.get(node_name) {
-              Some(ports) =>
-                match ports.get(port_name) {
-                  Some(port_info) =>
-                    match positions.get(node_name) {
-                      Some(node_pos) => {
-                        let dy = port_info.center.y - node_pos.y
-                        let half_height = port_info.size.height_pt / 2.0 -
-                          @record_geometry.RECORD_BORDER_PT / 2.0 -
-                          0.01
-                        let adjusted = if half_height < 0.0 {
-                          0.0
-                        } else {
-                          half_height * 0.5
-                        }
-                        if dy < 0.0 &&
-                          (port_info.sides & @port_geometry.PORT_SIDE_BOTTOM) !=
-                          0 &&
-                          adjusted > extra_below {
-                          extra_below = adjusted
-                        } else if dy > 0.0 &&
-                          (port_info.sides & @port_geometry.PORT_SIDE_TOP) != 0 &&
-                          adjusted > extra_above {
-                          extra_above = adjusted
-                        }
-                      }
-                      None => ()
-                    }
-                  None => ()
-                }
-              None => ()
-            }
-          None => ()
-        }
-      None => ()
-    }
-  }
-  for edge in edges {
-    // Graphviz set_ycoords accounts for a self-edge's label but does not add
-    // record-port rank padding for the loop itself. makeSelfEdge resolves its
-    // port geometry later, after the rank bbox has already been established.
-    if edge.tail().name() == edge.head().name() {
-      continue
-    }
-    if @edge_identity.port_is_explicit(edge.tail_port()) &&
-      @record_geometry.is_record_shape(edge.tail()) {
-      update_padding(edge.tail().name(), edge.tail_port())
-    }
-    if @edge_identity.port_is_explicit(edge.head_port()) &&
-      @record_geometry.is_record_shape(edge.head()) {
-      update_padding(edge.head().name(), edge.head_port())
-    }
-  }
-  { below: extra_below, above: extra_above, }
-}
-
-///|
-pub(all) struct RecordPortPaddingY {
-  below : Double
-  above : Double
 }

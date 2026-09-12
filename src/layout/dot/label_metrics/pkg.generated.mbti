@@ -4,20 +4,48 @@ package "moonbit-community/graphviz/layout/dot/label_metrics"
 import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/layout/dot/graph_label",
+  "moonbit-community/graphviz/layout/html",
 }
 
 // Values
 pub fn graph_label_metrics(@cgraph.Graph) -> @graph_label.GraphLabelMetrics?
 
+pub fn html_styled_text_metrics(Array[@html.HtmlTextSpan], String, String, Double) -> HtmlTextMetrics
+
 pub fn label_text_dimensions(String, String, Double) -> (Double, Double)
 
 pub fn label_text_metrics(String, String, Double) -> (Double, Double, Double, Double)
+
+pub fn normalize_label_line_trailing_whitespace(String) -> String
 
 pub fn record_label_text_dimensions(String, String, Double) -> (Double, Double)
 
 // Errors
 
 // Types and methods
+pub struct HtmlTextLine {
+  alignment : @html.HtmlAlign?
+  runs : Array[HtmlTextRun]
+  width_pt : Double
+  baseline_advance : Double
+}
+
+pub struct HtmlTextMetrics {
+  lines : Array[HtmlTextLine]
+  width_pt : Double
+  height_pt : Double
+  simple : Bool
+}
+
+pub struct HtmlTextRun {
+  text : String
+  color : String?
+  font_name : String
+  font_size_pt : Double
+  width_pt : Double
+  height_pt : Double
+  yoffset_centerline : Double
+}
 
 // Type aliases
 

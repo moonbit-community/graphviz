@@ -126,10 +126,29 @@ pub fn build_neighbor_rank_groups(
     for edge_idx in 0..<edge_tail.length() {
       let tail = edge_tail[edge_idx]
       let head = edge_head[edge_idx]
+      guard node_ranks.get(tail) != node_ranks.get(head) else { continue }
       append_neighbor_edge(out_neighbors, in_neighbors, tail, head)
     }
   }
   let cluster_nodes : Map[String, Array[String]] = Map([])
+  // Neighbor hints may describe the enclosing graph. Nodes without a rank
+  // in this active graph must not be enqueued and silently installed at 0.
+  for name in nlist {
+    out_neighbors[name] = out_neighbors
+      .get(name)
+      .unwrap_or_default()
+      .filter(neighbor => {
+        node_ranks.get(neighbor) is Some(rank) &&
+        node_ranks.get(name) != Some(rank)
+      })
+    in_neighbors[name] = in_neighbors
+      .get(name)
+      .unwrap_or_default()
+      .filter(neighbor => {
+        node_ranks.get(neighbor) is Some(rank) &&
+        node_ranks.get(name) != Some(rank)
+      })
+  }
   let cluster_has_skeleton : Map[String, Bool] = Map([])
   for name in nlist {
     if cluster_skeleton.get(name) == Some(true) {

@@ -3,6 +3,24 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+test "dynamic endpoint neighbors follow the fast chain rather than original endpoints" {
+  let tail : @geom.Point = { x: 0.0, y: 100.0, }
+  let head : @geom.Point = { x: 0.0, y: 0.0, }
+  let first : @geom.Point = { x: 150.0, y: 80.0, }
+  let last : @geom.Point = { x: -150.0, y: 20.0, }
+  @test.assert_eq(
+    route_endpoint_neighbors(
+      ["first", "last"],
+      { "first": first, "last": last },
+      tail,
+      head,
+    ),
+    (first, last),
+  )
+  @test.assert_eq(route_endpoint_neighbors([], {}, tail, head), (head, tail))
+}
+
+///|
 fn route_dynamic_anchor(
   anchor : @geom.Point?,
   side? : Int = 0,
@@ -24,7 +42,6 @@ test "compass clip resolves explicit self-edge ports to their fixed point" {
   })
 
   let clip = compass_clip_point_if_needed({
-    is_record_shape: _ => false,
     node,
     port,
     center,
@@ -33,6 +50,21 @@ test "compass clip resolves explicit self-edge ports to their fixed point" {
   })
 
   assert_eq(clip, Some(@edge_spline.point(130.0, 182.0)))
+}
+
+///|
+test "record compass chooses a non-square field corner instead of a ray intersection" {
+  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
+  let node = graph.node("record")
+  node.set_attr("shape", "record")
+  let clip = compass_clip_point_if_needed({
+    node,
+    port: Some({ name: Some("field"), compass: Some(@cgraph.Compass::SE), }),
+    center: { x: 100.0, y: 200.0, },
+    size: @node_primitives.node_size_from_points(60.0, 20.0),
+    rankdir: RankDir::TB,
+  })
+  @test.assert_eq(clip, Some({ x: 130.0, y: 190.0, }))
 }
 
 ///|
@@ -86,40 +118,6 @@ test "clip_point_for_route_endpoint prefers dynamic anchor then compass clip" {
     clip_target: @edge_spline.point(12.0, 0.0),
   })
   assert_eq(compass_clipped, @edge_spline.point(8.0, 8.0))
-}
-
-///|
-test "clustered_edge_arrow_len_override clamps short cluster spans" {
-  let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
-  let tail = graph.node("tail")
-  let head = graph.node("head")
-  let edge = graph.edge(tail, head)
-  edge.set_attr("arrowtail", "crow")
-  edge.set_attr("arrowhead", "box")
-  edge.set_attr("arrowsize", "1.5")
-  edge.set_attr("penwidth", "2.0")
-
-  let override_len = clustered_edge_arrow_len_override({
-    edge,
-    include_tail: true,
-    include_head: true,
-    tail_cluster_bbox: Some({ llx: 0.0, lly: 0.0, urx: 1.0, ury: 1.0, }),
-    head_cluster_bbox: None,
-    tail_clip: @edge_spline.point(0.0, 0.0),
-    head_clip: @edge_spline.point(1.0, 0.0),
-  })
-  assert_eq(override_len, Some(0.25))
-
-  let no_cluster_override = clustered_edge_arrow_len_override({
-    edge,
-    include_tail: true,
-    include_head: true,
-    tail_cluster_bbox: None,
-    head_cluster_bbox: None,
-    tail_clip: @edge_spline.point(0.0, 0.0),
-    head_clip: @edge_spline.point(1.0, 0.0),
-  })
-  assert_eq(no_cluster_override, None)
 }
 
 ///|

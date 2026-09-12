@@ -205,6 +205,62 @@ pub fn build_order_edges_by_tail(
   let vnode_creation_by_tail : Map[String, Array[String]] = Map([])
   let edge_creation : Array[(String, String)] = []
   let use_mapping = order_with_clusters && map_clusters
+  let concentrated = graphviz_concentrate_enabled(edges)
+  let parallel_merges = if concentrated {
+    let port_samples : Map[Int, (Double, Double, Double, Double)] = Map([])
+    for index, edge in edges {
+      let (tail, _) = edge_endpoints_at(edge, index, edge_tail, edge_head)
+      let tx = if index < edge_tail_port_x.length() {
+        edge_tail_port_x[index]
+      } else {
+        0.0
+      }
+      let hx = if index < edge_head_port_x.length() {
+        edge_head_port_x[index]
+      } else {
+        0.0
+      }
+      let to = if index < edge_tail_port_order.length() {
+        edge_tail_port_order[index]
+      } else {
+        0.0
+      }
+      let ho = if index < edge_head_port_order.length() {
+        edge_head_port_order[index]
+      } else {
+        0.0
+      }
+      port_samples[edge.id()] = if tail == edge.tail().name() {
+        (tx, hx, to, ho)
+      } else {
+        (hx, tx, ho, to)
+      }
+    }
+    let ports_equal = (a : @cgraph.Edge, b : @cgraph.Edge) => {
+      port_samples.get(a.id()) == port_samples.get(b.id()) &&
+      @edge_identity.port_key(a.tail_port()) ==
+      @edge_identity.port_key(b.tail_port()) &&
+      @edge_identity.port_key(a.head_port()) ==
+      @edge_identity.port_key(b.head_port())
+    }
+    build_reverse_merge_metadata(
+      {
+        edges,
+        edge_tail,
+        edge_head,
+        edge_excluded_from_reverse_merge: edge => {
+          edge.tail().name() == edge.head().name() ||
+          edge.get_attr("label").unwrap_or_default() != ""
+        },
+        edge_ports_equal: ports_equal,
+      },
+      initial_metadata=build_parallel_merge_metadata(
+        edges, ranks, cluster_keys, ports_equal,
+      ),
+    )
+  } else {
+    { merged_edge_weight_bonus: Map([]), merged_edge_skip: Map([]), }
+  }
   let cluster_order_index_local : Map[String, Int] = Map([])
   if order_with_clusters && cluster_order_index.length() > 0 {
     for cluster, idx in cluster_order_index {
@@ -389,6 +445,11 @@ pub fn build_order_edges_by_tail(
       if use_mapping && tail_cluster != "" && tail_cluster == head_cluster {
         continue
       }
+      if concentrated &&
+        tail_cluster == head_cluster &&
+        parallel_merges.merged_edge_skip.get(idx) is Some(_) {
+        continue
+      }
       let tail_rank = match ranks.get(tail) {
         Some(value) => value
         None => 0
@@ -472,19 +533,21 @@ pub fn build_order_edges_by_tail(
         let t = chain[i]
         let h = chain[i + 1]
         if t != h {
+          // Newly created virtual endpoints have Graphviz's zero port,
+          // independently of the retained original endpoint's port offset.
           let seg_tail_port = if t == tail && mapped_tail == tail {
             tail_port_x
           } else if t == head && mapped_head == head {
             head_port_x
           } else {
-            0.5
+            0.0
           }
           let seg_head_port = if h == head && mapped_head == head {
             head_port_x
           } else if h == tail && mapped_tail == tail {
             tail_port_x
           } else {
-            0.5
+            0.0
           }
           let seg_tail_order = if t == tail && mapped_tail == tail {
             tail_port_order

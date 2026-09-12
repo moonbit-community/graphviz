@@ -56,8 +56,8 @@ fn is_keyword_token(id : String) -> Bool {
 }
 
 ///|
-fn canonical_id(raw : String) -> String {
-  if is_html_label_value(raw) {
+fn canonical_id(raw : String, html? : Bool? = None) -> String {
+  if html.unwrap_or_else(() => is_html_label_value(raw)) {
     return raw
   }
   if raw == "" {
@@ -280,13 +280,6 @@ fn write_port(port : @cgraph.Port?) -> String {
 }
 
 ///|
-priv enum AttrGroup {
-  Graph
-  Node
-  Edge
-}
-
-///|
 fn is_internal_graph_attr(name : String) -> Bool {
   name == INPUT_LATIN1_FALLBACK_ATTR
 }
@@ -297,193 +290,22 @@ fn is_internal_edge_attr(name : String) -> Bool {
 }
 
 ///|
-fn graph_attr_rank(name : String) -> Int {
-  match name {
-    "URL" | "url" | "href" => -1
-    "_draw_" => 0
-    "_ldraw_" => 1
-    "bb" => 2
-    "charset" => 3
-    "bgcolor" => 3
-    "gradientangle" => 3
-    "color" => 4
-    "fillcolor" => 4
-    "pencolor" => 5
-    "concentrate" => 5
-    "colorscheme" => 5
-    "center" => 6
-    "fontcolor" => 7
-    "fontname" => 8
-    "fontsize" => 9
-    "label" => 10
-    "labeljust" => 11
-    "labelloc" => 12
-    "lheight" => 13
-    "peripheries" => 14
-    "lp" => 14
-    "lwidth" => 15
-    "layout" => 16
-    "mode" => 17
-    "ordering" => 20
-    "orientation" => 18
-    "page" => 19
-    "margin" => 19
-    "nodesep" => 20
-    "overlap" => 21
-    "rank" => 22
-    "rankdir" => 23
-    "ranksep" => 24
-    "ratio" => 25
-    "size" => 26
-    "root" => 26
-    "splines" => 27
-    "style" => 28
-    "xdotversion" => 1000
-    _ => 200
-  }
-}
-
-///|
-fn node_attr_rank(name : String) -> Int {
-  match name {
-    "URL" | "url" | "href" => -1
-    "area" => 1
-    "class" => 0
-    "_draw_" => 0
-    "_ldraw_" => 1
-    "color" => 2
-    "colorscheme" => 3
-    "fillcolor" => 4
-    "gradientangle" => 4
-    "fixedsize" => 5
-    "distortion" => 5
-    "fontcolor" => 6
-    "fontname" => 7
-    "fname" => 8
-    "fontsize" => 9
-    "height" => 10
-    "id" => 11
-    "hight" => 11
-    "image" => 11
-    "imagescale" => 11
-    "kind" => 11
-    "label" => 12
-    "orientation" => 13
-    "peripheries" => 14
-    "pname" => 15
-    "margin" => 16
-    "pos" => 17
-    "rects" => 18
-    "penwidth" => 19
-    "regular" => 19
-    "shape" => 20
-    "sides" => 21
-    "skew" => 22
-    "style" => 23
-    "shapefile" => 24
-    "subkind" => 24
-    "root" => 24
-    "width" => 25
-    _ => 200
-  }
-}
-
-///|
-fn edge_attr_rank(name : String) -> Int {
-  match name {
-    "URL"
-    | "url"
-    | "href"
-    | "edgeURL"
-    | "edgeurl"
-    | "edgehref"
-    | "headURL"
-    | "headurl"
-    | "headhref"
-    | "tailURL"
-    | "tailurl"
-    | "tailhref"
-    | "labelURL"
-    | "labelurl"
-    | "labelhref" => -1
-    "class" => 0
-    "_draw_" => 0
-    "_hdraw_" => 1
-    "_hldraw_" => 2
-    "_ldraw_" => 3
-    "_tdraw_" => 4
-    "_tldraw_" => 5
-    "arrowhead" => 6
-    "arrowtail" => 7
-    "arrowsize" => 8
-    "color" => 9
-    "constraint" => 10
-    "dir" => 11
-    "fontcolor" => 12
-    "fontname" => 13
-    "fontsize" => 14
-    "head_lp" => 15
-    "headlabel" => 16
-    "id" => 17
-    "label" => 18
-    "labelfontcolor" => 19
-    "labelangle" => 19
-    "labeldistance" => 20
-    "len" => 20
-    "lp" => 21
-    "lhead" => 22
-    "ltail" => 23
-    "headclip" => 24
-    "minlen" => 24
-    "pos" => 25
-    "radius" => 26
-    "samearrowhead" => 26
-    "tailclip" => 26
-    "samearrowtail" => 27
-    "samehead" => 28
-    "sametail" => 29
-    "style" => 30
-    "tail_lp" => 31
-    "taillabel" => 32
-    "xlabel" => 33
-    "xlp" => 34
-    "w" => 35
-    "weight" => 35
-    "wt" => 36
-    // Graphviz emits unknown/custom edge attrs (for example, `len`/`f`)
-    // ahead of generated `pos`, while still keeping them after label/minlen.
-    _ => 24
-  }
-}
-
-///|
-fn attr_rank(group : AttrGroup, name : String) -> Int {
-  match group {
-    AttrGroup::Graph => graph_attr_rank(name)
-    AttrGroup::Node => node_attr_rank(name)
-    AttrGroup::Edge => edge_attr_rank(name)
-  }
-}
-
-///|
-fn sort_attrs(
-  attrs : Array[(String, String)],
-  group : AttrGroup,
-) -> Array[(String, String)] {
-  let indexed : Array[(Int, (String, String))] = []
-  for i, pair in attrs {
-    indexed.push((i, pair))
-  }
-  indexed.sort_by_key(entry => {
-    let (index, pair) = entry
-    let (name, _value) = pair
-    attr_rank(group, name) * 1000 + index
+/// cgraph writes its attribute dictionaries in symbol-name order (Dttree).
+/// The same ordering applies to built-in, custom, and generated attributes.
+fn sort_attrs(attrs : Array[(String, String)]) -> Array[(String, String)] {
+  let ordered = attrs.map(pair => (pair, @utf8.encode(pair.0)))
+  ordered.sort_by((left, right) => {
+    let a = left.1
+    let b = right.1
+    let length = if a.length() < b.length() { a.length() } else { b.length() }
+    for index in 0..<length {
+      if a[index] != b[index] {
+        return if a[index] < b[index] { -1 } else { 1 }
+      }
+    }
+    a.length().compare(b.length())
   })
-  let out : Array[(String, String)] = []
-  for entry in indexed {
-    out.push(entry.1)
-  }
-  out
+  ordered.map(entry => entry.0)
 }
 
 ///|
@@ -542,11 +364,11 @@ fn write_tabs(sb : StringBuilder, level : Int) -> Unit {
 fn write_attr_block(
   sb : StringBuilder,
   attrs : Array[(String, String)],
-  group : AttrGroup,
   indent : Int,
   close_on_newline : Bool,
+  attr_value? : (String) -> @cgraph.AttrValue? = _ => None,
 ) -> Unit {
-  let ordered = sort_attrs(attrs, group)
+  let ordered = sort_attrs(attrs)
   sb.write_char('[')
   for i, pair in ordered {
     if i > 0 {
@@ -569,7 +391,8 @@ fn write_attr_block(
     }
     sb.write_string(write_id(key))
     sb.write_char('=')
-    sb.write_string(write_id(value))
+    let html = attr_value(key).map(value => value is @cgraph.AttrValue::Html(_))
+    sb.write_string(canonical_id(value, html~))
   }
   if close_on_newline && ordered.length() > 1 {
     sb.write_char('\n')
@@ -584,7 +407,7 @@ fn write_default_stmt(
   indent : Int,
   name : String,
   attrs : Array[(String, String)],
-  group : AttrGroup,
+  attr_value? : (String) -> @cgraph.AttrValue? = _ => None,
 ) -> Unit {
   if attrs.length() == 0 {
     return
@@ -592,7 +415,7 @@ fn write_default_stmt(
   write_tabs(sb, indent)
   sb.write_string(name)
   sb.write_char(' ')
-  write_attr_block(sb, attrs, group, indent, true)
+  write_attr_block(sb, attrs, indent, true, attr_value~)
   sb.write_string(";\n")
 }
 
@@ -605,8 +428,9 @@ fn filter_nondefault_node_attrs(
   for pair in node.attrs() {
     let (key, value) = pair
     match graph.get_default_attr(@cgraph.AttrKind::Node, key) {
-      Some(default_value) =>
-        if default_value != value {
+      Some(_) =>
+        if graph.get_default_attr_value(@cgraph.AttrKind::Node, key) !=
+          node.get_attr_value(key) {
           filtered.push((key, value))
         }
       None =>
@@ -642,14 +466,12 @@ fn filter_nondefault_edge_attrs(
       continue
     }
     match graph.get_default_attr(@cgraph.AttrKind::Edge, key) {
-      Some(default_value) =>
-        if default_value != value {
+      Some(_) =>
+        if graph.get_default_attr_value(@cgraph.AttrKind::Edge, key) !=
+          edge.get_attr_value(key) {
           filtered.push((key, value))
         }
-      None =>
-        if value != "" || key == "style" || key == "label" {
-          filtered.push((key, value))
-        }
+      None => if value != "" || key == "style" { filtered.push((key, value)) }
     }
   }
   if edge.get_attr("style") is None {
@@ -683,7 +505,11 @@ fn node_has_nondefault_attrs(
   for pair in node.attrs() {
     let (key, value) = pair
     match graph.get_default_attr(@cgraph.AttrKind::Node, key) {
-      Some(default_value) => if default_value != value { return true }
+      Some(_) =>
+        if graph.get_default_attr_value(@cgraph.AttrKind::Node, key) !=
+          node.get_attr_value(key) {
+          return true
+        }
       None =>
         if value != "" ||
           key == "distortion" ||
@@ -716,7 +542,9 @@ fn write_node_stmt(
     let attrs = filter_nondefault_node_attrs(graph, node)
     if attrs.length() > 0 {
       sb.write_char('\t')
-      write_attr_block(sb, attrs, AttrGroup::Node, indent, false)
+      write_attr_block(sb, attrs, indent, false, attr_value=key => {
+        node.get_attr_value(key)
+      })
     }
   }
   sb.write_string(";\n")
@@ -777,7 +605,9 @@ fn write_edge_stmt(
   let attrs = edge_stmt_attrs(graph, edge, emit_attrs)
   if attrs.length() > 0 {
     sb.write_char('\t')
-    write_attr_block(sb, attrs, AttrGroup::Edge, indent, false)
+    write_attr_block(sb, attrs, indent, false, attr_value=key => {
+      edge.get_attr_value(key)
+    })
   }
   sb.write_string(";\n")
 }
@@ -1390,9 +1220,6 @@ fn should_skip_layout_subgraph(
   if parent.name() is Some(_) {
     return false
   }
-  if parent.edges().length() == 0 {
-    return false
-  }
   if child.attrs().length() > 0 {
     return false
   }
@@ -1408,10 +1235,32 @@ fn should_skip_layout_subgraph(
   if child.edges().length() > 0 {
     return false
   }
-  if child.subgraphs().length() > 0 {
-    return false
-  }
   true
+}
+
+///|
+/// cgraph's write_subgs descends through irrelevant anonymous scopes without
+/// writing their braces. Keep source paths unchanged for edge ownership.
+fn write_subgraphs_recursive(
+  graph : @cgraph.Graph,
+  sb : StringBuilder,
+  indent : Int,
+  path : String,
+  is_layout_output : Bool,
+  ctx : WriteContext,
+) -> Unit {
+  for i, subgraph in graph.subgraphs() {
+    let child_path = child_graph_path(path, i)
+    if should_skip_layout_subgraph(graph, subgraph, is_layout_output) {
+      write_subgraphs_recursive(
+        subgraph, sb, indent, child_path, is_layout_output, ctx,
+      )
+    } else {
+      write_graph_recursive(
+        subgraph, sb, indent, child_path, false, is_layout_output, ctx,
+      )
+    }
+  }
 }
 
 ///|
@@ -1458,7 +1307,9 @@ fn write_graph_recursive(
   )
   let graph_attrs = filter_internal_graph_attrs(graph.attrs())
   let graph_dict_attrs = merge_attrs_keep_order(graph_defaults, graph_attrs)
-  write_default_stmt(sb, inner, "graph", graph_dict_attrs, AttrGroup::Graph)
+  write_default_stmt(sb, inner, "graph", graph_dict_attrs, attr_value=key => {
+    graph.get_attr_value(key)
+  })
   let node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
   let node_defaults = if is_root && is_layout_output {
     let mut has_label = false
@@ -1482,18 +1333,14 @@ fn write_graph_recursive(
   } else {
     node_defaults
   }
-  write_default_stmt(sb, inner, "node", node_defaults, AttrGroup::Node)
+  write_default_stmt(sb, inner, "node", node_defaults, attr_value=key => {
+    graph.get_default_attr_value(@cgraph.AttrKind::Node, key)
+  })
   let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
-  write_default_stmt(sb, inner, "edge", edge_defaults, AttrGroup::Edge)
-  for i, subgraph in graph.subgraphs() {
-    if should_skip_layout_subgraph(graph, subgraph, is_layout_output) {
-      continue
-    }
-    let child_path = child_graph_path(path, i)
-    write_graph_recursive(
-      subgraph, sb, inner, child_path, false, is_layout_output, ctx,
-    )
-  }
+  write_default_stmt(sb, inner, "edge", edge_defaults, attr_value=key => {
+    graph.get_default_attr_value(@cgraph.AttrKind::Edge, key)
+  })
+  write_subgraphs_recursive(graph, sb, inner, path, is_layout_output, ctx)
   write_body(graph, sb, inner, preorder, path, is_layout_output, ctx)
   write_tabs(sb, indent)
   sb.write_string("}\n")
