@@ -1,6 +1,6 @@
 name = "moonbit-community/graphviz"
 
-version = "0.1.8"
+version = "0.1.9"
 
 import {
   "moonbitlang/async@0.21.2",
