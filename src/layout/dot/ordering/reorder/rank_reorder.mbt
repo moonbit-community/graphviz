@@ -2303,7 +2303,10 @@ pub fn reorder_rank_groups(
       Some(list) => list
       None => []
     }
-    if !has_single_rank_incidents(
+    // Flat edges still require break_flat_cycles and flat_reorder even when
+    // this rank has no incident edges to another rank.
+    if flat_constraints.is_empty() &&
+      !has_single_rank_incidents(
         single_names, edge_tail, edge_head, edge_penalty, graphviz_out_neighbors,
         graphviz_in_neighbors,
       ) {
