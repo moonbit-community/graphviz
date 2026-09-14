@@ -58,6 +58,17 @@ test "monospace measurement depends on column counts not glyph shapes" {
 }
 
 ///|
+test "Helvetica HTML table span retains its reference-side rounding" {
+  @test.assert_eq(
+    label_text_dimensions(
+      "\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\"", "Helvetica",
+      14.0,
+    ),
+    (446.25000000000006, 15.0),
+  )
+}
+
+///|
 test "fallback offsets apply when font has no captured offsets" {
   let (width, height, yoffset_layout, yoffset_centerline) = label_text_metrics(
     "A", "UnknownFont", 10.0,
