@@ -2,7 +2,6 @@ import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/dot",
   "moonbitlang/async/fs" @async_fs,
-  "moonbitlang/core/buffer",
   "moonbitlang/core/encoding/utf8",
 }
 

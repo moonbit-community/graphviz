@@ -184,11 +184,7 @@ pub fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
 
 ///|
 pub fn edge_weight(edge : @cgraph.Edge) -> Int {
-  let weight_value = @attrs.parse_double(edge.get_attr("weight"), 1.0)
-  let mut weight = weight_value.round().to_int()
-  if weight < 0 {
-    weight = 0
-  }
+  let mut weight = dot_weight(edge.get_attr("weight"))
   if !edge_is_constraint(edge) {
     return 0
   }
@@ -204,6 +200,28 @@ pub fn edge_weight(edge : @cgraph.Edge) -> Int {
     weight = weight * 100
   }
   weight
+}
+
+///|
+/// dotinit.c uses late_int/strtol: consume the signed decimal prefix, not a
+/// rounded floating-point value. DOT clamps negative weights to zero.
+fn dot_weight(value : String?) -> Int {
+  guard value is Some(value) else { return 1 }
+  let text = value.trim().to_owned()
+  let prefix = for index = 0, prefix = "" {
+    guard text.get_char(index) is Some(char) else { break prefix }
+    guard (char >= '0' && char <= '9') ||
+      (index == 0 && (char == '+' || char == '-')) else {
+      break prefix
+    }
+    continue index + 1, prefix + char.to_string()
+  }
+  if prefix.has_prefix("-") && prefix.length() > 1 {
+    return 0
+  }
+  @string.parse_int(prefix[:], base=10) catch {
+    _ => 1
+  }
 }
 
 ///|

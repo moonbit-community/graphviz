@@ -2299,19 +2299,8 @@ pub fn reorder_rank_groups(
     let min_quit = 8
     let convergence = 0.995
     let rank = rank_keys[0]
-    let single_names = match ordered.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    // Flat edges still require break_flat_cycles and flat_reorder even when
-    // this rank has no incident edges to another rank.
-    if flat_constraints.is_empty() &&
-      !has_single_rank_incidents(
-        single_names, edge_tail, edge_head, edge_penalty, graphviz_out_neighbors,
-        graphviz_in_neighbors,
-      ) {
-      return ordered
-    }
+    // Even without constraining flat edges, build_ranks must group connected
+    // nodes and apply the rankdir flip before mincross can stop at zero crossings.
     let compute_single_cross = () => {
       if crossing_counter is Some(counter) {
         return counter(ordered)
@@ -2392,7 +2381,13 @@ pub fn reorder_rank_groups(
         }
         if pass == 0 {
           let (topology, matrix) = break_flat_cycles(
-            rank_keys, ordered, node_ranks, flat_constraints, edge_tail, edge_head,
+            rank_keys,
+            ordered,
+            node_ranks,
+            flat_constraints,
+            edge_tail,
+            edge_head,
+            edges~,
           )
           flat_constraints = topology
           swap_flat_constraints = flat_swap_constraints(matrix, graphviz_flip)
@@ -2598,7 +2593,13 @@ pub fn reorder_rank_groups(
         }
         if pass == 0 {
           let (topology, matrix) = break_flat_cycles(
-            rank_keys, ordered, node_ranks, flat_constraints, edge_tail, edge_head,
+            rank_keys,
+            ordered,
+            node_ranks,
+            flat_constraints,
+            edge_tail,
+            edge_head,
+            edges~,
           )
           flat_constraints = topology
           swap_flat_constraints = flat_swap_constraints(matrix, graphviz_flip)
