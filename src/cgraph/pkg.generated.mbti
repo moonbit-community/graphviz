@@ -26,7 +26,10 @@ pub(all) enum AttrValue {
   Text(String)
   Html(String)
 } derive(Eq, @debug.Debug)
+pub fn AttrValue::equal(Self, Self) -> Bool
+pub fn AttrValue::not_equal(Self, Self) -> Bool
 pub fn AttrValue::text(Self) -> String
+pub fn AttrValue::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Compass {
   N
