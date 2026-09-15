@@ -12,6 +12,7 @@ fn break_flat_cycles(
   constraints : Map[String, Bool],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edges? : Array[@cgraph.Edge] = [],
 ) -> (Map[String, Bool], Map[String, Bool]) {
   let topology : Map[String, Bool] = Map([])
   let matrix : Map[String, Bool] = Map([])
@@ -34,7 +35,23 @@ fn break_flat_cycles(
     heads.push(head)
   }
   // class2 installs ordinary flat edges before ordered_edges appends FLATORDER.
+  let scan_order = []
   for index in 0..<edge_tail.length() {
+    scan_order.push(index)
+  }
+  // class2 scans agfstnode/agfstout: outgoing edges are ordered by the
+  // original head node id, not by edge statement order. Keep parallel ties
+  // in edge-id order before flat_search mutates the live adjacency lists.
+  if edges.length() == scan_order.length() {
+    scan_order.sort_by((a, b) => {
+      let tail_order = edges[a].tail().id.compare(edges[b].tail().id)
+      guard tail_order == 0 else { return tail_order }
+      let head_order = edges[a].head().id.compare(edges[b].head().id)
+      guard head_order == 0 else { return head_order }
+      edges[a].id().compare(edges[b].id())
+    })
+  }
+  for index in scan_order {
     let tail = edge_tail[index]
     let head = edge_head[index]
     ordinary["\{tail}|\{head}"] = true

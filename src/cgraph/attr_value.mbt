@@ -7,6 +7,12 @@ pub(all) enum AttrValue {
 } derive(Eq, Debug)
 
 ///|
+pub extend AttrValue with Eq::{not_equal, equal}
+
+///|
+pub extend AttrValue with Debug::{to_repr}
+
+///|
 /// Returns the attribute spelling without losing the stored syntax.
 pub fn AttrValue::text(self : AttrValue) -> String {
   match self {

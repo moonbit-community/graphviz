@@ -173,7 +173,7 @@ fn add_same_rank_constraint_edges_to_flat_constraints(
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
     if edge_idx < edges.length() &&
-      !@edge_semantics.edge_is_constraint(edges[edge_idx]) {
+      @edge_semantics.edge_weight(edges[edge_idx]) == 0 {
       edge_idx = edge_idx + 1
       continue
     }

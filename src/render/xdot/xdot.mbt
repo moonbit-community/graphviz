@@ -5888,7 +5888,7 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
       input[index + 5] == b'=' {
       let prev_is_name = index > 0 && is_attr_name_byte(input[index - 1])
       if !prev_is_name {
-        out.write_bytesview(input.view(start=index, end=index + 6))
+        out.write_bytesview(input.exact_view(start=index, end=index + 6))
         index = index + 6
         if index >= input.length() {
           continue
@@ -5917,7 +5917,7 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
             }
             end = end + 1
           }
-          let token = input.view(start~, end~)
+          let token = input.exact_view(start~, end~)
           out.write_bytes(latin1_token_bytes(token))
           if end < input.length() && input[end] == b'"' {
             out.write_byte(b'"')
@@ -5943,7 +5943,7 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
           }
           end = end + 1
         }
-        let token = input.view(start=index, end~)
+        let token = input.exact_view(start=index, end~)
         out.write_bytes(latin1_token_bytes(token))
         index = end
         continue
