@@ -63,7 +63,7 @@ run_moon_test_command() {
 run_moon_build_dot_command() {
   run_moon_command_with_optional_frozen \
     "moon build fallback" \
-    moon build src/cmd/dot --target native --release -j "${moon_jobs}"
+    moon build cli/cmd/dot --target native --release -j "${moon_jobs}"
 }
 
 run_strict_parity_command() {
@@ -109,7 +109,7 @@ run_step "check snapshot inputs" scripts/check_snapshot_input_candidates.py
 run_step "check strict parity lists" scripts/check_strict_parity_case_lists.py
 
 run_step "moon build dot" run_moon_build_dot_command
-dot_bin="_build/native/release/build/cmd/dot/dot.exe"
+dot_bin="_build/native/release/build/moonbit-community/graphviz-cli/cmd/dot/dot.exe"
 
 run_step "check strict parity" run_strict_parity_command
 

@@ -25,7 +25,7 @@ jobs:
           moon version --all
           moon update
 
-      # Add -C if your moon.mod.json or moon.pkg.json is not in the root directory
+      # Validate both workspace members before publishing the library.
       - name: prepublish check
         run: |
           moon check
@@ -42,5 +42,5 @@ jobs:
             exit 1
           fi
           echo "$SECRET" > ~/.moon/credentials.json
-          moon publish
+          moon -C graphviz publish
           rm ~/.moon/credentials.json

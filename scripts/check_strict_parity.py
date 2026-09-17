@@ -18,6 +18,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from dot_cli_paths import dot_binary, dot_package
+
 from case_list_utils import load_case_names
 from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path
 
@@ -72,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--build-if-missing",
         action="store_true",
-        help="Run `moon build src/cmd/dot --target native` if dot binary is missing.",
+        help="Run `moon build cli/cmd/dot --target native` if dot binary is missing.",
     )
     parser.add_argument(
         "--formats",
@@ -246,7 +248,7 @@ def compare_case(
 
 def ensure_dot_bin(args: argparse.Namespace) -> Path:
     repo_root = args.repo_root.resolve()
-    default_bin = repo_root / "_build/native/debug/build/cmd/dot/dot.exe"
+    default_bin = dot_binary(repo_root)
     dot_bin = args.dot_bin.resolve() if args.dot_bin else default_bin
     if dot_bin.exists():
         return dot_bin
@@ -255,7 +257,7 @@ def ensure_dot_bin(args: argparse.Namespace) -> Path:
             f"dot binary not found: {dot_bin} (pass --build-if-missing to build it)",
         )
     subprocess.run(
-        ["moon", "build", "src/cmd/dot", "--target", "native"],
+        ["moon", "build", dot_package(repo_root), "--target", "native"],
         cwd=repo_root,
         check=True,
     )

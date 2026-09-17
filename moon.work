@@ -1,0 +1,4 @@
+members = [
+  "./graphviz",
+  "./cli",
+]

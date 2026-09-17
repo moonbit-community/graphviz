@@ -16,6 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from dot_cli_paths import dot_binary
+
 from case_list_utils import load_case_names as load_case_names_from_file
 from case_list_utils import resolve_repo_path
 from snapshot_inputs import resolve_input_path
@@ -82,7 +84,7 @@ def load_case_names(repo_root: Path, args: argparse.Namespace) -> list[str]:
 
 def ensure_dot_bin(repo_root: Path, dot_bin: Path | None) -> Path:
     if dot_bin is None:
-        dot_bin = repo_root / "_build/native/debug/build/cmd/dot/dot.exe"
+        dot_bin = dot_binary(repo_root)
     elif not dot_bin.is_absolute():
         dot_bin = repo_root / dot_bin
     dot_bin = dot_bin.resolve()

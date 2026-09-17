@@ -1,0 +1,5 @@
+import {
+  "moonbit-community/graphviz-cli/dot/fs" @dot_fs,
+  "moonbit-community/graphviz/layout/dot" @layout_dot,
+  "moonbitlang/async",
+} for "test"
