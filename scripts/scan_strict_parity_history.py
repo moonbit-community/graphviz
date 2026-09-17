@@ -17,6 +17,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from dot_cli_paths import dot_package
+
 from case_list_utils import dedupe_case_names
 from case_list_utils import load_case_names
 from case_list_utils import resolve_repo_path
@@ -242,7 +244,7 @@ def main() -> int:
                     env={"GIT_TERMINAL_PROMPT": "0"},
                 )
                 run(
-                    ["moon", "build", "src/cmd/dot", "--target", "native"],
+                    ["moon", "build", dot_package(worktree), "--target", "native"],
                     worktree,
                 )
                 cmd = [

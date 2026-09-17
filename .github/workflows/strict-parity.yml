@@ -10,12 +10,14 @@ on:
     branches:
       - main
     paths:
-      - "src/**"
+      - "graphviz/**"
+      - "cli/**"
+      - "moon.work"
       - "tests/**"
       - "scripts/**"
       - "refs/graphviz"
-      - "moon.mod"
-      - "moon.mod.json"
+      - "**/moon.mod"
+      - "**/moon.mod.json"
       - "**/moon.pkg"
       - "**/moon.pkg.json"
       - ".github/workflows/strict-parity.yml"
@@ -23,12 +25,14 @@ on:
     branches:
       - main
     paths:
-      - "src/**"
+      - "graphviz/**"
+      - "cli/**"
+      - "moon.work"
       - "tests/**"
       - "scripts/**"
       - "refs/graphviz"
-      - "moon.mod"
-      - "moon.mod.json"
+      - "**/moon.mod"
+      - "**/moon.mod.json"
       - "**/moon.pkg"
       - "**/moon.pkg.json"
       - ".github/workflows/strict-parity.yml"
@@ -63,17 +67,17 @@ jobs:
       - name: Build dot CLI
         run: |
           moon update
-          moon build src/cmd/dot --target native
+          moon build cli/cmd/dot --target native
 
       - name: Ordering-input capture environment invariance
         run: |
           scripts/check_capture_env_invariance.py \
-            --dot-bin _build/native/debug/build/cmd/dot/dot.exe \
+            --dot-bin _build/native/debug/build/moonbit-community/graphviz-cli/cmd/dot/dot.exe \
             --formats dot xdot svg \
             --cases-file tests/capture_env_invariant_cases.txt
 
       - name: Trapezium SVG polygon invariant
-        run: moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
+        run: moon test cli/integration/svg/render_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
 
       - name: Validate strict parity case lists
         run: scripts/check_strict_parity_case_lists.py

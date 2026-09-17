@@ -22,7 +22,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-output_path="${repo_root}/src/layout/dot/font_metrics/font_metrics.generated.mbt"
+output_path="${repo_root}/graphviz/layout/dot/font_metrics/font_metrics.generated.mbt"
 export OUTPUT_PATH="${output_path}"
 
 python3 - <<'PY'

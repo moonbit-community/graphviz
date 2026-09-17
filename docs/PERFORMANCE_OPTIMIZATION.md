@@ -128,5 +128,5 @@ let max_iter = if node_count > 100 { 2 } else if node_count > 50 { 4 } else { 24
 ## References
 
 - Official graphviz: `refs/graphviz/lib/dotgen/mincross.c`
-- Our implementation: `src/layout/dot/mincross.mbt`
-- Crossing count: `src/layout/dot/ordering_helpers.mbt:1145`
+- Our implementation: `graphviz/layout/dot/mincross.mbt`
+- Crossing count: `graphviz/layout/dot/ordering_helpers.mbt:1145`

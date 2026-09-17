@@ -1,8 +1,0 @@
-import {
-  "moonbit-community/graphviz/cli",
-  "moonbitlang/async",
-  "moonbitlang/async/stdio",
-  "moonbitlang/core/env",
-}
-
-pkgtype(kind: "executable")

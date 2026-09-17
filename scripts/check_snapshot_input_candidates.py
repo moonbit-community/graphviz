@@ -162,25 +162,12 @@ def main() -> int:
             'python3 "${repo_root}/scripts/snapshot_inputs.py" --repo-root "${repo_root}" --case "${case_name}"',
         )
 
-    targets: list[tuple[str, list[str]]] = []
-    targets.append(
+    targets = [
         (
-            "src/layout/dot/snapshot_test.mbt:candidates",
-            parse_mbt_candidates(repo_root / "src/layout/dot/snapshot_test.mbt"),
-        )
-    )
-    targets.append(
-        (
-            "src/render/xdot/snapshot_test.mbt:candidates",
-            parse_mbt_candidates(repo_root / "src/render/xdot/snapshot_test.mbt"),
-        )
-    )
-    targets.append(
-        (
-            "src/render/svg/svg_test.mbt:candidates",
-            parse_mbt_candidates(repo_root / "src/render/svg/svg_test.mbt"),
-        )
-    )
+            "cli/cli/snapshot_test.mbt:candidates",
+            parse_mbt_candidates(repo_root / "cli/cli/snapshot_test.mbt"),
+        ),
+    ]
     mismatches: list[str] = []
     for name, current in targets:
         if current != canonical:

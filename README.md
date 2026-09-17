@@ -8,7 +8,7 @@ The repository currently targets byte-for-byte compatibility with upstream Graph
 - `xdot`
 - `svg`
 
-This project is built as a multi-package MoonBit module and includes a native `dot`-style CLI, a DOT parser/writer, layout code, and renderers.
+This repository uses `moon.work` to connect two modules: `moonbit-community/graphviz`, a synchronous library with no external module dependencies, and `moonbit-community/graphviz-cli`, the native `dot`-style CLI. Only the CLI module depends on `moonbitlang/async`.
 
 ## Status
 
@@ -16,7 +16,7 @@ The project is under active development. The main engineering goal is not just "
 
 Today the repository includes:
 
-- a native CLI frontend at `src/cmd/dot`
+- a native CLI frontend at `cli/cmd/dot`
 - DOT parsing and writing
 - DOT layout implementation in MoonBit
 - XDOT and SVG renderers
@@ -43,25 +43,25 @@ Do not generate parity fixtures with this repository's own `dot.exe`.
 Build the native CLI:
 
 ```bash
-moon build src/cmd/dot --target native
+moon build cli/cmd/dot --target native
 ```
 
 Run it on a DOT file:
 
 ```bash
-_build/native/debug/build/cmd/dot/dot.exe -Tsvg input.gv -o output.svg
+_build/native/debug/build/moonbit-community/graphviz-cli/cmd/dot/dot.exe -Tsvg input.gv -o output.svg
 ```
 
 Write layout-annotated DOT to stdout:
 
 ```bash
-_build/native/debug/build/cmd/dot/dot.exe -Tdot input.gv
+_build/native/debug/build/moonbit-community/graphviz-cli/cmd/dot/dot.exe -Tdot input.gv
 ```
 
 List currently supported output formats:
 
 ```bash
-_build/native/debug/build/cmd/dot/dot.exe -T
+_build/native/debug/build/moonbit-community/graphviz-cli/cmd/dot/dot.exe -T
 ```
 
 Current CLI coverage includes:
@@ -70,7 +70,13 @@ Current CLI coverage includes:
 - frontend behavior compatible with `dot` and `neato` program names
 - common flags: `-T`, `-K`, `-o`, `-G`, `-N`, `-E`, `-s`, `-n`, `-x`, `-v`, `-V`
 
+## Library usage
+
+Depend on `moonbit-community/graphviz` for in-memory parsing, layout, and rendering. Its package names under `cgraph`, `dot`, `layout`, and `render` are unchanged. The former `graphviz/cli` and `graphviz/dot/fs` packages now live under `moonbit-community/graphviz-cli`; library consumers supply their own I/O.
+
 ## Development
+
+Run commands from the repository root to check and test both workspace members. Moon runs CLI tests from `cli/`; their fixture paths point back to the shared `tests/` and `refs/graphviz/` directories.
 
 Basic local validation:
 
@@ -118,28 +124,36 @@ These helpers reject missing or non-14.1.1 binaries.
 
 Some layout assets are intentionally pre-generated to avoid expensive pre-build steps. See:
 
-- `src/layout/dot/README.md`
-- `src/render/xdot/README.md`
-- `src/render/svg/README.md`
+- `graphviz/layout/dot/README.md`
+- `graphviz/render/xdot/README.md`
+- `graphviz/render/svg/README.md`
 
 ## Repository Layout
 
+Workspace members:
+
+- `moon.work`: local workspace configuration
+- `graphviz/moon.mod`: `moonbit-community/graphviz` library
+- `cli/moon.mod`: `moonbit-community/graphviz-cli` frontend
+
 Core packages:
 
-- `src/cgraph`: graph data model
-- `src/dot`: DOT parsing and writing
-- `src/layout/dot`: DOT layout pipeline
-- `src/render/xdot`: XDOT renderer
-- `src/render/svg`: SVG renderer
-- `src/cli`: CLI parsing and render pipeline orchestration
-- `src/cmd/dot`: native executable entrypoint
+- `graphviz/cgraph`: graph data model
+- `graphviz/dot`: DOT parsing and writing
+- `graphviz/layout/dot`: DOT layout pipeline
+- `graphviz/render/xdot`: XDOT renderer
+- `graphviz/render/svg`: SVG renderer
+- `cli/cli`: CLI parsing and render pipeline orchestration
+- `cli/dot/fs`: asynchronous file loading and input decoding
+- `cli/integration`: file-based layout and renderer tests
+- `cli/cmd/dot`: native executable entrypoint
 
 Useful documentation:
 
 - `docs/parity_guard.md`: strict parity workflow and history scan tools
 - `docs/graphviz/architecture.md`: upstream Graphviz architecture notes
 - `docs/graphviz/cli-and-formats.md`: CLI and I/O format reference
-- `src/layout/dot/DOT_LAYOUT_ALGORITHM.md`: end-to-end DOT layout pipeline notes
+- `graphviz/layout/dot/DOT_LAYOUT_ALGORITHM.md`: end-to-end DOT layout pipeline notes
 
 ## License
 

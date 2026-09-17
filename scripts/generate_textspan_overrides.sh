@@ -7,8 +7,8 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-input_path="${repo_root}/src/layout/dot/font_metrics/textspan_overrides.jsonl"
-output_path="${repo_root}/src/layout/dot/font_metrics/textspan_overrides.generated.mbt"
+input_path="${repo_root}/graphviz/layout/dot/font_metrics/textspan_overrides.jsonl"
+output_path="${repo_root}/graphviz/layout/dot/font_metrics/textspan_overrides.generated.mbt"
 
 if [ ! -f "$input_path" ]; then
   echo "textspan fixtures not found at $input_path" >&2
@@ -22,8 +22,8 @@ python3 - <<'PY'
 import json
 import os
 
-input_path = os.environ["INPUT_PATH"] if "INPUT_PATH" in os.environ else "src/layout/dot/font_metrics/textspan_overrides.jsonl"
-output_path = os.environ["OUTPUT_PATH"] if "OUTPUT_PATH" in os.environ else "src/layout/dot/font_metrics/textspan_overrides.generated.mbt"
+input_path = os.environ["INPUT_PATH"] if "INPUT_PATH" in os.environ else "graphviz/layout/dot/font_metrics/textspan_overrides.jsonl"
+output_path = os.environ["OUTPUT_PATH"] if "OUTPUT_PATH" in os.environ else "graphviz/layout/dot/font_metrics/textspan_overrides.generated.mbt"
 
 entries = {}
 with open(input_path, "r", encoding="utf-8") as handle:

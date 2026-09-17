@@ -1,0 +1,10 @@
+import {
+  "moonbit-community/graphviz-cli/dot/fs" @dot_fs,
+  "moonbit-community/graphviz/layout/dot" @layout_dot,
+  "moonbitlang/async",
+  "moonbit-community/graphviz/render/xdot" @xdot_renderer,
+  "moonbit-community/graphviz/dot",
+  "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/geom",
+  "moonbitlang/core/string",
+} for "test"
