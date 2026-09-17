@@ -19,10 +19,18 @@ pub fn label_text_dimensions(
 }
 
 ///|
-/// Graphviz parity: graph label text metrics honor inherited graph font
-/// attributes while binding dot label measurement to this package.
+/// Graph and cluster labels preserve HTML syntax and inherited font attributes.
 pub fn graph_label_metrics(
   graph : @cgraph.Graph,
 ) -> @graph_label.GraphLabelMetrics? {
-  @graph_label.graph_label_metrics_with(graph, label_text_dimensions)
+  let html = graph
+    .get_attr_value("label")
+    .map(value => value is @cgraph.AttrValue::Html(_))
+  @graph_label.graph_label_metrics_with(graph, (text, font, size) => {
+    guard parse_html_label_cached(text, html~) is Some(label) else {
+      return label_text_dimensions(text, font, size)
+    }
+    let dimensions = html_label_size(label, font, size)
+    (dimensions.width_pt, dimensions.height_pt)
+  })
 }

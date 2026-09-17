@@ -4,13 +4,22 @@ package "moonbit-community/graphviz/layout/dot/label_metrics"
 import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/layout/dot/graph_label",
+  "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/html",
 }
 
 // Values
 pub fn graph_label_metrics(@cgraph.Graph) -> @graph_label.GraphLabelMetrics?
 
+pub fn html_cell_border_pt(@html.HtmlTable, @html.HtmlCell) -> Double
+
+pub fn html_cell_size(@html.HtmlTable, @html.HtmlCell, String, Double) -> @numeric.GraphSizePt
+
+pub fn html_label_size(@html.HtmlLabel, String, Double) -> @numeric.GraphSizePt
+
 pub fn html_styled_text_metrics(Array[@html.HtmlTextSpan], String, String, Double) -> HtmlTextMetrics
+
+pub fn html_table_size(@html.HtmlTable, String, Double) -> @numeric.GraphSizePt
 
 pub fn label_text_dimensions(String, String, Double) -> (Double, Double)
 
@@ -18,7 +27,11 @@ pub fn label_text_metrics(String, String, Double) -> (Double, Double, Double, Do
 
 pub fn normalize_label_line_trailing_whitespace(String) -> String
 
+pub fn parse_html_label_cached(String, html? : Bool?) -> @html.HtmlLabel?
+
 pub fn record_label_text_dimensions(String, String, Double) -> (Double, Double)
+
+pub fn reset_html_label_cache() -> Unit
 
 // Errors
 

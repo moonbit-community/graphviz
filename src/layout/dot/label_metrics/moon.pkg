@@ -1,4 +1,6 @@
 import {
+  "moonbit-community/graphviz/layout/dot/numeric",
+  "moonbitlang/core/ref",
   "moonbit-community/graphviz/layout/html" @html_label,
   "moonbit-community/graphviz/layout/dot/font_metrics",
   "moonbit-community/graphviz/layout/dot/graph_label",

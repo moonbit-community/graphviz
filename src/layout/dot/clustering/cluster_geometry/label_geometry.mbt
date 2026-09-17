@@ -19,10 +19,7 @@ pub fn cluster_label_padding_for_layout(
   if flip {
     return { top: 0.0, bottom: 0.0, }
   }
-  match
-    @graph_label.graph_label_metrics_with(
-      graph, @label_metrics.label_text_dimensions,
-    ) {
+  match @label_metrics.graph_label_metrics(graph) {
     Some(metrics) => {
       let pad = CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
@@ -40,10 +37,7 @@ pub fn cluster_label_padding_for_layout(
 pub fn cluster_label_width_with_pad_for_layout(
   graph : @cgraph.Graph,
 ) -> Double? {
-  match
-    @graph_label.graph_label_metrics_with(
-      graph, @label_metrics.label_text_dimensions,
-    ) {
+  match @label_metrics.graph_label_metrics(graph) {
     Some(metrics) => Some(metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0)
     None => None
   }
@@ -58,10 +52,7 @@ pub fn cluster_label_borders_for_xpos_constraints(
   if !flip {
     return (0.0, 0.0)
   }
-  match
-    @graph_label.graph_label_metrics_with(
-      graph, @label_metrics.label_text_dimensions,
-    ) {
+  match @label_metrics.graph_label_metrics(graph) {
     Some(metrics) => {
       let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
@@ -78,10 +69,7 @@ pub fn expand_cluster_label_bbox_for_position_stage(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
 ) -> @geom.Rect {
-  match
-    @graph_label.graph_label_metrics_with(
-      graph, @label_metrics.label_text_dimensions,
-    ) {
+  match @label_metrics.graph_label_metrics(graph) {
     Some(metrics) =>
       @graph_label.expand_bbox_for_label(
         bbox,

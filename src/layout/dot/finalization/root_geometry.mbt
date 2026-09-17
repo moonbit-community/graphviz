@@ -59,9 +59,7 @@ pub fn compute_root_cluster_padding(
 fn root_graph_label_metrics(
   graph : @cgraph.Graph,
 ) -> @graph_label.GraphLabelMetrics? {
-  @graph_label.graph_label_metrics_with(
-    graph, @label_metrics.label_text_dimensions,
-  )
+  @label_metrics.graph_label_metrics(graph)
 }
 
 ///|

@@ -14,108 +14,14 @@ type RecordPort = @record_geometry.RecordPort
 type SizePt = @numeric.GraphSizePt
 
 ///|
-let html_label_cache : Ref[Map[(String, Bool?), @html_label.HtmlLabel]] = @ref.new(
-  Map([]),
-)
-
-///|
 let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
   Map([]),
 )
 
 ///|
 pub fn reset_html_label_caches() -> Unit {
-  html_label_cache.val = Map([])
+  @label_metrics.reset_html_label_cache()
   html_ports_cache.val = Map([])
-}
-
-///|
-
-///|
-fn html_cell_content_size(
-  content : @html_label.HtmlCellContent,
-  font_name : String,
-  font_size_pt : Double,
-) -> SizePt {
-  match content {
-    @html_label.HtmlCellContent::Text(text) => {
-      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
-        text, font_name, font_size_pt,
-      )
-      { width_pt, height_pt, }
-    }
-    @html_label.HtmlCellContent::StyledText(spans) => {
-      let metrics = @label_metrics.html_styled_text_metrics(
-        spans, "", font_name, font_size_pt,
-      )
-      { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
-    }
-    @html_label.HtmlCellContent::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
-  }
-}
-
-///|
-/// Graphviz parity: html cell border defaults to table border when cellborder is unset.
-fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
-  if table.cell_border_pt >= 0.0 {
-    table.cell_border_pt
-  } else if table.border_pt >= 0.0 {
-    table.border_pt
-  } else {
-    1.0
-  }
-}
-
-///|
-fn html_cell_border_pt(
-  table : @html_label.HtmlTable,
-  cell : @html_label.HtmlCell,
-) -> Double {
-  cell.border_pt.unwrap_or(html_table_cell_border_pt(table))
-}
-
-///|
-fn html_cell_size(
-  table : @html_label.HtmlTable,
-  cell : @html_label.HtmlCell,
-  font_name : String,
-  font_size_pt : Double,
-) -> SizePt {
-  let content_size = html_cell_content_size(
-    cell.content,
-    font_name,
-    font_size_pt,
-  )
-  let cell_border_pt = html_cell_border_pt(table, cell)
-  let mut width = content_size.width_pt +
-    table.cell_padding_pt * 2.0 +
-    cell_border_pt * 2.0
-  let mut height = content_size.height_pt +
-    table.cell_padding_pt * 2.0 +
-    cell_border_pt * 2.0
-  match cell.min_width_pt {
-    Some(value) => if value > width { width = value }
-    None => ()
-  }
-  match cell.min_height_pt {
-    Some(value) => if value > height { height = value }
-    None => ()
-  }
-  { width_pt: width, height_pt: height, }
-}
-
-///|
-fn html_table_size(
-  table : @html_label.HtmlTable,
-  font_name : String,
-  font_size_pt : Double,
-) -> SizePt {
-  let (width_pt, height_pt) = @html_label.html_table_size(table, cell => {
-    let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
-    (cell_size.width_pt, cell_size.height_pt)
-  })
-  { width_pt, height_pt, }
 }
 
 ///|
@@ -126,7 +32,9 @@ fn html_table_layout(
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
   @html_label.html_table_layout(table, rect, cell => {
-    let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
+    let cell_size = @label_metrics.html_cell_size(
+      table, cell, font_name, font_size_pt,
+    )
     (cell_size.width_pt, cell_size.height_pt)
   })
 }
@@ -136,19 +44,7 @@ pub fn parse_html_label_cached(
   label : String,
   html? : Bool? = None,
 ) -> @html_label.HtmlLabel? {
-  guard html != Some(false) else { return None }
-  let key = (label, html)
-  match html_label_cache.val.get(key) {
-    Some(cached) => Some(cached)
-    None =>
-      match @html_label.parse_html_label(label, html~) {
-        Some(parsed) => {
-          html_label_cache.val[key] = parsed
-          Some(parsed)
-        }
-        None => None
-      }
-  }
+  @label_metrics.parse_html_label_cached(label, html~)
 }
 
 ///|
@@ -157,22 +53,7 @@ pub fn html_label_size(
   font_name : String,
   font_size_pt : Double,
 ) -> SizePt {
-  match label {
-    @html_label.HtmlLabel::StyledText(spans) => {
-      let metrics = @label_metrics.html_styled_text_metrics(
-        spans, "", font_name, font_size_pt,
-      )
-      { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
-    }
-    @html_label.HtmlLabel::Text(text) => {
-      let (width_pt, height_pt) = @label_metrics.label_text_dimensions(
-        text, font_name, font_size_pt,
-      )
-      { width_pt, height_pt, }
-    }
-    @html_label.HtmlLabel::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
-  }
+  @label_metrics.html_label_size(label, font_name, font_size_pt)
 }
 
 ///|
@@ -184,7 +65,9 @@ fn collect_html_ports(
   font_size_pt : Double,
   ports : Map[String, RecordPort],
 ) -> Unit {
-  let dimensions = html_table_size(table, font_name, font_size_pt)
+  let dimensions = @label_metrics.html_table_size(
+    table, font_name, font_size_pt,
+  )
   let center_x = (rect.llx + rect.urx) / 2.0
   let center_y = (rect.lly + rect.ury) / 2.0
   let rect : @geom.Rect = {
@@ -236,7 +119,8 @@ fn collect_html_ports(
     }
     match cell_layout.cell.content {
       @html_label.HtmlCellContent::Table(nested) => {
-        let padding = table.cell_padding_pt + html_cell_border_pt(table, cell)
+        let padding = table.cell_padding_pt +
+          @label_metrics.html_cell_border_pt(table, cell)
         let content_rect : @geom.Rect = {
           llx: cell_layout.rect.llx + padding,
           lly: cell_layout.rect.lly + padding,
