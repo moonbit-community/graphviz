@@ -4,8 +4,8 @@
 
 ///|
 test "spline_bbox returns none for empty input and point bounds for non-bezier polylines" {
-  assert_eq(spline_bbox([]), None)
-  let bbox = spline_bbox([
+  assert_eq(@bbox.spline_bbox([]), None)
+  let bbox = @bbox.spline_bbox([
     { x: -1.0, y: 2.0, },
     { x: 3.0, y: 4.0, },
     { x: 2.0, y: -5.0, },
@@ -15,7 +15,7 @@ test "spline_bbox returns none for empty input and point bounds for non-bezier p
 
 ///|
 test "spline_bbox captures cubic bezier bulge beyond endpoints" {
-  let bbox = spline_bbox([
+  let bbox = @bbox.spline_bbox([
     { x: 0.0, y: 0.0, },
     { x: 0.0, y: 10.0, },
     { x: 10.0, y: 10.0, },
@@ -35,7 +35,7 @@ test "spline_bbox captures cubic bezier bulge beyond endpoints" {
 
 ///|
 test "merge_bbox and round_bbox keep pure rectangle arithmetic" {
-  let merged = merge_bbox({ llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, }, {
+  let merged = @bbox.merge_bbox({ llx: 1.0, lly: 2.0, urx: 3.0, ury: 4.0, }, {
     llx: -1.0,
     lly: 3.0,
     urx: 2.0,
@@ -43,6 +43,6 @@ test "merge_bbox and round_bbox keep pure rectangle arithmetic" {
   })
   assert_eq(merged, { llx: -1.0, lly: 2.0, urx: 3.0, ury: 10.0, })
 
-  let rounded = round_bbox({ llx: 1.2, lly: -3.4, urx: 7.8, ury: 9.9, })
+  let rounded = @bbox.round_bbox({ llx: 1.2, lly: -3.4, urx: 7.8, ury: 9.9, })
   assert_eq(rounded, { llx: 1.0, lly: -3.4, urx: 8.0, ury: 9.9, })
 }

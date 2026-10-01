@@ -65,7 +65,7 @@ test "build_remincross_input_snapshot preserves duplicate edges without coalesci
   let cluster_keys : Map[String, String] = Map([])
   cluster_keys["a"] = "cluster_a"
 
-  let snapshot = build_remincross_input_snapshot({
+  let snapshot = @remincross.build_remincross_input_snapshot({
     rank_keys,
     groups,
     edges_out: [ab1, ab2],

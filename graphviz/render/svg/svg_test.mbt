@@ -6,7 +6,7 @@
 test "render_svg emits svg" {
   let graph = @dot.parse_dot("digraph { a -> b; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -19,7 +19,7 @@ test "render_svg emits svg" {
 test "render_svg emits root background" {
   let graph = @dot.parse_dot("digraph { bgcolor=\"pink\"; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -31,7 +31,7 @@ test "render_svg emits root background" {
 test "render_svg emits edge labels" {
   let graph = @dot.parse_dot("digraph { a -> b [label=\"edge\"]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -44,7 +44,7 @@ test "render_svg honors dashed and dotted styles" {
     "digraph { node [style=dotted]; a; b; a -> b [style=dashed]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -58,7 +58,7 @@ test "render_svg expands rgba hex colors to opacity attrs" {
     "digraph { a [style=filled,color=\"#00ff005f\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -75,7 +75,7 @@ test "render_svg draws polygon node shapes" {
     "digraph { a [shape=diamond]; b [shape=triangle]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -87,7 +87,7 @@ test "render_svg draws polygon node shapes" {
 test "render_svg falls back unknown node shapes to box polygons" {
   let graph = @dot.parse_dot("digraph { a [style=filled shape=DFDbox]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -100,7 +100,7 @@ test "render_svg draws shapefile nodes with a box outline" {
     "digraph { a [label=\"\" shapefile=\"shape.gif\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -112,7 +112,7 @@ test "render_svg draws shapefile nodes with a box outline" {
 test "render_svg preserves forestgreen label color" {
   let graph = @dot.parse_dot("digraph { a [fontcolor=forestgreen]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -125,7 +125,7 @@ test "render_svg preserves standard palegoldenrod color names" {
     "digraph { a [color=palegoldenrod style=filled]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -139,7 +139,7 @@ test "render_svg emits linear gradients for multicolor node fills" {
     "digraph { a [style=filled fillcolor=\"red:blue\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -155,7 +155,7 @@ test "render_svg emits radial gradients for radial node styles" {
     "digraph { a [style=radial fillcolor=\"red:blue\" gradientangle=90]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -172,7 +172,7 @@ test "render_svg emits radial gradients for graph and cluster backgrounds" {
     "digraph { style=radial bgcolor=\"red:blue\"; subgraph cluster_0 { style=radial fillcolor=\"green:yellow\"; a; } }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -188,7 +188,7 @@ test "render_svg applies labelfontcolor to endpoint labels" {
     "digraph { a -> b [headlabel=head labelfontcolor=chocolate]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -200,7 +200,7 @@ test "render_svg applies labelfontcolor to endpoint labels" {
 test "render_svg skips outlines for plaintext nodes" {
   let graph = @dot.parse_dot("digraph { a [shape=plaintext,label=\"hello\"]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -215,7 +215,7 @@ test "render_svg renders record fields" {
     "digraph { node [shape=record]; a [label=\"<f0>left|<f1>right\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -230,7 +230,7 @@ test "render_svg renders nested record fields" {
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -248,7 +248,7 @@ test "render_svg renders html-like labels" {
     "digraph { node [shape=plaintext]; a [label=<<TABLE CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\"><TR><TD>left</TD><TD>right</TD></TR></TABLE>>]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -263,7 +263,7 @@ test "render_svg renders html label alignment and colors" {
     "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -290,7 +290,7 @@ test "render_svg fills cluster background" {
     "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -302,7 +302,7 @@ test "render_svg hides cluster outlines with zero peripheries" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_0 { style=filled; peripheries=0; a; } }",
   )
-  let svg = render_svg(@layout_dot.layout_dot(graph), options={
+  let svg = @svg.render_svg(@layout_dot.layout_dot(graph), options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -315,7 +315,7 @@ test "render_svg skips empty cluster outlines" {
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -329,7 +329,7 @@ test "render_svg emits graph labels" {
     "digraph { label=\"Root\"; labelloc=t; labeljust=r; a -> b; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -432,7 +432,7 @@ test "render_svg passes css variables through as paints" {
     "digraph { bgcolor=\"var(--uml-canvas)\"; a [style=filled, fillcolor=\"var(--uml-node)\", color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; a -> b [color=\"var(--uml-line)\", label=\"edge\", fontcolor=\"var(--uml-text)\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
@@ -449,7 +449,7 @@ test "render_svg keeps the css variable spelling verbatim" {
     "digraph { bgcolor=\"VAR(--UML-Canvas)\"; a [style=filled, fillcolor=\"var(--x, #ff0000)\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(layout, options={
+  let svg = @svg.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
   })

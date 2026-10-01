@@ -17,7 +17,7 @@ test "shortest path is direct inside rectangle" {
   ]
   let start = point(1.0, 1.0)
   let end = point(9.0, 9.0)
-  let path = shortest_path_in_poly(polygon, start, end)
+  let path = @pathplan.shortest_path_in_poly(polygon, start, end)
   assert_eq(path.length(), 2)
   assert_eq(path[0], start)
   assert_eq(path[1], end)
@@ -35,7 +35,7 @@ test "shortest path bends around concave notch" {
   ]
   let start = point(1.0, 5.0)
   let end = point(5.0, 1.0)
-  let path = shortest_path_in_poly(polygon, start, end)
+  let path = @pathplan.shortest_path_in_poly(polygon, start, end)
   assert_true(path.length() > 2)
   assert_eq(path[0], start)
   assert_eq(path[path.length() - 1], end)
@@ -78,7 +78,7 @@ test "shortest path matches Graphviz single-bend corridor fixture" {
     point(-240.0, 248.0),
     point(-240.0, 266.5),
   ]
-  let path = shortest_path_in_poly(
+  let path = @pathplan.shortest_path_in_poly(
     polygon,
     point(824.0, 265.5),
     point(780.0, 180.5),
@@ -115,7 +115,7 @@ test "shortest path matches Graphviz multi-bend corridor fixture" {
     point(537.0, 699.0),
     point(537.0, 725.5),
   ]
-  let path = shortest_path_in_poly(
+  let path = @pathplan.shortest_path_in_poly(
     polygon,
     point(586.0, 724.5),
     point(823.0, 591.5),
