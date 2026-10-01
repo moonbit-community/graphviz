@@ -20,17 +20,17 @@ test "edge mid label helpers treat missing and empty labels as absent" {
   let b = graph.node("b")
   let edge = graph.edge(a, b)
 
-  assert_eq(edge_mid_label_text(edge), None)
-  match edge_mid_label_metrics(edge) {
+  assert_eq(@edge_label_metrics.edge_mid_label_text(edge), None)
+  match @edge_label_metrics.edge_mid_label_metrics(edge) {
     None => ()
     Some(_) => fail("expected no mid label metrics")
   }
-  assert_eq(edge_mid_label_width_pt(edge), 0.0)
-  assert_eq(edge_label_height_pt(edge), 0.0)
+  assert_eq(@edge_label_metrics.edge_mid_label_width_pt(edge), 0.0)
+  assert_eq(@edge_label_metrics.edge_label_height_pt(edge), 0.0)
 
   edge.set_attr("label", "")
-  assert_eq(edge_mid_label_text(edge), None)
-  match edge_mid_label_metrics(edge) {
+  assert_eq(@edge_label_metrics.edge_mid_label_text(edge), None)
+  match @edge_label_metrics.edge_mid_label_metrics(edge) {
     None => ()
     Some(_) => fail("expected empty label to stay absent")
   }
@@ -48,8 +48,12 @@ test "graph_has_edge_labels only tracks non-empty mid labels" {
   let labeled = graph.edge(c, a)
   labeled.set_attr("label", "mid")
 
-  assert_false(graph_has_edge_labels([unlabeled, head_only]))
-  assert_true(graph_has_edge_labels([unlabeled, head_only, labeled]))
+  assert_false(
+    @edge_label_metrics.graph_has_edge_labels([unlabeled, head_only]),
+  )
+  assert_true(
+    @edge_label_metrics.graph_has_edge_labels([unlabeled, head_only, labeled]),
+  )
 }
 
 ///|
@@ -62,15 +66,18 @@ test "edge_label_height_pt takes the maximum height across mid head and tail lab
   edge.set_attr("headlabel", "head")
   edge.set_attr("taillabel", "tail tail")
 
-  let mid = match edge_label_metrics_for_attr(edge, "label", false) {
+  let mid = match
+    @edge_label_metrics.edge_label_metrics_for_attr(edge, "label", false) {
     Some(value) => value
     None => fail("expected mid label metrics")
   }
-  let head = match edge_label_metrics_for_attr(edge, "headlabel", true) {
+  let head = match
+    @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
     Some(value) => value
     None => fail("expected head label metrics")
   }
-  let tail = match edge_label_metrics_for_attr(edge, "taillabel", true) {
+  let tail = match
+    @edge_label_metrics.edge_label_metrics_for_attr(edge, "taillabel", true) {
     Some(value) => value
     None => fail("expected tail label metrics")
   }
@@ -86,7 +93,7 @@ test "edge_label_height_pt takes the maximum height across mid head and tail lab
     tail.height
   }
 
-  assert_close(edge_label_height_pt(edge), expected)
+  assert_close(@edge_label_metrics.edge_label_height_pt(edge), expected)
 }
 
 ///|
@@ -96,24 +103,24 @@ test "self edge label width and height swap across rank directions" {
   let edge = graph.edge(node, node)
   edge.set_attr("label", "wide self label")
 
-  let metrics = match edge_mid_label_metrics(edge) {
+  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
     Some(value) => value
     None => fail("expected self-edge metrics")
   }
   assert_close(
-    self_edge_label_width_pt(edge, @rankdir.RankDir::TB),
+    @edge_label_metrics.self_edge_label_width_pt(edge, @rankdir.RankDir::TB),
     metrics.width,
   )
   assert_close(
-    self_edge_label_height_pt(edge, @rankdir.RankDir::TB),
+    @edge_label_metrics.self_edge_label_height_pt(edge, @rankdir.RankDir::TB),
     metrics.height,
   )
   assert_close(
-    self_edge_label_width_pt(edge, @rankdir.RankDir::LR),
+    @edge_label_metrics.self_edge_label_width_pt(edge, @rankdir.RankDir::LR),
     metrics.height,
   )
   assert_close(
-    self_edge_label_height_pt(edge, @rankdir.RankDir::LR),
+    @edge_label_metrics.self_edge_label_height_pt(edge, @rankdir.RankDir::LR),
     metrics.width,
   )
 }

@@ -35,7 +35,7 @@ test "compass ports on plain nodes clip away from node centers" {
   } noraise {
     value => value
   }
-  let layout = layout_dot(graph)
+  let layout = @dot.layout_dot(graph)
   layout.apply()
   let edges = graph.edges()
   assert_eq(edges.length(), 1)

@@ -4,7 +4,7 @@
 
 ///|
 async fn roundtrip_file(path : String) -> Unit {
-  let graph = try parse_dot_file(path) catch {
+  let graph = try @fs.parse_dot_file(path) catch {
     err => fail("parse_dot_file failed: \{path} \{err}")
   } noraise {
     graph => graph
@@ -49,7 +49,7 @@ async test "dot roundtrip tier1" {
 ///|
 async test "write_dot_bytes keeps latin1 output bytes" {
   let graph = try
-    parse_dot_file("../refs/graphviz/graphs/directed/Latin1.gv")
+    @fs.parse_dot_file("../refs/graphviz/graphs/directed/Latin1.gv")
   catch {
     err => fail("parse_dot_file failed: \{err}")
   } noraise {
@@ -74,7 +74,7 @@ async test "write_dot_bytes keeps latin1 output bytes" {
 ///|
 async test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
   let graph = try
-    parse_dot_file("../refs/graphviz/tests/windows/Latin1.gv")
+    @fs.parse_dot_file("../refs/graphviz/tests/windows/Latin1.gv")
   catch {
     err => fail("parse_dot_file failed: \{err}")
   } noraise {

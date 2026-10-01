@@ -10,7 +10,7 @@ test "parse_dot reports invalid token at start" {
     _ => fail("expected InvalidToken")
   }
   match error {
-    DotParseError::InvalidToken(pos~, token~) => {
+    @dot.DotParseError::InvalidToken(pos~, token~) => {
       ignore(pos)
       assert_eq(token, "@")
     }
@@ -26,7 +26,7 @@ test "parse_dot requires graph or digraph" {
     _ => fail("expected InvalidSyntax")
   }
   match error {
-    DotParseError::InvalidSyntax(pos~, message~) => {
+    @dot.DotParseError::InvalidSyntax(pos~, message~) => {
       ignore(pos)
       assert_eq(message, "expected graph or digraph")
     }
@@ -57,7 +57,7 @@ test "parse_dot rejects undirected edges in digraph" {
     _ => fail("expected InvalidSyntax")
   }
   match error {
-    DotParseError::InvalidSyntax(pos~, message~) => {
+    @dot.DotParseError::InvalidSyntax(pos~, message~) => {
       ignore(pos)
       assert_eq(message, "undirected edge in digraph")
     }
@@ -73,7 +73,7 @@ test "parse_dot flags trailing tokens" {
     _ => fail("expected InvalidSyntax")
   }
   match error {
-    DotParseError::InvalidSyntax(pos~, message~) => {
+    @dot.DotParseError::InvalidSyntax(pos~, message~) => {
       ignore(pos)
       assert_eq(message, "trailing tokens")
     }
@@ -89,7 +89,7 @@ test "parse_dot reports unexpected eof in strings" {
     _ => fail("expected UnexpectedEof")
   }
   match error {
-    DotParseError::UnexpectedEof(pos~) => ignore(pos)
+    @dot.DotParseError::UnexpectedEof(pos~) => ignore(pos)
     _ => fail("expected UnexpectedEof")
   }
 }

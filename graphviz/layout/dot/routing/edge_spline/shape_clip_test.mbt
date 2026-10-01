@@ -9,30 +9,30 @@ test "compass_port_point_on_shape clips box compass anchors" {
   box.set_attr("shape", "box")
   box.set_attr("penwidth", "0")
 
-  let east_anchor = compass_port_point_on_shape(
+  let east_anchor = @edge_spline.compass_port_point_on_shape(
     box,
-    point(0.0, 0.0),
+    @edge_spline.point(0.0, 0.0),
     @node_primitives.node_size_from_points(100.0, 60.0),
     @cgraph.Compass::E,
     @rankdir.RankDir::TB,
   )
-  assert_eq(east_anchor, point(50.0, 0.0))
+  assert_eq(east_anchor, @edge_spline.point(50.0, 0.0))
 
-  let north_anchor = compass_port_point_on_shape(
+  let north_anchor = @edge_spline.compass_port_point_on_shape(
     box,
-    point(0.0, 0.0),
+    @edge_spline.point(0.0, 0.0),
     @node_primitives.node_size_from_points(100.0, 60.0),
     @cgraph.Compass::N,
     @rankdir.RankDir::TB,
   )
-  assert_eq(north_anchor, point(0.0, 30.0))
+  assert_eq(north_anchor, @edge_spline.point(0.0, 30.0))
 
-  let southeast_anchor = compass_port_point_on_shape(
+  let southeast_anchor = @edge_spline.compass_port_point_on_shape(
     box,
-    point(0.0, 0.0),
+    @edge_spline.point(0.0, 0.0),
     @node_primitives.node_size_from_points(100.0, 60.0),
     @cgraph.Compass::SE,
     @rankdir.RankDir::TB,
   )
-  assert_eq(southeast_anchor, point(50.0, -30.0))
+  assert_eq(southeast_anchor, @edge_spline.point(50.0, -30.0))
 }

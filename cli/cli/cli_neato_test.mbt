@@ -50,7 +50,7 @@ async test "cli neato -n preserves node positions" {
     write_input(
       input_path, "graph { a [pos=\"10,20!\", pin=true]; b [pos=\"30,40\"]; a -- b; }",
     )
-    let output = run_cli(["-n", input_path], program="neato")
+    let output = @cli.run_cli(["-n", input_path], program="neato")
     let graph = @dot.parse_dot(output)
     let (ax, ay) = match node_pos(graph, "a") {
       Some(value) => value
@@ -74,7 +74,7 @@ async test "cli neato -x prunes isolated nodes" {
     write_input(
       input_path, "graph { a [pos=\"0,0\"]; b [pos=\"10,0\"]; c [pos=\"5,8\"]; d [pos=\"100,100\"]; a -- b; b -- c; c -- a; }",
     )
-    let output = run_cli(["-n", "-x", input_path], program="neato")
+    let output = @cli.run_cli(["-n", "-x", input_path], program="neato")
     let graph = @dot.parse_dot(output)
     match graph.find_node("d") {
       Some(_) => fail("expected node d to be pruned")
@@ -100,7 +100,7 @@ async test "cli neato assigns positions without -n" {
   with_cli_test_dir(test_dir => {
     let input_path = "\{test_dir}/neato_layout.dot"
     write_input(input_path, "graph { a -- b; b -- c; }")
-    let output = run_cli([input_path], program="neato")
+    let output = @cli.run_cli([input_path], program="neato")
     let graph = @dot.parse_dot(output)
     let (ax, ay) = match node_pos(graph, "a") {
       Some(value) => value
@@ -128,7 +128,7 @@ async test "cli neato honors pinned positions" {
   with_cli_test_dir(test_dir => {
     let input_path = "\{test_dir}/neato_pinned.dot"
     write_input(input_path, "graph { a [pos=\"10,20!\"]; b; a -- b; }")
-    let output = run_cli([input_path], program="neato")
+    let output = @cli.run_cli([input_path], program="neato")
     let graph = @dot.parse_dot(output)
     let (ax, ay) = match node_pos(graph, "a") {
       Some(value) => value
@@ -144,7 +144,7 @@ async test "cli neato respects edge length" {
   with_cli_test_dir(test_dir => {
     let short_path = "\{test_dir}/neato_len_short.dot"
     write_input(short_path, "graph { a -- b [len=1]; }")
-    let short_out = run_cli([short_path], program="neato")
+    let short_out = @cli.run_cli([short_path], program="neato")
     let short_graph = @dot.parse_dot(short_out)
     let (sax, say) = match node_pos(short_graph, "a") {
       Some(value) => value
@@ -157,7 +157,7 @@ async test "cli neato respects edge length" {
     let short_dist = distance((sax, say), (sbx, sby))
     let long_path = "\{test_dir}/neato_len_long.dot"
     write_input(long_path, "graph { a -- b [len=2]; }")
-    let long_out = run_cli([long_path], program="neato")
+    let long_out = @cli.run_cli([long_path], program="neato")
     let long_graph = @dot.parse_dot(long_out)
     let (lax, lay) = match node_pos(long_graph, "a") {
       Some(value) => value
