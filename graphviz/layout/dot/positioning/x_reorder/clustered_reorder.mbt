@@ -7,25 +7,25 @@
 /// order-graph edge materialization data, and reorder constraints grouped for a
 /// single clustered xpos pass.
 pub struct ClusteredXposReorderInput {
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  node_order : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
+  node_order : Map[String, Int32]
   cluster_skeleton_size : @node_primitives.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  cluster_skeleton_penalty : Int
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  cluster_skeleton_penalty : Int32
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   flat_constraints : Map[String, Bool]
@@ -38,7 +38,7 @@ pub struct ClusteredXposReorderInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_xpos_groups(
   input : ClusteredXposReorderInput,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let reorder_seed_data = build_clustered_xpos_seed({
     x_groups: input.x_groups,
     x_order_sizes: input.x_order_sizes,
@@ -93,8 +93,8 @@ fn build_clustered_xpos_groups(
 /// snapshots, rank metadata, and cluster constraints grouped for one
 /// reorder_rank_groups invocation.
 priv struct ClusteredXposReorderApplyInput {
-  order_rank_keys : Array[Int]
-  order_groups : Map[Int, Array[String]]
+  order_rank_keys : Array[Int32]
+  order_groups : Map[Int32, Array[String]]
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -103,11 +103,11 @@ priv struct ClusteredXposReorderApplyInput {
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
   order_nodes : Array[String]
-  order_ranks : Map[String, Int]
+  order_ranks : Map[String, Int32]
   order_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  order_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  order_node_order : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -123,7 +123,7 @@ priv struct ClusteredXposReorderApplyInput {
 /// Do not change behavior without updating fixtures/tests.
 fn apply_clustered_xpos_reorder(
   input : ClusteredXposReorderApplyInput,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let edge_index_data = @order_graph.build_edge_index_for_names(
     input.order_nodes,
     input.order_edge_tail_out,
@@ -171,12 +171,12 @@ fn apply_clustered_xpos_reorder(
 /// groups, cluster bounds, and node-order seeds together before skeleton
 /// injection and rank/order materialization.
 priv struct ClusteredXposSeedInput {
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  node_order : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
+  node_order : Map[String, Int32]
   cluster_skeleton_size : @node_primitives.NodeSize
 }
 
@@ -185,20 +185,20 @@ priv struct ClusteredXposSeedInput {
 /// order-group/rank/node-order snapshots consumed by edge materialization and
 /// reorder_rank_groups.
 priv struct ClusteredXposSeedOutput {
-  order_groups : Map[Int, Array[String]]
+  order_groups : Map[Int32, Array[String]]
   order_sizes : Map[String, @node_primitives.NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  order_node_order : Map[String, Int]
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  order_node_order : Map[String, Int32]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_nodes : Array[String]
 }
 
 ///|
 fn append_skeleton_nodes(
   input : ClusteredXposSeedInput,
-  order_groups : Map[Int, Array[String]],
+  order_groups : Map[Int32, Array[String]],
   order_sizes : Map[String, @node_primitives.NodeSize],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
@@ -225,7 +225,7 @@ fn append_skeleton_nodes(
 fn build_clustered_xpos_seed(
   input : ClusteredXposSeedInput,
 ) -> ClusteredXposSeedOutput {
-  let order_groups : Map[Int, Array[String]] = Map([])
+  let order_groups : Map[Int32, Array[String]] = Map([])
   for rank, names in input.x_groups {
     order_groups[rank] = names.copy()
   }
@@ -241,7 +241,7 @@ fn build_clustered_xpos_seed(
   append_skeleton_nodes(
     input, order_groups, order_sizes, order_cluster_keys, order_cluster_skeleton,
   )
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   for name, value in input.node_order {
     order_node_order[name] = value
   }
@@ -280,16 +280,16 @@ priv struct ClusteredXposEdgeMaterializationInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   order_nodes : Array[String]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  cluster_skeleton_penalty : Int
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
+  cluster_skeleton_penalty : Int32
 }
 
 ///|
@@ -306,7 +306,11 @@ priv struct ClusteredXposEdgeMaterializationOutput {
 }
 
 ///|
-fn edge_name_at(names : Array[String], idx : Int, fallback : String) -> String {
+fn edge_name_at(
+  names : Array[String],
+  idx : Int32,
+  fallback : String,
+) -> String {
   if idx < names.length() {
     names[idx]
   } else {
@@ -317,7 +321,7 @@ fn edge_name_at(names : Array[String], idx : Int, fallback : String) -> String {
 ///|
 fn edge_port_value_or_default(
   values : Array[Double],
-  idx : Int,
+  idx : Int32,
   fallback : Double,
 ) -> Double {
   if idx < values.length() {
@@ -329,7 +333,7 @@ fn edge_port_value_or_default(
 
 ///|
 fn build_xpos_chain_with_vnodes(
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   tail : String,
   head : String,
   vnodes : Array[String],
@@ -367,7 +371,7 @@ fn append_xpos_chain_segments(
   chain : Array[String],
   tail : String,
   head : String,
-  penalty : Int,
+  penalty : Int32,
   constraint : Bool,
   tail_port_x : Double,
   head_port_x : Double,
@@ -418,10 +422,10 @@ fn append_xpos_edge_with_vnodes(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   tail : String,
   head : String,
-  penalty : Int,
+  penalty : Int32,
   constraint : Bool,
   tail_port_x : Double,
   head_port_x : Double,

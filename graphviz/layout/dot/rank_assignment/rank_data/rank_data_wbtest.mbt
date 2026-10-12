@@ -70,7 +70,7 @@ test "build_rank_groups assigns missing ranks to zero and preserves node order w
   let b = graph.node("b")
   let c = graph.node("c")
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 2
   ranks["c"] = 2
 

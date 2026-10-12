@@ -12,14 +12,14 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
   let edge = graph.edge(a, b)
   edge.set_attr("label", "cluster-fallback")
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 0
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = ["a", "c", "b"]
-  let x_groups : Map[Int, Array[String]] = Map([])
+  let x_groups : Map[Int32, Array[String]] = Map([])
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
 
@@ -78,14 +78,14 @@ test "non-adjacent flat edge prefers endpoint cluster membership over edge clust
   let edge = graph.edge(a, b)
   edge.set_attr("label", "cluster-membership")
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 0
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = ["a", "c", "b"]
-  let x_groups : Map[Int, Array[String]] = Map([])
+  let x_groups : Map[Int32, Array[String]] = Map([])
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
 

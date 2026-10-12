@@ -15,17 +15,17 @@ test "edge_internal_to_cluster treats ancestor-related clusters as internal" {
 
 ///|
 test "build_vnode_keys_from_nlist interpolates vnodes between real nodes" {
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = ["a", "b"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v1", "v2"]
 
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   order_index["a"] = 0
   order_index["b"] = 1
 
-  let nlist_order_index : Map[String, Int] = Map([])
+  let nlist_order_index : Map[String, Int32] = Map([])
   nlist_order_index["a"] = 0
   nlist_order_index["v1"] = 1
   nlist_order_index["v2"] = 2

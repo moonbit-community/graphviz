@@ -14,12 +14,12 @@ priv struct EdgePolylinePointsInput {
   head_port : @cgraph.Port?
   tail_anchor : @geom.Point
   head_anchor : @geom.Point
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_positions : Map[String, @geom.Point]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
   nodesep_pt : Double
   label_width_pt : Double
   label_height_pt : Double?

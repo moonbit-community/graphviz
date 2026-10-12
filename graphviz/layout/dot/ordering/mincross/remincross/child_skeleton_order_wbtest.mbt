@@ -1,6 +1,6 @@
 ///|
 test "local cluster cleanup keeps child skeletons before direct parent nodes" {
-  let groups : Map[Int, Array[String]] = { 0: ["y", "x"] }
+  let groups : Map[Int32, Array[String]] = { 0: ["y", "x"] }
   reorder_groups_by_local_cluster(
     groups,
     { "x": "cluster_x", "y": "cluster_x" },

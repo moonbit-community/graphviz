@@ -33,7 +33,7 @@ test "edge_endpoints_at prefers override arrays and falls back to edge names" {
 
 ///|
 test "build_edge_index_for_names ignores same-rank edges" {
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   ranks["c"] = 1
@@ -104,14 +104,14 @@ test "build_order_edges_by_tail expands vnode chains into segment edges" {
   }
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1", "v2"]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["a"] = [0]
 
   let output = build_order_edges_by_tail(
@@ -163,7 +163,7 @@ test "build_order_edges_by_tail maps intercluster edges to cluster skeletons" {
   let edge = graph.edge(a, b)
   edge.set_attr("xpenalty", "5")
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
 
@@ -171,7 +171,7 @@ test "build_order_edges_by_tail maps intercluster edges to cluster skeletons" {
   cluster_keys["a"] = "left"
   cluster_keys["b"] = "right"
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["a"] = [0]
 
   let output = build_order_edges_by_tail(
@@ -215,14 +215,14 @@ test "build_edge_index_with_vnodes chains through vnodes in rank order" {
   }
   let edge = graph.edge(high, low)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["high"] = 3
   ranks["low"] = 0
 
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1", "v2"]
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v1"] = 1
   vnode_ranks["v2"] = 2
 

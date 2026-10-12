@@ -12,7 +12,7 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
-fn find_from(text : String, needle : String, start : Int) -> Int? {
+fn find_from(text : String, needle : String, start : Int32) -> Int32? {
   if start < 0 || start >= text.length() {
     return None
   }

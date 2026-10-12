@@ -21,16 +21,16 @@ fn build_xpos_nlist_order(input : XposNlistOrderInput) -> Array[String] {
 /// reverse creation order, then preserves GD_nlist order for existing nodes.
 pub(all) struct ConstraintReorderInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   nlist_order : Array[String]
 }
 
 ///|
 /// Graphviz parity: order mirrors position.c's auxiliary-graph sweep and keeps
 /// slack helper nodes ahead of non-slack constraints.
-fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
+fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int32] {
   let total = input.graph.nodes.length()
-  let order : Array[Int] = []
+  let order : Array[Int32] = []
   if total == 0 {
     return order
   }
@@ -38,7 +38,7 @@ fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
   for _ in 0..<total {
     seen.push(false)
   }
-  let slack_indices : Array[Int] = []
+  let slack_indices : Array[Int32] = []
   for i in 0..<total {
     if input.graph.nodes[i].kind == @network_simplex.NodeKind::Slack {
       slack_indices.push(i)
@@ -71,14 +71,14 @@ fn build_constraint_reorder(input : ConstraintReorderInput) -> Array[Int] {
 ///|
 pub(all) struct ReorderConstraintGraphInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
-  order : Array[Int]
+  index : Map[String, Int32]
+  order : Array[Int32]
 }
 
 ///|
 pub(all) struct ReorderConstraintGraphOutput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
 }
 
 ///|
@@ -92,7 +92,7 @@ fn reorder_constraint_graph(
     return { graph: input.graph, index: input.index, }
   }
   let new_graph = @network_simplex.new_graph()
-  let old_to_new : Array[Int] = []
+  let old_to_new : Array[Int32] = []
   for _ in 0..<total {
     old_to_new.push(-1)
   }
@@ -113,7 +113,7 @@ fn reorder_constraint_graph(
       edge.weight,
     )
   }
-  let new_index : Map[String, Int] = Map([])
+  let new_index : Map[String, Int32] = Map([])
   for name, old_idx in input.index {
     let new_idx = old_to_new[old_idx]
     new_index[name] = new_idx
@@ -128,8 +128,8 @@ type SnapshotNodeSize = @node_primitives.NodeSize
 pub(all) struct XposConstraintNodeSnapshot {
   name : String?
   kind : @network_simplex.NodeKind
-  rank : Int
-  order : Int
+  rank : Int32
+  order : Int32
   left_pt : Double
   right_pt : Double
   height_pt : Double
@@ -137,10 +137,10 @@ pub(all) struct XposConstraintNodeSnapshot {
 
 ///|
 pub(all) struct XposConstraintEdgeSnapshot {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
 }
 
 ///|
@@ -192,9 +192,9 @@ pub fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
 ///|
 fn build_constraint_snapshot(
   graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
+  index : Map[String, Int32],
   sizes : Map[String, SnapshotNodeSize],
-  order_index : Map[String, Int],
+  order_index : Map[String, Int32],
 ) -> XposConstraintSnapshot {
   let names : Array[String?] = []
   for _ in 0..<graph.nodes.length() {
@@ -264,7 +264,7 @@ pub(all) struct PreparedXposConstraintInputs {
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
+  compress_width_minlen : Int32?
 }
 
 ///|
@@ -272,9 +272,9 @@ fn prepare_xpos_constraint_inputs(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int32],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   sizes : Map[String, @node_primitives.NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
@@ -282,7 +282,7 @@ fn prepare_xpos_constraint_inputs(
   edge_vnodes : Map[String, Array[String]],
   base_extra_nodes : Array[ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints = build_cluster_constraints(
     graph,
@@ -333,8 +333,8 @@ fn prepare_xpos_constraint_inputs(
 /// vnode extra-node toggles, and size overlays grouped for one xpos call.
 pub struct XposComputationInput {
   x_sizes : Map[String, @node_primitives.NodeSize]
-  x_rank_keys : Array[Int]
-  x_ranks : Map[String, Int]
+  x_rank_keys : Array[Int32]
+  x_ranks : Map[String, Int32]
   x_extra_nodes : Array[ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
 }
@@ -345,10 +345,10 @@ pub struct XposComputationInput {
 priv struct XposComputationInputSources {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, @node_primitives.NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_creation_order : Array[String]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
 }
 
@@ -358,7 +358,7 @@ priv struct XposComputationInputSources {
 /// Do not change behavior without updating fixtures/tests.
 fn build_vnode_extra_nodes(
   vnode_order : Array[String],
-  vnode_ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int32],
 ) -> Array[ExtraConstraintNode] {
   let extra : Array[ExtraConstraintNode] = []
   let seen : Map[String, Bool] = Map([])
@@ -423,12 +423,12 @@ pub(all) struct XPositionSolveInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   output_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
@@ -445,17 +445,17 @@ pub(all) struct XPositionSolveInput {
 pub(all) struct XPositionPipelineInput {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, @node_primitives.NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_creation_order : Array[String]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   cluster_keys : Map[String, String]
@@ -510,11 +510,11 @@ priv struct XposSimplexSolveInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
@@ -524,13 +524,16 @@ priv struct XposSimplexSolveInput {
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
-  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int)
+  compress_width_minlen : Int32?
+  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (
+    Int32,
+    Int32,
+  )
   edge_has_mid_label_fn : (@cgraph.Edge) -> Bool
-  edge_degree_increment_fn : (@cgraph.Edge) -> Int
+  edge_degree_increment_fn : (@cgraph.Edge) -> Int32
   root_margin : Double
-  root_compress_weight : Int
-  on_reordered_graph : (@network_simplex.NsGraph, Map[String, Int]) -> Unit
+  root_compress_weight : Int32
+  on_reordered_graph : (@network_simplex.NsGraph, Map[String, Int32]) -> Unit
 }
 
 ///|
@@ -540,7 +543,7 @@ priv struct XposSimplexSolveInput {
 /// Do not change behavior without updating fixtures/tests.
 fn solve_xpos_with_simplex(
   input : XposSimplexSolveInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let constraint_graph = build_constraint_graph(
     {
@@ -611,12 +614,12 @@ priv struct XSimplexInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
@@ -626,20 +629,23 @@ priv struct XSimplexInput {
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
+  compress_width_minlen : Int32?
   root_margin : Double
-  root_compress_weight : Int
-  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int)
+  root_compress_weight : Int32
+  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (
+    Int32,
+    Int32,
+  )
   edge_has_mid_label_fn : (@cgraph.Edge) -> Bool
-  edge_degree_increment_fn : (@cgraph.Edge) -> Int
+  edge_degree_increment_fn : (@cgraph.Edge) -> Int32
   capture_snapshot : Bool
-  order_index : Map[String, Int]
+  order_index : Map[String, Int32]
 }
 
 ///|
 fn x_positions_from_simplex(
   input : XSimplexInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let xpos_nlist_order = build_xpos_nlist_order({
     nlist_order: input.nlist_order,
@@ -695,12 +701,15 @@ fn x_positions_from_simplex(
 pub fn compute_x_positions_with_prepared_constraints(
   solve_input : XPositionSolveInput,
   root_margin : Double,
-  root_compress_weight : Int,
-  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int),
+  root_compress_weight : Int32,
+  segment_minlen_fn : (SlackSegment, Map[String, @cgraph.Node]) -> (
+    Int32,
+    Int32,
+  ),
   edge_has_mid_label_fn : (@cgraph.Edge) -> Bool,
-  edge_degree_increment_fn : (@cgraph.Edge) -> Int,
+  edge_degree_increment_fn : (@cgraph.Edge) -> Int32,
   capture_snapshot : Bool,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let prepared = prepare_xpos_constraint_inputs(
     solve_input.graph,

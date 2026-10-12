@@ -4,32 +4,32 @@
 
 ///|
 pub(all) struct PortAwareCrossingInputs {
-  edge_penalty : Array[Int]
-  edge_in : Map[String, Array[Int]]
-  edge_out : Map[String, Array[Int]]
-  edge_tail_rank : Array[Int]
-  edge_head_rank : Array[Int]
+  edge_penalty : Array[Int32]
+  edge_in : Map[String, Array[Int32]]
+  edge_out : Map[String, Array[Int32]]
+  edge_tail_rank : Array[Int32]
+  edge_head_rank : Array[Int32]
 }
 
 ///|
 fn build_port_aware_crossing_inputs(
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks? : Map[String, Int] = Map([]),
+  ranks~ : Map[String, Int32] = Map([]),
 ) -> PortAwareCrossingInputs {
-  let edge_out : Map[String, Array[Int]] = Map([])
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   for _rank, names in groups {
     for name in names {
       edge_out[name] = []
       edge_in[name] = []
     }
   }
-  let edge_penalty : Array[Int] = []
-  let edge_tail_rank : Array[Int] = []
-  let edge_head_rank : Array[Int] = []
+  let edge_penalty : Array[Int32] = []
+  let edge_tail_rank : Array[Int32] = []
+  let edge_head_rank : Array[Int32] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let penalty = @edge_semantics.edge_xpenalty(edge)
@@ -54,7 +54,7 @@ fn build_port_aware_crossing_inputs(
 }
 
 ///|
-fn count_inversions(values : Array[Int]) -> Int {
+fn count_inversions(values : Array[Int32]) -> Int32 {
   let n = values.length()
   if n < 2 {
     return 0
@@ -119,14 +119,14 @@ fn count_inversions(values : Array[Int]) -> Int {
 
 ///|
 pub fn count_crossings(
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> Int {
+) -> Int32 {
   let order = @rank_groups.build_order_index(groups)
-  let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map([])
+  let edge_groups : Map[(Int32, Int32), Array[(Int32, Int32)]] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     if !@edge_semantics.edge_is_constraint(edge) {
@@ -177,7 +177,7 @@ pub fn count_crossings(
         a0 - b0
       }
     })
-    let heads : Array[Int] = []
+    let heads : Array[Int32] = []
     for pair in list {
       let (_, h) = pair
       heads.push(h)
@@ -193,7 +193,7 @@ pub fn count_crossings(
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
 /// Do not change behavior without updating fixtures/tests.
-fn count_local_port_crossings(items : Array[(Int, Double, Int)]) -> Int {
+fn count_local_port_crossings(items : Array[(Int32, Double, Int32)]) -> Int32 {
   let len = items.length()
   if len < 2 {
     return 0
@@ -219,16 +219,16 @@ fn count_local_port_crossings(items : Array[(Int, Double, Int)]) -> Int {
 /// Graphviz parity: rcross-style crossing count with local port-order ties.
 /// Do not change behavior without updating fixtures/tests.
 fn count_crossings_port_aware_with_inputs(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   edge_tail : Array[String],
   edge_head : Array[String],
   inputs : PortAwareCrossingInputs,
-  edge_tail_port_x? : Array[Double] = [],
-  edge_head_port_x? : Array[Double] = [],
-  fixed_order? : Map[String, Int] = Map([]),
-) -> Int {
+  edge_tail_port_x~ : Array[Double] = [],
+  edge_head_port_x~ : Array[Double] = [],
+  fixed_order~ : Map[String, Int32] = Map([]),
+) -> Int32 {
   let _ = ranks
   let _ = edge_tail
   let order = @rank_groups.build_order_index(groups)
@@ -255,7 +255,7 @@ fn count_crossings_port_aware_with_inputs(
     // Graphviz parity with fixed external slots: local rank slices may carry
     // sparse slot indices, so the counting array must follow max slot.
     let count = Array::make(next_nodes.length() + 1, 0)
-    let local_in_by_bottom : Array[Array[(Int, Double, Int)]] = []
+    let local_in_by_bottom : Array[Array[(Int32, Double, Int32)]] = []
     if include_head_ports {
       for _ in next_nodes {
         local_in_by_bottom.push([])
@@ -263,8 +263,8 @@ fn count_crossings_port_aware_with_inputs(
     }
     let mut max_order = 0
     for top_idx, top in top_nodes {
-      let projected_slots : Array[(Int, Int)] = []
-      let local_out_items : Array[(Int, Double, Int)] = []
+      let projected_slots : Array[(Int32, Int32)] = []
+      let local_out_items : Array[(Int32, Double, Int32)] = []
       for edge_idx in inputs.edge_out.get(top).unwrap_or_default() {
         if Array::unsafe_get(inputs.edge_head_rank, edge_idx) != next_rank {
           continue
@@ -342,16 +342,16 @@ fn count_crossings_port_aware_with_inputs(
 /// Graphviz parity: rcross-style crossing count with local port-order ties.
 /// Do not change behavior without updating fixtures/tests.
 pub fn count_crossings_port_aware(
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_tail_port_x? : Array[Double] = [],
-  edge_head_port_x? : Array[Double] = [],
-  fixed_order? : Map[String, Int] = Map([]),
-) -> Int {
-  let rank_keys : Array[Int] = []
+  edge_tail_port_x~ : Array[Double] = [],
+  edge_head_port_x~ : Array[Double] = [],
+  fixed_order~ : Map[String, Int32] = Map([]),
+) -> Int32 {
+  let rank_keys : Array[Int32] = []
   for rank, _ in groups {
     rank_keys.push(rank)
   }
@@ -377,7 +377,7 @@ pub fn count_crossings_port_aware(
 }
 
 ///|
-fn count_pairs_greater(left : Array[Int], right : Array[Int]) -> Int {
+fn count_pairs_greater(left : Array[Int32], right : Array[Int32]) -> Int32 {
   if left.length() == 0 || right.length() == 0 {
     return 0
   }
@@ -397,13 +397,13 @@ fn count_pairs_greater(left : Array[Int], right : Array[Int]) -> Int {
 pub fn build_neighbor_order_index(
   names : Array[String],
   neighbors : Map[String, Array[String]],
-  ranks : Map[String, Int],
-  order : Map[String, Int],
-  target_rank : Int,
-) -> Map[String, Array[Int]] {
-  let result : Map[String, Array[Int]] = Map([])
+  ranks : Map[String, Int32],
+  order : Map[String, Int32],
+  target_rank : Int32,
+) -> Map[String, Array[Int32]] {
+  let result : Map[String, Array[Int32]] = Map([])
   for name in names {
-    let orders : Array[Int] = []
+    let orders : Array[Int32] = []
     let list = match neighbors.get(name) {
       Some(value) => value
       None => []
@@ -429,9 +429,9 @@ pub fn build_neighbor_order_index(
 pub fn crossing_for_pair(
   left : String,
   right : String,
-  parent_orders : Map[String, Array[Int]],
-  child_orders : Map[String, Array[Int]],
-) -> Int {
+  parent_orders : Map[String, Array[Int32]],
+  child_orders : Map[String, Array[Int32]],
+) -> Int32 {
   let left_parents = match parent_orders.get(left) {
     Some(value) => value
     None => []

@@ -49,19 +49,19 @@ pub fn layout_ports_from_final(
 }
 
 ///|
-pub const PORT_SIDE_BOTTOM : Int = 1
+pub const PORT_SIDE_BOTTOM : Int32 = 1
 
 ///|
-pub const PORT_SIDE_RIGHT : Int = 2
+pub const PORT_SIDE_RIGHT : Int32 = 2
 
 ///|
-pub const PORT_SIDE_TOP : Int = 4
+pub const PORT_SIDE_TOP : Int32 = 4
 
 ///|
-pub const PORT_SIDE_LEFT : Int = 8
+pub const PORT_SIDE_LEFT : Int32 = 8
 
 ///|
-pub const PORT_SIDE_ALL : Int = PORT_SIDE_BOTTOM |
+pub const PORT_SIDE_ALL : Int32 = PORT_SIDE_BOTTOM |
   PORT_SIDE_RIGHT |
   PORT_SIDE_TOP |
   PORT_SIDE_LEFT
@@ -78,9 +78,13 @@ fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
 
 ///|
 /// Maps output-facing port sides into dot's internal top-to-bottom coordinates.
-pub fn invflip_side(side : Int, rankdir : RankDir) -> Int {
+pub fn invflip_side(side : Int32, rankdir : RankDir) -> Int32 {
   let mut out = 0
-  let add = (from : Int, to : Int) => if (side & from) != 0 { out = out | to }
+  let add = (from : Int32, to : Int32) => {
+    if (side & from) != 0 {
+      out = out | to
+    }
+  }
   match rankdir {
     RankDir::TB => side
     RankDir::BT => {
@@ -111,7 +115,7 @@ pub fn invflip_side(side : Int, rankdir : RankDir) -> Int {
 pub fn port_side_mask_from_rects(
   port_rect : @geom.Rect,
   node_rect : @geom.Rect,
-) -> Int {
+) -> Int32 {
   let eps = if @record_geometry.RECORD_BORDER_PT > 0.01 {
     @record_geometry.RECORD_BORDER_PT + 0.01
   } else {
@@ -136,7 +140,7 @@ pub fn port_side_mask_from_rects(
 ///|
 priv struct DynamicPortAnchor {
   anchor : @geom.Point?
-  side : Int
+  side : Int32
 }
 
 ///|
@@ -148,7 +152,7 @@ priv struct ResolvedLabelPort {
 ///|
 pub(all) struct DynamicPortAnchorForEdge {
   anchor : @geom.Point?
-  side : Int
+  side : Int32
   is_dynamic : Bool
 }
 
@@ -189,7 +193,7 @@ fn resolve_dynamic_port_anchor(
   let mut best_dist = 0.0
   let mut best_point = @edge_spline.point(0.0, 0.0)
   let mut seen = false
-  let consider = (side : Int, pos : @geom.Point) => {
+  let consider = (side : Int32, pos : @geom.Point) => {
     if (sides & side) == 0 {
       return ()
     }
@@ -333,7 +337,7 @@ pub fn dynamic_port_anchor_for_edge(
 }
 
 ///|
-pub fn compass_side_mask(compass : @cgraph.Compass) -> Int {
+pub fn compass_side_mask(compass : @cgraph.Compass) -> Int32 {
   match compass {
     @cgraph.Compass::N => PORT_SIDE_TOP
     @cgraph.Compass::NE => PORT_SIDE_TOP | PORT_SIDE_RIGHT
@@ -352,7 +356,7 @@ fn port_side_mask_from_rect(
   port_rect : @geom.Rect,
   node_pos : @geom.Point,
   node_size : NodeSize,
-) -> Int {
+) -> Int32 {
   let node_rect = @edge_spline.port_side_rect(node_pos, node_size)
   port_side_mask_from_rects(port_rect, node_rect)
 }
@@ -362,7 +366,7 @@ pub fn port_side_mask_from_anchor(
   anchor : @geom.Point,
   node_pos : @geom.Point,
   node_size : NodeSize,
-) -> Int {
+) -> Int32 {
   let eps = if @record_geometry.RECORD_BORDER_PT > 0.01 {
     @record_geometry.RECORD_BORDER_PT + 0.01
   } else {
@@ -389,7 +393,7 @@ pub fn label_port_compass_side(
   node_name : String,
   port : @cgraph.Port?,
   ports_map : Map[String, Map[String, RecordPort]],
-) -> Int? {
+) -> Int32? {
   let resolved = resolve_label_port_for_graph(node_name, port, ports_map)
   guard resolved.name is Some(name) else { return None }
   guard resolved.effective_compass is Some(compass) else { return None }
@@ -405,7 +409,7 @@ pub fn port_side_for_edge(
   node_pos : @geom.Point,
   node_size : NodeSize,
   side_anchor : @geom.Point?,
-) -> Int {
+) -> Int32 {
   let all_sides = PORT_SIDE_BOTTOM |
     PORT_SIDE_RIGHT |
     PORT_SIDE_TOP |

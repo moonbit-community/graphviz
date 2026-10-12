@@ -27,7 +27,7 @@ pub fn cluster_rounding_enabled() -> Bool {
 priv struct InterclusterAlignmentInput {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   x_positions : Map[String, Double]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
@@ -36,7 +36,7 @@ priv struct InterclusterAlignmentInput {
 }
 
 ///|
-fn cluster_rank_key(cluster : String, rank : Int) -> String {
+fn cluster_rank_key(cluster : String, rank : Int32) -> String {
   "\{cluster}@\{rank}"
 }
 
@@ -45,7 +45,7 @@ fn cluster_rank_key(cluster : String, rank : Int) -> String {
 /// same-rank cluster groups that share a single external target.
 fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
   let cluster_rank_nodes : Map[String, Array[String]] = Map([])
-  let cluster_rank_value : Map[String, Int] = Map([])
+  let cluster_rank_value : Map[String, Int32] = Map([])
   for node in input.nodes {
     let name = node.name()
     let cluster = input.cluster_keys.get(name).unwrap_or_default()
@@ -142,11 +142,11 @@ fn adjust_intercluster_alignment(input : InterclusterAlignmentInput) -> Unit {
 ///|
 fn vnode_positions_from_edges(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
+  ranks : Map[String, Int32],
+  vnode_ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
   node_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
+  rank_y : Map[Int32, Double],
 ) -> Map[String, @geom.Point] {
   let positions : Map[String, @geom.Point] = Map([])
   for edge in edges {
@@ -217,9 +217,9 @@ fn build_node_positions_map(
 /// Do not change behavior without updating fixtures/tests.
 priv struct VnodePositionsInput {
   use_vnodes_for_xpos : Bool
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   x_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   fallback_fn : () -> Map[String, @geom.Point]
 }
 
@@ -307,16 +307,16 @@ priv struct PositionOutputBuildSources {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   x_positions : Map[String, Double]
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
   use_vnodes_for_xpos : Bool
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
 }
 
@@ -399,16 +399,16 @@ pub(all) struct PositionOutputPipelineInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   x_positions : Map[String, Double]
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
   use_vnodes_for_xpos : Bool
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   cluster_rounding_enabled : Bool
   vnode_clusters : Map[String, String]

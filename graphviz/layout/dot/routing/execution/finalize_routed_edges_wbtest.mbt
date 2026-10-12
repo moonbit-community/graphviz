@@ -11,7 +11,7 @@ test "finalize_routed_edges preserves input order for layouts that remain after 
   let edge_1 = graph.edge(a, b)
   let edge_2 = graph.edge(a, c)
   let edge_3 = graph.edge(b, c)
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
+  let edges_out_by_id : Map[Int32, DotLayoutEdge] = Map([])
   edges_out_by_id[edge_1.id()] = build_layout_edge(edge_1, 10.0)
   edges_out_by_id[edge_3.id()] = build_layout_edge(edge_3, 30.0)
 
@@ -36,10 +36,10 @@ test "finalize_routed_edges omits concentrated nonrepresentative edges" {
   let b = graph.node("b")
   let representative = graph.edge(a, b)
   let ignored = graph.edge(a, b)
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
+  let edges_out_by_id : Map[Int32, DotLayoutEdge] = Map([])
   edges_out_by_id[representative.id()] = build_layout_edge(representative, 10.0)
   edges_out_by_id[ignored.id()] = build_layout_edge(ignored, 20.0)
-  let ignored_edge_ids : Map[Int, Bool] = Map([])
+  let ignored_edge_ids : Map[Int32, Bool] = Map([])
   ignored_edge_ids[ignored.id()] = true
 
   let output = finalize_routed_edges({
@@ -64,7 +64,7 @@ test "finalize_routed_edges remaps parallel layouts before output order and reap
   edge_2.set_attr("taillabel", "tail")
   edge_2.set_attr("xlabel", "x")
 
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
+  let edges_out_by_id : Map[Int32, DotLayoutEdge] = Map([])
   edges_out_by_id[edge_1.id()] = build_layout_edge(
     edge_1,
     10.0,

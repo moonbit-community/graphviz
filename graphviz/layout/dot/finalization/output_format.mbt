@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn pow10_int(exp : Int) -> Int {
+fn pow10_int(exp : Int32) -> Int32 {
   if exp <= 0 {
     return 1
   }
@@ -15,7 +15,7 @@ fn pow10_int(exp : Int) -> Int {
 }
 
 ///|
-fn pow10_double(exp : Int) -> Double {
+fn pow10_double(exp : Int32) -> Double {
   @math.pow(10.0, exp.to_double())
 }
 
@@ -37,7 +37,7 @@ pub fn trim_trailing_zeros(text : String) -> String {
 }
 
 ///|
-fn round_half_even(value : Double, decimals : Int) -> Double {
+fn round_half_even(value : Double, decimals : Int32) -> Double {
   let digits = if decimals > 0 { decimals } else { 0 }
   let scale = pow10_double(digits)
   let abs_value = if value < 0.0 { -value } else { value }
@@ -65,7 +65,7 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
 // Multiplication by 10^digits can erase which side of a decimal tie a
 // binary64 value occupies. Resolve only that ambiguous case using its exact
 // significand, as printf does, rather than treating a tolerance as equality.
-fn decimal_tie_rounds_up(abs_value : Double, digits : Int) -> Bool {
+fn decimal_tie_rounds_up(abs_value : Double, digits : Int32) -> Bool {
   let bits = abs_value.reinterpret_as_uint64()
   let exponent = ((bits >> 52) & 0x7ffUL).to_int()
   let fraction = bits & 0x000fffffffffffffUL
@@ -87,7 +87,7 @@ fn decimal_tie_rounds_up(abs_value : Double, digits : Int) -> Bool {
 }
 
 ///|
-pub fn format_fixed(value : Double, decimals : Int) -> String {
+pub fn format_fixed(value : Double, decimals : Int32) -> String {
   if decimals <= 0 {
     return "\{round_half_even(value, 0).to_int()}"
   }
@@ -106,20 +106,20 @@ pub fn format_fixed(value : Double, decimals : Int) -> String {
 }
 
 ///|
-pub fn format_fixed_trim(value : Double, decimals : Int) -> String {
+pub fn format_fixed_trim(value : Double, decimals : Int32) -> String {
   trim_trailing_zeros(format_fixed(value, decimals))
 }
 
 ///|
-pub fn round_to(value : Double, decimals : Int) -> Double {
+pub fn round_to(value : Double, decimals : Int32) -> Double {
   round_half_even(value, decimals)
 }
 
 ///|
 fn format_scientific(
   abs : Double,
-  exp : Int,
-  precision : Int,
+  exp : Int32,
+  precision : Int32,
   sign : String,
 ) -> String {
   let mut exp_mut = exp

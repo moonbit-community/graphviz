@@ -16,16 +16,16 @@ type RankDir = @rankdir.RankDir
 const RECORD_BORDER_PT : Double = @record_geometry.RECORD_BORDER_PT
 
 ///|
-const PORT_SIDE_BOTTOM : Int = 1
+const PORT_SIDE_BOTTOM : Int32 = 1
 
 ///|
-const PORT_SIDE_RIGHT : Int = 2
+const PORT_SIDE_RIGHT : Int32 = 2
 
 ///|
-const PORT_SIDE_TOP : Int = 4
+const PORT_SIDE_TOP : Int32 = 4
 
 ///|
-const PORT_SIDE_LEFT : Int = 8
+const PORT_SIDE_LEFT : Int32 = 8
 
 ///|
 fn apply_parallel_offset(
@@ -59,14 +59,14 @@ pub fn edge_spline_for_polyline(
   orthogonal : Bool,
   include_tail : Bool,
   include_head : Bool,
-  tail_clip_enabled? : Bool = true,
-  head_clip_enabled? : Bool = true,
+  tail_clip_enabled~ : Bool = true,
+  head_clip_enabled~ : Bool = true,
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
-  parallel_offset? : Double = 0.0,
-  clip_swapped? : Bool = false,
-  arrow_swapped? : Bool = false,
+  parallel_offset~ : Double = 0.0,
+  clip_swapped~ : Bool = false,
+  arrow_swapped~ : Bool = false,
 ) -> @geom.Spline {
   let (tail, head) = if tail_clip == head_clip {
     (tail_clip, point(head_clip.x + 1.0, head_clip.y))
@@ -153,17 +153,17 @@ pub fn edge_spline_for_points(
   force_segmented : Bool,
   include_tail : Bool,
   include_head : Bool,
-  tail_clip_enabled? : Bool = true,
-  head_clip_enabled? : Bool = true,
-  tail_port_side? : Int = 0,
-  head_port_side? : Int = 0,
-  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
+  tail_clip_enabled~ : Bool = true,
+  head_clip_enabled~ : Bool = true,
+  tail_port_side~ : Int32 = 0,
+  head_port_side~ : Int32 = 0,
+  route_barriers~ : Array[(@geom.Point, @geom.Point)] = [],
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
-  parallel_offset? : Double = 0.0,
-  clip_swapped? : Bool = false,
-  arrow_swapped? : Bool = false,
+  parallel_offset~ : Double = 0.0,
+  clip_swapped~ : Bool = false,
+  arrow_swapped~ : Bool = false,
 ) -> @geom.Spline {
   if points.length() == 0 {
     return { start: None, end: None, points: [], }
@@ -247,14 +247,14 @@ pub fn edge_spline_for_bezier_points(
   head_anchor_size : NodeSize,
   include_tail : Bool,
   include_head : Bool,
-  tail_clip_enabled? : Bool = true,
-  head_clip_enabled? : Bool = true,
+  tail_clip_enabled~ : Bool = true,
+  head_clip_enabled~ : Bool = true,
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
-  parallel_offset? : Double = 0.0,
-  clip_swapped? : Bool = false,
-  arrow_swapped? : Bool = false,
+  parallel_offset~ : Double = 0.0,
+  clip_swapped~ : Bool = false,
+  arrow_swapped~ : Bool = false,
 ) -> @geom.Spline {
   if bezier.length() == 0 {
     return { start: None, end: None, points: [], }
@@ -328,7 +328,7 @@ pub fn edge_spline_raw_for_points(
   tail_slope : @geom.Point,
   head_slope : @geom.Point,
   force_segmented : Bool,
-  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
+  route_barriers~ : Array[(@geom.Point, @geom.Point)] = [],
 ) -> Array[@geom.Point] {
   route_bezier_points(
     points, tail_slope, head_slope, force_segmented, route_barriers,
@@ -368,18 +368,18 @@ pub fn edge_spline_for_line(
   head_slope : @geom.Point,
   include_tail : Bool,
   include_head : Bool,
-  tail_clip_enabled? : Bool = true,
-  head_clip_enabled? : Bool = true,
+  tail_clip_enabled~ : Bool = true,
+  head_clip_enabled~ : Bool = true,
   rankdir : RankDir,
   curve_offset : Double,
   curve_skew : Double,
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
-  prefer_linear? : Bool = false,
-  parallel_offset? : Double = 0.0,
-  clip_swapped? : Bool = false,
-  arrow_swapped? : Bool = false,
+  prefer_linear~ : Bool = false,
+  parallel_offset~ : Double = 0.0,
+  clip_swapped~ : Bool = false,
+  arrow_swapped~ : Bool = false,
 ) -> @geom.Spline {
   let arrow_lengths = if include_tail || include_head {
     arrow_length_for_edge_oriented(

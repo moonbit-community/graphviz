@@ -78,7 +78,7 @@ pub(all) struct DotLayoutGraph {
 #declaration_only
 pub fn layout_dot(
   graph : @cgraph.Graph,
-  options? : DotLayoutOptions = DotLayoutOptions::default(),
+  options~ : DotLayoutOptions = DotLayoutOptions::default(),
 ) -> DotLayoutGraph raise DotLayoutError {
   ...
 }
@@ -90,9 +90,9 @@ pub fn layout_dot(
 #declaration_only
 pub fn layout_neato_noop(
   graph : @cgraph.Graph,
-  no_op_level? : Int = 1,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  no_op_level~ : Int32 = 1,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   ...
 }
@@ -104,9 +104,9 @@ pub fn layout_neato_noop(
 #declaration_only
 pub fn layout_dot_noop(
   graph : @cgraph.Graph,
-  no_op_level? : Int = 1,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  no_op_level~ : Int32 = 1,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   ...
 }
@@ -117,8 +117,8 @@ pub fn layout_dot_noop(
 #declaration_only
 pub fn layout_neato(
   graph : @cgraph.Graph,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   ...
 }

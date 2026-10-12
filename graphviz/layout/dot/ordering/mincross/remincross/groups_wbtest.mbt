@@ -6,10 +6,10 @@
 test "build_remincross_groups preserves expanded rank order across multiple clusters" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_only", 0)
 
-  let final_groups : Map[Int, Array[String]] = Map([])
+  let final_groups : Map[Int32, Array[String]] = Map([])
   final_groups[0] = ["b", "a"]
 
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map([])
+  let ordered_with_vnodes : Map[Int32, Array[String]] = Map([])
   ordered_with_vnodes[0] = [skeleton, "v_before", "a", "b"]
 
   let rem_groups = build_remincross_groups({
@@ -42,11 +42,11 @@ test "build_remincross_groups preserves expanded rank order across multiple clus
 test "build_remincross_groups falls back to vnode-group rebuild when seeded replay is empty under ratio fill" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_only", 0)
 
-  let final_groups : Map[Int, Array[String]] = Map([])
+  let final_groups : Map[Int32, Array[String]] = Map([])
   final_groups[0] = ["a"]
   final_groups[1] = ["b"]
 
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map([])
+  let ordered_with_vnodes : Map[Int32, Array[String]] = Map([])
   ordered_with_vnodes[0] = [skeleton]
 
   let rem_groups = build_remincross_groups({
@@ -83,7 +83,7 @@ test "build_remincross_vnode_groups injects root-boundary trailing vnodes after 
   let cluster_node = graph.node("cluster_node")
   let edge = graph.edge(root, cluster_node)
 
-  let final_groups : Map[Int, Array[String]] = Map([])
+  let final_groups : Map[Int32, Array[String]] = Map([])
   final_groups[0] = ["root"]
   final_groups[1] = ["mid_real"]
   final_groups[2] = ["cluster_node"]
@@ -91,13 +91,13 @@ test "build_remincross_vnode_groups injects root-boundary trailing vnodes after 
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v_trail"]
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v_trail"] = 1
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[1] = ["v_trail"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["root"] = 0
   ranks["mid_real"] = 1
   ranks["cluster_node"] = 2

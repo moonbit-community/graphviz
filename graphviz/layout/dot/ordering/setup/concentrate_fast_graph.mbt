@@ -9,19 +9,19 @@
 pub(all) struct ConcentrateFastEdge {
   tail : String
   head : String
-  mut weight : Int
+  mut weight : Int32
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
-  mut to_virtual : Int?
+  mut to_virtual : Int32?
   original : @cgraph.Edge?
 }
 
 ///|
 pub(all) struct ConcentrateFastGraph {
   edges : Array[ConcentrateFastEdge]
-  copied_from : Map[Int, Int]
-  incoming : Map[String, Array[Int]]
-  outgoing : Map[String, Array[Int]]
+  copied_from : Map[Int32, Int32]
+  incoming : Map[String, Array[Int32]]
+  outgoing : Map[String, Array[Int32]]
 }
 
 ///|
@@ -31,9 +31,9 @@ pub fn ConcentrateFastGraph::new() -> ConcentrateFastGraph {
 
 ///|
 fn append_fast_adjacency(
-  adjacency : Map[String, Array[Int]],
+  adjacency : Map[String, Array[Int32]],
   node : String,
-  edge : Int,
+  edge : Int32,
 ) -> Unit {
   if adjacency.get(node) is Some(indices) {
     indices.push(edge)
@@ -47,11 +47,11 @@ fn ConcentrateFastGraph::add_edge(
   self : ConcentrateFastGraph,
   tail : String,
   head : String,
-  weight : Int,
-  tail_port? : @cgraph.Port? = None,
-  head_port? : @cgraph.Port? = None,
-  original? : @cgraph.Edge? = None,
-) -> Int {
+  weight : Int32,
+  tail_port~ : @cgraph.Port? = None,
+  head_port~ : @cgraph.Port? = None,
+  original~ : @cgraph.Edge? = None,
+) -> Int32 {
   let index = self.edges.length()
   self.edges.push({
     tail,
@@ -69,7 +69,7 @@ fn ConcentrateFastGraph::add_edge(
 
 ///|
 /// zapinlist removes by swapping with the last entry, not stable erasure.
-fn remove_fast_adjacency(indices : Array[Int], edge : Int) -> Unit {
+fn remove_fast_adjacency(indices : Array[Int32], edge : Int32) -> Unit {
   for index, candidate in indices {
     guard candidate == edge else { continue }
     guard indices.pop() is Some(last) else { return }
@@ -83,7 +83,7 @@ fn remove_fast_adjacency(indices : Array[Int], edge : Int) -> Unit {
 ///|
 fn ConcentrateFastGraph::delete_edge(
   self : ConcentrateFastGraph,
-  index : Int,
+  index : Int32,
 ) -> Unit {
   let edge = self.edges[index]
   remove_fast_adjacency(self.outgoing[edge.tail], index)
@@ -110,8 +110,8 @@ fn ConcentrateFastGraph::copy_edge(
   self : ConcentrateFastGraph,
   tail : String,
   head : String,
-  original : Int,
-) -> Int {
+  original : Int32,
+) -> Int32 {
   let edge = self.edges[original]
   let index = self.add_edge(
     tail,
@@ -133,8 +133,8 @@ fn ConcentrateFastGraph::copy_edge(
 /// subsequent merge propagates weight through every downstream representative.
 fn ConcentrateFastGraph::merge_weight(
   self : ConcentrateFastGraph,
-  source : Int,
-  target : Int,
+  source : Int32,
+  target : Int32,
 ) -> Unit {
   let edge = self.edges[source]
   guard edge.to_virtual != Some(target) &&
@@ -175,7 +175,7 @@ fn ConcentrateFastGraph::merge_node(
       Down => edge.head
       Up => edge.tail
     }
-    let mut existing : Int? = None
+    let mut existing : Int32? = None
     for candidate in leaving.get(kept).unwrap_or_default() {
       let other = self.edges[candidate]
       let endpoint = match sweep {

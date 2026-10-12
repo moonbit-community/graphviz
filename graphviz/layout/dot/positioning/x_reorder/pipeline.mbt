@@ -20,26 +20,26 @@ pub(all) struct XposReorderPipelineSources {
   has_vnode_order : Bool
   ordering_set : Bool
   has_clusters : Bool
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  node_order : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
+  node_order : Map[String, Int32]
   cluster_skeleton_size : @node_primitives.NodeSize
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  cluster_skeleton_penalty : Int
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  cluster_skeleton_penalty : Int32
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   flat_constraints : Map[String, Bool]
@@ -52,11 +52,11 @@ pub(all) struct XposReorderPipelineSources {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   cluster_skeleton : Map[String, Bool]
-  transpose_max_passes : Int
+  transpose_max_passes : Int32
 }
 
 ///|
@@ -81,7 +81,7 @@ fn build_xpos_reorder_path_flags(
 /// materialization and reorder_rank_groups input ordering as Graphviz.
 fn apply_clustered_xpos_reorder_path(
   input : XposReorderPipelineSources,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   build_clustered_xpos_groups({
     x_groups: input.x_groups,
     x_order_sizes: input.x_order_sizes,
@@ -114,7 +114,7 @@ fn apply_clustered_xpos_reorder_path(
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 fn apply_nonclustered_xpos_reorder(
   input : XposReorderPipelineSources,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   build_nonclustered_xpos_groups(
     {
       nodes: input.nodes,
@@ -154,7 +154,7 @@ fn apply_nonclustered_xpos_reorder(
 fn maybe_apply_xpos_transpose_cleanup(
   path_flags : XposReorderPathFlags,
   input : XposReorderPipelineSources,
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> Unit {
   if path_flags.clustered_reorder_enabled {
     apply_xpos_transpose_cleanup(
@@ -179,7 +179,7 @@ fn maybe_apply_xpos_transpose_cleanup(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_x_groups_after_reorder(
   input : XposReorderPipelineSources,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let path_flags = build_xpos_reorder_path_flags(input)
   let x_groups = if path_flags.clustered_reorder_enabled {
     apply_clustered_xpos_reorder_path(input)

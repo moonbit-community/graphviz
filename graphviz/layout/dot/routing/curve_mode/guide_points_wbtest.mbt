@@ -51,14 +51,14 @@ test "edge_polyline_points applies cluster-tuned interpolation on non-flat vnode
 
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1"]
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v1"] = 1
   let vnode_positions : Map[String, @geom.Point] = Map([])
   vnode_positions["v1"] = @edge_spline.point(8.0, 40.0)
 
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[1] = 50.0
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[1] = 3.0
 
   let points = edge_polyline_points({

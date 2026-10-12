@@ -8,7 +8,7 @@
 /// Do not change behavior without updating fixtures/tests.
 fn edge_endpoints_at(
   edge : @cgraph.Edge,
-  edge_idx : Int,
+  edge_idx : Int32,
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {
@@ -42,9 +42,9 @@ pub fn collect_parallel_offset_edge_flags(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> (Map[Int, Bool], Map[Int, Bool]) {
-  let edge_reversed_by_id : Map[Int, Bool] = Map([])
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+) -> (Map[Int32, Bool], Map[Int32, Bool]) {
+  let edge_reversed_by_id : Map[Int32, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   for i in 0..<edges.length() {
     let edge = edges[i]
     let (oriented_tail, oriented_head) = edge_endpoints_at(
@@ -65,12 +65,12 @@ pub fn collect_parallel_offset_edge_flags(
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ParallelOffsetsBuildInput {
   edges : Array[@cgraph.Edge]
-  edge_has_label_by_id : Map[Int, Bool]
-  ranks : Map[String, Int]
+  edge_has_label_by_id : Map[Int32, Bool]
+  ranks : Map[String, Int32]
   nodesep_pt : Double
-  edge_reversed_by_id : Map[Int, Bool]
+  edge_reversed_by_id : Map[Int32, Bool]
   cluster_keys : Map[String, String]
-  concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
 }
 
 ///|
@@ -78,10 +78,10 @@ pub(all) struct ParallelOffsetsBuildInput {
 /// regardless of which direction appeared first in the input.
 pub fn collect_concentrated_edge_ids(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   concentrate : Bool,
-) -> Map[Int, Bool] {
-  let ignored_edge_ids : Map[Int, Bool] = Map([])
+) -> Map[Int32, Bool] {
+  let ignored_edge_ids : Map[Int32, Bool] = Map([])
   if !concentrate {
     return ignored_edge_ids
   }
@@ -146,7 +146,7 @@ pub fn collect_concentrated_edge_ids(
 pub fn mark_absorbed_concentrated_edge_ids(
   edges : Array[@cgraph.Edge],
   concentrate : Bool,
-  ignored_edge_ids : Map[Int, Bool],
+  ignored_edge_ids : Map[Int32, Bool],
 ) -> Unit {
   if !concentrate {
     return
@@ -177,7 +177,7 @@ fn matching_reverse_concentrated_edge(
 /// attribute remains unchanged in DOT output.
 pub fn mark_concentrated_reverse_representatives(
   edges : Array[@cgraph.Edge],
-  ignored_edge_ids : Map[Int, Bool],
+  ignored_edge_ids : Map[Int32, Bool],
 ) -> Unit {
   for edge in edges {
     if ignored_edge_ids.get(edge.id()) is Some(_) {
@@ -196,7 +196,7 @@ pub fn mark_concentrated_reverse_representatives(
 ///|
 pub fn build_edge_parallel_offsets(
   input : ParallelOffsetsBuildInput,
-) -> Map[Int, Double] {
+) -> Map[Int32, Double] {
   let edges = input.edges
   let edge_has_label_by_id = input.edge_has_label_by_id
   let ranks = input.ranks
@@ -205,11 +205,11 @@ pub fn build_edge_parallel_offsets(
   let cluster_keys = input.cluster_keys
   let concentrated_ignored_edge_ids = input.concentrated_ignored_edge_ids
   let concentrate = @order_graph.graphviz_concentrate_enabled(edges)
-  let groups : Map[String, Array[Int]] = Map([])
+  let groups : Map[String, Array[Int32]] = Map([])
   let group_first_dir_attr : Map[String, String] = Map([])
   let group_has_mixed_dir_attr : Map[String, Bool] = Map([])
-  let sameport_marked : Map[Int, Bool] = Map([])
-  let edge_by_id : Map[Int, @cgraph.Edge] = Map([])
+  let sameport_marked : Map[Int32, Bool] = Map([])
+  let edge_by_id : Map[Int32, @cgraph.Edge] = Map([])
   let has_self_edge : Map[String, Bool] = Map([])
   for edge in edges {
     edge_by_id[edge.id()] = edge
@@ -270,7 +270,7 @@ pub fn build_edge_parallel_offsets(
       }
     }
   }
-  let offsets : Map[Int, Double] = Map([])
+  let offsets : Map[Int32, Double] = Map([])
   for key, ids in groups {
     if ids.length() <= 1 {
       continue

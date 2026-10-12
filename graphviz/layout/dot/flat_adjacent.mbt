@@ -40,7 +40,7 @@ fn route_flat_adjacent_group(
   right : @cgraph.Node,
   edges : Array[@cgraph.Edge],
   has_defined_ports : (@cgraph.Edge) -> Bool,
-) -> Map[Int, @layout_tree.DotLayoutEdge] raise DotLayoutError {
+) -> Map[Int32, @layout_tree.DotLayoutEdge] raise DotLayoutError {
   let flipped = parent.prep.rankdir == RankDir::LR ||
     parent.prep.rankdir == RankDir::RL
   let first = if flipped { right } else { left }
@@ -64,7 +64,7 @@ fn route_flat_adjacent_group(
   source.set_attr("rank", "source")
   let aux_tail = clone_flat_node(source, first)
   let aux_head = clone_flat_node(aux, second)
-  let originals : Map[Int, @cgraph.Edge] = Map([])
+  let originals : Map[Int32, @cgraph.Edge] = Map([])
   let mut heavy : @cgraph.Edge? = None
   for edge in edges {
     let forward = edge.tail().name() == first.name()
@@ -158,7 +158,7 @@ fn route_flat_adjacent_group(
       { x: left_pos.x + right_pos.x - p.y, y: first_pos.y + p.x - middle_x, }
     }
   }
-  let output : Map[Int, @layout_tree.DotLayoutEdge] = Map([])
+  let output : Map[Int32, @layout_tree.DotLayoutEdge] = Map([])
   for routed in routing.edges_out {
     guard originals.get(routed.edge.id()) is Some(original) else { continue }
     output[original.id()] = {
@@ -227,7 +227,7 @@ fn route_flat_adjacent_ports(
       })
     group.push(edge)
   }
-  let replacements : Map[Int, @layout_tree.DotLayoutEdge] = Map([])
+  let replacements : Map[Int32, @layout_tree.DotLayoutEdge] = Map([])
   for (left, right), edges in groups {
     guard edges.any(has_defined_ports) else { continue }
     let routed = route_flat_adjacent_group(

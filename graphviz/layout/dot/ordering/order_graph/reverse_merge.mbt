@@ -9,7 +9,7 @@ fn directed_edge_merge_key(tail_name : String, head_name : String) -> String {
 
 ///|
 fn edge_is_reversed_by_endpoints(
-  edge_idx : Int,
+  edge_idx : Int32,
   edge : @cgraph.Edge,
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -31,8 +31,8 @@ fn edge_is_reversed_by_endpoints(
 /// Graphviz parity: reverse-edge merge metadata tracks representative forward
 /// edges and accumulates skip/weight-bonus overlays for reversed duplicates.
 pub(all) struct ReverseMergeMetadata {
-  merged_edge_weight_bonus : Map[Int, Int]
-  merged_edge_skip : Map[Int, Bool]
+  merged_edge_weight_bonus : Map[Int32, Int32]
+  merged_edge_skip : Map[Int32, Bool]
 }
 
 ///|
@@ -78,12 +78,12 @@ pub fn graphviz_concentrate_enabled(edges : Array[@cgraph.Edge]) -> Bool {
 /// unless excluded (labels/self-edge), matching constraint-graph assembly.
 pub fn build_reverse_merge_metadata(
   input : ReverseMergeMetadataInput,
-  initial_metadata? : ReverseMergeMetadata = {
+  initial_metadata~ : ReverseMergeMetadata = {
     merged_edge_weight_bonus: Map([]),
     merged_edge_skip: Map([]),
   },
 ) -> ReverseMergeMetadata {
-  let forward_rep_by_key : Map[String, Array[Int]] = Map([])
+  let forward_rep_by_key : Map[String, Array[Int32]] = Map([])
   let concentrate = graphviz_concentrate_enabled(input.edges)
   let merged_edge_weight_bonus = initial_metadata.merged_edge_weight_bonus
   let merged_edge_skip = initial_metadata.merged_edge_skip
@@ -156,13 +156,13 @@ pub fn build_reverse_merge_metadata(
 /// duplicates are ignored instead. Flat edges have their own constraint pass.
 pub fn build_parallel_merge_metadata(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   cluster_keys : Map[String, String],
   ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool,
 ) -> ReverseMergeMetadata {
-  let previous_by_endpoints : Map[String, Int] = Map([])
-  let merged_edge_weight_bonus : Map[Int, Int] = Map([])
-  let merged_edge_skip : Map[Int, Bool] = Map([])
+  let previous_by_endpoints : Map[String, Int32] = Map([])
+  let merged_edge_weight_bonus : Map[Int32, Int32] = Map([])
+  let merged_edge_skip : Map[Int32, Bool] = Map([])
   let concentrate = graphviz_concentrate_enabled(edges)
   let precreated = precreated_forward_edges(
     edges, ranks, cluster_keys, ports_equal,
@@ -207,14 +207,14 @@ pub fn build_parallel_merge_metadata(
 /// take class2's ED_to_virt early exit, not the parallel-merging branch.
 fn precreated_forward_edges(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   cluster_keys : Map[String, String],
   ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool,
-) -> Map[Int, Bool] {
-  let precreated : Map[Int, Bool] = Map([])
+) -> Map[Int32, Bool] {
+  let precreated : Map[Int32, Bool] = Map([])
   guard edges.length() > 0 else { precreated }
   let root = @membership.root_graph_for_node(edges[0].tail())
-  let node_order : Map[String, Int] = Map([])
+  let node_order : Map[String, Int32] = Map([])
   for index, node in root.nodes() {
     node_order[node.name()] = index
   }

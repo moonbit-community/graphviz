@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -16,11 +16,11 @@ fn assert_close(
 ///|
 fn build_curve_base(
   edge : @cgraph.Edge,
-  tail_anchor? : @geom.Point = @edge_spline.point(0.0, 0.0),
-  head_anchor? : @geom.Point = @edge_spline.point(10.0, 0.0),
-  head_port? : @cgraph.Port? = None,
-  layout_rankdir? : RankDir = RankDir::TB,
-  orig_head_name? : String = edge.head().name(),
+  tail_anchor~ : @geom.Point = @edge_spline.point(0.0, 0.0),
+  head_anchor~ : @geom.Point = @edge_spline.point(10.0, 0.0),
+  head_port~ : @cgraph.Port? = None,
+  layout_rankdir~ : RankDir = RankDir::TB,
+  orig_head_name~ : String = edge.head().name(),
 ) -> EdgeRouteBase {
   let zero = @edge_spline.point(0.0, 0.0)
   let size = @node_primitives.node_size_from_points(10.0, 10.0)

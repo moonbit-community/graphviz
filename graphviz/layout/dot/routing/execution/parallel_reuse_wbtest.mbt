@@ -111,10 +111,10 @@ test "apply_regular_parallel_reuse_layouts writes sibling layouts only when thei
   regular_parallel_groups[@edge_identity.edge_vnode_key(edge_1)] = [
     edge_1, edge_2, edge_3,
   ]
-  let base_cache : Map[Int, EdgeRouteBase] = Map([])
+  let base_cache : Map[Int32, EdgeRouteBase] = Map([])
   let edge_2_base = build_route_base(edge_2)
   base_cache[edge_2.id()] = edge_2_base
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map([])
+  let edges_out_by_id : Map[Int32, DotLayoutEdge] = Map([])
   let callbacks : RoutingCallbacks = {
     recover_slack_vnodes_fn: _ => (),
     build_edge_layout_fn: layout_input => {

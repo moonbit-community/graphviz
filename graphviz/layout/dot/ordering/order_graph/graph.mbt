@@ -11,8 +11,8 @@ type NodeSize = @node_primitives.NodeSize
 /// cluster_order for cluster tie-breaking in ordering passes.
 pub fn build_cluster_order_index(
   cluster_order : Array[String],
-) -> Map[String, Int] {
-  let cluster_index : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let cluster_index : Map[String, Int32] = Map([])
   for idx, name in cluster_order {
     cluster_index[name] = idx
   }
@@ -20,8 +20,8 @@ pub fn build_cluster_order_index(
 }
 
 ///|
-pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
-  let order : Map[String, Int] = Map([])
+pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int32] {
+  let order : Map[String, Int32] = Map([])
   let mut idx = 0
   for edge in edges {
     let tail = edge.tail().name()
@@ -89,9 +89,9 @@ pub fn merge_edge_creation_sequences(
 /// as 0 when evaluating same-rank non-self edge constraints.
 /// Do not change behavior without updating fixtures/tests.
 pub fn flat_constraint_rank_or_zero(
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   name : String,
-) -> Int {
+) -> Int32 {
   match ranks.get(name) {
     Some(value) => value
     None => 0
@@ -116,13 +116,13 @@ pub fn order_edge_merge_key(
 /// preserving first-seen sequence while summing xpenalty for duplicate keys.
 /// Do not change behavior without updating fixtures/tests.
 fn coalesce_order_edges_for_tail(
-  entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  entries : Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   should_merge : (String, String) -> Bool,
-) -> Array[(String, String, Int, Bool, Double, Double, Double, Double)] {
+) -> Array[(String, String, Int32, Bool, Double, Double, Double, Double)] {
   let coalesced : Array[
-    (String, String, Int, Bool, Double, Double, Double, Double),
+    (String, String, Int32, Bool, Double, Double, Double, Double),
   ] = []
-  let key_index : Map[String, Int] = Map([])
+  let key_index : Map[String, Int32] = Map([])
   for entry in entries {
     let (
       tail,
@@ -193,16 +193,16 @@ fn coalesce_order_edges_for_tail(
 pub fn coalesce_order_edges_by_tail(
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
-  should_merge? : (String, String) -> Bool = (_, _) => true,
+  should_merge~ : (String, String) -> Bool = (_, _) => true,
 ) -> Map[
   String,
-  Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
 ] {
   let coalesced : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   for tail_name, entries in order_edges_by_tail {
     coalesced[tail_name] = coalesce_order_edges_for_tail(entries, should_merge)
@@ -228,7 +228,7 @@ pub fn edge_orientation_is_reversed(
 pub fn edge_tail_port_for_name(
   edge : @cgraph.Edge,
   tail_name : String,
-  fallback_to_original? : Bool = true,
+  fallback_to_original~ : Bool = true,
 ) -> @cgraph.Port? {
   let orig_tail = edge.tail().name()
   let orig_head = edge.head().name()
@@ -250,7 +250,7 @@ pub fn edge_tail_port_for_name(
 pub fn edge_head_port_for_name(
   edge : @cgraph.Edge,
   head_name : String,
-  fallback_to_original? : Bool = true,
+  fallback_to_original~ : Bool = true,
 ) -> @cgraph.Port? {
   let orig_tail = edge.tail().name()
   let orig_head = edge.head().name()
@@ -291,8 +291,8 @@ pub fn build_sizes_for_order_graph(
 /// and per-rank node sequence (including appended virtual skeleton/vnodes).
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_order_nodes_from_groups(
-  order_groups : Map[Int, Array[String]],
-  order_rank_keys : Array[Int],
+  order_groups : Map[Int32, Array[String]],
+  order_rank_keys : Array[Int32],
 ) -> Array[String] {
   let order_nodes : Array[String] = []
   for rank in order_rank_keys {
@@ -358,7 +358,7 @@ pub fn collect_order_edges_for_tails(
   tail_sequence : Array[String],
   edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
@@ -412,7 +412,7 @@ pub fn collect_order_edges_for_tails(
 pub(all) struct EdgeIndicesAndOrder {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
 }
 
 ///|
@@ -423,7 +423,7 @@ pub fn build_edge_indices_and_order(
   order_nodes : Array[String],
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
-  order_ranks : Map[String, Int],
+  order_ranks : Map[String, Int32],
   edges_out : Array[@cgraph.Edge],
 ) -> EdgeIndicesAndOrder {
   let edge_index_data = build_edge_index_for_names(

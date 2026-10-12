@@ -7,18 +7,18 @@
 
 ///|
 pub(all) struct OrderingClass2Data {
-  edges_by_tail : Map[String, Array[Int]]
+  edges_by_tail : Map[String, Array[Int32]]
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   order_edges_by_tail_root : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   order_edges_by_tail_unmapped : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   root_edge_creation : Array[(String, String)]
   skeleton_edge_creation : Array[(String, String)]
@@ -57,7 +57,7 @@ fn adjust_nlist_order_for_flip(
   // Graphviz parity: cluster flip precomputes reversed per-cluster node lists
   // and zeroed consumption indices before reconstructing adjusted nlist order.
   let cluster_reversed : Map[String, Array[String]] = Map([])
-  let cluster_index : Map[String, Int] = Map([])
+  let cluster_index : Map[String, Int32] = Map([])
   for cluster, list in cluster_nodes {
     // Graphviz parity: cluster flip uses explicit reverse traversal to
     // construct per-cluster replacement lists in reverse local order.
@@ -98,8 +98,8 @@ fn adjust_nlist_order_for_flip(
 
 ///|
 pub(all) struct OrderingReorderSetup {
-  ordering_groups_base : Map[Int, Array[String]]
-  base_order_index : Map[String, Int]
+  ordering_groups_base : Map[Int32, Array[String]]
+  base_order_index : Map[String, Int32]
   order_with_vnodes : Bool
   order_with_clusters : Bool
   graphviz_flip : Bool
@@ -115,7 +115,7 @@ pub(all) struct OrderingReorderSetup {
 fn build_flat_rank_constraints(
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
 ) -> Map[String, Bool] {
   let flat_rank_constraints : Map[String, Bool] = Map([])
   let mut flat_idx = 0
@@ -161,20 +161,20 @@ pub(all) struct OrderingReorderSetupSources {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   port_edge_nodes : Map[String, Bool]
   vnode_info : EdgeVnodeInfo
   cluster_has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_parents : Map[String, String?]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   rankdir : @rankdir.RankDir
   edge_port_data : OrderingEdgePortData
 }
@@ -183,14 +183,14 @@ pub(all) struct OrderingReorderSetupSources {
 /// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_rank_same_order(
-  groups : Map[Int, Array[String]],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  node_order : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
+  node_order : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let _ = node_order
-  let adjusted : Map[Int, Array[String]] = Map([])
+  let adjusted : Map[Int32, Array[String]] = Map([])
   for rank, names in groups {
     adjusted[rank] = names.copy()
   }
@@ -201,9 +201,9 @@ fn apply_rank_same_order(
     if names.length() <= 1 {
       continue
     }
-    let group_positions : Map[Int, Array[Int]] = Map([])
-    let group_nodes : Map[Int, Array[String]] = Map([])
-    let group_has_ported : Map[Int, Bool] = Map([])
+    let group_positions : Map[Int32, Array[Int32]] = Map([])
+    let group_nodes : Map[Int32, Array[String]] = Map([])
+    let group_has_ported : Map[Int32, Bool] = Map([])
     for i in 0..<names.length() {
       let name = names[i]
       match rank_same_groups.get(name) {
@@ -312,7 +312,7 @@ pub fn build_ordering_reorder_setup_from_sources(
     graphviz_flip,
   )
   let gdnlist_order = build_gdnlist_order(class2_data)
-  let nlist_order_index : Map[String, Int] = Map([])
+  let nlist_order_index : Map[String, Int32] = Map([])
   let mut nlist_idx = 0
   for name in class2_data.nlist_order {
     nlist_order_index[name] = nlist_idx
@@ -357,10 +357,10 @@ pub fn build_ordering_reorder_setup_from_sources(
 }
 
 ///|
-const CL_CROSS : Int = 1000
+const CL_CROSS : Int32 = 1000
 
 ///|
-fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
+fn skeleton_name_for_rank(cluster : String, rank : Int32) -> String {
   @cluster_identity.cluster_skeleton_name(cluster, rank)
 }
 
@@ -368,15 +368,15 @@ fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
 fn prepend_order_edge_entry(
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   tail_name : String,
-  entry : (String, String, Int, Bool, Double, Double, Double, Double),
+  entry : (String, String, Int32, Bool, Double, Double, Double, Double),
 ) -> Unit {
   match order_edges_by_tail.get(tail_name) {
     Some(list) => {
       let updated : Array[
-        (String, String, Int, Bool, Double, Double, Double, Double),
+        (String, String, Int32, Bool, Double, Double, Double, Double),
       ] = [entry]
       for item in list {
         updated.push(item)
@@ -390,15 +390,15 @@ fn prepend_order_edge_entry(
 ///|
 fn append_cluster_skeleton_edges(
   cluster : String,
-  min_rank : Int,
-  max_rank : Int,
+  min_rank : Int32,
+  max_rank : Int32,
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   order_edges_by_tail_root : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   skeleton_edge_creation : Array[(String, String)],
 ) -> Unit {
@@ -418,15 +418,15 @@ fn append_cluster_skeleton_edges(
 fn build_skeleton_edge_creation(
   order_with_clusters : Bool,
   cluster_order : Array[String],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
+  cluster_min_rank : Map[String, Int32],
+  cluster_max_rank : Map[String, Int32],
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   order_edges_by_tail_root : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
 ) -> Array[(String, String)] {
   let skeleton_edge_creation : Array[(String, String)] = []
@@ -475,19 +475,19 @@ fn build_ordering_class2_data(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
+  edge_out_order : Map[String, Array[Int32]],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
   cluster_keys : Map[String, String],
   cluster_order : Array[String],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
+  cluster_min_rank : Map[String, Int32],
+  cluster_max_rank : Map[String, Int32],
   has_clusters : Bool,
   flat_rank_constraints : Map[String, Bool],
   graphviz_flip : Bool,
@@ -496,7 +496,7 @@ fn build_ordering_class2_data(
   for node in nodes {
     creation_order.push(node.name())
   }
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   for node in nodes {
     let name = node.name()
     match edge_out_order.get(name) {

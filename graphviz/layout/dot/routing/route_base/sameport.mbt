@@ -49,7 +49,7 @@ fn collect_sameport_classes(
 fn for_each_sameport_class_member_edge_id(
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
-  apply_id : (Int) -> Unit,
+  apply_id : (Int32) -> Unit,
 ) -> Unit {
   if @edge_semantics.edge_has_label(edge) {
     apply_id(edge.id())
@@ -66,7 +66,7 @@ fn for_each_sameport_class_member_edge_id(
 
 ///|
 fn assign_sameport_override(
-  overrides : Map[Int, @geom.Point],
+  overrides : Map[Int32, @geom.Point],
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
   anchor : @geom.Point,
@@ -78,10 +78,10 @@ fn assign_sameport_override(
 
 ///|
 fn assign_sameport_group_size(
-  group_sizes : Map[Int, Int],
+  group_sizes : Map[Int32, Int32],
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
-  group_size : Int,
+  group_size : Int32,
 ) -> Unit {
   for_each_sameport_class_member_edge_id(merge_classes, edge, member_edge_id => {
     group_sizes[member_edge_id] = group_size
@@ -238,18 +238,18 @@ fn sameport_anchor_for_group(input : SameportAnchorInput) -> @geom.Point? {
 
 ///|
 priv struct SameportOverrides {
-  samehead_anchors : Map[Int, @geom.Point]
-  sametail_anchors : Map[Int, @geom.Point]
-  samehead_group_sizes : Map[Int, Int]
-  sametail_group_sizes : Map[Int, Int]
+  samehead_anchors : Map[Int32, @geom.Point]
+  sametail_anchors : Map[Int32, @geom.Point]
+  samehead_group_sizes : Map[Int32, Int32]
+  sametail_group_sizes : Map[Int32, Int32]
 }
 
 ///|
 priv struct EdgeSameportOrientationInfo {
   tail_anchor : @geom.Point?
   head_anchor : @geom.Point?
-  tail_group_size : Int
-  head_group_size : Int
+  tail_group_size : Int32
+  head_group_size : Int32
 }
 
 ///|
@@ -295,8 +295,8 @@ priv struct RouteBaseSwapEndsInput {
   edge : @cgraph.Edge
   orig_tail_name : String
   orig_head_name : String
-  ranks : Map[String, Int]
-  order_index : Map[String, Int]
+  ranks : Map[String, Int32]
+  order_index : Map[String, Int32]
   node_local_cluster_key_fn : (@cgraph.Node) -> String
 }
 
@@ -324,7 +324,7 @@ fn edge_swap_ends_for_route_base(input : RouteBaseSwapEndsInput) -> Bool {
 
 ///|
 fn edge_sameport_orientation_info(
-  edge_id : Int,
+  edge_id : Int32,
   sameport_overrides : SameportOverrides,
   swap_ends : Bool,
 ) -> EdgeSameportOrientationInfo {
@@ -356,8 +356,8 @@ priv struct SameportGroupOverridesApplyInput {
   groups : Map[String, Array[@cgraph.Edge]]
   group_order : Array[String]
   head_group : Bool
-  overrides : Map[Int, @geom.Point]
-  group_sizes : Map[Int, Int]
+  overrides : Map[Int32, @geom.Point]
+  group_sizes : Map[Int32, Int32]
   merge_classes : Map[String, Array[@cgraph.Edge]]
   positions : Map[String, @geom.Point]
   sizes : Map[String, NodeSize]
@@ -471,8 +471,8 @@ fn collect_sameport_overrides(
       )
     }
   }
-  let samehead_overrides : Map[Int, @geom.Point] = Map([])
-  let samehead_group_sizes : Map[Int, Int] = Map([])
+  let samehead_overrides : Map[Int32, @geom.Point] = Map([])
+  let samehead_group_sizes : Map[Int32, Int32] = Map([])
   apply_sameport_group_overrides({
     groups: samehead_groups,
     group_order: samehead_group_order,
@@ -486,8 +486,8 @@ fn collect_sameport_overrides(
     layout_rankdir,
     ranksep_pt,
   })
-  let sametail_overrides : Map[Int, @geom.Point] = Map([])
-  let sametail_group_sizes : Map[Int, Int] = Map([])
+  let sametail_overrides : Map[Int32, @geom.Point] = Map([])
+  let sametail_group_sizes : Map[Int32, Int32] = Map([])
   apply_sameport_group_overrides({
     groups: sametail_groups,
     group_order: sametail_group_order,

@@ -105,8 +105,8 @@ fn node_pos_hint(node : @cgraph.Node) -> NodePosHint {
 
 ///|
 pub struct NeatoEdge {
-  tail : Int
-  head : Int
+  tail : Int32
+  head : Int32
   length_pt : Double
   weight : Double
 }
@@ -114,7 +114,7 @@ pub struct NeatoEdge {
 ///|
 pub struct NeatoNodeSizing {
   sizes : Map[String, NodeSize]
-  indices : Map[String, Int]
+  indices : Map[String, Int32]
   radii : Array[Double]
   max_half : Double
 }
@@ -125,7 +125,7 @@ pub fn build_neato_node_sizing(
   record_orientation : RecordOrientation,
 ) -> NeatoNodeSizing {
   let sizes : Map[String, NodeSize] = Map([])
-  let indices : Map[String, Int] = Map([])
+  let indices : Map[String, Int32] = Map([])
   let radii : Array[Double] = []
   let mut max_half = 0.0
   for i in 0..<nodes.length() {
@@ -193,7 +193,7 @@ pub fn build_neato_initial_node_state(
 ///|
 pub fn build_neato_edges(
   graph : @cgraph.Graph,
-  indices : Map[String, Int],
+  indices : Map[String, Int32],
   radii : Array[Double],
   nodesep_pt : Double,
 ) -> Array[NeatoEdge] {
@@ -236,7 +236,7 @@ pub fn build_neato_edges(
 }
 
 ///|
-fn zero_double_array(length : Int) -> Array[Double] {
+fn zero_double_array(length : Int32) -> Array[Double] {
   let values : Array[Double] = []
   for _ in 0..<length {
     values.push(0.0)
@@ -356,7 +356,7 @@ pub fn relax_positions(
   edges : Array[NeatoEdge],
   spacing : Double,
   nodesep_pt : Double,
-  iterations : Int,
+  iterations : Int32,
 ) -> Unit {
   let node_count = positions.length()
   if node_count <= 1 {

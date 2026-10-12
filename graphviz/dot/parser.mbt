@@ -408,7 +408,7 @@ fn Parser::endpoint_nodes(
     Subgraph(sub) => {
       let nodes = sub.nodes()
       let root = root_graph_for_graph(graph)
-      let root_order : Map[String, Int] = Map([])
+      let root_order : Map[String, Int32] = Map([])
       for i, node in root.nodes() {
         root_order[node.name()] = i
       }

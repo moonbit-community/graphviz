@@ -62,8 +62,8 @@ fn build_asymmetric_fanout_graph() -> NsGraph {
 
 ///|
 fn build_weighted_slack_anchor_graph(
-  left_minlen : Int,
-  right_minlen : Int,
+  left_minlen : Int32,
+  right_minlen : Int32,
 ) -> NsGraph {
   let graph = new_graph()
   let left = add_node(graph, "left")

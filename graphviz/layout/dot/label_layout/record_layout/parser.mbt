@@ -19,12 +19,12 @@ pub(all) enum RecordNode {
 }
 
 ///|
-let record_nodes_cache : Ref[Map[String, Array[RecordNode]]] = @ref.new(Map([]))
+let record_nodes_cache : Ref[Map[String, Array[RecordNode]]] = Ref(Map([]))
 
 ///|
 pub(all) struct RecordParser {
   chars : Array[Char]
-  mut index : Int
+  mut index : Int32
 }
 
 ///|

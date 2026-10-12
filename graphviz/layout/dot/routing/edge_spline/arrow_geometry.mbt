@@ -8,49 +8,49 @@
 const ARROW_LENGTH : Double = 10.0
 
 ///|
-const BITS_PER_ARROW_TYPE : Int = 4
+const BITS_PER_ARROW_TYPE : Int32 = 4
 
 ///|
-const NUMB_OF_ARROW_HEADS : Int = 4
+const NUMB_OF_ARROW_HEADS : Int32 = 4
 
 ///|
-const ARR_TYPE_NONE : Int = 0
+const ARR_TYPE_NONE : Int32 = 0
 
 ///|
-const ARR_TYPE_NORM : Int = 1
+const ARR_TYPE_NORM : Int32 = 1
 
 ///|
-const ARR_TYPE_CROW : Int = 2
+const ARR_TYPE_CROW : Int32 = 2
 
 ///|
-const ARR_TYPE_TEE : Int = 3
+const ARR_TYPE_TEE : Int32 = 3
 
 ///|
-const ARR_TYPE_BOX : Int = 4
+const ARR_TYPE_BOX : Int32 = 4
 
 ///|
-const ARR_TYPE_DIAMOND : Int = 5
+const ARR_TYPE_DIAMOND : Int32 = 5
 
 ///|
-const ARR_TYPE_DOT : Int = 6
+const ARR_TYPE_DOT : Int32 = 6
 
 ///|
-const ARR_TYPE_CURVE : Int = 7
+const ARR_TYPE_CURVE : Int32 = 7
 
 ///|
-const ARR_TYPE_GAP : Int = 8
+const ARR_TYPE_GAP : Int32 = 8
 
 ///|
-const ARR_MOD_OPEN : Int = 1 << (BITS_PER_ARROW_TYPE + 0)
+const ARR_MOD_OPEN : Int32 = 1 << (BITS_PER_ARROW_TYPE + 0)
 
 ///|
-const ARR_MOD_INV : Int = 1 << (BITS_PER_ARROW_TYPE + 1)
+const ARR_MOD_INV : Int32 = 1 << (BITS_PER_ARROW_TYPE + 1)
 
 ///|
-const ARR_MOD_LEFT : Int = 1 << (BITS_PER_ARROW_TYPE + 2)
+const ARR_MOD_LEFT : Int32 = 1 << (BITS_PER_ARROW_TYPE + 2)
 
 ///|
-const ARR_MOD_RIGHT : Int = 1 << (BITS_PER_ARROW_TYPE + 3)
+const ARR_MOD_RIGHT : Int32 = 1 << (BITS_PER_ARROW_TYPE + 3)
 
 ///|
 priv struct ArrowShapePolygon {
@@ -63,7 +63,7 @@ fn arrow_type_normal0(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> ArrowShapePolygon {
   let mut arrowwidth = 0.35
   if penwidth > 4.0 {
@@ -171,7 +171,7 @@ fn arrow_type_crow0(
   u : @geom.Point,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> ArrowShapePolygon {
   let mut p = p_in
   let mut arrowwidth = 0.45
@@ -320,7 +320,7 @@ fn arrow_type_diamond0(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> ArrowShapePolygon {
   let v = point(-u.y / 3.0, u.x / 3.0)
   let mut p = p_in
@@ -360,7 +360,7 @@ fn arrow_length_normal(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
@@ -384,7 +384,7 @@ fn arrow_length_normal(
 }
 
 ///|
-fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
+fn has_prefix_at(text : String, start : Int32, prefix : String) -> Bool {
   let end = start + prefix.length()
   if end > text.length() {
     return false
@@ -393,12 +393,12 @@ fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
 }
 
 ///|
-fn arrow_synonyms() -> Array[(String, Int)] {
+fn arrow_synonyms() -> Array[(String, Int32)] {
   [("invempty", ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN)]
 }
 
 ///|
-fn arrow_mods() -> Array[(String, Int)] {
+fn arrow_mods() -> Array[(String, Int32)] {
   [
     ("o", ARR_MOD_OPEN),
     ("r", ARR_MOD_RIGHT),
@@ -409,7 +409,7 @@ fn arrow_mods() -> Array[(String, Int)] {
 }
 
 ///|
-fn arrow_names() -> Array[(String, Int)] {
+fn arrow_names() -> Array[(String, Int32)] {
   [
     ("normal", ARR_TYPE_NORM),
     ("crow", ARR_TYPE_CROW),
@@ -429,16 +429,16 @@ fn arrow_names() -> Array[(String, Int)] {
 
 ///|
 priv struct ArrowMatchResult {
-  next : Int
-  flag : Int
+  next : Int32
+  flag : Int32
 }
 
 ///|
 fn arrow_match_name_frag(
   value : String,
-  start : Int,
-  names : Array[(String, Int)],
-  flag : Int,
+  start : Int32,
+  names : Array[(String, Int32)],
+  flag : Int32,
 ) -> ArrowMatchResult {
   for pair in names {
     let (name, arrow_flag) = pair
@@ -450,7 +450,7 @@ fn arrow_match_name_frag(
 }
 
 ///|
-fn arrow_match_shape(value : String, start : Int) -> ArrowMatchResult {
+fn arrow_match_shape(value : String, start : Int32) -> ArrowMatchResult {
   let type_mask = (1 << BITS_PER_ARROW_TYPE) - 1
   let syn_match = arrow_match_name_frag(
     value,
@@ -483,7 +483,7 @@ fn arrow_match_shape(value : String, start : Int) -> ArrowMatchResult {
 ///|
 /// Graphviz parity: arrow flag parsing aligned to refs/graphviz/lib/common/arrows.c.
 /// Do not change behavior without updating fixtures/tests.
-fn parse_arrow_flags(value : String?) -> Array[Int] {
+fn parse_arrow_flags(value : String?) -> Array[Int32] {
   let text = match value {
     Some(v) => v.to_lower()
     None => "normal"
@@ -491,7 +491,7 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
   if text == "" {
     return [ARR_TYPE_NORM]
   }
-  let flags : Array[Int] = []
+  let flags : Array[Int32] = []
   let mut idx = 0
   while idx < text.length() && flags.length() < NUMB_OF_ARROW_HEADS {
     let matched = arrow_match_shape(text, idx)
@@ -520,7 +520,7 @@ fn arrow_length_generic(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   ignore(penwidth)
   ignore(flag)
@@ -532,7 +532,7 @@ fn arrow_length_tee(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   ignore(flag)
   let nominal_length = lenfact * arrowsize * ARROW_LENGTH
@@ -555,7 +555,7 @@ fn arrow_length_box(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   ignore(flag)
   lenfact * arrowsize * ARROW_LENGTH + penwidth / 2.0
@@ -566,7 +566,7 @@ fn arrow_length_diamond(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
@@ -589,7 +589,7 @@ fn arrow_length_dot(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   ignore(flag)
   lenfact * arrowsize * ARROW_LENGTH + penwidth
@@ -600,7 +600,7 @@ fn arrow_length_curve(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   ignore(flag)
   lenfact * arrowsize * ARROW_LENGTH + penwidth / 2.0
@@ -611,7 +611,7 @@ fn arrow_length_crow(
   lenfact : Double,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
@@ -642,7 +642,7 @@ fn arrow_length_crow(
 
 ///|
 fn arrow_length_for_flags(
-  flags : Array[Int],
+  flags : Array[Int32],
   arrowsize : Double,
   penwidth : Double,
 ) -> Double {
@@ -673,7 +673,7 @@ fn arrow_length_for_flags(
 fn arrow_length_for_attr(
   edge : @cgraph.Edge,
   attr_name : String,
-  default_flags : Array[Int],
+  default_flags : Array[Int32],
 ) -> Double {
   let arrowsize_raw = match edge.get_attr("arrowsize") {
     Some(value) => @numeric.parse_double_or(value, 1.0)

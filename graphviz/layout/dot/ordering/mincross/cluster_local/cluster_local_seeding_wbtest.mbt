@@ -31,7 +31,7 @@ test "build_cluster_rank_seeded_groups applies same-rank flat constraints after 
     cluster_flat_constraints: { "a|c": true, "c|b": true },
   }
 
-  let fixed_ranks : Map[String, Int] = Map([])
+  let fixed_ranks : Map[String, Int32] = Map([])
   fixed_ranks["a"] = 0
   fixed_ranks["b"] = 0
   fixed_ranks["c"] = 0
@@ -53,7 +53,7 @@ test "cluster rank seed traverses real and long-edge virtual nodes together" {
   let short_virtual = "_mbt_edge_vn_8_3"
   let back_middle = "_mbt_edge_vn_9_2"
   let back_lower = "_mbt_edge_vn_9_3"
-  let groups : Map[Int, Array[String]] = {
+  let groups : Map[Int32, Array[String]] = {
     1: ["a0"],
     2: ["a1", back_middle],
     3: [short_virtual, "a2", back_lower],
@@ -62,7 +62,7 @@ test "cluster rank seed traverses real and long-edge virtual nodes together" {
   let ranks = @rank_groups.build_node_ranks(groups)
   let names = ["a0", "a1", "a2", "a3", short_virtual, back_middle, back_lower]
   let node_set : Map[String, Bool] = Map([])
-  let node_order : Map[String, Int] = Map([])
+  let node_order : Map[String, Int32] = Map([])
   for index, name in names {
     node_set[name] = true
     node_order[name] = index

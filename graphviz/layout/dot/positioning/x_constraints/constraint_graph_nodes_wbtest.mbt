@@ -59,7 +59,7 @@ test "constraint node setup delays cluster boundaries and seeds base positions" 
 ///|
 test "add_constraint_edge_if_present only emits edges with both endpoints" {
   let graph = @network_simplex.new_graph()
-  let index : Map[String, Int] = Map([])
+  let index : Map[String, Int32] = Map([])
   index["a"] = @network_simplex.add_node(graph, "a")
   index["b"] = @network_simplex.add_node(graph, "b")
 

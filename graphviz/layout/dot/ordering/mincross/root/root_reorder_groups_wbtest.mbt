@@ -13,7 +13,7 @@ test "build_root_reorder_groups keeps root and skeleton names and inserts only c
 
   let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
+  let order_groups_for_mincross : Map[Int32, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root_a", skeleton_0, "cluster_member"]
   order_groups_for_mincross[1] = ["cluster_peer", "root_b"]
 
@@ -33,7 +33,7 @@ test "build_root_reorder_groups keeps root and skeleton names and inserts only c
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = ["v_cross"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_local)] = ["v_local"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_cross", "v_local"]
 
   let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
@@ -111,7 +111,7 @@ test "build_root_vnode_inputs keeps only marked root vnodes in rank buckets and 
   root_vnodes["v_keep"] = true
   root_vnodes["v_keep_2"] = true
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_drop", "v_keep"]
   vnodes_by_rank[2] = ["v_keep_2"]
 

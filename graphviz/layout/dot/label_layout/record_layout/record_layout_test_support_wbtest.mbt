@@ -11,7 +11,7 @@ fn assert_close(actual : Double, expected : Double, tol : Double) -> Unit raise 
 }
 
 ///|
-const ALL_PORT_SIDES : Int = @port_geometry.PORT_SIDE_TOP |
+const ALL_PORT_SIDES : Int32 = @port_geometry.PORT_SIDE_TOP |
   @port_geometry.PORT_SIDE_BOTTOM |
   @port_geometry.PORT_SIDE_LEFT |
   @port_geometry.PORT_SIDE_RIGHT

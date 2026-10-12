@@ -11,7 +11,7 @@ test "adjust_intercluster_alignment shifts one cluster-rank group toward its sha
   let a_to_target = graph.edge(a, target)
   let b_to_target = graph.edge(b, target)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["target"] = 1
@@ -56,7 +56,7 @@ test "adjust_intercluster_alignment keeps positions when a cluster-rank group fa
   let a_to_left = graph.edge(a, left_target)
   let b_to_right = graph.edge(b, right_target)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["left_target"] = 1
@@ -102,7 +102,7 @@ test "adjust_intercluster_alignment keeps positions when no node is already alig
   let a_to_target = graph.edge(a, target)
   let b_to_target = graph.edge(b, target)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["target"] = 1
@@ -146,7 +146,7 @@ test "adjust_intercluster_alignment uses inclusive epsilon and odd-rank label sp
   let a_to_target = graph.edge(a, target)
   let b_to_target = graph.edge(b, target)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
   ranks["b"] = 1
   ranks["target"] = 2

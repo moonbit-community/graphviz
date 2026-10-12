@@ -10,7 +10,7 @@ fn sample_pipeline_sources(
   ordering_set : Bool,
   has_clusters : Bool,
 ) -> XposReorderPipelineSources {
-  let x_groups : Map[Int, Array[String]] = { 0: ["a", "b"] }
+  let x_groups : Map[Int32, Array[String]] = { 0: ["a", "b"] }
   let x_order_sizes : Map[String, @node_primitives.NodeSize] = {
     "a": sample_node_size(10.0, 10.0),
   }

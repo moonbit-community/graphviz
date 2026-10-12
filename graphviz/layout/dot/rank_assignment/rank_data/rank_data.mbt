@@ -3,14 +3,14 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-pub const CL_BACK : Int = 10
+pub const CL_BACK : Int32 = 10
 
 ///|
 fn build_rank_groups(
   nodes : Array[@cgraph.Node],
-  ranks : Map[String, Int],
-) -> Map[Int, Array[String]] {
-  let groups : Map[Int, Array[String]] = Map([])
+  ranks : Map[String, Int32],
+) -> Map[Int32, Array[String]] {
+  let groups : Map[Int32, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
     let rank = ranks.get(name).unwrap_or_default()
@@ -30,7 +30,7 @@ pub struct RankDataInput {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   has_edge_labels : Bool
-  back_weight_scale : Int
+  back_weight_scale : Int32
   edge_label_height_pt_for : (@cgraph.Edge) -> Double
 }
 
@@ -40,7 +40,7 @@ pub fn make_rank_data_input(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  back_weight_scale : Int,
+  back_weight_scale : Int32,
   edge_label_height_pt_for : (@cgraph.Edge) -> Double,
 ) -> RankDataInput {
   {
@@ -58,11 +58,11 @@ pub struct RankData {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  rank_keys : Array[Int32]
+  all_ranks : Array[Int32]
   self_edge_labels : Map[String, Double]
 }
 
@@ -76,7 +76,7 @@ pub fn compute_rank_data(input : RankDataInput) -> RankData {
   let edges = input.edges
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   let acyclic_directions = @solver.acyclic_edge_directions_with_order(
     graph, nodes, edges,
   )
@@ -98,7 +98,7 @@ pub fn compute_rank_data(input : RankDataInput) -> RankData {
     input.back_weight_scale,
   )
   let groups = build_rank_groups(nodes, ranks)
-  let rank_keys : Array[Int] = []
+  let rank_keys : Array[Int32] = []
   for key, _ in groups {
     rank_keys.push(key)
   }

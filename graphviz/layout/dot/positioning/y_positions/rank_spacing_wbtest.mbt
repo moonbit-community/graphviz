@@ -66,28 +66,28 @@ test "self_edge_label_half_heights keeps the maximum per tail and ignores non-se
 
 ///|
 test "fill_rank_positions uses the larger of ranksep spacing and cluster margin spacing" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["low"]
   groups[1] = ["mid"]
   groups[2] = ["high"]
 
-  let rank_pht : Map[Int, Double] = Map([])
+  let rank_pht : Map[Int32, Double] = Map([])
   rank_pht[0] = 2.0
   rank_pht[1] = 3.0
   rank_pht[2] = 4.0
 
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[0] = 4.0
   rank_ht1[1] = 2.0
   rank_ht1[2] = 5.0
 
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht2[0] = 1.0
   rank_ht2[1] = 6.0
   rank_ht2[2] = 3.0
 
   let y_positions : Map[String, Double] = Map([])
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   fill_rank_positions({
     rank_keys: [0, 1, 2],
     groups,

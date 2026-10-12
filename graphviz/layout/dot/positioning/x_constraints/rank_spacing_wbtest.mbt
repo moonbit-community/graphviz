@@ -31,7 +31,7 @@ test "compress_width_minlen_pt respects ratio rankdir swap and clamp" {
 ///|
 test "compute_rank_positions applies edge-label spacing only on odd ranks" {
   let sizes = build_rank_spacing_test_sizes()
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["d", "e"]
   groups[1] = ["a", "b", "c"]
 

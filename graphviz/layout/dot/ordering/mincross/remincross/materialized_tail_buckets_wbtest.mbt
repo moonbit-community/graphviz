@@ -22,7 +22,7 @@ test "rebucket_input_like_order groups minimum-rank inputs by local fanout then 
   heads_by_tail["i-later"] = ["later_head"]
   heads_by_tail["i-multi-local"] = ["same_1", "same_2"]
 
-  let cluster_order_pos : Map[String, Int] = Map([])
+  let cluster_order_pos : Map[String, Int32] = Map([])
   cluster_order_pos["cluster_prev"] = 0
   cluster_order_pos["cluster_cur"] = 1
   cluster_order_pos["cluster_next"] = 2
@@ -50,7 +50,7 @@ test "build_nonroot_tail_names replays higher ranks first and rebuckets only the
   let names = [
     "unknown", "i-neutral", "i-earlier", "i-later", "i-multi-local", "x1", "x2",
   ]
-  let rem_ranks : Map[String, Int] = Map([])
+  let rem_ranks : Map[String, Int32] = Map([])
   rem_ranks["i-neutral"] = 0
   rem_ranks["i-earlier"] = 0
   rem_ranks["i-later"] = 0
@@ -64,7 +64,7 @@ test "build_nonroot_tail_names replays higher ranks first and rebuckets only the
   heads_by_tail["i-later"] = ["later_head"]
   heads_by_tail["i-multi-local"] = ["same_1", "same_2"]
 
-  let cluster_order_pos : Map[String, Int] = Map([])
+  let cluster_order_pos : Map[String, Int32] = Map([])
   cluster_order_pos["cluster_prev"] = 0
   cluster_order_pos["cluster_cur"] = 1
   cluster_order_pos["cluster_next"] = 2

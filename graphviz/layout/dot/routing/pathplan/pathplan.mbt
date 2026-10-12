@@ -3,45 +3,45 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-const CCW_ISCCW : Int = 1
+const CCW_ISCCW : Int32 = 1
 
 ///|
-const CCW_ISCW : Int = 2
+const CCW_ISCW : Int32 = 2
 
 ///|
-const CCW_ISON : Int = 3
+const CCW_ISON : Int32 = 3
 
 ///|
 /// Graphviz parity: pathplan aligned to refs/graphviz/lib/pathplan/route.c + shortest.c + visibility.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 priv struct PathNode {
   point : @geom.Point
-  mut link : Int?
+  mut link : Int32?
 }
 
 ///|
 priv struct TriEdge {
-  a : Int
-  b : Int
-  mut right : Int?
+  a : Int32
+  b : Int32
+  mut right : Int32?
 }
 
 ///|
 priv struct PathTriangle {
-  mut mark : Int
+  mut mark : Int32
   edges : Array[TriEdge]
 }
 
 ///|
 priv struct Deque {
-  pnlps : Array[Int]
-  mut fp : Int
-  mut lp : Int
-  mut apex : Int
+  pnlps : Array[Int32]
+  mut fp : Int32
+  mut lp : Int32
+  mut apex : Int32
 }
 
 ///|
-fn ccw(p1 : @geom.Point, p2 : @geom.Point, p3 : @geom.Point) -> Int {
+fn ccw(p1 : @geom.Point, p2 : @geom.Point, p3 : @geom.Point) -> Int32 {
   let d = (p1.y - p2.y) * (p3.x - p2.x) - (p3.y - p2.y) * (p1.x - p2.x)
   if d > 0.0 {
     CCW_ISCW
@@ -95,9 +95,9 @@ fn intersects(
 
 ///|
 fn is_diagonal(
-  i : Int,
-  ip2 : Int,
-  points : Array[Int],
+  i : Int32,
+  ip2 : Int32,
+  points : Array[Int32],
   nodes : Array[PathNode],
 ) -> Bool {
   let pointn = points.length()
@@ -132,9 +132,9 @@ fn is_diagonal(
 ///|
 fn load_triangle(
   triangles : Array[PathTriangle],
-  a : Int,
-  b : Int,
-  c : Int,
+  a : Int32,
+  b : Int32,
+  c : Int32,
 ) -> Bool {
   let edges : Array[TriEdge] = [
     { a, b, right: None, },
@@ -147,7 +147,7 @@ fn load_triangle(
 
 ///|
 fn triangulate(
-  points : Array[Int],
+  points : Array[Int32],
   nodes : Array[PathNode],
   triangles : Array[PathTriangle],
 ) -> Bool {
@@ -220,8 +220,8 @@ fn point_in_tri(
 ///|
 fn mark_tri_path(
   triangles : Array[PathTriangle],
-  trii : Int,
-  trij : Int,
+  trii : Int32,
+  trij : Int32,
 ) -> Bool {
   if triangles[trii].mark != 0 {
     return false
@@ -244,7 +244,7 @@ fn mark_tri_path(
 fn add_to_deque(
   dq : Deque,
   side_front : Bool,
-  node_idx : Int,
+  node_idx : Int32,
   nodes : Array[PathNode],
 ) -> Unit {
   if side_front {
@@ -263,7 +263,7 @@ fn add_to_deque(
 }
 
 ///|
-fn split_deque(dq : Deque, side_front : Bool, index : Int) -> Unit {
+fn split_deque(dq : Deque, side_front : Bool, index : Int32) -> Unit {
   if side_front {
     dq.lp = index
   } else {
@@ -272,7 +272,11 @@ fn split_deque(dq : Deque, side_front : Bool, index : Int) -> Unit {
 }
 
 ///|
-fn find_deque_split(dq : Deque, nodes : Array[PathNode], node_idx : Int) -> Int {
+fn find_deque_split(
+  dq : Deque,
+  nodes : Array[PathNode],
+  node_idx : Int32,
+) -> Int32 {
   let point = nodes[node_idx].point
   let mut idx = dq.fp
   while idx < dq.apex {
@@ -360,7 +364,7 @@ fn normalize_polygon_order(points : Array[@geom.Point]) -> Array[@geom.Point] {
 ///|
 fn path_nodes_to_points(
   nodes : Array[PathNode],
-  start_idx : Int,
+  start_idx : Int32,
 ) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
   let mut current = start_idx
@@ -395,7 +399,7 @@ pub fn shortest_path_in_poly(
   nodes.push({ point: start, link: None, })
   let end_idx = nodes.length()
   nodes.push({ point: end, link: None, })
-  let point_indices : Array[Int] = []
+  let point_indices : Array[Int32] = []
   for i in 0..<normalized.length() {
     point_indices.push(i)
   }

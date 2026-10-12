@@ -60,7 +60,7 @@ test "expand_bbox_for_edge_labels raises top for flat-label vnode edges in TB" {
   let edge_layout = layout_edge(edge, straight_spline(), label_pos~)
   let flat_label_edge_vnodes : Map[String, String] = Map([])
   flat_label_edge_vnodes[@edge_identity.edge_key(edge)] = "v_flat"
-  let ranks : Map[String, Int] = { "a": 0, "b": 0 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0 }
   let flags = classify_flat_edge_label(edge, ranks, flat_label_edge_vnodes)
   let base_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
   let mid_bbox = expand_bbox_for_edge_mid_label(

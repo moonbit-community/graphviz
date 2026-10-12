@@ -45,16 +45,16 @@ const ROUTE_LABEL_PAD : Double = 10.0
 const ROUTE_MIN_WIDTH : Double = 16.0
 
 ///|
-const SIDE_BOTTOM : Int = 1
+const SIDE_BOTTOM : Int32 = 1
 
 ///|
-const SIDE_RIGHT : Int = 2
+const SIDE_RIGHT : Int32 = 2
 
 ///|
-const SIDE_TOP : Int = 4
+const SIDE_TOP : Int32 = 4
 
 ///|
-const SIDE_LEFT : Int = 8
+const SIDE_LEFT : Int32 = 8
 
 ///|
 fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
@@ -97,27 +97,27 @@ fn edge_pathplan_polyline_core(
   path_head_name : String,
   path_tail_anchor : @geom.Point,
   path_head_anchor : @geom.Point,
-  path_tail_side : Int,
-  path_head_side : Int,
+  path_tail_side : Int32,
+  path_head_side : Int32,
   path_tail_port_box : @geom.Rect?,
   path_head_port_box : @geom.Rect?,
-  path_tail_rank : Int,
-  path_head_rank : Int,
+  path_tail_rank : Int32,
+  path_head_rank : Int32,
   path_tail_prev : String?,
   path_head_next : String?,
   ordered : Array[String],
-  vnode_ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int32],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
   cluster_bboxes : Map[String, @geom.Rect],
-  x_groups : Map[Int, Array[String]],
-  order_index : Map[String, Int],
+  x_groups : Map[Int32, Array[String]],
+  order_index : Map[String, Int32],
   path_out_edges : Map[String, Array[String]],
   path_in_edges : Map[String, Array[String]],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  rank_y : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
   nodesep_pt : Double,
   ranksep_pt : Double,
   rankdir : RankDir,
@@ -127,7 +127,7 @@ fn edge_pathplan_polyline_core(
   splinesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
-  vnode_origin_clusters? : Map[String, (String, String)] = {},
+  vnode_origin_clusters~ : Map[String, (String, String)] = {},
 ) -> PathplanCoreResult? {
   let tail_cluster = cluster_key_for_name(
     path_tail_name, cluster_keys, vnode_clusters,
@@ -394,13 +394,13 @@ pub fn edge_pathplan_polyline(
   tail_anchor : @geom.Point,
   head_anchor : @geom.Point,
   rankdir : RankDir,
-  tail_port_side : Int,
-  head_port_side : Int,
+  tail_port_side : Int32,
+  head_port_side : Int32,
   tail_port_box : @geom.Rect?,
   head_port_box : @geom.Rect?,
   ranksep_pt : Double,
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
+  ranks : Map[String, Int32],
+  vnode_ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
   merged_positions : Map[String, @geom.Point],
   route_sizes : Map[String, NodeSize],
@@ -409,18 +409,18 @@ pub fn edge_pathplan_polyline(
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
   cluster_bboxes : Map[String, @geom.Rect],
-  x_groups : Map[Int, Array[String]],
-  order_index : Map[String, Int],
+  x_groups : Map[Int32, Array[String]],
+  order_index : Map[String, Int32],
   path_out_edges : Map[String, Array[String]],
   path_in_edges : Map[String, Array[String]],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  rank_y : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
   nodesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
   has_any_edge_label : Bool,
-  vnode_origin_clusters? : Map[String, (String, String)] = {},
+  vnode_origin_clusters~ : Map[String, (String, String)] = {},
 ) -> PathplanResult? {
   let vnodes = match edge_vnodes.get(@edge_identity.edge_vnode_key(edge)) {
     Some(list) => list.copy()

@@ -30,7 +30,7 @@ test "probe xx first-segment triangulation status" {
   ]
   let normalized = normalize_polygon_order(polygon)
   let nodes = prepare_polygon_nodes(normalized)
-  let point_indices : Array[Int] = []
+  let point_indices : Array[Int32] = []
   for i in 0..<normalized.length() {
     point_indices.push(i)
   }

@@ -4,16 +4,16 @@
 
 ///|
 test "apply_rank_same_order reorders unported rank-same groups only" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b", "c", "d"]
 
-  let rank_same_groups : Map[String, Int] = Map([])
+  let rank_same_groups : Map[String, Int32] = Map([])
   rank_same_groups["a"] = 1
   rank_same_groups["b"] = 1
   rank_same_groups["c"] = 2
   rank_same_groups["d"] = 2
 
-  let rank_same_order : Map[String, Int] = Map([])
+  let rank_same_order : Map[String, Int32] = Map([])
   rank_same_order["b"] = 0
   rank_same_order["a"] = 1
   rank_same_order["d"] = 0

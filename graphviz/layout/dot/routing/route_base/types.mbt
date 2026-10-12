@@ -21,10 +21,10 @@ type EdgeRouteBase = @routing.EdgeRouteBase
 type RouteDynamicPortAnchor = @routing.RouteDynamicPortAnchor
 
 ///|
-const PORT_SIDE_BOTTOM : Int = 1
+const PORT_SIDE_BOTTOM : Int32 = 1
 
 ///|
-const PORT_SIDE_TOP : Int = 4
+const PORT_SIDE_TOP : Int32 = 4
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {

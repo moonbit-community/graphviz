@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn collect_node_ranks(graph : NsGraph) -> Array[Int] {
-  let ranks : Array[Int] = []
+fn collect_node_ranks(graph : NsGraph) -> Array[Int32] {
+  let ranks : Array[Int32] = []
   for i in 0..<graph.nodes.length() {
     ranks.push(node_rank(graph, i))
   }
@@ -12,7 +12,7 @@ fn collect_node_ranks(graph : NsGraph) -> Array[Int] {
 }
 
 ///|
-fn feasible_tree_edges_for_test(graph : NsGraph) -> Array[Int] raise {
+fn feasible_tree_edges_for_test(graph : NsGraph) -> Array[Int32] raise {
   if !build_feasible_tree(graph) {
     fail("expected feasible tree")
   }
@@ -20,7 +20,7 @@ fn feasible_tree_edges_for_test(graph : NsGraph) -> Array[Int] raise {
 }
 
 ///|
-fn pre_balance_ranks_for_test(graph : NsGraph) -> Array[Int] raise {
+fn pre_balance_ranks_for_test(graph : NsGraph) -> Array[Int32] raise {
   if !network_simplex_pre_balance(graph, 0x7fffffff) {
     fail("expected network_simplex_pre_balance to succeed")
   }
@@ -31,16 +31,16 @@ fn pre_balance_ranks_for_test(graph : NsGraph) -> Array[Int] raise {
 struct ExactRankNodeSpec {
   name : String
   kind : NodeKind
-  rank : Int
+  rank : Int32
 }
 
 ///|
 struct ExactRankEdgeSpec {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
-  in_pos : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
+  in_pos : Int32
 }
 
 ///|
@@ -53,7 +53,7 @@ fn build_exact_rank_fixture_graph(
     let node = add_node(graph, spec.name, kind=spec.kind)
     set_node_rank(graph, node, spec.rank)
   }
-  let in_positions : Array[Int] = []
+  let in_positions : Array[Int32] = []
   for spec in edge_specs {
     ignore(add_edge(graph, spec.tail, spec.head, spec.minlen, spec.weight))
     in_positions.push(spec.in_pos)
@@ -80,10 +80,10 @@ fn build_exact_rank_fixture_graph(
 
 ///|
 struct CapturedRankEdgeSpec {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
 }
 
 ///|

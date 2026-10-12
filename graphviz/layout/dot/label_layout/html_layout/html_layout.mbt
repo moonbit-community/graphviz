@@ -14,9 +14,7 @@ type RecordPort = @record_geometry.RecordPort
 type SizePt = @numeric.GraphSizePt
 
 ///|
-let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
-  Map([]),
-)
+let html_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = Ref(Map([]))
 
 ///|
 pub fn reset_html_label_caches() -> Unit {
@@ -42,7 +40,7 @@ fn html_table_layout(
 ///|
 pub fn parse_html_label_cached(
   label : String,
-  html? : Bool? = None,
+  html~ : Bool? = None,
 ) -> @html_label.HtmlLabel? {
   @label_metrics.parse_html_label_cached(label, html~)
 }
@@ -60,7 +58,7 @@ pub fn html_label_size(
 fn collect_html_ports(
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
-  inherited_sides : Int,
+  inherited_sides : Int32,
   font_name : String,
   font_size_pt : Double,
   ports : Map[String, RecordPort],

@@ -5,10 +5,10 @@
 ///|
 test "collect_noncluster_components builds components from rank groups and flat constraints in root order" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", vnode]
   groups[1] = ["b", "c"]
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   order_index["a"] = 0
   order_index[vnode] = 1
   order_index["b"] = 2
@@ -38,7 +38,7 @@ test "collect_noncluster_components builds components from rank groups and flat 
 
 ///|
 test "filter_component_rank_groups preserves per-rank order and drops empty ranks" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["c"]
   groups[2] = ["d", "e"]
@@ -56,12 +56,12 @@ test "filter_component_rank_groups preserves per-rank order and drops empty rank
 
 ///|
 test "append_component_rank_groups appends each component rank output into the merged map in rank order" {
-  let merged : Map[Int, Array[String]] = Map([])
+  let merged : Map[Int32, Array[String]] = Map([])
   merged[0] = ["existing0"]
   merged[1] = []
   merged[2] = ["existing2"]
 
-  let ordered_component : Map[Int, Array[String]] = Map([])
+  let ordered_component : Map[Int32, Array[String]] = Map([])
   ordered_component[0] = ["a0", "a1"]
   ordered_component[2] = ["c0"]
 

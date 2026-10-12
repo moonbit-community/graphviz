@@ -16,7 +16,7 @@ pub(all) struct LabelExtent {
 pub(all) struct ExpandEdgeLabelBboxInput {
   bbox : @geom.Rect
   edges : Array[DotLayoutEdge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
   rankdir : @rankdir.RankDir
 }
@@ -88,7 +88,7 @@ fn edge_label_extent_for_rankdir(
 ///|
 fn classify_flat_edge_label(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   flat_label_edge_vnodes : Map[String, String],
 ) -> FlatEdgeLabelFlags {
   let tail = edge.tail().name()

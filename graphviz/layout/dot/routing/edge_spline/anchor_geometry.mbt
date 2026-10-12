@@ -152,7 +152,7 @@ pub fn port_side_count(
   port_rect : @geom.Rect,
   node_pos : @geom.Point,
   node_size : NodeSize,
-) -> Int {
+) -> Int32 {
   let eps = if RECORD_BORDER_PT > 0.01 { RECORD_BORDER_PT + 0.01 } else { 0.01 }
   let node_rect = port_side_rect(node_pos, node_size)
   let mut count = 0
@@ -176,7 +176,7 @@ pub fn port_side_count(
 ///|
 pub fn endpoint_slope_for_anchor(
   port : @cgraph.Port?,
-  port_side : Int,
+  port_side : Int32,
   anchor : @geom.Point,
   node_pos : @geom.Point,
   node_size : NodeSize,

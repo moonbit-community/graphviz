@@ -8,7 +8,7 @@
 /// rank coverage owner-locally so rank fixture replay can retire entirely.
 fn build_dense_lr_mixed_feedback_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
-  let slack_ranks : Array[Int] = [
+  let slack_ranks : Array[Int32] = [
     -1, 223, 367, 553, 553, 608, 608, 92, 498, 215, 71, 71, 498, 287, 287, 807, 807,
     312, 443, 443, 143, 143, 143, 143, 371, 274, 92, -1, -1, 278, 312, 257, 185,
     680, 680, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 37, 126, 92, 202, -1, 109,

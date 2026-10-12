@@ -153,7 +153,7 @@ fn oriented_edge_clip_enabled(
 pub fn build_route_base_cache(
   input : RouteEdgesPipelineInput,
   route_base_deps : RouteBaseDeps,
-) -> Map[Int, EdgeRouteBase] {
+) -> Map[Int32, EdgeRouteBase] {
   let sameport_overrides = collect_sameport_overrides({
     edges: input.edges,
     positions: input.positions,
@@ -162,7 +162,7 @@ pub fn build_route_base_cache(
     layout_rankdir: input.layout_rankdir,
     ranksep_pt: input.ranksep_pt,
   })
-  let base_cache : Map[Int, EdgeRouteBase] = Map([])
+  let base_cache : Map[Int32, EdgeRouteBase] = Map([])
   for edge in input.edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {

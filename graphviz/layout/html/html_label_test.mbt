@@ -14,8 +14,8 @@ fn assert_text_label(label : String, expected : String) -> Unit raise {
 ///|
 fn make_text_cell(
   text : String,
-  col_span : Int,
-  row_span : Int,
+  col_span : Int32,
+  row_span : Int32,
 ) -> @html.HtmlCell {
   {
     content: @html.HtmlCellContent::Text(text),

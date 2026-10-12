@@ -7,7 +7,7 @@ test "filter_root_mincross_seeded_groups_for_clusters keeps only root and skelet
   let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
   let skel_b = @cluster_identity.cluster_skeleton_name("cluster_b", 1)
 
-  let seeded_groups : Map[Int, Array[String]] = Map([])
+  let seeded_groups : Map[Int32, Array[String]] = Map([])
   seeded_groups[0] = ["root_a", "member_a", skel_a]
   seeded_groups[1] = ["member_b"]
   seeded_groups[2] = [skel_b, "root_b", "member_c"]
@@ -36,7 +36,7 @@ test "filter_root_mincross_seeded_groups_for_clusters keeps only root and skelet
 test "resolve_root_mincross_input_groups filters cluster-internal nodes when enabled and clones override groups when provided" {
   let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
 
-  let seeded_groups : Map[Int, Array[String]] = Map([])
+  let seeded_groups : Map[Int32, Array[String]] = Map([])
   seeded_groups[0] = ["root", "member", skel_a]
 
   let order_cluster_keys : Map[String, String] = Map([])
@@ -54,7 +54,7 @@ test "resolve_root_mincross_input_groups filters cluster-internal nodes when ena
     None,
   )
 
-  let override_groups : Map[Int, Array[String]] = Map([])
+  let override_groups : Map[Int32, Array[String]] = Map([])
   override_groups[0] = ["override_only"]
   let overridden = resolve_root_mincross_input_groups(
     true,
@@ -77,10 +77,10 @@ test "resolve_root_mincross_input_groups filters cluster-internal nodes when ena
 test "finalize_root_mincross_ordered_groups returns raw root ordering without clusters and merges back into seeded groups with clusters" {
   let skel_a = @cluster_identity.cluster_skeleton_name("cluster_a", 0)
 
-  let seeded_groups : Map[Int, Array[String]] = Map([])
+  let seeded_groups : Map[Int32, Array[String]] = Map([])
   seeded_groups[0] = ["member", skel_a, "root", "tail"]
 
-  let ordered_mincross : Map[Int, Array[String]] = Map([])
+  let ordered_mincross : Map[Int32, Array[String]] = Map([])
   ordered_mincross[0] = ["root", skel_a]
 
   let mincross_nodes = build_node_membership_set(["root", skel_a])

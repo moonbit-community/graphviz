@@ -7,8 +7,8 @@ type NodeSize = @node_primitives.NodeSize
 
 ///|
 pub(all) struct RoutingContext {
-  order_index : Map[String, Int]
-  path_order_index : Map[String, Int]
+  order_index : Map[String, Int32]
+  path_order_index : Map[String, Int32]
   path_adjacency : @routesplines.PathAdjacency
   merged_positions : Map[String, @geom.Point]
   pathplan_route_sizes : Map[String, NodeSize]
@@ -17,10 +17,10 @@ pub(all) struct RoutingContext {
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
   path_vnode_origin_clusters : Map[String, (String, String)]
-  parallel_offsets : Map[Int, Double]
-  concentrated_ignored_edge_ids : Map[Int, Bool]
-  concentrated_segments : Map[Int, Array[ConcentratedSegment]]
-  concentrated_route_order : Map[Int, Int]
+  parallel_offsets : Map[Int32, Double]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
+  concentrated_segments : Map[Int32, Array[ConcentratedSegment]]
+  concentrated_route_order : Map[Int32, Int32]
   cluster_bboxes : Map[String, @geom.Rect]
 }
 
@@ -105,10 +105,10 @@ pub(all) struct PrepareRoutingContextInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   positions : Map[String, @geom.Point]
-  ordered_groups : Map[Int, Array[String]]
-  x_groups : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   sizes : Map[String, NodeSize]
   edge_vnodes : Map[String, Array[String]]
@@ -118,7 +118,7 @@ pub(all) struct PrepareRoutingContextInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
-  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
+  initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)]
 }
 
 ///|
@@ -127,7 +127,7 @@ pub(all) struct PrepareRoutingContextInput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn prepare_routing_context(
   input : PrepareRoutingContextInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> RoutingContext {
   let order_index = @rank_groups.build_order_index(input.ordered_groups)
   let path_order_index = @rank_groups.build_order_index(input.x_groups)
@@ -194,7 +194,7 @@ pub fn prepare_routing_context(
     input.concentrate,
     concentrated_ignored_edge_ids,
   )
-  let concentrated_route_order : Map[Int, Int] = Map([])
+  let concentrated_route_order : Map[Int32, Int32] = Map([])
   let concentrated_segments = live_graph.map_or({}, fast => {
     collect_concentrated_segments(
       fast,

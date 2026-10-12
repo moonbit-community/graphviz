@@ -10,7 +10,7 @@ test "build_root_tail_order_seed replaces clustered names with rank-qualified sk
   cluster_keys["cluster_a_1"] = "cluster_a"
   cluster_keys["cluster_b_0"] = "cluster_b"
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["cluster_a_0"] = 0
   ranks["cluster_a_0_dup"] = 0
   ranks["cluster_a_1"] = 1
@@ -79,7 +79,7 @@ test "build_root_nlist_order seeds from skeletonized tail order, replays edge cr
   let cluster_keys : Map[String, String] = Map([])
   cluster_keys["cluster_member"] = "cluster_x"
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["cluster_member"] = 0
 
   let root_nlist_order = build_root_nlist_order(

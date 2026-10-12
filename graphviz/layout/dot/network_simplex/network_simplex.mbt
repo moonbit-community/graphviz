@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-const NONE_EDGE : Int = -1
+const NONE_EDGE : Int32 = -1
 
 ///|
-const NO_HEAP : Int = -1
+const NO_HEAP : Int32 = -1
 
 ///|
 pub(all) enum BalanceMode {
@@ -25,37 +25,37 @@ pub(all) enum NodeKind {
 pub extend NodeKind with Eq::{not_equal, equal}
 
 ///|
-let root_override : Ref[Int?] = Ref(None)
+let root_override : Ref[Int32?] = Ref(None)
 
 ///|
 pub(all) struct NsEdge {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
-  mut cutvalue : Int
-  mut tree_index : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
+  mut cutvalue : Int32
+  mut tree_index : Int32
 }
 
 ///|
 pub(all) struct NsNode {
   kind : NodeKind
-  mut rank : Int
-  in_edges : Array[Int]
-  out_edges : Array[Int]
-  tree_in : Array[Int]
-  tree_out : Array[Int]
-  mut par_edge : Int
-  mut low : Int
-  mut lim : Int
-  mut priority : Int
+  mut rank : Int32
+  in_edges : Array[Int32]
+  out_edges : Array[Int32]
+  tree_in : Array[Int32]
+  tree_out : Array[Int32]
+  mut par_edge : Int32
+  mut low : Int32
+  mut lim : Int32
+  mut priority : Int32
 }
 
 ///|
 pub(all) struct NsGraph {
   nodes : Array[NsNode]
   edges : Array[NsEdge]
-  tree_edges : Array[Int]
+  tree_edges : Array[Int32]
 }
 
 ///|
@@ -67,8 +67,8 @@ pub fn new_graph() -> NsGraph {
 pub fn add_node(
   graph : NsGraph,
   _name : String,
-  kind? : NodeKind = NodeKind::Normal,
-) -> Int {
+  kind~ : NodeKind = NodeKind::Normal,
+) -> Int32 {
   let idx = graph.nodes.length()
   graph.nodes.push({
     kind,
@@ -88,11 +88,11 @@ pub fn add_node(
 ///|
 pub fn add_edge(
   graph : NsGraph,
-  tail : Int,
-  head : Int,
-  minlen : Int,
-  weight : Int,
-) -> Int {
+  tail : Int32,
+  head : Int32,
+  minlen : Int32,
+  weight : Int32,
+) -> Int32 {
   let idx = graph.edges.length()
   graph.edges.push({
     tail,
@@ -108,33 +108,33 @@ pub fn add_edge(
 }
 
 ///|
-pub fn node_rank(graph : NsGraph, idx : Int) -> Int {
+pub fn node_rank(graph : NsGraph, idx : Int32) -> Int32 {
   graph.nodes[idx].rank
 }
 
 ///|
-pub fn set_node_rank(graph : NsGraph, idx : Int, rank : Int) -> Unit {
+pub fn set_node_rank(graph : NsGraph, idx : Int32, rank : Int32) -> Unit {
   graph.nodes[idx].rank = rank
 }
 
 ///|
-fn edge_length(graph : NsGraph, edge_idx : Int) -> Int {
+fn edge_length(graph : NsGraph, edge_idx : Int32) -> Int32 {
   let edge = graph.edges[edge_idx]
   graph.nodes[edge.head].rank - graph.nodes[edge.tail].rank
 }
 
 ///|
-fn edge_slack(graph : NsGraph, edge_idx : Int) -> Int {
+fn edge_slack(graph : NsGraph, edge_idx : Int32) -> Int32 {
   edge_length(graph, edge_idx) - graph.edges[edge_idx].minlen
 }
 
 ///|
-fn is_tree_edge(graph : NsGraph, edge_idx : Int) -> Bool {
+fn is_tree_edge(graph : NsGraph, edge_idx : Int32) -> Bool {
   graph.edges[edge_idx].tree_index >= 0
 }
 
 ///|
-fn add_tree_edge(graph : NsGraph, edge_idx : Int) -> Unit {
+fn add_tree_edge(graph : NsGraph, edge_idx : Int32) -> Unit {
   if is_tree_edge(graph, edge_idx) {
     return ()
   }
@@ -147,7 +147,7 @@ fn add_tree_edge(graph : NsGraph, edge_idx : Int) -> Unit {
 }
 
 ///|
-fn remove_tree_edge(list : Array[Int], edge_idx : Int) -> Unit {
+fn remove_tree_edge(list : Array[Int32], edge_idx : Int32) -> Unit {
   let mut i = 0
   while i < list.length() {
     if list[i] == edge_idx {
@@ -161,7 +161,11 @@ fn remove_tree_edge(list : Array[Int], edge_idx : Int) -> Unit {
 }
 
 ///|
-fn exchange_tree_edges(graph : NsGraph, leaving : Int, entering : Int) -> Unit {
+fn exchange_tree_edges(
+  graph : NsGraph,
+  leaving : Int32,
+  entering : Int32,
+) -> Unit {
   let idx = graph.edges[leaving].tree_index
   if idx < 0 {
     return ()
@@ -204,7 +208,7 @@ fn init_graph(graph : NsGraph) -> Bool {
 
 ///|
 fn init_rank(graph : NsGraph) -> Unit {
-  let queue : Array[Int] = []
+  let queue : Array[Int32] = []
   for i in 0..<graph.nodes.length() {
     if graph.nodes[i].priority == 0 {
       queue.push(i)
@@ -236,52 +240,52 @@ fn init_rank(graph : NsGraph) -> Unit {
 
 ///|
 priv struct Subtree {
-  rep : Int
-  mut size : Int
-  mut heap_index : Int
-  mut parent : Int
+  rep : Int32
+  mut size : Int32
+  mut heap_index : Int32
+  mut parent : Int32
 }
 
 ///|
 priv struct TightState {
-  node : Int
-  mut in_i : Int
-  mut out_i : Int
-  mut rv : Int
+  node : Int32
+  mut in_i : Int32
+  mut out_i : Int32
+  mut rv : Int32
 }
 
 ///|
 priv struct DfsState {
-  node : Int
-  par_edge : Int
-  mut lim : Int
-  mut tree_out_i : Int
-  mut tree_in_i : Int
+  node : Int32
+  par_edge : Int32
+  mut lim : Int32
+  mut tree_out_i : Int32
+  mut tree_in_i : Int32
 }
 
 ///|
 priv struct CutState {
-  node : Int
-  parent_edge : Int
-  mut tree_out_i : Int
-  mut tree_in_i : Int
+  node : Int32
+  parent_edge : Int32
+  mut tree_out_i : Int32
+  mut tree_in_i : Int32
 }
 
 ///|
 priv struct InterTreeState {
-  node : Int
-  parent : Int
-  mut out_i : Int
-  mut in_i : Int
+  node : Int32
+  parent : Int32
+  mut out_i : Int32
+  mut in_i : Int32
 }
 
 ///|
-fn subtree_on_heap(subtrees : Array[Subtree], idx : Int) -> Bool {
+fn subtree_on_heap(subtrees : Array[Subtree], idx : Int32) -> Bool {
   subtrees[idx].heap_index != NO_HEAP
 }
 
 ///|
-fn subtree_find(subtrees : Array[Subtree], idx : Int) -> Int {
+fn subtree_find(subtrees : Array[Subtree], idx : Int32) -> Int32 {
   let mut root = idx
   while subtrees[root].parent != root {
     root = subtrees[root].parent
@@ -296,7 +300,7 @@ fn subtree_find(subtrees : Array[Subtree], idx : Int) -> Int {
 }
 
 ///|
-fn subtree_union(subtrees : Array[Subtree], a : Int, b : Int) -> Int {
+fn subtree_union(subtrees : Array[Subtree], a : Int32, b : Int32) -> Int32 {
   let r0 = subtree_find(subtrees, a)
   let r1 = subtree_find(subtrees, b)
   if r0 == r1 {
@@ -320,9 +324,9 @@ fn subtree_union(subtrees : Array[Subtree], a : Int, b : Int) -> Int {
 
 ///|
 fn heapify_down(
-  heap : Array[Int],
+  heap : Array[Int32],
   subtrees : Array[Subtree],
-  start : Int,
+  start : Int32,
 ) -> Unit {
   let mut idx = start
   let size = heap.length()
@@ -350,8 +354,8 @@ fn heapify_down(
 }
 
 ///|
-fn build_heap(subtrees : Array[Subtree]) -> Array[Int] {
-  let heap : Array[Int] = []
+fn build_heap(subtrees : Array[Subtree]) -> Array[Int32] {
+  let heap : Array[Int32] = []
   for i in 0..<subtrees.length() {
     heap.push(i)
     subtrees[i].heap_index = i
@@ -368,7 +372,7 @@ fn build_heap(subtrees : Array[Subtree]) -> Array[Int] {
 }
 
 ///|
-fn heap_extract_min(heap : Array[Int], subtrees : Array[Subtree]) -> Int {
+fn heap_extract_min(heap : Array[Int32], subtrees : Array[Subtree]) -> Int32 {
   let min_idx = heap[0]
   subtrees[min_idx].heap_index = NO_HEAP
   let last = heap[heap.length() - 1]
@@ -382,8 +386,13 @@ fn heap_extract_min(heap : Array[Int], subtrees : Array[Subtree]) -> Int {
 }
 
 ///|
-fn tree_adjust(graph : NsGraph, start : Int, from : Int, delta : Int) -> Unit {
-  let stack : Array[(Int, Int)] = [(start, from)]
+fn tree_adjust(
+  graph : NsGraph,
+  start : Int32,
+  from : Int32,
+  delta : Int32,
+) -> Unit {
+  let stack : Array[(Int32, Int32)] = [(start, from)]
   while stack.length() > 0 {
     let (v, parent) = stack[stack.length() - 1]
     let _ = stack.pop()
@@ -406,10 +415,10 @@ fn tree_adjust(graph : NsGraph, start : Int, from : Int, delta : Int) -> Unit {
 ///|
 fn tight_subtree_search(
   graph : NsGraph,
-  start : Int,
-  node_subtree : Array[Int],
-  subtree_id : Int,
-) -> Int {
+  start : Int32,
+  node_subtree : Array[Int32],
+  subtree_id : Int32,
+) -> Int32 {
   let stack : Array[TightState] = [{ node: start, in_i: 0, out_i: 0, rv: 1, }]
   node_subtree[start] = subtree_id
   let mut result = 1
@@ -475,13 +484,13 @@ fn tight_subtree_search(
 ///|
 fn inter_tree_edge_search(
   graph : NsGraph,
-  node_subtree : Array[Int],
+  node_subtree : Array[Int32],
   subtrees : Array[Subtree],
-  root : Int,
-  v : Int,
-  from : Int,
-  best : Int?,
-) -> Int? {
+  root : Int32,
+  v : Int32,
+  from : Int32,
+  best : Int32?,
+) -> Int32? {
   let mut current = best
   match current {
     Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
@@ -568,10 +577,10 @@ fn inter_tree_edge_search(
 ///|
 fn inter_tree_edge(
   graph : NsGraph,
-  node_subtree : Array[Int],
+  node_subtree : Array[Int32],
   subtrees : Array[Subtree],
-  subtree_id : Int,
-) -> Int? {
+  subtree_id : Int32,
+) -> Int32? {
   let root = subtree_find(subtrees, subtree_id)
   let start = subtrees[root].rep
   inter_tree_edge_search(
@@ -588,10 +597,10 @@ fn inter_tree_edge(
 ///|
 fn merge_trees(
   graph : NsGraph,
-  node_subtree : Array[Int],
+  node_subtree : Array[Int32],
   subtrees : Array[Subtree],
-  edge_idx : Int,
-) -> Int? {
+  edge_idx : Int32,
+) -> Int32? {
   let edge = graph.edges[edge_idx]
   let tail_sub = subtree_find(subtrees, node_subtree[edge.tail])
   let head_sub = subtree_find(subtrees, node_subtree[edge.head])
@@ -612,7 +621,7 @@ fn merge_trees(
 
 ///|
 fn feasible_tree(graph : NsGraph) -> Bool {
-  let node_subtree : Array[Int] = []
+  let node_subtree : Array[Int32] = []
   for _ in 0..<graph.nodes.length() {
     node_subtree.push(NONE_EDGE)
   }
@@ -659,7 +668,7 @@ fn feasible_tree(graph : NsGraph) -> Bool {
 }
 
 ///|
-fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
+fn dfs_range_init(graph : NsGraph, root : Int32) -> Int32 {
   let nodes = graph.nodes
   let edges = graph.edges
   nodes[root].par_edge = NONE_EDGE
@@ -735,10 +744,10 @@ fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
 ///|
 fn dfs_range(
   graph : NsGraph,
-  node_idx : Int,
-  parent_edge : Int,
-  low : Int,
-) -> Int {
+  node_idx : Int32,
+  parent_edge : Int32,
+  low : Int32,
+) -> Int32 {
   let nodes = graph.nodes
   let edges = graph.edges
   if nodes[node_idx].par_edge == parent_edge && nodes[node_idx].low == low {
@@ -831,12 +840,17 @@ fn dfs_range(
 }
 
 ///|
-fn seq(a : Int, b : Int, c : Int) -> Bool {
+fn seq(a : Int32, b : Int32, c : Int32) -> Bool {
   a <= b && b <= c
 }
 
 ///|
-fn x_val(graph : NsGraph, edge_idx : Int, node_idx : Int, dir : Int) -> Int {
+fn x_val(
+  graph : NsGraph,
+  edge_idx : Int32,
+  node_idx : Int32,
+  dir : Int32,
+) -> Int32 {
   let edge = graph.edges[edge_idx]
   let other = if edge.tail == node_idx { edge.head } else { edge.tail }
   let mut rv = 0
@@ -872,7 +886,7 @@ fn x_val(graph : NsGraph, edge_idx : Int, node_idx : Int, dir : Int) -> Int {
 }
 
 ///|
-fn x_cutval(graph : NsGraph, edge_idx : Int) -> Unit {
+fn x_cutval(graph : NsGraph, edge_idx : Int32) -> Unit {
   let edge = graph.edges[edge_idx]
   let tail = edge.tail
   let head = edge.head
@@ -892,7 +906,7 @@ fn x_cutval(graph : NsGraph, edge_idx : Int) -> Unit {
 }
 
 ///|
-fn dfs_cutval(graph : NsGraph, node_idx : Int, parent_edge : Int) -> Unit {
+fn dfs_cutval(graph : NsGraph, node_idx : Int32, parent_edge : Int32) -> Unit {
   let stack : Array[CutState] = [
     { node: node_idx, parent_edge, tree_out_i: 0, tree_in_i: 0, },
   ]
@@ -961,7 +975,7 @@ fn init_cutvalues(graph : NsGraph) -> Unit {
 }
 
 ///|
-fn invalidate_path(graph : NsGraph, lca : Int, to_node : Int) -> Unit {
+fn invalidate_path(graph : NsGraph, lca : Int32, to_node : Int32) -> Unit {
   let mut current = to_node
   while true {
     if graph.nodes[current].low == -1 {
@@ -988,11 +1002,11 @@ fn invalidate_path(graph : NsGraph, lca : Int, to_node : Int) -> Unit {
 ///|
 fn treeupdate(
   graph : NsGraph,
-  v : Int,
-  w : Int,
-  cutvalue : Int,
+  v : Int32,
+  w : Int32,
+  cutvalue : Int32,
   dir : Bool,
-) -> Int {
+) -> Int32 {
   let mut current = v
   while !seq(
           graph.nodes[current].low,
@@ -1022,19 +1036,19 @@ fn treeupdate(
 
 ///|
 priv struct LeaveEdgeResult {
-  edge : Int?
-  next_index : Int
+  edge : Int32?
+  next_index : Int32
 }
 
 ///|
 fn leave_edge(
   graph : NsGraph,
-  search_index : Int,
-  search_size : Int,
+  search_index : Int32,
+  search_size : Int32,
 ) -> LeaveEdgeResult {
   let total = graph.tree_edges.length()
   let mut idx = search_index
-  let mut best_edge : Int? = None
+  let mut best_edge : Int32? = None
   let mut best_cut = 0
   let mut count = 0
   while idx < total {
@@ -1076,15 +1090,15 @@ fn leave_edge(
 ///|
 fn dfs_enter_outedge(
   graph : NsGraph,
-  start : Int,
-  low : Int,
-  lim : Int,
-) -> Int? {
+  start : Int32,
+  low : Int32,
+  lim : Int32,
+) -> Int32? {
   let nodes = graph.nodes
   let edges = graph.edges
-  let mut best_edge : Int? = None
+  let mut best_edge : Int32? = None
   let mut best_slack = 0x7fffffff
-  let stack : Array[Int] = [start]
+  let stack : Array[Int32] = [start]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
@@ -1119,12 +1133,17 @@ fn dfs_enter_outedge(
 }
 
 ///|
-fn dfs_enter_inedge(graph : NsGraph, start : Int, low : Int, lim : Int) -> Int? {
+fn dfs_enter_inedge(
+  graph : NsGraph,
+  start : Int32,
+  low : Int32,
+  lim : Int32,
+) -> Int32? {
   let nodes = graph.nodes
   let edges = graph.edges
-  let mut best_edge : Int? = None
+  let mut best_edge : Int32? = None
   let mut best_slack = 0x7fffffff
-  let stack : Array[Int] = [start]
+  let stack : Array[Int32] = [start]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
@@ -1159,7 +1178,7 @@ fn dfs_enter_inedge(graph : NsGraph, start : Int, low : Int, lim : Int) -> Int? 
 }
 
 ///|
-fn enter_edge(graph : NsGraph, leaving : Int) -> Int? {
+fn enter_edge(graph : NsGraph, leaving : Int32) -> Int32? {
   let edge = graph.edges[leaving]
   if graph.nodes[edge.tail].lim < graph.nodes[edge.head].lim {
     dfs_enter_inedge(
@@ -1179,10 +1198,10 @@ fn enter_edge(graph : NsGraph, leaving : Int) -> Int? {
 }
 
 ///|
-fn rerank(graph : NsGraph, node_idx : Int, delta : Int) -> Unit {
+fn rerank(graph : NsGraph, node_idx : Int32, delta : Int32) -> Unit {
   let nodes = graph.nodes
   let edges = graph.edges
-  let stack : Array[Int] = [node_idx]
+  let stack : Array[Int32] = [node_idx]
   while stack.length() > 0 {
     let v = stack[stack.length() - 1]
     let _ = stack.pop()
@@ -1206,7 +1225,7 @@ fn rerank(graph : NsGraph, node_idx : Int, delta : Int) -> Unit {
 }
 
 ///|
-fn update(graph : NsGraph, leaving : Int, entering : Int) -> Unit {
+fn update(graph : NsGraph, leaving : Int32, entering : Int32) -> Unit {
   let delta = edge_slack(graph, entering)
   if delta > 0 {
     let tail = graph.edges[leaving].tail
@@ -1266,7 +1285,7 @@ fn lr_balance(graph : NsGraph) -> Unit {
 }
 
 ///|
-fn normalize_ranks(graph : NsGraph) -> Int {
+fn normalize_ranks(graph : NsGraph) -> Int32 {
   let mut min_rank = 0
   let mut max_rank = 0
   let mut seen = false
@@ -1301,7 +1320,7 @@ fn normalize_ranks(graph : NsGraph) -> Int {
 }
 
 ///|
-fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
+fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int32]) -> Unit {
   if nodes.length() <= 1 {
     return ()
   }
@@ -1309,7 +1328,7 @@ fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
     return ()
   }
   if nodes.length() <= 100 {
-    let tmp : Array[Int] = []
+    let tmp : Array[Int32] = []
     for _ in 0..<nodes.length() {
       tmp.push(0)
     }
@@ -1332,10 +1351,10 @@ fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
 ///|
 fn merge_sort_nodes_by_rank(
   graph : NsGraph,
-  nodes : Array[Int],
-  tmp : Array[Int],
-  lo : Int,
-  hi : Int,
+  nodes : Array[Int32],
+  tmp : Array[Int32],
+  lo : Int32,
+  hi : Int32,
 ) -> Unit {
   if hi - lo <= 1 {
     return ()
@@ -1379,17 +1398,17 @@ fn merge_sort_nodes_by_rank(
 
 ///|
 priv struct TbBalanceBounds {
-  inweight : Int
-  outweight : Int
-  low : Int
-  high : Int
+  inweight : Int32
+  outweight : Int32
+  low : Int32
+  high : Int32
 }
 
 ///|
 fn tb_balance_bounds(
   graph : NsGraph,
-  node_idx : Int,
-  max_rank : Int,
+  node_idx : Int32,
+  max_rank : Int32,
 ) -> TbBalanceBounds {
   let node = graph.nodes[node_idx]
   let mut inweight = 0
@@ -1424,7 +1443,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
   if max_rank <= 0 {
     return ()
   }
-  let nrank : Array[Int] = []
+  let nrank : Array[Int32] = []
   for _ in 0..<(max_rank + 1) {
     nrank.push(0)
   }
@@ -1436,7 +1455,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
       }
     }
   }
-  let ordered : Array[Int] = []
+  let ordered : Array[Int32] = []
   for i in 0..<graph.nodes.length() {
     ordered.push(i)
   }
@@ -1472,7 +1491,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
 ///|
 /// Graphviz parity: aligned to refs/graphviz/lib/common/ns.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
+fn network_simplex_core(graph : NsGraph, max_iter : Int32) -> Bool {
   let feasible = init_graph(graph)
   if !feasible {
     init_rank(graph)
@@ -1504,14 +1523,14 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
 }
 
 ///|
-pub fn debug_run_core_only(graph : NsGraph, max_iter : Int) -> Bool {
+pub fn debug_run_core_only(graph : NsGraph, max_iter : Int32) -> Bool {
   network_simplex_core(graph, max_iter)
 }
 
 ///|
 pub fn network_simplex(
   graph : NsGraph,
-  max_iter : Int,
+  max_iter : Int32,
   balance : BalanceMode,
 ) -> Unit {
   if !network_simplex_core(graph, max_iter) {
@@ -1526,9 +1545,9 @@ pub fn network_simplex(
 ///|
 pub fn network_simplex_with_root(
   graph : NsGraph,
-  max_iter : Int,
+  max_iter : Int32,
   balance : BalanceMode,
-  root_idx : Int,
+  root_idx : Int32,
 ) -> Unit {
   let prev = root_override.val
   root_override.val = Some(root_idx)
@@ -1537,12 +1556,12 @@ pub fn network_simplex_with_root(
 }
 
 ///|
-pub fn network_simplex_pre_balance(graph : NsGraph, max_iter : Int) -> Bool {
+pub fn network_simplex_pre_balance(graph : NsGraph, max_iter : Int32) -> Bool {
   network_simplex_core(graph, max_iter)
 }
 
 ///|
-pub fn normalize_ranks_for_test(graph : NsGraph) -> Int {
+pub fn normalize_ranks_for_test(graph : NsGraph) -> Int32 {
   normalize_ranks(graph)
 }
 

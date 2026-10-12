@@ -29,9 +29,9 @@ priv struct TokenWithPos {
 ///|
 priv struct Lexer {
   bytes : Bytes
-  mut index : Int
-  mut line : Int
-  mut column : Int
+  mut index : Int32
+  mut line : Int32
+  mut column : Int32
 }
 
 ///|
@@ -45,7 +45,7 @@ fn Lexer::position(self : Lexer) -> Position {
 }
 
 ///|
-fn Lexer::peek_byte(self : Lexer, offset? : Int = 0) -> Byte? {
+fn Lexer::peek_byte(self : Lexer, offset~ : Int32 = 0) -> Byte? {
   self.bytes.get(self.index + offset)
 }
 

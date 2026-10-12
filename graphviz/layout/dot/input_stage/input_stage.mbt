@@ -27,7 +27,7 @@ priv struct SizeMaps {
 ///|
 priv struct PortOrderTotal {
   sum : Double
-  count : Int
+  count : Int32
 }
 
 ///|
@@ -142,8 +142,8 @@ fn prepare_layout_inputs(input : InputStageInput) -> LayoutPrep {
 fn build_node_order(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
-) -> Map[String, Int] {
-  let node_order : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let node_order : Map[String, Int32] = Map([])
   if rankdir == RankDir::RL {
     let total = nodes.length()
     for i, node in nodes {

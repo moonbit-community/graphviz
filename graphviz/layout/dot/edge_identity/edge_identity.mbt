@@ -12,8 +12,8 @@ pub const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
 ///|
 pub fn unique_virtual_node_name(
   prefix : String,
-  edge_index : Int,
-  rank : Int,
+  edge_index : Int32,
+  rank : Int32,
   existing : Map[String, Bool],
 ) -> String {
   let mut candidate = "\{prefix}\{edge_index}_\{rank}"

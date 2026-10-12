@@ -10,7 +10,7 @@ fn clustered_skeleton_tree_rank_reorder_case() -> (
   MincrossInput,
   MincrossOutput,
 ) {
-  let input_ranks : Array[Array[Int]] = [
+  let input_ranks : Array[Array[Int32]] = [
     [29],
     [28],
     [7, 24],
@@ -27,7 +27,7 @@ fn clustered_skeleton_tree_rank_reorder_case() -> (
     [19],
     [20],
   ]
-  let output_ranks : Array[Array[Int]] = [
+  let output_ranks : Array[Array[Int32]] = [
     [29],
     [28],
     [7, 24],

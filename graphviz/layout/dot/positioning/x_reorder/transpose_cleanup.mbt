@@ -11,9 +11,9 @@ pub struct XposTransposeCleanupInput {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
 }
 
 ///|
@@ -21,9 +21,9 @@ pub struct XposTransposeCleanupInput {
 /// order (forward then reverse), matching Graphviz fixture behavior.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_xpos_transpose_cleanup(
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
   input : XposTransposeCleanupInput,
-  max_passes : Int,
+  max_passes : Int32,
 ) -> Unit {
   let edge_index_data = @order_graph.build_edge_index_with_vnodes(
     input.nodes,

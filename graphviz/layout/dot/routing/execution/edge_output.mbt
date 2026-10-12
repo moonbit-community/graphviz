@@ -38,9 +38,9 @@ fn remap_port_label_pos(input : PortLabelPosRemapInput) -> @geom.Point? {
 /// Do not change behavior without updating fixtures/tests.
 fn collect_input_order_edge_ids(
   edges : Array[@cgraph.Edge],
-  has_layout : (Int) -> Bool,
-) -> Array[Int] {
-  let ordered_ids : Array[Int] = []
+  has_layout : (Int32) -> Bool,
+) -> Array[Int32] {
+  let ordered_ids : Array[Int32] = []
   for edge in edges {
     let edge_id = edge.id()
     if has_layout(edge_id) {
@@ -97,10 +97,10 @@ fn remap_edge_layout_edge(
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct FinalizeRoutedEdgesInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
+  ranks : Map[String, Int32]
+  edges_out_by_id : Map[Int32, DotLayoutEdge]
   edge_port_label_pos_fn : EdgePortLabelPosFn
-  concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
 }
 
 ///|

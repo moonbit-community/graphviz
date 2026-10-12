@@ -7,10 +7,10 @@
 /// and keeps routing order preference stable for pathplan.
 /// Do not change behavior without updating fixtures/tests.
 pub fn select_path_groups(
-  x_groups : Map[Int, Array[String]],
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  ordered_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
+  x_groups : Map[Int32, Array[String]],
+  ordered_groups_with_vnodes : Map[Int32, Array[String]],
+  ordered_groups : Map[Int32, Array[String]],
+) -> Map[Int32, Array[String]] {
   if x_groups.length() > 0 {
     x_groups
   } else if ordered_groups_with_vnodes.length() > 0 {
@@ -26,8 +26,8 @@ pub fn select_path_groups(
 pub fn build_label_edge_counts(
   edges : Array[@cgraph.Edge],
   has_mid_label : (@cgraph.Edge) -> Bool,
-) -> Map[String, Int] {
-  let label_edge_counts : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let label_edge_counts : Map[String, Int32] = Map([])
   for edge in edges {
     if !has_mid_label(edge) {
       continue
@@ -55,13 +55,13 @@ pub fn complex_tuning_enabled() -> Bool {
 pub(all) struct RoutingPrecomputePipelineInput {
   edges : Array[@cgraph.Edge]
   positions : Map[String, @geom.Point]
-  x_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  ordered_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
   head_port_metrics : HeadPortMetrics
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   nodesep_pt : Double
   sizes : Map[String, @node_primitives.NodeSize]
   edge_vnodes : Map[String, Array[String]]
@@ -71,7 +71,7 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
-  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
+  initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)]
 }
 
 ///|
@@ -80,7 +80,7 @@ pub(all) struct RoutingPrecomputePipelineInput {
 /// context for Stage E solve.
 pub struct RoutingPrecomputePipelineOutput {
   head_port_metrics : HeadPortMetrics
-  path_groups : Map[Int, Array[String]]
+  path_groups : Map[Int32, Array[String]]
   pathplan_sizes : Map[String, @node_primitives.NodeSize]
   routing_context : RoutingContext
 }
@@ -91,7 +91,7 @@ pub struct RoutingPrecomputePipelineOutput {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_routing_precompute_pipeline(
   input : RoutingPrecomputePipelineInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> RoutingPrecomputePipelineOutput {
   let path_groups = select_path_groups(
     input.x_groups,

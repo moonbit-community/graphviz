@@ -13,8 +13,8 @@ priv struct RegularSplineLayoutResult {
 /// Do not change behavior without updating fixtures/tests.
 fn ordered_vnodes_for_rank_direction(
   vnodes : Array[String],
-  tail_rank : Int,
-  head_rank : Int,
+  tail_rank : Int32,
+  head_rank : Int32,
 ) -> Array[String] {
   if tail_rank <= head_rank {
     vnodes.copy()
@@ -44,7 +44,7 @@ priv struct PathplanSlackRecoverInput {
   base : EdgeRouteBase
   spline_result : EdgeSplineResult
   input : RegularPassInput
-  recover_edge_id_by_key : Map[String, Int]
+  recover_edge_id_by_key : Map[String, Int32]
   recovered_slack_keys : Map[String, Bool]
   callbacks : RoutingCallbacks
 }
@@ -134,7 +134,7 @@ priv struct RegularSplineLayoutBuildInput {
   input : RegularPassInput
   path_left_bound : Double
   path_right_bound : Double
-  recover_edge_id_by_key : Map[String, Int]
+  recover_edge_id_by_key : Map[String, Int32]
   recovered_slack_keys : Map[String, Bool]
   callbacks : RoutingCallbacks
 }
@@ -144,7 +144,7 @@ priv struct RegularSplineLayoutBuildInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_spline_layout(
   layout_input : RegularSplineLayoutBuildInput,
-  install_base? : EdgeRouteBase? = None,
+  install_base~ : EdgeRouteBase? = None,
 ) -> RegularSplineLayoutResult {
   let spline_result = @curve_mode.build_edge_spline({
     base: layout_input.base,
@@ -213,7 +213,7 @@ fn collect_parallel_reuse_siblings(
   edge : @cgraph.Edge,
   raw_bezier : Array[@geom.Point],
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]],
-  ignored_edge_ids : Map[Int, Bool],
+  ignored_edge_ids : Map[Int32, Bool],
 ) -> Array[@cgraph.Edge] {
   if raw_bezier.length() == 0 {
     return []
@@ -243,10 +243,10 @@ priv struct RegularParallelReuseLayoutsInput {
   edge : @cgraph.Edge
   regular_layout : RegularSplineLayoutResult
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, EdgeRouteBase]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
+  base_cache : Map[Int32, EdgeRouteBase]
+  edges_out_by_id : Map[Int32, DotLayoutEdge]
   callbacks : RoutingCallbacks
-  ignored_edge_ids : Map[Int, Bool]
+  ignored_edge_ids : Map[Int32, Bool]
 }
 
 ///|
@@ -284,17 +284,17 @@ fn apply_regular_parallel_reuse_layouts(
 /// Graphviz parity: regular-layout input keeps edge solve state and mutable
 /// output/recover maps grouped for one regular pass boundary.
 pub(all) struct RegularLayoutsForEdgeInput {
-  edge_id : Int
+  edge_id : Int32
   edge : @cgraph.Edge
   base : EdgeRouteBase
   input : RegularPassInput
   path_left_bound : Double
   path_right_bound : Double
-  recover_edge_id_by_key : Map[String, Int]
+  recover_edge_id_by_key : Map[String, Int32]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int32, EdgeRouteBase]
   recovered_slack_keys : Map[String, Bool]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
+  edges_out_by_id : Map[Int32, DotLayoutEdge]
   callbacks : RoutingCallbacks
 }
 

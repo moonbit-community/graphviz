@@ -27,7 +27,7 @@ test "sorted_edges_for_routing prioritizes self edges then flat edges then regul
   let regular_edge = graph.edge(graph.node("a"), graph.node("b"))
   let flat_edge = graph.edge(graph.node("c"), graph.node("d"))
   let self_edge = graph.edge(graph.node("s"), graph.node("s"))
-  let base_cache : Map[Int, EdgeRouteBase] = Map([])
+  let base_cache : Map[Int32, EdgeRouteBase] = Map([])
   base_cache[regular_edge.id()] = build_route_base(
     regular_edge,
     tail_rank=0,
@@ -69,7 +69,7 @@ test "sorted_edges_for_routing compares equivalent endpoint sets by port before 
   let left_port = Some(left_port_value)
   let edge_right = graph.edge(a, b, tail_port=right_port_value)
   let edge_left = graph.edge(a, b, tail_port=left_port_value)
-  let base_cache : Map[Int, EdgeRouteBase] = Map([])
+  let base_cache : Map[Int32, EdgeRouteBase] = Map([])
   base_cache[edge_right.id()] = build_route_base(
     edge_right,
     tail_port=right_port,

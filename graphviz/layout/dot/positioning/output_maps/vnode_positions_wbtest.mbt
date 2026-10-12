@@ -9,11 +9,11 @@ test "vnode_positions_from_edges interpolates vnode x by rank span" {
   let b = graph.node("b")
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 4
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v1"] = 1
   vnode_ranks["v2"] = 3
 
@@ -24,7 +24,7 @@ test "vnode_positions_from_edges interpolates vnode x by rank span" {
   node_positions["a"] = 10.0
   node_positions["b"] = 30.0
 
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[1] = 100.0
   rank_y[3] = 300.0
 
@@ -43,11 +43,11 @@ test "vnode_positions_from_edges interpolates vnode x by rank span" {
 
 ///|
 test "build_vnode_positions uses direct xpos ranks or fallback interpolation" {
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v1"] = 1
   let x_positions : Map[String, Double] = Map([])
   x_positions["v1"] = 42.0
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[1] = 18.0
 
   let fallback_calls = Ref(0)

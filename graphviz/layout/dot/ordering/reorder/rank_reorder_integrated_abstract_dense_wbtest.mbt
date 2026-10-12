@@ -8,7 +8,7 @@
 /// case still depends on integrated input order seeding, so keep it as an
 /// exact owner-local case instead of a plain fixed-order reorder test.
 fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
-  let input_ranks : Array[Array[Int]] = [
+  let input_ranks : Array[Array[Int32]] = [
     [69, 81],
     [0, 57, 30, 73, 79, 82],
     [1, 13, 48, 58, 63, 65, 68, 56, 38, 31, 36, 29, 39, 74, 72, 80, 77, 83, 86],
@@ -19,7 +19,7 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     [6, 18, 8],
     [19],
   ]
-  let output_ranks : Array[Array[Int]] = [
+  let output_ranks : Array[Array[Int32]] = [
     [69, 81],
     [57, 30, 73, 82, 79, 0],
     [58, 56, 48, 39, 65, 31, 68, 29, 72, 38, 74, 80, 83, 86, 63, 36, 77, 13, 1],
@@ -1272,7 +1272,7 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
       head_port_order: 0,
     },
   ]
-  let out_neighbor_overrides : Map[Int, Array[Int]] = Map([])
+  let out_neighbor_overrides : Map[Int32, Array[Int32]] = Map([])
   out_neighbor_overrides[7] = [8, 6]
   out_neighbor_overrides[8] = []
   out_neighbor_overrides[15] = [16]
@@ -1282,7 +1282,7 @@ fn abstract_dense_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
   out_neighbor_overrides[43] = []
   out_neighbor_overrides[77] = [78]
   out_neighbor_overrides[80] = [23]
-  let in_neighbor_overrides : Map[Int, Array[Int]] = Map([])
+  let in_neighbor_overrides : Map[Int32, Array[Int32]] = Map([])
   in_neighbor_overrides[7] = [53, 16, 21]
   in_neighbor_overrides[8] = [9, 62, 35, 52, 90, 26, 7]
   in_neighbor_overrides[15] = [85, 14, 37, 64, 78]

@@ -25,10 +25,10 @@ pub fn make_edge_mid_label_metrics(
 pub struct RankHeightsInput {
   graph : @cgraph.Graph
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  rank_keys : Array[Int32]
+  all_ranks : Array[Int32]
   sizes : Map[String, NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir
@@ -44,10 +44,10 @@ pub struct RankHeightsInput {
 pub fn make_rank_heights_input(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  all_ranks : Array[Int],
+  ranks : Map[String, Int32],
+  groups : Map[Int32, Array[String]],
+  rank_keys : Array[Int32],
+  all_ranks : Array[Int32],
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
   rankdir : @rankdir.RankDir,
@@ -79,9 +79,9 @@ pub fn make_rank_heights_input(
 
 ///|
 pub struct RankHeights {
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   nodesep_pt : Double
   ranksep_pt : Double
 }
@@ -92,8 +92,8 @@ pub struct RankHeights {
 /// Do not change behavior without updating fixtures/tests.
 fn update_rank_pht_for_label(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
+  ranks : Map[String, Int32],
+  rank_pht : Map[Int32, Double],
   rankdir : @rankdir.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
 ) -> Unit {
@@ -125,20 +125,20 @@ fn update_rank_pht_for_label(
 
 ///|
 priv struct RankHeightCopies {
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|
 priv struct BaseRankHalfHeights {
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|
-fn init_rank_half_heights(all_ranks : Array[Int]) -> Map[Int, Double] {
-  let rank_pht : Map[Int, Double] = Map([])
+fn init_rank_half_heights(all_ranks : Array[Int32]) -> Map[Int32, Double] {
+  let rank_pht : Map[Int32, Double] = Map([])
   for rank in all_ranks {
     rank_pht[rank] = 0.0
   }
@@ -147,9 +147,9 @@ fn init_rank_half_heights(all_ranks : Array[Int]) -> Map[Int, Double] {
 
 ///|
 fn apply_node_rank_half_heights(
-  rank_pht : Map[Int, Double],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  rank_pht : Map[Int32, Double],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
 ) -> Unit {
@@ -171,8 +171,8 @@ fn apply_node_rank_half_heights(
 ///|
 fn apply_edge_label_rank_half_heights(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
+  ranks : Map[String, Int32],
+  rank_pht : Map[Int32, Double],
   rankdir : @rankdir.RankDir,
   edge_mid_label_metrics_for : (@cgraph.Edge) -> EdgeMidLabelMetrics?,
 ) -> Unit {
@@ -186,8 +186,8 @@ fn apply_edge_label_rank_half_heights(
 ///|
 fn apply_vnode_rank_half_heights(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
+  ranks : Map[String, Int32],
+  rank_pht : Map[Int32, Double],
   vnode_height_pt : Double,
 ) -> Unit {
   // Graphviz parity: long edges reserve vnode half-height across
@@ -212,13 +212,13 @@ fn apply_vnode_rank_half_heights(
 
 ///|
 fn clone_rank_half_heights(
-  all_ranks : Array[Int],
-  rank_pht : Map[Int, Double],
+  all_ranks : Array[Int32],
+  rank_pht : Map[Int32, Double],
 ) -> RankHeightCopies {
   // Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
   // before cluster-specific adjustments.
-  let rank_ht1 : Map[Int, Double] = Map([])
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   for rank in all_ranks {
     let half_height = rank_pht.get(rank).unwrap_or_default()
     rank_ht1[rank] = half_height

@@ -4,22 +4,22 @@
 
 ///|
 fn compare_concentrated_route_indices(
-  indices : Array[Int],
-  priorities : Array[Int],
-  left : Int,
-  right : Int,
-) -> Int {
+  indices : Array[Int32],
+  priorities : Array[Int32],
+  left : Int32,
+  right : Int32,
+) -> Int32 {
   priorities[indices[left]].compare(priorities[indices[right]])
 }
 
 ///|
 fn concentrated_route_median(
-  indices : Array[Int],
-  priorities : Array[Int],
-  first : Int,
-  second : Int,
-  third : Int,
-) -> Int {
+  indices : Array[Int32],
+  priorities : Array[Int32],
+  first : Int32,
+  second : Int32,
+  third : Int32,
+) -> Int32 {
   let first_second = compare_concentrated_route_indices(
     indices, priorities, first, second,
   )
@@ -48,10 +48,10 @@ fn concentrated_route_median(
 
 ///|
 fn swap_concentrated_route_ranges(
-  indices : Array[Int],
-  first : Int,
-  second : Int,
-  length : Int,
+  indices : Array[Int32],
+  first : Int32,
+  second : Int32,
+  length : Int32,
 ) -> Unit {
   for offset in 0..<length {
     indices.swap(first + offset, second + offset)
@@ -60,10 +60,10 @@ fn swap_concentrated_route_ranges(
 
 ///|
 fn insertion_sort_concentrated_routes(
-  indices : Array[Int],
-  priorities : Array[Int],
-  low : Int,
-  high : Int,
+  indices : Array[Int32],
+  priorities : Array[Int32],
+  low : Int32,
+  high : Int32,
 ) -> Unit {
   for current in (low + 1)..<high {
     for position = current {
@@ -85,10 +85,10 @@ fn insertion_sort_concentrated_routes(
 
 ///|
 fn sort_concentrated_route_range(
-  indices : Array[Int],
-  priorities : Array[Int],
-  low : Int,
-  high : Int,
+  indices : Array[Int32],
+  priorities : Array[Int32],
+  low : Int32,
+  high : Int32,
 ) -> Unit {
   let length = high - low
   guard length >= 7 else {
@@ -182,7 +182,7 @@ fn sort_concentrated_route_range(
 }
 
 ///|
-fn sort_concentrated_route_indices(priorities : Array[Int]) -> Array[Int] {
+fn sort_concentrated_route_indices(priorities : Array[Int32]) -> Array[Int32] {
   let indices = priorities.mapi((index, _) => index)
   sort_concentrated_route_range(indices, priorities, 0, indices.length())
   indices

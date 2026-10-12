@@ -4,9 +4,9 @@
 
 ///|
 fn require_constraint_builder_index(
-  index : Map[String, Int],
+  index : Map[String, Int32],
   name : String,
-) -> Int raise {
+) -> Int32 raise {
   match index.get(name) {
     Some(value) => value
     None => fail("missing index for \{name}")

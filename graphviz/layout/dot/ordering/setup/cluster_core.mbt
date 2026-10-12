@@ -27,9 +27,9 @@ fn build_cluster_membership_maps(
 
 ///|
 pub(all) struct ClusterNodeRankBounds {
-  min_rank : Map[String, Int]
-  max_rank : Map[String, Int]
-  first_order : Map[String, Int]
+  min_rank : Map[String, Int32]
+  max_rank : Map[String, Int32]
+  first_order : Map[String, Int32]
 }
 
 ///|
@@ -39,12 +39,12 @@ pub(all) struct ClusterNodeRankBounds {
 fn collect_cluster_rank_bounds(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
+  ranks : Map[String, Int32],
+  node_order : Map[String, Int32],
 ) -> ClusterNodeRankBounds {
-  let cluster_min_rank : Map[String, Int] = Map([])
-  let cluster_max_rank : Map[String, Int] = Map([])
-  let cluster_first_order : Map[String, Int] = Map([])
+  let cluster_min_rank : Map[String, Int32] = Map([])
+  let cluster_max_rank : Map[String, Int32] = Map([])
+  let cluster_first_order : Map[String, Int32] = Map([])
   for node in nodes {
     let name = node.name()
     let cluster = cluster_keys.get(name).unwrap_or_default()
@@ -79,7 +79,7 @@ fn seed_cluster_node_order(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
-  node_order : Map[String, Int],
+  node_order : Map[String, Int32],
 ) -> Unit {
   let total_nodes = nodes.length()
   for i, node in nodes {
@@ -103,7 +103,7 @@ fn seed_cluster_node_order(
 /// (first node encountered in rank order).
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_skeleton(
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Map[String, Bool] {
   let cluster_skeleton : Map[String, Bool] = Map([])
@@ -131,12 +131,12 @@ fn build_cluster_skeleton(
 fn apply_cluster_order_base(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
-  cluster_min_rank : Map[String, Int],
-  cluster_first_order : Map[String, Int],
-  node_order : Map[String, Int],
+  cluster_min_rank : Map[String, Int32],
+  cluster_first_order : Map[String, Int32],
+  node_order : Map[String, Int32],
   cluster_order_base_enabled : Bool,
 ) -> Unit {
-  let cluster_order_list : Array[(String, Int, Int)] = []
+  let cluster_order_list : Array[(String, Int32, Int32)] = []
   for cluster, rank in cluster_min_rank {
     let order = cluster_first_order.get(cluster).unwrap_or_default()
     cluster_order_list.push((cluster, rank, order))
@@ -160,7 +160,7 @@ fn apply_cluster_order_base(
     }
   })
   let step = nodes.length() + 1
-  let cluster_order_base : Map[String, Int] = Map([])
+  let cluster_order_base : Map[String, Int32] = Map([])
   let mut base = 0
   for entry in cluster_order_list {
     let (cluster, _rank, _order) = entry
@@ -186,8 +186,8 @@ pub(all) struct ClusterCoreOrderingMetadata {
   has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
@@ -200,9 +200,9 @@ pub(all) struct ClusterCoreOrderingMetadata {
 fn build_cluster_core_metadata_for_ordering(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
+  node_order : Map[String, Int32],
   graphviz_flip : Bool,
   cluster_order_base_enabled : Bool,
 ) -> ClusterCoreOrderingMetadata {

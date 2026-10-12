@@ -10,14 +10,14 @@ test "zero internal crossings do not hide crossings at a cluster boundary" {
   let edges = tails.mapi((index, tail) => {
     graph.edge(graph.node(tail), graph.node(heads[index]))
   })
-  let ranks : Map[String, Int] = {
+  let ranks : Map[String, Int32] = {
     "left": 0,
     "right": 0,
     "a": 1,
     "b": 1,
     "c": 2,
   }
-  let local_groups : Map[Int, Array[String]] = { 1: ["a", "b"], 2: ["c"] }
+  let local_groups : Map[Int32, Array[String]] = { 1: ["a", "b"], 2: ["c"] }
   @test.assert_eq(
     count_crossings_port_aware(local_groups, ranks, edges, tails, heads),
     0,

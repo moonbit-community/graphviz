@@ -21,12 +21,12 @@ priv struct NonclusterReorderInputs {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   nlist_order : Array[String]
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
@@ -36,9 +36,9 @@ priv struct NonclusterReorderInputs {
   order_edge_head_port_order : Array[Double]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -56,15 +56,15 @@ pub(all) struct NonclusterReorderInputsBuildSources {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -82,7 +82,7 @@ pub(all) struct NonclusterReorderInputsBuildSources {
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_noncluster_reorder_pass(
   sources : NonclusterReorderInputsBuildSources,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   run_noncluster_reorder_pass_with_inputs({
     nodes: sources.nodes,
     edges: sources.edges,
@@ -120,8 +120,8 @@ pub fn run_noncluster_reorder_pass(
 /// reorder_rank_groups argument order and precomputed graphviz neighbors.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct NonclusterRankReorderInputs {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
@@ -132,10 +132,10 @@ pub(all) struct NonclusterRankReorderInputs {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
   cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
-  order_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
+  order_node_order : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -153,9 +153,9 @@ pub(all) struct NonclusterRankReorderInputs {
 /// then fills any missing names using existing node-order values.
 fn build_noncluster_order_node_order(
   nlist_order : Array[String],
-  node_order : Map[String, Int],
-) -> Map[String, Int] {
-  let order_node_order : Map[String, Int] = Map([])
+  node_order : Map[String, Int32],
+) -> Map[String, Int32] {
+  let order_node_order : Map[String, Int32] = Map([])
   let mut order_idx = 0
   for name in nlist_order {
     order_node_order[name] = order_idx
@@ -174,7 +174,7 @@ fn build_noncluster_order_node_order(
 /// reorder_rank_groups wiring as Graphviz non-cluster mincross pass.
 pub fn run_noncluster_rank_reorder(
   call_inputs : NonclusterRankReorderInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   @reorder.reorder_rank_groups(
     call_inputs.rank_keys,
     call_inputs.groups,
@@ -214,7 +214,7 @@ fn build_noncluster_graphviz_neighbors(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
+  edge_out_order : Map[String, Array[Int32]],
 ) -> GraphvizNeighborMaps {
   let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   let graphviz_in_neighbors : Map[String, Array[String]] = Map([])
@@ -266,7 +266,7 @@ fn build_noncluster_graphviz_neighbors(
 /// Do not change behavior without updating fixtures/tests.
 fn run_noncluster_reorder_pass_with_inputs(
   inputs : NonclusterReorderInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let order_node_order = build_noncluster_order_node_order(
     inputs.nlist_order,
     inputs.node_order,

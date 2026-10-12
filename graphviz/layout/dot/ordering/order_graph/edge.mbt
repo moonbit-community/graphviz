@@ -5,7 +5,7 @@
 ///|
 fn edge_tail_at(
   edge : @cgraph.Edge,
-  edge_idx : Int,
+  edge_idx : Int32,
   edge_tail : Array[String],
 ) -> String {
   if edge_idx < edge_tail.length() {
@@ -18,7 +18,7 @@ fn edge_tail_at(
 ///|
 fn edge_head_at(
   edge : @cgraph.Edge,
-  edge_idx : Int,
+  edge_idx : Int32,
   edge_head : Array[String],
 ) -> String {
   if edge_idx < edge_head.length() {
@@ -31,7 +31,7 @@ fn edge_head_at(
 ///|
 pub fn edge_endpoints_at(
   edge : @cgraph.Edge,
-  edge_idx : Int,
+  edge_idx : Int32,
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {
@@ -52,7 +52,7 @@ pub fn build_edge_index_for_order(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
 ) -> EdgeIndexData {
   let node_names : Array[String] = []
   for node in nodes {
@@ -66,8 +66,8 @@ fn build_edge_index_impl(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_count : Int,
+  ranks : Map[String, Int32],
+  edge_count : Int32,
 ) -> EdgeIndexData {
   let parents : Map[String, Array[String]] = Map([])
   let children : Map[String, Array[String]] = Map([])
@@ -106,7 +106,7 @@ pub fn build_edge_index_for_names(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
 ) -> EdgeIndexData {
   build_edge_index_impl(
     node_names,
@@ -130,7 +130,7 @@ pub fn add_order_edge(
   edge_head_port_order : Array[Double],
   tail_name : String,
   head_name : String,
-  xpenalty : Int,
+  xpenalty : Int32,
   constraint : Bool,
   tail_port_x : Double,
   head_port_x : Double,
@@ -169,7 +169,7 @@ pub fn add_order_edge(
 pub(all) struct OrderEdgesByTailOutput {
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   vnode_creation_by_tail : Map[String, Array[String]]
   edge_creation_order : Array[(String, String)]
@@ -187,19 +187,19 @@ pub fn build_order_edges_by_tail(
   edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
   map_clusters : Bool,
   map_intercluster : Bool,
-  edges_by_tail : Map[String, Array[Int]],
-  cluster_order_index? : Map[String, Int] = Map([]),
+  edges_by_tail : Map[String, Array[Int32]],
+  cluster_order_index~ : Map[String, Int32] = Map([]),
 ) -> OrderEdgesByTailOutput {
   let out : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   let vnode_seen : Map[String, Bool] = Map([])
   let vnode_creation_by_tail : Map[String, Array[String]] = Map([])
@@ -207,7 +207,7 @@ pub fn build_order_edges_by_tail(
   let use_mapping = order_with_clusters && map_clusters
   let concentrated = graphviz_concentrate_enabled(edges)
   let parallel_merges = if concentrated {
-    let port_samples : Map[Int, (Double, Double, Double, Double)] = Map([])
+    let port_samples : Map[Int32, (Double, Double, Double, Double)] = Map([])
     for index, edge in edges {
       let (tail, _) = edge_endpoints_at(edge, index, edge_tail, edge_head)
       let tx = if index < edge_tail_port_x.length() {
@@ -261,7 +261,7 @@ pub fn build_order_edges_by_tail(
   } else {
     { merged_edge_weight_bonus: Map([]), merged_edge_skip: Map([]), }
   }
-  let cluster_order_index_local : Map[String, Int] = Map([])
+  let cluster_order_index_local : Map[String, Int32] = Map([])
   if order_with_clusters && cluster_order_index.length() > 0 {
     for cluster, idx in cluster_order_index {
       cluster_order_index_local[cluster] = idx
@@ -288,7 +288,7 @@ pub fn build_order_edges_by_tail(
         None => -1
       }
       let head_cluster_default = cluster_order_index_local.length() + 1
-      let keyed : Array[(Int, Int, Int, Int, String)] = []
+      let keyed : Array[(Int32, Int32, Int32, Int32, String)] = []
       let mut original_pos = 0
       for idx in indices_raw {
         let edge = edges[idx]
@@ -347,10 +347,10 @@ pub fn build_order_edges_by_tail(
       // Graphviz parity: when a tail points into later clusters, agfstout
       // starts each cluster bucket from its rankleader edge, then walks the
       // remaining edges in original order.
-      let keyed_rotated : Array[(Int, Int, Int, Int, String)] = []
+      let keyed_rotated : Array[(Int32, Int32, Int32, Int32, String)] = []
       if tail_cluster_name != "" && tail_cluster_rank >= 0 && keyed.length() > 1 {
-        let leader_entries : Array[(Int, Int, Int, Int, String)] = []
-        let body_entries : Array[(Int, Int, Int, Int, String)] = []
+        let leader_entries : Array[(Int32, Int32, Int32, Int32, String)] = []
+        let body_entries : Array[(Int32, Int32, Int32, Int32, String)] = []
         let mut insert_pos = -1
         let mut i = 0
         while i < keyed.length() {
@@ -416,7 +416,7 @@ pub fn build_order_edges_by_tail(
           keyed_rotated.push(entry)
         }
       }
-      let sorted_indices : Array[Int] = []
+      let sorted_indices : Array[Int32] = []
       for entry in keyed_rotated {
         let (idx, _same, _rank, _pos, _cluster) = entry
         sorted_indices.push(idx)
@@ -601,9 +601,9 @@ pub fn build_edge_index_with_vnodes(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int32],
 ) -> EdgeIndexData {
   let parents : Map[String, Array[String]] = Map([])
   let children : Map[String, Array[String]] = Map([])

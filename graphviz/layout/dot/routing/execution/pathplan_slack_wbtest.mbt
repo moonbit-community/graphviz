@@ -36,7 +36,7 @@ test "recover_pathplan_slack consumes segment vnodes in rank direction and only 
     apply_dotted_adjustment: false,
   }
   let recover_key = recover_slack_key_for_edge(edge)
-  let recover_edge_id_by_key : Map[String, Int] = Map([])
+  let recover_edge_id_by_key : Map[String, Int32] = Map([])
   recover_edge_id_by_key[recover_key] = edge.id()
   let recovered_slack_keys : Map[String, Bool] = Map([])
   let recovered_orders : Array[String] = []
@@ -124,7 +124,7 @@ test "recover_pathplan_slack falls back to limited pathplan boxes when segments 
   let recover_key = recover_slack_key_for_edge(edge)
   let recovered_slack_keys : Map[String, Bool] = Map([])
   let recovered_orders : Array[String] = []
-  let recovered_box_counts : Array[Int] = []
+  let recovered_box_counts : Array[Int32] = []
   let callbacks : RoutingCallbacks = {
     recover_slack_vnodes_fn: recover_input => {
       recovered_orders.push(recover_input.ordered_vnodes.join(","))

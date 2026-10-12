@@ -17,17 +17,17 @@ test "build_constraint_segment_pass updates same-rank invis ordering constraints
   cross.set_attr("minlen", "5")
   cross.set_attr("weight", "11")
 
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   edge_out_order["b"] = [0]
   edge_out_order["a"] = [1]
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 0 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 0 }
   let cluster_keys : Map[String, String] = {
     "a": "cluster0",
     "b": "cluster0",
     "c": "cluster1",
   }
-  let order_in_rank : Map[String, Int] = { "a": 0, "b": 1, "c": 2 }
+  let order_in_rank : Map[String, Int32] = { "a": 0, "b": 1, "c": 2 }
   let rank_adj_constraints : Map[String, ConstraintEdge] = {
     "a|b": {
       tail: "a",
@@ -81,11 +81,11 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
   edge.set_attr("weight", "3")
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}flat_0"
 
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   edge_out_order["a"] = [0]
-  let ranks : Map[String, Int] = { "a": 0, "b": 0 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0 }
   ranks[vnode] = 0
-  let order_in_rank : Map[String, Int] = { "a": 0, "b": 2 }
+  let order_in_rank : Map[String, Int32] = { "a": 0, "b": 2 }
   order_in_rank[vnode] = 1
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode]
@@ -145,9 +145,9 @@ test "descending chains use forward fast-edge tails and scale sparse weights" {
 
   let vnode0 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_0"
   let vnode1 = "\{@edge_identity.EDGE_VNODE_PREFIX}desc_1"
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   edge_out_order["a"] = [0]
-  let ranks : Map[String, Int] = { "a": 2, "b": 0 }
+  let ranks : Map[String, Int32] = { "a": 2, "b": 0 }
   ranks[vnode0] = 1
   ranks[vnode1] = 1
   let edge_vnodes : Map[String, Array[String]] = Map([])

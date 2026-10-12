@@ -50,14 +50,14 @@ test "collect_sameport_overrides propagates samehead anchors to unlabeled merge 
 
 ///|
 test "edge_sameport_orientation_info swaps head and tail anchors with swap_ends" {
-  let samehead_anchors : Map[Int, @geom.Point] = {
+  let samehead_anchors : Map[Int32, @geom.Point] = {
     7: @edge_spline.point(10.0, 1.0),
   }
-  let sametail_anchors : Map[Int, @geom.Point] = {
+  let sametail_anchors : Map[Int32, @geom.Point] = {
     7: @edge_spline.point(-4.0, 2.0),
   }
-  let samehead_group_sizes : Map[Int, Int] = { 7: 5 }
-  let sametail_group_sizes : Map[Int, Int] = { 7: 3 }
+  let samehead_group_sizes : Map[Int32, Int32] = { 7: 5 }
+  let sametail_group_sizes : Map[Int32, Int32] = { 7: 3 }
   let overrides = {
     samehead_anchors,
     sametail_anchors,

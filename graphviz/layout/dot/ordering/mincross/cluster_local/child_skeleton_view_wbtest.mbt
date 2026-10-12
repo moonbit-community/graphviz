@@ -15,7 +15,7 @@ test "parent class2 view collapses descendant nodes and internal vnodes into a s
   let incoming = graph.edge(outside, a)
   let internal = grandchild.edge(a, b)
   let vnode = "_mbt_edge_vn_1_1"
-  let groups : Map[Int, Array[String]] = {
+  let groups : Map[Int32, Array[String]] = {
     -1: ["outside"],
     0: ["a"],
     1: [vnode],
@@ -81,7 +81,7 @@ test "parent class2 view collapses descendant nodes and internal vnodes into a s
 ///|
 test "cluster expansion replaces its rankleader instead of the first pre-expanded member" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_parent", 1)
-  let groups : Map[Int, Array[String]] = {
+  let groups : Map[Int32, Array[String]] = {
     1: ["left", skeleton, "outside", "a", "b"],
   }
   apply_cluster_rank_reorder_output(

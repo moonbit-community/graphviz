@@ -8,7 +8,7 @@ fn attachment_distance_squared(a : @geom.Point, b : @geom.Point) -> Double {
 ///|
 fn attachment_curve_point(
   points : Array[@geom.Point],
-  start : Int,
+  start : Int32,
   t : Double,
 ) -> @geom.Point {
   let work = [
@@ -39,7 +39,7 @@ pub fn label_attachment(
   splines : Array[@geom.Spline],
 ) -> Array[@geom.Point] {
   guard text.trim(chars=" \t\n\r\u000b\u000c") != "" else { [] }
-  let mut selected : (Array[@geom.Point], Int)? = None
+  let mut selected : (Array[@geom.Point], Int32)? = None
   let mut best_distance = 1.0e38
   for spline in splines {
     guard spline.points.length() >= 4 else { continue }

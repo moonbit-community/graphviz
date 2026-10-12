@@ -5,8 +5,8 @@
 ///|
 fn concentrate_live_candidates(
   fast : ConcentrateFastGraph,
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   edges : Array[@cgraph.Edge],
   vnode_info : EdgeVnodeInfo,
   excluded : Map[String, Bool],
@@ -33,7 +33,7 @@ fn concentrate_live_candidates(
       }
     }
   }
-  let rank_keys : Array[Int] = []
+  let rank_keys : Array[Int32] = []
   for rank, _ in groups {
     rank_keys.push(rank)
   }
@@ -96,7 +96,7 @@ fn ConcentrateFastGraph::same_concentrate_endpoint(
   kept : String,
   candidate : String,
   sweep : ConcentrateSweep,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   excluded : Map[String, Bool],
   nodes : Map[String, @cgraph.Node],
   node_ports_equal : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool,

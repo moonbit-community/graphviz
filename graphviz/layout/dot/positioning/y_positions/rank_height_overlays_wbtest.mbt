@@ -10,19 +10,19 @@ test "build_all_ranks_with_overlays expands to cover inserted vnode ranks" {
 
 ///|
 test "apply_rank_half_heights raises all rank height maps only where overlay is larger" {
-  let rank_pht : Map[Int, Double] = Map([])
+  let rank_pht : Map[Int32, Double] = Map([])
   rank_pht[0] = 4.0
   rank_pht[1] = 6.0
 
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[0] = 3.0
   rank_ht1[1] = 7.0
 
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht2[0] = 5.0
   rank_ht2[1] = 2.0
 
-  let overlays : Map[Int, Double] = Map([])
+  let overlays : Map[Int32, Double] = Map([])
   overlays[0] = 6.0
   overlays[1] = 4.0
   overlays[2] = 8.0
@@ -44,7 +44,7 @@ test "apply_rank_half_heights raises all rank height maps only where overlay is 
 
 ///|
 test "apply_flat_label_rank_heights ignores missing vnode sizes and keeps max half height per rank" {
-  let flat_label_ranks : Map[String, Int] = Map([])
+  let flat_label_ranks : Map[String, Int32] = Map([])
   flat_label_ranks["v0_small"] = 0
   flat_label_ranks["v0_large"] = 0
   flat_label_ranks["v1"] = 1
@@ -55,15 +55,15 @@ test "apply_flat_label_rank_heights ignores missing vnode sizes and keeps max ha
   vnode_sizes["v0_large"] = sample_node_size(10.0, 20.0)
   vnode_sizes["v1"] = sample_node_size(10.0, 12.0)
 
-  let rank_pht : Map[Int, Double] = Map([])
+  let rank_pht : Map[Int32, Double] = Map([])
   rank_pht[0] = 4.0
   rank_pht[1] = 7.0
 
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[0] = 3.0
   rank_ht1[1] = 5.0
 
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht2[0] = 1.0
   rank_ht2[1] = 8.0
 

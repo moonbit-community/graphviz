@@ -44,9 +44,9 @@ fn sample_root_reorder_inputs() -> RootRankReorderInputs {
 
 ///|
 test "resolve_root_component_order_index prefers explicit order then fallback then zero" {
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   order_node_order["a"] = 4
-  let fallback_order : Map[String, Int] = Map([])
+  let fallback_order : Map[String, Int32] = Map([])
   fallback_order["b"] = 9
 
   assert_eq(

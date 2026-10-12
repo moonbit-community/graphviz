@@ -9,22 +9,22 @@ test "build_x_seed_data derives vnode order from edge-vnode chains when explicit
   let head = graph.node("head")
   let edge = graph.edge(tail, head)
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = ["tail"]
   ordered_groups[1] = ["mid_real"]
   ordered_groups[2] = ["head"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["tail"] = 0
   ranks["head"] = 2
 
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes["tail|head||"] = ["v_mid"]
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v_mid"] = 1
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[1] = ["v_mid"]
 
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])

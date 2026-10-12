@@ -61,15 +61,15 @@ priv struct FinalizeLayoutInput {
   edges_out : Array[DotLayoutEdge]
   rankdir : RankDir
   splines : SplinesMode
-  all_ranks : Array[Int]
-  ranks : Map[String, Int]
+  all_ranks : Array[Int32]
+  ranks : Map[String, Int32]
   sizes : Map[String, NodeSize]
   cluster_ln_x : Map[String, Double]
   cluster_rn_x : Map[String, Double]
   cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   nodesep_pt : Double
   flat_label_edge_vnodes : Map[String, String]
 }

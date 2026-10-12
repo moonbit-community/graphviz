@@ -12,15 +12,15 @@ pub fn compute_clustered_ranks(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  back_weight_scale : Int,
+  back_weight_scale : Int32,
   compute_recursive_ranks : (
     @cgraph.Graph,
     Array[@cgraph.Node],
     Array[@cgraph.Edge],
     Bool,
-    Int,
-  ) -> Map[String, Int],
-) -> Map[String, Int] {
+    Int32,
+  ) -> Map[String, Int32],
+) -> Map[String, Int32] {
   let top_cluster_data = collect_top_clusters(source)
   let cluster_graphs = top_cluster_data.cluster_graphs
   let top_clusters = top_cluster_data.top_clusters
@@ -80,10 +80,10 @@ pub fn project_clustered_node_ranks(
   nodes : Array[@cgraph.Node],
   node_cluster : Map[String, String],
   cluster_leaders : Map[String, String],
-  local_ranks : Map[String, Int],
-  leader_ranks : Map[String, Int],
-) -> Map[String, Int] {
-  let ranks : Map[String, Int] = Map([])
+  local_ranks : Map[String, Int32],
+  leader_ranks : Map[String, Int32],
+) -> Map[String, Int32] {
+  let ranks : Map[String, Int32] = Map([])
   let mut min_rank = 0
   let mut seen = false
   for node in nodes {
@@ -133,10 +133,10 @@ pub fn project_clustered_node_ranks(
 pub fn apply_clustered_rank_postprocessing(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
-  ranks : Map[String, Int],
-) -> Map[String, Int] {
+  ranks : Map[String, Int32],
+) -> Map[String, Int32] {
   let rank_same_reps = @rank_constraints.build_rank_same_reps(source, nodes)
-  let rep_ranks : Map[String, Int] = Map([])
+  let rep_ranks : Map[String, Int32] = Map([])
   for name, rank in ranks {
     let rep = match rank_same_reps.get(name) {
       Some(value) => value

@@ -5,7 +5,7 @@
 ///|
 fn sample_route_port_geometry(
   center : @geom.Point,
-  size? : @node_primitives.NodeSize = @node_primitives.node_size_from_points(
+  size~ : @node_primitives.NodeSize = @node_primitives.node_size_from_points(
     10.0, 10.0,
   ),
 ) -> RoutePortGeometry {

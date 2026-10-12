@@ -3,25 +3,25 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-const ROUTE_EDGE_REGULAR : Int = 1
+const ROUTE_EDGE_REGULAR : Int32 = 1
 
 ///|
-const ROUTE_EDGE_FLAT : Int = 2
+const ROUTE_EDGE_FLAT : Int32 = 2
 
 ///|
-const ROUTE_EDGE_SELF_PORT : Int = 4
+const ROUTE_EDGE_SELF_PORT : Int32 = 4
 
 ///|
-const ROUTE_EDGE_SELF_NOPORT : Int = 8
+const ROUTE_EDGE_SELF_NOPORT : Int32 = 8
 
 ///|
-const ROUTE_GRAPH_MAIN : Int = 64
+const ROUTE_GRAPH_MAIN : Int32 = 64
 
 ///|
-const ROUTE_GRAPH_AUX : Int = 128
+const ROUTE_GRAPH_AUX : Int32 = 128
 
 ///|
-fn edge_route_type(base : EdgeRouteBase) -> Int {
+fn edge_route_type(base : EdgeRouteBase) -> Int32 {
   if base.orig_tail_name == base.orig_head_name {
     if @edge_identity.port_is_explicit(base.tail_port) ||
       @edge_identity.port_is_explicit(base.head_port) {
@@ -37,7 +37,7 @@ fn edge_route_type(base : EdgeRouteBase) -> Int {
 }
 
 ///|
-fn edge_route_graph_type(edge_type : Int) -> Int {
+fn edge_route_graph_type(edge_type : Int32) -> Int32 {
   if edge_type == ROUTE_EDGE_REGULAR {
     ROUTE_GRAPH_MAIN
   } else {
@@ -46,7 +46,7 @@ fn edge_route_graph_type(edge_type : Int) -> Int {
 }
 
 ///|
-fn cmp_int(a : Int, b : Int) -> Int {
+fn cmp_int(a : Int32, b : Int32) -> Int32 {
   if a < b {
     -1
   } else if a > b {
@@ -57,7 +57,7 @@ fn cmp_int(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn cmp_double(a : Double, b : Double) -> Int {
+fn cmp_double(a : Double, b : Double) -> Int32 {
   if a < b {
     -1
   } else if a > b {
@@ -83,7 +83,7 @@ fn port_cmp(
   a_pos : @geom.Point,
   b_defined : Bool,
   b_pos : @geom.Point,
-) -> Int {
+) -> Int32 {
   if !b_defined {
     if a_defined {
       1
@@ -116,8 +116,8 @@ priv struct EdgePortCmpInfo {
 ///|
 fn edge_port_cmp_info(
   base : EdgeRouteBase,
-  edge_type : Int,
-  order_index : Map[String, Int],
+  edge_type : Int32,
+  order_index : Map[String, Int32],
 ) -> EdgePortCmpInfo {
   let tail_anchor = if base.swap_ends {
     base.head_anchor
@@ -170,9 +170,9 @@ fn edge_port_cmp_info(
 fn route_edge_cmp(
   a : @cgraph.Edge,
   b : @cgraph.Edge,
-  base_cache : Map[Int, EdgeRouteBase],
-  order_index : Map[String, Int],
-) -> Int {
+  base_cache : Map[Int32, EdgeRouteBase],
+  order_index : Map[String, Int32],
+) -> Int32 {
   let base_a = match base_cache.get(a.id()) {
     Some(value) => value
     None => return 0
@@ -262,9 +262,9 @@ fn route_edge_cmp(
 /// Do not change behavior without updating fixtures/tests.
 pub fn sorted_edges_for_routing(
   edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
-  order_index : Map[String, Int],
-  concentrated_route_order? : Map[Int, Int] = {},
+  base_cache : Map[Int32, EdgeRouteBase],
+  order_index : Map[String, Int32],
+  concentrated_route_order~ : Map[Int32, Int32] = {},
 ) -> Array[@cgraph.Edge] {
   let ordered_edges = edges.copy()
   if ordered_edges.length() > 1 {

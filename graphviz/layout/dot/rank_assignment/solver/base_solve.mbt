@@ -4,10 +4,10 @@
 
 ///|
 priv struct MergedRankEdge {
-  tail_idx : Int
-  head_idx : Int
-  minlen : Int
-  weight : Int
+  tail_idx : Int32
+  head_idx : Int32
+  minlen : Int32
+  weight : Int32
 }
 
 ///|
@@ -20,17 +20,17 @@ pub fn compute_ranks_directed_base(
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> Map[String, Int] {
+) -> Map[String, Int32] {
   let node_by_name : Map[String, @cgraph.Node] = Map([])
   let tail_order : Array[String] = []
-  let node_order_index : Map[String, Int] = Map([])
+  let node_order_index : Map[String, Int32] = Map([])
   for node in nodes {
     let name = node.name()
     node_by_name[name] = node
     node_order_index[name] = tail_order.length()
     tail_order.push(name)
   }
-  let head_order_by_edge : Array[Int] = []
+  let head_order_by_edge : Array[Int32] = []
   for edge_idx in 0..<edges.length() {
     let head_name = if edge_idx < edge_head.length() {
       edge_head[edge_idx]
@@ -39,7 +39,7 @@ pub fn compute_ranks_directed_base(
     }
     head_order_by_edge.push(node_order_index.get(head_name).unwrap_or_default())
   }
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   for edge_idx in 0..<edges.length() {
     let tail = edge_tail[edge_idx]
     match edges_by_tail.get(tail) {
@@ -118,9 +118,9 @@ pub fn compute_ranks_directed_base(
     }
   }
   let rank_same_reps = @rank_constraints.build_rank_same_reps(source, nodes)
-  let rep_index : Map[String, Int] = Map([])
+  let rep_index : Map[String, Int32] = Map([])
   let rep_order : Array[String] = []
-  let index : Map[String, Int] = Map([])
+  let index : Map[String, Int32] = Map([])
   let mut has_rank_same_groups = false
   for node in rank_nodes {
     let name = node.name()
@@ -196,13 +196,13 @@ pub fn compute_ranks_directed_base(
       }
     }
   }
-  let adjacency : Array[Array[Int]] = []
+  let adjacency : Array[Array[Int32]] = []
   for _ in 0..<rep_order.length() {
     adjacency.push([])
   }
-  let components : Array[Array[Int]] = []
+  let components : Array[Array[Int32]] = []
   if has_rank_same_groups {
-    let component : Array[Int] = []
+    let component : Array[Int32] = []
     let collapsed_edges : Array[(String, String)] = []
     let seen_edges : Map[String, Bool] = Map([])
     // decompose visits the fast graph after rank-set representatives merge.
@@ -253,8 +253,8 @@ pub fn compute_ranks_directed_base(
         continue
       }
       visited[start] = true
-      let stack : Array[Int] = [start]
-      let component : Array[Int] = []
+      let stack : Array[Int32] = [start]
+      let component : Array[Int32] = []
       while stack.length() > 0 {
         let top = stack.length() - 1
         let idx = stack[top]
@@ -271,13 +271,13 @@ pub fn compute_ranks_directed_base(
       components.push(component)
     }
   }
-  let rep_ranks : Map[String, Int] = Map([])
+  let rep_ranks : Map[String, Int32] = Map([])
   // Graphviz parity: rank1 runs network simplex per connected component
   // (refs/graphviz/lib/dotgen/rank.c), and each component is normalized
   // independently before readout.
   for component in components {
     let graph = @network_simplex.new_graph()
-    let local_index : Map[Int, Int] = Map([])
+    let local_index : Map[Int32, Int32] = Map([])
     for rep_idx in component {
       let rep_name = rep_order[rep_idx]
       local_index[rep_idx] = @network_simplex.add_node(graph, rep_name)
@@ -348,7 +348,7 @@ pub fn compute_ranks_directed_base(
       None => default_rank
     }
   }
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   let mut min_rank = 0
   let mut seen = false
   for node in nodes {

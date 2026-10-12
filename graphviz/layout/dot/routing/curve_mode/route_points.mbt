@@ -94,7 +94,7 @@ fn simplify_polyline(
   let keep = Array::make(points.length(), false)
   keep[0] = true
   keep[last] = true
-  let stack : Array[(Int, Int)] = []
+  let stack : Array[(Int32, Int32)] = []
   stack.push((0, last))
   while stack.length() > 0 {
     let top = stack.length() - 1
@@ -143,7 +143,7 @@ priv struct RoutePointState {
 fn sameport_path_port_box(
   center : @geom.Point,
   anchor : @geom.Point,
-  group_size : Int,
+  group_size : Int32,
 ) -> @geom.Rect {
   // Graphviz parity: large sameport groups keep a tiny inward port-box offset;
   // this preserves oldarrows/honda routing-label snapshots exactly.
@@ -170,12 +170,12 @@ fn sameport_path_port_box(
 priv struct PathplanRoutePointsInput {
   base : EdgeRouteBase
   has_any_edge_label : Bool
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   vnode_info : EdgeVnodeInfo
-  x_groups : Map[Int, Array[String]]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int32, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   nodesep_pt : Double
   path_left_bound : Double
   path_right_bound : Double
@@ -390,7 +390,7 @@ fn adjust_route_points(input : AdjustRoutePointsInput) -> Array[@geom.Point] {
 priv struct AdjustedCurveModePointsInput {
   base : EdgeRouteBase
   prepared : CurveModeRoutePrep
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   nodesep_pt : Double
   enable_complex_tuning : Bool
 }

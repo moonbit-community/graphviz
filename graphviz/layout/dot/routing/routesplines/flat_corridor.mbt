@@ -5,8 +5,8 @@ fn flat_endpoint_boxes(
   pos : @geom.Point,
   size : NodeSize,
   anchor : @geom.Point,
-  side : Int,
-  route_side : Int,
+  side : Int32,
+  route_side : Int32,
   tail : Bool,
   ranksep : Double,
   rank_height : Double,
@@ -89,7 +89,7 @@ fn flat_endpoint_boxes(
 fn flat_corridor_route(
   tail : EndpathResult,
   head : EndpathResult,
-  route_side : Int,
+  route_side : Int32,
   stepx : Double,
   stepy : Double,
 ) -> PathplanResult? {

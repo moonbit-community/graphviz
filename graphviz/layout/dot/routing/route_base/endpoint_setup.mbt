@@ -110,18 +110,18 @@ priv struct RouteEndpointPortSideInput {
   port_rect : @geom.Rect?
   pos : @geom.Point
   size : NodeSize
-  port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int
+  port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int32
   port_side_for_edge : (
     String,
     @cgraph.Port?,
     @geom.Rect?,
     @geom.Point,
     NodeSize,
-  ) -> Int
+  ) -> Int32
 }
 
 ///|
-fn port_side_for_route_endpoint(input : RouteEndpointPortSideInput) -> Int {
+fn port_side_for_route_endpoint(input : RouteEndpointPortSideInput) -> Int32 {
   if input.sameport_anchor is Some(_) {
     (input.port_side_mask_from_anchor)(input.anchor_base, input.pos, input.size)
   } else if input.dynamic_anchor.is_dynamic {
@@ -205,8 +205,8 @@ priv struct FlatBottomDirBothNudgeCheckInput {
   compass_head_on_non_record : Bool
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
-  tail_port_side : Int
-  head_port_side : Int
+  tail_port_side : Int32
+  head_port_side : Int32
   layout_rankdir : RankDir
 }
 

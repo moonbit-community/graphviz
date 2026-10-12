@@ -30,7 +30,7 @@ fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
 pub fn compress_width_minlen_pt(
   graph : @cgraph.Graph,
   rankdir : @rankdir.RankDir,
-) -> Int? {
+) -> Int32? {
   if !graph_ratio_is_compress(graph) {
     return None
   }
@@ -73,7 +73,7 @@ fn size_right_pt(
 
 ///|
 pub fn rank_nodesep_pt(
-  rank : Int,
+  rank : Int32,
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> Double {
@@ -86,8 +86,8 @@ pub fn rank_nodesep_pt(
 
 ///|
 pub fn compute_rank_positions(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,

@@ -167,7 +167,7 @@ fn collect_noop_nodes_with_sizes(
 /// unranked_engine package so the root API boundary stays thin.
 fn build_noop_layout_tree(
   graph : @cgraph.Graph,
-  no_op_level : Int,
+  no_op_level : Int32,
   scale : Double,
 ) -> Result[@layout_tree.LayoutTree, String] {
   let geometry = build_engine_geometry_context(graph, scale)

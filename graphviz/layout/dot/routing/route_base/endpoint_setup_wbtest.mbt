@@ -23,8 +23,8 @@ test "dynamic endpoint neighbors follow the fast chain rather than original endp
 ///|
 fn route_dynamic_anchor(
   anchor : @geom.Point?,
-  side? : Int = 0,
-  is_dynamic? : Bool = false,
+  side~ : Int32 = 0,
+  is_dynamic~ : Bool = false,
 ) -> RouteDynamicPortAnchor {
   { anchor, side, is_dynamic, }
 }

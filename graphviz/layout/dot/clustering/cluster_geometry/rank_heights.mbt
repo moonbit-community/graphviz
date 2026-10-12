@@ -11,11 +11,11 @@
 /// walk payload grouped so rank half-height propagation remains explicit.
 pub(all) struct ClusterRankHeightsApplyInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   rankdir : @rankdir.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
@@ -50,7 +50,7 @@ fn apply_cluster_rank_heights_inner(
     return None
   }
   let seen : Map[String, Bool] = Map([])
-  let rank_heights : Map[Int, Double] = Map([])
+  let rank_heights : Map[Int32, Double] = Map([])
   let rank_bounds = collect_cluster_rank_heights({
     graph: input.graph,
     ranks: input.ranks,

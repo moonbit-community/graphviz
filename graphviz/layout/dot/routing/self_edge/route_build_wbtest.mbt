@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -18,11 +18,11 @@ fn build_self_edge_base(
   edge : @cgraph.Edge,
   tail_anchor : @geom.Point,
   head_anchor : @geom.Point,
-  tail_port_side : Int,
-  head_port_side : Int,
-  tail_port? : @cgraph.Port? = None,
-  head_port? : @cgraph.Port? = None,
-  rankdir? : RankDir = RankDir::TB,
+  tail_port_side : Int32,
+  head_port_side : Int32,
+  tail_port~ : @cgraph.Port? = None,
+  head_port~ : @cgraph.Port? = None,
+  rankdir~ : RankDir = RankDir::TB,
 ) -> EdgeRouteBase {
   let node = edge.tail()
   let name = node.name()
@@ -123,7 +123,7 @@ test "build_self_edge_routes sends implicit self-edge loops to the right" {
     0,
     0,
   )
-  let rank_y : Map[Int, Double] = { 0: 0.0 }
+  let rank_y : Map[Int32, Double] = { 0: 0.0 }
 
   let routes = build_self_edge_routes({
     edges: [edge],
@@ -162,7 +162,7 @@ test "build_self_edge_routes keeps top-port labels above the node" {
     tail_port=top_port,
     head_port=top_port,
   )
-  let rank_y : Map[Int, Double] = { 0: 0.0 }
+  let rank_y : Map[Int32, Double] = { 0: 0.0 }
 
   let routes = build_self_edge_routes({
     edges: [edge],

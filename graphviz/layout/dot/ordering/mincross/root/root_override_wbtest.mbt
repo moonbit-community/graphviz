@@ -186,11 +186,11 @@ test "merge_rank_with_attached_skeleton_replacements inserts attached members af
 
 ///|
 test "merge_root_mincross_groups uses positional merge when one attached member should stay in front of the root-skeleton pair" {
-  let seeded_groups : Map[Int, Array[String]] = Map([])
+  let seeded_groups : Map[Int32, Array[String]] = Map([])
   seeded_groups[0] = ["member", "skel_a", "root", "tail"]
   seeded_groups[1] = ["untouched"]
 
-  let ordered_mincross : Map[Int, Array[String]] = Map([])
+  let ordered_mincross : Map[Int32, Array[String]] = Map([])
   ordered_mincross[0] = ["root", "skel_a"]
 
   let mincross_nodes : Map[String, Bool] = Map([])
@@ -219,10 +219,10 @@ test "merge_root_mincross_groups uses positional merge when one attached member 
 
 ///|
 test "merge_root_mincross_groups uses attached-skeleton merge when a skeleton has multiple attached members" {
-  let seeded_groups : Map[Int, Array[String]] = Map([])
+  let seeded_groups : Map[Int32, Array[String]] = Map([])
   seeded_groups[0] = ["member1", "skel_a", "root", "tail", "member2"]
 
-  let ordered_mincross : Map[Int, Array[String]] = Map([])
+  let ordered_mincross : Map[Int32, Array[String]] = Map([])
   ordered_mincross[0] = ["root", "skel_a"]
 
   let mincross_nodes : Map[String, Bool] = Map([])

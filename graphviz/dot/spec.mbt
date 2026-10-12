@@ -5,9 +5,9 @@
 ///|
 /// Source position for parse errors.
 pub(all) struct Position {
-  line : Int
-  column : Int
-  offset : Int
+  line : Int32
+  column : Int32
+  offset : Int32
 } derive(Debug, Eq)
 
 ///|

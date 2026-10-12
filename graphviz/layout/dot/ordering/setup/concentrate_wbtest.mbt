@@ -13,7 +13,7 @@ test "concentrate uses the retained endpoint port after resolving aliases" {
   let kept_edge = graph.edge(a, head, head_port=normal)
   let absorbed_edge = graph.edge(a, head, head_port=target)
   let other_edge = graph.edge(c, head, head_port=target)
-  let ranks : Map[String, Int] = { "a": 0, "c": 0, "head": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "c": 0, "head": 2 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -68,7 +68,7 @@ test "concentrate absorbs the right virtual chain sharing a head port" {
     tail_port={ name: Some("Target"), compass: None, },
     head_port=in_port,
   )
-  let ranks : Map[String, Int] = { "tail": 0, "head": 3 }
+  let ranks : Map[String, Int32] = { "tail": 0, "head": 3 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -77,7 +77,7 @@ test "concentrate absorbs the right virtual chain sharing a head port" {
   )
   let normal_chain = edge_vnode_chain_for_test(vnode_info, normal)
   let target_chain = edge_vnode_chain_for_test(vnode_info, target)
-  let ordered_groups : Map[Int, Array[String]] = {
+  let ordered_groups : Map[Int32, Array[String]] = {
     1: [normal_chain[0], target_chain[0]],
     2: [normal_chain[1], target_chain[1]],
   }
@@ -107,7 +107,11 @@ test "concentrate does not reuse a representative that already branches" {
   let right_head = graph.node("right_head")
   let left_edge = graph.edge(tail, left_head)
   let right_edge = graph.edge(tail, right_head)
-  let ranks : Map[String, Int] = { "tail": 0, "left_head": 2, "right_head": 2 }
+  let ranks : Map[String, Int32] = {
+    "tail": 0,
+    "left_head": 2,
+    "right_head": 2,
+  }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -136,7 +140,7 @@ test "concentrate excludes opposite chains only when initial ports match" {
   let high = graph.node("high")
   let forward = graph.edge(low, high)
   let backward = graph.edge(high, low)
-  let ranks : Map[String, Int] = { "low": 0, "high": 3 }
+  let ranks : Map[String, Int32] = { "low": 0, "high": 3 }
   let unmatched = concentrate_opposite_edges([forward, backward], ranks, (_, _) => {
     false
   })
@@ -170,7 +174,7 @@ test "concentrate groups backward edges by rank-oriented endpoints" {
   let low_b = graph.node("low_b")
   let first = graph.edge(high, low_a)
   let second = graph.edge(high, low_b)
-  let ranks : Map[String, Int] = { "high": 3, "low_a": 0, "low_b": 0 }
+  let ranks : Map[String, Int32] = { "high": 3, "low_a": 0, "low_b": 0 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -201,7 +205,7 @@ test "concentrate requires the same live predecessor beyond the first rank" {
   let second_head = graph.node("second")
   let first = graph.edge(tail, first_head)
   let second = graph.edge(tail, second_head)
-  let ranks : Map[String, Int] = { "tail": 0, "first": 3, "second": 3 }
+  let ranks : Map[String, Int32] = { "tail": 0, "first": 3, "second": 3 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -243,7 +247,7 @@ test "concentrate degrees follow rank direction for shared opposite edges" {
   let high = graph.node("high")
   let forward = graph.edge(low, high)
   let backward = graph.edge(high, low)
-  let ranks : Map[String, Int] = { "low": 0, "high": 2 }
+  let ranks : Map[String, Int32] = { "low": 0, "high": 2 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -275,7 +279,7 @@ test "concentrate considers branches outside the common endpoint group" {
   let first = graph.edge(a, head)
   let second = graph.edge(b, head)
   let branch = graph.edge(a, other)
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "head": 2, "other": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "head": 2, "other": 2 }
   let vnode_info = build_edge_vnodes_for_test(
     graph,
     ranks,

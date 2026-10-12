@@ -10,8 +10,8 @@
 /// Graphviz parity: cluster-local rank reorder call payload preserves the
 /// startpass=2 + coalesced-parallel + fixed-slot wiring used by mincross_clust.
 pub(all) struct ClusterLocalRankReorderCallInputs {
-  cluster_rank_keys : Array[Int]
-  seeded_cluster_groups : Map[Int, Array[String]]
+  cluster_rank_keys : Array[Int32]
+  seeded_cluster_groups : Map[Int32, Array[String]]
   cluster_edges : Array[@cgraph.Edge]
   cluster_edge_tail : Array[String]
   cluster_edge_head : Array[String]
@@ -22,10 +22,10 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
   cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
-  cluster_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
+  cluster_node_order : Map[String, Int32]
   cluster_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -35,7 +35,7 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
   cluster_fixed_positions : Map[String, Double]
-  fixed_ranks : Map[String, Int]
+  fixed_ranks : Map[String, Int32]
 }
 
 ///|
@@ -43,8 +43,8 @@ pub(all) struct ClusterLocalRankReorderCallInputs {
 /// with fixed rank slots, startpass=2, and coalesced parallel-edge handling.
 pub fn run_cluster_local_rank_reorder_call(
   call_inputs : ClusterLocalRankReorderCallInputs,
-  crossing_counter? : ((Map[Int, Array[String]]) -> Int)? = None,
-) -> Map[Int, Array[String]] {
+  crossing_counter~ : ((Map[Int32, Array[String]]) -> Int32)? = None,
+) -> Map[Int32, Array[String]] {
   let skeletons : Map[String, Bool] = Map([])
   for name, _ in call_inputs.cluster_node_order {
     if @cluster_identity.is_cluster_skeleton_name(name) {
@@ -99,9 +99,9 @@ fn run_cluster_rank_reorder(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   dispatch_context : ClusterLocalReorderDispatchContext,
-  expansion_order? : Array[String] = [],
-  crossing_counter? : ((Map[Int, Array[String]]) -> Int)? = None,
-) -> Map[Int, Array[String]]? {
+  expansion_order~ : Array[String] = [],
+  crossing_counter~ : ((Map[Int32, Array[String]]) -> Int32)? = None,
+) -> Map[Int32, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
     for rank in local_context.cluster_rank_keys {
@@ -159,10 +159,10 @@ fn reorder_cluster_rank_group(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
-  expansion_order? : Array[String] = [],
+  expansion_order~ : Array[String] = [],
 ) -> Unit {
   guard build_child_skeleton_view(
       cluster, cluster_graph, groups, dispatch_context,
@@ -204,10 +204,10 @@ fn reorder_expanded_cluster_rank_group(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
-  expansion_order? : Array[String] = [],
+  expansion_order~ : Array[String] = [],
 ) -> Unit {
   let local_context = match
     build_cluster_local_reorder_context({
@@ -298,10 +298,10 @@ fn reorder_expanded_cluster_rank_group(
 fn reorder_cluster_rank_groups(
   cluster_names : Array[String],
   cluster_graphs : Map[String, @cgraph.Graph],
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
-  expansion_order? : Array[String] = [],
+  expansion_order~ : Array[String] = [],
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map([])
   let mut current_fixed_positions = fixed_positions
@@ -333,7 +333,7 @@ fn reorder_cluster_rank_groups(
 /// arrays/maps together so each cluster pass reuses one immutable payload.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusterLocalReorderDispatchContext {
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
@@ -347,18 +347,18 @@ pub(all) struct ClusterLocalReorderDispatchContext {
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
-  fixed_ranks : Map[String, Int]
+  fixed_ranks : Map[String, Int32]
   order_with_vnodes : Bool
 }
 
 ///|
-fn count_edge_vnodes(names : Array[String]) -> Int {
+fn count_edge_vnodes(names : Array[String]) -> Int32 {
   let mut vnode_count = 0
   for name in names {
     if @edge_identity.is_edge_vnode_name(name) {
@@ -373,9 +373,9 @@ fn count_edge_vnodes(names : Array[String]) -> Int {
 /// and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
 fn should_include_external_crossing_edges(
-  cluster_rank_keys : Array[Int],
-  cluster_graph_edge_count : Int,
-  vnode_count : Int,
+  cluster_rank_keys : Array[Int32],
+  cluster_graph_edge_count : Int32,
+  vnode_count : Int32,
 ) -> Bool {
   if @env.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
     return cluster_rank_keys.length() <= 2
@@ -450,7 +450,7 @@ priv struct ClusterLocalReorderRunInputsOutput {
   children : Map[String, Array[String]]
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   cluster_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   cluster_flat_constraints : Map[String, Bool]
@@ -474,7 +474,7 @@ priv struct ClusterLocalReorderInputBuildContext {
   neighbor_sources : ClusterLocalNeighborSources
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
-  fixed_ranks : Map[String, Int]
+  fixed_ranks : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   intercluster_keys : Map[String, String]
@@ -492,7 +492,7 @@ priv struct LocalReorderEdgeBundle {
   cluster_edge_head_port_order : Array[Double]
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
 }
 
 ///|
@@ -648,11 +648,11 @@ fn build_local_reorder_inputs(
 /// merge_ranks installs each expanded cluster as one contiguous rank block.
 /// Preserve the relative order of outside nodes, not gaps between members.
 fn apply_cluster_rank_reorder_output(
-  groups : Map[Int, Array[String]],
-  cluster_rank_keys : Array[Int],
-  ordered_cluster : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
+  cluster_rank_keys : Array[Int32],
+  ordered_cluster : Map[Int32, Array[String]],
   cluster_node_set : Map[String, Bool],
-  replaced_cluster? : String = "",
+  replaced_cluster~ : String = "",
 ) -> Unit {
   for rank in cluster_rank_keys {
     let desired = ordered_cluster.get(rank).unwrap_or_default()
@@ -692,9 +692,9 @@ fn apply_cluster_rank_reorder_output(
 priv struct ClusterLocalReorderContext {
   cluster_node_set : Map[String, Bool]
   cluster_nodes : Array[String]
-  cluster_node_order : Map[String, Int]
-  cluster_groups : Map[Int, Array[String]]
-  cluster_rank_keys : Array[Int]
+  cluster_node_order : Map[String, Int32]
+  cluster_groups : Map[Int32, Array[String]]
+  cluster_rank_keys : Array[Int32]
   cluster_fixed_positions : Map[String, Double]
 }
 
@@ -704,7 +704,7 @@ priv struct ClusterLocalReorderContext {
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusterNodeOrderContext {
   cluster_nodes : Array[String]
-  cluster_node_order : Map[String, Int]
+  cluster_node_order : Map[String, Int32]
 }
 
 ///|
@@ -714,7 +714,7 @@ priv struct ClusterNodeOrderContext {
 fn build_cluster_node_set_for_reorder(
   cluster : String,
   cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   vnode_clusters : Map[String, String],
   order_with_vnodes : Bool,
 ) -> Map[String, Bool] {
@@ -746,13 +746,13 @@ fn build_cluster_node_set_for_reorder(
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_node_order_context(
   cluster_node_set : Map[String, Bool],
-  node_order : Map[String, Int],
+  node_order : Map[String, Int32],
 ) -> ClusterNodeOrderContext {
   let cluster_nodes : Array[String] = []
   for name, _ in cluster_node_set {
     cluster_nodes.push(name)
   }
-  let cluster_node_order : Map[String, Int] = Map([])
+  let cluster_node_order : Map[String, Int32] = Map([])
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
@@ -773,7 +773,7 @@ fn build_cluster_node_order_context(
 fn build_cluster_fixed_positions(
   fixed_positions : Map[String, Double],
   cluster_node_set : Map[String, Bool],
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
 ) -> Map[String, Double] {
   let expanded_positions = fixed_positions.copy()
   for _rank, names in groups {
@@ -787,7 +787,7 @@ fn build_cluster_fixed_positions(
       }
     }
   }
-  let offsets : Map[Int, Double] = Map([])
+  let offsets : Map[Int32, Double] = Map([])
   for rank, names in groups {
     for index, name in names {
       guard cluster_node_set.get(name) is Some(_) else { continue }
@@ -816,8 +816,8 @@ fn build_cluster_fixed_positions(
 priv struct ClusterLocalReorderContextBuildInputs {
   cluster : String
   cluster_graph : @cgraph.Graph
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   source_out_neighbors : Map[String, Array[String]]
   vnode_clusters : Map[String, String]
   fixed_positions : Map[String, Double]
@@ -848,8 +848,8 @@ fn append_child_cluster_seed_nodes(
 /// walks that prepended list backwards, so children seed before direct nodes.
 fn cluster_class2_seed_order(
   graph : @cgraph.Graph,
-  node_order : Map[String, Int],
-) -> Map[String, Int] {
+  node_order : Map[String, Int32],
+) -> Map[String, Int32] {
   let names : Array[String] = []
   append_child_cluster_seed_nodes(graph, names)
   // class2 prepends real nodes in graph iteration order; build_ranks walks
@@ -862,7 +862,7 @@ fn cluster_class2_seed_order(
     remaining.push(name)
   }
   remaining.sort_by((a, b) => compare_by_order_then_name(node_order, a, b))
-  let result : Map[String, Int] = Map([])
+  let result : Map[String, Int32] = Map([])
   for name in [..names, ..remaining] {
     guard result.get(name) is None else { continue }
     result[name] = result.length()
@@ -918,9 +918,9 @@ fn build_cluster_local_reorder_context(
 fn build_cluster_rank_seeded_groups(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
-  fixed_ranks : Map[String, Int],
-  expansion_order? : Array[String] = [],
-) -> Map[Int, Array[String]] {
+  fixed_ranks : Map[String, Int32],
+  expansion_order~ : Array[String] = [],
+) -> Map[Int32, Array[String]] {
   let seeded_groups = @reorder.build_neighbor_rank_groups(
     local_context.cluster_rank_keys,
     local_context.cluster_groups,
@@ -955,9 +955,9 @@ fn cluster_depth_for_order_inner(
   cluster : String,
   parents : Map[String, String?],
   fallback_parents : Map[String, String?],
-  memo : Map[String, Int],
+  memo : Map[String, Int32],
   visiting : Map[String, Bool],
-) -> Int {
+) -> Int32 {
   match memo.get(cluster) {
     Some(value) => value
     None => {
@@ -1003,8 +1003,8 @@ fn cluster_depth_for_order(
   cluster : String,
   parents : Map[String, String?],
   fallback_parents : Map[String, String?],
-  memo : Map[String, Int],
-) -> Int {
+  memo : Map[String, Int32],
+) -> Int32 {
   cluster_depth_for_order_inner(
     cluster,
     parents,
@@ -1016,9 +1016,9 @@ fn cluster_depth_for_order(
 
 ///|
 fn cluster_order_index_or_end(
-  cluster_index : Map[String, Int],
+  cluster_index : Map[String, Int32],
   name : String,
-) -> Int {
+) -> Int32 {
   match cluster_index.get(name) {
     Some(value) => value
     None => cluster_index.length() + 1
@@ -1072,7 +1072,7 @@ fn build_cluster_graph_order(
     return { cluster_graphs, cluster_names, }
   }
   let cluster_index = @order_graph.build_cluster_order_index(cluster_order)
-  let cluster_depth : Map[String, Int] = Map([])
+  let cluster_depth : Map[String, Int32] = Map([])
   for name in cluster_names {
     let _ = cluster_depth_for_order(
       name, cluster_parents_hint, cluster_parents, cluster_depth,
@@ -1125,10 +1125,10 @@ fn build_cluster_graph_order(
 /// Graphviz parity: local-cluster stable sorts compare seed order first and
 /// break ties by node name to keep deterministic fixture ordering.
 fn compare_by_order_then_name(
-  order_map : Map[String, Int],
+  order_map : Map[String, Int32],
   a : String,
   b : String,
-) -> Int {
+) -> Int32 {
   let a_idx = order_map.get(a).unwrap_or_default()
   let b_idx = order_map.get(b).unwrap_or_default()
   if a_idx < b_idx {
@@ -1186,7 +1186,7 @@ fn build_rank_group_name_set(names : Array[String]) -> Map[String, Bool] {
 /// cluster node order before previous-rank reachability seeding.
 fn normalize_rank_real_nodes(
   list : Array[String],
-  cluster_node_order : Map[String, Int],
+  cluster_node_order : Map[String, Int32],
 ) -> Unit {
   if list.length() <= 1 {
     return ()
@@ -1231,7 +1231,7 @@ fn seed_rank_real_nodes_from_previous_rank(
   list : Array[String],
   prev_names : Array[String],
   out_heads_by_tail : Map[String, Array[String]],
-  cluster_node_order : Map[String, Int],
+  cluster_node_order : Map[String, Int32],
 ) -> Unit {
   if list.length() <= 1 {
     return ()
@@ -1271,12 +1271,12 @@ fn seed_rank_real_nodes_from_previous_rank(
 /// fallback.
 /// Do not change behavior without updating fixtures/tests.
 fn build_local_rank_groups(
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   cluster_node_set : Map[String, Bool],
-  cluster_node_order : Map[String, Int],
+  cluster_node_order : Map[String, Int32],
   source_graphviz_out_neighbors : Map[String, Array[String]],
-) -> Map[Int, Array[String]] {
-  let cluster_groups : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let cluster_groups : Map[Int32, Array[String]] = Map([])
   for rank, names in groups {
     let list : Array[String] = []
     for name in names {

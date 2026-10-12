@@ -9,7 +9,7 @@
 /// replay can retire without losing its distinct signal.
 fn build_l0_xpos_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
-  let slack_ranks : Array[Int] = [
+  let slack_ranks : Array[Int32] = [
     287, 287, 94, -1, -1, -1, -1, -1, 431, 431, 367, 215, 284, 189, 71, 71, 71, 215,
     143, 71, 215, 215, 215, 94, -1, -1, -1, -1, -1, 71, 71, 71, 143, 143, 71, -1,
     -1, -1, -1, -1, -1, -1,
@@ -23,7 +23,7 @@ fn build_l0_xpos_fixture_graph() -> NsGraph {
     "n24", "n25", "n26", "n27", "n28", "n29", "n30", "n31", "n32", "n33", "n34",
     "n35", "n36", "n37", "n38", "n39", "n40", "n41", "n42",
   ]
-  let normal_ranks : Array[Int] = [
+  let normal_ranks : Array[Int32] = [
     0, 0, 0, 0, 72, 144, 72, 83, 155, 0, 0, 0, 72, 144, 95, 227, 144, 216, 299, 371,
     72, 216, 190, 288, 360, 285, 144, 216, 432, 368, 440, 0, 0, 0, 72, 144, 95, 512,
     443, 216, 288, 288, 526,

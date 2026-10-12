@@ -4,7 +4,7 @@
 
 ///|
 test "build_root_reorder_node_order prefers nlist order for materialized nodes and backfills missing names from rank-group order" {
-  let root_groups : Map[Int, Array[String]] = Map([])
+  let root_groups : Map[Int32, Array[String]] = Map([])
   root_groups[0] = ["a", "c"]
   root_groups[1] = ["b"]
 
@@ -26,10 +26,10 @@ test "build_root_reorder_node_order prefers nlist order for materialized nodes a
 
 ///|
 test "finalize_root_rank_order_phase_output merges flip output back into seeded groups only when graphviz_flip is enabled" {
-  let root_groups : Map[Int, Array[String]] = Map([])
+  let root_groups : Map[Int32, Array[String]] = Map([])
   root_groups[0] = ["member", "skel_a", "root", "tail"]
 
-  let ordered_root : Map[Int, Array[String]] = Map([])
+  let ordered_root : Map[Int32, Array[String]] = Map([])
   ordered_root[0] = ["root", "skel_a"]
 
   let order_cluster_keys : Map[String, String] = Map([])
@@ -88,11 +88,11 @@ test "build_root_tail_order_override keeps first-seen tails only" {
 test "build_root_reorder_edge_data replays root tails in nlist order and normalizes synthetic vnode defaults" {
   let vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let root_nodes = ["root", vnode, "leaf"]
-  let root_groups : Map[Int, Array[String]] = Map([])
+  let root_groups : Map[Int32, Array[String]] = Map([])
   root_groups[0] = ["root", vnode]
   root_groups[1] = ["leaf"]
 
-  let root_ranks : Map[String, Int] = Map([])
+  let root_ranks : Map[String, Int32] = Map([])
   root_ranks["root"] = 0
   root_ranks[vnode] = 0
   root_ranks["leaf"] = 1
@@ -103,7 +103,7 @@ test "build_root_reorder_edge_data replays root tails in nlist order and normali
 
   let order_edges_by_tail_root : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   order_edges_by_tail_root["root"] = [
     ("root", vnode, 5, true, 1.0, 2.0, 0.1, 0.2),
@@ -146,7 +146,7 @@ test "build_root_reorder_context assembles filtered root groups ranks nodes nlis
 
   let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
+  let order_groups_for_mincross : Map[Int32, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root_a", skeleton_0, "cluster_member"]
   order_groups_for_mincross[1] = ["cluster_peer", "root_b"]
 
@@ -166,14 +166,14 @@ test "build_root_reorder_context assembles filtered root groups ranks nodes nlis
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cross)] = ["v_cross"]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_local)] = ["v_local"]
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_cross", "v_local"]
 
   let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
   vnode_order_keys_for_ordering["v_cross"] = 0.5
   vnode_order_keys_for_ordering["v_local"] = 0.25
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["cluster_member"] = 0
   ranks["cluster_peer"] = 1
 

@@ -36,7 +36,7 @@ fn graphviz_mapbool_default_false(value : String) -> Bool {
 /// produced by class2.
 fn edge_can_concentrate(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
 ) -> Bool {
   if edge.get_attr("label").unwrap_or_default() != "" {
@@ -56,7 +56,7 @@ fn edge_can_concentrate(
 /// when testing a shared head.
 fn edge_vnodes_in_direction(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
 ) -> Array[String] {
@@ -137,7 +137,7 @@ fn add_concentrated_vnode_segment(
 /// paths share a neighbor entry, matching merge_oneway in conc.c.
 fn build_concentrated_vnode_degrees(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   aliases : Map[String, String],
 ) -> ConcentratedVNodeDegrees {
@@ -227,20 +227,20 @@ fn same_retained_endpoint_ports(
 fn merge_adjacent_vnode_run(
   edges : Array[@cgraph.Edge],
   all_edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
-  step : Int,
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  step : Int32,
+  ordered_groups_with_vnodes : Map[Int32, Array[String]],
   aliases : Map[String, String],
-  live_graph? : ConcentrateFastGraph? = None,
-  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+  live_graph~ : ConcentrateFastGraph? = None,
+  node_ports_equal~ : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
     _,
     a,
     b,
   ) => @edge_identity.port_key(a) == @edge_identity.port_key(b),
 ) -> Unit {
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   for _rank, names in ordered_groups_with_vnodes {
     let mut position = 0
     for name in names {
@@ -253,7 +253,9 @@ fn merge_adjacent_vnode_run(
   let degrees = build_concentrated_vnode_degrees(
     all_edges, ranks, vnode_info, aliases,
   )
-  let candidates : Array[(String, Int, String, (@cgraph.Node, @cgraph.Port?)?)] = []
+  let candidates : Array[
+    (String, Int32, String, (@cgraph.Node, @cgraph.Port?)?),
+  ] = []
   for edge in edges {
     let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail)
     if step >= chain.length() {
@@ -329,10 +331,10 @@ fn merge_adjacent_vnode_run(
 /// `lib/dotgen/conc.c`.  Direction is part of the key, matching `samedir`.
 fn build_concentrate_edge_groups(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   from_low_rank : Bool,
-  excluded_edges? : Map[String, Bool] = Map([]),
+  excluded_edges~ : Map[String, Bool] = Map([]),
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
@@ -371,7 +373,7 @@ fn build_concentrate_edge_groups(
 /// participate in conc.c's samedir candidate test.
 fn concentrate_opposite_edges(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool,
 ) -> Map[String, Bool] {
   let excluded : Map[String, Bool] = Map([])
@@ -404,11 +406,11 @@ fn concentrate_opposite_edges(
 /// endpoint can have different lengths, so a short chain cannot end the scan.
 fn concentrate_step_at_rank(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   from_tail : Bool,
-  rank : Int,
-) -> Int? {
+  rank : Int32,
+) -> Int32? {
   for edge in edges {
     let chain = edge_vnodes_in_direction(edge, ranks, vnode_info, from_tail)
     for step, vnode in chain {
@@ -426,15 +428,15 @@ fn concentrate_step_at_rank(
 fn merge_concentrated_vnode_groups(
   groups : Map[String, Array[@cgraph.Edge]],
   all_edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   from_low_rank : Bool,
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  ordered_groups_with_vnodes : Map[Int32, Array[String]],
   aliases : Map[String, String],
   node_ports_equal : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool,
   live_graph : ConcentrateFastGraph?,
 ) -> Unit {
-  let rank_order : Array[Int] = []
+  let rank_order : Array[Int32] = []
   for rank, _ in ordered_groups_with_vnodes {
     rank_order.push(rank)
   }
@@ -485,7 +487,7 @@ fn rebuild_concentrated_vnode_info(
     }
     edge_vnodes[key] = updated
   }
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   let vnode_clusters : Map[String, String] = Map([])
   for vnode, _ in live {
@@ -502,7 +504,7 @@ fn rebuild_concentrated_vnode_info(
       None => ()
     }
   }
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   for rank, names in vnode_info.vnodes_by_rank {
     let updated : Array[String] = []
     let seen : Map[String, Bool] = Map([])
@@ -525,10 +527,10 @@ fn rebuild_concentrated_vnode_info(
 /// Remove absorbed virtual nodes from an already ordered rank list while
 /// retaining ordinary nodes and cluster skeleton nodes unchanged.
 fn filter_absorbed_vnodes_from_groups(
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   aliases : Map[String, String],
-) -> Map[Int, Array[String]] {
-  let filtered : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let filtered : Map[Int32, Array[String]] = Map([])
   for rank, names in groups {
     let updated : Array[String] = []
     for name in names {
@@ -586,7 +588,7 @@ fn mark_edges_with_absorbed_vnodes(
 /// Result of the post-mincross virtual-node concentrate step.
 priv struct ConcentratedVNodeData {
   vnode_info : EdgeVnodeInfo
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   aliases : Map[String, String]
 }
 
@@ -597,12 +599,12 @@ priv struct ConcentratedVNodeData {
 fn concentrate_vnode_data(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  live_graph? : ConcentrateFastGraph? = None,
-  edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
-  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+  ordered_groups_with_vnodes : Map[Int32, Array[String]],
+  live_graph~ : ConcentrateFastGraph? = None,
+  edge_ports_equal~ : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
+  node_ports_equal~ : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
     _,
     a,
     b,
@@ -680,10 +682,10 @@ fn concentrate_vnode_data(
 pub fn concentrate_ordering_result(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   ordering : OrderingResult,
-  edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
-  node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
+  edge_ports_equal~ : (@cgraph.Edge, @cgraph.Edge) -> Bool = (_, _) => false,
+  node_ports_equal~ : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool = (
     _,
     a,
     b,

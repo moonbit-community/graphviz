@@ -6,7 +6,7 @@
 fn assert_point_close(
   actual : @geom.Point?,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   match actual {
     Some(value) => {

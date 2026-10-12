@@ -7,7 +7,7 @@
 /// yours_truly integrated fixture at startpass=2. Keep an exact owner-local
 /// test so fixture replay can focus on larger changed reorder cases.
 fn stable_named_cluster_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
-  let input_ranks : Array[Array[Int]] = [
+  let input_ranks : Array[Array[Int32]] = [
     [20],
     [18, 17, 19],
     [30, 31, 15, 14, 16],
@@ -24,7 +24,7 @@ fn stable_named_cluster_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     [8, 7],
     [6, 5],
   ]
-  let output_ranks : Array[Array[Int]] = [
+  let output_ranks : Array[Array[Int32]] = [
     [20],
     [18, 17, 19],
     [30, 31, 15, 14, 16],

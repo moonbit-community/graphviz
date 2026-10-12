@@ -1,21 +1,21 @@
 ///|
 fn compare_nodes_by_rank(
   graph : NsGraph,
-  nodes : Array[Int],
-  left : Int,
-  right : Int,
-) -> Int {
+  nodes : Array[Int32],
+  left : Int32,
+  right : Int32,
+) -> Int32 {
   graph.nodes[nodes[left]].rank.compare(graph.nodes[nodes[right]].rank)
 }
 
 ///|
 fn node_rank_median(
   graph : NsGraph,
-  nodes : Array[Int],
-  first : Int,
-  second : Int,
-  third : Int,
-) -> Int {
+  nodes : Array[Int32],
+  first : Int32,
+  second : Int32,
+  third : Int32,
+) -> Int32 {
   let first_second = compare_nodes_by_rank(graph, nodes, first, second)
   let second_third = compare_nodes_by_rank(graph, nodes, second, third)
   let first_third = compare_nodes_by_rank(graph, nodes, first, third)
@@ -38,10 +38,10 @@ fn node_rank_median(
 
 ///|
 fn swap_node_rank_ranges(
-  nodes : Array[Int],
-  first : Int,
-  second : Int,
-  length : Int,
+  nodes : Array[Int32],
+  first : Int32,
+  second : Int32,
+  length : Int32,
 ) -> Unit {
   for offset in 0..<length {
     nodes.swap(first + offset, second + offset)
@@ -51,9 +51,9 @@ fn swap_node_rank_ranges(
 ///|
 fn insertion_sort_nodes_by_rank(
   graph : NsGraph,
-  nodes : Array[Int],
-  low : Int,
-  high : Int,
+  nodes : Array[Int32],
+  low : Int32,
+  high : Int32,
 ) -> Unit {
   for current in (low + 1)..<high {
     for position = current {
@@ -70,9 +70,9 @@ fn insertion_sort_nodes_by_rank(
 ///|
 fn sort_node_rank_range(
   graph : NsGraph,
-  nodes : Array[Int],
-  low : Int,
-  high : Int,
+  nodes : Array[Int32],
+  low : Int32,
+  high : Int32,
 ) -> Unit {
   let length = high - low
   guard length >= 7 else {
@@ -168,7 +168,7 @@ fn sort_node_rank_range(
 ///|
 fn sort_nodes_by_rank_via_native_qsort(
   graph : NsGraph,
-  nodes : Array[Int],
+  nodes : Array[Int32],
 ) -> Bool {
   sort_node_rank_range(graph, nodes, 0, nodes.length())
   true

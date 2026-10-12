@@ -32,7 +32,7 @@ test "build_local_reorder_inputs keeps crossing edges when enabled and scopes me
   cluster_node_set["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = true
   cluster_node_set["b"] = true
 
-  let fixed_ranks : Map[String, Int] = Map([])
+  let fixed_ranks : Map[String, Int32] = Map([])
   fixed_ranks["ext"] = 0
   fixed_ranks["a"] = 1
   fixed_ranks["\{@edge_identity.EDGE_VNODE_PREFIX}0"] = 2
@@ -204,7 +204,7 @@ test "build_local_reorder_inputs drops external crossing edges when disabled" {
   cluster_node_set[vnode_name] = true
   cluster_node_set["b"] = true
 
-  let fixed_ranks : Map[String, Int] = Map([])
+  let fixed_ranks : Map[String, Int32] = Map([])
   fixed_ranks["a"] = 1
   fixed_ranks[vnode_name] = 2
   fixed_ranks["b"] = 3

@@ -4,8 +4,8 @@
 
 ///|
 test "build_xpos_chain_with_vnodes respects rank direction" {
-  let forward_ranks : Map[String, Int] = { "tail": 0, "head": 3 }
-  let reverse_ranks : Map[String, Int] = { "tail": 3, "head": 0 }
+  let forward_ranks : Map[String, Int32] = { "tail": 0, "head": 3 }
+  let reverse_ranks : Map[String, Int32] = { "tail": 3, "head": 0 }
 
   assert_eq(
     build_xpos_chain_with_vnodes(forward_ranks, "tail", "head", ["v1", "v2"]),
@@ -27,7 +27,7 @@ test "append_xpos_edge_with_vnodes keeps endpoint port hints on outer segments o
   let order_edge_head_port_x : Array[Double] = []
   let order_edge_tail_port_order : Array[Double] = []
   let order_edge_head_port_order : Array[Double] = []
-  let ranks : Map[String, Int] = { "a": 0, "v1": 1, "v2": 2, "b": 3 }
+  let ranks : Map[String, Int32] = { "a": 0, "v1": 1, "v2": 2, "b": 3 }
 
   append_xpos_edge_with_vnodes(
     graph,

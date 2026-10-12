@@ -34,7 +34,7 @@ test "precreated forward chains survive concentrated filtering without offsets" 
   let first = graph.edge(low, high)
   let second = graph.edge(low, high)
   let edges = [backward, first, second]
-  let ranks : Map[String, Int] = { "low": 0, "high": 1 }
+  let ranks : Map[String, Int32] = { "low": 0, "high": 1 }
   let ignored = collect_concentrated_edge_ids(edges, ranks, true)
   @test.assert_eq(ignored.length(), 0)
   let (_, labels) = collect_parallel_offset_edge_flags(edges, [], [])
@@ -82,7 +82,7 @@ test "build_edge_parallel_offsets keeps sameport-marked edges on the outer slot"
   sameport.set_attr("samehead", "group")
   labeled.set_attr("label", "mid")
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   edge_has_label_by_id[plain.id()] = false
   edge_has_label_by_id[sameport.id()] = false
   edge_has_label_by_id[labeled.id()] = true
@@ -111,10 +111,10 @@ test "build_edge_parallel_offsets prefers the reverse pair whose tail lacks a se
   let ba = graph.edge(b, a)
   ignore(graph.edge(a, a))
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   edge_has_label_by_id[ab.id()] = false
   edge_has_label_by_id[ba.id()] = false
-  let edge_reversed_by_id : Map[Int, Bool] = Map([])
+  let edge_reversed_by_id : Map[Int32, Bool] = Map([])
   edge_reversed_by_id[ab.id()] = false
   edge_reversed_by_id[ba.id()] = true
 
@@ -141,7 +141,7 @@ test "build_edge_parallel_offsets reverses slot order when parallel edges mix di
   let back = graph.edge(a, b, name="back")
   back.set_attr("dir", "back")
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   edge_has_label_by_id[forward.id()] = false
   edge_has_label_by_id[back.id()] = false
 
@@ -167,11 +167,11 @@ test "build_edge_parallel_offsets keeps intercluster reverse pairs in cluster-co
   let ab = graph.edge(a, b)
   let ba = graph.edge(b, a)
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   edge_has_label_by_id[ab.id()] = false
   edge_has_label_by_id[ba.id()] = false
 
-  let edge_reversed_by_id : Map[Int, Bool] = Map([])
+  let edge_reversed_by_id : Map[Int32, Bool] = Map([])
   edge_reversed_by_id[ab.id()] = false
   edge_reversed_by_id[ba.id()] = true
 
@@ -200,7 +200,7 @@ test "concentrate keeps the forward regular edge as the representative" {
   let b = graph.node("b")
   let forward = graph.edge(a, b)
   let reverse = graph.edge(b, a)
-  let ranks : Map[String, Int] = { "a": 0, "b": 1 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 1 }
   let ignored_edge_ids = collect_concentrated_edge_ids(
     [forward, reverse],
     ranks,
@@ -215,7 +215,7 @@ test "concentrate keeps the forward regular edge as the representative" {
   )
   assert_eq(forward.get_attr("_concentrated_reverse"), Some("true"))
 
-  let edge_has_label_by_id : Map[Int, Bool] = Map([])
+  let edge_has_label_by_id : Map[Int32, Bool] = Map([])
   edge_has_label_by_id[forward.id()] = false
   edge_has_label_by_id[reverse.id()] = false
   let offsets = build_edge_parallel_offsets({
@@ -257,7 +257,7 @@ test "concentrate omits an edge whose virtual chain was absorbed after mincross"
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("tail"), graph.node("head"))
   edge.set_attr("_concentrated_absorbed", "true")
-  let ignored_edge_ids : Map[Int, Bool] = Map([])
+  let ignored_edge_ids : Map[Int32, Bool] = Map([])
 
   mark_absorbed_concentrated_edge_ids([edge], true, ignored_edge_ids)
 

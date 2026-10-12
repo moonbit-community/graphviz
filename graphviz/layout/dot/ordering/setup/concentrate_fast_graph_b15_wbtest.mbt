@@ -7,7 +7,7 @@
 /// tests/layout/dot/b15.gv.dot byte for byte. No implementation output is used
 /// as an expectation. This isolates live-edge updates from candidate selection.
 test "b15 upstream merge events reproduce all live fast edge weights" {
-  let initial : Array[(String, String, Int)] = [
+  let initial : Array[(String, String, Int32)] = [
     ("Walk", "WalkStepUp", 1),
     ("Walk", "WalkStepUp", 1),
     ("Walk", "WalkStepDown", 1),
@@ -368,7 +368,7 @@ test "b15 upstream merge events reproduce all live fast edge weights" {
     ("_mbt_edge_vn_29_2", "_mbt_edge_vn_33_2", Up),
     ("_mbt_edge_vn_16_1", "_mbt_edge_vn_25_1", Up),
   ]
-  let expected : Array[(String, String, Int)] = [
+  let expected : Array[(String, String, Int32)] = [
     ("Walk", "WalkStepUp", 1),
     ("Walk", "WalkStepUp", 1),
     ("Walk", "WalkStepDown", 1),
@@ -608,7 +608,7 @@ test "b15 upstream merge events reproduce all live fast edge weights" {
   for (kept, removed, sweep) in events {
     graph.merge_node(kept, removed, sweep)
   }
-  let actual : Array[(String, String, Int)] = []
+  let actual : Array[(String, String, Int32)] = []
   for _, indices in graph.outgoing {
     for index in indices {
       let edge = graph.edges[index]

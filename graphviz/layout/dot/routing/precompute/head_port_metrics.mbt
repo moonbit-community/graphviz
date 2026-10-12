@@ -10,7 +10,7 @@ pub(all) struct RoutePortGeometry {
 
 ///|
 pub(all) struct HeadPortMetrics {
-  head_port_counts : Map[String, Int]
+  head_port_counts : Map[String, Int32]
   head_port_min_dist : Map[String, Double]
   head_port_max_dist : Map[String, Double]
 }
@@ -23,7 +23,7 @@ pub fn build_head_port_metrics(
   enable_complex_tuning : Bool,
   edge_metric_sample : (@cgraph.Edge) -> (String, Double)?,
 ) -> HeadPortMetrics {
-  let head_port_counts : Map[String, Int] = Map([])
+  let head_port_counts : Map[String, Int32] = Map([])
   let head_port_min_dist : Map[String, Double] = Map([])
   let head_port_max_dist : Map[String, Double] = Map([])
   if enable_complex_tuning {

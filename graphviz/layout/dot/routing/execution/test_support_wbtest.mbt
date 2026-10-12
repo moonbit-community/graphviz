@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -17,7 +17,7 @@ fn assert_close(
 fn assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_close(actual.x, expected.x, eps~)
   assert_close(actual.y, expected.y, eps~)
@@ -26,23 +26,23 @@ fn assert_point_close(
 ///|
 fn build_route_base(
   edge : @cgraph.Edge,
-  is_flat_edge? : Bool = false,
-  parallel_offset? : Double = 0.0,
-  tail_rank? : Int = 0,
-  head_rank? : Int = 1,
-  tail_pos? : @geom.Point = @edge_spline.point(0.0, 0.0),
-  head_pos? : @geom.Point = @edge_spline.point(30.0, 0.0),
-  tail_anchor? : @geom.Point = @edge_spline.point(5.0, 0.0),
-  head_anchor? : @geom.Point = @edge_spline.point(25.0, 0.0),
-  tail_port? : @cgraph.Port? = None,
-  head_port? : @cgraph.Port? = None,
-  orig_tail_name? : String = edge.tail().name(),
-  orig_head_name? : String = edge.head().name(),
-  tail_clip_enabled? : Bool = false,
-  head_clip_enabled? : Bool = false,
-  has_vnodes? : Bool = false,
-  vnodes? : Array[String] = [],
-  has_side_anchor? : Bool = false,
+  is_flat_edge~ : Bool = false,
+  parallel_offset~ : Double = 0.0,
+  tail_rank~ : Int32 = 0,
+  head_rank~ : Int32 = 1,
+  tail_pos~ : @geom.Point = @edge_spline.point(0.0, 0.0),
+  head_pos~ : @geom.Point = @edge_spline.point(30.0, 0.0),
+  tail_anchor~ : @geom.Point = @edge_spline.point(5.0, 0.0),
+  head_anchor~ : @geom.Point = @edge_spline.point(25.0, 0.0),
+  tail_port~ : @cgraph.Port? = None,
+  head_port~ : @cgraph.Port? = None,
+  orig_tail_name~ : String = edge.tail().name(),
+  orig_head_name~ : String = edge.head().name(),
+  tail_clip_enabled~ : Bool = false,
+  head_clip_enabled~ : Bool = false,
+  has_vnodes~ : Bool = false,
+  vnodes~ : Array[String] = [],
+  has_side_anchor~ : Bool = false,
 ) -> EdgeRouteBase {
   let zero = @edge_spline.point(0.0, 0.0)
   let size = @node_primitives.node_size_from_points(10.0, 10.0)
@@ -115,7 +115,7 @@ fn build_route_base(
 }
 
 ///|
-fn normalize_id_groups(groups : Array[Array[Int]]) -> Array[Array[Int]] {
+fn normalize_id_groups(groups : Array[Array[Int32]]) -> Array[Array[Int32]] {
   let normalized = groups.copy()
   for ids in normalized {
     ids.sort()
@@ -146,10 +146,10 @@ fn spline_with_start_x(start_x : Double) -> @geom.Spline {
 fn build_layout_edge(
   edge : @cgraph.Edge,
   spline_start_x : Double,
-  label_pos? : @geom.Point? = None,
-  head_label_pos? : @geom.Point? = None,
-  tail_label_pos? : @geom.Point? = None,
-  xlabel_pos? : @geom.Point? = None,
+  label_pos~ : @geom.Point? = None,
+  head_label_pos~ : @geom.Point? = None,
+  tail_label_pos~ : @geom.Point? = None,
+  xlabel_pos~ : @geom.Point? = None,
 ) -> DotLayoutEdge {
   {
     edge,
@@ -173,11 +173,11 @@ fn straight_bezier_points() -> Array[@geom.Point] {
 
 ///|
 fn sample_regular_pass_input(
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
+  ranks : Map[String, Int32],
+  vnode_ranks : Map[String, Int32],
   vnode_positions : Map[String, @geom.Point],
   vnode_sizes : Map[String, @node_primitives.NodeSize],
-  rank_y : Map[Int, Double],
+  rank_y : Map[Int32, Double],
 ) -> RegularPassInput {
   {
     spline_mode: 0,

@@ -12,7 +12,7 @@ test "live graph excludes flat edges and ignored parallel chains" {
   let first = graph.edge(a, b)
   let duplicate = graph.edge(a, b)
   let flat = graph.edge(a, c)
-  let ranks : Map[String, Int] = { "a": 0, "b": 2, "c": 0 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 2, "c": 0 }
   let vnodes = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -41,7 +41,7 @@ test "live graph creation follows target node order rather than edge declaration
   let c = graph.node("c")
   let ac = graph.edge(a, c)
   let ab = graph.edge(a, b)
-  let ranks : Map[String, Int] = { "a": 0, "b": 1, "c": 1 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 1, "c": 1 }
   let vnodes = build_edge_vnodes_for_test(
     graph,
     ranks,
@@ -65,7 +65,7 @@ test "live concentration transfers weight while retaining a branching leader" {
   let b = graph.node("b")
   let first = graph.edge(p, a)
   let second = graph.edge(p, b)
-  let ranks : Map[String, Int] = { "p": 0, "a": 2, "b": 2 }
+  let ranks : Map[String, Int32] = { "p": 0, "a": 2, "b": 2 }
   let vnodes = build_edge_vnodes_for_test(
     graph,
     ranks,

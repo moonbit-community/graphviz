@@ -19,7 +19,7 @@ test "collect_parallel_remap_edge_ids keeps plain and sameport duplicate groups 
   sameport_2.set_attr("samehead", "g")
   labeled.set_attr("label", "mid")
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 2, "c": 0 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 2, "c": 0 }
   let groups = normalize_id_groups(
     collect_parallel_remap_edge_ids(
       [plain_1, plain_2, sameport_1, sameport_2, labeled, same_rank, self_edge],
@@ -42,7 +42,7 @@ test "collect_parallel_remap_edge_ids drops duplicate classes once directions ar
   let forward_2 = graph.edge(a, b)
   let reverse = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 2 }
   let groups = collect_parallel_remap_edge_ids(
     [forward_1, forward_2, reverse],
     ranks,
@@ -60,7 +60,7 @@ test "build_parallel_remap_assignments requires complete groups and reverses sou
   let edge_2 = graph.edge(a, b)
   let edge_3 = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 2 }
   let incomplete = collect_complete_parallel_remap_groups({
     edges: [edge_1, edge_2, edge_3],
     ranks,

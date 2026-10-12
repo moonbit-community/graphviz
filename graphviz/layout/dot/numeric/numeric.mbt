@@ -23,7 +23,7 @@ pub fn parse_double_or(value : String, fallback : Double) -> Double {
 
 ///|
 /// Graphviz ROUND macro parity (round half away from zero).
-pub fn round_int(value : Double) -> Int {
+pub fn round_int(value : Double) -> Int32 {
   if value >= 0.0 {
     (value + 0.5).floor().to_int()
   } else {
@@ -32,7 +32,7 @@ pub fn round_int(value : Double) -> Int {
 }
 
 ///|
-pub fn trunc_int(value : Double) -> Int {
+pub fn trunc_int(value : Double) -> Int32 {
   if value >= 0.0 {
     value.floor().to_int()
   } else {

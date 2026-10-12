@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-const MAX_OUTPUT_LINE : Int = 128
+const MAX_OUTPUT_LINE : Int32 = 128
 
 ///|
 fn is_html_label_value(value : String) -> Bool {
@@ -33,7 +33,7 @@ fn is_graphviz_id_char(ch : Char) -> Bool {
 }
 
 ///|
-fn is_escape_at(chars : Array[Char], index : Int) -> Bool {
+fn is_escape_at(chars : Array[Char], index : Int32) -> Bool {
   if index < 0 || index >= chars.length() {
     return false
   }
@@ -56,7 +56,7 @@ fn is_keyword_token(id : String) -> Bool {
 }
 
 ///|
-fn canonical_id(raw : String, html? : Bool? = None) -> String {
+fn canonical_id(raw : String, html~ : Bool? = None) -> String {
   if html.unwrap_or_else(() => is_html_label_value(raw)) {
     return raw
   }
@@ -329,7 +329,7 @@ fn merge_attrs_keep_order(
   overrides : Array[(String, String)],
 ) -> Array[(String, String)] {
   let out : Array[(String, String)] = []
-  let index : Map[String, Int] = Map([])
+  let index : Map[String, Int32] = Map([])
   for pair in base {
     let (key, value) = pair
     match index.get(key) {
@@ -354,7 +354,7 @@ fn merge_attrs_keep_order(
 }
 
 ///|
-fn write_tabs(sb : StringBuilder, level : Int) -> Unit {
+fn write_tabs(sb : StringBuilder, level : Int32) -> Unit {
   for _ in 0..<level {
     sb.write_char('\t')
   }
@@ -364,9 +364,9 @@ fn write_tabs(sb : StringBuilder, level : Int) -> Unit {
 fn write_attr_block(
   sb : StringBuilder,
   attrs : Array[(String, String)],
-  indent : Int,
+  indent : Int32,
   close_on_newline : Bool,
-  attr_value? : (String) -> @cgraph.AttrValue? = _ => None,
+  attr_value~ : (String) -> @cgraph.AttrValue? = _ => None,
 ) -> Unit {
   let ordered = sort_attrs(attrs)
   sb.write_char('[')
@@ -404,10 +404,10 @@ fn write_attr_block(
 ///|
 fn write_default_stmt(
   sb : StringBuilder,
-  indent : Int,
+  indent : Int32,
   name : String,
   attrs : Array[(String, String)],
-  attr_value? : (String) -> @cgraph.AttrValue? = _ => None,
+  attr_value~ : (String) -> @cgraph.AttrValue? = _ => None,
 ) -> Unit {
   if attrs.length() == 0 {
     return
@@ -533,7 +533,7 @@ fn write_node_stmt(
   graph : @cgraph.Graph,
   node : @cgraph.Node,
   sb : StringBuilder,
-  indent : Int,
+  indent : Int32,
   emit_attrs : Bool,
 ) -> Unit {
   write_tabs(sb, indent)
@@ -586,7 +586,7 @@ fn write_edge_stmt(
   graph : @cgraph.Graph,
   edge : @cgraph.Edge,
   sb : StringBuilder,
-  indent : Int,
+  indent : Int32,
   emit_attrs : Bool,
 ) -> Unit {
   let tail_port = effective_edge_port(edge, edge.tail_port(), "tailport")
@@ -613,7 +613,7 @@ fn write_edge_stmt(
 }
 
 ///|
-fn map_get_or_zero_str(map : Map[String, Int], key : String) -> Int {
+fn map_get_or_zero_str(map : Map[String, Int32], key : String) -> Int32 {
   match map.get(key) {
     Some(value) => value
     None => 0
@@ -621,7 +621,7 @@ fn map_get_or_zero_str(map : Map[String, Int], key : String) -> Int {
 }
 
 ///|
-fn map_get_or_zero_int(map : Map[Int, Int], key : Int) -> Int {
+fn map_get_or_zero_int(map : Map[Int32, Int32], key : Int32) -> Int32 {
   match map.get(key) {
     Some(value) => value
     None => 0
@@ -630,12 +630,12 @@ fn map_get_or_zero_int(map : Map[Int, Int], key : Int) -> Int {
 
 ///|
 priv struct WriteContext {
-  mut preorder_next : Int
-  node_last_written : Map[String, Int]
-  edge_last_written : Map[Int, Int]
+  mut preorder_next : Int32
+  node_last_written : Map[String, Int32]
+  edge_last_written : Map[Int32, Int32]
   node_attrs_written : Map[String, Bool]
-  edge_attrs_written : Map[Int, Bool]
-  edge_target_paths : Map[Int, String]
+  edge_attrs_written : Map[Int32, Bool]
+  edge_target_paths : Map[Int32, String]
 }
 
 ///|
@@ -643,7 +643,7 @@ fn should_write_node(
   graph : @cgraph.Graph,
   node : @cgraph.Node,
   graph_edges : Array[@cgraph.Edge],
-  preorder : Int,
+  preorder : Int32,
   ctx : WriteContext,
 ) -> Bool {
   if map_get_or_zero_str(ctx.node_last_written, node.name()) >= preorder {
@@ -658,7 +658,7 @@ fn should_write_node(
 ///|
 fn should_write_edge(
   edge : @cgraph.Edge,
-  preorder : Int,
+  preorder : Int32,
   ctx : WriteContext,
 ) -> Bool {
   map_get_or_zero_int(ctx.edge_last_written, edge.id()) < preorder
@@ -673,12 +673,12 @@ fn attrs_already_written_for_node(
 }
 
 ///|
-fn attrs_already_written_for_edge(ctx : WriteContext, edge_id : Int) -> Bool {
+fn attrs_already_written_for_edge(ctx : WriteContext, edge_id : Int32) -> Bool {
   ctx.edge_attrs_written.get(edge_id) is Some(_)
 }
 
 ///|
-fn child_graph_path(path : String, index : Int) -> String {
+fn child_graph_path(path : String, index : Int32) -> String {
   if path == "" {
     "\{index}"
   } else {
@@ -807,7 +807,7 @@ fn is_cluster_subgraph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn graph_contains_edge_id(graph : @cgraph.Graph, edge_id : Int) -> Bool {
+fn graph_contains_edge_id(graph : @cgraph.Graph, edge_id : Int32) -> Bool {
   for edge in graph.edges() {
     if edge.id() == edge_id {
       return true
@@ -820,7 +820,7 @@ fn graph_contains_edge_id(graph : @cgraph.Graph, edge_id : Int) -> Bool {
 fn edge_home_path_recursive(
   graph : @cgraph.Graph,
   path : String,
-  edge_id : Int,
+  edge_id : Int32,
 ) -> String {
   for i, subgraph in graph.subgraphs() {
     if should_skip_layout_subgraph(graph, subgraph, true) {
@@ -836,7 +836,7 @@ fn edge_home_path_recursive(
 }
 
 ///|
-fn parse_non_negative_int(text : String) -> Int? {
+fn parse_non_negative_int(text : String) -> Int32? {
   if text == "" {
     return None
   }
@@ -1051,8 +1051,8 @@ fn edge_target_path(
 fn write_body(
   graph : @cgraph.Graph,
   sb : StringBuilder,
-  indent : Int,
-  preorder : Int,
+  indent : Int32,
+  preorder : Int32,
   graph_path : String,
   is_layout_output : Bool,
   ctx : WriteContext,
@@ -1084,7 +1084,7 @@ fn write_body(
     graph_nodes.sort_by_key(node => node.name())
   } else {
     let root_nodes = root_graph(graph).nodes()
-    let root_order : Map[String, Int] = Map([])
+    let root_order : Map[String, Int32] = Map([])
     for i, node in root_nodes {
       root_order[node.name()] = i
     }
@@ -1095,7 +1095,7 @@ fn write_body(
       }
     })
   }
-  let node_order : Map[String, Int] = Map([])
+  let node_order : Map[String, Int32] = Map([])
   for i, node in graph_nodes {
     node_order[node.name()] = i
   }
@@ -1244,7 +1244,7 @@ fn should_skip_layout_subgraph(
 fn write_subgraphs_recursive(
   graph : @cgraph.Graph,
   sb : StringBuilder,
-  indent : Int,
+  indent : Int32,
   path : String,
   is_layout_output : Bool,
   ctx : WriteContext,
@@ -1267,7 +1267,7 @@ fn write_subgraphs_recursive(
 fn write_graph_recursive(
   graph : @cgraph.Graph,
   sb : StringBuilder,
-  indent : Int,
+  indent : Int32,
   path : String,
   is_root : Bool,
   is_layout_output : Bool,

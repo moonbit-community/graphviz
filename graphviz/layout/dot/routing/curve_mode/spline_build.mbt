@@ -401,8 +401,8 @@ fn route_base_endpoint_slopes(
 
 ///|
 priv struct PathplanSegmentSlopesInput {
-  seg_idx : Int
-  segment_count : Int
+  seg_idx : Int32
+  segment_count : Int32
   tail_slope_for : @geom.Point
   head_slope_for : @geom.Point
   join_dir : @geom.Point
@@ -469,8 +469,8 @@ fn trimmed_pathplan_segment_points(
 ///|
 priv struct PathplanSegmentRawBezierInput {
   segment : @routesplines.PathplanSegment
-  seg_idx : Int
-  segment_count : Int
+  seg_idx : Int32
+  segment_count : Int32
   tail_slope_for : @geom.Point
   head_slope_for : @geom.Point
   join_dir : @geom.Point

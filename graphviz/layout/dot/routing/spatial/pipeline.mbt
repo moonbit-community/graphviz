@@ -48,7 +48,7 @@ priv struct RoutingPortLayoutMaps {
 pub(all) struct RoutingSpatialInput {
   graph : @cgraph.Graph
   prep : LayoutPrep
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   positions_state : PositionResult
 }
 

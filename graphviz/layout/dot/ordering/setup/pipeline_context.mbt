@@ -36,8 +36,8 @@ fn build_flat_constraints(
   cluster_keys : Map[String, String],
 ) -> FlatConstraintsOutput {
   let flat_constraints : Map[String, Bool] = Map([])
-  let out_edges : Map[String, Array[(Int, Int)]] = Map([])
-  let in_edges : Map[String, Array[(Int, Int)]] = Map([])
+  let out_edges : Map[String, Array[(Int32, Int32)]] = Map([])
+  let in_edges : Map[String, Array[(Int32, Int32)]] = Map([])
   for node in nodes {
     let name = node.name()
     out_edges[name] = []
@@ -167,7 +167,7 @@ fn add_same_rank_constraint_edges_to_flat_constraints(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   flat_constraints : Map[String, Bool],
 ) -> Unit {
   let mut edge_idx = 0
@@ -200,7 +200,7 @@ fn build_cluster_flat_constraints(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   cluster_keys : Map[String, String],
 ) -> FlatConstraintsOutput {
   let flat_constraints_output = build_flat_constraints(
@@ -216,10 +216,10 @@ fn build_cluster_flat_constraints(
 ///|
 fn collect_rank_same_order(
   graph : @cgraph.Graph,
-  group_ids : Map[String, Int],
-  order_ids : Map[String, Int],
-  next_group : Int,
-) -> Int {
+  group_ids : Map[String, Int32],
+  order_ids : Map[String, Int32],
+  next_group : Int32,
+) -> Int32 {
   let mut current_group = next_group
   match graph.get_attr("rank") {
     Some(value) =>
@@ -247,8 +247,8 @@ fn collect_rank_same_order(
 
 ///|
 priv struct RankSameMetadata {
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
 }
 
 ///|
@@ -256,8 +256,8 @@ priv struct RankSameMetadata {
 /// attributes before ordering setup and flat-constraint wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_rank_same_metadata(graph : @cgraph.Graph) -> RankSameMetadata {
-  let rank_same_groups : Map[String, Int] = Map([])
-  let rank_same_order : Map[String, Int] = Map([])
+  let rank_same_groups : Map[String, Int32] = Map([])
+  let rank_same_order : Map[String, Int32] = Map([])
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   { rank_same_groups, rank_same_order, }
 }
@@ -266,8 +266,8 @@ fn collect_rank_same_metadata(graph : @cgraph.Graph) -> RankSameMetadata {
 /// Graphviz parity: ordering metadata payload keeps rank=same and flat
 /// constraint snapshots grouped for clustered reorder dispatch wiring.
 priv struct ClusterOrderingMetadata {
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
 }
@@ -282,7 +282,7 @@ fn build_cluster_ordering_metadata(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   cluster_keys : Map[String, String],
 ) -> ClusterOrderingMetadata {
   let rank_same_metadata = collect_rank_same_metadata(graph)
@@ -305,9 +305,9 @@ pub(all) struct DotClusterMetadataSources {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
+  groups : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
+  node_order : Map[String, Int32]
   edge_tail : Array[String]
   edge_head : Array[String]
   rankdir : @rankdir.RankDir
@@ -333,13 +333,13 @@ pub(all) struct DotClusterMetadata {
   has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
 }
@@ -407,10 +407,10 @@ pub(all) struct BuildOrderingPipelineContextSources {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   nodesep_pt : Double
   rankdir : @rankdir.RankDir
   cluster_meta : DotClusterMetadata
@@ -421,14 +421,14 @@ pub(all) struct BuildOrderingPipelineContextSources {
 /// metadata, and derived edge-order snapshots grouped for downstream stages.
 pub(all) struct OrderingResult {
   live_graph : ConcentrateFastGraph?
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   vnode_info : EdgeVnodeInfo
-  vnode_count : Int
+  vnode_count : Int32
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   edge_cluster_keys : Map[String, String]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
@@ -496,8 +496,8 @@ pub fn build_ordering_pipeline_context_from_sources(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_result_from_pipeline_context(
   pipeline_context : OrderingPipelineContext,
-  ordered_groups : Map[Int, Array[String]],
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  ordered_groups : Map[Int32, Array[String]],
+  ordered_groups_with_vnodes : Map[Int32, Array[String]],
 ) -> OrderingResult {
   {
     live_graph: None,

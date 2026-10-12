@@ -8,8 +8,8 @@ fn base_cluster_pipeline_ranks(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  back_weight_scale : Int,
-) -> Map[String, Int] {
+  back_weight_scale : Int32,
+) -> Map[String, Int32] {
   ignore(back_weight_scale)
   let directions = @solver.acyclic_edge_directions_with_order(
     graph, nodes, edges,

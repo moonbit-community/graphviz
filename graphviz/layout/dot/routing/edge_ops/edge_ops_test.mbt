@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -15,8 +15,8 @@ fn assert_close(
 
 ///|
 test "edge_swap_ends uses rank first then order index with missing values defaulting to zero" {
-  let ranks : Map[String, Int] = { "a": 2, "b": 1, "c": 1 }
-  let order_index : Map[String, Int] = { "b": 0, "c": 3 }
+  let ranks : Map[String, Int32] = { "a": 2, "b": 1, "c": 1 }
+  let order_index : Map[String, Int32] = { "b": 0, "c": 3 }
 
   assert_true(@edge_ops.edge_swap_ends("a", "b", ranks, order_index))
   assert_false(@edge_ops.edge_swap_ends("b", "a", ranks, order_index))

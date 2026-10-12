@@ -14,7 +14,7 @@ type NodeSize = @node_primitives.NodeSize
 /// order-graph sizes, and cluster metadata maps bundled for root/cluster
 /// ordering preparation.
 priv struct OrderSeedGroupsOutput {
-  order_groups : Map[Int, Array[String]]
+  order_groups : Map[Int32, Array[String]]
   order_sizes_out : Map[String, NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
@@ -24,16 +24,16 @@ priv struct OrderSeedGroupsOutput {
 /// Graphviz parity: order-stage seed input keeps vnode and cluster metadata
 /// snapshots unchanged before grouped seed expansion.
 priv struct OrderSeedGroupsInputs {
-  ordering_groups_base : Map[Int, Array[String]]
-  base_order_index : Map[String, Int]
+  ordering_groups_base : Map[Int32, Array[String]]
+  base_order_index : Map[String, Int32]
   order_with_vnodes : Bool
   order_with_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   vnode_clusters : Map[String, String]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_order_keys_for_ordering : Map[String, Double]
   order_sizes : Map[String, NodeSize]
   vnode_sizes : Map[String, NodeSize]
@@ -55,7 +55,7 @@ fn build_order_seed_groups(
       inputs.vnode_order_keys_for_ordering,
     )
   } else {
-    let out : Map[Int, Array[String]] = Map([])
+    let out : Map[Int32, Array[String]] = Map([])
     for rank, names in inputs.ordering_groups_base {
       out[rank] = names.copy()
     }
@@ -131,12 +131,12 @@ fn build_order_seed_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn append_cluster_skeleton_range(
   cluster : String,
-  min_rank : Int,
-  max_rank : Int,
+  min_rank : Int32,
+  max_rank : Int32,
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
   order_sizes_out : Map[String, NodeSize],
-  order_groups : Map[Int, Array[String]],
+  order_groups : Map[Int32, Array[String]],
   skeleton_size : NodeSize,
 ) -> Unit {
   for rank in min_rank..<=max_rank {
@@ -155,30 +155,30 @@ fn append_cluster_skeleton_range(
 /// Graphviz parity: clustered pre-root reorder context keeps build_ranks seed
 /// ranks, order-graph snapshots, and node-order seed maps unchanged.
 pub(all) struct OrderReorderContext {
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_nodes : Array[String]
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
   order_graph_unmapped : @cgraph.Graph
   order_node_map_unmapped : Map[String, @cgraph.Node]
   creation_order : Array[String]
-  order_node_order : Map[String, Int]
+  order_node_order : Map[String, Int32]
 }
 
 ///|
 /// Graphviz parity: reorder-context seed input keeps GD_nlist/nlist snapshots,
 /// rank=same metadata, and base order maps unchanged before order-graph build.
 priv struct OrderReorderContextInputs {
-  order_groups : Map[Int, Array[String]]
+  order_groups : Map[Int32, Array[String]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   real_nodes : Map[String, Bool]
   has_clusters : Bool
-  base_order_index : Map[String, Int]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  base_order_index : Map[String, Int32]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   port_edge_nodes : Map[String, Bool]
 }
 
@@ -186,16 +186,16 @@ priv struct OrderReorderContextInputs {
 /// Graphviz parity: unported rank=same groups keep subgraph order for ND_order.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_rank_same_order_nodes(
-  node_order : Map[String, Int],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
+  node_order : Map[String, Int32],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
 ) -> Unit {
   if rank_same_groups.length() == 0 {
     return ()
   }
-  let group_nodes : Map[Int, Array[String]] = Map([])
-  let group_has_ported : Map[Int, Bool] = Map([])
+  let group_nodes : Map[Int32, Array[String]] = Map([])
+  let group_has_ported : Map[Int32, Bool] = Map([])
   for name, group in rank_same_groups {
     if node_order.get(name) is None {
       continue
@@ -233,7 +233,7 @@ fn apply_rank_same_order_nodes(
         0
       }
     })
-    let orders : Array[Int] = []
+    let orders : Array[Int32] = []
     for name in names {
       let order_value = match node_order.get(name) {
         Some(value) => value
@@ -285,7 +285,7 @@ fn build_order_reorder_context(
   // Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
   // fills with nlist/order_groups/base order; rank=same ND_order normalization
   // is applied only on clustered reorder paths.
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   let mut order_idx = 0
   for name in inputs.gdnlist_order {
     order_node_order[name] = order_idx
@@ -372,13 +372,13 @@ priv struct OrderMaterializationInputs {
   nlist_order : Array[String]
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
   order_edges_by_tail_unmapped : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   order_graph_unmapped : @cgraph.Graph
   order_node_map_unmapped : Map[String, @cgraph.Node]
@@ -400,7 +400,7 @@ fn build_materialized_graphviz_neighbors(
   order_nodes : Array[String],
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
   edge_creation_order : Array[(String, String)],
 ) -> MaterializedGraphvizNeighborMaps {
@@ -507,15 +507,15 @@ fn apply_unconstrained_order_overrides(
   order_nodes : Array[String],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
-  rank_same_groups : Map[String, Int],
+  rank_same_groups : Map[String, Int32],
   edge_tail : Array[String],
   edge_head : Array[String],
   nodes : Array[@cgraph.Node],
   intercluster_keys : Map[String, String],
-  order_node_order : Map[String, Int],
+  order_node_order : Map[String, Int32],
 ) -> Unit {
   // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-  let gdnlist_order_index : Map[String, Int] = Map([])
+  let gdnlist_order_index : Map[String, Int32] = Map([])
   let mut gdnlist_idx = 0
   for name in gdnlist_order {
     if real_nodes.get(name) is Some(_) {
@@ -548,7 +548,7 @@ fn apply_unconstrained_order_overrides(
   // follow first incoming-edge order from unmapped class2 edge lists.
   let node_has_out : Map[String, Bool] = Map([])
   let node_has_in : Map[String, Bool] = Map([])
-  let first_in_order : Map[String, Int] = Map([])
+  let first_in_order : Map[String, Int32] = Map([])
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
     let tail = edge_tail[edge_idx]
@@ -592,7 +592,7 @@ fn apply_unconstrained_order_overrides(
     }
     let desired = unconstrained_local.copy()
     if desired.length() > 1 {
-      let local_index : Map[String, Int] = Map([])
+      let local_index : Map[String, Int32] = Map([])
       for idx, name in unconstrained_local {
         local_index[name] = idx
       }
@@ -628,7 +628,7 @@ fn apply_unconstrained_order_overrides(
         }
       })
     }
-    let orders : Array[Int] = []
+    let orders : Array[Int32] = []
     let mut all_present = true
     for name in unconstrained_local {
       match order_node_order.get(name) {
@@ -669,18 +669,18 @@ pub(all) struct ClusteredPreRootStageSources {
   reorder_setup : @setup.OrderingReorderSetup
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   vnode_clusters : Map[String, String]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   order_sizes : Map[String, NodeSize]
   vnode_sizes : Map[String, NodeSize]
   skeleton_size : NodeSize
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   real_nodes : Map[String, Bool]
   has_clusters : Bool
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   port_edge_nodes : Map[String, Bool]
   flat_constraints : Map[String, Bool]
   edge_tail : Array[String]
@@ -694,7 +694,7 @@ pub(all) struct ClusteredPreRootStageSources {
 /// cluster skeleton maps, reorder context, and materialized edges unchanged.
 /// Do not change behavior without updating fixtures/tests.
 pub struct ClusteredPreRootStageOutput {
-  order_groups : Map[Int, Array[String]]
+  order_groups : Map[Int32, Array[String]]
   order_sizes_out : Map[String, NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
@@ -734,7 +734,7 @@ fn build_clustered_order_seed_stage(
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_materialized_stage(
   sources : ClusteredPreRootStageSources,
-  order_groups : Map[Int, Array[String]],
+  order_groups : Map[Int32, Array[String]],
 ) -> ClusteredMaterializedStageOutput {
   let reorder_context = build_order_reorder_context({
     order_groups,

@@ -8,25 +8,25 @@
 
 ///|
 struct MincrossNode {
-  id : Int
+  id : Int32
   name : String?
-  rank : Int
-  order : Int
+  rank : Int32
+  order : Int32
   cluster : String?
   cluster_skeleton : Bool
-  out_neighbors : Array[Int]
-  in_neighbors : Array[Int]
+  out_neighbors : Array[Int32]
+  in_neighbors : Array[Int32]
   out_all_neighbors : Array[String]
   in_all_neighbors : Array[String]
 }
 
 ///|
 struct MincrossEdge {
-  tail : Int
-  head : Int
-  xpenalty : Int
-  seq : Int
-  order : Int
+  tail : Int32
+  head : Int32
+  xpenalty : Int32
+  seq : Int32
+  order : Int32
   tail_port_x : Double
   head_port_x : Double
   tail_port_order : Double
@@ -35,41 +35,41 @@ struct MincrossEdge {
 
 ///|
 struct MincrossFlatEdge {
-  tail : Int
-  head : Int
+  tail : Int32
+  head : Int32
 }
 
 ///|
 struct MincrossInput {
-  case_id : Int
+  case_id : Int32
   graph : String
-  startpass : Int
+  startpass : Int32
   flip : Bool
-  minrank : Int
-  maxrank : Int
+  minrank : Int32
+  maxrank : Int32
   nodes : Array[MincrossNode]
   edges : Array[MincrossEdge]
   flat_edges : Array[MincrossFlatEdge]
-  ranks : Array[Array[Int]]
+  ranks : Array[Array[Int32]]
 }
 
 ///|
 struct MincrossOutput {
-  case_id : Int
-  ranks : Array[Array[Int]]
+  case_id : Int32
+  ranks : Array[Array[Int32]]
 }
 
 ///|
-fn node_key(id : Int) -> String {
+fn node_key(id : Int32) -> String {
   "n\{id}"
 }
 
 ///|
 fn assert_rank_groups(
-  case_id : Int,
+  case_id : Int32,
   graph : String,
-  actual : Array[Array[Int]],
-  expected : Array[Array[Int]],
+  actual : Array[Array[Int32]],
+  expected : Array[Array[Int32]],
 ) -> Unit raise {
   if actual.length() != expected.length() {
     fail(
@@ -100,7 +100,7 @@ fn assert_rank_groups(
 fn run_mincross_case_with_name_order(
   input : MincrossInput,
   output : MincrossOutput,
-  fixture_name_order : Map[String, Int],
+  fixture_name_order : Map[String, Int32],
 ) -> Unit raise {
   if input.case_id != output.case_id {
     fail(
@@ -112,11 +112,11 @@ fn run_mincross_case_with_name_order(
     name=input.graph,
     strict=false,
   )
-  let id_to_name : Map[Int, String] = Map([])
-  let name_to_id : Map[String, Int] = Map([])
-  let name_to_rank : Map[String, Int] = Map([])
+  let id_to_name : Map[Int32, String] = Map([])
+  let name_to_id : Map[String, Int32] = Map([])
+  let name_to_rank : Map[String, Int32] = Map([])
   let name_to_node : Map[String, @cgraph.Node] = Map([])
-  let name_to_order : Map[String, Int] = Map([])
+  let name_to_order : Map[String, Int32] = Map([])
   let local_name_to_key : Map[String, String] = Map([])
   let ambiguous_local_names : Map[String, Bool] = Map([])
   let sizes : Map[String, NodeSize] = Map([])
@@ -251,7 +251,7 @@ fn run_mincross_case_with_name_order(
     edge_tail_port_order.push(edge.tail_port_order)
     edge_head_port_order.push(edge.head_port_order)
   }
-  let rank_keys : Array[Int] = []
+  let rank_keys : Array[Int32] = []
   for rank in input.minrank..<=input.maxrank {
     rank_keys.push(rank)
   }
@@ -260,7 +260,7 @@ fn run_mincross_case_with_name_order(
       "case \{input.case_id} graph=\{input.graph} rank list length mismatch expected=\{rank_keys.length()} actual=\{input.ranks.length()}",
     )
   }
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   let mut rank = input.minrank
   for rank_nodes in input.ranks {
     let names : Array[String] = []
@@ -345,13 +345,13 @@ fn run_mincross_case_with_name_order(
     coalesce_parallel_edges=input.startpass > 1,
     startpass=input.startpass,
   )
-  let actual : Array[Array[Int]] = []
+  let actual : Array[Array[Int32]] = []
   for rank_key in rank_keys {
     let names = match ordered.get(rank_key) {
       Some(list) => list
       None => []
     }
-    let ids : Array[Int] = []
+    let ids : Array[Int32] = []
     for name in names {
       let id = match name_to_id.get(name) {
         Some(value) => value
@@ -374,11 +374,11 @@ fn run_fixed_rank_reorder_case(
     name=input.graph,
     strict=false,
   )
-  let id_to_name : Map[Int, String] = Map([])
-  let name_to_id : Map[String, Int] = Map([])
-  let name_to_rank : Map[String, Int] = Map([])
+  let id_to_name : Map[Int32, String] = Map([])
+  let name_to_id : Map[String, Int32] = Map([])
+  let name_to_rank : Map[String, Int32] = Map([])
   let name_to_node : Map[String, @cgraph.Node] = Map([])
-  let name_to_order : Map[String, Int] = Map([])
+  let name_to_order : Map[String, Int32] = Map([])
   let sizes : Map[String, NodeSize] = Map([])
   let nodes : Array[@cgraph.Node] = []
   let default_size = @node_primitives.node_size_from_points(
@@ -457,11 +457,11 @@ fn run_fixed_rank_reorder_case(
     edge_head_port_order.push(edge.head_port_order)
   }
 
-  let rank_keys : Array[Int] = []
+  let rank_keys : Array[Int32] = []
   for rank in input.minrank..<=input.maxrank {
     rank_keys.push(rank)
   }
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   let mut rank = input.minrank
   for rank_nodes in input.ranks {
     let names : Array[String] = []
@@ -512,13 +512,13 @@ fn run_fixed_rank_reorder_case(
     startpass=input.startpass,
   )
 
-  let actual : Array[Array[Int]] = []
+  let actual : Array[Array[Int32]] = []
   for rank_key in rank_keys {
     let names = match ordered.get(rank_key) {
       Some(list) => list
       None => []
     }
-    let ids : Array[Int] = []
+    let ids : Array[Int32] = []
     for name in names {
       match name_to_id.get(name) {
         Some(value) => ids.push(value)
@@ -536,24 +536,24 @@ fn run_fixed_rank_reorder_case(
 /// that differs from raw edge sequence. Keep those overrides explicit so the
 /// test data only carries the non-derivable signal.
 fn build_exact_layered_rank_reorder_case(
-  case_id : Int,
+  case_id : Int32,
   graph : String,
-  startpass : Int,
+  startpass : Int32,
   flip : Bool,
-  minrank : Int,
-  input_ranks : Array[Array[Int]],
-  output_ranks : Array[Array[Int]],
+  minrank : Int32,
+  input_ranks : Array[Array[Int32]],
+  output_ranks : Array[Array[Int32]],
   node_names : Array[String?],
   node_clusters : Array[String?],
   node_cluster_skeleton : Array[Bool],
   edges : Array[MincrossEdge],
-  out_neighbor_overrides : Map[Int, Array[Int]],
-  in_neighbor_overrides : Map[Int, Array[Int]],
+  out_neighbor_overrides : Map[Int32, Array[Int32]],
+  in_neighbor_overrides : Map[Int32, Array[Int32]],
 ) -> (MincrossInput, MincrossOutput) {
-  let out_neighbors : Map[Int, Array[Int]] = Map([])
-  let in_neighbors : Map[Int, Array[Int]] = Map([])
-  let node_rank_by_id : Map[Int, Int] = Map([])
-  let node_order_by_id : Map[Int, Int] = Map([])
+  let out_neighbors : Map[Int32, Array[Int32]] = Map([])
+  let in_neighbors : Map[Int32, Array[Int32]] = Map([])
+  let node_rank_by_id : Map[Int32, Int32] = Map([])
+  let node_order_by_id : Map[Int32, Int32] = Map([])
   for rank_offset, rank_nodes in input_ranks {
     let rank = minrank + rank_offset
     for order, id in rank_nodes {

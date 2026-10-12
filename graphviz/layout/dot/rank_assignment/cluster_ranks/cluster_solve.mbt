@@ -4,16 +4,16 @@
 
 ///|
 pub struct LocalClusterRankResult {
-  local_ranks : Map[String, Int]
+  local_ranks : Map[String, Int32]
   cluster_leaders : Map[String, String]
 }
 
 ///|
 priv struct LeaderRankEdge {
-  tail_idx : Int
-  head_idx : Int
-  minlen : Int
-  weight : Int
+  tail_idx : Int32
+  head_idx : Int32
+  minlen : Int32
+  weight : Int32
 }
 
 ///|
@@ -28,9 +28,9 @@ pub fn compute_local_cluster_ranks_and_leaders(
     @cgraph.Graph,
     Array[@cgraph.Node],
     Array[@cgraph.Edge],
-  ) -> Map[String, Int],
+  ) -> Map[String, Int32],
 ) -> LocalClusterRankResult {
-  let local_ranks : Map[String, Int] = Map([])
+  let local_ranks : Map[String, Int32] = Map([])
   let cluster_leaders : Map[String, String] = Map([])
   let node_cluster = build_node_cluster_index(top_clusters, cluster_members)
   for cluster_name in top_clusters {
@@ -88,18 +88,18 @@ pub fn solve_clustered_leader_ranks(
   edges : Array[@cgraph.Edge],
   node_cluster : Map[String, String],
   cluster_leaders : Map[String, String],
-  local_ranks : Map[String, Int],
+  local_ranks : Map[String, Int32],
   has_edge_labels : Bool,
-  back_weight_scale : Int,
+  back_weight_scale : Int32,
   orient_edges_for_names : (
     Array[String],
     Array[String],
     Array[String],
     Array[Bool],
   ) -> (Array[String], Array[String], Array[Bool]),
-) -> Map[String, Int] {
+) -> Map[String, Int32] {
   let rank_graph = @network_simplex.new_graph()
-  let rank_index : Map[String, Int] = Map([])
+  let rank_index : Map[String, Int32] = Map([])
   let rank_names : Array[String] = []
   for node in nodes {
     let name = node.name()
@@ -122,8 +122,8 @@ pub fn solve_clustered_leader_ranks(
   }
   let direct_tail : Array[String] = []
   let direct_head : Array[String] = []
-  let direct_minlen : Array[Int] = []
-  let direct_weight : Array[Int] = []
+  let direct_minlen : Array[Int32] = []
+  let direct_weight : Array[Int32] = []
   let direct_active : Array[Bool] = []
   let mut slack_id = 0
   for edge in edges {
@@ -254,7 +254,7 @@ pub fn solve_clustered_leader_ranks(
     )
   }
   solve_leader_components(rank_graph)
-  let leader_ranks : Map[String, Int] = Map([])
+  let leader_ranks : Map[String, Int32] = Map([])
   for name, idx in rank_index {
     leader_ranks[name] = @network_simplex.node_rank(rank_graph, idx)
   }

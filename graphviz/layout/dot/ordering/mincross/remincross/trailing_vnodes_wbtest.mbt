@@ -4,12 +4,12 @@
 
 ///|
 test "cluster_rank_ranges_overlap treats touching ranges as overlapping and falls back to min rank when max is missing" {
-  let cluster_min_rank : Map[String, Int] = Map([])
+  let cluster_min_rank : Map[String, Int32] = Map([])
   cluster_min_rank["left"] = 0
   cluster_min_rank["touching"] = 1
   cluster_min_rank["far"] = 3
 
-  let cluster_max_rank : Map[String, Int] = Map([])
+  let cluster_max_rank : Map[String, Int32] = Map([])
   cluster_max_rank["left"] = 1
 
   assert_true(
@@ -70,7 +70,7 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   cluster_parents["cluster_overlap_a"] = None
   cluster_parents["cluster_overlap_b"] = None
 
-  let cluster_min_rank : Map[String, Int] = Map([])
+  let cluster_min_rank : Map[String, Int32] = Map([])
   cluster_min_rank["cluster_left"] = 0
   cluster_min_rank["cluster_right"] = 2
   cluster_min_rank["cluster_child"] = 0
@@ -79,7 +79,7 @@ test "collect_remincross_trailing keeps only non-root non-internal cross-cluster
   cluster_min_rank["cluster_overlap_a"] = 1
   cluster_min_rank["cluster_overlap_b"] = 2
 
-  let cluster_max_rank : Map[String, Int] = Map([])
+  let cluster_max_rank : Map[String, Int32] = Map([])
   cluster_max_rank["cluster_left"] = 0
   cluster_max_rank["cluster_right"] = 2
   cluster_max_rank["cluster_child"] = 0
@@ -116,17 +116,17 @@ test "apply_remincross_floor raises selected trailing vnodes behind the last rea
   intercluster_vnodes["v_floor"] = true
   intercluster_vnodes["v_keep"] = true
 
-  let rem_base_order_index : Map[String, Int] = Map([])
+  let rem_base_order_index : Map[String, Int32] = Map([])
   rem_base_order_index["a"] = 0
   rem_base_order_index["b"] = 1
   rem_base_order_index["c"] = 0
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["c"] = 2
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["v_floor"] = 0
   vnode_ranks["v_keep"] = 2
 

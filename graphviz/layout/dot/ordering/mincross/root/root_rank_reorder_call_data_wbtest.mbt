@@ -37,12 +37,12 @@ test "build_root_rank_reorder_call_data filters root mincross edges, normalizes 
   let edge_skel_vnode = graph.edge(skel, vnode)
   let edge_vnode_leaf = graph.edge(vnode, leaf)
 
-  let order_groups_for_mincross : Map[Int, Array[String]] = Map([])
+  let order_groups_for_mincross : Map[Int32, Array[String]] = Map([])
   order_groups_for_mincross[0] = ["root", skel_name]
   order_groups_for_mincross[1] = [vnode_name]
   order_groups_for_mincross[2] = ["leaf"]
 
-  let order_ranks : Map[String, Int] = Map([])
+  let order_ranks : Map[String, Int32] = Map([])
   order_ranks["root"] = 0
   order_ranks[skel_name] = 0
   order_ranks[vnode_name] = 1
@@ -56,7 +56,7 @@ test "build_root_rank_reorder_call_data filters root mincross edges, normalizes 
   let order_cluster_skeleton : Map[String, Bool] = Map([])
   order_cluster_skeleton[skel_name] = true
 
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   order_node_order["root"] = 0
   order_node_order[skel_name] = 1
   order_node_order[vnode_name] = 2

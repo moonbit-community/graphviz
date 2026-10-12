@@ -57,15 +57,15 @@ pub fn self_edge_label_half_heights(
 /// Graphviz parity: rank-y fill input keeps rank-order, rank-height maps, and
 /// output maps grouped for one deterministic downward sweep.
 pub(all) struct FillRankPositionsInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  all_ranks : Array[Int]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  all_ranks : Array[Int32]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
 }
 
 ///|

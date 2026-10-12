@@ -9,7 +9,7 @@
 /// make_aux_edge creation order with final minlen/weight values.
 /// Each node tuple is (kind, initial rank, upstream solved rank).
 test "network simplex matches upstream b15 auxiliary graph" {
-  let node_seeds : Array[(Int, Int, Int)] = [
+  let node_seeds : Array[(Int32, Int32, Int32)] = [
     (2, 0, 3302),
     (2, 0, -185),
     (2, 0, 2306),
@@ -372,7 +372,7 @@ test "network simplex matches upstream b15 auxiliary graph" {
     (1, 1218, 1440),
     (1, 1256, 1478),
   ]
-  let edge_seeds : Array[(Int, Int, Int, Int)] = [
+  let edge_seeds : Array[(Int32, Int32, Int32, Int32)] = [
     (279, 278, 190, 0),
     (278, 311, 118, 0),
     (311, 322, 38, 0),

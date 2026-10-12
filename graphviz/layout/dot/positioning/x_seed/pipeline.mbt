@@ -11,17 +11,17 @@
 /// contexts grouped before Graphviz-compatible vnode-order derivation.
 priv struct XposVNodeOrderInput {
   use_vnodes_for_xpos : Bool
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
-  order_index : Map[String, Int]
+  ranks : Map[String, Int32]
+  order_index : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
 }
 
 ///|
@@ -69,10 +69,10 @@ fn build_vnode_order_state(input : XposVNodeOrderInput) -> XposVNodeOrderState {
 /// seeds and cluster-skeleton filtering gates grouped for one build pass.
 priv struct XInitialGroupsInput {
   use_vnodes_for_xpos : Bool
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  order_index : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
+  order_index : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_order_keys : Map[String, Double]
   has_clusters : Bool
 }
@@ -83,7 +83,7 @@ priv struct XInitialGroupsInput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_initial_x_groups(
   input : XInitialGroupsInput,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let mut x_groups = if input.use_vnodes_for_xpos {
     if input.ordered_groups_with_vnodes.length() > 0 {
       @rank_groups.clone_rank_groups(input.ordered_groups_with_vnodes)
@@ -99,7 +99,7 @@ fn build_initial_x_groups(
     input.ordered_groups
   }
   if input.has_clusters {
-    let cleaned : Map[Int, Array[String]] = Map([])
+    let cleaned : Map[Int32, Array[String]] = Map([])
     for rank, names in x_groups {
       let filtered : Array[String] = []
       for name in names {
@@ -153,7 +153,7 @@ pub struct XPositionSeedData {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_cluster_keys : Map[String, String]
 }
 
@@ -164,18 +164,18 @@ pub struct XPositionSeedData {
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct XSeedPipelineSources {
   use_vnodes_for_xpos : Bool
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   has_clusters : Bool
   cluster_keys : Map[String, String]
   vnode_clusters : Map[String, String]
@@ -202,21 +202,21 @@ pub(all) struct XSeedPortSamples {
 /// data build pass.
 priv struct XSeedBuildSources {
   use_vnodes_for_xpos : Bool
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   x_base_sizes : Map[String, @node_primitives.NodeSize]
   x_order_sizes : Map[String, @node_primitives.NodeSize]
   port_samples : XSeedPortSamples
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   has_clusters : Bool
   cluster_keys : Map[String, String]
   vnode_clusters : Map[String, String]

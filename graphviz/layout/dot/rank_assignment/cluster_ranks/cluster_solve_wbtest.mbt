@@ -42,7 +42,7 @@ test "compute_local_cluster_ranks_and_leaders filters external edges and falls b
       }
       seen_cluster_edges.push(cluster_edge_names.join(","))
 
-      let cluster_ranks : Map[String, Int] = Map([])
+      let cluster_ranks : Map[String, Int32] = Map([])
       cluster_ranks["a"] = 2
       cluster_ranks["b"] = 4
       cluster_ranks
@@ -92,7 +92,7 @@ test "solve_clustered_leader_ranks forwards only clusterless constrained direct 
 
   let node_cluster : Map[String, String] = Map([])
   let cluster_leaders : Map[String, String] = Map([])
-  let local_ranks : Map[String, Int] = Map([])
+  let local_ranks : Map[String, Int32] = Map([])
   let seen_tail : Array[String] = []
   let seen_head : Array[String] = []
   let seen_active : Array[Bool] = []
@@ -146,7 +146,7 @@ test "solve_clustered_leader_ranks converts positive cross-cluster offset into h
   cluster_leaders["cluster_a"] = "a0"
   cluster_leaders["cluster_b"] = "b0"
 
-  let local_ranks : Map[String, Int] = Map([])
+  let local_ranks : Map[String, Int32] = Map([])
   local_ranks["a0"] = 0
   local_ranks["b0"] = 0
 
@@ -184,7 +184,7 @@ test "solve_clustered_leader_ranks converts negative cross-cluster offset into t
   cluster_leaders["cluster_a"] = "a0"
   cluster_leaders["cluster_b"] = "b0"
 
-  let local_ranks : Map[String, Int] = Map([])
+  let local_ranks : Map[String, Int32] = Map([])
   local_ranks["a0"] = 0
   local_ranks["b0"] = 0
   local_ranks["b2"] = 2
@@ -224,7 +224,7 @@ test "solve_clustered_leader_ranks keeps reciprocal cluster edges on slack nodes
   cluster_leaders["cluster_a"] = "a0"
   cluster_leaders["cluster_b"] = "b0"
 
-  let local_ranks : Map[String, Int] = Map([])
+  let local_ranks : Map[String, Int32] = Map([])
   local_ranks["a0"] = 0
   local_ranks["a1"] = 1
   local_ranks["b0"] = 0

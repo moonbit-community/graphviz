@@ -20,27 +20,27 @@ pub(all) struct ReMincrossPassBuildContext {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   order_with_vnodes : Bool
   creation_order : Array[String]
-  edges_by_tail : Map[String, Array[Int]]
+  edges_by_tail : Map[String, Array[Int32]]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_flat_constraints : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_sizes : Map[String, @node_primitives.NodeSize]
   rank_same_constraints : Map[String, Bool]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
   real_nodes : Map[String, Bool]
   root_tail_order_override : Array[String]?
   root_cluster : String
@@ -55,8 +55,8 @@ pub(all) struct ReMincrossPassBuildContext {
 /// Graphviz parity: clustered ReMincross pass output keeps cleaned real-node
 /// groups and vnode-inclusive groups after startpass=2 cleanup reorder.
 pub(all) struct ReMincrossPassOutput {
-  ordered_groups : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
 }
 
 ///|
@@ -65,9 +65,9 @@ pub(all) struct ReMincrossPassOutput {
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusteredFinalizeInputs {
   order_with_clusters : Bool
-  order_rank_keys : Array[Int]
-  ordered : Map[Int, Array[String]]
-  cluster_rank_order : Map[Int, Map[String, Int]]
+  order_rank_keys : Array[Int32]
+  ordered : Map[Int32, Array[String]]
+  cluster_rank_order : Map[Int32, Map[String, Int32]]
   remincross_context : ReMincrossPassBuildContext
 }
 
@@ -83,7 +83,7 @@ priv struct ClusteredFinalizeStageRootSources {
   order_cluster_skeleton : Map[String, Bool]
   real_nodes : Map[String, Bool]
   order_with_clusters : Bool
-  order_rank_keys : Array[Int]
+  order_rank_keys : Array[Int32]
   remincross_context : ReMincrossPassBuildContext
 }
 
@@ -107,21 +107,21 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   reorder_setup : @setup.OrderingReorderSetup
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_flat_constraints : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_sizes : Map[String, @node_primitives.NodeSize]
   rank_same_constraints : Map[String, Bool]
@@ -235,7 +235,7 @@ fn build_clustered_finalize_inputs_from_root_phase_stage_sources(
 pub fn run_clustered_finalize_stage(
   build_sources : ClusteredFinalizeStageBuildSources,
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
-  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]],
 ) -> ReMincrossPassOutput {
   let sources = build_clustered_finalize_stage_from_sources(build_sources)
   let finalize_inputs = build_clustered_finalize_inputs_from_root_phase_stage_sources(
@@ -252,7 +252,7 @@ pub fn run_clustered_finalize_stage(
 pub(all) struct ReMincrossGroupInputs {
   ratio : String
   cluster_order : Array[String]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
   cluster_keys : Map[String, String]
   vnode_group_inputs : ReMincrossVnodeGroupInputs
 }
@@ -262,7 +262,7 @@ pub(all) struct ReMincrossGroupInputs {
 /// only when that state is unavailable, not based on cluster count or ratio.
 pub fn build_remincross_groups(
   inputs : ReMincrossGroupInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let should_try_seeded = inputs.vnode_group_inputs.order_with_vnodes
   if should_try_seeded {
     // Preserve the expanded rank lists instead of moving virtual nodes around
@@ -289,7 +289,7 @@ pub fn build_remincross_groups(
 fn run_clustered_finalize_order_groups(
   inputs : ClusteredFinalizeInputs,
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
-  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]],
 ) -> ReMincrossPassOutput {
   let cleaned_groups = collect_real_only_rank_groups(
     inputs.order_rank_keys,
@@ -324,9 +324,9 @@ fn run_clustered_finalize_order_groups(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_remincross_pass(
   context : ReMincrossPassBuildContext,
-  base_groups : Map[Int, Array[String]],
+  base_groups : Map[Int32, Array[String]],
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
-  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]],
 ) -> ReMincrossPassOutput {
   let rem_groups = build_remincross_groups({
     ratio: context.ratio,
@@ -414,8 +414,8 @@ pub fn run_remincross_pass(
 /// Graphviz parity: ReMincross cleanup capture payload records the same
 /// rematerialized edge snapshot passed into clustered startpass=2 reorder.
 pub(all) struct ReMincrossCleanupCaptureInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -430,8 +430,8 @@ pub(all) struct ReMincrossCleanupCaptureInputs {
 /// Graphviz parity: ReMincross cleanup reorder payload keeps edge-index maps
 /// and clustered reorder inputs built from one rematerialized snapshot.
 pub(all) struct ReMincrossCleanupReorderInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -442,10 +442,10 @@ pub(all) struct ReMincrossCleanupReorderInputs {
   rem_parents : Map[String, Array[String]]
   rem_children : Map[String, Array[String]]
   rem_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  rem_edge_order : Map[String, Int]
-  rem_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  rem_edge_order : Map[String, Int32]
+  rem_node_order : Map[String, Int32]
   rem_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -460,7 +460,7 @@ pub(all) struct ReMincrossCleanupReorderInputs {
 /// with coalesced-parallel mode on rematerialized edge arrays.
 pub fn run_remincross_cleanup_reorder(
   reorder_inputs : ReMincrossCleanupReorderInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   @reorder.reorder_rank_groups(
     reorder_inputs.rem_rank_keys,
     reorder_inputs.rem_groups,
@@ -499,11 +499,11 @@ pub fn run_remincross_cleanup_reorder(
 /// Graphviz parity: clustered ReMincross cleanup inputs keep rematerialized
 /// arrays, rank=same maps, and layout knobs unchanged before startpass=2 call.
 pub(all) struct ReMincrossCleanupInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   materialized_inputs : ReMincrossCleanupMaterializedInputs
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -518,8 +518,8 @@ pub(all) struct ReMincrossCleanupInputs {
 pub fn run_remincross_cleanup(
   inputs : ReMincrossCleanupInputs,
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
-  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]],
+) -> Map[Int32, Array[String]] {
   let materialized_inputs = inputs.materialized_inputs
   let rem_edge_indices = @order_graph.build_edge_indices_and_order(
     materialized_inputs.rem_nodes,
@@ -573,8 +573,8 @@ pub fn run_remincross_cleanup(
 /// Graphviz parity: seeded vnode-inclusive rank rebuilding anchors synthetic
 /// names between nearest real-node predecessors/successors from base order.
 priv struct NeighborRealIndices {
-  prev_real : Array[Int?]
-  next_real_by_pos : Array[Int?]
+  prev_real : Array[Int32?]
+  next_real_by_pos : Array[Int32?]
 }
 
 ///|
@@ -582,10 +582,10 @@ priv struct NeighborRealIndices {
 /// names between nearest real-node predecessors/successors from base order.
 fn build_neighbor_real_indices(
   filtered : Array[String],
-  real_order : Map[String, Int],
+  real_order : Map[String, Int32],
 ) -> NeighborRealIndices {
-  let prev_real : Array[Int?] = []
-  let mut last_real : Int? = None
+  let prev_real : Array[Int32?] = []
+  let mut last_real : Int32? = None
   for name in filtered {
     match real_order.get(name) {
       Some(idx) => last_real = Some(idx)
@@ -593,8 +593,8 @@ fn build_neighbor_real_indices(
     }
     prev_real.push(last_real)
   }
-  let next_rev : Array[Int?] = []
-  let mut next_real : Int? = None
+  let next_rev : Array[Int32?] = []
+  let mut next_real : Int32? = None
   let mut rev_idx = filtered.length()
   while rev_idx > 0 {
     rev_idx = rev_idx - 1
@@ -605,7 +605,7 @@ fn build_neighbor_real_indices(
     }
     next_rev.push(next_real)
   }
-  let next_real_by_pos : Array[Int?] = []
+  let next_real_by_pos : Array[Int32?] = []
   let mut idx = next_rev.length()
   while idx > 0 {
     idx = idx - 1
@@ -620,7 +620,7 @@ fn build_neighbor_real_indices(
 fn try_build_special_seed_order(
   filtered : Array[String],
   base_real : Array[String],
-  real_order : Map[String, Int],
+  real_order : Map[String, Int32],
   cluster_keys : Map[String, String],
 ) -> Array[String]? {
   let mut root_real_count = 0
@@ -665,12 +665,12 @@ fn try_build_special_seed_order(
 /// Graphviz parity: seeded rank merge key places real nodes on even slots,
 /// synthetic nodes after nearest previous/next real anchors.
 fn seeded_rank_merge_key(
-  index : Int,
+  index : Int32,
   name : String,
-  real_order : Map[String, Int],
-  prev_real : Array[Int?],
-  next_real_by_pos : Array[Int?],
-) -> Int {
+  real_order : Map[String, Int32],
+  prev_real : Array[Int32?],
+  next_real_by_pos : Array[Int32?],
+) -> Int32 {
   match real_order.get(name) {
     Some(real_idx) => real_idx * 2
     None =>
@@ -693,7 +693,7 @@ fn build_seeded_rank_order(
   base_real : Array[String],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let real_order : Map[String, Int] = Map([])
+  let real_order : Map[String, Int32] = Map([])
   for i in 0..<base_real.length() {
     real_order[base_real[i]] = i
   }
@@ -704,7 +704,7 @@ fn build_seeded_rank_order(
     Some(special_order) => special_order
     None => {
       let neighbor_indices = build_neighbor_real_indices(filtered, real_order)
-      let keyed : Array[(String, Int, Int)] = []
+      let keyed : Array[(String, Int32, Int32)] = []
       for i in 0..<filtered.length() {
         let name = filtered[i]
         let key = seeded_rank_merge_key(
@@ -750,11 +750,11 @@ fn build_seeded_rank_order(
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_seeded_remincross(
-  base_groups : Map[Int, Array[String]],
-  ordered_with_vnodes : Map[Int, Array[String]],
+  base_groups : Map[Int32, Array[String]],
+  ordered_with_vnodes : Map[Int32, Array[String]],
   cluster_keys : Map[String, String],
-) -> Map[Int, Array[String]] {
-  let rem_groups : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let rem_groups : Map[Int32, Array[String]] = Map([])
   for rank, names in ordered_with_vnodes {
     // Graphviz parity: seeded rank replay drops cluster skeleton placeholders
     // and keeps remaining name order unchanged.
@@ -786,8 +786,8 @@ pub fn build_seeded_remincross(
 fn cluster_rank_ranges_overlap(
   tail_cluster : String,
   head_cluster : String,
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
+  cluster_min_rank : Map[String, Int32],
+  cluster_max_rank : Map[String, Int32],
 ) -> Bool {
   let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
   let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
@@ -806,8 +806,8 @@ fn collect_remincross_trailing(
   edge_vnodes : Map[String, Array[String]],
   remincross_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
+  cluster_min_rank : Map[String, Int32],
+  cluster_max_rank : Map[String, Int32],
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map([])
   for edge_idx, edge in edges {
@@ -850,16 +850,16 @@ fn collect_remincross_trailing(
 fn apply_remincross_floor(
   keys : Map[String, Double],
   intercluster_vnodes : Map[String, Bool],
-  rem_base_order_index : Map[String, Int],
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
+  rem_base_order_index : Map[String, Int32],
+  ranks : Map[String, Int32],
+  vnode_ranks : Map[String, Int32],
 ) -> Unit {
   if intercluster_vnodes.length() == 0 {
     return ()
   }
   // Graphviz parity: trailing-vnode floor uses maximum real-node order per
   // rank from the current ReMincross base order index.
-  let max_order_by_rank : Map[Int, Int] = Map([])
+  let max_order_by_rank : Map[Int32, Int32] = Map([])
   for name, order in rem_base_order_index {
     let rank = match ranks.get(name) {
       Some(value) => value
@@ -892,20 +892,20 @@ fn apply_remincross_floor(
 /// Graphviz parity: clustered ReMincross vnode-group rebuild inputs keep the
 /// base groups and cluster/vnode context unchanged before vnode merge replay.
 pub(all) struct ReMincrossVnodeGroupInputs {
-  final_groups : Map[Int, Array[String]]
+  final_groups : Map[Int32, Array[String]]
   order_with_vnodes : Bool
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
 }
 
 ///|
@@ -914,7 +914,7 @@ pub(all) struct ReMincrossVnodeGroupInputs {
 /// vnode chains.
 fn build_remincross_vnode_keys(
   inputs : ReMincrossVnodeGroupInputs,
-  rem_base_order_index : Map[String, Int],
+  rem_base_order_index : Map[String, Int32],
 ) -> Map[String, Double] {
   let remincross_cluster_keys : Map[String, String] = Map([])
   for name, key in inputs.intercluster_keys {
@@ -959,7 +959,7 @@ fn build_remincross_vnode_keys(
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_remincross_vnode_groups(
   inputs : ReMincrossVnodeGroupInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let rem_base_groups = @rank_groups.clone_rank_groups(inputs.final_groups)
   let rem_base_order_index = @rank_groups.build_order_index(rem_base_groups)
   let rem_vnode_order_keys = if !inputs.order_with_vnodes {

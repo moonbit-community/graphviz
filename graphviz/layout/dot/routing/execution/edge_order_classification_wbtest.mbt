@@ -35,7 +35,7 @@ test "edge_port_cmp_info flips flat edge ports when node order is reversed" {
   let edge = graph.edge(graph.node("a"), graph.node("b"))
   let explicit_tail = Some(@cgraph.Port::{ name: Some("tail"), compass: None, })
   let explicit_head = Some(@cgraph.Port::{ name: Some("head"), compass: None, })
-  let order_index : Map[String, Int] = { "a": 2, "b": 0 }
+  let order_index : Map[String, Int32] = { "a": 2, "b": 0 }
   let base = build_route_base(
     edge,
     is_flat_edge=true,

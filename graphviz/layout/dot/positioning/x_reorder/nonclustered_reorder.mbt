@@ -22,14 +22,14 @@ pub struct NonclusteredXposGroupBuildInput {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   x_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
-  node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
+  node_order : Map[String, Int32]
   x_order_sizes : Map[String, NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -49,18 +49,18 @@ priv struct NonclusteredXposReorderInput {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   order_edge_tail_port_x : Array[Double]
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
   x_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
-  node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
+  node_order : Map[String, Int32]
   x_order_sizes : Map[String, NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -77,8 +77,8 @@ priv struct NonclusteredXposReorderInput {
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_nonclustered_x_groups(
   input : NonclusteredXposReorderInput,
-  x_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
+  x_groups : Map[Int32, Array[String]],
+) -> Map[Int32, Array[String]] {
   let edge_index_data = @order_graph.build_edge_index_with_vnodes(
     input.nodes,
     input.order_edges,
@@ -126,9 +126,9 @@ fn reorder_nonclustered_x_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn build_nonclustered_xpos_groups(
   input : NonclusteredXposGroupBuildInput,
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
   port_samples : XposPortSamples,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   reorder_nonclustered_x_groups(
     {
       nodes: input.nodes,

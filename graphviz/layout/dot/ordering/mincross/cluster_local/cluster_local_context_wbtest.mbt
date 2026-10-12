@@ -65,11 +65,11 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
   ignore(cluster_graph.node("d"))
   ignore(root.node("outside"))
 
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["b", "outside", "a"]
   groups[1] = ["d", "\{@edge_identity.EDGE_VNODE_PREFIX}0", "c", "outside"]
 
-  let node_order : Map[String, Int] = Map([])
+  let node_order : Map[String, Int32] = Map([])
   node_order["a"] = 0
   node_order["b"] = 1
   node_order["c"] = 2
@@ -133,11 +133,11 @@ test "build_cluster_local_reorder_context keeps cluster members plus local vnode
 
 ///|
 test "apply_cluster_rank_reorder_output installs contiguous blocks and preserves outside order" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["left", "a", "middle", "b", "right"]
   groups[1] = ["keep", "c"]
 
-  let ordered_cluster : Map[Int, Array[String]] = Map([])
+  let ordered_cluster : Map[Int32, Array[String]] = Map([])
   ordered_cluster[0] = ["b", "a"]
   ordered_cluster[1] = ["c"]
 
@@ -162,7 +162,7 @@ test "build_local_rank_groups dedupes previous-rank reachability, ignores extern
   let vnode0 = "\{@edge_identity.EDGE_VNODE_PREFIX}0"
   let vnode1 = "\{@edge_identity.EDGE_VNODE_PREFIX}1"
 
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["b", vnode0, "a", "outside"]
   groups[1] = ["e", vnode1, "d", "c", "outside"]
   groups[2] = ["solo"]
@@ -177,7 +177,7 @@ test "build_local_rank_groups dedupes previous-rank reachability, ignores extern
   cluster_node_set[vnode0] = true
   cluster_node_set[vnode1] = true
 
-  let cluster_node_order : Map[String, Int] = Map([])
+  let cluster_node_order : Map[String, Int32] = Map([])
   cluster_node_order["a"] = 0
   cluster_node_order["b"] = 1
   cluster_node_order["c"] = 2

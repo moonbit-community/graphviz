@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn build_order_map(entries : Array[(String, Int)]) -> Map[String, Int] {
-  let order_map : Map[String, Int] = Map([])
+fn build_order_map(entries : Array[(String, Int32)]) -> Map[String, Int32] {
+  let order_map : Map[String, Int32] = Map([])
   for entry in entries {
     let (name, order) = entry
     order_map[name] = order

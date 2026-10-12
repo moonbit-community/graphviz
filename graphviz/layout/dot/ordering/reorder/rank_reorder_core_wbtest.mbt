@@ -18,11 +18,11 @@ test "median_value_mc_scale follows Graphviz integer scaling" {
 
 ///|
 test "count_crossings counts inversions across adjacent ranks" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
@@ -42,11 +42,11 @@ test "count_crossings counts inversions across adjacent ranks" {
 
 ///|
 test "crossing_for_pair counts parent and child inversions" {
-  let parent_orders : Map[String, Array[Int]] = Map([])
+  let parent_orders : Map[String, Array[Int32]] = Map([])
   parent_orders["left"] = [1, 3]
   parent_orders["right"] = [0, 2]
 
-  let child_orders : Map[String, Array[Int]] = Map([])
+  let child_orders : Map[String, Array[Int32]] = Map([])
   child_orders["left"] = [0, 4]
   child_orders["right"] = [1, 2]
 
@@ -200,18 +200,18 @@ test "build_rank_constraint_lookup keeps only enabled flat constraints inside th
 
 ///|
 test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["p"] = 0
   ranks["x"] = 1
   ranks["y"] = 1
 
-  let fixed_order : Map[String, Int] = Map([])
+  let fixed_order : Map[String, Int32] = Map([])
 
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["x"] = [0]
   edge_in["y"] = [1]
 
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
 
   let crossings = count_rank_crossings_port(
     1,
@@ -232,21 +232,21 @@ test "count_rank_crossings_port uses port x offsets to break equal-order ties" {
 
 ///|
 test "count_rank_crossings_port respects fixed external endpoint slots" {
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["x"] = 1
   ranks["y"] = 1
   ranks["a"] = 0
   ranks["b"] = 0
 
-  let fixed_order : Map[String, Int] = Map([])
+  let fixed_order : Map[String, Int32] = Map([])
   fixed_order["a"] = 0
   fixed_order["b"] = 1
 
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["x"] = [1]
   edge_in["y"] = [0]
 
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
 
   let crossings = count_rank_crossings_port(
     1,
@@ -279,10 +279,10 @@ test "live port tie-break helpers match materialized port-order tuples" {
   active_incident_edges.in_edges["right"] = incident_edges.in_edges[1]
   active_incident_edges.out_edges["left"] = incident_edges.out_edges[0]
   active_incident_edges.out_edges["right"] = incident_edges.out_edges[1]
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["left"] = incident_edges.in_edges[0]
   edge_in["right"] = incident_edges.in_edges[1]
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
   edge_out["left"] = incident_edges.out_edges[0]
   edge_out["right"] = incident_edges.out_edges[1]
   let edge_endpoint_orders : EdgeEndpointOrders = {
@@ -354,11 +354,11 @@ test "live port tie-break helpers match materialized port-order tuples" {
 
 ///|
 test "active incident edge maps filter non-positive penalties once" {
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["x"] = [0, 1, 2]
   edge_in["y"] = [3]
 
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
   edge_out["a"] = [0, 3]
   edge_out["b"] = [1, 2]
 
@@ -374,24 +374,24 @@ test "active incident edge maps filter non-positive penalties once" {
 ///|
 test "transpose_rank_groups_port reorders rank using fixed external anchors" {
   let rank_keys = [1]
-  let ordered : Map[Int, Array[String]] = Map([])
+  let ordered : Map[Int32, Array[String]] = Map([])
   ordered[1] = ["x", "y"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["x"] = 1
   ranks["y"] = 1
   ranks["a"] = 0
   ranks["b"] = 0
 
-  let fixed_order : Map[String, Int] = Map([])
+  let fixed_order : Map[String, Int32] = Map([])
   fixed_order["a"] = 0
   fixed_order["b"] = 1
 
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["x"] = [1]
   edge_in["y"] = [0]
 
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
 
   let changed = transpose_rank_groups_port(
     rank_keys,
@@ -418,10 +418,10 @@ test "transpose_rank_groups_port reorders rank using fixed external anchors" {
 
 ///|
 test "flat_reorder_rank_groups topologically reorders constrained ranks" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b", "c", "d"]
 
-  let node_ranks : Map[String, Int] = Map([])
+  let node_ranks : Map[String, Int32] = Map([])
   node_ranks["a"] = 0
   node_ranks["b"] = 0
   node_ranks["c"] = 0

@@ -6,9 +6,9 @@
 fn xlabel_make_layout_tree(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
-  nodes? : Array[DotLayoutNode] = [],
-  edges? : Array[DotLayoutEdge] = [],
-  subgraphs? : Array[@layout_tree.LayoutTree] = [],
+  nodes~ : Array[DotLayoutNode] = [],
+  edges~ : Array[DotLayoutEdge] = [],
+  subgraphs~ : Array[@layout_tree.LayoutTree] = [],
 ) -> @layout_tree.LayoutTree {
   { graph, bbox, label_pos: None, nodes, edges, subgraphs, }
 }
@@ -19,7 +19,7 @@ fn xlabel_make_node_layout(
   pos : @geom.Point,
   width_in : Double,
   height_in : Double,
-  xlabel_pos? : @geom.Point? = None,
+  xlabel_pos~ : @geom.Point? = None,
 ) -> DotLayoutNode {
   { node, pos, width_in, height_in, label_pos: None, xlabel_pos, }
 }
@@ -28,10 +28,10 @@ fn xlabel_make_node_layout(
 fn xlabel_make_edge_layout(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
-  label_pos? : @geom.Point? = None,
-  head_label_pos? : @geom.Point? = None,
-  tail_label_pos? : @geom.Point? = None,
-  xlabel_pos? : @geom.Point? = None,
+  label_pos~ : @geom.Point? = None,
+  head_label_pos~ : @geom.Point? = None,
+  tail_label_pos~ : @geom.Point? = None,
+  xlabel_pos~ : @geom.Point? = None,
 ) -> DotLayoutEdge {
   {
     edge,

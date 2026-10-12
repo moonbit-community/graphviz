@@ -6,7 +6,7 @@
 fn assert_double_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_true(Double::is_close(actual, expected, absolute_tolerance=eps))
 }
@@ -21,7 +21,7 @@ test "compute_cluster_bbox_heights accumulates local, nested, margin, and label 
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
@@ -81,17 +81,17 @@ test "adjust_flip_rank_heights widens rank spacing and updates cluster half-heig
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
   ranks["b"] = 3
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[0] = 120.0
   rank_y[1] = 100.0
   rank_y[2] = 60.0
   rank_y[3] = 20.0
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[3] = 5.0
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht2[1] = 5.0
   let cluster_heights : Map[String, ClusterBboxHeightPair] = Map([])
 
@@ -136,12 +136,12 @@ test "adjust_flip_rank_heights leaves state unchanged when clusters have no widt
   let a = cluster.node("a")
   ignore(a)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[1] = 42.0
-  let rank_ht1 : Map[Int, Double] = Map([])
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   let cluster_heights : Map[String, ClusterBboxHeightPair] = Map([])
 
   let changed = adjust_flip_rank_heights({

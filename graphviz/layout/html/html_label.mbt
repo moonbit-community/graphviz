@@ -5,7 +5,7 @@
 ///|
 priv struct HtmlParser {
   chars : Array[Char]
-  mut index : Int
+  mut index : Int32
 }
 
 ///|
@@ -62,7 +62,7 @@ pub fn is_html_label_text(label : String) -> Bool {
 }
 
 ///|
-pub fn strip_html_wrappers(label : String, html? : Bool? = None) -> String? {
+pub fn strip_html_wrappers(label : String, html~ : Bool? = None) -> String? {
   let trimmed = label.trim(chars=" \n\r\t").to_owned()
   if !html.unwrap_or_else(() => is_html_label_text(trimmed)) {
     return None
@@ -282,7 +282,7 @@ fn html_valign_from(value : String?) -> HtmlVAlign {
 }
 
 ///|
-fn html_parse_int(value : String?, fallback : Int) -> Int {
+fn html_parse_int(value : String?, fallback : Int32) -> Int32 {
   match value {
     Some(text) => {
       let parsed = parse_double(text, fallback.to_double()).round().to_int()
@@ -619,7 +619,7 @@ fn parse_html_table_from_attrs(
 }
 
 ///|
-pub fn parse_html_label(label : String, html? : Bool? = None) -> HtmlLabel? {
+pub fn parse_html_label(label : String, html~ : Bool? = None) -> HtmlLabel? {
   guard strip_html_wrappers(label, html~) is Some(value) else { return None }
   let chars : Array[Char] = []
   for ch in value {
@@ -638,11 +638,11 @@ pub fn parse_html_label(label : String, html? : Bool? = None) -> HtmlLabel? {
 ///|
 fn html_table_placements(
   table : HtmlTable,
-) -> (Array[HtmlCellPlacement], Int, Int) {
+) -> (Array[HtmlCellPlacement], Int32, Int32) {
   let placements : Array[HtmlCellPlacement] = []
   let mut col_count = 0
   let mut row_index = 0
-  let row_spans : Array[Int] = []
+  let row_spans : Array[Int32] = []
   for row in table.rows {
     let mut col_index = 0
     for cell in row.cells {
@@ -802,7 +802,7 @@ pub fn html_table_size(
 }
 
 ///|
-fn round_half_up(value : Double) -> Int {
+fn round_half_up(value : Double) -> Int32 {
   if value >= 0.0 {
     (value + 0.5).floor().to_int()
   } else {
@@ -875,7 +875,7 @@ pub fn html_table_layout(
     let start_col = placement.col
     let end_col = placement.col + placement.cell.col_span - 1
     let start_row = placement.row
-    let end_row = Int::min(
+    let end_row = Int32::min(
       placement.row + placement.cell.row_span - 1,
       row_positions.length() - 1,
     )

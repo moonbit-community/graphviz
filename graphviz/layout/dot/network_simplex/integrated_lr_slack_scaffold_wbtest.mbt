@@ -9,7 +9,7 @@
 /// remaining LR cases.
 fn build_large_lr_slack_normal_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
-  let slack_ranks : Array[Int] = [
+  let slack_ranks : Array[Int32] = [
     287, 287, 95, -1, -1, -1, -1, -1, 431, 431, 371, 215, 287, 191, 71, 71, 71, 215,
     143, 71, 215, 215, 215, 95, -1, -1, -1, -1, -1, 71, 71, 71, 143, 143, 71, -1,
     -1, -1, -1, -1, -1, -1,
@@ -23,7 +23,7 @@ fn build_large_lr_slack_normal_fixture_graph() -> NsGraph {
     "n24", "n25", "n26", "n27", "n28", "n29", "n30", "n31", "n32", "n33", "n34",
     "n35", "n36", "n37", "n38", "n39", "n40", "n41", "n42",
   ]
-  let normal_ranks : Array[Int] = [
+  let normal_ranks : Array[Int32] = [
     0, 0, 0, 0, 72, 144, 72, 84, 156, 0, 0, 0, 72, 144, 96, 228, 144, 216, 300, 372,
     72, 216, 192, 288, 360, 288, 144, 216, 432, 372, 444, 0, 0, 0, 72, 144, 96, 516,
     444, 216, 288, 288, 528,

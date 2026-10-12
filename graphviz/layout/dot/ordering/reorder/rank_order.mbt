@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-const LARGE_SORT_THRESHOLD : Int = 128
+const LARGE_SORT_THRESHOLD : Int32 = 128
 
 ///|
 fn position_key(
@@ -26,15 +26,15 @@ priv struct PositionSortInfo {
   name : String
   key : Double
   is_vnode : Bool
-  degree : Int
-  secondary : Int
-  penalty : Int
+  degree : Int32
+  secondary : Int32
+  penalty : Int32
   ported : Bool
-  node_order : Int
-  original_index : Int
+  node_order : Int32
+  original_index : Int32
   port_order : Double?
-  rank_same_group : Int?
-  rank_same_order : Int
+  rank_same_group : Int32?
+  rank_same_order : Int32
 }
 
 ///|
@@ -44,9 +44,9 @@ fn sort_by_positions_fast(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
-  node_penalty : Map[String, Int],
+  node_penalty : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
-  node_order : Map[String, Int],
+  node_order : Map[String, Int32],
   reverse_ties : Bool,
 ) -> Array[String] {
   let infos : Array[PositionSortInfo] = []
@@ -167,11 +167,11 @@ fn sort_by_positions_large(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
-  node_penalty : Map[String, Int],
+  node_penalty : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
-  node_order : Map[String, Int],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
+  node_order : Map[String, Int32],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
   port_order_positions : Map[String, Double],
   reverse_ties : Bool,
 ) -> Array[String] {
@@ -403,14 +403,14 @@ pub fn sort_by_positions(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
-  node_penalty : Map[String, Int],
+  node_penalty : Map[String, Int32],
   parents_map : Map[String, Array[String]],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  edge_order : Map[String, Int],
-  node_order : Map[String, Int],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
+  edge_order : Map[String, Int32],
+  node_order : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
-  edge_pair_order : Map[String, Int],
+  edge_pair_order : Map[String, Int32],
   port_order_positions : Map[String, Double],
   reverse_ties : Bool,
 ) -> Array[String] {
@@ -666,7 +666,7 @@ pub fn median_value_mc_scale(values : Array[Double]) -> Double? {
   // Graphviz parity: medians are computed on MC_SCALE=256 integer values,
   // which affects tie behavior via integer division.
   let scale = 256.0
-  let scaled : Array[Int] = []
+  let scaled : Array[Int32] = []
   for value in values {
     scaled.push((value * scale).trunc().to_int())
   }
@@ -727,7 +727,7 @@ pub fn left2right_constraint(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-  remincross_mode? : Bool = false,
+  remincross_mode~ : Bool = false,
 ) -> Bool {
   let left_cluster = match cluster_keys.get(left) {
     Some(value) => value
