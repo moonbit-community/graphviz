@@ -33,7 +33,7 @@ fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool 
 }
 
 ///|
-fn order_for(name : String, order_index : Map[String, Int]) -> Int {
+fn order_for(name : String, order_index : Map[String, Int32]) -> Int32 {
   match order_index.get(name) {
     Some(value) => value
     None => 0
@@ -77,7 +77,7 @@ fn pathscross(
   path_next : String?,
   out_edges : Map[String, Array[String]],
   in_edges : Map[String, Array[String]],
-  order_index : Map[String, Int],
+  order_index : Map[String, Int32],
   vnode_sizes : Map[String, NodeSize],
 ) -> Bool {
   let out0 = path_neighbors(candidate, out_edges, vnode_sizes)
@@ -154,12 +154,12 @@ fn pathscross(
 ///|
 fn neighbor_names_for_rank(
   name : String,
-  rank : Int,
-  x_groups : Map[Int, Array[String]],
+  rank : Int32,
+  x_groups : Map[Int32, Array[String]],
   vnode_sizes : Map[String, NodeSize],
   out_edges : Map[String, Array[String]],
   in_edges : Map[String, Array[String]],
-  order_index : Map[String, Int],
+  order_index : Map[String, Int32],
   path_prev : String?,
   path_next : String?,
 ) -> RankNeighbors {
@@ -270,7 +270,7 @@ fn vnode_inside_cluster(
 /// Do not change behavior without updating fixtures/tests.
 fn maximal_bbox_for_name(
   name : String,
-  rank : Int,
+  rank : Int32,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   mval_sizes : Map[String, NodeSize],
@@ -278,21 +278,21 @@ fn maximal_bbox_for_name(
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
   cluster_bboxes : Map[String, @geom.Rect],
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
   nodesep_pt : Double,
   splinesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
   tail_cluster : String,
   head_cluster : String,
   out_edges : Map[String, Array[String]],
   in_edges : Map[String, Array[String]],
-  order_index : Map[String, Int],
+  order_index : Map[String, Int32],
   path_prev : String?,
   path_next : String?,
-  origin_clusters? : Map[String, (String, String)] = {},
+  origin_clusters~ : Map[String, (String, String)] = {},
 ) -> @geom.Rect? {
   let pos = match positions.get(name) {
     Some(value) => value
@@ -448,11 +448,11 @@ fn maximal_bbox_for_name(
 /// Graphviz parity: rank gap boxes mirror rank_box in refs/graphviz/lib/dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
 fn rank_gap_box(
-  rank_a : Int,
-  rank_b : Int,
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  rank_a : Int32,
+  rank_b : Int32,
+  rank_y : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
   left_bound : Double,
   right_bound : Double,
 ) -> @geom.Rect? {
@@ -503,7 +503,7 @@ fn beginpath_boxes_regular(
   node_pos : @geom.Point,
   node_size : NodeSize,
   start : @geom.Point,
-  side : Int,
+  side : Int32,
   use_port_box : Bool,
   ranksep_pt : Double,
 ) -> EndpathResult {
@@ -589,7 +589,7 @@ fn endpath_boxes_regular(
   node_pos : @geom.Point,
   node_size : NodeSize,
   end : @geom.Point,
-  side : Int,
+  side : Int32,
   use_port_box : Bool,
   ranksep_pt : Double,
 ) -> EndpathResult {

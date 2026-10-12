@@ -10,15 +10,15 @@
 priv struct FlatLabelNodeInfo {
   tail : String
   head : String
-  rank : Int
+  rank : Int32
 }
 
 ///|
 pub fn flat_label_adjacent(
-  rank : Int,
+  rank : Int32,
   tail : String,
   head : String,
-  ordered_groups : Map[Int, Array[String]],
+  ordered_groups : Map[Int32, Array[String]],
 ) -> Bool {
   let names = match ordered_groups.get(rank) {
     Some(list) => list
@@ -53,7 +53,7 @@ fn collect_vnode_out_heads(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Array[String]] {
   let out_heads : Map[String, Array[String]] = Map([])
@@ -111,12 +111,12 @@ fn collect_vnode_out_heads(
 ///|
 fn flat_limits(
   rank_nodes : Array[String],
-  order_index : Map[String, Int],
+  order_index : Map[String, Int32],
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
   vnode_out_heads : Map[String, Array[String]],
   tail : String,
   head : String,
-) -> Int {
+) -> Int32 {
   let tail_pos = match order_index.get(tail) {
     Some(value) => value
     None => 0
@@ -133,7 +133,7 @@ fn flat_limits(
   }
   let mut lnode = 0
   let mut rnode = n - 1
-  let bounds : Array[Int] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
+  let bounds : Array[Int32] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
   let setbounds = (name : String) => {
     let is_flat = flat_label_nodes.get(name) is Some(_)
     if !is_flat && !@edge_identity.is_edge_vnode_name(name) {
@@ -223,8 +223,8 @@ fn add_flat_label_vnodes(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
-  ordered_groups : Map[Int, Array[String]],
+  ranks : Map[String, Int32],
+  ordered_groups : Map[Int32, Array[String]],
   nodesep_pt : Double,
   rankdir : @rankdir.RankDir,
   sizes : Map[String, @node_primitives.NodeSize],
@@ -232,7 +232,7 @@ fn add_flat_label_vnodes(
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
   vnode_info : @setup.EdgeVnodeInfo,
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> FlatLabelVnodeResult {
   let order_index = @rank_groups.build_order_index(x_groups)
   let vnode_out_heads = collect_vnode_out_heads(
@@ -246,7 +246,7 @@ fn add_flat_label_vnodes(
   let flat_label_edges : Map[String, String] = Map([])
   let extra_edges : Array[@x_constraints.ConstraintEdge] = []
   let mut edge_idx = 0
-  let insert_at = (names : Array[String], pos : Int, value : String) => {
+  let insert_at = (names : Array[String], pos : Int32, value : String) => {
     let result : Array[String] = []
     let mut idx = 0
     let insert_pos = if pos < 0 {
@@ -436,7 +436,7 @@ fn add_flat_label_vnodes(
 
 ///|
 priv struct FlatLabelVnodeResult {
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   flat_label_nodes : Map[String, FlatLabelNodeInfo]
   flat_label_edge_vnodes : Map[String, String]
   flat_label_edges : Array[@x_constraints.ConstraintEdge]
@@ -447,8 +447,8 @@ fn build_flat_label_vnodes_for_positioning(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks : Map[String, Int],
-  ordered_groups : Map[Int, Array[String]],
+  ranks : Map[String, Int32],
+  ordered_groups : Map[Int32, Array[String]],
   nodesep_pt : Double,
   rankdir : @rankdir.RankDir,
   x_base_sizes : Map[String, @node_primitives.NodeSize],
@@ -456,13 +456,13 @@ fn build_flat_label_vnodes_for_positioning(
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
   vnode_info : @setup.EdgeVnodeInfo,
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(
     edges, edge_tail, edge_head, ranks, ordered_groups, nodesep_pt, rankdir, x_base_sizes,
     edge_cluster_keys, cluster_parents, existing_names, vnode_info, x_groups,
   )
-  let flat_label_ranks : Map[String, Int] = Map([])
+  let flat_label_ranks : Map[String, Int32] = Map([])
   for name, info in flat_label_vnodes.flat_label_nodes {
     flat_label_ranks[name] = info.rank
   }

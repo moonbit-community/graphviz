@@ -54,7 +54,7 @@ fn live_cluster_right_boundary_member(
 fn live_cluster_left_boundary_members(
   graph : @setup.ConcentrateFastGraph,
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   members : Map[String, Bool],
 ) -> Map[String, Bool] {
   let infused : Map[String, Bool] = Map([])
@@ -63,7 +63,7 @@ fn live_cluster_left_boundary_members(
       infused[name] = true
     }
   }
-  let first_edges : Map[String, Int] = Map([])
+  let first_edges : Map[String, Int32] = Map([])
   for index, edge in graph.edges {
     guard edge.original is Some(original) else { continue }
     let key = @edge_identity.edge_key(original)

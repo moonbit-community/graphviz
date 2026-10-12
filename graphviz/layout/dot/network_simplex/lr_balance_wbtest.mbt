@@ -131,12 +131,12 @@ test "network_simplex LR preserves layered port-label ladder spacing" {
 ///|
 struct LrChainCase {
   graph : NsGraph
-  ab : Int
-  bc : Int
+  ab : Int32
+  bc : Int32
 }
 
 ///|
-fn build_lr_chain_case(ac_minlen : Int) -> LrChainCase {
+fn build_lr_chain_case(ac_minlen : Int32) -> LrChainCase {
   let graph = new_graph()
   let a = add_node(graph, "a")
   let b = add_node(graph, "b")
@@ -150,8 +150,8 @@ fn build_lr_chain_case(ac_minlen : Int) -> LrChainCase {
 ///|
 struct LrOddSlackDiamondCase {
   graph : NsGraph
-  ac : Int
-  cd : Int
+  ac : Int32
+  cd : Int32
 }
 
 ///|
@@ -171,8 +171,8 @@ fn build_lr_odd_slack_diamond_case() -> LrOddSlackDiamondCase {
 ///|
 struct LrFanInCase {
   graph : NsGraph
-  ac : Int
-  cb : Int
+  ac : Int32
+  cb : Int32
 }
 
 ///|

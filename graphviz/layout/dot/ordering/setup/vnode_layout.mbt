@@ -6,9 +6,9 @@
 /// Ordering/setup owner: virtual-node metadata produced by class2 vnode
 /// construction and consumed by later ordering/positioning/routing stages.
 pub(all) struct EdgeVnodeInfo {
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   edge_vnodes : Map[String, Array[String]]
   vnode_clusters : Map[String, String]
 }
@@ -21,24 +21,24 @@ pub fn build_edge_vnodes(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
+  edge_out_order : Map[String, Array[Int32]],
+  ranks : Map[String, Int32],
   nodesep_pt : Double,
   rankdir : @rankdir.RankDir,
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
 ) -> EdgeVnodeInfo {
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   let edge_vnodes : Map[String, Array[String]] = Map([])
   let vnode_clusters : Map[String, String] = Map([])
   let tail_order : Array[String] = []
   for node in nodes {
     tail_order.push(node.name())
   }
-  let edge_indices : Array[Int] = []
+  let edge_indices : Array[Int32] = []
   let mut use_out_order = false
   for _key, _ in edge_out_order {
     use_out_order = true

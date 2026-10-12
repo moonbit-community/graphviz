@@ -123,7 +123,7 @@ fn push_unset_xlabel_label(
   metrics : XLabelMetrics,
   flip : Bool,
   labels : Array[XLabel],
-) -> Int {
+) -> Int32 {
   let label_dims = maybe_flip_dims(metrics.width, metrics.height, flip)
   let idx = labels.length()
   labels.push({
@@ -200,7 +200,7 @@ pub fn build_node_obstacle_with_xlabel_slot(
   let obj_dims = maybe_flip_dims(width_pt, height_pt, flip)
   let llx = node_layout.pos.x - obj_dims.width / 2.0
   let lly = node_layout.pos.y - obj_dims.height / 2.0
-  let mut label_index : Int? = None
+  let mut label_index : Int32? = None
   match xlabel_metrics_for_node(node) {
     Some(metrics) =>
       match node_layout.xlabel_pos {

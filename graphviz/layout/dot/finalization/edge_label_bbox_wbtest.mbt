@@ -30,7 +30,7 @@ test "expand_layout_tree_bbox_for_edge_labels expands root bbox for endpoint lab
       ),
     ],
   )
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
 

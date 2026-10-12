@@ -118,7 +118,7 @@ pub fn build_routing_precompute_data(
     prep.rankdir,
     prep.record_orientation,
   )
-  let initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)] = Map([])
+  let initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)] = Map([])
   if input.ordering.live_graph is Some(_) {
     let sample = @ports.build_initial_port_sampler(prep.nodes, input.sizes)
     for edge in prep.edges {
@@ -168,10 +168,10 @@ pub(all) struct RouteEdgesForDotInput {
   routing_label_ports_map : Map[String, Map[String, RecordPort]]
   routing_label_ports_raw : Map[String, Map[String, RecordPort]]
   routing_sizes : Map[String, NodeSize]
-  path_groups : Map[Int, Array[String]]
+  path_groups : Map[Int32, Array[String]]
   routing_context : @precompute.RoutingContext
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : @precompute.HeadPortMetrics
   enable_complex_tuning : Bool
 }

@@ -128,10 +128,10 @@ pub fn finalize_unranked_layout_tree(
   let empty_cluster_ln_x : Map[String, Double] = Map([])
   let empty_cluster_rn_x : Map[String, Double] = Map([])
   let empty_cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map([])
-  let empty_ranks : Map[String, Int] = Map([])
-  let empty_rank_y : Map[Int, Double] = Map([])
-  let empty_rank_ht1 : Map[Int, Double] = Map([])
-  let empty_rank_ht2 : Map[Int, Double] = Map([])
+  let empty_ranks : Map[String, Int32] = Map([])
+  let empty_rank_y : Map[Int32, Double] = Map([])
+  let empty_rank_ht1 : Map[Int32, Double] = Map([])
+  let empty_rank_ht2 : Map[Int32, Double] = Map([])
   let subgraphs = @subgraph_layout.layout_subgraphs({
     graph,
     nodes_out,

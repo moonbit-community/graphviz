@@ -200,7 +200,7 @@ fn edge_label_adjust_enabled() -> Bool {
 /// Do not change behavior without updating fixtures/tests.
 fn expand_layout_tree_bbox_for_edge_labels(
   layout : LayoutTree,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   flat_label_edge_vnodes : Map[String, String],
 ) -> LayoutTree {
   if !layout.graph.is_root() {

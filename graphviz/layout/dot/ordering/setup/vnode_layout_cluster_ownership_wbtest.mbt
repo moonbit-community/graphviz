@@ -37,7 +37,7 @@ test "build_edge_vnodes keeps cluster-local parallel chains at plain virtual wid
   let edge2 = graph.edge(a, b)
   ignore(edge2)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -67,7 +67,7 @@ test "build_edge_vnodes leaves cross-root-cluster chains unowned and at standard
   let b = right.node("b")
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -94,7 +94,7 @@ test "build_edge_vnodes applies edge cluster key when endpoints stay at root" {
   let b = graph.node("b")
   let edge = graph.edge(a, b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 

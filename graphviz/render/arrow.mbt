@@ -36,52 +36,52 @@ fn point_scale(a : @geom.Point, s : Double) -> @geom.Point {
 }
 
 ///|
-const NUMB_OF_ARROW_HEADS : Int = 4
+const NUMB_OF_ARROW_HEADS : Int32 = 4
 
 ///|
-const BITS_PER_ARROW_TYPE : Int = 4
+const BITS_PER_ARROW_TYPE : Int32 = 4
 
 ///|
-const ARR_TYPE_NONE : Int = 0
+const ARR_TYPE_NONE : Int32 = 0
 
 ///|
-const ARR_TYPE_NORM : Int = 1
+const ARR_TYPE_NORM : Int32 = 1
 
 ///|
-const ARR_TYPE_CROW : Int = 2
+const ARR_TYPE_CROW : Int32 = 2
 
 ///|
-const ARR_TYPE_TEE : Int = 3
+const ARR_TYPE_TEE : Int32 = 3
 
 ///|
-const ARR_TYPE_BOX : Int = 4
+const ARR_TYPE_BOX : Int32 = 4
 
 ///|
-const ARR_TYPE_DIAMOND : Int = 5
+const ARR_TYPE_DIAMOND : Int32 = 5
 
 ///|
-const ARR_TYPE_DOT : Int = 6
+const ARR_TYPE_DOT : Int32 = 6
 
 ///|
-const ARR_TYPE_CURVE : Int = 7
+const ARR_TYPE_CURVE : Int32 = 7
 
 ///|
-const ARR_TYPE_GAP : Int = 8
+const ARR_TYPE_GAP : Int32 = 8
 
 ///|
-const ARR_MOD_OPEN : Int = 1 << (BITS_PER_ARROW_TYPE + 0)
+const ARR_MOD_OPEN : Int32 = 1 << (BITS_PER_ARROW_TYPE + 0)
 
 ///|
-const ARR_MOD_INV : Int = 1 << (BITS_PER_ARROW_TYPE + 1)
+const ARR_MOD_INV : Int32 = 1 << (BITS_PER_ARROW_TYPE + 1)
 
 ///|
-const ARR_MOD_LEFT : Int = 1 << (BITS_PER_ARROW_TYPE + 2)
+const ARR_MOD_LEFT : Int32 = 1 << (BITS_PER_ARROW_TYPE + 2)
 
 ///|
-const ARR_MOD_RIGHT : Int = 1 << (BITS_PER_ARROW_TYPE + 3)
+const ARR_MOD_RIGHT : Int32 = 1 << (BITS_PER_ARROW_TYPE + 3)
 
 ///|
-fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
+fn has_prefix_at(text : String, start : Int32, prefix : String) -> Bool {
   let end = start + prefix.length()
   if end > text.length() {
     return false
@@ -90,12 +90,12 @@ fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
 }
 
 ///|
-fn arrow_synonyms() -> Array[(String, Int)] {
+fn arrow_synonyms() -> Array[(String, Int32)] {
   [("invempty", ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN)]
 }
 
 ///|
-fn arrow_mods() -> Array[(String, Int)] {
+fn arrow_mods() -> Array[(String, Int32)] {
   [
     ("o", ARR_MOD_OPEN),
     ("r", ARR_MOD_RIGHT),
@@ -106,7 +106,7 @@ fn arrow_mods() -> Array[(String, Int)] {
 }
 
 ///|
-fn arrow_names() -> Array[(String, Int)] {
+fn arrow_names() -> Array[(String, Int32)] {
   [
     ("normal", ARR_TYPE_NORM),
     ("crow", ARR_TYPE_CROW),
@@ -127,10 +127,10 @@ fn arrow_names() -> Array[(String, Int)] {
 ///|
 fn arrow_match_name_frag(
   value : String,
-  start : Int,
-  names : Array[(String, Int)],
-  flag : Int,
-) -> (Int, Int) {
+  start : Int32,
+  names : Array[(String, Int32)],
+  flag : Int32,
+) -> (Int32, Int32) {
   for pair in names {
     let (name, arrow_flag) = pair
     if has_prefix_at(value, start, name) {
@@ -141,7 +141,7 @@ fn arrow_match_name_frag(
 }
 
 ///|
-fn arrow_match_shape(value : String, start : Int) -> (Int, Int) {
+fn arrow_match_shape(value : String, start : Int32) -> (Int32, Int32) {
   let type_mask = (1 << BITS_PER_ARROW_TYPE) - 1
   let (syn_rest, syn_flag) = arrow_match_name_frag(
     value,
@@ -182,7 +182,7 @@ fn arrow_match_shape(value : String, start : Int) -> (Int, Int) {
 }
 
 ///|
-fn parse_arrow_flags(value : String?) -> Array[Int] {
+fn parse_arrow_flags(value : String?) -> Array[Int32] {
   let text = match value {
     Some(v) => v.to_lower()
     None => "normal"
@@ -190,7 +190,7 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
   if text == "" {
     return [ARR_TYPE_NORM]
   }
-  let flags : Array[Int] = []
+  let flags : Array[Int32] = []
   let mut idx = 0
   while idx < text.length() && flags.length() < NUMB_OF_ARROW_HEADS {
     let (next, parsed) = arrow_match_shape(text, idx)
@@ -217,13 +217,13 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
 }
 
 ///|
-fn arrow_type_mask(flag : Int) -> Int {
+fn arrow_type_mask(flag : Int32) -> Int32 {
   let mask = (1 << BITS_PER_ARROW_TYPE) - 1
   flag & mask
 }
 
 ///|
-fn arrow_lenfact(arrow_type : Int) -> Double {
+fn arrow_lenfact(arrow_type : Int32) -> Double {
   match arrow_type {
     ARR_TYPE_NORM => 1.0
     ARR_TYPE_CROW => 1.0
@@ -302,7 +302,7 @@ fn arrow_type_normal0(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[@geom.Point]) {
   let mut arrowwidth = 0.35
   if penwidth > 4.0 {
@@ -409,7 +409,7 @@ fn arrow_type_normal(
   p : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let (q, points) = arrow_type_normal0(p, u, penwidth, flag)
   let filled = (flag & ARR_MOD_OPEN) == 0
@@ -430,7 +430,7 @@ fn arrow_type_crow0(
   u : @geom.Point,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[@geom.Point]) {
   let mut p = p_in
   let mut arrowwidth = 0.45
@@ -580,7 +580,7 @@ fn arrow_type_crow(
   u : @geom.Point,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let (q, points) = arrow_type_crow0(p, u, arrowsize, penwidth, flag)
   let polygon_points = if (flag & ARR_MOD_LEFT) != 0 {
@@ -616,7 +616,7 @@ fn arrow_type_tee(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let mut p = p_in
   let mut m = point(p.x + u.x * 0.2, p.y + u.y * 0.2)
@@ -662,7 +662,7 @@ fn arrow_type_box(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let mut p = p_in
   let mut m = point(p.x + u.x * 0.8, p.y + u.y * 0.8)
@@ -704,7 +704,7 @@ fn arrow_type_diamond0(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[@geom.Point]) {
   let v = point(-u.y / 3.0, u.x / 3.0)
   let mut p = p_in
@@ -744,7 +744,7 @@ fn arrow_type_diamond(
   p : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let (q, points) = arrow_type_diamond0(p, u, penwidth, flag)
   let filled = (flag & ARR_MOD_OPEN) == 0
@@ -763,7 +763,7 @@ fn arrow_type_dot(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let mut p = p_in
   let mut delta = point(0.0, 0.0)
@@ -816,7 +816,7 @@ fn arrow_type_curve(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let line_start = p_in
   let mut p = p_in
@@ -879,7 +879,7 @@ fn arrow_gen_type(
   u : @geom.Point,
   arrowsize : Double,
   penwidth : Double,
-  flag : Int,
+  flag : Int32,
 ) -> (@geom.Point, Array[DrawOp]) {
   let arrow_type = arrow_type_mask(flag)
   let lenfact = arrow_lenfact(arrow_type)

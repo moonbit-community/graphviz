@@ -10,8 +10,8 @@
 /// Graphviz parity: root-anchor transfer only applies on the single-left
 /// cluster hand-off shape from the previous rank map.
 fn select_root_left_anchor(
-  order_map : Map[String, Int],
-  previous_order_map : Map[String, Int]?,
+  order_map : Map[String, Int32],
+  previous_order_map : Map[String, Int32]?,
 ) -> String? {
   let prev_map = match previous_order_map {
     Some(value) => value
@@ -56,9 +56,9 @@ fn select_root_left_anchor(
 /// Graphviz parity: cluster-rank sort keys are normalized into deterministic
 /// non-root order by (order, cluster-name) before root-anchor transfer.
 fn build_sorted_non_root_clusters(
-  order_map : Map[String, Int],
+  order_map : Map[String, Int32],
 ) -> Array[String] {
-  let entries : Array[(Int, String)] = []
+  let entries : Array[(Int32, String)] = []
   for cluster, order in order_map {
     if cluster == "" {
       continue
@@ -119,7 +119,7 @@ fn build_root_anchor_reordered_clusters(
 
 ///|
 fn rewrite_cluster_order_map(
-  order_map : Map[String, Int],
+  order_map : Map[String, Int32],
   ordered_clusters : Array[String],
 ) -> Unit {
   let mut idx = 0
@@ -134,8 +134,8 @@ fn rewrite_cluster_order_map(
 /// continuity across adjacent ranks when both ranks expose root buckets.
 /// Do not change behavior without updating fixtures/tests.
 fn anchor_root_bucket(
-  order_map : Map[String, Int],
-  previous_order_map : Map[String, Int]?,
+  order_map : Map[String, Int32],
+  previous_order_map : Map[String, Int32]?,
 ) -> Unit {
   if order_map.get("") is None {
     return ()
@@ -163,8 +163,8 @@ fn build_rank_cluster_bucket_order_map(
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
   real_nodes : Map[String, Bool],
-) -> Map[String, Int] {
-  let order_map : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let order_map : Map[String, Int32] = Map([])
   let mut idx = 0
   for name in names {
     if order_cluster_skeleton.get(name) == Some(true) {
@@ -191,14 +191,14 @@ fn build_rank_cluster_bucket_order_map(
 /// skeleton buckets (or root bucket) per rank, with root-anchor transfer
 /// between adjacent ranks when anchor preconditions match.
 fn build_cluster_order_from_root(
-  root_rank_keys : Array[Int],
-  ordered_root : Map[Int, Array[String]],
+  root_rank_keys : Array[Int32],
+  ordered_root : Map[Int32, Array[String]],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
   real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map([])
-  let mut previous_order_map : Map[String, Int]? = None
+) -> Map[Int32, Map[String, Int32]] {
+  let cluster_rank_order : Map[Int32, Map[String, Int32]] = Map([])
+  let mut previous_order_map : Map[String, Int32]? = None
   for rank in root_rank_keys {
     let names = ordered_root.get(rank).unwrap_or_default()
     let order_map = build_rank_cluster_bucket_order_map(

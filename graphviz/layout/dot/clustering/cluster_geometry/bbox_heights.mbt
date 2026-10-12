@@ -22,16 +22,16 @@ pub(all) struct ClusterBboxHeightPair {
 
 ///|
 priv struct ClusterHeights {
-  min_rank : Int
-  max_rank : Int
+  min_rank : Int32
+  max_rank : Int32
   ht1 : Double
   ht2 : Double
 }
 
 ///|
 priv struct ClusterRankBounds {
-  min_rank : Int?
-  max_rank : Int?
+  min_rank : Int32?
+  max_rank : Int32?
 }
 
 ///|
@@ -39,12 +39,12 @@ priv struct ClusterRankBounds {
 /// walk payload grouped so rank_y propagation stays explicit and stable.
 pub(all) struct FlipRankHeightsAdjustInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   cluster_heights : Map[String, ClusterBboxHeightPair]
-  min_root_rank : Int
+  min_root_rank : Int32
   margin_total : Double
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
@@ -55,7 +55,7 @@ pub(all) struct FlipRankHeightsAdjustInput {
 /// walk payload grouped so child height aggregation remains explicit and stable.
 priv struct ClusterBBoxHeightsCollectInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir
@@ -75,7 +75,7 @@ priv struct ClusterBBoxHeightsCollectInput {
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct ClusterBBoxHeightsInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir
@@ -93,13 +93,13 @@ pub(all) struct ClusterBBoxHeightsInput {
 /// state grouped so rank bounds and per-rank maxima remain in sync.
 priv struct ClusterRankHeightsCollectInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   seen : Map[String, Bool]
-  rank_heights : Map[Int, Double]
-  min_rank : Int?
-  max_rank : Int?
+  rank_heights : Map[Int32, Double]
+  min_rank : Int32?
+  max_rank : Int32?
   node_half_height_pt_for : (
     String,
     Map[String, @node_primitives.NodeSize],
@@ -152,8 +152,8 @@ pub fn adjust_flip_rank_heights(input : FlipRankHeightsAdjustInput) -> Bool {
   }
   let cluster_nodes : Map[String, Bool] = Map([])
   @cluster_graph.collect_graph_nodes(input.graph, cluster_nodes)
-  let mut min_rank : Int? = None
-  let mut max_rank : Int? = None
+  let mut min_rank : Int32? = None
+  let mut max_rank : Int32? = None
   for name, _ in cluster_nodes {
     match input.ranks.get(name) {
       Some(rank) => {
@@ -347,7 +347,7 @@ fn collect_cluster_bbox_heights(
     return None
   }
   let seen : Map[String, Bool] = Map([])
-  let rank_heights : Map[Int, Double] = Map([])
+  let rank_heights : Map[Int32, Double] = Map([])
   let rank_bounds = collect_cluster_rank_heights({
     graph: input.graph,
     ranks: input.ranks,

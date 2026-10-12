@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -17,7 +17,7 @@ fn assert_close(
 fn assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_close(actual.x, expected.x, eps~)
   assert_close(actual.y, expected.y, eps~)
@@ -75,11 +75,11 @@ fn sample_position_result(
   vnode_positions : Map[String, @geom.Point],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  rank_y : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
 ) -> PositionResult {
-  let empty_x_groups : Map[Int, Array[String]] = Map([])
+  let empty_x_groups : Map[Int32, Array[String]] = Map([])
   let empty_flat_label_edge_vnodes : Map[String, String] = Map([])
   let empty_cluster_bbox_heights = Map([])
   {

@@ -347,8 +347,8 @@ fn polygon_edges(
 ///|
 fn adjust_regular_path(
   boxes : Array[@geom.Rect],
-  fb : Int,
-  lb : Int,
+  fb : Int32,
+  lb : Int32,
 ) -> Array[@geom.Rect] {
   if boxes.length() == 0 {
     return boxes
@@ -527,7 +527,7 @@ fn limit_boxes_sample(
 pub fn limit_boxes_for_spline(
   boxes : Array[@geom.Rect],
   spline_points : Array[@geom.Point],
-  fallback_polyline? : Array[@geom.Point] = [],
+  fallback_polyline~ : Array[@geom.Point] = [],
 ) -> Array[@geom.Rect] {
   if boxes.length() == 0 {
     return boxes

@@ -11,7 +11,7 @@ fn explicit_compass_port(compass : @cgraph.Compass) -> @cgraph.Port? {
 fn short_route_assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -22,7 +22,7 @@ fn short_route_assert_close(
 fn short_route_assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   short_route_assert_close(actual.x, expected.x, eps~)
   short_route_assert_close(actual.y, expected.y, eps~)
@@ -32,7 +32,7 @@ fn short_route_assert_point_close(
 fn short_route_assert_points_close(
   actual : Array[@geom.Point],
   expected : Array[@geom.Point],
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_eq(actual.length(), expected.length())
   for i in 0..<expected.length() {
@@ -43,16 +43,16 @@ fn short_route_assert_points_close(
 ///|
 fn short_route_test_base(
   edge : @cgraph.Edge,
-  tail_anchor? : @geom.Point = @edge_spline.point(0.0, 0.0),
-  head_anchor? : @geom.Point = @edge_spline.point(10.0, 0.0),
-  tail_port? : @cgraph.Port? = None,
-  head_port? : @cgraph.Port? = None,
-  tail_port_side? : Int = 0,
-  head_port_side? : Int = 0,
-  route_include_tail? : Bool = false,
-  route_include_head? : Bool = false,
-  tail_slope? : @geom.Point = @edge_spline.point(0.0, 0.0),
-  head_slope? : @geom.Point = @edge_spline.point(0.0, 0.0),
+  tail_anchor~ : @geom.Point = @edge_spline.point(0.0, 0.0),
+  head_anchor~ : @geom.Point = @edge_spline.point(10.0, 0.0),
+  tail_port~ : @cgraph.Port? = None,
+  head_port~ : @cgraph.Port? = None,
+  tail_port_side~ : Int32 = 0,
+  head_port_side~ : Int32 = 0,
+  route_include_tail~ : Bool = false,
+  route_include_head~ : Bool = false,
+  tail_slope~ : @geom.Point = @edge_spline.point(0.0, 0.0),
+  head_slope~ : @geom.Point = @edge_spline.point(0.0, 0.0),
 ) -> EdgeRouteBase {
   let size = @node_primitives.node_size_from_points(10.0, 10.0)
   {

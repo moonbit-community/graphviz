@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn fixture_edge_at(graph : @cgraph.Graph, index : Int) -> @cgraph.Edge raise {
+fn fixture_edge_at(graph : @cgraph.Graph, index : Int32) -> @cgraph.Edge raise {
   let edges = graph.edges()
   guard index >= 0 && index < edges.length() else {
     fail("expected edge at index \{index}")

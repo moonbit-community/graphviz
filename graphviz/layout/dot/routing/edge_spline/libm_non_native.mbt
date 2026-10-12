@@ -37,8 +37,8 @@ pub fn libm_sin(x : Double) -> Double {
 
 ///|
 priv struct FmaTerm {
-  sign : Int
-  exp : Int
+  sign : Int32
+  exp : Int32
   sig : UInt64
   special : Bool
 }
@@ -66,12 +66,12 @@ fn fma_term(x : Double) -> FmaTerm {
 }
 
 ///|
-fn bigint_pow2(shift : Int) -> @bigint.BigInt {
+fn bigint_pow2(shift : Int32) -> @bigint.BigInt {
   @bigint.BigInt::from_uint64(1) << shift
 }
 
 ///|
-fn round_bigint(value : @bigint.BigInt, shift : Int) -> @bigint.BigInt {
+fn round_bigint(value : @bigint.BigInt, shift : Int32) -> @bigint.BigInt {
   if shift <= 0 {
     return value
   }
@@ -95,13 +95,13 @@ fn round_bigint(value : @bigint.BigInt, shift : Int) -> @bigint.BigInt {
 }
 
 ///|
-fn fma_zero(sign : Int) -> Double {
+fn fma_zero(sign : Int32) -> Double {
   let sign_bit : UInt64 = if sign < 0 { 1 } else { 0 }
   UInt64::reinterpret_as_double(sign_bit << 63)
 }
 
 ///|
-fn fma_inf(sign : Int) -> Double {
+fn fma_inf(sign : Int32) -> Double {
   let sign_bit : UInt64 = if sign < 0 { 1 } else { 0 }
   let exp_bits : UInt64 = 0x7ff
   let bits = (sign_bit << 63) | (exp_bits << 52)
@@ -109,7 +109,7 @@ fn fma_inf(sign : Int) -> Double {
 }
 
 ///|
-fn fma_round(mag : @bigint.BigInt, exp : Int, sign : Int) -> Double {
+fn fma_round(mag : @bigint.BigInt, exp : Int32, sign : Int32) -> Double {
   if mag.is_zero() {
     return fma_zero(sign)
   }

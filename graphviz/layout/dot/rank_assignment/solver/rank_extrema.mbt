@@ -36,7 +36,7 @@ pub fn collect_rank_extremes(
 /// normalization, matching rank.c postprocessing.
 /// Do not change behavior without updating fixtures/tests.
 pub fn apply_rank_extremes(
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   min_nodes : Map[String, Bool],
   max_nodes : Map[String, Bool],
 ) -> Unit {

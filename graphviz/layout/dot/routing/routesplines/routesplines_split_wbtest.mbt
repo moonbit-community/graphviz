@@ -19,8 +19,8 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = vnodes
 
-  let ranks : Map[String, Int] = { "tail": 0, "head": 7 }
-  let vnode_ranks : Map[String, Int] = {
+  let ranks : Map[String, Int32] = { "tail": 0, "head": 7 }
+  let vnode_ranks : Map[String, Int32] = {
     "v1": 1,
     "v2": 2,
     "v3": 3,
@@ -28,7 +28,7 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
     "v5": 5,
     "v6": 6,
   }
-  let rank_y : Map[Int, Double] = {
+  let rank_y : Map[Int32, Double] = {
     0: 700.0,
     1: 600.0,
     2: 500.0,
@@ -38,7 +38,7 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
     6: 100.0,
     7: 0.0,
   }
-  let rank_ht1 : Map[Int, Double] = {
+  let rank_ht1 : Map[Int32, Double] = {
     0: 5.0,
     1: 5.0,
     2: 5.0,
@@ -78,7 +78,7 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
     "v5": split_test_vnode_size(),
     "v6": split_test_vnode_size(),
   }
-  let x_groups : Map[Int, Array[String]] = {
+  let x_groups : Map[Int32, Array[String]] = {
     0: ["tail"],
     1: ["v1"],
     2: ["v2"],
@@ -88,7 +88,7 @@ test "edge_pathplan_polyline final split segment starts recover chain at segfirs
     6: ["v6"],
     7: ["head"],
   }
-  let order_index : Map[String, Int] = {
+  let order_index : Map[String, Int32] = {
     "tail": 0,
     "v1": 0,
     "v2": 0,

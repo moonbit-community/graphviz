@@ -35,8 +35,8 @@ test "ordering back edges are deleted but retain their reversed matrix entry" {
 
 ///|
 test "ordinary flat edges precede appended ordering edges in postorder" {
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 0 }
-  let groups : Map[Int, Array[String]] = { 0: ["a", "b", "c"] }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 0 }
+  let groups : Map[Int32, Array[String]] = { 0: ["a", "b", "c"] }
   let (topology, _) = break_flat_cycles(
     [0],
     groups,
@@ -72,8 +72,8 @@ test "backward rank seeding does not count flat edges as ordinary outgoing edges
 
 ///|
 test "flat cycle deletion preserves the swapped live adjacency order" {
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 0, "d": 0 }
-  let groups : Map[Int, Array[String]] = { 0: ["a", "b", "c", "d"] }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 0, "d": 0 }
+  let groups : Map[Int32, Array[String]] = { 0: ["a", "b", "c", "d"] }
   let (topology, _) = break_flat_cycles(
     [0],
     groups,

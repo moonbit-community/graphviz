@@ -113,8 +113,8 @@ pub fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
 
 ///|
 pub(all) struct EdgeRankSpan {
-  min_rank : Int
-  max_rank : Int
+  min_rank : Int32
+  max_rank : Int32
 }
 
 ///|
@@ -123,7 +123,7 @@ pub(all) struct EdgeRankSpan {
 /// Do not change behavior without updating fixtures/tests.
 pub fn edge_rank_span(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
 ) -> EdgeRankSpan? {
   let tail_rank = match ranks.get(edge.tail().name()) {
     Some(value) => value
@@ -183,7 +183,7 @@ pub fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
-pub fn edge_weight(edge : @cgraph.Edge) -> Int {
+pub fn edge_weight(edge : @cgraph.Edge) -> Int32 {
   let mut weight = dot_weight(edge.get_attr("weight"))
   if !edge_is_constraint(edge) {
     return 0
@@ -205,7 +205,7 @@ pub fn edge_weight(edge : @cgraph.Edge) -> Int {
 ///|
 /// dotinit.c uses late_int/strtol: consume the signed decimal prefix, not a
 /// rounded floating-point value. DOT clamps negative weights to zero.
-fn dot_weight(value : String?) -> Int {
+fn dot_weight(value : String?) -> Int32 {
   guard value is Some(value) else { return 1 }
   let text = value.trim().to_owned()
   let prefix = for index = 0, prefix = "" {
@@ -225,7 +225,7 @@ fn dot_weight(value : String?) -> Int {
 }
 
 ///|
-pub fn edge_minlen(edge : @cgraph.Edge) -> Int {
+pub fn edge_minlen(edge : @cgraph.Edge) -> Int32 {
   let minlen_value = @attrs.parse_double(edge.get_attr("minlen"), 1.0)
   let minlen = minlen_value.round().to_int()
   if minlen < 1 {
@@ -236,7 +236,7 @@ pub fn edge_minlen(edge : @cgraph.Edge) -> Int {
 }
 
 ///|
-pub fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
+pub fn edge_xpenalty(edge : @cgraph.Edge) -> Int32 {
   let penalty_value = @attrs.parse_double(edge.get_attr("xpenalty"), 1.0)
   let mut penalty = penalty_value.round().to_int()
   if penalty < 0 {

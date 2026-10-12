@@ -175,10 +175,10 @@ fn scale_node_size_value(
 
 ///|
 pub fn scale_double_map_rounded(
-  values : Map[Int, Double],
+  values : Map[Int32, Double],
   scale : Double,
-) -> Map[Int, Double] {
-  let scaled : Map[Int, Double] = Map([])
+) -> Map[Int32, Double] {
+  let scaled : Map[Int32, Double] = Map([])
   for key, value in values {
     scaled[key] = (value * scale).round()
   }

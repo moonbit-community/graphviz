@@ -4,7 +4,7 @@
 
 ///|
 test "flat_limits shifts insertion right when an earlier flat label occupies the left side" {
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   order_index["x"] = 0
   order_index["a"] = 1
   order_index["b"] = 3
@@ -33,7 +33,7 @@ test "flat_limits shifts away from existing vnode fanouts on either side" {
   let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
 
-  let left_order_index : Map[String, Int] = Map([])
+  let left_order_index : Map[String, Int32] = Map([])
   left_order_index[left_vnode] = 0
   left_order_index["slot1"] = 1
   left_order_index["slot2"] = 2
@@ -54,7 +54,7 @@ test "flat_limits shifts away from existing vnode fanouts on either side" {
     2,
   )
 
-  let right_order_index : Map[String, Int] = Map([])
+  let right_order_index : Map[String, Int32] = Map([])
   right_order_index["slot0"] = 0
   right_order_index["slot1"] = 1
   right_order_index[right_vnode] = 2
@@ -82,7 +82,7 @@ test "flat_limits falls back to midpoint when left and right vnode fanouts exhau
   let right_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}right"
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map([])
 
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   order_index["x"] = 0
   order_index[right_vnode] = 1
   order_index["a"] = 1

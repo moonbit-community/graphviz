@@ -9,7 +9,7 @@ priv struct SvgLayerSelection {
 ///|
 fn SvgLayerSelection::cluster_visible(
   self : SvgLayerSelection,
-  layer : Int,
+  layer : Int32,
   graph : @cgraph.Graph,
 ) -> Bool {
   guard self.names.length() > 1 else { true }
@@ -76,8 +76,8 @@ fn SvgLayerSelection::new(
 fn SvgLayerSelection::index(
   self : SvgLayerSelection,
   name : String,
-  all : Int,
-) -> Int {
+  all : Int32,
+) -> Int32 {
   guard name != "all" else { all }
   let numeric = for ch in name {
     if ch < '0' || ch > '9' {
@@ -100,7 +100,7 @@ fn SvgLayerSelection::index(
 ///|
 fn SvgLayerSelection::selected(
   self : SvgLayerSelection,
-  layer : Int,
+  layer : Int32,
   spec : String,
 ) -> Bool {
   for part in layer_tokens(spec, self.list_separators) {
@@ -142,7 +142,7 @@ test "SVG layer selection follows named numeric range and list semantics" {
 ///|
 fn SvgLayerSelection::node_visible(
   self : SvgLayerSelection,
-  layer : Int,
+  layer : Int32,
   graph : @cgraph.Graph,
   node : @cgraph.Node,
 ) -> Bool {
@@ -168,7 +168,7 @@ fn SvgLayerSelection::node_visible(
 ///|
 fn SvgLayerSelection::edge_visible(
   self : SvgLayerSelection,
-  layer : Int,
+  layer : Int32,
   edge : @cgraph.Edge,
 ) -> Bool {
   guard self.names.length() > 1 else { true }

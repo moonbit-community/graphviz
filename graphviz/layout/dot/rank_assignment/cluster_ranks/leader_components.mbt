@@ -24,8 +24,8 @@ fn solve_leader_components(graph : @network_simplex.NsGraph) -> Unit {
     }
     component.sort_by((a, b) => a - b)
     let subgraph = @network_simplex.new_graph()
-    let indices : Map[Int, Int] = Map([])
-    let component_edges : Array[Int] = []
+    let indices : Map[Int32, Int32] = Map([])
+    let component_edges : Array[Int32] = []
     for index in component {
       indices[index] = @network_simplex.add_node(
         subgraph,

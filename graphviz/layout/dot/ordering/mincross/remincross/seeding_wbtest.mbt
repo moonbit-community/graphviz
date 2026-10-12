@@ -48,10 +48,10 @@ test "build_seeded_rank_order falls back to keyed merge order around nearest rea
 test "build_seeded_remincross drops cluster skeletons and uses base real order only when present" {
   let skeleton = @cluster_identity.cluster_skeleton_name("cluster_x", 0)
 
-  let base_groups : Map[Int, Array[String]] = Map([])
+  let base_groups : Map[Int32, Array[String]] = Map([])
   base_groups[0] = ["a", "b"]
 
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map([])
+  let ordered_with_vnodes : Map[Int32, Array[String]] = Map([])
   ordered_with_vnodes[0] = [skeleton, "v_before", "a", "b"]
   ordered_with_vnodes[1] = [skeleton, "rank1_only"]
 

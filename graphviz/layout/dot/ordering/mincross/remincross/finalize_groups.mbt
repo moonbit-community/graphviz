@@ -15,11 +15,11 @@
 /// preserving rank iteration order and per-rank sequence.
 /// Do not change behavior without updating fixtures/tests.
 pub fn collect_real_only_rank_groups(
-  rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  ordered : Map[Int32, Array[String]],
   real_nodes : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let cleaned_groups : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let cleaned_groups : Map[Int32, Array[String]] = Map([])
   for rank in rank_keys {
     let names = ordered.get(rank).unwrap_or_default()
     let cleaned : Array[String] = []
@@ -40,10 +40,10 @@ pub fn collect_real_only_rank_groups(
 /// are ordered by local-cluster rank order with stable in-rank tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_local_cluster(
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   outer_cluster_keys : Map[String, String],
   local_cluster_keys : Map[String, String],
-  local_cluster_order : Map[String, Int],
+  local_cluster_order : Map[String, Int32],
 ) -> Unit {
   if local_cluster_order.length() == 0 {
     return ()
@@ -52,7 +52,7 @@ fn reorder_groups_by_local_cluster(
     if names.length() <= 1 {
       continue
     }
-    let positions_by_outer : Map[String, Array[Int]] = Map([])
+    let positions_by_outer : Map[String, Array[Int32]] = Map([])
     let nodes_by_outer : Map[String, Array[String]] = Map([])
     for i in 0..<names.length() {
       let name = names[i]
@@ -77,7 +77,7 @@ fn reorder_groups_by_local_cluster(
       let local_groups : Map[String, Array[String]] = Map([])
       let local_seen : Map[String, Bool] = Map([])
       let local_order_in_rank : Array[String] = []
-      let local_order_index : Map[String, Int] = Map([])
+      let local_order_index : Map[String, Int32] = Map([])
       for name in outer_nodes {
         let local_key = @order_graph.cluster_key_or_empty(
           local_cluster_keys, name,
@@ -146,8 +146,8 @@ fn reorder_groups_by_local_cluster(
 /// Graphviz parity: clustered-block bounds are the first/last clustered-name
 /// positions in the rank, with (-1, -1) when no clustered names exist.
 priv struct ClusterBlockBounds {
-  first_cluster : Int
-  last_cluster : Int
+  first_cluster : Int32
+  last_cluster : Int32
 }
 
 ///|
@@ -177,8 +177,8 @@ fn find_cluster_block_bounds(
 fn has_root_node_in_range(
   names : Array[String],
   cluster_keys : Map[String, String],
-  start_idx : Int,
-  end_idx : Int,
+  start_idx : Int32,
+  end_idx : Int32,
 ) -> Bool {
   let mut i = start_idx
   while i < end_idx {
@@ -223,8 +223,8 @@ fn has_root_nodes_on_both_sides(
 
 ///|
 priv struct ClusterOrderBucket {
-  order : Int
-  seq_idx : Int
+  order : Int32
+  seq_idx : Int32
   cluster : String
 }
 
@@ -234,7 +234,7 @@ priv struct ClusterOrderBucket {
 /// Do not change behavior without updating fixtures/tests.
 fn order_rank_names_by_cluster_buckets(
   names : Array[String],
-  order_map : Map[String, Int],
+  order_map : Map[String, Int32],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
   let cluster_nodes : Map[String, Array[String]] = Map([])
@@ -285,7 +285,7 @@ fn order_rank_names_by_cluster_buckets(
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_rank_group_by_cluster_order(
   names : Array[String],
-  order_map : Map[String, Int]?,
+  order_map : Map[String, Int32]?,
   cluster_keys : Map[String, String],
 ) -> Array[String] {
   match order_map {
@@ -306,11 +306,11 @@ fn reorder_rank_group_by_cluster_order(
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster(
-  final_groups : Map[Int, Array[String]],
-  cluster_rank_order : Map[Int, Map[String, Int]],
+  final_groups : Map[Int32, Array[String]],
+  cluster_rank_order : Map[Int32, Map[String, Int32]],
   cluster_keys : Map[String, String],
-) -> Map[Int, Array[String]] {
-  let ordered_by_cluster : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let ordered_by_cluster : Map[Int32, Array[String]] = Map([])
   for rank, names in final_groups {
     ordered_by_cluster[rank] = reorder_rank_group_by_cluster_order(
       names,
@@ -326,8 +326,8 @@ fn reorder_groups_by_cluster(
 /// a single-cluster single-anchor shape (one cluster bucket globally and at
 /// most one clustered node per rank).
 fn should_skip_cluster_rank_bucket_reorder(
-  cluster_rank_order : Map[Int, Map[String, Int]],
-  cleaned_groups : Map[Int, Array[String]],
+  cluster_rank_order : Map[Int32, Map[String, Int32]],
+  cleaned_groups : Map[Int32, Array[String]],
   cluster_keys : Map[String, String],
 ) -> Bool {
   let seen_clusters : Map[String, Bool] = Map([])
@@ -373,12 +373,12 @@ fn should_skip_cluster_rank_bucket_reorder(
 /// ordering before final ReMincross.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_clustered_finalize_groups(
-  cleaned_groups : Map[Int, Array[String]],
-  cluster_rank_order : Map[Int, Map[String, Int]],
+  cleaned_groups : Map[Int32, Array[String]],
+  cluster_rank_order : Map[Int32, Map[String, Int32]],
   cluster_keys : Map[String, String],
   local_cluster_keys : Map[String, String],
-  local_cluster_order : Map[String, Int],
-) -> Map[Int, Array[String]] {
+  local_cluster_order : Map[String, Int32],
+) -> Map[Int32, Array[String]] {
   let should_skip_cluster_rank_reorder = should_skip_cluster_rank_bucket_reorder(
     cluster_rank_order, cleaned_groups, cluster_keys,
   )

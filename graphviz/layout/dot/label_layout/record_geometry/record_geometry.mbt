@@ -11,7 +11,7 @@
 pub(all) struct RecordPort {
   center : @geom.Point
   size : @node_primitives.NodeSize
-  sides : Int
+  sides : Int32
 }
 
 ///|

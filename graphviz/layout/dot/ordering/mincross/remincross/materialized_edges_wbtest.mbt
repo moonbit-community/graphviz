@@ -4,8 +4,8 @@
 
 ///|
 fn materialized_entry_penalty(
-  entry : (String, String, Int, Bool, Double, Double, Double, Double),
-) -> Int {
+  entry : (String, String, Int32, Bool, Double, Double, Double, Double),
+) -> Int32 {
   let (_, _, penalty, _, _, _, _, _) = entry
   penalty
 }
@@ -14,13 +14,13 @@ fn materialized_entry_penalty(
 test "apply_intercluster_bonus adds the bonus only to the first representative of each merge key" {
   let coalesced : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   coalesced["tail0"] = [
     ("v1", "b", 2, true, 0.0, 0.0, 0.0, 0.0),
     ("v1", "b", 5, true, 1.0, 1.0, 0.0, 0.0),
   ]
-  let bonus : Map[String, Int] = Map([])
+  let bonus : Map[String, Int32] = Map([])
   bonus[@order_graph.order_edge_merge_key("v1", "b", true, 0.0, 0.0, 0.0, 0.0)] = 3
 
   let adjusted = apply_intercluster_bonus(coalesced, bonus)
@@ -49,7 +49,7 @@ test "collect_intercluster_bonus counts duplicated vnode-tail intercluster segme
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
   let cluster_keys : Map[String, String] = Map([])
@@ -94,7 +94,7 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
   let intercluster_keys : Map[String, String] = Map([])
@@ -163,7 +163,7 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = [vnode_ab]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cd)] = [vnode_cd]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["c"] = [1]
   edges_by_tail["a"] = [0]
 

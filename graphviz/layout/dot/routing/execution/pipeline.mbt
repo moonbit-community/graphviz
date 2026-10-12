@@ -5,7 +5,7 @@
 ///|
 fn build_route_edges_input(
   input : RouteEdgesPipelineInput,
-  base_cache : Map[Int, EdgeRouteBase],
+  base_cache : Map[Int32, EdgeRouteBase],
 ) -> RouteEdgesInput {
   {
     edges: input.edges,

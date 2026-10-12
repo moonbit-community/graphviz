@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -17,7 +17,7 @@ fn assert_close(
 fn assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_close(actual.x, expected.x, eps~)
   assert_close(actual.y, expected.y, eps~)
@@ -70,13 +70,13 @@ fn straight_spline_with_markers() -> @geom.Spline {
 ///|
 fn build_emit_base(
   edge : @cgraph.Edge,
-  swap_ends? : Bool = false,
-  tail_clip_enabled? : Bool = false,
-  head_clip_enabled? : Bool = false,
-  is_dotted? : Bool = false,
-  same_outer_cluster? : Bool = true,
-  out_tail_anchor? : @geom.Point = @edge_spline.point(0.0, 0.0),
-  out_head_anchor? : @geom.Point = @edge_spline.point(30.0, 0.0),
+  swap_ends~ : Bool = false,
+  tail_clip_enabled~ : Bool = false,
+  head_clip_enabled~ : Bool = false,
+  is_dotted~ : Bool = false,
+  same_outer_cluster~ : Bool = true,
+  out_tail_anchor~ : @geom.Point = @edge_spline.point(0.0, 0.0),
+  out_head_anchor~ : @geom.Point = @edge_spline.point(30.0, 0.0),
 ) -> EdgeRouteBase {
   let tail_node = edge.tail()
   let head_node = edge.head()

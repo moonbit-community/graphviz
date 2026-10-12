@@ -19,7 +19,11 @@ fn attr_bool_true(value : String?) -> Bool {
 }
 
 ///|
-fn polygon_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
+fn polygon_attr_int(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Int32,
+) -> Int32 {
   match node.get_attr(key) {
     Some(value) =>
       @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
@@ -227,7 +231,7 @@ fn builtin_polygon_attrs(
 
 ///|
 fn polygon_is_box_like(
-  sides : Int,
+  sides : Int32,
   orientation : Double,
   distortion : Double,
   skew : Double,
@@ -246,7 +250,7 @@ fn polygon_scaled_label_bbox(
   label_width_pt : Double,
   label_height_pt : Double,
   base_height_pt : Double,
-  sides : Int,
+  sides : Int32,
   is_box : Bool,
   centered_label : Bool,
 ) -> ScaledLabelBBox {
@@ -286,8 +290,8 @@ fn polygon_scaled_label_bbox(
 
 ///|
 priv struct PolygonShapeAttrs {
-  sides : Int
-  peripheries : Int
+  sides : Int32
+  peripheries : Int32
   orientation : Double
   distortion : Double
   skew : Double
@@ -311,7 +315,7 @@ priv struct PolygonVerticesResult {
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,

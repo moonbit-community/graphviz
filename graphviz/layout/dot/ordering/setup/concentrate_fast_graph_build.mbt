@@ -5,12 +5,12 @@
 ///|
 fn build_concentrate_fast_graph(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   vnode_info : EdgeVnodeInfo,
   edge_ports_equal : (@cgraph.Edge, @cgraph.Edge) -> Bool,
 ) -> ConcentrateFastGraph {
   let graph = ConcentrateFastGraph::new()
-  let degree : Map[String, Int] = Map([])
+  let degree : Map[String, Int32] = Map([])
   let cluster_keys : Map[String, String] = Map([])
   let edge_tail : Array[String] = []
   let edge_head : Array[String] = []
@@ -43,8 +43,8 @@ fn build_concentrate_fast_graph(
       edges, ranks, cluster_keys, edge_ports_equal,
     ),
   )
-  let creation_indices : Array[Int] = []
-  let node_order : Map[String, Int] = Map([])
+  let creation_indices : Array[Int32] = []
+  let node_order : Map[String, Int32] = Map([])
   if edges.length() > 0 {
     let root = @membership.root_graph_for_node(edges[0].tail())
     for index, node in root.nodes() {

@@ -17,7 +17,7 @@ pub fn DotLayoutOptions::default() -> DotLayoutOptions {
 /// Do not change behavior without updating fixtures/tests.
 pub fn layout_dot(
   graph : @cgraph.Graph,
-  options? : DotLayoutOptions = DotLayoutOptions::default(),
+  options~ : DotLayoutOptions = DotLayoutOptions::default(),
 ) -> DotLayoutGraph raise DotLayoutError {
   let opts = options
   @label_layout.reset_label_caches()

@@ -4,19 +4,19 @@
 
 ///|
 test "apply_rank_same_order_nodes rewrites node order for unported groups only" {
-  let node_order : Map[String, Int] = Map([])
+  let node_order : Map[String, Int32] = Map([])
   node_order["a"] = 2
   node_order["b"] = 5
   node_order["c"] = 9
   node_order["d"] = 7
 
-  let rank_same_groups : Map[String, Int] = Map([])
+  let rank_same_groups : Map[String, Int32] = Map([])
   rank_same_groups["a"] = 1
   rank_same_groups["b"] = 1
   rank_same_groups["c"] = 2
   rank_same_groups["d"] = 2
 
-  let rank_same_order : Map[String, Int] = Map([])
+  let rank_same_order : Map[String, Int32] = Map([])
   rank_same_order["b"] = 0
   rank_same_order["a"] = 1
   rank_same_order["d"] = 0
@@ -37,7 +37,7 @@ test "apply_rank_same_order_nodes rewrites node order for unported groups only" 
 
 ///|
 test "build_order_reorder_context assembles rank keys graphs creation order and node-order fallbacks on noncluster path" {
-  let order_groups : Map[Int, Array[String]] = Map([])
+  let order_groups : Map[Int32, Array[String]] = Map([])
   order_groups[0] = ["a", "b", "v0"]
   order_groups[1] = ["d"]
 
@@ -80,11 +80,11 @@ test "build_order_reorder_context assembles rank keys graphs creation order and 
 
 ///|
 test "build_order_reorder_context applies rank-same normalization only when clusters are enabled" {
-  let order_groups : Map[Int, Array[String]] = Map([])
+  let order_groups : Map[Int32, Array[String]] = Map([])
   order_groups[0] = ["a", "b"]
   let empty_nlist : Array[String] = []
-  let empty_node_order : Map[String, Int] = Map([])
-  let empty_base_order_index : Map[String, Int] = Map([])
+  let empty_node_order : Map[String, Int32] = Map([])
+  let empty_base_order_index : Map[String, Int32] = Map([])
   let empty_port_edge_nodes : Map[String, Bool] = Map([])
 
   let nonclustered = build_order_reorder_context({
@@ -123,7 +123,7 @@ test "apply_unconstrained_order_overrides resets isolated real nodes to gdnlist 
   let graphviz_out_neighbors : Map[String, Array[String]] = Map([])
   graphviz_out_neighbors["connected"] = ["sink"]
 
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   order_node_order["connected"] = 90
   order_node_order["isolated_b"] = 91
   order_node_order["isolated_a"] = 92
@@ -174,7 +174,7 @@ test "apply_unconstrained_order_overrides reassigns incoming-only local cluster 
   intercluster_keys["local_a"] = "cluster_local"
   intercluster_keys["local_b"] = "cluster_local"
 
-  let order_node_order : Map[String, Int] = Map([])
+  let order_node_order : Map[String, Int32] = Map([])
   order_node_order["local_a"] = 10
   order_node_order["local_b"] = 20
 

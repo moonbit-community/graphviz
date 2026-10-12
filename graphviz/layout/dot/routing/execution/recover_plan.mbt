@@ -19,9 +19,9 @@ fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
 /// center-most parallel member (tie: later edge id).
 fn recover_regular_selection(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
-) -> Map[String, Int] {
-  let selected_ids : Map[String, Int] = Map([])
+  base_cache : Map[Int32, EdgeRouteBase],
+) -> Map[String, Int32] {
+  let selected_ids : Map[String, Int32] = Map([])
   let selected_scores : Map[String, Double] = Map([])
   for edge in ordered_edges {
     if @edge_semantics.edge_is_self(edge) {
@@ -66,7 +66,7 @@ priv enum RegularParallelClass {
 ///|
 fn collect_parallel_groups(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
+  base_cache : Map[Int32, EdgeRouteBase],
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   let classes : Map[RegularParallelClass, Array[@cgraph.Edge]] = Map([])
@@ -114,7 +114,7 @@ fn collect_parallel_groups(
 ///|
 pub(all) struct RegularRecoverRoutingPlan {
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  recover_edge_id_for_routing : Map[String, Int]
+  recover_edge_id_for_routing : Map[String, Int32]
 }
 
 ///|
@@ -122,7 +122,7 @@ pub(all) struct RegularRecoverRoutingPlan {
 /// and keeps regular classes aligned to ordered-edge grouping.
 fn build_regular_recover_routing_plan(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
+  base_cache : Map[Int32, EdgeRouteBase],
 ) -> RegularRecoverRoutingPlan {
   let recover_edge_id_by_key = recover_regular_selection(
     ordered_edges, base_cache,
@@ -130,7 +130,7 @@ fn build_regular_recover_routing_plan(
   let regular_parallel_groups = collect_parallel_groups(
     ordered_edges, base_cache,
   )
-  let recover_edge_id_for_routing : Map[String, Int] = Map([])
+  let recover_edge_id_for_routing : Map[String, Int32] = Map([])
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id
   }

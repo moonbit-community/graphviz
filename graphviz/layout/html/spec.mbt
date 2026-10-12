@@ -68,8 +68,8 @@ pub(all) struct HtmlCell {
   target : String?
   content : HtmlCellContent
   port : String?
-  col_span : Int
-  row_span : Int
+  col_span : Int32
+  row_span : Int32
   align : HtmlAlign
   valign : HtmlVAlign
   bg_color : String?
@@ -145,8 +145,8 @@ pub extend HtmlLabel with Eq::{not_equal, equal}
 /// Table cell placement in the grid.
 pub(all) struct HtmlCellPlacement {
   cell : HtmlCell
-  row : Int
-  col : Int
+  row : Int32
+  col : Int32
 } derive(Debug, Eq)
 
 ///|
@@ -176,8 +176,8 @@ pub extend HtmlTableMetrics with Eq::{not_equal, equal}
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
-  row : Int
-  col : Int
+  row : Int32
+  col : Int32
   hruled : Bool
 } derive(Debug, Eq)
 
@@ -191,8 +191,8 @@ pub extend HtmlCellLayout with Eq::{not_equal, equal}
 /// Table layout output.
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
-  row_count : Int
-  col_count : Int
+  row_count : Int32
+  col_count : Int32
   scale_x : Double
   scale_y : Double
 } derive(Debug, Eq)

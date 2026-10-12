@@ -18,8 +18,8 @@ fn max_double(a : Double, b : Double) -> Double {
 pub fn edge_swap_ends(
   tail : String,
   head : String,
-  ranks : Map[String, Int],
-  order_index : Map[String, Int],
+  ranks : Map[String, Int32],
+  order_index : Map[String, Int32],
 ) -> Bool {
   let tail_rank = match ranks.get(tail) {
     Some(value) => value

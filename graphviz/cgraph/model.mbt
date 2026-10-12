@@ -5,13 +5,13 @@
 ///|
 priv struct GraphState {
   name : String?
-  parent : Int?
-  subgraphs_by_name : Map[String, Int]
-  subgraphs : Array[Int]
-  nodes : Array[Int]
-  nodes_set : Map[Int, Bool]
-  edges : Array[Int]
-  edges_set : Map[Int, Bool]
+  parent : Int32?
+  subgraphs_by_name : Map[String, Int32]
+  subgraphs : Array[Int32]
+  nodes : Array[Int32]
+  nodes_set : Map[Int32, Bool]
+  edges : Array[Int32]
+  edges_set : Map[Int32, Bool]
   attrs : Map[String, AttrValue]
   defaults_graph : Map[String, AttrValue]
   defaults_node : Map[String, AttrValue]
@@ -21,14 +21,14 @@ priv struct GraphState {
 ///|
 priv struct NodeState {
   name : String
-  home_graph_id : Int
+  home_graph_id : Int32
   attrs : Map[String, AttrValue]
 }
 
 ///|
 priv struct EdgeState {
-  tail : Int
-  head : Int
+  tail : Int32
+  head : Int32
   name : String?
   tail_port : Port?
   head_port : Port?
@@ -40,33 +40,33 @@ struct Root {
   kind : GraphKind
   strict : Bool
   graphs : Array[GraphState]
-  nodes_by_name : Map[String, Int]
+  nodes_by_name : Map[String, Int32]
   nodes : Array[NodeState]
   edges : Array[EdgeState]
-  edge_index : Map[String, Int]
-  edge_pair_index : Map[String, Int]
+  edge_index : Map[String, Int32]
+  edge_pair_index : Map[String, Int32]
 }
 
 ///|
 pub struct Graph {
   root : Root
-  id : Int
+  id : Int32
 }
 
 ///|
 pub struct Node {
   root : Root
-  id : Int
+  id : Int32
 }
 
 ///|
 pub struct Edge {
   root : Root
-  id : Int
+  id : Int32
 }
 
 ///|
-fn empty_graph_state(name : String?, parent : Int?) -> GraphState {
+fn empty_graph_state(name : String?, parent : Int32?) -> GraphState {
   {
     name,
     parent,
@@ -84,7 +84,12 @@ fn empty_graph_state(name : String?, parent : Int?) -> GraphState {
 }
 
 ///|
-fn edge_key(kind : GraphKind, tail : Int, head : Int, name : String?) -> String {
+fn edge_key(
+  kind : GraphKind,
+  tail : Int32,
+  head : Int32,
+  name : String?,
+) -> String {
   let mut t = tail
   let mut h = head
   if kind is Undirected && t > h {
@@ -100,7 +105,7 @@ fn edge_key(kind : GraphKind, tail : Int, head : Int, name : String?) -> String 
 }
 
 ///|
-fn edge_pair_key(kind : GraphKind, tail : Int, head : Int) -> String {
+fn edge_pair_key(kind : GraphKind, tail : Int32, head : Int32) -> String {
   let mut t = tail
   let mut h = head
   if kind is Undirected && t > h {
@@ -112,7 +117,7 @@ fn edge_pair_key(kind : GraphKind, tail : Int, head : Int) -> String {
 }
 
 ///|
-fn add_node_membership(root : Root, graph_id : Int, node_id : Int) -> Unit {
+fn add_node_membership(root : Root, graph_id : Int32, node_id : Int32) -> Unit {
   if !root.graphs[graph_id].nodes_set.contains(node_id) {
     root.graphs[graph_id].nodes_set[node_id] = true
     root.graphs[graph_id].nodes.push(node_id)
@@ -124,7 +129,7 @@ fn add_node_membership(root : Root, graph_id : Int, node_id : Int) -> Unit {
 }
 
 ///|
-fn add_edge_membership(root : Root, graph_id : Int, edge_id : Int) -> Unit {
+fn add_edge_membership(root : Root, graph_id : Int32, edge_id : Int32) -> Unit {
   if !root.graphs[graph_id].edges_set.contains(edge_id) {
     root.graphs[graph_id].edges_set[edge_id] = true
     root.graphs[graph_id].edges.push(edge_id)
@@ -138,11 +143,11 @@ fn add_edge_membership(root : Root, graph_id : Int, edge_id : Int) -> Unit {
 ///|
 fn resolve_default(
   root : Root,
-  graph_id : Int,
+  graph_id : Int32,
   kind : AttrKind,
   name : String,
 ) -> AttrValue? {
-  let mut current : Int? = Some(graph_id)
+  let mut current : Int32? = Some(graph_id)
   while current is Some(id) {
     let defaults = match kind {
       AttrKind::Graph => root.graphs[id].defaults_graph
@@ -161,11 +166,11 @@ fn resolve_default(
 ///|
 fn collect_defaults(
   root : Root,
-  graph_id : Int,
+  graph_id : Int32,
   kind : AttrKind,
 ) -> Map[String, AttrValue] {
   let resolved : Map[String, AttrValue] = Map([])
-  let mut current : Int? = Some(graph_id)
+  let mut current : Int32? = Some(graph_id)
   while current is Some(id) {
     let defaults = match kind {
       AttrKind::Graph => root.graphs[id].defaults_graph
@@ -186,7 +191,7 @@ fn collect_defaults(
 pub fn Graph::new(
   kind : GraphKind,
   name? : String,
-  strict? : Bool = false,
+  strict~ : Bool = false,
 ) -> Graph {
   let root_state = empty_graph_state(name, None)
   let root : Root = {
@@ -375,7 +380,7 @@ pub fn Edge::head(self : Edge) -> Node {
 }
 
 ///|
-pub fn Edge::id(self : Edge) -> Int {
+pub fn Edge::id(self : Edge) -> Int32 {
   self.id
 }
 
@@ -399,7 +404,7 @@ pub fn Graph::declare_attr(
   self : Graph,
   kind : AttrKind,
   name : String,
-  default? : String = "",
+  default~ : String = "",
 ) -> Unit {
   let defaults = match kind {
     AttrKind::Graph => self.root.graphs[self.id].defaults_graph

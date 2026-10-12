@@ -72,7 +72,7 @@ pub(all) struct LayoutPrep {
   has_dotted_edges : Bool
   has_port_edges : Bool
   has_edge_labels : Bool
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   record_orientation : RecordOrientation
   output_sizes : Map[String, @node_primitives.NodeSize]
   order_sizes : Map[String, @node_primitives.NodeSize]

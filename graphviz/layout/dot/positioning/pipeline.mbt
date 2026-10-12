@@ -6,15 +6,15 @@
 /// Graphviz parity: position stage result keeps x/y coordinates, vnode
 /// positions, and cluster bbox metadata grouped for downstream stages.
 pub(all) struct PositionResult {
-  x_groups : Map[Int, Array[String]]
-  rank_y : Map[Int, Double]
+  x_groups : Map[Int32, Array[String]]
+  rank_y : Map[Int32, Double]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   cluster_ln_x : Map[String, Double]
   cluster_rn_x : Map[String, Double]
   flat_label_edge_vnodes : Map[String, String]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
 }
 

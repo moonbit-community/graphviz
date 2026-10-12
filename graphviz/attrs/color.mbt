@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-pub fn color(value : String?, default? : String = "black") -> String {
+pub fn color(value : String?, default~ : String = "black") -> String {
   match value {
     Some(text) => if text == "" { default } else { text }
     None => default
@@ -34,7 +34,7 @@ fn tokenize_color(value : String) -> Array[String] {
 }
 
 ///|
-fn hex_digit(value : Int) -> Char {
+fn hex_digit(value : Int32) -> Char {
   match value {
     0 => '0'
     1 => '1'
@@ -56,7 +56,7 @@ fn hex_digit(value : Int) -> Char {
 }
 
 ///|
-fn append_hex_byte(sb : StringBuilder, value : Int) -> Unit {
+fn append_hex_byte(sb : StringBuilder, value : Int32) -> Unit {
   let mut channel = value
   if channel < 0 {
     channel = 0

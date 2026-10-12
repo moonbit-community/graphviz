@@ -8,20 +8,20 @@ test "apply_xpos_transpose_cleanup removes a simple crossing in place" {
   let ax = graph.edge(node_map["a"], node_map["x"])
   let by = graph.edge(node_map["b"], node_map["y"])
 
-  let x_groups : Map[Int, Array[String]] = Map([])
+  let x_groups : Map[Int32, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   x_groups[1] = ["y", "x"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 0
   ranks["x"] = 1
   ranks["y"] = 1
 
-  let edge_in : Map[String, Array[Int]] = Map([])
+  let edge_in : Map[String, Array[Int32]] = Map([])
   edge_in["x"] = [0]
   edge_in["y"] = [1]
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
   let before_crossings = @reorder.count_rank_crossings_port(
     1,
     x_groups.get(1).unwrap_or([]),

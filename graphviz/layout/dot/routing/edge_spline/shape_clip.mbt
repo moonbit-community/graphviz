@@ -77,7 +77,7 @@ priv enum ClipShape {
   None
   Rect
   Ellipse
-  Polygon(Int, Double, Double, Double, Int)
+  Polygon(Int32, Double, Double, Double, Int32)
   DoubleOctagon
   TripleOctagon
   Trapezium
@@ -127,7 +127,7 @@ fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
 }
 
 ///|
-fn graph_rankdir_quadrant(edge : @cgraph.Edge) -> Int {
+fn graph_rankdir_quadrant(edge : @cgraph.Edge) -> Int32 {
   let mut graph = edge.tail().graph()
   while true {
     match graph.parent() {
@@ -191,7 +191,7 @@ fn trim_record_border_for_clip(
 
 ///|
 priv struct PolygonClipParams {
-  sides : Int
+  sides : Int32
   orientation : Double
   distortion : Double
   skew : Double
@@ -228,7 +228,7 @@ fn polygon_clip_params(node : @cgraph.Node) -> PolygonClipParams {
 }
 
 ///|
-fn polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
+fn polygon_peripheries(node : @cgraph.Node, default : Int32) -> Int32 {
   let mut peripheries = match node.get_attr("peripheries") {
     Some(value) =>
       @numeric.parse_double_or(value, default.to_double()).round().to_int()
@@ -384,7 +384,7 @@ fn point_inside_ellipse(
 }
 
 ///|
-fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
+fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int32) -> @geom.Point {
   match quadrant {
     1 => point(-pt.y, pt.x)
     2 => point(-pt.x, -pt.y)
@@ -395,11 +395,11 @@ fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
 
 ///|
 priv struct PolygonShapeParams {
-  sides : Int
+  sides : Int32
   orientation_deg : Double
   distortion : Double
   skew : Double
-  peripheries : Int
+  peripheries : Int32
 }
 
 ///|
@@ -478,7 +478,7 @@ fn polygon_shape_params(shape : ClipShape) -> PolygonShapeParams? {
 /// (sides/distortion/skew/orientation), then scale to current node extents.
 fn polygon_vertices_for_shape(
   size : NodeSize,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
@@ -604,11 +604,11 @@ fn polygon_outline_vertices(
 ///|
 fn polygon_outline_vertices_for_shape(
   size : NodeSize,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-  peripheries : Int,
+  peripheries : Int32,
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
   let base_outline_pad = if peripheries > 1 {
@@ -712,7 +712,7 @@ fn build_point_inside_shape_fn(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
-  rankdir_quadrant : Int,
+  rankdir_quadrant : Int32,
   outline_pad_pt : Double,
 ) -> (@geom.Point) -> Bool {
   match shape {
@@ -765,7 +765,7 @@ fn clip_spline_start(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
-  rankdir_quadrant : Int,
+  rankdir_quadrant : Int32,
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
@@ -812,7 +812,7 @@ fn clip_spline_end(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
-  rankdir_quadrant : Int,
+  rankdir_quadrant : Int32,
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
@@ -868,11 +868,11 @@ fn clip_spline_to_nodes(
   tail_size : NodeSize,
   head_clip_center : @geom.Point,
   head_size : NodeSize,
-  tail_port_side? : Int = 0,
-  head_port_side? : Int = 0,
+  tail_port_side~ : Int32 = 0,
+  head_port_side~ : Int32 = 0,
   tail_clip_enabled_override~ : Bool?,
   head_clip_enabled_override~ : Bool?,
-  clip_swapped? : Bool = false,
+  clip_swapped~ : Bool = false,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
     return points
@@ -1046,7 +1046,7 @@ fn clip_spline_to_nodes(
 }
 
 ///|
-fn rankdir_to_quadrant(rankdir : RankDir) -> Int {
+fn rankdir_to_quadrant(rankdir : RankDir) -> Int32 {
   match rankdir {
     RankDir::TB => 0
     RankDir::LR => 1
@@ -1056,7 +1056,7 @@ fn rankdir_to_quadrant(rankdir : RankDir) -> Int {
 }
 
 ///|
-fn rotate_cw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
+fn rotate_cw_quadrant(pt : @geom.Point, quadrant : Int32) -> @geom.Point {
   match quadrant {
     1 => point(pt.y, -pt.x)
     2 => point(-pt.x, -pt.y)

@@ -6,7 +6,7 @@
 fn assert_rank_height_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_true(Double::is_close(actual, expected, absolute_tolerance=eps))
 }
@@ -21,13 +21,13 @@ test "apply_cluster_rank_heights propagates nested cluster heights into rank hal
   ignore(a)
   ignore(b)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   let self_edge_labels : Map[String, Double] = Map([])
-  let rank_ht1 : Map[Int, Double] = Map([])
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
 
   apply_cluster_rank_heights({
     graph: root,
@@ -73,12 +73,12 @@ test "apply_cluster_rank_heights preserves larger existing rank half-heights" {
   let a = cluster.node("a")
   ignore(a)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
   let self_edge_labels : Map[String, Double] = Map([])
-  let rank_ht1 : Map[Int, Double] = Map([])
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht1[1] = 10.0
   rank_ht2[1] = 9.0
 

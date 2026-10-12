@@ -109,8 +109,8 @@ fn clip_to_bbox(
 fn clip_polygon_attr_int(
   node : @cgraph.Node,
   key : String,
-  fallback : Int,
-) -> Int {
+  fallback : Int32,
+) -> Int32 {
   match node.get_attr(key) {
     Some(value) =>
       @numeric.parse_double_or(value, fallback.to_double()).round().to_int()
@@ -132,7 +132,7 @@ fn clip_polygon_attr_double(
 
 ///|
 priv struct ClipPolygonShapeParams {
-  sides : Int
+  sides : Int32
   orientation : Double
   distortion : Double
   skew : Double
@@ -193,7 +193,7 @@ fn clip_polygon_shape_params(
 ///|
 priv struct ClipPolygonForShapeInput {
   size : NodeSize
-  sides : Int
+  sides : Int32
   orientation_deg : Double
   distortion : Double
   skew : Double
@@ -270,7 +270,7 @@ priv struct PolygonShapeClipInput {
   center : @geom.Point
   size : NodeSize
   target : @geom.Point
-  sides : Int
+  sides : Int32
   orientation_deg : Double
   distortion : Double
   skew : Double

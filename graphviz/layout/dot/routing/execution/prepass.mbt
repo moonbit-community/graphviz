@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
-fn cmp_edge_id(a : Int, b : Int) -> Int {
+fn cmp_edge_id(a : Int32, b : Int32) -> Int32 {
   if a < b {
     -1
   } else if a > b {
@@ -19,10 +19,10 @@ fn cmp_edge_id(a : Int, b : Int) -> Int {
 /// Do not change behavior without updating fixtures/tests.
 fn collect_flat_adjacent_beziers(
   edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
-  ranks : Map[String, Int],
-  order_index : Map[String, Int],
-) -> Map[Int, Array[@geom.Point]] {
+  base_cache : Map[Int32, EdgeRouteBase],
+  ranks : Map[String, Int32],
+  order_index : Map[String, Int32],
+) -> Map[Int32, Array[@geom.Point]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map([])
   for edge in edges {
     if @edge_semantics.edge_is_self(edge) {
@@ -82,7 +82,7 @@ fn collect_flat_adjacent_beziers(
       None => groups[key] = [edge]
     }
   }
-  let out : Map[Int, Array[@geom.Point]] = Map([])
+  let out : Map[Int32, Array[@geom.Point]] = Map([])
   for _key, group_edges in groups {
     if group_edges.length() <= 1 {
       continue
@@ -148,9 +148,9 @@ fn collect_flat_adjacent_beziers(
 
 ///|
 pub(all) struct RoutePrepassState {
-  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
+  flat_adjacent_simple_beziers : Map[Int32, Array[@geom.Point]]
   ordered_edges : Array[@cgraph.Edge]
-  recover_edge_id_for_routing : Map[String, Int]
+  recover_edge_id_for_routing : Map[String, Int32]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
   path_left_bound : Double
   path_right_bound : Double
@@ -161,17 +161,17 @@ pub(all) struct RoutePrepassState {
 /// and edge-base snapshots grouped before the ordered-routing loop.
 pub(all) struct RoutePrepassInput {
   edges : Array[@cgraph.Edge]
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int32, EdgeRouteBase]
   build_flat_adjacent_beziers : Bool
-  ranks : Map[String, Int]
-  order_index : Map[String, Int]
-  path_order_index : Map[String, Int]
-  concentrated_route_order : Map[Int, Int]
+  ranks : Map[String, Int32]
+  order_index : Map[String, Int32]
+  path_order_index : Map[String, Int32]
+  concentrated_route_order : Map[Int32, Int32]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   sizes : Map[String, @node_primitives.NodeSize]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
 }
 
 ///|

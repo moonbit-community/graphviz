@@ -14,7 +14,7 @@ pub(all) struct ClusterConstraintBuild {
 }
 
 ///|
-const CLUSTER_COMPACT_WEIGHT : Int = 128
+const CLUSTER_COMPACT_WEIGHT : Int32 = 128
 
 ///|
 priv struct ClusterBoundaryNodes {
@@ -48,15 +48,15 @@ fn build_cluster_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int32],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   sizes : Map[String, @node_primitives.NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> ClusterConstraintBuild {
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   let cluster_graphs = cluster_maps.cluster_graphs
@@ -170,10 +170,10 @@ fn build_cluster_constraints(
   let cluster_margins : Map[String, Double] = Map([])
   let cluster_border_left : Map[String, Double] = Map([])
   let cluster_border_right : Map[String, Double] = Map([])
-  let cluster_min_rank : Map[String, Int] = Map([])
-  let cluster_max_rank : Map[String, Int] = Map([])
-  let cluster_left_seed_rank : Map[String, Int] = Map([])
-  let cluster_right_seed_rank : Map[String, Int] = Map([])
+  let cluster_min_rank : Map[String, Int32] = Map([])
+  let cluster_max_rank : Map[String, Int32] = Map([])
+  let cluster_left_seed_rank : Map[String, Int32] = Map([])
+  let cluster_right_seed_rank : Map[String, Int32] = Map([])
   let extra_nodes : Array[ExtraConstraintNode] = []
   let containment_and_compaction_edges : Array[ConstraintEdge] = []
   let keepout_edges : Array[ConstraintEdge] = []
@@ -188,8 +188,8 @@ fn build_cluster_constraints(
     cluster_border_right[name] = right_border
   }
   for name, members in cluster_members {
-    let mut min_rank : Int? = None
-    let mut max_rank : Int? = None
+    let mut min_rank : Int32? = None
+    let mut max_rank : Int32? = None
     let mut min_left : Double? = None
     let mut max_right : Double? = None
     for node_name, _ in members {
@@ -277,7 +277,7 @@ fn build_cluster_constraints(
     guard cluster_nodes.get(name) is Some(pair) else { continue }
     let ln_name = pair.left_node
     let rn_name = pair.right_node
-    let mut label_minlen : Int? = None
+    let mut label_minlen : Int32? = None
     // Graphviz parity: LR/RL handles cluster label extents via left/right
     // border slack, so do not add standalone label minlen here.
     if !flip {

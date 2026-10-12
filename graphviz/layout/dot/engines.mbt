@@ -9,8 +9,8 @@
 ///|
 pub fn layout_neato(
   graph : @cgraph.Graph,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   @label_layout.reset_label_caches()
   let layout_tree = match
@@ -24,9 +24,9 @@ pub fn layout_neato(
 ///|
 pub fn layout_neato_noop(
   graph : @cgraph.Graph,
-  no_op_level? : Int = 1,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  no_op_level~ : Int32 = 1,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   @label_layout.reset_label_caches()
   let layout_tree = match
@@ -40,9 +40,9 @@ pub fn layout_neato_noop(
 ///|
 pub fn layout_dot_noop(
   graph : @cgraph.Graph,
-  no_op_level? : Int = 1,
-  scale? : Double = 72.0,
-  prune? : Bool = false,
+  no_op_level~ : Int32 = 1,
+  scale~ : Double = 72.0,
+  prune~ : Bool = false,
 ) -> DotLayoutGraph raise DotLayoutError {
   layout_neato_noop(graph, no_op_level~, scale~, prune~)
 }

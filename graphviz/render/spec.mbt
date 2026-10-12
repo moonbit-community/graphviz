@@ -100,7 +100,7 @@ pub(all) enum DrawOp {
   GradPen(gradient~ : Gradient)
   Font(font~ : Font)
   Style(name~ : String)
-  FontChar(codepoint~ : UInt)
+  FontChar(codepoint~ : UInt32)
 } derive(Debug, Eq)
 
 ///|

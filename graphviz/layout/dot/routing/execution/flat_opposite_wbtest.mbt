@@ -7,7 +7,7 @@ test "adjacent opposite edges share a spindle group and preserve direction" {
   let backward = graph.edge(b, a)
   let left = @edge_spline.point(0.0, 0.0)
   let right = @edge_spline.point(30.0, 0.0)
-  let bases : Map[Int, EdgeRouteBase] = Map([
+  let bases : Map[Int32, EdgeRouteBase] = Map([
     (
       forward.id(),
       build_route_base(

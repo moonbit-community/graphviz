@@ -27,7 +27,7 @@ fn try_parse_double(text : String) -> Double? {
 }
 
 ///|
-fn parse_numbers(text : String, limit : Int) -> Array[Double] {
+fn parse_numbers(text : String, limit : Int32) -> Array[Double] {
   let numbers : Array[Double] = []
   let mut current = StringBuilder()
   let mut seen = false

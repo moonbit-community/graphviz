@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -17,7 +17,7 @@ fn assert_close(
 fn assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_close(actual.x, expected.x, eps~)
   assert_close(actual.y, expected.y, eps~)
@@ -62,10 +62,10 @@ fn straight_spline_with_markers() -> @geom.Spline {
 fn layout_edge(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
-  label_pos? : @geom.Point? = None,
-  head_label_pos? : @geom.Point? = None,
-  tail_label_pos? : @geom.Point? = None,
-  xlabel_pos? : @geom.Point? = None,
+  label_pos~ : @geom.Point? = None,
+  head_label_pos~ : @geom.Point? = None,
+  tail_label_pos~ : @geom.Point? = None,
+  xlabel_pos~ : @geom.Point? = None,
 ) -> DotLayoutEdge {
   {
     edge,

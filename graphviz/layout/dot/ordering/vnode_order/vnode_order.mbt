@@ -62,22 +62,22 @@ pub fn edge_internal_to_cluster(
 /// Graphviz parity: seed vnode order from GD_nlist order within each rank.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_vnode_keys_from_nlist(
-  ordered_groups : Map[Int, Array[String]],
-  vnodes_by_rank : Map[Int, Array[String]],
-  order_index : Map[String, Int],
-  nlist_order_index : Map[String, Int],
+  ordered_groups : Map[Int32, Array[String]],
+  vnodes_by_rank : Map[Int32, Array[String]],
+  order_index : Map[String, Int32],
+  nlist_order_index : Map[String, Int32],
   _intercluster_vnodes : Map[String, Bool],
   _has_clusters : Bool,
 ) -> Map[String, Double] {
   let keys : Map[String, Double] = Map([])
-  let rank_set : Map[Int, Bool] = Map([])
+  let rank_set : Map[Int32, Bool] = Map([])
   for rank, _ in ordered_groups {
     rank_set[rank] = true
   }
   for rank, _ in vnodes_by_rank {
     rank_set[rank] = true
   }
-  let ranks : Array[Int] = []
+  let ranks : Array[Int32] = []
   for rank, _ in rank_set {
     ranks.push(rank)
   }
@@ -173,7 +173,7 @@ pub fn build_vnode_keys_from_nlist(
     }
     let interval : Array[String] = []
     let mut prev_order = -1
-    let mut first_real_order : Int? = None
+    let mut first_real_order : Int32? = None
     for name in combined {
       if real_set.get(name) == Some(true) {
         let ord = get_order(name)
@@ -215,16 +215,16 @@ pub fn build_vnode_order_keys(
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_reversed : Array[Bool],
-  ranks : Map[String, Int],
-  order_index : Map[String, Int],
+  ranks : Map[String, Int32],
+  order_index : Map[String, Int32],
   cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int32],
 ) -> Map[String, Double] {
   let _ = edge_reversed
   let keys : Map[String, Double] = Map([])
-  let max_order_by_rank : Map[Int, Int] = Map([])
+  let max_order_by_rank : Map[Int32, Int32] = Map([])
   for name, order in order_index {
     let rank = match ranks.get(name) {
       Some(value) => value

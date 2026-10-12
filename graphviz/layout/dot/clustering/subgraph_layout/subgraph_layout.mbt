@@ -45,10 +45,10 @@ pub(all) struct LayoutSubgraphsInput {
   cluster_rn_x : Map[String, Double]
   cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
   rankdir : RankDir
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|
@@ -131,8 +131,8 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       let mut pad_y = pad
       let mut use_rank_bbox = false
       // Graphviz parity: cluster y bounds come from rank positions (dot_compute_bb).
-      let mut min_rank : Int? = None
-      let mut max_rank : Int? = None
+      let mut min_rank : Int32? = None
+      let mut max_rank : Int32? = None
       let cluster_nodes : Map[String, Bool] = Map([])
       @cluster_graph.collect_graph_nodes(subgraph, cluster_nodes)
       for name, _ in cluster_nodes {
@@ -387,10 +387,10 @@ pub fn compute_cluster_route_bboxes(
   cluster_rn_x : Map[String, Double],
   cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   rankdir : RankDir,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  ranks : Map[String, Int32],
+  rank_y : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map([])
   if @cluster_graph.graph_has_cluster(graph) {

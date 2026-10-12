@@ -26,7 +26,7 @@ pub fn SvgOptions::default() -> SvgOptions {
 #declaration_only
 pub fn render_svg(
   layout : @layout_dot.DotLayoutGraph,
-  options? : SvgOptions = SvgOptions::default(),
+  options~ : SvgOptions = SvgOptions::default(),
 ) -> String {
   ...
 }

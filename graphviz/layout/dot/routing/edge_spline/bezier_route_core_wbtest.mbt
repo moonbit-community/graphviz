@@ -6,7 +6,7 @@
 fn assert_close(
   actual : Double,
   expected : Double,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if Double::abs(actual - expected) > eps {
     fail("expected=\{expected} actual=\{actual} eps=\{eps}")
@@ -17,7 +17,7 @@ fn assert_close(
 fn assert_point_close(
   actual : @geom.Point,
   expected : @geom.Point,
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   assert_close(actual.x, expected.x, eps~)
   assert_close(actual.y, expected.y, eps~)
@@ -27,7 +27,7 @@ fn assert_point_close(
 fn assert_points_close(
   actual : Array[@geom.Point],
   expected : Array[@geom.Point],
-  eps? : Double = 0.000001,
+  eps~ : Double = 0.000001,
 ) -> Unit raise {
   if actual.length() != expected.length() {
     fail("expected point count \{expected.length()} got \{actual.length()}")

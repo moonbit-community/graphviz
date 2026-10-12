@@ -13,9 +13,9 @@ test "build_clustered_xpos_edges expands vnode chains and appends skeleton links
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = ["v1"]
 
-  let ranks : Map[String, Int] = { "a": 0, "v1": 1, "b": 2 }
-  let cluster_min_rank : Map[String, Int] = { "cluster_0": 0 }
-  let cluster_max_rank : Map[String, Int] = { "cluster_0": 1 }
+  let ranks : Map[String, Int32] = { "a": 0, "v1": 1, "b": 2 }
+  let cluster_min_rank : Map[String, Int32] = { "cluster_0": 0 }
+  let cluster_max_rank : Map[String, Int32] = { "cluster_0": 1 }
   let skeleton_0 = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
   let skeleton_1 = @cluster_identity.cluster_skeleton_name("cluster_0", 1)
 

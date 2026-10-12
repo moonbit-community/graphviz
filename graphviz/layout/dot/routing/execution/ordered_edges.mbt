@@ -5,14 +5,14 @@
 ///|
 priv struct OrderedEdgeRoutingState {
   recovered_slack_keys : Map[String, Bool]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
+  self_edge_routes : Map[Int32, SelfEdgeRoute]
+  edges_out_by_id : Map[Int32, DotLayoutEdge]
 }
 
 ///|
 priv struct OrderedEdgeLayoutAttemptInput {
   edge : @cgraph.Edge
-  edge_id : Int
+  edge_id : Int32
   base : EdgeRouteBase
   input : OrderedRoutingInput
   state : OrderedEdgeRoutingState
@@ -140,7 +140,7 @@ fn route_ordered_edge(
 /// Do not change behavior without updating fixtures/tests.
 fn route_ordered_edges(
   input : OrderedRoutingInput,
-  edges_out_by_id : Map[Int, DotLayoutEdge],
+  edges_out_by_id : Map[Int32, DotLayoutEdge],
   callbacks : RoutingCallbacks,
 ) -> Unit {
   let state : OrderedEdgeRoutingState = {

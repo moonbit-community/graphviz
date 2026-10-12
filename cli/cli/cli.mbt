@@ -39,7 +39,7 @@ fn parse_engine_name(name : String) -> LayoutEngine {
 }
 
 ///|
-pub fn default_engine(program? : String = "dot") -> LayoutEngine {
+pub fn default_engine(program~ : String = "dot") -> LayoutEngine {
   parse_engine_name(program_basename(program))
 }
 
@@ -111,7 +111,7 @@ fn parse_double(flag : String, text : String) -> Double raise CliError {
 }
 
 ///|
-fn parse_int(flag : String, text : String) -> Int raise CliError {
+fn parse_int(flag : String, text : String) -> Int32 raise CliError {
   @string.parse_int(text) catch {
     _ => raise CliError::InvalidNumber(flag~, value=text)
   }
@@ -127,7 +127,7 @@ fn try_parse_double(text : String) -> Double? {
 }
 
 ///|
-fn try_parse_int(text : String) -> Int? {
+fn try_parse_int(text : String) -> Int32? {
   try @string.parse_int(text) catch {
     _ => None
   } noraise {
@@ -138,10 +138,10 @@ fn try_parse_int(text : String) -> Int? {
 ///|
 fn required_flag_value(
   args : Array[String],
-  index : Int,
+  index : Int32,
   flag : String,
-  prefix_len : Int,
-) -> (String, Int) raise CliError {
+  prefix_len : Int32,
+) -> (String, Int32) raise CliError {
   let arg = args[index]
   if arg.length() > prefix_len {
     let value = arg.unsafe_substring(start=prefix_len, end=arg.length())
@@ -161,10 +161,10 @@ fn required_flag_value(
 ///|
 fn optional_int_flag_value(
   args : Array[String],
-  index : Int,
+  index : Int32,
   flag : String,
-  prefix_len : Int,
-) -> (Int?, Int) raise CliError {
+  prefix_len : Int32,
+) -> (Int32?, Int32) raise CliError {
   let arg = args[index]
   if arg.length() > prefix_len {
     let value = arg.unsafe_substring(start=prefix_len, end=arg.length())
@@ -186,10 +186,10 @@ fn optional_int_flag_value(
 ///|
 fn optional_double_flag_value(
   args : Array[String],
-  index : Int,
+  index : Int32,
   flag : String,
-  prefix_len : Int,
-) -> (Double?, Int) raise CliError {
+  prefix_len : Int32,
+) -> (Double?, Int32) raise CliError {
   let arg = args[index]
   if arg.length() > prefix_len {
     let value = arg.unsafe_substring(start=prefix_len, end=arg.length())
@@ -211,7 +211,7 @@ fn optional_double_flag_value(
 ///|
 pub fn parse_cli_args(
   args : Array[String],
-  program? : String = "dot",
+  program~ : String = "dot",
 ) -> CliAction raise CliError {
   let mut engine = default_engine(program~)
   let mut engine_explicit = false
@@ -223,7 +223,7 @@ pub fn parse_cli_args(
   let node_attrs : Array[AttrAssignment] = []
   let edge_attrs : Array[AttrAssignment] = []
   let mut scale : Double? = None
-  let mut neato_no_op : Int? = None
+  let mut neato_no_op : Int32? = None
   let mut neato_prune = false
   let mut verbose = false
   let mut i = 0
@@ -416,7 +416,7 @@ fn layout_for_job(
 }
 
 ///|
-fn patch_svg_graph_group_id(svg : String, page_index : Int) -> String {
+fn patch_svg_graph_group_id(svg : String, page_index : Int32) -> String {
   if page_index <= 0 {
     return svg
   }
@@ -439,7 +439,7 @@ fn patch_svg_graph_group_id(svg : String, page_index : Int) -> String {
 fn render_graph(
   job : CliJob,
   graph : @cgraph.Graph,
-  page_index : Int,
+  page_index : Int32,
 ) -> String raise {
   cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
@@ -463,7 +463,7 @@ fn render_graph(
 fn render_graph_bytes(
   job : CliJob,
   graph : @cgraph.Graph,
-  page_index : Int,
+  page_index : Int32,
 ) -> Bytes raise {
   cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
@@ -534,7 +534,7 @@ fn version_text() -> String {
 }
 
 ///|
-pub async fn run_cli(args : Array[String], program? : String = "dot") -> String {
+pub async fn run_cli(args : Array[String], program~ : String = "dot") -> String {
   match parse_cli_args(args, program~) {
     CliAction::Render(job) =>
       match job.output {
@@ -556,7 +556,7 @@ pub async fn run_cli(args : Array[String], program? : String = "dot") -> String 
 ///|
 pub async fn run_cli_bytes(
   args : Array[String],
-  program? : String = "dot",
+  program~ : String = "dot",
 ) -> Bytes {
   match parse_cli_args(args, program~) {
     CliAction::Render(job) =>

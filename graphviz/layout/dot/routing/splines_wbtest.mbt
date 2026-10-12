@@ -36,7 +36,7 @@ test "layout_dot retains right self-edge reservation in graph bbox" {
 }
 
 ///|
-fn count_numbers(text : String) -> Int {
+fn count_numbers(text : String) -> Int32 {
   let mut count = 0
   let mut in_num = false
   for ch in text {

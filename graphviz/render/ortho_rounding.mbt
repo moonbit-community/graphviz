@@ -12,11 +12,11 @@ const ORTHO_TOLERANCE : Double = 0.1
 const CORNER_TOLERANCE : Double = 0.01
 
 ///|
-const QUARTER_ARC_SEGMENTS : Int = 8
+const QUARTER_ARC_SEGMENTS : Int32 = 8
 
 ///|
 priv struct RoundedCorner {
-  idx : Int
+  idx : Int32
   corner : @geom.Point
   trunc_prev : @geom.Point
   trunc_next : @geom.Point
@@ -36,7 +36,7 @@ fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
-fn find_prev_distinct(points : Array[@geom.Point], i : Int) -> Int? {
+fn find_prev_distinct(points : Array[@geom.Point], i : Int32) -> Int32? {
   let mut j = i - 1
   while j >= 0 {
     if point_dist(points[j], points[i]) > DISTINCT_TOLERANCE {
@@ -48,7 +48,7 @@ fn find_prev_distinct(points : Array[@geom.Point], i : Int) -> Int? {
 }
 
 ///|
-fn find_next_distinct(points : Array[@geom.Point], i : Int) -> Int? {
+fn find_next_distinct(points : Array[@geom.Point], i : Int32) -> Int32? {
   let mut j = i + 1
   while j < points.length() {
     if point_dist(points[j], points[i]) > DISTINCT_TOLERANCE {
@@ -251,7 +251,7 @@ fn find_ortho_corners(
       angle2,
     })
   }
-  corners.sort_by((a, b) => Int::compare(a.idx, b.idx))
+  corners.sort_by((a, b) => Int32::compare(a.idx, b.idx))
   corners
 }
 

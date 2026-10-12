@@ -13,8 +13,8 @@ pub fn compute_ranks_directed(
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
-  back_weight_scale : Int,
-) -> Map[String, Int] {
+  back_weight_scale : Int32,
+) -> Map[String, Int32] {
   if @cluster_graph.graph_has_cluster(source) {
     return @cluster_ranks.compute_clustered_ranks(
       source, nodes, edges, has_edge_labels, back_weight_scale, compute_ranks_directed_with_clusters,
@@ -32,8 +32,8 @@ pub fn compute_ranks_directed_with_clusters(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  back_weight_scale : Int,
-) -> Map[String, Int] {
+  back_weight_scale : Int32,
+) -> Map[String, Int32] {
   let acyclic_directions = @solver.acyclic_edge_directions_with_order(
     source, nodes, edges,
   )

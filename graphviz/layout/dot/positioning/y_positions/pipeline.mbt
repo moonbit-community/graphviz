@@ -10,10 +10,10 @@
 /// Graphviz parity: per-rank half-height maxima from flat-edge label vnodes
 /// must update rank_pht/rank_ht1/rank_ht2 consistently before y placement.
 fn apply_rank_half_heights(
-  half_heights_by_rank : Map[Int, Double],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  half_heights_by_rank : Map[Int32, Double],
+  rank_pht : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
 ) -> Unit {
   for rank, half_height in half_heights_by_rank {
     let current_pht = rank_pht.get(rank).unwrap_or_default()
@@ -35,10 +35,10 @@ fn apply_rank_half_heights(
 /// Graphviz parity: y-rank sweep range expands to include inserted flat-label
 /// vnode ranks, while preserving continuous rank iteration.
 pub fn build_all_ranks_with_overlays(
-  rank_keys : Array[Int],
-  overlay_ranks : Array[Int],
-) -> Array[Int] {
-  let all_ranks : Array[Int] = []
+  rank_keys : Array[Int32],
+  overlay_ranks : Array[Int32],
+) -> Array[Int32] {
+  let all_ranks : Array[Int32] = []
   if rank_keys.length() == 0 {
     return all_ranks
   }
@@ -62,9 +62,9 @@ pub fn build_all_ranks_with_overlays(
 /// Graphviz parity: when flipped cluster-rank heights adjust rank_y, node y
 /// coordinates are rebuilt from rank order/groups without extra transforms.
 fn build_y_positions_from_rank_groups(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  rank_y : Map[Int, Double],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
+  rank_y : Map[Int32, Double],
 ) -> Map[String, Double] {
   let y_positions : Map[String, Double] = Map([])
   for rank in rank_keys {
@@ -83,15 +83,15 @@ fn build_y_positions_from_rank_groups(
 priv struct YPositionsWithFlipInput {
   graph : @cgraph.Graph
   rankdir : @rankdir.RankDir
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
   cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
-  y_all_ranks : Array[Int]
+  y_all_ranks : Array[Int32]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_width_pt_for : (@cgraph.Graph) -> Double?
 }
@@ -99,7 +99,7 @@ priv struct YPositionsWithFlipInput {
 ///|
 priv struct YPositionsWithFlipOutput {
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
 }
 
 ///|
@@ -114,11 +114,11 @@ fn ranksep_equally_enabled(graph : @cgraph.Graph) -> Bool {
 /// Graphviz parity: position.c first assigns the minimum feasible rank gaps,
 /// then ranksep=equally replaces every gap with the largest one.
 fn equalize_rank_positions(
-  all_ranks : Array[Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  all_ranks : Array[Int32],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   y_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
+  rank_y : Map[Int32, Double],
 ) -> Unit {
   if all_ranks.length() < 2 {
     return ()
@@ -158,7 +158,7 @@ fn build_y_positions_with_flip(
   input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map([])
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   fill_rank_positions({
     rank_keys: input.rank_keys,
     groups: input.groups,
@@ -216,16 +216,16 @@ pub(all) struct YPositionPipelineInput {
   has_clusters : Bool
   graph : @cgraph.Graph
   rankdir : @rankdir.RankDir
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
-  flat_label_ranks : Map[String, Int]
+  flat_label_ranks : Map[String, Int32]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
@@ -240,20 +240,20 @@ pub(all) struct YPositionPipelineInput {
 ///|
 pub(all) struct YPositionPipelineOutput {
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
 }
 
 ///|
 fn apply_flat_label_rank_heights(
-  flat_label_ranks : Map[String, Int],
+  flat_label_ranks : Map[String, Int32],
   vnode_sizes : Map[String, @node_primitives.NodeSize],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-) -> Array[Int] {
-  let half_heights_by_rank : Map[Int, Double] = Map([])
-  let overlay_ranks : Array[Int] = []
+  rank_pht : Map[Int32, Double],
+  rank_ht1 : Map[Int32, Double],
+  rank_ht2 : Map[Int32, Double],
+) -> Array[Int32] {
+  let half_heights_by_rank : Map[Int32, Double] = Map([])
+  let overlay_ranks : Array[Int32] = []
   for name, rank in flat_label_ranks {
     let size = match vnode_sizes.get(name) {
       Some(value) => value

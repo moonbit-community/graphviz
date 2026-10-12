@@ -10,7 +10,7 @@ fn project_root_neighbor_hints(
   edge_sources : Array[String],
   edge_targets : Array[String],
 ) -> Map[String, Array[String]] {
-  let remaining : Map[(String, String), Int] = Map([])
+  let remaining : Map[(String, String), Int32] = Map([])
   for index, source in edge_sources {
     let key = (source, edge_targets[index])
     remaining[key] = remaining.get(key).unwrap_or_default() + 1

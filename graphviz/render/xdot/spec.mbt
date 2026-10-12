@@ -32,7 +32,7 @@ pub fn encode_xdot_ops(ops : Array[@render.DrawOp]) -> String {
 #declaration_only
 pub fn attach_xdot_attrs(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> Unit {
   ...
 }
@@ -42,7 +42,7 @@ pub fn attach_xdot_attrs(
 #declaration_only
 pub fn render_xdot(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> String {
   ...
 }
@@ -52,7 +52,7 @@ pub fn render_xdot(
 #declaration_only
 pub fn render_xdot_bytes(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> Bytes {
   ...
 }

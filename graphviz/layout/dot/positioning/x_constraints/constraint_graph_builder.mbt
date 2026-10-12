@@ -8,8 +8,8 @@
 pub(all) struct ConstraintEdge {
   tail : String
   head : String
-  minlen : Int
-  weight : Int
+  minlen : Int32
+  weight : Int32
   tail_port : String?
   head_port : String?
 }
@@ -22,8 +22,8 @@ fn upsert_constraint_with_max(
   key : String,
   tail : String,
   head : String,
-  minlen : Int,
-  weight : Int,
+  minlen : Int32,
+  weight : Int32,
 ) -> Unit {
   match constraints.get(key) {
     Some(entry) =>
@@ -60,7 +60,7 @@ fn upsert_constraint_with_max(
 /// present in the current simplex index.
 pub fn add_constraint_edge_if_present(
   graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
+  index : Map[String, Int32],
   edge : ConstraintEdge,
 ) -> Unit {
   match index.get(edge.tail) {
@@ -84,13 +84,13 @@ pub fn add_constraint_edge_if_present(
 ///|
 pub(all) struct ExtraConstraintNode {
   name : String
-  rank : Int
+  rank : Int32
 }
 
 ///|
 priv struct ConstraintNodeSeed {
   real_by_name : Map[String, @cgraph.Node]
-  extra_rank : Map[String, Int]
+  extra_rank : Map[String, Int32]
   late_extra_nodes : Array[ExtraConstraintNode]
 }
 
@@ -112,7 +112,7 @@ fn build_constraint_node_seed(
   for node in nodes {
     real_by_name[node.name()] = node
   }
-  let extra_rank : Map[String, Int] = Map([])
+  let extra_rank : Map[String, Int32] = Map([])
   for extra_node in early_extra_nodes {
     extra_rank[extra_node.name] = extra_node.rank
   }
@@ -124,7 +124,7 @@ fn build_constraint_ordered_names(
   nodes : Array[@cgraph.Node],
   nlist_order : Array[String],
   real_by_name : Map[String, @cgraph.Node],
-  extra_rank : Map[String, Int],
+  extra_rank : Map[String, Int32],
 ) -> Array[String] {
   let ordered_names : Array[String] = []
   let seen : Map[String, Bool] = Map([])
@@ -166,10 +166,10 @@ pub fn constraint_node_kind(name : String) -> @network_simplex.NodeKind {
 ///|
 fn add_ordered_constraint_nodes(
   graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
+  index : Map[String, Int32],
   ordered_names : Array[String],
   real_by_name : Map[String, @cgraph.Node],
-  extra_rank : Map[String, Int],
+  extra_rank : Map[String, Int32],
   base_positions : Map[String, Double],
 ) -> Unit {
   for name in ordered_names {
@@ -213,7 +213,7 @@ pub(all) struct ConstraintNodesSetupInput {
 /// Graphviz parity: cluster boundary helpers remain late-boundary nodes while
 /// all other aux nodes are materialized in the initial constraint index.
 pub(all) struct ConstraintNodesSetupOutput {
-  index : Map[String, Int]
+  index : Map[String, Int32]
   real_by_name : Map[String, @cgraph.Node]
   late_extra_nodes : Array[ExtraConstraintNode]
 }
@@ -229,7 +229,7 @@ fn build_constraint_nodes_setup(
     seed.real_by_name,
     seed.extra_rank,
   )
-  let index : Map[String, Int] = Map([])
+  let index : Map[String, Int32] = Map([])
   add_ordered_constraint_nodes(
     input.graph,
     index,
@@ -248,7 +248,7 @@ fn build_constraint_nodes_setup(
 ///|
 pub(all) struct LateConstraintNodesInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   late_extra_nodes : Array[ExtraConstraintNode]
 }
 
@@ -268,7 +268,7 @@ fn append_late_constraint_nodes(input : LateConstraintNodesInput) -> Unit {
 }
 
 ///|
-fn round_int_for_seed(value : Double) -> Int {
+fn round_int_for_seed(value : Double) -> Int32 {
   if value >= 0.0 {
     (value + 0.5).floor().to_int()
   } else {
@@ -282,7 +282,7 @@ fn nodesep_minlen_for_seed(
   head_name : String,
   sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
-) -> Int {
+) -> Int32 {
   let tail_size = sizes.get(tail_name)
   let head_size = sizes.get(head_name)
   let tail_right = match tail_size {
@@ -307,22 +307,22 @@ fn nodesep_minlen_for_seed(
 pub(all) struct RankConstraintSeed {
   rank_adj_constraints : Map[String, ConstraintEdge]
   rank_adj_order : Array[String]
-  order_in_rank : Map[String, Int]
+  order_in_rank : Map[String, Int32]
 }
 
 ///|
 /// Graphviz parity: rank-adjacent constraints use rank_nodesep and node widths
 /// exactly once per adjacent pair in each rank group.
 fn build_rank_constraint_seed(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   sizes : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> RankConstraintSeed {
   let rank_adj_constraints : Map[String, ConstraintEdge] = Map([])
   let rank_adj_order : Array[String] = []
-  let order_in_rank : Map[String, Int] = Map([])
+  let order_in_rank : Map[String, Int32] = Map([])
   for rank in rank_keys {
     let names = groups.get(rank).unwrap_or_default()
     for i in 0..<names.length() {
@@ -355,11 +355,11 @@ fn build_rank_constraint_seed(
 /// falls back to unseen edge indices in input sequence.
 fn for_each_edge_index_in_tail_order(
   edges : Array[@cgraph.Edge],
-  edge_out_order : Map[String, Array[Int]],
+  edge_out_order : Map[String, Array[Int32]],
   nlist_order : Array[String],
-  visit : (Int) -> Unit,
+  visit : (Int32) -> Unit,
 ) -> Unit {
-  let seen_edges : Map[Int, Bool] = Map([])
+  let seen_edges : Map[Int32, Bool] = Map([])
   for tail_name in nlist_order {
     let indices = edge_out_order.get(tail_name).unwrap_or_default()
     for edge_idx in indices {
@@ -389,7 +389,7 @@ priv enum EndpointClass {
 ///|
 fn endpoint_class(
   name : String,
-  node_degrees : Map[String, Int],
+  node_degrees : Map[String, Int32],
 ) -> EndpointClass {
   if @edge_identity.is_edge_vnode_name(name) {
     EndpointClass::Virtual
@@ -407,7 +407,7 @@ fn endpoint_class(
 fn constraint_weight_scale(
   tail_class : EndpointClass,
   head_class : EndpointClass,
-) -> Int {
+) -> Int32 {
   match (tail_class, head_class) {
     (EndpointClass::Virtual, EndpointClass::Virtual) => 4
     (EndpointClass::Singleton, EndpointClass::Singleton)
@@ -421,11 +421,11 @@ fn constraint_weight_scale(
 /// Graphviz parity: edge segment weights are amplified for virtual/singleton
 /// endpoints so auxiliary chains remain tight in sparse local neighborhoods.
 fn scaled_segment_edge_weight(
-  base_weight : Int,
+  base_weight : Int32,
   tail_name : String,
   head_name : String,
-  node_degrees : Map[String, Int],
-) -> Int {
+  node_degrees : Map[String, Int32],
+) -> Int32 {
   if base_weight == 0 {
     0
   } else {
@@ -450,7 +450,7 @@ fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
 pub(all) struct SlackSegment {
   tail : String
   head : String
-  weight : Int
+  weight : Int32
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
   concentrated_absorbed : Bool
@@ -461,7 +461,7 @@ fn push_slack_segment(
   segments_by_tail : Map[String, Array[SlackSegment]],
   seg_tail : String,
   seg_head : String,
-  weight : Int,
+  weight : Int32,
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
   concentrated_absorbed : Bool,
@@ -490,7 +490,7 @@ fn coalesce_concentrated_segments(
   let coalesced_by_tail : Map[String, Array[SlackSegment]] = Map([])
   for tail, segments in segments_by_tail {
     let coalesced : Array[SlackSegment] = []
-    let index_by_head : Map[String, Int] = Map([])
+    let index_by_head : Map[String, Int32] = Map([])
     for segment in segments {
       let has_virtual_endpoint = @edge_identity.is_edge_vnode_name(segment.tail) ||
         @edge_identity.is_edge_vnode_name(segment.head)
@@ -523,10 +523,10 @@ fn coalesce_concentrated_segments(
 ///|
 priv struct SegmentsInTailOrderInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   segments_by_tail : Map[String, Array[SlackSegment]]
   nlist_order : Array[String]
-  segment_minlen : (SlackSegment) -> (Int, Int)
+  segment_minlen : (SlackSegment) -> (Int32, Int32)
 }
 
 ///|
@@ -535,7 +535,7 @@ priv struct SegmentsInTailOrderInput {
 pub fn segment_slack_minlen(
   segment : SlackSegment,
   edge_port_offset : (String, @cgraph.Port?) -> Double,
-) -> (Int, Int) {
+) -> (Int32, Int32) {
   let tail_offset = edge_port_offset(segment.tail, segment.tail_port)
   let head_offset = edge_port_offset(segment.head, segment.head_port)
   let delta = head_offset - tail_offset
@@ -547,9 +547,9 @@ pub fn segment_slack_minlen(
 ///|
 fn add_segment_slack_edges(
   graph : @network_simplex.NsGraph,
-  index : Map[String, Int],
+  index : Map[String, Int32],
   segments : Array[SlackSegment],
-  segment_minlen : (SlackSegment) -> (Int, Int),
+  segment_minlen : (SlackSegment) -> (Int32, Int32),
 ) -> Unit {
   for seg in segments {
     let tail_idx = match index.get(seg.tail) {
@@ -629,18 +629,18 @@ pub(all) struct ConstraintSegmentPassInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   cluster_keys : Map[String, String]
   edge_vnodes : Map[String, Array[String]]
-  order_in_rank : Map[String, Int]
+  order_in_rank : Map[String, Int32]
   nodesep_pt : Double
   sizes : Map[String, @node_primitives.NodeSize]
   skip_intercluster : Bool
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
-  edge_degree_increment : (@cgraph.Edge) -> Int
+  edge_degree_increment : (@cgraph.Edge) -> Int32
 }
 
 ///|
@@ -653,7 +653,7 @@ pub(all) struct ConstraintSegmentPassOutput {
 fn choose_flat_constraint_endpoints(
   tail_name : String,
   head_name : String,
-  order_in_rank : Map[String, Int],
+  order_in_rank : Map[String, Int32],
 ) -> (String, String) {
   match (order_in_rank.get(tail_name), order_in_rank.get(head_name)) {
     (Some(tail_order), Some(head_order)) =>
@@ -674,8 +674,8 @@ fn choose_flat_constraint_endpoints(
 ///|
 fn ordered_vnodes_for_ranks(
   vnodes : Array[String],
-  tail_rank : Int,
-  head_rank : Int,
+  tail_rank : Int32,
+  head_rank : Int32,
 ) -> Array[String] {
   if tail_rank <= head_rank {
     return vnodes
@@ -692,10 +692,10 @@ fn ordered_vnodes_for_ranks(
 ///|
 fn build_node_degrees(
   edges : Array[@cgraph.Edge],
-  edge_degree_increment : (@cgraph.Edge) -> Int,
+  edge_degree_increment : (@cgraph.Edge) -> Int32,
   cluster_keys : Map[String, String],
-) -> Map[String, Int] {
-  let node_degrees : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let node_degrees : Map[String, Int32] = Map([])
   for edge in edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
@@ -736,7 +736,7 @@ fn same_rank_constraint_minlen(
   nodesep_pt : Double,
   sizes : Map[String, @node_primitives.NodeSize],
   has_edge_labels : Bool,
-) -> Int {
+) -> Int32 {
   let width = node_side_pt(left, sizes, false) +
     node_side_pt(right, sizes, true)
   let minlen_value = Double::from_int(@edge_semantics.edge_minlen(edge)) *
@@ -751,7 +751,7 @@ fn same_rank_constraint_minlen(
 /// ND_out/ND_nlist order, including reverse-merge handling and same-rank flats.
 fn build_constraint_segment_pass(
   input : ConstraintSegmentPassInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintSegmentPassOutput {
   let node_degrees = build_node_degrees(
     input.edges,
@@ -795,7 +795,7 @@ fn build_constraint_segment_pass(
   let flat_minlen_constraints : Map[String, ConstraintEdge] = Map([])
   // class2 merges same-direction flat multi-edges with merge_oneway before
   // make_LR_constraints reads their accumulated weight.
-  let flat_weights : Map[String, Int] = Map([])
+  let flat_weights : Map[String, Int32] = Map([])
   for edge in input.edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
@@ -1029,8 +1029,8 @@ fn build_constraint_segment_pass(
 /// Graphviz parity: when root boundary slack nodes are enabled (compress mode),
 /// each non-empty rank contributes its leftmost/rightmost node once.
 fn append_missing_rank_boundary_targets(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
 ) -> Unit {
@@ -1066,9 +1066,9 @@ fn append_missing_rank_boundary_targets(
 ///|
 priv struct RootBoundaryTargetEdgesInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   target_names : Array[String]
-  root_idx : Int
+  root_idx : Int32
   sizes : Map[String, @node_primitives.NodeSize]
   root_margin : Double
   compress_mode : Bool
@@ -1125,13 +1125,13 @@ fn add_root_boundary_target_edges(input : RootBoundaryTargetEdgesInput) -> Unit 
 /// and optional compress-width edge before simplex solve.
 priv struct RootBoundaryConstraintsInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
   sizes : Map[String, @node_primitives.NodeSize]
   root_margin : Double
-  compress_width_minlen : Int?
-  root_compress_weight : Int
+  compress_width_minlen : Int32?
+  root_compress_weight : Int32
 }
 
 ///|
@@ -1149,7 +1149,7 @@ fn is_cluster_box_relation(edge : ConstraintEdge) -> Bool {
 ///|
 fn add_root_boundary_constraints(
   input : RootBoundaryConstraintsInput,
-  extra_edges? : Array[ConstraintEdge] = [],
+  extra_edges~ : Array[ConstraintEdge] = [],
 ) -> Unit {
   // pos_clusters emits node containment/compaction and keepout first.
   // Left->left/right->right containment and right->left sibling links
@@ -1236,11 +1236,11 @@ pub(all) struct ConstraintGraphBuildInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
@@ -1250,18 +1250,18 @@ pub(all) struct ConstraintGraphBuildInput {
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
-  segment_minlen : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int)
+  compress_width_minlen : Int32?
+  segment_minlen : (SlackSegment, Map[String, @cgraph.Node]) -> (Int32, Int32)
   edge_has_mid_label : (@cgraph.Edge) -> Bool
-  edge_degree_increment : (@cgraph.Edge) -> Int
+  edge_degree_increment : (@cgraph.Edge) -> Int32
   root_margin : Double
-  root_compress_weight : Int
+  root_compress_weight : Int32
 }
 
 ///|
 pub(all) struct ConstraintGraphBuildOutput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
 }
 
 ///|
@@ -1270,7 +1270,7 @@ pub(all) struct ConstraintGraphBuildOutput {
 /// Do not change behavior without updating fixtures/tests.
 fn build_constraint_graph(
   input : ConstraintGraphBuildInput,
-  live_graph? : @setup.ConcentrateFastGraph? = None,
+  live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintGraphBuildOutput {
   let graph = @network_simplex.new_graph()
   let skip_intercluster = @env.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS")

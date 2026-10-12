@@ -7,9 +7,9 @@
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct TransposeSeedMapsOutput {
-  edge_penalty : Array[Int]
-  edge_in : Map[String, Array[Int]]
-  edge_out : Map[String, Array[Int]]
+  edge_penalty : Array[Int32]
+  edge_in : Map[String, Array[Int32]]
+  edge_out : Map[String, Array[Int32]]
 }
 
 ///|
@@ -17,16 +17,16 @@ pub(all) struct TransposeSeedMapsOutput {
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_transpose_seed_maps(
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
+  order_rank_keys : Array[Int32],
+  seeded_groups : Map[Int32, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
   order_edge_tail_out : Array[String],
   order_edge_head_out : Array[String],
-  order_ranks : Map[String, Int],
+  order_ranks : Map[String, Int32],
 ) -> TransposeSeedMapsOutput {
-  let edge_penalty : Array[Int] = []
-  let edge_in : Map[String, Array[Int]] = Map([])
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_penalty : Array[Int32] = []
+  let edge_in : Map[String, Array[Int32]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
   for rank in order_rank_keys {
     let names = match seeded_groups.get(rank) {
       Some(list) => list

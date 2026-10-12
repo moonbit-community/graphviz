@@ -7,7 +7,7 @@ test "build_materialized_graphviz_neighbors preserves per-tail head order and AG
   let order_nodes = ["a", "b", "c", "isolated"]
   let order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   order_edges_by_tail["a"] = [
     ("a", "c", 1, true, 0.0, 0.0, 0.0, 0.0),
@@ -43,7 +43,7 @@ test "build_order_materialization_data replays mapped and unmapped tails in nlis
 
   let order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   order_edges_by_tail["a"] = [
     ("a", "b", 5, true, 1.0, 2.0, 0.1, 0.2),
@@ -53,7 +53,7 @@ test "build_order_materialization_data replays mapped and unmapped tails in nlis
 
   let order_edges_by_tail_unmapped : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   order_edges_by_tail_unmapped["a"] = [("a", "c", 9, true, 7.0, 8.0, 0.7, 0.8)]
   order_edges_by_tail_unmapped["b"] = [

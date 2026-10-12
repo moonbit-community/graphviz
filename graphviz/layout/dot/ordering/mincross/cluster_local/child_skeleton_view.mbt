@@ -5,7 +5,7 @@
 ///|
 priv struct ChildSkeletonView {
   graph : @cgraph.Graph
-  groups : Map[Int, Array[String]]
+  groups : Map[Int32, Array[String]]
   members : Map[String, Array[String]]
   dispatch : ClusterLocalReorderDispatchContext
 }
@@ -55,7 +55,7 @@ fn local_cluster_skeleton_flags(nodes : Map[String, Bool]) -> Map[String, Bool] 
 fn build_child_skeleton_view(
   cluster : String,
   graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
   dispatch : ClusterLocalReorderDispatchContext,
 ) -> ChildSkeletonView? {
   let children : Array[@cgraph.Graph] = []
@@ -70,7 +70,7 @@ fn build_child_skeleton_view(
   let skeleton_chains : Array[Array[String]] = []
   for child in children {
     let child_name = child.name().unwrap_or_default()
-    let child_ranks : Array[Int] = []
+    let child_ranks : Array[Int32] = []
     for node in child.nodes() {
       if ranks.get(node.name()) is Some(rank) {
         child_ranks.push(rank)
@@ -109,7 +109,7 @@ fn build_child_skeleton_view(
       ignore(active_graph.node(node.name()))
     }
   }
-  let collapsed_groups : Map[Int, Array[String]] = Map([])
+  let collapsed_groups : Map[Int32, Array[String]] = Map([])
   for rank, names in groups {
     let collapsed : Array[String] = []
     let seen : Map[String, Bool] = Map([])

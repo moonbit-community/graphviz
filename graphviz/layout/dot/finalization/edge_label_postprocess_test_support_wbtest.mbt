@@ -6,10 +6,10 @@
 fn postprocess_make_layout_tree(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
-  label_pos? : @geom.Point? = None,
-  nodes? : Array[DotLayoutNode] = [],
-  edges? : Array[DotLayoutEdge] = [],
-  subgraphs? : Array[LayoutTree] = [],
+  label_pos~ : @geom.Point? = None,
+  nodes~ : Array[DotLayoutNode] = [],
+  edges~ : Array[DotLayoutEdge] = [],
+  subgraphs~ : Array[LayoutTree] = [],
 ) -> LayoutTree {
   { graph, bbox, label_pos, nodes, edges, subgraphs, }
 }
@@ -18,10 +18,10 @@ fn postprocess_make_layout_tree(
 fn postprocess_make_edge_layout(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
-  label_pos? : @geom.Point? = None,
-  head_label_pos? : @geom.Point? = None,
-  tail_label_pos? : @geom.Point? = None,
-  xlabel_pos? : @geom.Point? = None,
+  label_pos~ : @geom.Point? = None,
+  head_label_pos~ : @geom.Point? = None,
+  tail_label_pos~ : @geom.Point? = None,
+  xlabel_pos~ : @geom.Point? = None,
 ) -> DotLayoutEdge {
   {
     edge,

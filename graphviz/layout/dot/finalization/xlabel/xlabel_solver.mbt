@@ -27,7 +27,7 @@ pub(all) struct XObject {
   pos : @geom.Point
   width : Double
   height : Double
-  label_index : Int?
+  label_index : Int32?
 }
 
 ///|
@@ -47,32 +47,32 @@ const XLXDENOM : Double = 8.0
 const XLYDENOM : Double = 2.0
 
 ///|
-const XLPXPY : Int = 0
+const XLPXPY : Int32 = 0
 
 ///|
-const XLCXPY : Int = 1
+const XLCXPY : Int32 = 1
 
 ///|
-const XLNXPY : Int = 2
+const XLNXPY : Int32 = 2
 
 ///|
-const XLPXCY : Int = 3
+const XLPXCY : Int32 = 3
 
 ///|
-const XLNXCY : Int = 5
+const XLNXCY : Int32 = 5
 
 ///|
-const XLPXNY : Int = 6
+const XLPXNY : Int32 = 6
 
 ///|
-const XLCXNY : Int = 7
+const XLCXNY : Int32 = 7
 
 ///|
-const XLNXNY : Int = 8
+const XLNXNY : Int32 = 8
 
 ///|
 priv struct XBestPos {
-  n : Int
+  n : Int32
   area : Double
   pos : @geom.Point
 }
@@ -119,7 +119,11 @@ fn label_encloses_point(label : XLabel, point_obj : XObject) -> Bool {
 }
 
 ///|
-fn get_intrsx_index(op : XObject, cp : XObject, labels : Array[XLabel]) -> Int {
+fn get_intrsx_index(
+  op : XObject,
+  cp : XObject,
+  labels : Array[XLabel],
+) -> Int32 {
   let op_set = match op.label_index {
     Some(idx) => labels[idx].set
     None => false
@@ -166,11 +170,11 @@ fn get_intrsx_index(op : XObject, cp : XObject, labels : Array[XLabel]) -> Int {
 fn record_intersection_slot(
   objs : Array[XObject],
   labels : Array[XLabel],
-  op_idx : Int,
-  cp_idx : Int,
+  op_idx : Int32,
+  cp_idx : Int32,
   rect : @geom.Rect,
   area : Double,
-  intrsx : Array[Int?],
+  intrsx : Array[Int32?],
 ) -> Double {
   let op = objs[op_idx]
   let cp = objs[cp_idx]
@@ -215,8 +219,8 @@ fn record_intersection_slot(
 fn xlintersections(
   objs : Array[XObject],
   labels : Array[XLabel],
-  obj_idx : Int,
-  intrsx : Array[Int?],
+  obj_idx : Int32,
+  intrsx : Array[Int32?],
 ) -> XBestPos {
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
@@ -278,7 +282,7 @@ fn xlintersections(
 fn xladjust(
   objs : Array[XObject],
   labels : Array[XLabel],
-  obj_idx : Int,
+  obj_idx : Int32,
 ) -> XBestPos {
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
@@ -288,7 +292,7 @@ fn xladjust(
   let label = labels[label_idx]
   let xincr = (2.0 * label.width + obj.width) / XLXDENOM
   let yincr = (2.0 * label.height + obj.height) / XLYDENOM
-  let intrsx : Array[Int?] = []
+  let intrsx : Array[Int32?] = []
   for _ in 0..<9 {
     intrsx.push(None)
   }

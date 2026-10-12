@@ -24,7 +24,7 @@ pub(all) struct OrderingEdgeSnapshotBuildInput {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 ///|
@@ -33,7 +33,7 @@ pub(all) struct OrderingEdgeSnapshotBuildInput {
 pub(all) struct OrderingEdgeSnapshotEntry {
   tail : String
   head : String
-  xpenalty : Int
+  xpenalty : Int32
   tail_port_x : Double
   head_port_x : Double
   tail_port_order : Double
@@ -95,7 +95,7 @@ pub fn coalesce_ordering_edge_snapshot_entries(
 ) -> Array[OrderingEdgeSnapshotEntry] {
   let entries_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   let tail_order : Array[String] = []
   for entry in entries {
@@ -156,8 +156,8 @@ pub fn coalesce_ordering_edge_snapshot_entries(
 /// Graphviz parity: root mincross snapshot payload keeps rank-order groups,
 /// coalesced edge snapshots, and cluster overlays for fixture capture checks.
 pub(all) struct RootMincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges : Array[OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
@@ -172,8 +172,8 @@ pub let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref(
 /// Graphviz parity: root mincross snapshot input keeps order-rank groups,
 /// edge arrays, and cluster overlays together before capture materialization.
 pub(all) struct RootMincrossSnapshotBuildInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
   edge_head_out : Array[String]
@@ -183,7 +183,7 @@ pub(all) struct RootMincrossSnapshotBuildInput {
   edge_head_port_order : Array[Double]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 ///|
@@ -237,7 +237,7 @@ pub fn build_root_mincross_input_snapshot(
 /// pass0-captured reorder snapshot into fixture state when capture is enabled.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_root_snapshot_capture_callback(
-  edge_xpenalty_for : (@cgraph.Edge) -> Int,
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32,
 ) -> (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit {
   (result, inputs) => {
     if !should_capture_ordering_inputs() {

@@ -35,10 +35,10 @@ pub(all) struct EdgeRouteBase {
   tail_anchor : @geom.Point
   head_anchor : @geom.Point
   head_port_rect : @geom.Rect?
-  tail_port_side : Int
-  head_port_side : Int
-  tail_sameport_group_size : Int
-  head_sameport_group_size : Int
+  tail_port_side : Int32
+  head_port_side : Int32
+  tail_sameport_group_size : Int32
+  head_sameport_group_size : Int32
   tail_clip_center : @geom.Point
   tail_clip_size : @node_primitives.NodeSize
   head_clip_center : @geom.Point
@@ -52,8 +52,8 @@ pub(all) struct EdgeRouteBase {
   force_segmented : Bool
   tail_cluster_bbox : @geom.Rect?
   head_cluster_bbox : @geom.Rect?
-  tail_rank : Int
-  head_rank : Int
+  tail_rank : Int32
+  head_rank : Int32
   is_flat_edge : Bool
   is_flat_adjacent : Bool
   vnodes : Array[String]
@@ -88,7 +88,7 @@ pub(all) struct RouteLabelMetrics {
 ///|
 pub(all) struct RouteDynamicPortAnchor {
   anchor : @geom.Point?
-  side : Int
+  side : Int32
   is_dynamic : Bool
 }
 
@@ -130,14 +130,14 @@ pub(all) struct RouteBaseDeps {
     @geom.Point,
     @geom.Point,
     @node_primitives.NodeSize,
-  ) -> Int
+  ) -> Int32
   port_side_for_edge : (
     String,
     @cgraph.Port?,
     @geom.Rect?,
     @geom.Point,
     @node_primitives.NodeSize,
-  ) -> Int
+  ) -> Int32
   layout_port_offset : (@geom.Point, @rankdir.RankDir) -> @geom.Point
   node_cluster_key : (@cgraph.Node) -> String
   node_local_cluster_key : (@cgraph.Node) -> String
@@ -166,8 +166,8 @@ pub type DotLayoutEdge = @layout_tree.DotLayoutEdge
 
 ///|
 pub(all) struct EdgeLayoutInput {
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
   vnode_info : @setup.EdgeVnodeInfo
   vnode_positions : Map[String, @geom.Point]
   has_clusters : Bool
@@ -180,9 +180,9 @@ pub(all) struct RecoverSlackVnodesInput {
   edge : @cgraph.Edge
   ordered_vnodes : Array[String]
   boxes : Array[@geom.Rect]
-  ranks : Map[String, Int]
-  vnode_ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
+  ranks : Map[String, Int32]
+  vnode_ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
   vnode_positions : Map[String, @geom.Point]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   merged_positions : Map[String, @geom.Point]
@@ -233,20 +233,20 @@ pub(all) struct RouteEdgesPipelineDeps {
 
 ///|
 pub(all) struct RegularPassInput {
-  spline_mode : Int
-  ranks : Map[String, Int]
+  spline_mode : Int32
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : @setup.EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext
   enable_complex_tuning : Bool
@@ -255,41 +255,41 @@ pub(all) struct RegularPassInput {
 ///|
 pub(all) struct OrderedRoutingInput {
   ordered_edges : Array[@cgraph.Edge]
-  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
-  base_cache : Map[Int, EdgeRouteBase]
+  flat_adjacent_simple_beziers : Map[Int32, Array[@geom.Point]]
+  base_cache : Map[Int32, EdgeRouteBase]
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
   regular_pass_input : RegularPassInput
   path_left_bound : Double
   path_right_bound : Double
-  recover_edge_id_for_routing : Map[String, Int]
+  recover_edge_id_for_routing : Map[String, Int32]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   nodesep_pt : Double
 }
 
 ///|
 pub(all) struct RouteEdgesInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : @setup.EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]
   routing_context : RoutingContext
   enable_complex_tuning : Bool
   use_spline_prepass : Bool
-  spline_mode : Int
-  base_cache : Map[Int, EdgeRouteBase]
+  spline_mode : Int32
+  base_cache : Map[Int32, EdgeRouteBase]
 }
 
 ///|
@@ -298,23 +298,23 @@ pub(all) struct RouteEdgesPipelineInput {
   rankdir : @rankdir.RankDir
   layout_rankdir : @rankdir.RankDir
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : @setup.EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   ranksep_pt : Double
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]
   routing_context : RoutingContext
   enable_complex_tuning : Bool
   use_spline_prepass : Bool
-  spline_mode : Int
+  spline_mode : Int32
 }

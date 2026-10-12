@@ -4,11 +4,11 @@
 
 ///|
 test "merge_ranks_with_vnodes overlays vnode ranks without dropping base entries" {
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
 
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks["b"] = 9
   vnode_ranks["v1"] = 2
 

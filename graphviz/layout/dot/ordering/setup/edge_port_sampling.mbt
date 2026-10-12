@@ -165,7 +165,7 @@ fn dedup_ordering_edges(
 
 ///|
 pub(all) struct OrderingEdgePortData {
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]

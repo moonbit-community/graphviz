@@ -14,7 +14,7 @@ test "cluster_depth_for_order prefers explicit hints, ignores self-parent hints,
   fallback_parents["orphan"] = Some("root")
   fallback_parents["selfish"] = Some("root")
 
-  let memo : Map[String, Int] = Map([])
+  let memo : Map[String, Int32] = Map([])
   let child_depth = cluster_depth_for_order(
     "child", parents, fallback_parents, memo,
   )

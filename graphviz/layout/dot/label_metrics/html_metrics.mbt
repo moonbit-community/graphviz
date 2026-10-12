@@ -7,7 +7,7 @@
 type SizePt = @numeric.GraphSizePt
 
 ///|
-let html_label_cache : Ref[Map[(String, Bool?), @html_label.HtmlLabel]] = @ref.new(
+let html_label_cache : Ref[Map[(String, Bool?), @html_label.HtmlLabel]] = Ref(
   Map([]),
 )
 
@@ -19,7 +19,7 @@ pub fn reset_html_label_cache() -> Unit {
 ///|
 pub fn parse_html_label_cached(
   label : String,
-  html? : Bool? = None,
+  html~ : Bool? = None,
 ) -> @html_label.HtmlLabel? {
   guard html != Some(false) else { return None }
   let key = (label, html)

@@ -21,11 +21,11 @@ pub(all) struct OrderingPipelineInput {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  rank_keys : Array[Int32]
+  node_order : Map[String, Int32]
   order_sizes : Map[String, NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -36,8 +36,8 @@ pub(all) struct OrderingPipelineInput {
 
 ///|
 priv struct OrderingDispatchOutput {
-  ordered_groups : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
 }
 
 ///|

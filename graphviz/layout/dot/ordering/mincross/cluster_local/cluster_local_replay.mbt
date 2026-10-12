@@ -10,15 +10,15 @@
 /// snapshots, neighbor replay maps, vnode/rank overlays, and cluster traversal
 /// metadata grouped before local reorder execution.
 priv struct ClusterLocalRankReplayInput {
-  groups : Map[Int, Array[String]]
+  groups : Map[Int32, Array[String]]
   graph : @cgraph.Graph
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
@@ -28,13 +28,13 @@ priv struct ClusterLocalRankReplayInput {
   order_edge_head_port_order : Array[Double]
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_with_vnodes : Bool
@@ -45,15 +45,15 @@ priv struct ClusterLocalRankReplayInput {
 /// snapshots and cluster gates grouped before replay input assembly.
 pub(all) struct ClusterLocalRankReplayAfterRootSources {
   order_with_clusters : Bool
-  groups : Map[Int, Array[String]]
+  groups : Map[Int32, Array[String]]
   graph : @cgraph.Graph
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
@@ -63,13 +63,13 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
   order_edge_head_port_order : Array[Double]
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   order_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_with_vnodes : Bool
@@ -81,7 +81,7 @@ pub(all) struct ClusterLocalRankReplayAfterRootSources {
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_cluster_local_rank_replay_after_root_from_sources(
   sources : ClusterLocalRankReplayAfterRootSources,
-  expansion_order? : Array[String] = [],
+  expansion_order~ : Array[String] = [],
 ) -> Unit {
   if !sources.order_with_clusters {
     return ()
@@ -126,10 +126,10 @@ pub fn run_cluster_local_rank_replay_after_root_from_sources(
 /// names while preserving all existing base rank entries.
 /// Do not change behavior without updating fixtures/tests.
 fn merge_ranks_with_vnodes(
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> Map[String, Int] {
-  let merged : Map[String, Int] = Map([])
+  ranks : Map[String, Int32],
+  vnode_ranks : Map[String, Int32],
+) -> Map[String, Int32] {
+  let merged : Map[String, Int32] = Map([])
   for name, rank in ranks {
     merged[name] = rank
   }
@@ -144,7 +144,7 @@ fn merge_ranks_with_vnodes(
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_replay(
   input : ClusterLocalRankReplayInput,
-  expansion_order? : Array[String] = [],
+  expansion_order~ : Array[String] = [],
 ) -> Unit {
   if input.cluster_order.length() == 0 {
     return ()

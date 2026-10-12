@@ -7,10 +7,10 @@ priv struct FlatDetourLookupInput {
   base : EdgeRouteBase
   positions : Map[String, @geom.Point]
   sizes : Map[String, NodeSize]
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
 }
 
@@ -47,13 +47,13 @@ priv struct FlatDetourResult {
 pub(all) struct FlatDetourLookupContext {
   tail_name : String
   head_name : String
-  rank : Int
+  rank : Int32
   positions : Map[String, @geom.Point]
   sizes : Map[String, NodeSize]
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
   rankdir : RankDir
 }

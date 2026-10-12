@@ -8,7 +8,7 @@ test "root links follow containment and precede sibling separation and compressi
   let left = @cluster_identity.cluster_left_boundary_name("cluster_a")
   let right = @cluster_identity.cluster_right_boundary_name("cluster_a")
   let sibling = @cluster_identity.cluster_left_boundary_name("cluster_b")
-  let index : Map[String, Int] = Map([])
+  let index : Map[String, Int32] = Map([])
   for name in [left, right, sibling, "n"] {
     index[name] = @network_simplex.add_node(graph, name)
   }
@@ -61,7 +61,7 @@ test "root links follow containment and precede sibling separation and compressi
 
 ///|
 test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes once per non-empty rank" {
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[2] = ["c", "d", "e"]
 
@@ -81,7 +81,7 @@ test "append_missing_rank_boundary_targets adds leftmost and rightmost nodes onc
 ///|
 test "add_root_boundary_constraints builds slack nodes for plain and compress modes" {
   let plain_graph = @network_simplex.new_graph()
-  let plain_index : Map[String, Int] = Map([])
+  let plain_index : Map[String, Int32] = Map([])
   plain_index["a"] = @network_simplex.add_node(plain_graph, "a")
   plain_index["b"] = @network_simplex.add_node(plain_graph, "b")
   let sizes : Map[String, @node_primitives.NodeSize] = Map([])
@@ -113,7 +113,7 @@ test "add_root_boundary_constraints builds slack nodes for plain and compress mo
   assert_eq(plain_graph.edges[1].minlen, 7)
 
   let compress_graph = @network_simplex.new_graph()
-  let compress_index : Map[String, Int] = Map([])
+  let compress_index : Map[String, Int32] = Map([])
   compress_index["a"] = @network_simplex.add_node(compress_graph, "a")
   compress_index["b"] = @network_simplex.add_node(compress_graph, "b")
 

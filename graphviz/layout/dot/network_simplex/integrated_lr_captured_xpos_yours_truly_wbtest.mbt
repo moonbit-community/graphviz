@@ -5,7 +5,7 @@
 ///|
 fn build_yours_truly_xpos_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
-  let slack_ranks : Array[Int] = [
+  let slack_ranks : Array[Int32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 212, 237, 216, -1, -1, -1, -1, -94, -94, -94, 84, 109, 24, -1, -1, 290,
     71, 274, 216, -1, -1, -1, -1, -1, -1, 13, -1, 6, 212, 237, 40, 71, 47, 40, 47,

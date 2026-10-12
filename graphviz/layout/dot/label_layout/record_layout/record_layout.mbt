@@ -22,13 +22,13 @@ type SizePt = @numeric.GraphSizePt
 ///|
 priv struct RecordLayoutNode {
   rect : @geom.Rect
-  sides : Int
+  sides : Int32
   field : RecordField?
   children : Array[RecordLayoutNode]
 }
 
 ///|
-let record_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = @ref.new(
+let record_ports_cache : Ref[Map[String, Map[String, RecordPort]]] = Ref(
   Map([]),
 )
 
@@ -224,10 +224,10 @@ fn record_child_rects(
 ///|
 fn record_child_sides(
   orientation : RecordOrientation,
-  sides : Int,
-  index : Int,
-  last : Int,
-) -> Int {
+  sides : Int32,
+  index : Int32,
+  last : Int32,
+) -> Int32 {
   if sides == 0 {
     return 0
   }
@@ -283,7 +283,7 @@ fn layout_record_tree(
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
-  sides : Int,
+  sides : Int32,
 ) -> Array[RecordLayoutNode] {
   if nodes.length() == 0 {
     return []

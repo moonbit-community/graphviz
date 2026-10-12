@@ -4,11 +4,11 @@
 
 ///|
 test "build_order_seed_groups merges vnode groups and appends cluster skeletons in cluster order before unseen clusters" {
-  let ordering_groups_base : Map[Int, Array[String]] = Map([])
+  let ordering_groups_base : Map[Int32, Array[String]] = Map([])
   ordering_groups_base[0] = ["a"]
   ordering_groups_base[1] = ["b"]
 
-  let base_order_index : Map[String, Int] = Map([])
+  let base_order_index : Map[String, Int32] = Map([])
   base_order_index["a"] = 0
   base_order_index["b"] = 0
 
@@ -16,19 +16,19 @@ test "build_order_seed_groups merges vnode groups and appends cluster skeletons 
   cluster_keys["a"] = "cluster_x"
   cluster_keys["b"] = "cluster_y"
 
-  let cluster_min_rank : Map[String, Int] = Map([])
+  let cluster_min_rank : Map[String, Int32] = Map([])
   cluster_min_rank["cluster_y"] = 1
   cluster_min_rank["cluster_x"] = 0
   cluster_min_rank["cluster_z"] = 1
 
-  let cluster_max_rank : Map[String, Int] = Map([])
+  let cluster_max_rank : Map[String, Int32] = Map([])
   cluster_max_rank["cluster_x"] = 1
   cluster_max_rank["cluster_z"] = 1
 
   let vnode_clusters : Map[String, String] = Map([])
   vnode_clusters["v0"] = "cluster_x"
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v0"]
 
   let vnode_order_keys_for_ordering : Map[String, Double] = Map([])
@@ -94,7 +94,7 @@ test "build_order_seed_groups merges vnode groups and appends cluster skeletons 
 
 ///|
 test "build_order_seed_groups keeps only real-node metadata when vnode and cluster ordering are disabled" {
-  let ordering_groups_base : Map[Int, Array[String]] = Map([])
+  let ordering_groups_base : Map[Int32, Array[String]] = Map([])
   ordering_groups_base[0] = ["a", "b"]
 
   let order_sizes : Map[String, NodeSize] = Map([])

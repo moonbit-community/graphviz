@@ -286,8 +286,8 @@ fn point_segment_distance(
 fn point_distance_to_polyline(
   pt : @geom.Point,
   points : Array[@geom.Point],
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
 ) -> Double {
   if end - start <= 1 {
     return point_dist(pt, points[start])
@@ -311,8 +311,8 @@ fn bezier_within_polyline(
   c2 : @geom.Point,
   p3 : @geom.Point,
   points : Array[@geom.Point],
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   bound_eps : Double,
 ) -> Bool {
   if bound_eps <= 0.0 {
@@ -409,7 +409,7 @@ fn approx_zero(value : Double) -> Bool {
 }
 
 ///|
-fn solve1(coeff : Array[Double], roots : Array[Double]) -> Int {
+fn solve1(coeff : Array[Double], roots : Array[Double]) -> Int32 {
   let a = coeff[1]
   let b = coeff[0]
   if approx_zero(a) {
@@ -423,7 +423,7 @@ fn solve1(coeff : Array[Double], roots : Array[Double]) -> Int {
 }
 
 ///|
-fn solve2(coeff : Array[Double], roots : Array[Double]) -> Int {
+fn solve2(coeff : Array[Double], roots : Array[Double]) -> Int32 {
   let a = coeff[2]
   let b = coeff[1]
   let c = coeff[0]
@@ -446,7 +446,7 @@ fn solve2(coeff : Array[Double], roots : Array[Double]) -> Int {
 }
 
 ///|
-fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
+fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int32 {
   let a = coeff[3]
   let b = coeff[2]
   let c = coeff[1]
@@ -505,7 +505,7 @@ fn points_to_coeff(
 }
 
 ///|
-fn add_root(root : Double, roots : Array[Double], rootn : Int) -> Int {
+fn add_root(root : Double, roots : Array[Double], rootn : Int32) -> Int32 {
   if root >= 0.0 && root <= 1.0 {
     roots[rootn] = root
     return rootn + 1
@@ -522,7 +522,7 @@ fn spline_intersects_line(
   l0 : @geom.Point,
   l1 : @geom.Point,
   roots : Array[Double],
-) -> Int {
+) -> Int32 {
   let xcoeff0 = l0.x
   let xcoeff1 = l1.x - l0.x
   let ycoeff0 = l0.y
@@ -658,8 +658,8 @@ fn spline_is_inside(
 ///|
 fn route_spline_recursive_range(
   points : Array[@geom.Point],
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   ev0 : @geom.Point,
   ev1 : @geom.Point,
   out : Array[@geom.Point],
@@ -908,7 +908,7 @@ fn route_polyline_to_bezier(
   allow_spline_fit : Bool,
   min_len_ratio : Double,
   bound_eps : Double,
-  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
+  route_barriers~ : Array[(@geom.Point, @geom.Point)] = [],
 ) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
   if points.length() < 2 {

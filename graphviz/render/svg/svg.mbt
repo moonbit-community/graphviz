@@ -12,7 +12,7 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
-fn parse_int(value : String, fallback : Int) -> Int {
+fn parse_int(value : String, fallback : Int32) -> Int32 {
   parse_double(value, fallback.to_double()).round().to_int()
 }
 
@@ -29,7 +29,7 @@ fn centered_html_text_x(value : Double, font_name : String) -> Double {
 }
 
 ///|
-fn pow10_bigint(exp : Int) -> @bigint.BigInt {
+fn pow10_bigint(exp : Int32) -> @bigint.BigInt {
   let mut out = @bigint.BigInt::from_int(1)
   for _ in 0..<exp {
     out = out * @bigint.BigInt::from_int(10)
@@ -40,7 +40,7 @@ fn pow10_bigint(exp : Int) -> @bigint.BigInt {
 ///|
 fn round_abs_scaled_half_even(
   abs_value : Double,
-  decimals : Int,
+  decimals : Int32,
 ) -> @bigint.BigInt {
   if abs_value == 0.0 {
     return @bigint.BigInt::from_int(0)
@@ -83,7 +83,7 @@ fn round_abs_scaled_half_even(
 ///|
 fn format_scaled_integer(
   scaled_abs : @bigint.BigInt,
-  decimals : Int,
+  decimals : Int32,
   negative : Bool,
   trim_trailing_zeros : Bool,
 ) -> String {
@@ -120,7 +120,7 @@ fn format_scaled_integer(
 }
 
 ///|
-fn format_double_with_decimals(value : Double, decimals : Int) -> String {
+fn format_double_with_decimals(value : Double, decimals : Int32) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
   }
@@ -132,7 +132,7 @@ fn format_double_with_decimals(value : Double, decimals : Int) -> String {
 }
 
 ///|
-fn format_double_fixed(value : Double, decimals : Int) -> String {
+fn format_double_fixed(value : Double, decimals : Int32) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
   }
@@ -144,7 +144,7 @@ fn format_double_fixed(value : Double, decimals : Int) -> String {
 }
 
 ///|
-fn format_double_significant(value : Double, digits : Int) -> String {
+fn format_double_significant(value : Double, digits : Int32) -> String {
   if value == 0.0 {
     return "0"
   }
@@ -288,7 +288,7 @@ fn node_link_title(node : @cgraph.Node, fallback : String) -> String {
 }
 
 ///|
-fn parse_palette_index(value : String) -> Int? {
+fn parse_palette_index(value : String) -> Int32? {
   let trimmed = value.trim().to_owned()
   if trimmed == "" {
     return None
@@ -354,7 +354,7 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
 }
 
 ///|
-fn colorscheme_index_color(scheme : String, index : Int) -> String? {
+fn colorscheme_index_color(scheme : String, index : Int32) -> String? {
   match scheme.to_lower() {
     // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
     "rdbu5" =>
@@ -652,7 +652,7 @@ fn gradient_linear_points(
 }
 
 ///|
-fn radial_focus_percent(gradient_angle : String?) -> (Int, Int) {
+fn radial_focus_percent(gradient_angle : String?) -> (Int32, Int32) {
   match gradient_angle {
     Some(value) => {
       let radians = parse_double(value, 0.0) * @math.PI / 180.0
@@ -1001,17 +1001,17 @@ fn svg_color(color : String) -> String {
 }
 
 ///|
-fn hex_nibble(ch : Char) -> Int {
+fn hex_nibble(ch : Char) -> Int32 {
   match ch {
-    '0'..='9' => ch.to_int() - '0'.to_int()
-    'a'..='f' => ch.to_int() - 'a'.to_int() + 10
-    'A'..='F' => ch.to_int() - 'A'.to_int() + 10
+    '0'..<='9' => ch.to_int() - '0'.to_int()
+    'a'..<='f' => ch.to_int() - 'a'.to_int() + 10
+    'A'..<='F' => ch.to_int() - 'A'.to_int() + 10
     _ => -1
   }
 }
 
 ///|
-fn parse_hex8_color(color : String) -> (String, Int)? {
+fn parse_hex8_color(color : String) -> (String, Int32)? {
   if color.length() != 9 || !color.has_prefix("#") {
     return None
   }
@@ -1032,7 +1032,7 @@ fn parse_hex8_color(color : String) -> (String, Int)? {
 }
 
 ///|
-fn alpha_opacity_text(alpha_byte : Int) -> String {
+fn alpha_opacity_text(alpha_byte : Int32) -> String {
   format_double_fixed(alpha_byte.to_double() / 255.0, 6)
 }
 
@@ -2252,7 +2252,7 @@ fn node_attr_double(
 }
 
 ///|
-fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
+fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int32) -> Int32 {
   match node_attr(node, key) {
     Some(value) => parse_int(value, fallback)
     None => fallback
@@ -2260,7 +2260,7 @@ fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
 }
 
 ///|
-fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
+fn node_peripheries(node : @cgraph.Node, fallback : Int32) -> Int32 {
   let raw = node_attr_int(node, "peripheries", fallback)
   if raw < 1 {
     1
@@ -2272,12 +2272,12 @@ fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
 ///|
 fn polygon_params_with_defaults(
   node : @cgraph.Node,
-  sides : Int,
+  sides : Int32,
   default_orientation : Double,
   default_distortion : Double,
   default_skew : Double,
-  default_peripheries : Int,
-) -> (Int, Double, Double, Double, Int) {
+  default_peripheries : Int32,
+) -> (Int32, Double, Double, Double, Int32) {
   let orientation = node_attr_double(node, "orientation", default_orientation)
   let distortion = node_attr_double(node, "distortion", default_distortion)
   let skew = node_attr_double(node, "skew", default_skew)
@@ -2293,7 +2293,7 @@ fn point_nearly_equal(a : @geom.Point, b : @geom.Point) -> Bool {
 ///|
 fn polygon_vertices_for_rect(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
@@ -2412,7 +2412,7 @@ fn polygon_outline_vertices(
 ///|
 fn polygon_paths_from_base(
   base : Array[@geom.Point],
-  peripheries : Int,
+  peripheries : Int32,
 ) -> Array[Array[@geom.Point]] {
   if base.length() < 3 {
     return []
@@ -2430,7 +2430,7 @@ fn polygon_paths_from_base(
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
@@ -2447,11 +2447,11 @@ fn polygon_vertices_for_size(
 ///|
 fn polygon_outline_vertices_for_rect(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-  peripheries : Int,
+  peripheries : Int32,
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
   let target_w = rect.urx - rect.llx
@@ -2531,7 +2531,7 @@ fn polygon_outline_vertices_for_rect(
 ///|
 fn inner_rect_for_peripheries(
   rect : @geom.Rect,
-  peripheries : Int,
+  peripheries : Int32,
 ) -> @geom.Rect {
   if peripheries <= 1 {
     return rect
@@ -2556,11 +2556,11 @@ fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
 ///|
 fn polygon_paths_for_shape(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-  peripheries : Int,
+  peripheries : Int32,
 ) -> Array[Array[@geom.Point]] {
   let count = if peripheries < 1 { 1 } else { peripheries }
   let paths : Array[Array[@geom.Point]] = []
@@ -3302,7 +3302,7 @@ fn shape_polygon_paths(
   kind : String,
   rect : @geom.Rect,
 ) -> Array[Array[@geom.Point]]? {
-  let params : (Int, Double, Double, Double, Int)? = match kind {
+  let params : (Int32, Double, Double, Double, Int32)? = match kind {
     "diamond" => Some((4, 45.0, 0.0, 0.0, 1))
     "triangle" => Some(polygon_params_with_defaults(node, 3, 0.0, 0.0, 0.0, 1))
     "invtriangle" =>
@@ -3438,7 +3438,7 @@ fn toggle_record_orientation(
 ///|
 priv struct RecordParser {
   chars : Array[Char]
-  mut index : Int
+  mut index : Int32
 }
 
 ///|
@@ -4146,7 +4146,7 @@ fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
 }
 
 ///|
-fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
+fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int32 {
   let sides = cell.sides.unwrap_or_default().to_lower()
   if sides == "" {
     return 15
@@ -4168,7 +4168,7 @@ fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
 }
 
 ///|
-fn html_side_points(rect : @geom.Rect, side : Int) -> Array[@geom.Point] {
+fn html_side_points(rect : @geom.Rect, side : Int32) -> Array[@geom.Point] {
   match side {
     0 => [{ x: rect.llx, y: rect.lly, }, { x: rect.urx, y: rect.lly, }]
     1 => [{ x: rect.urx, y: rect.lly, }, { x: rect.urx, y: rect.ury, }]
@@ -4206,7 +4206,7 @@ fn write_html_cell_sides(
     return ()
   }
   let visited : Array[Bool] = [false, false, false, false]
-  let start_order : Array[Int] = [0, 2, 3, 1]
+  let start_order : Array[Int32] = [0, 2, 3, 1]
   for index in 0..<start_order.length() {
     let start = start_order[index]
     let start_bit = 1 << start
@@ -4565,8 +4565,8 @@ fn write_html_gradient_fill(
   gradient_angle : String?,
   rect : @geom.Rect,
   bbox : @geom.Rect,
-  linear_gradient_index : Ref[Int],
-  radial_gradient_index : Ref[Int],
+  linear_gradient_index : Ref[Int32],
+  radial_gradient_index : Ref[Int32],
   pretty : Bool,
 ) -> String {
   if raw_color.find(":") is None {
@@ -4611,11 +4611,11 @@ fn write_html_table(
   stroke_dash : String,
   bbox : @geom.Rect,
   indent : String,
-  linear_gradient_index : Ref[Int],
-  radial_gradient_index : Ref[Int],
+  linear_gradient_index : Ref[Int32],
+  radial_gradient_index : Ref[Int32],
   pretty : Bool,
   link_id_prefix : String,
-  link_index : Ref[Int],
+  link_index : Ref[Int32],
 ) -> Unit {
   let _ = stroke_dash
   let link = svg_link(
@@ -5221,7 +5221,7 @@ fn write_label_lines(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
-  justification_width? : Double? = None,
+  justification_width~ : Double? = None,
 ) -> Unit {
   if text == "" {
     return ()
@@ -5288,8 +5288,8 @@ fn same_subgraph_name(a : @cgraph.Graph, b : @cgraph.Graph) -> Bool {
 ///|
 fn advance_cluster_graph_ids(
   graph : @cgraph.Graph,
-  next_cluster_id : Int,
-) -> Int {
+  next_cluster_id : Int32,
+) -> Int32 {
   let mut cluster_id = next_cluster_id
   for subgraph in graph.subgraphs() {
     cluster_id = cluster_id + 1
@@ -5305,13 +5305,13 @@ fn write_cluster_graphs(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
-  next_cluster_id : Int,
-  linear_gradient_index : Ref[Int],
-  radial_gradient_index : Ref[Int],
-  layer_selection? : SvgLayerSelection? = None,
-  layer_number? : Int = 1,
-  layer_prefix? : String = "",
-) -> Int {
+  next_cluster_id : Int32,
+  linear_gradient_index : Ref[Int32],
+  radial_gradient_index : Ref[Int32],
+  layer_selection~ : SvgLayerSelection? = None,
+  layer_number~ : Int32 = 1,
+  layer_prefix~ : String = "",
+) -> Int32 {
   let mut cluster_id = next_cluster_id
   let rendered_subgraphs = layout.subgraphs
   let mut rendered_idx = 0
@@ -5812,7 +5812,7 @@ fn color_spline_offset_qr(
 ///|
 fn edge_multicolor_spline_points(
   points : Array[@geom.Point],
-  color_count : Int,
+  color_count : Int32,
 ) -> Array[Array[@geom.Point]] {
   if color_count <= 1 {
     return [points]
@@ -5898,8 +5898,8 @@ fn write_svg_edge_group(
   bbox : @geom.Rect,
   edge_id : String,
   pretty : Bool,
-  linear_gradient_index : Ref[Int],
-  radial_gradient_index : Ref[Int],
+  linear_gradient_index : Ref[Int32],
+  radial_gradient_index : Ref[Int32],
 ) -> Unit {
   let svg_group_class = (base : String, extra : String?) => {
     match extra {
@@ -6341,11 +6341,11 @@ fn write_svg_node_group(
   node_layout : @layout_dot.DotLayoutNode,
   fixedshape_draw_sizes : Map[String, (Double, Double)],
   bbox : @geom.Rect,
-  node_index : Int,
-  linear_gradient_index : Ref[Int],
-  radial_gradient_index : Ref[Int],
+  node_index : Int32,
+  linear_gradient_index : Ref[Int32],
+  radial_gradient_index : Ref[Int32],
   pretty : Bool,
-  layer_name? : String = "",
+  layer_name~ : String = "",
 ) -> Unit {
   let node = node_layout.node
   let node_title = escape_xml_with_dash(normalize_svg_title_text(node.name()))
@@ -7677,7 +7677,7 @@ pub fn SvgOptions::default() -> SvgOptions {
 ///|
 pub fn render_svg(
   layout : @layout_dot.DotLayoutGraph,
-  options? : SvgOptions = SvgOptions::default(),
+  options~ : SvgOptions = SvgOptions::default(),
 ) -> String {
   let fixedshape_draw_sizes = capture_fixedshape_draw_sizes(layout.nodes)
   layout.apply()
@@ -7793,7 +7793,7 @@ pub fn render_svg(
     1
   }
   let layer_select = layout.graph.get_attr("layerselect").unwrap_or_default()
-  let selected_layers : Array[Int] = []
+  let selected_layers : Array[Int32] = []
   for layer in 1..<=layer_count {
     if layer_select == "" || layer_selection.selected(layer, layer_select) {
       selected_layers.push(layer)
@@ -7910,11 +7910,11 @@ pub fn render_svg(
     let kind = layout.graph.kind()
     let root_nodes = layout.graph.nodes()
     let root_edges = layout.graph.edges()
-    let node_order : Map[String, Int] = Map([])
+    let node_order : Map[String, Int32] = Map([])
     for i, node in root_nodes {
       node_order[node.name()] = i
     }
-    let edge_order : Map[Int, Int] = Map([])
+    let edge_order : Map[Int32, Int32] = Map([])
     for i, edge in root_edges {
       edge_order[edge.id()] = i
     }
@@ -7922,12 +7922,12 @@ pub fn render_svg(
     for node_layout in layout.nodes {
       layout_node_by_name[node_layout.node.name()] = node_layout
     }
-    let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map([])
+    let layout_edge_by_id : Map[Int32, @layout_dot.DotLayoutEdge] = Map([])
     for edge_layout in layout.edges {
       layout_edge_by_id[edge_layout.edge.id()] = edge_layout
     }
     let written_nodes : Map[String, Bool] = Map([])
-    let written_edges : Map[Int, Bool] = Map([])
+    let written_edges : Map[Int32, Bool] = Map([])
     for node in root_nodes {
       let node_name = node.name()
       if written_nodes.get(node_name) != Some(true) &&

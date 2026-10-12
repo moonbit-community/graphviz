@@ -22,13 +22,13 @@ fn sample_node_size(
 test "build_x_seed_data uses explicit vnode groups, vnode size overlay, and vnode cluster keys" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
-  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map([])
+  let ordered_groups_with_vnodes : Map[Int32, Array[String]] = Map([])
   ordered_groups_with_vnodes[0] = [cluster_skeleton, "a", "v1"]
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["v1"] = 0
 
@@ -101,10 +101,10 @@ test "build_x_seed_data uses explicit vnode groups, vnode size overlay, and vnod
 test "build_x_seed_data keeps explicit cluster skeletons when cluster cleanup is disabled" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
-  let ordered_groups_with_vnodes : Map[Int, Array[String]] = Map([])
+  let ordered_groups_with_vnodes : Map[Int32, Array[String]] = Map([])
   ordered_groups_with_vnodes[0] = [cluster_skeleton, "a", "v1"]
 
   let cluster_keys : Map[String, String] = Map([])
@@ -165,7 +165,7 @@ test "build_x_seed_data keeps explicit cluster skeletons when cluster cleanup is
 test "build_x_seed_data keeps base groups and sizes when vnode xpos mode is off" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a"]
 
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])

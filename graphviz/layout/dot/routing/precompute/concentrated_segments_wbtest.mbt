@@ -50,7 +50,7 @@ test "concentrated entries compare inherited ports before installation identity"
     segment: { tail: "_mbt_edge_vn_0_1", head: "b", vnodes: [], },
     ports: (None, Some({ x: 0.0, y: 0.0, })),
   }
-  let ranks : Map[String, Int] = { "a": 0, "b": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 2 }
   let positions : Map[String, @geom.Point] = {
     "a": { x: 0.0, y: 100.0, },
     "b": { x: 50.0, y: 0.0, },

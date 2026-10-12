@@ -40,9 +40,9 @@ fn assert_snapshot_entries_eq(
 
 ///|
 fn make_snapshot_penalty_lookup(
-  entries : Array[(@cgraph.Edge, Int)],
-) -> Map[Int, Int] {
-  let penalties : Map[Int, Int] = Map([])
+  entries : Array[(@cgraph.Edge, Int32)],
+) -> Map[Int32, Int32] {
+  let penalties : Map[Int32, Int32] = Map([])
   for pair in entries {
     let (edge, penalty) = pair
     penalties[edge.id()] = penalty
@@ -196,8 +196,8 @@ test "build_root_mincross_input_snapshot clones overlays and coalesces duplicate
   let ac = graph.edge(a, c)
   let penalties = make_snapshot_penalty_lookup([(ab1, 2), (ab2, 3), (ac, 5)])
 
-  let rank_keys : Array[Int] = [0, 1]
-  let groups : Map[Int, Array[String]] = Map([])
+  let rank_keys : Array[Int32] = [0, 1]
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "cluster_skel"]
   groups[1] = ["b", "c"]
   let cluster_keys : Map[String, String] = Map([])

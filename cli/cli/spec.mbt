@@ -76,7 +76,7 @@ pub(all) struct CliJob {
   node_attrs : Array[AttrAssignment]
   edge_attrs : Array[AttrAssignment]
   scale : Double?
-  neato_no_op : Int?
+  neato_no_op : Int32?
   neato_prune : Bool
   verbose : Bool
 } derive(Debug, Eq)
@@ -120,7 +120,7 @@ pub extend CliError with Eq::{not_equal, equal}
 ///|
 /// Resolve default engine from the program name (dot, neato, etc.).
 #declaration_only
-pub fn default_engine(program? : String = "dot") -> LayoutEngine {
+pub fn default_engine(program~ : String = "dot") -> LayoutEngine {
   ...
 }
 
@@ -137,7 +137,7 @@ pub fn default_format(engine : LayoutEngine) -> FormatSpec {
 #declaration_only
 pub fn parse_cli_args(
   args : Array[String],
-  program? : String = "dot",
+  program~ : String = "dot",
 ) -> CliAction raise CliError {
   ...
 }

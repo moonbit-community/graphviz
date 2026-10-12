@@ -408,11 +408,11 @@ fn update_bbox_with_bezier(
 /// grouped for deterministic dot_compute_bb bounds reconstruction.
 pub(all) struct DotBBoxInput {
   nodes_out : Array[DotLayoutNode]
-  all_ranks : Array[Int]
+  all_ranks : Array[Int32]
   sizes : Map[String, NodeSize]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|

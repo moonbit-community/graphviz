@@ -8,12 +8,12 @@
 
 ///|
 priv struct RankBounds {
-  min_rank : Int
-  max_rank : Int
+  min_rank : Int32
+  max_rank : Int32
 }
 
 ///|
-fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
+fn rank_bounds(rank_y : Map[Int32, Double]) -> RankBounds {
   let mut min_rank = 0
   let mut max_rank = 0
   let mut seen = false
@@ -36,12 +36,12 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
 
 ///|
 priv struct SelfEdgeRankSpacingInput {
-  rank : Int
-  rank_y : Map[Int, Double]
+  rank : Int32
+  rank_y : Map[Int32, Double]
   node_y : Double
   node_height : Double
-  min_rank : Int
-  max_rank : Int
+  min_rank : Int32
+  max_rank : Int32
 }
 
 ///|
@@ -83,9 +83,9 @@ fn self_edge_rank_spacing(input : SelfEdgeRankSpacingInput) -> Double {
 }
 
 ///|
-fn convert_sides_to_points(tail_side : Int, head_side : Int) -> Int {
-  let vertices : Array[Int] = [12, 4, 6, 2, 3, 1, 9, 8]
-  let pair_a : Array[Array[Int]] = [
+fn convert_sides_to_points(tail_side : Int32, head_side : Int32) -> Int32 {
+  let vertices : Array[Int32] = [12, 4, 6, 2, 3, 1, 9, 8]
+  let pair_a : Array[Array[Int32]] = [
     [11, 12, 13, 14, 15, 16, 17, 18],
     [21, 22, 23, 24, 25, 26, 27, 28],
     [31, 32, 33, 34, 35, 36, 37, 38],
@@ -122,7 +122,7 @@ priv struct TopSelfEdgeRoutesInput {
   base0 : EdgeRouteBase
   nodesep_pt : Double
   sizey_param : Double
-  point_pair : Int
+  point_pair : Int32
   self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
 }
 
@@ -197,7 +197,7 @@ priv struct BottomSelfEdgeRoutesInput {
   base0 : EdgeRouteBase
   nodesep_pt : Double
   sizey_param : Double
-  point_pair : Int
+  point_pair : Int32
   self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
 }
 
@@ -257,10 +257,10 @@ fn self_edge_routes_bottom(
 
 ///|
 fn resolve_self_edge_port_side(
-  port_side : Int,
+  port_side : Int32,
   port : @cgraph.Port?,
-  all_sides : Int,
-) -> Int {
+  all_sides : Int32,
+) -> Int32 {
   if port_side != 0 {
     return port_side
   }
@@ -289,9 +289,9 @@ priv struct HorizontalSelfEdgeRoutesInput {
   np : @geom.Point
   tp : @geom.Point
   hp : @geom.Point
-  point_pair : Int
-  flip_pair_a : Int
-  flip_pair_b : Int
+  point_pair : Int32
+  flip_pair_a : Int32
+  flip_pair_b : Int32
   side_width : Double
   to_right : Bool
   self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
@@ -373,7 +373,7 @@ priv struct BuildSelfEdgeRoutesInput {
   edges : Array[@cgraph.Edge]
   bases : Array[EdgeRouteBase]
   nodesep_pt : Double
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
   self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
 }

@@ -28,8 +28,8 @@ pub(all) struct XStageInput {
 /// y/output inputs derived from flat-label augmentation grouped together.
 pub(all) struct XStageOutput {
   use_vnodes_for_xpos : Bool
-  x_groups : Map[Int, Array[String]]
-  flat_label_ranks : Map[String, Int]
+  x_groups : Map[Int32, Array[String]]
+  flat_label_ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
   x_positions : Map[String, Double]
 }
@@ -49,9 +49,9 @@ pub struct PositionModeFlags {
 pub(all) struct PositionModeFlagSources {
   has_edge_labels : Bool
   has_port_edges : Bool
-  vnode_count : Int
-  max_xpos_vnodes : Int
-  max_xpos_reorder_vnodes : Int
+  vnode_count : Int32
+  max_xpos_vnodes : Int32
+  max_xpos_reorder_vnodes : Int32
   rankdir : @rankdir.RankDir
 }
 
@@ -76,10 +76,10 @@ pub fn build_position_mode_flags(
 priv struct XWithFlatLabelData {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_cluster_keys : Map[String, String]
   flat_label_edges : Array[ConstraintEdge]
-  flat_label_ranks : Map[String, Int]
+  flat_label_ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -92,12 +92,12 @@ fn build_position_edge_out_order(
   nodes : Array[@cgraph.Node],
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> Map[String, Array[Int]] {
-  let node_index : Map[String, Int] = Map([])
+) -> Map[String, Array[Int32]] {
+  let node_index : Map[String, Int32] = Map([])
   for i in 0..<nodes.length() {
     node_index[nodes[i].name()] = i
   }
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   for edge_idx in 0..<edge_tail.length() {
     let tail = edge_tail[edge_idx]
     match edge_out_order.get(tail) {
@@ -315,16 +315,16 @@ fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
 ///|
 /// X-stage owner keeps vnode thresholds and x-constraint wiring together so
 /// the root positioning package stays focused on cross-stage orchestration.
-const MAX_XPOS_VNODES : Int = 100000
+const MAX_XPOS_VNODES : Int32 = 100000
 
 ///|
-const MAX_XPOS_REORDER_VNODES : Int = 5000
+const MAX_XPOS_REORDER_VNODES : Int32 = 5000
 
 ///|
 const CLUSTER_MARGIN_PT : Double = 8.0
 
 ///|
-const ROOT_COMPRESS_WEIGHT : Int = 1000
+const ROOT_COMPRESS_WEIGHT : Int32 = 1000
 
 ///|
 fn resolve_x_simplex_root_context(

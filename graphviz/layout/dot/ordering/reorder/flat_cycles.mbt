@@ -6,13 +6,13 @@
 // mincross.c flat_search: a back edge always contributes the reversed matrix
 // entry, but only an ordinary edge is reinserted into the flat graph.
 fn break_flat_cycles(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   constraints : Map[String, Bool],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edges? : Array[@cgraph.Edge] = [],
+  edges~ : Array[@cgraph.Edge] = [],
 ) -> (Map[String, Bool], Map[String, Bool]) {
   let topology : Map[String, Bool] = Map([])
   let matrix : Map[String, Bool] = Map([])
@@ -69,7 +69,7 @@ fn break_flat_cycles(
   for rank in rank_keys {
     for start in groups.get(rank).unwrap_or([]) {
       guard marked.get(start) != Some(true) else { continue }
-      let stack : Array[(String, Int)] = [(start, 0)]
+      let stack : Array[(String, Int32)] = [(start, 0)]
       marked[start] = true
       on_stack[start] = true
       while stack.length() > 0 {

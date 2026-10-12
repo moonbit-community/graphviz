@@ -27,12 +27,12 @@ fn build_long_edge_rank_heights_input(
     edge.set_attr("label", "mid")
   }
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 1
   ranks["c"] = 2
 
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a"]
   groups[1] = ["b"]
   groups[2] = ["c"]

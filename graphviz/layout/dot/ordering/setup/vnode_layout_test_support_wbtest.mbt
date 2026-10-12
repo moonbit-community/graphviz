@@ -5,7 +5,7 @@
 ///|
 fn build_edge_vnodes_for_test(
   graph : @cgraph.Graph,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   nodesep_pt : Double,
   rankdir : @rankdir.RankDir,
 ) -> EdgeVnodeInfo {

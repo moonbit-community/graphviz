@@ -20,7 +20,7 @@ pub fn build_path_adjacency(
   edge_vnodes : Map[String, Array[String]],
   edge_tail : Array[String],
   edge_head : Array[String],
-  ranks? : Map[String, Int] = {},
+  ranks~ : Map[String, Int32] = {},
 ) -> PathAdjacency {
   let out_edges : Map[String, Array[String]] = Map([])
   let in_edges : Map[String, Array[String]] = Map([])
@@ -110,10 +110,10 @@ pub(all) struct PathplanBounds {
 fn compute_horizontal_bounds(
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> PathplanBounds {
-  let mut min_rank : Int? = None
-  let mut max_rank : Int? = None
+  let mut min_rank : Int32? = None
+  let mut max_rank : Int32? = None
   for rank, _ in x_groups {
     match min_rank {
       Some(value) => if rank < value { min_rank = Some(rank) }
@@ -179,7 +179,7 @@ pub fn pathplan_bounds(
   vnode_positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> PathplanBounds {
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, 0.0)
@@ -189,7 +189,7 @@ pub fn pathplan_bounds(
 ///|
 fn edge_endpoints_at(
   edge : @cgraph.Edge,
-  edge_idx : Int,
+  edge_idx : Int32,
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {

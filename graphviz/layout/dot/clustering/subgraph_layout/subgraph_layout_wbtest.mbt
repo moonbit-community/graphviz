@@ -16,7 +16,7 @@ fn cluster_test_node_layout(
 fn cluster_test_layout_tree(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
-  subgraphs? : Array[LayoutTree] = [],
+  subgraphs~ : Array[LayoutTree] = [],
 ) -> LayoutTree {
   { graph, bbox, label_pos: None, nodes: [], edges: [], subgraphs, }
 }
@@ -75,13 +75,13 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   ignore(a)
 
   let nodes_out = [cluster_test_node_layout(a, { x: 10.0, y: 20.0, }, 1.0, 1.0)]
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
-  let rank_y : Map[Int, Double] = Map([])
+  let rank_y : Map[Int32, Double] = Map([])
   rank_y[1] = 100.0
-  let rank_ht1 : Map[Int, Double] = Map([])
+  let rank_ht1 : Map[Int32, Double] = Map([])
   rank_ht1[1] = 5.0
-  let rank_ht2 : Map[Int, Double] = Map([])
+  let rank_ht2 : Map[Int32, Double] = Map([])
   rank_ht2[1] = 7.0
   let cluster_ln_x : Map[String, Double] = Map([])
   cluster_ln_x["cluster_0"] = 2.0
@@ -136,10 +136,10 @@ test "compute_cluster_route_bboxes collects nested cluster bounds from layout_su
     cluster_test_node_layout(a, { x: 10.0, y: 20.0, }, 1.0, 1.0),
     cluster_test_node_layout(b, { x: 30.0, y: 40.0, }, 1.0, 1.0),
   ]
-  let ranks : Map[String, Int] = { "a": 1, "b": 2 }
-  let rank_y : Map[Int, Double] = { 1: 100.0, 2: 200.0 }
-  let rank_ht1 : Map[Int, Double] = { 1: 5.0, 2: 7.0 }
-  let rank_ht2 : Map[Int, Double] = { 1: 6.0, 2: 8.0 }
+  let ranks : Map[String, Int32] = { "a": 1, "b": 2 }
+  let rank_y : Map[Int32, Double] = { 1: 100.0, 2: 200.0 }
+  let rank_ht1 : Map[Int32, Double] = { 1: 5.0, 2: 7.0 }
+  let rank_ht2 : Map[Int32, Double] = { 1: 6.0, 2: 8.0 }
   let cluster_ln_x : Map[String, Double] = {
     "cluster_0": 2.0,
     "cluster_1": 25.0,

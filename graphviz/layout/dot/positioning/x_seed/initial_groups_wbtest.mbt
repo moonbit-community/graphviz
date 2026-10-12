@@ -6,15 +6,15 @@
 test "build_initial_x_groups derives vnode placement from order keys and strips cluster skeletons" {
   let cluster_skeleton = @cluster_identity.cluster_skeleton_name("cluster_0", 0)
 
-  let ordered_groups : Map[Int, Array[String]] = Map([])
+  let ordered_groups : Map[Int32, Array[String]] = Map([])
   ordered_groups[0] = [cluster_skeleton, "a", "b"]
 
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   order_index[cluster_skeleton] = 0
   order_index["a"] = 1
   order_index["b"] = 2
 
-  let vnodes_by_rank : Map[Int, Array[String]] = Map([])
+  let vnodes_by_rank : Map[Int32, Array[String]] = Map([])
   vnodes_by_rank[0] = ["v_left", "v_right"]
 
   let vnode_order_keys : Map[String, Double] = Map([])

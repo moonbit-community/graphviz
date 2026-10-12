@@ -57,7 +57,7 @@ test "pathscross coalesces duplicate virtual neighbors" {
     "candidate": ["other", "other"],
     "current": ["next", "extra"],
   }
-  let order_index : Map[String, Int] = {
+  let order_index : Map[String, Int32] = {
     "candidate": 0,
     "current": 1,
     "next": 0,
@@ -94,7 +94,7 @@ test "pathplan_bounds merges vnode positions and expands each rank by route widt
   let vnode_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   vnode_sizes["v"] = @node_primitives.vnode_size_from_widths(3.0, 7.0)
 
-  let x_groups : Map[Int, Array[String]] = Map([])
+  let x_groups : Map[Int32, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   x_groups[1] = ["v"]
 

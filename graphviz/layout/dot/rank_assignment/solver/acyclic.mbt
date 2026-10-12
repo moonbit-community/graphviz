@@ -7,7 +7,7 @@
 
 ///|
 /// Graphviz parity: adjacency removal uses zapinlist (swap with last), not stable delete.
-fn remove_edge_at(list : Array[Int], idx : Int) -> Unit {
+fn remove_edge_at(list : Array[Int32], idx : Int32) -> Unit {
   let last = list.length() - 1
   if idx < 0 || idx > last {
     return ()
@@ -19,7 +19,7 @@ fn remove_edge_at(list : Array[Int], idx : Int) -> Unit {
 }
 
 ///|
-fn remove_edge_value(list : Array[Int], value : Int) -> Unit {
+fn remove_edge_value(list : Array[Int32], value : Int32) -> Unit {
   let mut i = 0
   while i < list.length() {
     if list[i] == value {
@@ -37,12 +37,12 @@ fn edge_pair_key(tail : String, head : String) -> String {
 
 ///|
 fn edge_pair_lookup(
-  edge_by_pair : Map[String, Int],
+  edge_by_pair : Map[String, Int32],
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_active : Array[Bool],
   key : String,
-) -> Int? {
+) -> Int32? {
   match edge_by_pair.get(key) {
     Some(idx) =>
       if idx >= 0 &&
@@ -61,11 +61,11 @@ fn edge_pair_lookup(
 
 ///|
 fn acyclic_dfs(
-  idx : Int,
-  node_index : Map[String, Int],
-  out_edges : Array[Array[Int]],
-  out_edges_all : Array[Array[Int]],
-  in_edges_all : Array[Array[Int]],
+  idx : Int32,
+  node_index : Map[String, Int32],
+  out_edges : Array[Array[Int32]],
+  out_edges_all : Array[Array[Int32]],
+  in_edges_all : Array[Array[Int32]],
   edge_is_active : Array[Bool],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -76,7 +76,7 @@ fn acyclic_dfs(
   if marked[idx] {
     return ()
   }
-  let stack : Array[(Int, Int)] = []
+  let stack : Array[(Int32, Int32)] = []
   marked[idx] = true
   onstack[idx] = true
   stack.push((idx, 0))
@@ -135,14 +135,14 @@ fn acyclic_dfs(
 /// merging parallel edges and reverse-edge merge_oneway behavior.
 /// Do not change behavior without updating fixtures/tests.
 fn acyclic_dfs_fast(
-  idx : Int,
-  rep_index : Map[String, Int],
-  out_edges : Array[Array[Int]],
+  idx : Int32,
+  rep_index : Map[String, Int32],
+  out_edges : Array[Array[Int32]],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_members : Array[Array[Int]],
+  edge_members : Array[Array[Int32]],
   edge_active : Array[Bool],
-  edge_by_pair : Map[String, Int],
+  edge_by_pair : Map[String, Int32],
   edge_reversed : Array[Bool],
   marked : Array[Bool],
   onstack : Array[Bool],
@@ -150,7 +150,7 @@ fn acyclic_dfs_fast(
   if marked[idx] {
     return ()
   }
-  let stack : Array[(Int, Int)] = []
+  let stack : Array[(Int32, Int32)] = []
   marked[idx] = true
   onstack[idx] = true
   stack.push((idx, 0))
@@ -232,8 +232,8 @@ pub struct AcyclicDirectionsWithOrder {
   tail : Array[String]
   head : Array[String]
   reversed : Array[Bool]
-  out_edges : Array[Array[Int]]
-  in_edges : Array[Array[Int]]
+  out_edges : Array[Array[Int32]]
+  in_edges : Array[Array[Int32]]
 }
 
 ///|
@@ -243,7 +243,7 @@ pub fn acyclic_edge_directions_with_order(
   edges : Array[@cgraph.Edge],
 ) -> AcyclicDirectionsWithOrder {
   let _ = graph
-  let node_index : Map[String, Int] = Map([])
+  let node_index : Map[String, Int32] = Map([])
   let node_names : Array[String] = []
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
@@ -267,8 +267,8 @@ pub fn acyclic_edge_directions_with_order(
   let edge_head_orig : Array[String] = []
   let edge_reversed : Array[Bool] = []
   let edge_is_active : Array[Bool] = []
-  let out_edges_all_orig : Array[Array[Int]] = []
-  let in_edges_all_orig : Array[Array[Int]] = []
+  let out_edges_all_orig : Array[Array[Int32]] = []
+  let in_edges_all_orig : Array[Array[Int32]] = []
   for _ in 0..<nodes.length() {
     out_edges_all_orig.push([])
     in_edges_all_orig.push([])
@@ -295,7 +295,7 @@ pub fn acyclic_edge_directions_with_order(
   // (creation order), then edge AGSEQ; agfstin/agnxtin orders by tail
   // node AGSEQ, then edge AGSEQ (cgraph agedgeseqcmpf).
   // Do not change behavior without updating fixtures/tests.
-  let sort_out_list = (list : Array[Int]) => {
+  let sort_out_list = (list : Array[Int32]) => {
     if list.length() > 1 {
       list.sort_by((a, b) => {
         let head_a = edge_head_orig[a]
@@ -322,7 +322,7 @@ pub fn acyclic_edge_directions_with_order(
       })
     }
   }
-  let sort_in_list = (list : Array[Int]) => {
+  let sort_in_list = (list : Array[Int32]) => {
     if list.length() > 1 {
       list.sort_by((a, b) => {
         let tail_a = edge_tail_orig[a]
@@ -354,16 +354,16 @@ pub fn acyclic_edge_directions_with_order(
     sort_in_list(in_edges_all_orig[i])
   }
   // Build fast-graph edges (unique directed pairs) in agfstout order.
-  let rep_index : Map[String, Int] = Map([])
+  let rep_index : Map[String, Int32] = Map([])
   for i in 0..<rep_names.length() {
     rep_index[rep_names[i]] = i
   }
   let fast_edge_tail : Array[String] = []
   let fast_edge_head : Array[String] = []
-  let fast_edge_members : Array[Array[Int]] = []
+  let fast_edge_members : Array[Array[Int32]] = []
   let fast_edge_active : Array[Bool] = []
-  let fast_edge_by_pair : Map[String, Int] = Map([])
-  let fast_out_edges : Array[Array[Int]] = []
+  let fast_edge_by_pair : Map[String, Int32] = Map([])
+  let fast_out_edges : Array[Array[Int32]] = []
   for _ in 0..<rep_names.length() {
     fast_out_edges.push([])
   }
@@ -473,16 +473,16 @@ pub fn acyclic_edge_directions_for_names(
   edge_head : Array[String],
   edge_is_active : Array[Bool],
 ) -> AcyclicNameDirections {
-  let node_index : Map[String, Int] = Map([])
+  let node_index : Map[String, Int32] = Map([])
   for i in 0..<node_names.length() {
     node_index[node_names[i]] = i
   }
   let tail = edge_tail.copy()
   let head = edge_head.copy()
   let edge_reversed : Array[Bool] = []
-  let out_edges : Array[Array[Int]] = []
-  let out_edges_all : Array[Array[Int]] = []
-  let in_edges_all : Array[Array[Int]] = []
+  let out_edges : Array[Array[Int32]] = []
+  let out_edges_all : Array[Array[Int32]] = []
+  let in_edges_all : Array[Array[Int32]] = []
   for _ in 0..<node_names.length() {
     out_edges.push([])
     out_edges_all.push([])

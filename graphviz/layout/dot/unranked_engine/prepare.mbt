@@ -9,7 +9,7 @@
 /// package-local owner files.
 fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
   let nodes = graph.nodes()
-  let degree : Map[String, Int] = Map([])
+  let degree : Map[String, Int32] = Map([])
   let neighbors : Map[String, Array[String]] = Map([])
   for node in nodes {
     let name = node.name()
@@ -270,7 +270,7 @@ pub fn prepare_neato_layout_tree(
 /// unranked engine package before fixed-position layout-tree assembly.
 pub fn prepare_noop_layout_tree(
   graph : @cgraph.Graph,
-  no_op_level : Int,
+  no_op_level : Int32,
   scale : Double,
   prune : Bool,
 ) -> Result[LayoutTree, String] {

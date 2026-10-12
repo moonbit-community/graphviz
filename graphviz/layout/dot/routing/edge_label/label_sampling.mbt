@@ -89,7 +89,7 @@ pub fn bezier_point_fma(
 ///|
 pub fn sample_spline_points(
   points : Array[@geom.Point],
-  steps : Int,
+  steps : Int32,
 ) -> Array[@geom.Point] {
   let samples : Array[@geom.Point] = []
   if points.length() == 0 || steps <= 0 {

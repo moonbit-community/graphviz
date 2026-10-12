@@ -4,7 +4,7 @@
 
 ///|
 test "build_remincross_materialized_arrays replays materialized tail buckets in rem_nlist order" {
-  let rem_groups : Map[Int, Array[String]] = Map([])
+  let rem_groups : Map[Int32, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = ["v1", "b"]
   let rem_nodes = @order_graph.build_order_nodes_from_groups(rem_groups, [0, 1])
@@ -70,7 +70,7 @@ test "build_remincross_materialized_inputs assembles rem nodes edges sizes clust
   let b = graph.node("b")
   let edge_ab = graph.edge(a, b)
 
-  let rem_groups : Map[Int, Array[String]] = Map([])
+  let rem_groups : Map[Int32, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = ["b"]
   let order_sizes : Map[String, @node_primitives.NodeSize] = Map([])
@@ -140,7 +140,7 @@ test "build_remincross_materialized_edges coalesces duplicate chains, applies vn
   edge_vnodes[@edge_identity.edge_vnode_key(edge_1)] = [shared_vnode]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_2)] = [shared_vnode]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["a"] = [0, 1]
 
   let intercluster_keys : Map[String, String] = Map([])
@@ -209,7 +209,7 @@ test "build_remincross_materialized_edges replays edge creation in creation-orde
   edge_vnodes[@edge_identity.edge_vnode_key(edge_ab)] = [vnode_ab]
   edge_vnodes[@edge_identity.edge_vnode_key(edge_cd)] = [vnode_cd]
 
-  let edges_by_tail : Map[String, Array[Int]] = Map([])
+  let edges_by_tail : Map[String, Array[Int32]] = Map([])
   edges_by_tail["c"] = [1]
   edges_by_tail["a"] = [0]
 
@@ -256,7 +256,7 @@ test "build_remincross_materialized_inputs keeps clustered vnode sizes and root-
   let edge_ab = graph.edge(a, b)
 
   let shared_vnode = "\{@edge_identity.EDGE_VNODE_PREFIX}shared_clustered_0"
-  let rem_groups : Map[Int, Array[String]] = Map([])
+  let rem_groups : Map[Int32, Array[String]] = Map([])
   rem_groups[0] = ["a"]
   rem_groups[1] = [shared_vnode]
   rem_groups[2] = ["b"]

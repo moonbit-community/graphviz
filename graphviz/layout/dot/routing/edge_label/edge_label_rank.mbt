@@ -4,8 +4,8 @@
 
 ///|
 pub struct EdgeLabelRankInfo {
-  label_rank : Int
-  span : Int
+  label_rank : Int32
+  span : Int32
 }
 
 ///|
@@ -14,7 +14,7 @@ pub struct EdgeLabelRankInfo {
 /// Do not change behavior without updating fixtures/tests.
 pub fn edge_label_rank_info(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   mid_label_width_pt : Double,
 ) -> EdgeLabelRankInfo? {
   if mid_label_width_pt <= 0.0 {
@@ -37,8 +37,8 @@ pub fn edge_label_rank_info(
 ///|
 pub fn edge_label_rank_y(
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
+  ranks : Map[String, Int32],
+  rank_y : Map[Int32, Double],
   mid_label_width_pt : Double,
 ) -> Double? {
   match edge_label_rank_info(edge, ranks, mid_label_width_pt) {
@@ -53,7 +53,7 @@ pub fn edge_label_rank_y(
 /// Do not change behavior without updating fixtures/tests.
 pub fn edge_label_rank_x(
   edge : @cgraph.Edge,
-  label_rank : Int,
+  label_rank : Int32,
   vnode_info : EdgeVnodeInfo,
   vnode_positions : Map[String, @geom.Point],
 ) -> Double? {

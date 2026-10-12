@@ -7,7 +7,7 @@
 /// integrated fixture. Keep exact owner-local coverage so the fixture replay
 /// can focus on denser integrated reorder cases.
 fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
-  let input_ranks : Array[Array[Int]] = [
+  let input_ranks : Array[Array[Int32]] = [
     [3],
     [0, 4, 5, 39, 40],
     [1, 6, 16, 17, 41],
@@ -19,7 +19,7 @@ fn wide_normal_tree_rank_reorder_case() -> (MincrossInput, MincrossOutput) {
     [32, 34, 35],
     [33, 36],
   ]
-  let output_ranks : Array[Array[Int]] = [
+  let output_ranks : Array[Array[Int32]] = [
     [3],
     [0, 4, 5, 39, 40],
     [1, 6, 16, 17, 41],

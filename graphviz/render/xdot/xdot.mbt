@@ -53,7 +53,7 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
-fn parse_int(value : String, fallback : Int) -> Int {
+fn parse_int(value : String, fallback : Int32) -> Int32 {
   parse_double(value, fallback.to_double()).round().to_int()
 }
 
@@ -348,7 +348,7 @@ priv struct ArrowFlags {
 }
 
 ///|
-fn pow10_bigint(exp : Int) -> @bigint.BigInt {
+fn pow10_bigint(exp : Int32) -> @bigint.BigInt {
   let mut out = @bigint.BigInt::from_int(1)
   for _ in 0..<exp {
     out = out * @bigint.BigInt::from_int(10)
@@ -359,7 +359,7 @@ fn pow10_bigint(exp : Int) -> @bigint.BigInt {
 ///|
 fn round_abs_scaled_half_even(
   abs_value : Double,
-  decimals : Int,
+  decimals : Int32,
 ) -> @bigint.BigInt {
   if abs_value == 0.0 {
     return @bigint.BigInt::from_int(0)
@@ -402,7 +402,7 @@ fn round_abs_scaled_half_even(
 ///|
 fn format_scaled_integer(
   scaled_abs : @bigint.BigInt,
-  decimals : Int,
+  decimals : Int32,
   negative : Bool,
   trim_trailing_zeros : Bool,
 ) -> String {
@@ -439,7 +439,7 @@ fn format_scaled_integer(
 }
 
 ///|
-fn format_double_with_decimals(value : Double, decimals : Int) -> String {
+fn format_double_with_decimals(value : Double, decimals : Int32) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
   }
@@ -451,7 +451,7 @@ fn format_double_with_decimals(value : Double, decimals : Int) -> String {
 }
 
 ///|
-fn format_double_fixed(value : Double, decimals : Int) -> String {
+fn format_double_fixed(value : Double, decimals : Int32) -> String {
   if Double::is_nan(value) || Double::is_inf(value) {
     return value.to_string()
   }
@@ -463,7 +463,7 @@ fn format_double_fixed(value : Double, decimals : Int) -> String {
 }
 
 ///|
-fn format_double_significant(value : Double, digits : Int) -> String {
+fn format_double_significant(value : Double, digits : Int32) -> String {
   if value == 0.0 {
     return "0"
   }
@@ -529,7 +529,7 @@ fn node_attr(node : @cgraph.Node, name : String) -> String? {
 }
 
 ///|
-fn parse_palette_index(value : String) -> Int? {
+fn parse_palette_index(value : String) -> Int32? {
   let trimmed = value.trim().to_owned()
   if trimmed == "" {
     return None
@@ -595,7 +595,7 @@ fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
 }
 
 ///|
-fn colorscheme_index_color(scheme : String, index : Int) -> String? {
+fn colorscheme_index_color(scheme : String, index : Int32) -> String? {
   match scheme.to_lower() {
     // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
     "rdbu5" =>
@@ -1728,7 +1728,7 @@ fn node_attr_double(
 }
 
 ///|
-fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
+fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int32) -> Int32 {
   match node.get_attr(key) {
     Some(value) => parse_int(value, fallback)
     None => fallback
@@ -1736,7 +1736,7 @@ fn node_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
 }
 
 ///|
-fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
+fn node_peripheries(node : @cgraph.Node, fallback : Int32) -> Int32 {
   let raw = node_attr_int(node, "peripheries", fallback)
   if raw < 1 {
     1
@@ -1748,12 +1748,12 @@ fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
 ///|
 fn polygon_params_with_defaults(
   node : @cgraph.Node,
-  sides : Int,
+  sides : Int32,
   default_orientation : Double,
   default_distortion : Double,
   default_skew : Double,
-  default_peripheries : Int,
-) -> (Int, Double, Double, Double, Int) {
+  default_peripheries : Int32,
+) -> (Int32, Double, Double, Double, Int32) {
   let orientation = node_attr_double(node, "orientation", default_orientation)
   let distortion = node_attr_double(node, "distortion", default_distortion)
   let skew = node_attr_double(node, "skew", default_skew)
@@ -1766,7 +1766,7 @@ fn polygon_params_with_defaults(
 // using sides/orientation/distortion/skew and fit into node bbox.
 fn polygon_vertices_for_rect(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
@@ -1890,7 +1890,7 @@ fn polygon_outline_vertices(
 ///|
 fn polygon_paths_from_base(
   base : Array[@geom.Point],
-  peripheries : Int,
+  peripheries : Int32,
 ) -> Array[Array[@geom.Point]] {
   if base.length() < 3 {
     return []
@@ -1908,7 +1908,7 @@ fn polygon_paths_from_base(
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
@@ -1925,11 +1925,11 @@ fn polygon_vertices_for_size(
 ///|
 fn polygon_outline_vertices_for_rect(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-  peripheries : Int,
+  peripheries : Int32,
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
   let target_w = rect.urx - rect.llx
@@ -2009,7 +2009,7 @@ fn polygon_outline_vertices_for_rect(
 ///|
 fn inner_rect_for_peripheries(
   rect : @geom.Rect,
-  peripheries : Int,
+  peripheries : Int32,
 ) -> @geom.Rect {
   if peripheries <= 1 {
     return rect
@@ -2024,11 +2024,11 @@ fn inner_rect_for_peripheries(
 ///|
 fn polygon_paths_for_shape(
   rect : @geom.Rect,
-  sides : Int,
+  sides : Int32,
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-  peripheries : Int,
+  peripheries : Int32,
 ) -> Array[Array[@geom.Point]] {
   let count = if peripheries < 1 { 1 } else { peripheries }
   let paths : Array[Array[@geom.Point]] = []
@@ -2770,7 +2770,7 @@ fn shape_polygon_paths(
   kind : String,
   rect : @geom.Rect,
 ) -> Array[Array[@geom.Point]]? {
-  let params : (Int, Double, Double, Double, Int)? = match kind {
+  let params : (Int32, Double, Double, Double, Int32)? = match kind {
     "diamond" => Some((4, 45.0, 0.0, 0.0, 1))
     "triangle" => Some(polygon_params_with_defaults(node, 3, 0.0, 0.0, 0.0, 1))
     "invtriangle" =>
@@ -2908,7 +2908,7 @@ fn toggle_record_orientation(
 ///|
 priv struct RecordParser {
   chars : Array[Char]
-  mut index : Int
+  mut index : Int32
 }
 
 ///|
@@ -3753,7 +3753,7 @@ fn html_stroke_table_border_ops(
 }
 
 ///|
-fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
+fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int32 {
   let sides = cell.sides.unwrap_or_default().to_lower()
   if sides == "" {
     return 15
@@ -3775,7 +3775,7 @@ fn html_cell_side_mask(cell : @html_label.HtmlCell) -> Int {
 }
 
 ///|
-fn html_side_points(rect : @geom.Rect, side : Int) -> Array[@geom.Point] {
+fn html_side_points(rect : @geom.Rect, side : Int32) -> Array[@geom.Point] {
   match side {
     0 => [{ x: rect.llx, y: rect.lly, }, { x: rect.urx, y: rect.lly, }]
     1 => [{ x: rect.urx, y: rect.lly, }, { x: rect.urx, y: rect.ury, }]
@@ -3809,7 +3809,7 @@ fn html_stroke_cell_sides_ops(
   }
   let border = border_rect(rect, border_pt)
   let visited : Array[Bool] = [false, false, false, false]
-  let start_order : Array[Int] = [0, 2, 3, 1]
+  let start_order : Array[Int32] = [0, 2, 3, 1]
   for index in 0..<start_order.length() {
     let start = start_order[index]
     let start_bit = 1 << start
@@ -4933,8 +4933,8 @@ fn append_text_label_ops(
   pos : @geom.Point?,
   font : @render.Font,
   pen_color : String,
-  justification_width? : Double? = None,
-  html? : Bool? = None,
+  justification_width~ : Double? = None,
+  html~ : Bool? = None,
 ) -> Unit {
   if text == "" {
     return
@@ -5406,7 +5406,7 @@ fn color_spline_offset_qr(
 ///|
 fn edge_multicolor_spline_points(
   points : Array[@geom.Point],
-  color_count : Int,
+  color_count : Int32,
 ) -> Array[Array[@geom.Point]] {
   if color_count <= 1 {
     return [points]
@@ -5753,19 +5753,19 @@ fn append_double(sb : StringBuilder, value : Double) -> Unit {
 }
 
 ///|
-fn append_int(sb : StringBuilder, value : Int) -> Unit {
+fn append_int(sb : StringBuilder, value : Int32) -> Unit {
   sb.write_char(' ')
   sb.write_string(value.to_string())
 }
 
 ///|
-fn append_uint(sb : StringBuilder, value : UInt) -> Unit {
+fn append_uint(sb : StringBuilder, value : UInt32) -> Unit {
   sb.write_char(' ')
   sb.write_string(value.to_string())
 }
 
 ///|
-fn utf8_byte_length(value : String) -> Int {
+fn utf8_byte_length(value : String) -> Int32 {
   let mut length = 0
   for ch in value {
     let code = ch.to_int()
@@ -6468,7 +6468,7 @@ pub fn encode_xdot_ops(ops : Array[@render.DrawOp]) -> String {
 ///|
 pub fn attach_xdot_attrs(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> Unit {
   attach_xdot_attrs_internal(layout, Map([]), options~)
 }
@@ -6477,7 +6477,7 @@ pub fn attach_xdot_attrs(
 fn attach_xdot_attrs_internal(
   layout : @layout_dot.DotLayoutGraph,
   fixedshape_draw_sizes : Map[String, (Double, Double)],
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> Unit {
   let version = match options.version {
     Some(value) => value
@@ -6567,7 +6567,7 @@ fn attach_xdot_attrs_internal(
 ///|
 pub fn render_xdot(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> String {
   let fixedshape_draw_sizes = capture_fixedshape_draw_sizes(layout.nodes)
   layout.apply()
@@ -6578,7 +6578,7 @@ pub fn render_xdot(
 ///|
 pub fn render_xdot_bytes(
   layout : @layout_dot.DotLayoutGraph,
-  options? : XDotOptions = XDotOptions::default(),
+  options~ : XDotOptions = XDotOptions::default(),
 ) -> Bytes {
   let output = render_xdot(layout, options~)
   encode_xdot_output_bytes(layout.graph, output)

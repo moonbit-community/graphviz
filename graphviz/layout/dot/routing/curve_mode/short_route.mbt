@@ -68,8 +68,8 @@ priv struct FlatDetourCandidateInput {
   is_flat_edge : Bool
   has_explicit_port : Bool
   label_width_pt : Double
-  tail_port_side : Int
-  head_port_side : Int
+  tail_port_side : Int32
+  head_port_side : Int32
   layout_rankdir : RankDir
   route_include_tail : Bool
   route_include_head : Bool
@@ -136,8 +136,8 @@ priv struct ShortRouteDetourContextInput {
   layout_rankdir : RankDir
   has_explicit_port : Bool
   label_width_pt : Double
-  tail_port_side : Int
-  head_port_side : Int
+  tail_port_side : Int32
+  head_port_side : Int32
   route_include_tail : Bool
   route_include_head : Bool
 }
@@ -253,10 +253,10 @@ pub(all) struct ShortRouteBuildContextInput {
   base : EdgeRouteBase
   positions : Map[String, @geom.Point]
   sizes : Map[String, NodeSize]
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
   route_barriers : Array[(@geom.Point, @geom.Point)]
   using_pathplan : Bool

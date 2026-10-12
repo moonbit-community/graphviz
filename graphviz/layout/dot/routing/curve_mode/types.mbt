@@ -24,10 +24,10 @@ type RoutingContext = @precompute.RoutingContext
 type EdgeSplineResult = @routing.EdgeSplineResult
 
 ///|
-const PORT_SIDE_BOTTOM : Int = 1
+const PORT_SIDE_BOTTOM : Int32 = 1
 
 ///|
-const PORT_SIDE_TOP : Int = 4
+const PORT_SIDE_TOP : Int32 = 4
 
 ///|
 fn min_double(a : Double, b : Double) -> Double {

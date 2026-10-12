@@ -216,7 +216,7 @@ fn edge_clip_attr_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
 ///|
 fn edge_render_clip_flags(
   base : EdgeRouteBase,
-  using_pathplan? : Bool = false,
+  using_pathplan~ : Bool = false,
 ) -> EdgeRenderClipFlags {
   let sameport_direct_flags = edge_sameport_direct_flags(
     base.edge,

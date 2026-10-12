@@ -292,7 +292,7 @@ fn port_side_mask_for_self_edge(
   node : @cgraph.Node,
   port : @cgraph.Port?,
   port_maps : Map[String, Map[String, RecordPort]],
-) -> Int {
+) -> Int32 {
   match port {
     None => 0
     Some(value) =>

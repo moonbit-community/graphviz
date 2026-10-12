@@ -30,21 +30,21 @@ priv struct CurveModeSplineBuildResult {
 /// snapshots grouped before guide-point and short-route preparation.
 priv struct CurveModeRouteInput {
   base : EdgeRouteBase
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   path_left_bound : Double
   path_right_bound : Double
   ranksep_pt : Double
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext
   enable_complex_tuning : Bool
@@ -185,7 +185,7 @@ fn curve_mode_result_for_short_route(
 priv struct CurveModeSplineFromPreparedInput {
   base : EdgeRouteBase
   prepared : CurveModeRoutePrep
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   nodesep_pt : Double
   enable_complex_tuning : Bool
 }
@@ -322,22 +322,22 @@ pub fn build_edge_spline(input : EdgeSplineBuildInput) -> EdgeSplineResult {
 /// grouped for one spline-mode dispatch boundary.
 pub(all) struct EdgeSplineBuildInput {
   base : EdgeRouteBase
-  spline_mode : Int
-  ranks : Map[String, Int]
+  spline_mode : Int32
+  ranks : Map[String, Int32]
   sizes : Map[String, NodeSize]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   vnode_info : EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   path_left_bound : Double
   path_right_bound : Double
   ranksep_pt : Double
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : HeadPortMetrics
   routing_context : RoutingContext
   enable_complex_tuning : Bool

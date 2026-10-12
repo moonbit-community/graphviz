@@ -7,10 +7,10 @@ type NodeSize = @node_primitives.NodeSize
 
 ///|
 priv struct RankConstraintLookup {
-  cluster_ids : Array[Int]
+  cluster_ids : Array[Int32]
   skeletons : Array[Bool]
-  name_index : Map[String, Int]
-  flat_left_to_right : Array[Map[Int, Bool]]
+  name_index : Map[String, Int32]
+  flat_left_to_right : Array[Map[Int32, Bool]]
   has_clusters : Bool
   has_flat_constraints : Bool
 }
@@ -23,7 +23,7 @@ priv struct ParsedFlatConstraints {
 
 ///|
 priv struct RankConstraintState {
-  node_indices : Array[Int]
+  node_indices : Array[Int32]
 }
 
 ///|
@@ -63,11 +63,11 @@ fn build_rank_constraint_lookup(
   cluster_skeleton : Map[String, Bool],
   flat_constraints : ParsedFlatConstraints,
 ) -> RankConstraintLookup {
-  let cluster_ids : Array[Int] = []
+  let cluster_ids : Array[Int32] = []
   let skeletons : Array[Bool] = []
-  let name_index : Map[String, Int] = Map([])
-  let flat_left_to_right : Array[Map[Int, Bool]] = []
-  let cluster_id_by_name : Map[String, Int] = Map([])
+  let name_index : Map[String, Int32] = Map([])
+  let flat_left_to_right : Array[Map[Int32, Bool]] = []
+  let cluster_id_by_name : Map[String, Int32] = Map([])
   let build_flat_lookup = flat_constraints.has_enabled_constraints
   let mut has_clusters = false
   let mut next_cluster_id = 1
@@ -130,7 +130,7 @@ fn build_rank_constraint_state(
   names : Array[String],
   constraint_lookup : RankConstraintLookup,
 ) -> RankConstraintState {
-  let node_indices : Array[Int] = []
+  let node_indices : Array[Int32] = []
   if !constraint_lookup.has_flat_constraints {
     for i in 0..<names.length() {
       node_indices.push(i)
@@ -150,8 +150,8 @@ fn build_rank_constraint_state(
 fn rank_left2right_constraint_resolved(
   constraint_lookup : RankConstraintLookup,
   constraint_state : RankConstraintState,
-  left_pos : Int,
-  right_pos : Int,
+  left_pos : Int32,
+  right_pos : Int32,
   remincross_mode : Bool,
 ) -> Bool {
   if !constraint_lookup.has_clusters && !constraint_lookup.has_flat_constraints {
@@ -214,15 +214,15 @@ pub fn order_rank_by_cluster(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
-  node_penalty : Map[String, Int],
+  node_penalty : Map[String, Int32],
   parents_map : Map[String, Array[String]],
   cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  edge_order : Map[String, Int],
-  node_order : Map[String, Int],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
+  edge_order : Map[String, Int32],
+  node_order : Map[String, Int32],
   port_edge_nodes : Map[String, Bool],
-  edge_pair_order : Map[String, Int],
+  edge_pair_order : Map[String, Int32],
   port_order_positions : Map[String, Double],
   reverse_ties : Bool,
 ) -> Array[String] {
@@ -231,8 +231,8 @@ pub fn order_rank_by_cluster(
   }
   let group_keys : Array[String] = []
   let group_nodes : Array[Array[String]] = []
-  let group_order : Array[Int] = []
-  let group_index : Map[String, Int] = Map([])
+  let group_order : Array[Int32] = []
+  let group_index : Map[String, Int32] = Map([])
   let mut next_index = 0
   for name in names {
     let cluster_key = match cluster_keys.get(name) {
@@ -255,7 +255,7 @@ pub fn order_rank_by_cluster(
     group_nodes[idx].push(name)
   }
   let group_values : Array[Double] = []
-  let group_secondary : Array[Int] = []
+  let group_secondary : Array[Int32] = []
   for i in 0..<group_nodes.length() {
     let values : Array[Double] = []
     let mut secondary_total = 0
@@ -280,7 +280,7 @@ pub fn order_rank_by_cluster(
     group_values.push(value)
     group_secondary.push(secondary_total)
   }
-  let order : Array[Int] = []
+  let order : Array[Int32] = []
   for i in 0..<group_nodes.length() {
     order.push(i)
   }
@@ -343,7 +343,7 @@ pub fn reorder_by_medians(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-  remincross_mode? : Bool = false,
+  remincross_mode~ : Bool = false,
 ) -> Array[String] {
   let parsed_flat_constraints = build_parsed_flat_constraints(flat_constraints)
   let constraint_lookup = build_rank_constraint_lookup(
@@ -366,7 +366,7 @@ fn reorder_by_medians_with_lookup(
   reverse : Bool,
   hasfixed : Bool,
   constraint_lookup : RankConstraintLookup,
-  remincross_mode? : Bool = false,
+  remincross_mode~ : Bool = false,
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
@@ -492,7 +492,7 @@ fn reorder_by_medians_constrained(
   hasfixed : Bool,
   constraint_lookup : RankConstraintLookup,
   constraint_state : RankConstraintState,
-  remincross_mode? : Bool = false,
+  remincross_mode~ : Bool = false,
 ) -> Array[String] {
   // Hot path: loop guards and stored node indices keep accesses in bounds.
   let has_values = desired_state.has_values
@@ -665,12 +665,12 @@ pub fn compute_scaled_medians(
 
 ///|
 fn transpose_rank(
-  rank : Int,
+  rank : Int32,
   names : Array[String],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
-  ranks : Map[String, Int],
-  order : Map[String, Int],
+  ranks : Map[String, Int32],
+  order : Map[String, Int32],
   reverse : Bool,
 ) -> Bool {
   let mut changed = false
@@ -708,13 +708,13 @@ fn transpose_rank(
 
 ///|
 pub fn transpose_rank_groups_limited(
-  rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  ordered : Map[Int32, Array[String]],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   reverse : Bool,
-  max_passes : Int,
+  max_passes : Int32,
 ) -> Bool {
   let mut changed_any = false
   let mut changed = true
@@ -746,21 +746,21 @@ pub fn transpose_rank_groups_limited(
 
 ///|
 priv struct PortTiebreakOrders {
-  in_orders : Array[Array[(Int, Double, Int)]]
-  out_orders : Array[Array[(Int, Double, Int)]]
+  in_orders : Array[Array[(Int32, Double, Int32)]]
+  out_orders : Array[Array[(Int32, Double, Int32)]]
 }
 
 ///|
 priv struct RankIncidentEdgeLists {
-  in_edges : Array[Array[Int]]
-  out_edges : Array[Array[Int]]
+  in_edges : Array[Array[Int32]]
+  out_edges : Array[Array[Int32]]
 }
 
 ///|
 priv struct PortIncidentEdge {
-  edge_idx : Int
+  edge_idx : Int32
   port_x : Double
-  penalty : Int
+  penalty : Int32
 }
 
 ///|
@@ -771,28 +771,28 @@ priv struct RankPortIncidentEdgeLists {
 
 ///|
 priv struct ActiveIncidentEdgeMaps {
-  in_edges : Map[String, Array[Int]]
-  out_edges : Map[String, Array[Int]]
+  in_edges : Map[String, Array[Int32]]
+  out_edges : Map[String, Array[Int32]]
 }
 
 ///|
 priv struct EdgeEndpointOrders {
-  tail_orders : Array[Int]
-  head_orders : Array[Int]
+  tail_orders : Array[Int32]
+  head_orders : Array[Int32]
 }
 
 ///|
 priv struct CrossPairCounts {
-  forward : Int
-  reverse : Int
+  forward : Int32
+  reverse : Int32
 }
 
 ///|
 fn resolve_port_tiebreak_order(
   name : String,
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
-) -> Int {
+  order : Map[String, Int32],
+  fixed_order : Map[String, Int32],
+) -> Int32 {
   match order.get(name) {
     Some(value) => value
     None => fixed_order.get(name).unwrap_or_default()
@@ -803,14 +803,14 @@ fn resolve_port_tiebreak_order(
 fn build_edge_endpoint_orders(
   edge_tail : Array[String],
   edge_head : Array[String],
-  order : Map[String, Int],
-  fixed_order : Map[String, Int],
+  order : Map[String, Int32],
+  fixed_order : Map[String, Int32],
 ) -> EdgeEndpointOrders {
-  let tail_orders : Array[Int] = []
+  let tail_orders : Array[Int32] = []
   for tail in edge_tail {
     tail_orders.push(resolve_port_tiebreak_order(tail, order, fixed_order))
   }
-  let head_orders : Array[Int] = []
+  let head_orders : Array[Int32] = []
   for head in edge_head {
     head_orders.push(resolve_port_tiebreak_order(head, order, fixed_order))
   }
@@ -819,14 +819,14 @@ fn build_edge_endpoint_orders(
 
 ///|
 fn build_active_incident_edge_maps(
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
-  edge_penalty : Array[Int],
+  edge_in : Map[String, Array[Int32]],
+  edge_out : Map[String, Array[Int32]],
+  edge_penalty : Array[Int32],
 ) -> ActiveIncidentEdgeMaps {
-  let active_in_edges : Map[String, Array[Int]] = Map([])
-  let active_out_edges : Map[String, Array[Int]] = Map([])
+  let active_in_edges : Map[String, Array[Int32]] = Map([])
+  let active_out_edges : Map[String, Array[Int32]] = Map([])
   for name, incident in edge_in {
-    let filtered : Array[Int] = []
+    let filtered : Array[Int32] = []
     for edge_idx in incident {
       if edge_penalty[edge_idx] > 0 {
         filtered.push(edge_idx)
@@ -835,7 +835,7 @@ fn build_active_incident_edge_maps(
     active_in_edges[name] = filtered
   }
   for name, incident in edge_out {
-    let filtered : Array[Int] = []
+    let filtered : Array[Int32] = []
     for edge_idx in incident {
       if edge_penalty[edge_idx] > 0 {
         filtered.push(edge_idx)
@@ -851,8 +851,8 @@ fn build_rank_incident_edge_lists(
   names : Array[String],
   active_incident_edges : ActiveIncidentEdgeMaps,
 ) -> RankIncidentEdgeLists {
-  let in_edges : Array[Array[Int]] = []
-  let out_edges : Array[Array[Int]] = []
+  let in_edges : Array[Array[Int32]] = []
+  let out_edges : Array[Array[Int32]] = []
   for name in names {
     in_edges.push(active_incident_edges.in_edges.get(name).unwrap_or_default())
     out_edges.push(
@@ -865,11 +865,11 @@ fn build_rank_incident_edge_lists(
 ///|
 fn build_rank_port_incident_edge_lists(
   names : Array[String],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+  edge_in : Map[String, Array[Int32]],
+  edge_out : Map[String, Array[Int32]],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
+  edge_penalty : Array[Int32],
 ) -> RankPortIncidentEdgeLists {
   let in_edges : Array[Array[PortIncidentEdge]] = []
   let out_edges : Array[Array[PortIncidentEdge]] = []
@@ -918,12 +918,12 @@ fn build_rank_port_tiebreak_orders(
   edge_endpoint_orders : EdgeEndpointOrders,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
+  edge_penalty : Array[Int32],
 ) -> PortTiebreakOrders {
-  let in_orders : Array[Array[(Int, Double, Int)]] = []
-  let out_orders : Array[Array[(Int, Double, Int)]] = []
+  let in_orders : Array[Array[(Int32, Double, Int32)]] = []
+  let out_orders : Array[Array[(Int32, Double, Int32)]] = []
   for edge_indices in incident_edges.in_edges {
-    let incoming : Array[(Int, Double, Int)] = []
+    let incoming : Array[(Int32, Double, Int32)] = []
     for edge_idx in edge_indices {
       let penalty = edge_penalty[edge_idx]
       if penalty <= 0 {
@@ -944,7 +944,7 @@ fn build_rank_port_tiebreak_orders(
     in_orders.push(incoming)
   }
   for edge_indices in incident_edges.out_edges {
-    let outgoing : Array[(Int, Double, Int)] = []
+    let outgoing : Array[(Int32, Double, Int32)] = []
     for edge_idx in edge_indices {
       let penalty = edge_penalty[edge_idx]
       if penalty <= 0 {
@@ -971,7 +971,7 @@ fn build_rank_port_tiebreak_orders(
 fn refresh_port_incident_edge_orders_for_node(
   incident_in : Array[PortIncidentEdge],
   incident_out : Array[PortIncidentEdge],
-  new_order : Int,
+  new_order : Int32,
   edge_endpoint_orders : EdgeEndpointOrders,
 ) -> Unit {
   for edge in incident_out {
@@ -1024,9 +1024,9 @@ fn in_cross_pair_tiebreak_live(
 ///|
 /// Graphviz parity: port x tie-break matches mincross.c in_cross.
 fn in_cross_port_tiebreak(
-  left_in : Array[(Int, Double, Int)],
-  right_in : Array[(Int, Double, Int)],
-) -> Int {
+  left_in : Array[(Int32, Double, Int32)],
+  right_in : Array[(Int32, Double, Int32)],
+) -> Int32 {
   let mut cross = 0
   for right_entry in right_in {
     let (inv, inv_port, cnt) = right_entry
@@ -1083,9 +1083,9 @@ fn out_cross_pair_tiebreak_live(
 ///|
 /// Graphviz parity: port x tie-break matches mincross.c out_cross.
 fn out_cross_port_tiebreak(
-  left_out : Array[(Int, Double, Int)],
-  right_out : Array[(Int, Double, Int)],
-) -> Int {
+  left_out : Array[(Int32, Double, Int32)],
+  right_out : Array[(Int32, Double, Int32)],
+) -> Int32 {
   let mut cross = 0
   for right_entry in right_out {
     let (inv, inv_port, cnt) = right_entry
@@ -1102,21 +1102,21 @@ fn out_cross_port_tiebreak(
 
 ///|
 pub fn count_rank_crossings_port(
-  rank : Int,
+  rank : Int32,
   names : Array[String],
-  ranks : Map[String, Int],
-  fixed_order : Map[String, Int],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+  ranks : Map[String, Int32],
+  fixed_order : Map[String, Int32],
+  edge_in : Map[String, Array[Int32]],
+  edge_out : Map[String, Array[Int32]],
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
-) -> Int {
+  edge_penalty : Array[Int32],
+) -> Int32 {
   let _ = rank
   let _ = ranks
-  let order : Map[String, Int] = Map([])
+  let order : Map[String, Int32] = Map([])
   for i, name in names {
     order[name] = i
   }
@@ -1159,7 +1159,7 @@ pub fn has_single_rank_incidents(
   names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_penalty : Array[Int],
+  edge_penalty : Array[Int32],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> Bool {
@@ -1214,14 +1214,14 @@ pub fn has_single_rank_incidents(
 
 ///|
 priv struct TransposeRankResult {
-  delta : Int
+  delta : Int32
   changed : Bool
 }
 
 ///|
 fn transpose_rank_port_tiebreak(
-  rank : Int,
-  ranks : Map[String, Int],
+  rank : Int32,
+  ranks : Map[String, Int32],
   names : Array[String],
   incident_edges : RankPortIncidentEdgeLists,
   edge_endpoint_orders : EdgeEndpointOrders,
@@ -1310,23 +1310,23 @@ fn transpose_rank_port_tiebreak(
 
 ///|
 pub fn transpose_rank_groups_port(
-  rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  fixed_order? : Map[String, Int] = Map([]),
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+  rank_keys : Array[Int32],
+  ordered : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
+  fixed_order~ : Map[String, Int32] = Map([]),
+  edge_in : Map[String, Array[Int32]],
+  edge_out : Map[String, Array[Int32]],
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
-  edge_penalty : Array[Int],
+  edge_penalty : Array[Int32],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
   reverse : Bool,
-  max_passes : Int,
-  remincross_mode? : Bool = false,
+  max_passes : Int32,
+  remincross_mode~ : Bool = false,
 ) -> Bool {
   let mut changed_any = false
   let mut passes = 0
@@ -1418,11 +1418,11 @@ pub fn transpose_rank_groups_port(
 pub fn apply_flat_mvals(
   names : Array[String],
   desired : Map[String, Double],
-  edge_in : Map[String, Array[Int]],
-  edge_out : Map[String, Array[Int]],
+  edge_in : Map[String, Array[Int32]],
+  edge_out : Map[String, Array[Int32]],
   flat_constraints : Map[String, Bool],
 ) -> Bool {
-  let order_index : Map[String, Int] = Map([])
+  let order_index : Map[String, Int32] = Map([])
   let rank_nodes : Map[String, Bool] = Map([])
   for i, name in names {
     order_index[name] = i
@@ -1547,12 +1547,12 @@ pub fn apply_flat_mvals(
 /// Graphviz parity: flat edge reorder aligned to refs/graphviz/lib/dotgen/flat.c.
 /// Do not change behavior without updating fixtures/tests.
 pub fn flat_reorder_rank_groups(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  node_ranks : Map[String, Int],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
+  node_ranks : Map[String, Int32],
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let ordered = @rank_groups.clone_rank_groups(groups)
   if flat_constraints.length() == 0 {
     return ordered
@@ -1633,7 +1633,7 @@ pub fn flat_reorder_rank_groups(
     }
     let temprank : Array[String] = []
     let postorder = (start : String) => {
-      let stack : Array[(String, Int)] = [(start, 0)]
+      let stack : Array[(String, Int32)] = [(start, 0)]
       while stack.length() > 0 {
         let top_idx = stack.length() - 1
         let (current, idx) = stack[top_idx]
@@ -1716,12 +1716,12 @@ pub fn flat_reorder_rank_groups(
 /// then applies transpose when crossings remain (port-offset aware tie-breaks).
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct SeededReorderBuildContext {
-  order_rank_keys : Array[Int]
-  order_groups : Map[Int, Array[String]]
+  order_rank_keys : Array[Int32]
+  order_groups : Map[Int32, Array[String]]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
-  order_ranks : Map[String, Int]
-  order_node_order : Map[String, Int]
+  order_ranks : Map[String, Int32]
+  order_node_order : Map[String, Int32]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
   order_flat_constraints : Map[String, Bool]
@@ -1740,7 +1740,7 @@ pub(all) struct SeededReorderBuildContext {
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_seeded_reorder_groups(
   build_context : SeededReorderBuildContext,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   // Graphviz parity: seed build_ranks from component-scoped walk,
   // matching decompose/install traversal used by remincross with
   // cluster-expanded flat constraints.
@@ -1809,15 +1809,15 @@ pub fn build_seeded_reorder_groups(
 pub let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref(false)
 
 ///|
-pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref(
+pub let capture_pass0_flat_seed_groups_value : Ref[Map[Int32, Array[String]]?] = Ref(
   None,
 )
 
 ///|
 fn maybe_capture_seed_groups(
-  pass : Int,
-  rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
+  pass : Int32,
+  rank_keys : Array[Int32],
+  ordered : Map[Int32, Array[String]],
 ) -> Unit {
   if !capture_pass0_flat_seed_groups_enabled.val || pass != 0 {
     return
@@ -1825,7 +1825,7 @@ fn maybe_capture_seed_groups(
   if capture_pass0_flat_seed_groups_value.val is Some(_) {
     return
   }
-  let snapshot : Map[Int, Array[String]] = Map([])
+  let snapshot : Map[Int32, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match ordered.get(rank) {
       Some(list) => list.copy()
@@ -1853,8 +1853,8 @@ pub fn[T] run_with_pass0_flat_seed_capture(run_phase : () -> T) -> T {
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/mincross.c and flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn reorder_rank_groups(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -1865,10 +1865,10 @@ pub fn reorder_rank_groups(
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  edge_order : Map[String, Int],
-  node_order : Map[String, Int],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
+  edge_order : Map[String, Int32],
+  node_order : Map[String, Int32],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -1877,17 +1877,17 @@ pub fn reorder_rank_groups(
   preferred_positions : Map[String, Double],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors? : Map[String, Array[String]] = Map([]),
-  graphviz_in_neighbors? : Map[String, Array[String]] = Map([]),
-  fixed_positions? : Map[String, Double] = Map([]),
-  fixed_ranks? : Map[String, Int] = Map([]),
-  graphviz_flip? : Bool = false,
-  coalesce_parallel_edges? : Bool = false,
-  startpass? : Int = 0,
-  startpass_init_infinite? : Bool = false,
-  remincross_mode? : Bool = false,
-  crossing_counter? : ((Map[Int, Array[String]]) -> Int)? = None,
-) -> Map[Int, Array[String]] {
+  graphviz_out_neighbors~ : Map[String, Array[String]] = Map([]),
+  graphviz_in_neighbors~ : Map[String, Array[String]] = Map([]),
+  fixed_positions~ : Map[String, Double] = Map([]),
+  fixed_ranks~ : Map[String, Int32] = Map([]),
+  graphviz_flip~ : Bool = false,
+  coalesce_parallel_edges~ : Bool = false,
+  startpass~ : Int32 = 0,
+  startpass_init_infinite~ : Bool = false,
+  remincross_mode~ : Bool = false,
+  crossing_counter~ : ((Map[Int32, Array[String]]) -> Int32)? = None,
+) -> Map[Int32, Array[String]] {
   let mut flat_constraints = flat_constraints
   let mut swap_flat_constraints = flat_swap_constraints(
     flat_constraints, graphviz_flip,
@@ -1902,7 +1902,7 @@ pub fn reorder_rank_groups(
   } else {
     startpass
   }
-  let mut ordered : Map[Int, Array[String]] = Map([])
+  let mut ordered : Map[Int32, Array[String]] = Map([])
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list.copy()
@@ -1911,7 +1911,7 @@ pub fn reorder_rank_groups(
     ordered[rank] = names
   }
   guard rank_keys.length() > 0 else { return ordered }
-  let rank_sizes : Map[Int, Int] = Map([])
+  let rank_sizes : Map[Int32, Int32] = Map([])
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -1929,7 +1929,7 @@ pub fn reorder_rank_groups(
       port_edge_nodes[edge_head[edge_idx]] = true
     }
   }
-  let edge_pair_order : Map[String, Int] = Map([])
+  let edge_pair_order : Map[String, Int32] = Map([])
   let mut edge_idx = 0
   for _edge in edges {
     let tail = edge_tail[edge_idx]
@@ -1937,7 +1937,7 @@ pub fn reorder_rank_groups(
     edge_pair_order["\{tail}|\{head}"] = edge_idx
     edge_idx = edge_idx + 1
   }
-  let node_penalty : Map[String, Int] = Map([])
+  let node_penalty : Map[String, Int32] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let penalty = @edge_semantics.edge_xpenalty(edge)
@@ -1974,7 +1974,7 @@ pub fn reorder_rank_groups(
   )
   let mut best_ordered = @rank_groups.clone_rank_groups(ordered)
   let mut order_positions = @rank_groups.order_positions_from_groups(ordered)
-  let fixed_order : Map[String, Int] = Map([])
+  let fixed_order : Map[String, Int32] = Map([])
   for name, pos in fixed_positions {
     fixed_order[name] = pos.to_int()
   }
@@ -2023,9 +2023,9 @@ pub fn reorder_rank_groups(
   }
   let median_parents : Map[String, Array[(String, Double)]] = Map([])
   let median_children : Map[String, Array[(String, Double)]] = Map([])
-  let edge_penalty : Array[Int] = []
-  let edge_in : Map[String, Array[Int]] = Map([])
-  let edge_out : Map[String, Array[Int]] = Map([])
+  let edge_penalty : Array[Int32] = []
+  let edge_in : Map[String, Array[Int32]] = Map([])
+  let edge_out : Map[String, Array[Int32]] = Map([])
   let mut has_graphviz_neighbor_hints = false
   let mut has_external_in_anchor = false
   let mut has_external_out_anchor = false
@@ -2054,7 +2054,7 @@ pub fn reorder_rank_groups(
       edge_out[name] = []
     }
   }
-  let coalesced_edge_index : Map[String, Int] = Map([])
+  let coalesced_edge_index : Map[String, Int32] = Map([])
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     let base_penalty = @edge_semantics.edge_xpenalty(edge)

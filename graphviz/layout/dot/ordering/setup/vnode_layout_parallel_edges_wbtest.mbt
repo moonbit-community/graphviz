@@ -11,7 +11,7 @@ test "build_edge_vnodes widens shared chains for parallel unlabeled edges" {
   let edge2 = graph.edge(a, b)
   ignore(edge2)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -40,7 +40,7 @@ test "build_edge_vnodes reuses the same chain for reverse unlabeled duplicates" 
   let forward = graph.edge(a, b)
   let reverse = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -67,7 +67,7 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
   let forward = graph.edge(a, b)
   let reverse = graph.edge(b, a)
 
-  let ranks : Map[String, Int] = Map([])
+  let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 0
   ranks["b"] = 3
 
@@ -75,7 +75,7 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
   existing_names["a"] = true
   existing_names["b"] = true
 
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   edge_out_order["b"] = [1]
   edge_out_order["a"] = [0]
 

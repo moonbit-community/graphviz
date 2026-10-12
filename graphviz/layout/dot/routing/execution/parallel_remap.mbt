@@ -22,9 +22,9 @@ fn parallel_remap_direction_key(
 /// Do not change behavior without updating fixtures/tests.
 fn collect_parallel_remap_edge_ids(
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-) -> Array[Array[Int]] {
-  let groups : Map[String, Array[Int]] = Map([])
+  ranks : Map[String, Int32],
+) -> Array[Array[Int32]] {
+  let groups : Map[String, Array[Int32]] = Map([])
   let group_first_direction : Map[String, String] = Map([])
   let group_has_mixed_direction : Map[String, Bool] = Map([])
   let concentrate = @order_graph.graphviz_concentrate_enabled(edges)
@@ -62,7 +62,7 @@ fn collect_parallel_remap_edge_ids(
       }
     }
   }
-  let remap_groups : Array[Array[Int]] = []
+  let remap_groups : Array[Array[Int32]] = []
   for key, ids in groups {
     if ids.length() <= 1 {
       continue
@@ -86,15 +86,15 @@ fn collect_parallel_remap_edge_ids(
 /// Do not change behavior without updating fixtures/tests.
 priv struct CompleteParallelRemapGroupsCollectInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  has_layout : (Int) -> Bool
+  ranks : Map[String, Int32]
+  has_layout : (Int32) -> Bool
 }
 
 ///|
 fn collect_complete_parallel_remap_groups(
   input : CompleteParallelRemapGroupsCollectInput,
-) -> Array[Array[Int]] {
-  let complete_groups : Array[Array[Int]] = []
+) -> Array[Array[Int32]] {
+  let complete_groups : Array[Array[Int32]] = []
   for ids in collect_parallel_remap_edge_ids(input.edges, input.ranks) {
     let mut all_present = true
     for edge_id in ids {
@@ -112,8 +112,8 @@ fn collect_complete_parallel_remap_groups(
 
 ///|
 priv struct ParallelRemapAssignment {
-  target_edge_id : Int
-  source_edge_id : Int
+  target_edge_id : Int32
+  source_edge_id : Int32
 }
 
 ///|
@@ -122,8 +122,8 @@ priv struct ParallelRemapAssignment {
 /// Do not change behavior without updating fixtures/tests.
 priv struct ParallelRemapAssignmentsBuildInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  has_layout : (Int) -> Bool
+  ranks : Map[String, Int32]
+  has_layout : (Int32) -> Bool
 }
 
 ///|
@@ -157,8 +157,8 @@ fn build_parallel_remap_assignments(
 /// Do not change behavior without updating fixtures/tests.
 priv struct ParallelEdgeLayoutsRemapInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
+  ranks : Map[String, Int32]
+  edges_out_by_id : Map[Int32, DotLayoutEdge]
   edge_port_label_pos_fn : EdgePortLabelPosFn
 }
 
@@ -172,7 +172,7 @@ fn remap_parallel_edge_layouts(input : ParallelEdgeLayoutsRemapInput) -> Unit {
     ranks,
     has_layout: edge_id => edges_out_by_id.get(edge_id) is Some(_),
   })
-  let remap_snapshot : Map[Int, DotLayoutEdge] = Map([])
+  let remap_snapshot : Map[Int32, DotLayoutEdge] = Map([])
   for assignment in assignments {
     match edges_out_by_id.get(assignment.target_edge_id) {
       Some(layout) => remap_snapshot[assignment.target_edge_id] = layout

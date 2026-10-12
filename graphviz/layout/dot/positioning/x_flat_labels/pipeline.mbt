@@ -10,9 +10,9 @@ type ConstraintEdge = @x_constraints.ConstraintEdge
 /// label edges, rank overlays, and vnode cluster-key overlay grouped for one
 /// positioning-stage augmentation pass.
 priv struct FlatLabelVnodeBuildOutput {
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   flat_label_edges : Array[ConstraintEdge]
-  flat_label_ranks : Map[String, Int]
+  flat_label_ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -22,20 +22,20 @@ priv struct FlatLabelVnodeBuildOutput {
 /// one augmentation pass.
 priv struct XFlatLabelAugmentationInput {
   use_vnodes_for_xpos : Bool
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_cluster_keys : Map[String, String]
   nodes : Array[@cgraph.Node]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
-  build_flat_label_vnodes_fn : (Map[String, Bool], Map[Int, Array[String]]) -> FlatLabelVnodeBuildOutput
+  build_flat_label_vnodes_fn : (Map[String, Bool], Map[Int32, Array[String]]) -> FlatLabelVnodeBuildOutput
 }
 
 ///|
 pub(all) struct XFlatLabelAugmentationOutput {
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_cluster_keys : Map[String, String]
   flat_label_edges : Array[ConstraintEdge]
-  flat_label_ranks : Map[String, Int]
+  flat_label_ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
 }
 
@@ -52,25 +52,25 @@ pub(all) struct XFlatLabelPositioningPipelineSources {
   has_vnode_order : Bool
   ordering_set : Bool
   has_clusters : Bool
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_base_sizes : Map[String, @node_primitives.NodeSize]
   x_order_sizes : Map[String, @node_primitives.NodeSize]
   x_cluster_keys : Map[String, String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  node_order : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
+  node_order : Map[String, Int32]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   flat_constraints : Map[String, Bool]
@@ -82,12 +82,12 @@ pub(all) struct XFlatLabelPositioningPipelineSources {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   cluster_skeleton : Map[String, Bool]
   vnode_clusters : Map[String, String]
-  ordered_groups : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
   rankdir : @rankdir.RankDir
   edge_cluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
@@ -100,14 +100,14 @@ pub(all) struct XFlatLabelPositioningPipelineSources {
 /// before flat-label vnode injection.
 priv struct XFlatLabelPipelineInput {
   reorder_sources : @x_reorder.XposReorderPipelineSources
-  augment_from_groups_fn : (Map[Int, Array[String]]) -> XFlatLabelAugmentationOutput
+  augment_from_groups_fn : (Map[Int32, Array[String]]) -> XFlatLabelAugmentationOutput
 }
 
 ///|
-const CLUSTER_SKELETON_PENALTY : Int = 1000
+const CLUSTER_SKELETON_PENALTY : Int32 = 1000
 
 ///|
-const TRANSPOSE_MAX_PASSES : Int = 4
+const TRANSPOSE_MAX_PASSES : Int32 = 4
 
 ///|
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
@@ -119,7 +119,7 @@ fn build_x_flat_label_augmentation(
 ) -> XFlatLabelAugmentationOutput {
   let mut next_x_groups = input.x_groups
   let mut flat_label_edges : Array[ConstraintEdge] = []
-  let mut flat_label_ranks : Map[String, Int] = Map([])
+  let mut flat_label_ranks : Map[String, Int32] = Map([])
   let mut flat_label_edge_vnodes : Map[String, String] = Map([])
   let next_x_cluster_keys = input.x_cluster_keys
   if input.use_vnodes_for_xpos {
@@ -212,7 +212,7 @@ fn build_positioning_x_flat_label_reorder_sources(
 /// Do not change behavior without updating fixtures/tests.
 fn build_positioning_x_flat_label_augmentation(
   sources : XFlatLabelPositioningPipelineSources,
-  x_groups : Map[Int, Array[String]],
+  x_groups : Map[Int32, Array[String]],
 ) -> XFlatLabelAugmentationOutput {
   build_x_flat_label_augmentation({
     use_vnodes_for_xpos: sources.use_vnodes_for_xpos,

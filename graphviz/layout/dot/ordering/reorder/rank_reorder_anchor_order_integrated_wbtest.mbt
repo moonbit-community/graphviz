@@ -13,7 +13,7 @@
 fn plugin_dense_integrated_anchor_order_case() -> (
   MincrossInput,
   MincrossOutput,
-  Map[String, Int],
+  Map[String, Int32],
 ) {
   let input : MincrossInput = {
     case_id: 1011,
@@ -3330,7 +3330,7 @@ fn plugin_dense_integrated_anchor_order_case() -> (
     ],
   }
 
-  let name_order : Map[String, Int] = Map([])
+  let name_order : Map[String, Int32] = Map([])
   name_order["i-rsvg-svg"] = 0
   name_order["i-xbm"] = 0
   name_order["o-xlib"] = 0

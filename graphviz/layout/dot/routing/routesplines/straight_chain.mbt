@@ -11,7 +11,7 @@ fn straight_chain_length(
   vnode_sizes : Map[String, NodeSize],
   outgoing : Map[String, Array[String]],
   incoming : Map[String, Array[String]],
-) -> Int {
+) -> Int32 {
   guard positions.get(start) is Some(base) else { return 0 }
   for current = start, count = 0 {
     guard outgoing.get(current) is Some(next_nodes) && next_nodes.length() > 0 else {

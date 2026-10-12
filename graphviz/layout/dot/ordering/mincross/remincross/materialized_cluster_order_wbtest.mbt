@@ -49,7 +49,7 @@ test "build_remincross_cluster_keys rewrites empty root keys and assigns vnode L
 test "build_cluster_tail_order sorts non-root clusters by order index and keeps root override last" {
   let rem_order_creation = ["root_a", "c1_low", "c2_only", "c1_high", "root_b"]
 
-  let rem_ranks : Map[String, Int] = Map([])
+  let rem_ranks : Map[String, Int32] = Map([])
   rem_ranks["root_a"] = 0
   rem_ranks["root_b"] = 0
   rem_ranks["c1_low"] = 0
@@ -63,7 +63,7 @@ test "build_cluster_tail_order sorts non-root clusters by order index and keeps 
   rem_cluster_keys["c1_high"] = "cluster1"
   rem_cluster_keys["c2_only"] = "cluster2"
 
-  let cluster_order_index : Map[String, Int] = Map([])
+  let cluster_order_index : Map[String, Int32] = Map([])
   cluster_order_index["cluster1"] = 0
   cluster_order_index["cluster2"] = 1
 

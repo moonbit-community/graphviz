@@ -9,7 +9,7 @@
 /// remaining denser LR graph.
 fn build_large_lr_mixed_scaffold_fixture_graph() -> NsGraph {
   let node_specs : Array[ExactRankNodeSpec] = []
-  let slack_ranks : Array[Int] = [
+  let slack_ranks : Array[Int32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 216, 241, 221, -1, -1, -1, -1, -98, -98, -98, 86, 111, 24, -1, -1, 296,
     71, 280, 221, -1, -1, -1, -1, -1, -1, 13, -1, 6, 216, 241, 40, 71, 47, 40, 47,

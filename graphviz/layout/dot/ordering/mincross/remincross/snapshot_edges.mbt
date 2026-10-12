@@ -10,8 +10,8 @@
 /// Graphviz parity: remincross snapshot payload keeps rank-order groups and
 /// edge snapshots for fixture capture checks.
 pub(all) struct RemincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges : Array[@root.OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
 }
@@ -23,8 +23,8 @@ pub let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref(None)
 /// Graphviz parity: remincross snapshot input keeps order-rank groups,
 /// edge arrays, and cluster overlays together before capture materialization.
 pub(all) struct RemincrossSnapshotBuildInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
   edge_head_out : Array[String]
@@ -33,7 +33,7 @@ pub(all) struct RemincrossSnapshotBuildInput {
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
   cluster_keys : Map[String, String]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 ///|
@@ -69,7 +69,7 @@ pub fn build_remincross_input_snapshot(
 /// rematerialized startpass=2 reorder snapshot into fixture state when enabled.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_remincross_snapshot_capture_callback(
-  edge_xpenalty_for : (@cgraph.Edge) -> Int,
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32,
 ) -> (ReMincrossCleanupCaptureInputs) -> Unit {
   capture_inputs => {
     if !@root.should_capture_ordering_inputs() {

@@ -24,8 +24,8 @@ test "build_cluster_constraints adds boundary nodes containment and keepout edge
   let b = cluster.node("b")
   let c = graph.node("c")
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 0 }
-  let groups : Map[Int, Array[String]] = { 0: ["c", "a", "b"] }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 0 }
+  let groups : Map[Int32, Array[String]] = { 0: ["c", "a", "b"] }
   let sizes : Map[String, @node_primitives.NodeSize] = {
     "a": @node_primitives.vnode_size_from_widths_with_h(2.0, 3.0, 8.0),
     "b": @node_primitives.vnode_size_from_widths_with_h(4.0, 5.0, 8.0),
@@ -52,7 +52,7 @@ test "build_cluster_constraints adds boundary nodes containment and keepout edge
 
   let left_name = @cluster_identity.cluster_left_boundary_name("cluster_0")
   let right_name = @cluster_identity.cluster_right_boundary_name("cluster_0")
-  let extra_node_ranks : Map[String, Int] = Map([])
+  let extra_node_ranks : Map[String, Int32] = Map([])
   for extra_node in build.extra_nodes {
     extra_node_ranks[extra_node.name] = extra_node.rank
   }
@@ -104,8 +104,8 @@ test "build_cluster_constraints stops containment at an outside normal rank peer
   let b = cluster.node("b")
   let outside = graph.node("outside")
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "outside": 0 }
-  let groups : Map[Int, Array[String]] = { 0: ["a", "outside", "b"] }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "outside": 0 }
+  let groups : Map[Int32, Array[String]] = { 0: ["a", "outside", "b"] }
   let sizes : Map[String, @node_primitives.NodeSize] = {
     "a": @node_primitives.vnode_size_from_widths_with_h(2.0, 2.0, 8.0),
     "b": @node_primitives.vnode_size_from_widths_with_h(2.0, 2.0, 8.0),

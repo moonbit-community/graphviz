@@ -12,27 +12,27 @@
 fn apply_intercluster_bonus(
   order_edges_by_tail_coalesced : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ],
-  intercluster_bonus : Map[String, Int],
+  intercluster_bonus : Map[String, Int32],
 ) -> Map[
   String,
-  Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+  Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
 ] {
   if intercluster_bonus.length() == 0 {
     return order_edges_by_tail_coalesced
   }
-  let remaining_bonus : Map[String, Int] = Map([])
+  let remaining_bonus : Map[String, Int32] = Map([])
   for key, value in intercluster_bonus {
     remaining_bonus[key] = value
   }
   let adjusted : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ] = Map([])
   for tail_name, entries in order_edges_by_tail_coalesced {
     let adjusted_entries : Array[
-      (String, String, Int, Bool, Double, Double, Double, Double),
+      (String, String, Int32, Bool, Double, Double, Double, Double),
     ] = []
     for entry in entries {
       let (
@@ -82,14 +82,14 @@ fn collect_intercluster_bonus(
   edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
-  edges_by_tail : Map[String, Array[Int]],
+  edges_by_tail : Map[String, Array[Int32]],
   cluster_keys : Map[String, String],
-) -> Map[String, Int] {
-  let count_by_key : Map[String, Int] = Map([])
+) -> Map[String, Int32] {
+  let count_by_key : Map[String, Int32] = Map([])
   for tail_name in creation_order {
     let indices = match edges_by_tail.get(tail_name) {
       Some(list) => list
@@ -207,7 +207,7 @@ fn collect_intercluster_bonus(
       }
     }
   }
-  let bonus_by_key : Map[String, Int] = Map([])
+  let bonus_by_key : Map[String, Int32] = Map([])
   for key, count in count_by_key {
     if count > 1 {
       bonus_by_key[key] = count - 1
@@ -265,9 +265,9 @@ fn build_remincross_nlist_order(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
   rem_edge_creation : Array[(String, String)],
-  rem_ranks : Map[String, Int],
+  rem_ranks : Map[String, Int32],
   rem_cluster_keys : Map[String, String],
-  cluster_order_index : Map[String, Int],
+  cluster_order_index : Map[String, Int32],
   root_tail_order_override : Array[String]?,
 ) -> Array[String] {
   let rem_order_creation = build_remincross_order_creation(
@@ -299,7 +299,7 @@ fn build_remincross_nlist_order(
 priv struct ReMincrossMaterializedOrderEdges {
   order_edges_by_tail : Map[
     String,
-    Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+    Array[(String, String, Int32, Bool, Double, Double, Double, Double)],
   ]
   vnode_creation : Map[String, Array[String]]
   edge_creation : Array[(String, String)]
@@ -309,7 +309,7 @@ priv struct ReMincrossMaterializedOrderEdges {
 /// Graphviz parity: clustered ReMincross materialized-edge payload keeps node
 /// order plus rematerialized edge arrays for cleanup reorder input.
 priv struct ReMincrossMaterializedEdgeArrays {
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
   edge_head_out : Array[String]
@@ -324,7 +324,7 @@ priv struct ReMincrossMaterializedEdgeArrays {
 /// expansion, coalescing, intercluster bonus, then tail-order replay.
 fn build_remincross_materialized_edges(
   inputs : ReMincrossMaterializationInputs,
-  cluster_order_index : Map[String, Int],
+  cluster_order_index : Map[String, Int32],
 ) -> ReMincrossMaterializedOrderEdges {
   let rem_order_edges_output = @order_graph.build_order_edges_by_tail(
     inputs.creation_order,
@@ -399,7 +399,7 @@ fn build_remincross_materialized_arrays(
   inputs : ReMincrossMaterializationInputs,
   rem_graph : @cgraph.Graph,
   rem_node_map : Map[String, @cgraph.Node],
-  cluster_order_index : Map[String, Int],
+  cluster_order_index : Map[String, Int32],
   materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
   let rem_ranks = @rank_groups.build_node_ranks(inputs.rem_groups)
@@ -435,8 +435,8 @@ fn build_remincross_materialized_arrays(
 /// Graphviz parity: clustered ReMincross rematerialization inputs keep
 /// dispatch snapshots unchanged before startpass=2 cleanup reorder setup.
 pub(all) struct ReMincrossMaterializationInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   creation_order : Array[String]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -445,13 +445,13 @@ pub(all) struct ReMincrossMaterializationInputs {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   order_with_vnodes : Bool
   intercluster_keys : Map[String, String]
   cluster_order : Array[String]
   order_with_clusters : Bool
-  edges_by_tail : Map[String, Array[Int]]
+  edges_by_tail : Map[String, Array[Int32]]
   root_tail_order_override : Array[String]?
   root_cluster : String
   cluster_parents : Map[String, String?]
@@ -595,8 +595,8 @@ fn build_remincross_flat_constraints(
 /// maps for cleanup reorder dispatch.
 pub(all) struct ReMincrossCleanupMaterializedInputs {
   rem_nodes : Array[String]
-  rem_ranks : Map[String, Int]
-  rem_node_order : Map[String, Int]
+  rem_ranks : Map[String, Int32]
+  rem_node_order : Map[String, Int32]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -697,10 +697,10 @@ fn append_names_in_order(target : Array[String], names : Array[String]) -> Unit 
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_tail_order(
   rem_order_creation : Array[String],
-  rem_ranks : Map[String, Int],
+  rem_ranks : Map[String, Int32],
   rem_cluster_keys : Map[String, String],
   rem_edge_creation : Array[(String, String)],
-  cluster_order_index : Map[String, Int],
+  cluster_order_index : Map[String, Int32],
   root_tail_order_override : Array[String]?,
 ) -> Array[String] {
   let cluster_tail_buckets = build_cluster_tail_buckets(
@@ -744,7 +744,7 @@ fn build_cluster_tail_order(
 priv struct ClusterTailBuckets {
   cluster_order_seen : Array[String]
   names_by_cluster : Map[String, Array[String]]
-  cluster_first_seen : Map[String, Int]
+  cluster_first_seen : Map[String, Int32]
 }
 
 ///|
@@ -752,9 +752,9 @@ priv struct ClusterTailBuckets {
 /// tail->head adjacency snapshots for per-cluster ordered-name replay.
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusterTailOrderContext {
-  rem_ranks : Map[String, Int]
+  rem_ranks : Map[String, Int32]
   heads_by_tail : Map[String, Array[String]]
-  cluster_order_pos : Map[String, Int]
+  cluster_order_pos : Map[String, Int32]
   cluster_order : Array[String]
   rem_cluster_keys : Map[String, String]
   root_tail_order_override : Array[String]?
@@ -784,7 +784,7 @@ fn build_cluster_tail_buckets(
       None => names_by_cluster[cluster] = [name]
     }
   }
-  let cluster_first_seen : Map[String, Int] = Map([])
+  let cluster_first_seen : Map[String, Int32] = Map([])
   for idx, cluster in cluster_order_seen {
     cluster_first_seen[cluster] = idx
   }
@@ -869,7 +869,7 @@ fn cluster_key_for_tail_name(
 /// Do not change behavior without updating fixtures/tests.
 priv struct ReMincrossClusterOrder {
   cluster_order : Array[String]
-  cluster_order_pos : Map[String, Int]
+  cluster_order_pos : Map[String, Int32]
 }
 
 ///|
@@ -879,8 +879,8 @@ priv struct ReMincrossClusterOrder {
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_order(
   cluster_order_seen : Array[String],
-  cluster_first_seen : Map[String, Int],
-  cluster_order_index : Map[String, Int],
+  cluster_first_seen : Map[String, Int32],
+  cluster_order_index : Map[String, Int32],
 ) -> ReMincrossClusterOrder {
   let cluster_order_non_root : Array[String] = []
   let mut has_root_cluster = false
@@ -916,7 +916,7 @@ fn build_remincross_order(
   if has_root_cluster {
     cluster_order.push("")
   }
-  let cluster_order_pos : Map[String, Int] = Map([])
+  let cluster_order_pos : Map[String, Int32] = Map([])
   for idx, cluster in cluster_order {
     cluster_order_pos[cluster] = idx
   }
@@ -958,10 +958,10 @@ fn build_nonroot_ordered_names(
 /// Do not change behavior without updating fixtures/tests.
 fn collect_nonroot_tail_rank_keys(
   names : Array[String],
-  rem_ranks : Map[String, Int],
-) -> Array[Int] {
-  let rank_keys : Array[Int] = []
-  let rank_seen : Map[Int, Bool] = Map([])
+  rem_ranks : Map[String, Int32],
+) -> Array[Int32] {
+  let rank_keys : Array[Int32] = []
+  let rank_seen : Map[Int32, Bool] = Map([])
   for name in names {
     let rank = rem_ranks.get(name).unwrap_or(-1)
     if rank_seen.get(rank) is None {
@@ -979,8 +979,8 @@ fn collect_nonroot_tail_rank_keys(
 /// Do not change behavior without updating fixtures/tests.
 fn collect_nonroot_tail_rank_names(
   names : Array[String],
-  rem_ranks : Map[String, Int],
-  rank : Int,
+  rem_ranks : Map[String, Int32],
+  rank : Int32,
 ) -> Array[String] {
   let rank_names : Array[String] = []
   for name in names {
@@ -998,9 +998,9 @@ fn collect_nonroot_tail_rank_names(
 fn build_nonroot_tail_names(
   cluster : String,
   names : Array[String],
-  rem_ranks : Map[String, Int],
+  rem_ranks : Map[String, Int32],
   heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
+  cluster_order_pos : Map[String, Int32],
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
@@ -1054,9 +1054,9 @@ fn build_nonroot_tail_names(
 priv struct InputLikeBucketContext {
   cluster : String
   heads_by_tail : Map[String, Array[String]]
-  cluster_order_pos : Map[String, Int]
-  cluster_end_pos : Int
-  current_cluster_pos : Int
+  cluster_order_pos : Map[String, Int32]
+  cluster_end_pos : Int32
+  current_cluster_pos : Int32
   rem_cluster_keys : Map[String, String]
 }
 
@@ -1066,7 +1066,7 @@ priv struct InputLikeBucketContext {
 fn classify_input_like_bucket(
   name : String,
   context : InputLikeBucketContext,
-) -> Int {
+) -> Int32 {
   let heads = context.heads_by_tail.get(name).unwrap_or_default()
   let mut has_later = false
   let mut has_earlier = false
@@ -1105,7 +1105,7 @@ fn rebucket_input_like_order(
   cluster : String,
   rank_ordered : Array[String],
   heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
+  cluster_order_pos : Map[String, Int32],
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {

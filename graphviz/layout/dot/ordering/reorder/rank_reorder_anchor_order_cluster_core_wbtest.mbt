@@ -10,7 +10,7 @@
 fn plugin_cluster_core_anchor_order_case() -> (
   MincrossInput,
   MincrossOutput,
-  Map[String, Int],
+  Map[String, Int32],
 ) {
   let input : MincrossInput = {
     case_id: 1010,
@@ -917,7 +917,7 @@ fn plugin_cluster_core_anchor_order_case() -> (
     ],
   }
 
-  let name_order : Map[String, Int] = Map([])
+  let name_order : Map[String, Int32] = Map([])
   name_order["r-lasi"] = 1
   name_order["i-svg"] = 3
   name_order["i-png"] = 4

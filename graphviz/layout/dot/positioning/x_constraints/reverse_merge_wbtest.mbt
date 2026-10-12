@@ -26,7 +26,7 @@ test "parallel merges distinguish concentrated ordinary and cluster edges" {
   let a = graph.node("a")
   let b = graph.node("b")
   let edges = [graph.edge(a, b), graph.edge(a, b), graph.edge(a, b)]
-  let ranks : Map[String, Int] = { "a": 0, "b": 1 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 1 }
   let ordinary = @order_graph.build_parallel_merge_metadata(edges, ranks, {}, (
     _,
     _,
@@ -59,7 +59,7 @@ test "parallel merging retains differing ports and labeled or flat edges" {
   let b = graph.node("b")
   let first = graph.edge(a, b)
   let second = graph.edge(a, b)
-  let ranks : Map[String, Int] = { "a": 0, "b": 1 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 1 }
   let different = @order_graph.build_parallel_merge_metadata(
     [first, second],
     ranks,

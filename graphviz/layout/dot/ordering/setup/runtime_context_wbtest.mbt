@@ -32,7 +32,7 @@ fn require_array(
 }
 
 ///|
-fn require_int(map : Map[String, Int], key : String) -> Int raise {
+fn require_int(map : Map[String, Int32], key : String) -> Int32 raise {
   match map.get(key) {
     Some(value) => value
     None => fail("missing int for \{key}")
@@ -56,8 +56,14 @@ test "build_local_cluster_order sorts by min rank then first order then cluster 
     "d": "cluster_c",
     "e": "cluster_a",
   }
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 2, "d": 1, "e": 3 }
-  let node_order : Map[String, Int] = { "a": 0, "b": 0, "c": 4, "d": 0, "e": 5 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 2, "d": 1, "e": 3 }
+  let node_order : Map[String, Int32] = {
+    "a": 0,
+    "b": 0,
+    "c": 4,
+    "d": 0,
+    "e": 5,
+  }
 
   let order = build_local_cluster_order(
     nodes, local_cluster_keys, ranks, node_order,
@@ -70,7 +76,7 @@ test "build_local_cluster_order sorts by min rank then first order then cluster 
 
 ///|
 test "build_vnode_tail_constraints groups same-tail vnodes by edge index order" {
-  let rank_vnodes : Map[Int, Array[String]] = {
+  let rank_vnodes : Map[Int32, Array[String]] = {
     1: [
       "\{@edge_identity.EDGE_VNODE_PREFIX}2_1",
       "other",
@@ -96,9 +102,9 @@ test "build_ordering_runtime_context_from_sources seeds runtime maps and vnode i
   let a = graph.node("a")
   let c = graph.node("c")
   let edges = graph.edges()
-  let ranks : Map[String, Int] = { "a": 0, "c": 2 }
-  let node_order : Map[String, Int] = { "a": 0, "c": 1 }
-  let edge_out_order : Map[String, Array[Int]] = { "a": [0] }
+  let ranks : Map[String, Int32] = { "a": 0, "c": 2 }
+  let node_order : Map[String, Int32] = { "a": 0, "c": 1 }
+  let edge_out_order : Map[String, Array[Int32]] = { "a": [0] }
 
   let runtime_context = build_ordering_runtime_context_from_sources({
     graph,

@@ -23,7 +23,7 @@ pub fn is_cluster_skeleton_name(name : String) -> Bool {
 
 ///|
 /// Graphviz parity: cluster skeleton node names encode "<cluster>@<rank>".
-pub fn cluster_skeleton_name(cluster : String, rank : Int) -> String {
+pub fn cluster_skeleton_name(cluster : String, rank : Int32) -> String {
   "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
 }
 

@@ -107,7 +107,7 @@ fn collect_mincross_order_edges(
   let order_edge_head_port_x_mincross : Array[Double] = []
   let order_edge_tail_port_order_mincross : Array[Double] = []
   let order_edge_head_port_order_mincross : Array[Double] = []
-  let cluster_representatives : Map[String, Int] = Map([])
+  let cluster_representatives : Map[String, Int32] = Map([])
   let representative_graph = @cgraph.Graph::new(
     @cgraph.GraphKind::Directed,
     strict=false,
@@ -179,14 +179,14 @@ fn collect_mincross_order_edges(
 /// merged back into seeded rank lists by replacing only filtered positions.
 /// Do not change behavior without updating fixtures/tests.
 pub fn merge_root_mincross_groups(
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
-  ordered_mincross : Map[Int, Array[String]],
+  order_rank_keys : Array[Int32],
+  seeded_groups : Map[Int32, Array[String]],
+  ordered_mincross : Map[Int32, Array[String]],
   mincross_nodes : Map[String, Bool],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let merged : Map[Int32, Array[String]] = Map([])
   for rank in order_rank_keys {
     let names = seeded_groups.get(rank).unwrap_or_default()
     let replacements = ordered_mincross.get(rank).unwrap_or_default()
@@ -221,11 +221,11 @@ pub fn merge_root_mincross_groups(
 /// from seeded build_ranks groups; cluster-internal names stay cluster-local.
 /// Do not change behavior without updating fixtures/tests.
 fn filter_root_mincross_seeded_groups_for_clusters(
-  seeded_groups : Map[Int, Array[String]],
+  seeded_groups : Map[Int32, Array[String]],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let filtered : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let filtered : Map[Int32, Array[String]] = Map([])
   for rank, names in seeded_groups {
     let list : Array[String] = []
     for name in names {
@@ -253,7 +253,7 @@ priv struct RootMincrossEdgeBundle {
   order_edge_head_port_order_mincross : Array[Double]
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
 }
 
 ///|
@@ -270,7 +270,7 @@ fn build_root_mincross_edge_bundle(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  order_ranks : Map[String, Int],
+  order_ranks : Map[String, Int32],
 ) -> RootMincrossEdgeBundle {
   let mincross_edges_output = collect_mincross_order_edges(
     mincross_nodes, order_edges_out, order_edge_tail_out, order_edge_head_out, order_edge_tail_port_x,
@@ -319,7 +319,7 @@ fn build_root_vnode_preferred_positions(
 
 ///|
 pub(all) struct RootRankReorderCallData {
-  order_rank_keys_for_mincross : Array[Int]
+  order_rank_keys_for_mincross : Array[Int32]
   mincross_nodes : Map[String, Bool]
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
@@ -333,14 +333,14 @@ pub(all) struct RootRankReorderCallData {
 
 ///|
 priv struct RootReorderPassResult {
-  ordered_mincross : Map[Int, Array[String]]
+  ordered_mincross : Map[Int32, Array[String]]
   reorder_call_data : RootRankReorderCallData
 }
 
 ///|
 pub(all) struct RootMincrossReorderResult {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
+  order_groups_for_mincross : Map[Int32, Array[String]]
+  ordered : Map[Int32, Array[String]]
   reorder_call_data : RootRankReorderCallData
 }
 
@@ -348,9 +348,9 @@ pub(all) struct RootMincrossReorderResult {
 pub(all) struct RootMincrossReorderInputs {
   order_with_clusters : Bool
   order_with_vnodes : Bool
-  seeded_groups : Map[Int, Array[String]]
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  seeded_groups : Map[Int32, Array[String]]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -360,10 +360,10 @@ pub(all) struct RootMincrossReorderInputs {
   order_edge_head_port_order : Array[Double]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   vnode_order_keys_for_ordering : Map[String, Double]
-  order_node_order : Map[String, Int]
+  order_node_order : Map[String, Int32]
   order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -382,8 +382,8 @@ pub(all) struct RootMincrossReorderInputs {
 priv struct RootMincrossReorderBuildContext {
   order_with_clusters : Bool
   order_with_vnodes : Bool
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -393,10 +393,10 @@ priv struct RootMincrossReorderBuildContext {
   order_edge_head_port_order : Array[Double]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   vnode_order_keys_for_ordering : Map[String, Double]
-  order_node_order : Map[String, Int]
+  order_node_order : Map[String, Int32]
   order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -415,7 +415,7 @@ priv struct RootMincrossReorderBuildContext {
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_mincross_reorder_inputs_from_stage_sources(
   sources : ClusteredRootPhaseStageSources,
-  root_node_order : Map[String, Int],
+  root_node_order : Map[String, Int32],
 ) -> RootMincrossReorderInputs {
   let seeded_context : @reorder.SeededReorderBuildContext = {
     order_rank_keys: sources.reorder_context.order_rank_keys,
@@ -472,7 +472,7 @@ fn build_root_mincross_reorder_inputs_from_stage_sources(
 /// same seeded groups + pre-root materialized snapshots before root pass call.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_mincross_reorder_inputs(
-  seeded_groups : Map[Int, Array[String]],
+  seeded_groups : Map[Int32, Array[String]],
   context : RootMincrossReorderBuildContext,
 ) -> RootMincrossReorderInputs {
   {
@@ -511,7 +511,7 @@ fn build_root_mincross_reorder_inputs(
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_rank_reorder_call_data(
-  order_groups_for_mincross : Map[Int, Array[String]],
+  order_groups_for_mincross : Map[Int32, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
   order_edge_tail_out : Array[String],
   order_edge_head_out : Array[String],
@@ -519,11 +519,11 @@ fn build_root_rank_reorder_call_data(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  order_ranks : Map[String, Int],
+  order_ranks : Map[String, Int32],
   order_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  order_node_order : Map[String, Int],
+  rank_same_groups : Map[String, Int32],
+  rank_same_order : Map[String, Int32],
+  order_node_order : Map[String, Int32],
   order_sizes_out : Map[String, @node_primitives.NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -611,7 +611,7 @@ fn build_root_rank_reorder_call_data(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_reorder_for_groups(
   reorder_inputs : RootMincrossReorderInputs,
-  order_groups_for_mincross : Map[Int, Array[String]],
+  order_groups_for_mincross : Map[Int32, Array[String]],
 ) -> RootReorderPassResult {
   let reorder_call_data = build_root_rank_reorder_call_data(
     order_groups_for_mincross,
@@ -652,11 +652,11 @@ fn run_root_reorder_for_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn resolve_root_mincross_input_groups(
   order_with_clusters : Bool,
-  seeded_groups : Map[Int, Array[String]],
+  seeded_groups : Map[Int32, Array[String]],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
-  order_groups_override : Map[Int, Array[String]]?,
-) -> Map[Int, Array[String]] {
+  order_groups_override : Map[Int32, Array[String]]?,
+) -> Map[Int32, Array[String]] {
   let order_groups_for_mincross_base = if !order_with_clusters {
     seeded_groups
   } else {
@@ -679,13 +679,13 @@ fn resolve_root_mincross_input_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn finalize_root_mincross_ordered_groups(
   order_with_clusters : Bool,
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
-  ordered_mincross : Map[Int, Array[String]],
+  order_rank_keys : Array[Int32],
+  seeded_groups : Map[Int32, Array[String]],
+  ordered_mincross : Map[Int32, Array[String]],
   mincross_nodes : Map[String, Bool],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   if !order_with_clusters {
     return ordered_mincross
   }
@@ -701,7 +701,7 @@ fn finalize_root_mincross_ordered_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
-  order_groups_override : Map[Int, Array[String]]?,
+  order_groups_override : Map[Int32, Array[String]]?,
 ) -> RootMincrossReorderResult {
   let order_groups_for_mincross = resolve_root_mincross_input_groups(
     inputs.order_with_clusters,
@@ -735,7 +735,7 @@ fn run_root_mincross_reorder(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_reorder_with_pass0_capture(
   inputs : RootMincrossReorderInputs,
-  order_groups_override : Map[Int, Array[String]]?,
+  order_groups_override : Map[Int32, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootMincrossReorderResult {
   let result = @reorder.run_with_pass0_flat_seed_capture(() => {
@@ -753,7 +753,7 @@ priv struct RootAndClusterRanksInputs {
   order_with_vnodes : Bool
   graphviz_flip : Bool
   cluster_keys : Map[String, String]
-  root_groups_override : Map[Int, Array[String]]?
+  root_groups_override : Map[Int32, Array[String]]?
 }
 
 ///|
@@ -780,8 +780,8 @@ fn run_root_and_cluster_ranks_with_pass0_capture(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_and_cluster_ranks_stage_from_sources(
   sources : ClusteredRootPhaseStageSources,
-  root_node_order : Map[String, Int],
-  root_groups_override : Map[Int, Array[String]]?,
+  root_node_order : Map[String, Int32],
+  root_groups_override : Map[Int32, Array[String]]?,
   capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
 ) -> RootAndClusterRanksOutput {
   let root_mincross_reorder_inputs = build_root_mincross_reorder_inputs_from_stage_sources(
@@ -861,7 +861,7 @@ pub struct ClusteredRootPhaseStageOutput {
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusteredRootPhaseStageSources {
   root_rank_order_phase_base_sources : RootRankOrderPhaseBaseBuildSources
-  order_groups_for_root_phase : Map[Int, Array[String]]
+  order_groups_for_root_phase : Map[Int32, Array[String]]
   reorder_context : @pre_root.OrderReorderContext
   materialized : @pre_root.OrderMaterializationData
   graph : @cgraph.Graph
@@ -869,8 +869,8 @@ priv struct ClusteredRootPhaseStageSources {
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
-  ranks : Map[String, Int]
-  vnode_ranks : Map[String, Int]
+  ranks : Map[String, Int32]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
@@ -887,10 +887,10 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
   edge_head : Array[String]
   cluster_keys : Map[String, String]
   edge_vnodes : Map[String, Array[String]]
-  vnodes_by_rank : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  vnodes_by_rank : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -900,7 +900,7 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
@@ -997,20 +997,20 @@ pub fn run_clustered_root_phase_stage(
 /// groups, final ordered groups, and vnode-inclusive groups for xpos.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct RootAndClusterRanksOutput {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  order_groups_for_mincross : Map[Int32, Array[String]]
+  ordered : Map[Int32, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
 }
 
 ///|
 /// Graphviz parity: graphviz_flip root output merge can replay rank overrides
 /// captured from root phase before cluster-local build_ranks ordering.
 fn resolve_root_phase_ordered_groups(
-  root_ordered_groups : Map[Int, Array[String]],
-  root_groups_override : Map[Int, Array[String]]?,
+  root_ordered_groups : Map[Int32, Array[String]],
+  root_groups_override : Map[Int32, Array[String]]?,
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   if !graphviz_flip {
     return root_ordered_groups
   }
@@ -1312,11 +1312,11 @@ fn build_root_override_rank_names(
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_root_groups_override(
-  groups : Map[Int, Array[String]],
-  override_groups : Map[Int, Array[String]],
+  groups : Map[Int32, Array[String]],
+  override_groups : Map[Int32, Array[String]],
   cluster_keys : Map[String, String],
   graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let reordered = @rank_groups.clone_rank_groups(groups)
   for rank, override_names in override_groups {
     match reordered.get(rank) {
@@ -1340,9 +1340,9 @@ fn apply_root_groups_override(
 /// Do not change behavior without updating fixtures/tests.
 fn resolve_root_component_order_index(
   name : String,
-  order_node_order : Map[String, Int],
-  fallback_order : Map[String, Int],
-) -> Int {
+  order_node_order : Map[String, Int32],
+  fallback_order : Map[String, Int32],
+) -> Int32 {
   match order_node_order.get(name) {
     Some(value) => value
     None =>
@@ -1429,10 +1429,10 @@ fn build_flat_constraint_adjacency(
 /// Do not change behavior without updating fixtures/tests.
 fn build_component_traversal_starts(
   order_nodes : Array[String],
-  order_node_order : Map[String, Int],
+  order_node_order : Map[String, Int32],
 ) -> ComponentTraversalStarts {
-  let fallback_order : Map[String, Int] = Map([])
-  let start_entries : Array[(String, Int)] = []
+  let fallback_order : Map[String, Int32] = Map([])
+  let start_entries : Array[(String, Int32)] = []
   for i, name in order_nodes {
     fallback_order[name] = i
     start_entries.push(
@@ -1575,9 +1575,9 @@ fn collect_components_from_traversal(
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_noncluster_components(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  order_node_order : Map[String, Int],
+  rank_keys : Array[Int32],
+  groups : Map[Int32, Array[String]],
+  order_node_order : Map[String, Int32],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
@@ -1688,7 +1688,7 @@ fn filter_component_flat_constraints(
 
 ///|
 priv struct RootComponentProjection {
-  order_groups_for_mincross : Map[Int, Array[String]]
+  order_groups_for_mincross : Map[Int32, Array[String]]
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
   order_edge_head_out_mincross : Array[String]
@@ -1708,8 +1708,8 @@ priv struct RootComponentProjection {
 
 ///|
 struct RootRankReorderInputs {
-  order_rank_keys_for_mincross : Array[Int]
-  order_groups_for_mincross : Map[Int, Array[String]]
+  order_rank_keys_for_mincross : Array[Int32]
+  order_groups_for_mincross : Map[Int32, Array[String]]
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
   order_edge_head_out_mincross : Array[String]
@@ -1720,10 +1720,10 @@ struct RootRankReorderInputs {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
   order_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  edge_order : Map[String, Int]
-  order_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  edge_order : Map[String, Int32]
+  order_node_order : Map[String, Int32]
   order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -1744,7 +1744,7 @@ pub fn run_root_rank_reorder_call(
   reorder_inputs : RootRankReorderInputs,
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   @reorder.reorder_rank_groups(
     reorder_inputs.order_rank_keys_for_mincross,
     reorder_inputs.order_groups_for_mincross,
@@ -1784,8 +1784,8 @@ pub fn run_root_rank_reorder_call(
 fn build_root_component_projection(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
+  order_rank_keys_for_mincross : Array[Int32],
+  order_groups_for_mincross : Map[Int32, Array[String]],
   order_edges_out_mincross : Array[@cgraph.Edge],
   order_edge_tail_out_mincross : Array[String],
   order_edge_head_out_mincross : Array[String],
@@ -1937,11 +1937,11 @@ fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool 
 /// Graphviz parity: component reorder keeps each rank's relative extraction
 /// order from the full group list before running mincross on that component.
 fn filter_component_rank_groups(
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
+  order_rank_keys_for_mincross : Array[Int32],
+  order_groups_for_mincross : Map[Int32, Array[String]],
   component_set : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let component_groups : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let component_groups : Map[Int32, Array[String]] = Map([])
   for rank in order_rank_keys_for_mincross {
     let names = order_groups_for_mincross.get(rank).unwrap_or_default()
     let keep : Array[String] = []
@@ -1959,9 +1959,9 @@ fn filter_component_rank_groups(
 
 ///|
 fn append_component_rank_groups(
-  order_rank_keys_for_mincross : Array[Int],
-  merged : Map[Int, Array[String]],
-  ordered_component : Map[Int, Array[String]],
+  order_rank_keys_for_mincross : Array[Int32],
+  merged : Map[Int32, Array[String]],
+  ordered_component : Map[Int32, Array[String]],
 ) -> Unit {
   for rank in order_rank_keys_for_mincross {
     let names = ordered_component.get(rank).unwrap_or_default()
@@ -1982,12 +1982,12 @@ fn append_component_rank_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn run_componentwise_root_rank_reorder(
   components : Array[Array[String]],
-  order_rank_keys_for_mincross : Array[Int],
+  order_rank_keys_for_mincross : Array[Int32],
   inputs : RootRankReorderInputs,
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
-) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map([])
+) -> Map[Int32, Array[String]] {
+  let merged : Map[Int32, Array[String]] = Map([])
   for rank in order_rank_keys_for_mincross {
     merged[rank] = []
   }
@@ -2012,7 +2012,7 @@ fn run_componentwise_root_rank_reorder(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
-) -> Map[Int, Array[String]] {
+) -> Map[Int32, Array[String]] {
   let (components, root_graphviz_flip) = build_root_component_runtime_plan(
     inputs.order_cluster_keys,
     inputs.graphviz_flip,
@@ -2045,9 +2045,9 @@ fn run_root_rank_reorder(
 fn build_root_component_runtime_plan(
   order_cluster_keys : Map[String, String],
   graphviz_flip : Bool,
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_node_order : Map[String, Int],
+  order_rank_keys_for_mincross : Array[Int32],
+  order_groups_for_mincross : Map[Int32, Array[String]],
+  order_node_order : Map[String, Int32],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   order_flat_constraints : Map[String, Bool],

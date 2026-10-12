@@ -27,10 +27,10 @@ priv struct SubgraphsAndBBoxInput {
   cluster_rn_x : Map[String, Double]
   cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
   rankdir : RankDir
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|
@@ -49,11 +49,11 @@ priv struct FinalLayoutGeometry {
 priv struct FinalLayoutGeometryInput {
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
-  all_ranks : Array[Int]
+  all_ranks : Array[Int32]
   sizes : Map[String, NodeSize]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 ///|

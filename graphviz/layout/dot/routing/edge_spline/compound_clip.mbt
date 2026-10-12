@@ -96,7 +96,7 @@ fn clip_compound_spline(
 ///|
 /// Compound and bbox clipping owner for edge splines: intersect Bezier
 /// segments with cluster boxes and adjust short compound exits.
-fn cmp_double(a : Double, b : Double) -> Int {
+fn cmp_double(a : Double, b : Double) -> Int32 {
   if a < b {
     -1
   } else if a > b {
@@ -107,7 +107,7 @@ fn cmp_double(a : Double, b : Double) -> Int {
 }
 
 ///|
-fn count_vert_cross(points : Array[@geom.Point], xcoord : Double) -> Int {
+fn count_vert_cross(points : Array[@geom.Point], xcoord : Double) -> Int32 {
   let mut sign = cmp_double(points[0].x, xcoord)
   let mut crossings = 0
   if sign == 0 {
@@ -124,7 +124,7 @@ fn count_vert_cross(points : Array[@geom.Point], xcoord : Double) -> Int {
 }
 
 ///|
-fn count_horz_cross(points : Array[@geom.Point], ycoord : Double) -> Int {
+fn count_horz_cross(points : Array[@geom.Point], ycoord : Double) -> Int32 {
   let mut sign = cmp_double(points[0].y, ycoord)
   let mut crossings = 0
   if sign == 0 {

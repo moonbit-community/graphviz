@@ -13,7 +13,7 @@ pub(all) struct ConcentratedSegment {
 priv struct ConcentratedAuxiliaryRoutes {
   flat_out : Map[String, Array[@cgraph.Edge]]
   other : Map[String, Array[@cgraph.Edge]]
-  main_edges : Map[Int, @cgraph.Edge]
+  main_edges : Map[Int32, @cgraph.Edge]
 }
 
 ///|
@@ -22,12 +22,12 @@ priv struct ConcentratedAuxiliaryRoutes {
 fn concentrated_auxiliary_routes(
   fast : @setup.ConcentrateFastGraph,
   edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
 ) -> ConcentratedAuxiliaryRoutes {
   let flat_out : Map[String, Array[@cgraph.Edge]] = Map([])
   let other : Map[String, Array[@cgraph.Edge]] = Map([])
-  let main_edges : Map[Int, @cgraph.Edge] = Map([])
-  let fast_owners : Map[Int, Bool] = Map([])
+  let main_edges : Map[Int32, @cgraph.Edge] = Map([])
+  let fast_owners : Map[Int32, Bool] = Map([])
   let representatives : Map[String, @cgraph.Edge] = Map([])
   let parallel_key = (edge : @cgraph.Edge) => {
     @edge_ops.edge_parallel_key(
@@ -84,19 +84,19 @@ fn concentrated_auxiliary_routes(
 
 ///|
 priv struct ConcentratedRouteEntry {
-  owner : Int
+  owner : Int32
   main : @cgraph.Edge
   segment : ConcentratedSegment
   ports : (@geom.Point?, @geom.Point?)
   auxiliary : Bool
-  edge_type : Int
+  edge_type : Int32
 }
 
 ///|
 fn compare_concentrated_ports(
   first : @geom.Point?,
   second : @geom.Point?,
-) -> Int {
+) -> Int32 {
   guard first is Some(a) else { if second is Some(_) { -1 } else { 0 } }
   guard second is Some(b) else { 1 }
   guard a.x == b.x else { a.x.compare(b.x) }
@@ -109,9 +109,9 @@ fn compare_concentrated_ports(
 fn compare_concentrated_entries(
   first : ConcentratedRouteEntry,
   second : ConcentratedRouteEntry,
-  ranks : Map[String, Int],
+  ranks : Map[String, Int32],
   positions : Map[String, @geom.Point],
-) -> Int {
+) -> Int32 {
   guard first.edge_type == second.edge_type else {
     second.edge_type.compare(first.edge_type)
   }
@@ -144,14 +144,14 @@ fn compare_concentrated_entries(
 /// edge's original owns the resulting spline, including interior segments.
 fn collect_concentrated_segments(
   fast : @setup.ConcentrateFastGraph,
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  groups : Map[Int32, Array[String]],
+  ranks : Map[String, Int32],
   positions : Map[String, @geom.Point],
-  edges? : Array[@cgraph.Edge] = [],
-  initial_port_points? : Map[Int, (@geom.Point?, @geom.Point?)] = {},
-  route_order? : Map[Int, Int] = {},
-) -> Map[Int, Array[ConcentratedSegment]] {
-  let segments : Map[Int, Array[ConcentratedSegment]] = Map([])
+  edges~ : Array[@cgraph.Edge] = [],
+  initial_port_points~ : Map[Int32, (@geom.Point?, @geom.Point?)] = {},
+  route_order~ : Map[Int32, Int32] = {},
+) -> Map[Int32, Array[ConcentratedSegment]] {
+  let segments : Map[Int32, Array[ConcentratedSegment]] = Map([])
   let entries : Array[ConcentratedRouteEntry] = []
   let auxiliary = concentrated_auxiliary_routes(fast, edges, ranks)
   let order_index = @rank_groups.build_order_index(groups)

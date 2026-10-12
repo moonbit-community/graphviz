@@ -178,7 +178,7 @@ fn finalize_xlabels(
 
 ///|
 /// Xlabel layout update and cluster-label obstacle collection helpers.
-fn parse_int_prefix(value : String) -> Int? {
+fn parse_int_prefix(value : String) -> Int32? {
   let mut acc = 0
   let mut seen = false
   for c in value {

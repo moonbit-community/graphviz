@@ -46,7 +46,7 @@ fn trim_degenerate_spline_segments(
 ///|
 priv struct SegmentClipResult {
   points : Array[@geom.Point]
-  idx : Int
+  idx : Int32
   anchor : @geom.Point
 }
 
@@ -62,8 +62,8 @@ fn arrow_clip_start_segment(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
-  start_idx : Int,
-  end_idx : Int,
+  start_idx : Int32,
+  end_idx : Int32,
 ) -> SegmentClipResult {
   let start_point = points[start_idx]
   if arrow_len <= 0.0 || points.length() < 4 {
@@ -94,8 +94,8 @@ fn arrow_clip_end_segment(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
-  start_idx : Int,
-  end_idx : Int,
+  start_idx : Int32,
+  end_idx : Int32,
 ) -> SegmentClipResult {
   let end_point = points[end_idx + 3]
   if arrow_len <= 0.0 || points.length() < 4 {
@@ -214,7 +214,7 @@ fn clip_spline_arrows(
   include_tail : Bool,
   include_head : Bool,
   eps : Double,
-  orthogonal? : Bool = false,
+  orthogonal~ : Bool = false,
 ) -> SplineArrowClipResult {
   if orthogonal {
     return clip_spline_arrows_ortho(

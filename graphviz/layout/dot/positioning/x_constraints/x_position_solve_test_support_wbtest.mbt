@@ -20,7 +20,7 @@ fn build_simplex_test_input(
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let a = graph.node("a")
   let b = graph.node("b")
-  let x_groups : Map[Int, Array[String]] = Map([])
+  let x_groups : Map[Int32, Array[String]] = Map([])
   x_groups[0] = ["a", "b"]
   let x_base_sizes : Map[String, @node_primitives.NodeSize] = Map([])
   x_base_sizes["a"] = @node_primitives.node_size_from_points(10.0, 10.0)
@@ -30,7 +30,7 @@ fn build_simplex_test_input(
   vnode_sizes[vnode_name] = @node_primitives.vnode_size_from_widths_with_h(
     4.0, 6.0, 2.0,
   )
-  let vnode_ranks : Map[String, Int] = Map([])
+  let vnode_ranks : Map[String, Int32] = Map([])
   vnode_ranks[vnode_name] = 1
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes["edge0"] = [vnode_name]

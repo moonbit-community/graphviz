@@ -12,7 +12,7 @@ fn make_object(
   pos : @geom.Point,
   width : Double,
   height : Double,
-  label_index? : Int? = None,
+  label_index~ : Int32? = None,
 ) -> XObject {
   { pos, width, height, label_index, }
 }

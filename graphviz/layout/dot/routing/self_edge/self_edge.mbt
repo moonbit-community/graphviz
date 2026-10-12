@@ -30,16 +30,16 @@ fn max_double(a : Double, b : Double) -> Double {
 }
 
 ///|
-const PORT_SIDE_BOTTOM : Int = 1
+const PORT_SIDE_BOTTOM : Int32 = 1
 
 ///|
-const PORT_SIDE_RIGHT : Int = 2
+const PORT_SIDE_RIGHT : Int32 = 2
 
 ///|
-const PORT_SIDE_TOP : Int = 4
+const PORT_SIDE_TOP : Int32 = 4
 
 ///|
-const PORT_SIDE_LEFT : Int = 8
+const PORT_SIDE_LEFT : Int32 = 8
 
 ///|
 pub(all) struct SelfEdgeRightSpaceInput {
@@ -48,7 +48,7 @@ pub(all) struct SelfEdgeRightSpaceInput {
   rankdir : RankDir
   self_edge_size_pt : Double
   self_edge_label_width_for : (@cgraph.Edge, RankDir) -> Double
-  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int
+  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int32
 }
 
 ///|
@@ -158,10 +158,10 @@ pub fn collect_self_edge_groups(
 priv struct EnsureSelfEdgeRoutesInput {
   edge : @cgraph.Edge
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int32, EdgeRouteBase]
   nodesep_pt : Double
-  rank_y : Map[Int, Double]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
+  rank_y : Map[Int32, Double]
+  self_edge_routes : Map[Int32, SelfEdgeRoute]
   self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
   self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
 }
@@ -214,10 +214,10 @@ fn ensure_self_edge_routes(input : EnsureSelfEdgeRoutesInput) -> Unit {
 pub(all) struct SelfEdgeRouteLookupInput {
   edge : @cgraph.Edge
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int32, EdgeRouteBase]
   nodesep_pt : Double
-  rank_y : Map[Int, Double]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
+  rank_y : Map[Int32, Double]
+  self_edge_routes : Map[Int32, SelfEdgeRoute]
   self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
   self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
 }

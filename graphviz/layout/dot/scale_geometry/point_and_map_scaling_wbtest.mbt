@@ -23,7 +23,7 @@ test "point and map scaling helpers keep expected rounding and axis scaling" {
   assert_eq(scaled_points.get("a"), Some({ x: 3.0, y: -8.0, }))
   assert_eq(scaled_points.get("b"), Some({ x: -1.0, y: 2.0, }))
 
-  let doubles : Map[Int, Double] = Map([])
+  let doubles : Map[Int32, Double] = Map([])
   doubles[1] = 1.24
   doubles[2] = -1.26
   let scaled_doubles = scale_double_map_rounded(doubles, 10.0)

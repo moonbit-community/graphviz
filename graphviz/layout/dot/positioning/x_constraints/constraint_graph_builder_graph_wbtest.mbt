@@ -23,14 +23,14 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
   let sizes = build_constraint_builder_test_sizes()
   sizes[vnode] = @node_primitives.vnode_size_from_widths_with_h(1.0, 1.0, 2.0)
 
-  let edge_out_order : Map[String, Array[Int]] = Map([])
+  let edge_out_order : Map[String, Array[Int32]] = Map([])
   edge_out_order["a"] = [1]
   edge_out_order["b"] = [0]
 
-  let ranks : Map[String, Int] = { "a": 0, "b": 0, "c": 2 }
+  let ranks : Map[String, Int32] = { "a": 0, "b": 0, "c": 2 }
   ranks[vnode] = 1
 
-  let groups : Map[Int, Array[String]] = Map([])
+  let groups : Map[Int32, Array[String]] = Map([])
   groups[0] = ["a", "b"]
   groups[2] = ["c"]
 

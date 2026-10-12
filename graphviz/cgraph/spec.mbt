@@ -80,7 +80,7 @@ pub type Edge
 pub fn Graph::new(
   kind : GraphKind,
   name? : String,
-  strict? : Bool = false,
+  strict~ : Bool = false,
 ) -> Graph {
   ...
 }
@@ -216,7 +216,7 @@ pub fn Graph::declare_attr(
   self : Graph,
   kind : AttrKind,
   name : String,
-  default? : String = "",
+  default~ : String = "",
 ) -> Unit {
   ...
 }
