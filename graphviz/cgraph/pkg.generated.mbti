@@ -51,14 +51,14 @@ pub impl Show for Compass
 
 pub struct Edge {
   root : Root
-  id : Int
+  id : Int32
 }
 pub fn Edge::attrs(Self) -> Array[(String, String)]
 pub fn Edge::get_attr(Self, String) -> String?
 pub fn Edge::get_attr_value(Self, String) -> AttrValue?
 pub fn Edge::head(Self) -> Node
 pub fn Edge::head_port(Self) -> Port?
-pub fn Edge::id(Self) -> Int
+pub fn Edge::id(Self) -> Int32
 pub fn Edge::name(Self) -> String?
 pub fn Edge::set_attr(Self, String, String) -> Unit
 pub fn Edge::set_attr_value(Self, String, AttrValue) -> Unit
@@ -67,7 +67,7 @@ pub fn Edge::tail_port(Self) -> Port?
 
 pub struct Graph {
   root : Root
-  id : Int
+  id : Int32
 }
 pub fn Graph::attrs(Self) -> Array[(String, String)]
 pub fn Graph::declare_attr(Self, AttrKind, String, default? : String) -> Unit
@@ -107,7 +107,7 @@ pub impl Show for GraphKind
 
 pub struct Node {
   root : Root
-  id : Int
+  id : Int32
 }
 pub fn Node::attrs(Self) -> Array[(String, String)]
 pub fn Node::get_attr(Self, String) -> String?

@@ -32,9 +32,9 @@ pub impl Show for DotParseError
 
 // Types and methods
 pub(all) struct Position {
-  line : Int
-  column : Int
-  offset : Int
+  line : Int32
+  column : Int32
+  offset : Int32
 } derive(Eq, @debug.Debug)
 pub fn Position::equal(Self, Self) -> Bool
 pub fn Position::not_equal(Self, Self) -> Bool

@@ -40,8 +40,8 @@ pub(all) struct HtmlCell {
   target : String?
   content : HtmlCellContent
   port : String?
-  col_span : Int
-  row_span : Int
+  col_span : Int32
+  row_span : Int32
   align : HtmlAlign
   valign : HtmlVAlign
   bg_color : String?
@@ -75,8 +75,8 @@ pub impl Show for HtmlCellContent
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
-  row : Int
-  col : Int
+  row : Int32
+  col : Int32
   hruled : Bool
 } derive(Eq, @debug.Debug)
 pub fn HtmlCellLayout::equal(Self, Self) -> Bool
@@ -88,8 +88,8 @@ pub impl Show for HtmlCellLayout
 
 pub(all) struct HtmlCellPlacement {
   cell : HtmlCell
-  row : Int
-  col : Int
+  row : Int32
+  col : Int32
 } derive(Eq, @debug.Debug)
 pub fn HtmlCellPlacement::equal(Self, Self) -> Bool
 pub fn HtmlCellPlacement::not_equal(Self, Self) -> Bool
@@ -147,8 +147,8 @@ pub impl Show for HtmlTable
 
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
-  row_count : Int
-  col_count : Int
+  row_count : Int32
+  col_count : Int32
   scale_x : Double
   scale_y : Double
 } derive(Eq, @debug.Debug)

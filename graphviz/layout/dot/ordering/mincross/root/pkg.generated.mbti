@@ -16,11 +16,11 @@ pub fn build_ordering_edge_snapshot_entries(OrderingEdgeSnapshotBuildInput) -> A
 
 pub fn build_root_mincross_input_snapshot(RootMincrossSnapshotBuildInput) -> RootMincrossInputSnapshot
 
-pub fn build_root_snapshot_capture_callback((@cgraph.Edge) -> Int) -> (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit
+pub fn build_root_snapshot_capture_callback((@cgraph.Edge) -> Int32) -> (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit
 
 pub fn coalesce_ordering_edge_snapshot_entries(Array[OrderingEdgeSnapshotEntry]) -> Array[OrderingEdgeSnapshotEntry]
 
-pub fn merge_root_mincross_groups(Array[Int], Map[Int, Array[String]], Map[Int, Array[String]], Map[String, Bool], Map[String, String], Map[String, Bool]) -> Map[Int, Array[String]]
+pub fn merge_root_mincross_groups(Array[Int32], Map[Int32, Array[String]], Map[Int32, Array[String]], Map[String, Bool], Map[String, String], Map[String, Bool]) -> Map[Int32, Array[String]]
 
 pub fn normalize_synthetic_ports(String, String, Double, Double, Double, Double) -> (Double, Double, Double, Double)
 
@@ -30,9 +30,9 @@ pub let root_mincross_input_snapshot : @ref.Ref[RootMincrossInputSnapshot?]
 
 pub fn run_clustered_root_phase_stage(ClusteredRootPhaseStageBuildSources, (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit) -> ClusteredRootPhaseStageOutput
 
-pub fn run_root_rank_order_reorder(RootRankOrderCallInputs, Bool) -> Map[Int, Array[String]]
+pub fn run_root_rank_order_reorder(RootRankOrderCallInputs, Bool) -> Map[Int32, Array[String]]
 
-pub fn run_root_rank_reorder_call(RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]]
+pub fn run_root_rank_reorder_call(RootRankReorderInputs, Bool, Bool) -> Map[Int32, Array[String]]
 
 pub fn should_capture_ordering_inputs() -> Bool
 
@@ -47,10 +47,10 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
   edge_head : Array[String]
   cluster_keys : Map[String, String]
   edge_vnodes : Map[String, Array[String]]
-  vnodes_by_rank : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  vnodes_by_rank : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -60,7 +60,7 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
   flat_constraints : Map[String, Bool]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_clusters : Map[String, String]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
 }
@@ -68,7 +68,7 @@ pub(all) struct ClusteredRootPhaseStageBuildSources {
 pub struct ClusteredRootPhaseStageOutput {
   root_cluster_stage : RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
-  cluster_rank_order_replay : (RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int, Map[String, Int]]
+  cluster_rank_order_replay : (RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int32, Map[String, Int32]]
 }
 
 pub(all) struct OrderingEdgeSnapshotBuildInput {
@@ -79,13 +79,13 @@ pub(all) struct OrderingEdgeSnapshotBuildInput {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 pub(all) struct OrderingEdgeSnapshotEntry {
   tail : String
   head : String
-  xpenalty : Int
+  xpenalty : Int32
   tail_port_x : Double
   head_port_x : Double
   tail_port_order : Double
@@ -93,14 +93,14 @@ pub(all) struct OrderingEdgeSnapshotEntry {
 }
 
 pub(all) struct RootAndClusterRanksOutput {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  order_groups_for_mincross : Map[Int32, Array[String]]
+  ordered : Map[Int32, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
 }
 
 pub(all) struct RootMincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges : Array[OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
@@ -109,9 +109,9 @@ pub(all) struct RootMincrossInputSnapshot {
 pub(all) struct RootMincrossReorderInputs {
   order_with_clusters : Bool
   order_with_vnodes : Bool
-  seeded_groups : Map[Int, Array[String]]
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  seeded_groups : Map[Int32, Array[String]]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -121,10 +121,10 @@ pub(all) struct RootMincrossReorderInputs {
   order_edge_head_port_order : Array[Double]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   vnode_order_keys_for_ordering : Map[String, Double]
-  order_node_order : Map[String, Int]
+  order_node_order : Map[String, Int32]
   order_sizes_out : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -137,14 +137,14 @@ pub(all) struct RootMincrossReorderInputs {
 }
 
 pub(all) struct RootMincrossReorderResult {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
+  order_groups_for_mincross : Map[Int32, Array[String]]
+  ordered : Map[Int32, Array[String]]
   reorder_call_data : RootRankReorderCallData
 }
 
 pub(all) struct RootMincrossSnapshotBuildInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
   edge_head_out : Array[String]
@@ -154,13 +154,13 @@ pub(all) struct RootMincrossSnapshotBuildInput {
   edge_head_port_order : Array[Double]
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 type RootRankOrderCallInputs
 
 pub(all) struct RootRankReorderCallData {
-  order_rank_keys_for_mincross : Array[Int]
+  order_rank_keys_for_mincross : Array[Int32]
   mincross_nodes : Map[String, Bool]
   order_edges_out_mincross : Array[@cgraph.Edge]
   order_edge_tail_out_mincross : Array[String]
@@ -175,6 +175,6 @@ pub(all) struct RootRankReorderCallData {
 type RootRankReorderInputs
 
 // Type aliases
-pub type ClusterRankOrderReplay = (RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int, Map[String, Int]]
+pub type ClusterRankOrderReplay = (RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int32, Map[String, Int32]]
 
 // Traits

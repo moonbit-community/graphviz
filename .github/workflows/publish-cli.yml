@@ -1,0 +1,46 @@
+name: Validate and publish Graphviz CLI
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/publish-cli.yml
+permissions:
+  contents: read
+concurrency:
+  group: graphviz-cli-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install current MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- nightly
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Validate tests and reference parity
+        env:
+          MOON_TEST_JOBS: 2
+          STRICT_PARITY_JOBS: 2
+          CAPTURE_ENV_INVARIANCE_JOBS: 2
+        run: |
+          moon version --all
+          moon update
+          moon check --target native --deny-warn
+          scripts/run_moon_test_full.sh
+          moon -C cli package --list
+      - name: Publish CLI
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_MOONBIT_COMMUNITY_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$MOONCAKES_TOKEN"
+          umask 077
+          trap 'rm -f "$HOME/.moon/credentials.json"' EXIT
+          printf '%s' "$MOONCAKES_TOKEN" > "$HOME/.moon/credentials.json"
+          moon -C cli publish

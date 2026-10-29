@@ -26,9 +26,9 @@ pub fn finalize_layout_from_sources(FinalizeLayoutBuildSources) -> @layout_tree.
 
 pub fn format_dim(Double) -> String
 
-pub fn format_fixed(Double, Int) -> String
+pub fn format_fixed(Double, Int32) -> String
 
-pub fn format_fixed_trim(Double, Int) -> String
+pub fn format_fixed_trim(Double, Int32) -> String
 
 pub fn format_float(Double) -> String
 
@@ -40,7 +40,7 @@ pub fn format_rects(Array[@geom.Rect]) -> String
 
 pub fn root_label_pos_for_bbox(@cgraph.Graph, @geom.Rect) -> @geom.Point?
 
-pub fn round_to(Double, Int) -> Double
+pub fn round_to(Double, Int32) -> Double
 
 pub fn shift_optional_point(@geom.Point?, Double, Double) -> @geom.Point?
 

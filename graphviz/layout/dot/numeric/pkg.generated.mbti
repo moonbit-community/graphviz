@@ -16,9 +16,9 @@ pub fn parse_first_double_optional(String) -> Double?
 
 pub fn parse_graph_size_pt_attr(@cgraph.Graph) -> GraphSizePt?
 
-pub fn round_int(Double) -> Int
+pub fn round_int(Double) -> Int32
 
-pub fn trunc_int(Double) -> Int
+pub fn trunc_int(Double) -> Int32
 
 // Errors
 

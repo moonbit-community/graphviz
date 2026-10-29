@@ -28,16 +28,16 @@ pub(all) struct PositionOutputPipelineInput {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   x_positions : Map[String, Double]
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
   nodesep_pt : Double
   has_edge_labels : Bool
   use_vnodes_for_xpos : Bool
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   cluster_rounding_enabled : Bool
   vnode_clusters : Map[String, String]

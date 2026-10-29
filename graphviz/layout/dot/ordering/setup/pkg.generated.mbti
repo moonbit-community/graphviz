@@ -12,7 +12,7 @@ pub fn build_dot_cluster_metadata_from_sources(DotClusterMetadataSources) -> Dot
 
 pub fn build_edge_port_sample_bundle(Array[@cgraph.Edge], Array[String], Array[String], (String, @cgraph.Port?) -> Double, (String, @cgraph.Port?) -> Double) -> EdgePortSampleBundle
 
-pub fn build_edge_vnodes(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Array[Int]], Map[String, Int], Double, @rankdir.RankDir, Map[String, Bool], Map[String, String], Map[String, String?]) -> EdgeVnodeInfo
+pub fn build_edge_vnodes(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Array[Int32]], Map[String, Int32], Double, @rankdir.RankDir, Map[String, Bool], Map[String, String], Map[String, String?]) -> EdgeVnodeInfo
 
 pub fn build_ordering_edge_port_data_from_sources(OrderingEdgePortDataSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingEdgePortData
 
@@ -20,11 +20,11 @@ pub fn build_ordering_pipeline_context_from_sources(BuildOrderingPipelineContext
 
 pub fn build_ordering_reorder_setup_from_sources(OrderingReorderSetupSources) -> OrderingReorderSetup
 
-pub fn build_ordering_result_from_pipeline_context(OrderingPipelineContext, Map[Int, Array[String]], Map[Int, Array[String]]) -> OrderingResult
+pub fn build_ordering_result_from_pipeline_context(OrderingPipelineContext, Map[Int32, Array[String]], Map[Int32, Array[String]]) -> OrderingResult
 
 pub fn build_ordering_runtime_context_from_sources(BuildOrderingRuntimeContextSources) -> OrderingRuntimeContext
 
-pub fn concentrate_ordering_result(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int], OrderingResult, edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool, node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool) -> OrderingResult
+pub fn concentrate_ordering_result(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int32], OrderingResult, edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool, node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool) -> OrderingResult
 
 // Errors
 
@@ -36,10 +36,10 @@ pub(all) struct BuildOrderingPipelineContextSources {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   nodesep_pt : Double
   rankdir : @rankdir.RankDir
   cluster_meta : DotClusterMetadata
@@ -51,9 +51,9 @@ pub(all) struct BuildOrderingRuntimeContextSources {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  node_order : Map[String, Int32]
   nodesep_pt : Double
   rankdir : @rankdir.RankDir
   cluster_meta : DotClusterMetadata
@@ -63,8 +63,8 @@ pub(all) struct ClusterCoreOrderingMetadata {
   has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
@@ -76,26 +76,26 @@ pub(all) struct ClusterMembershipMaps {
 }
 
 pub(all) struct ClusterNodeRankBounds {
-  min_rank : Map[String, Int]
-  max_rank : Map[String, Int]
-  first_order : Map[String, Int]
+  min_rank : Map[String, Int32]
+  max_rank : Map[String, Int32]
+  first_order : Map[String, Int32]
 }
 
 pub(all) struct ConcentrateFastEdge {
   tail : String
   head : String
-  mut weight : Int
+  mut weight : Int32
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
-  mut to_virtual : Int?
+  mut to_virtual : Int32?
   original : @cgraph.Edge?
 }
 
 pub(all) struct ConcentrateFastGraph {
   edges : Array[ConcentrateFastEdge]
-  copied_from : Map[Int, Int]
-  incoming : Map[String, Array[Int]]
-  outgoing : Map[String, Array[Int]]
+  copied_from : Map[Int32, Int32]
+  incoming : Map[String, Array[Int32]]
+  outgoing : Map[String, Array[Int32]]
 }
 pub fn ConcentrateFastGraph::new() -> Self
 
@@ -109,13 +109,13 @@ pub(all) struct DotClusterMetadata {
   has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_skeleton : Map[String, Bool]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_order : Array[String]
   cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
 }
@@ -124,9 +124,9 @@ pub(all) struct DotClusterMetadataSources {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
-  node_order : Map[String, Int]
+  groups : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
+  node_order : Map[String, Int32]
   edge_tail : Array[String]
   edge_head : Array[String]
   rankdir : @rankdir.RankDir
@@ -140,9 +140,9 @@ pub(all) struct EdgePortSampleBundle {
 }
 
 pub(all) struct EdgeVnodeInfo {
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   edge_vnodes : Map[String, Array[String]]
   vnode_clusters : Map[String, String]
 }
@@ -153,10 +153,10 @@ pub(all) struct FlatConstraintsOutput {
 }
 
 pub(all) struct OrderingClass2Data {
-  edges_by_tail : Map[String, Array[Int]]
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edges_by_tail : Map[String, Array[Int32]]
+  order_edges_by_tail : Map[String, Array[(String, String, Int32, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int32, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int32, Bool, Double, Double, Double, Double)]]
   root_edge_creation : Array[(String, String)]
   skeleton_edge_creation : Array[(String, String)]
   edge_creation_order : Array[(String, String)]
@@ -166,7 +166,7 @@ pub(all) struct OrderingClass2Data {
 }
 
 pub(all) struct OrderingEdgePortData {
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   edge_tail_port_x : Array[Double]
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
@@ -198,8 +198,8 @@ pub(all) struct OrderingPipelineContext {
 }
 
 pub(all) struct OrderingReorderSetup {
-  ordering_groups_base : Map[Int, Array[String]]
-  base_order_index : Map[String, Int]
+  ordering_groups_base : Map[Int32, Array[String]]
+  base_order_index : Map[String, Int32]
   order_with_vnodes : Bool
   order_with_clusters : Bool
   graphviz_flip : Bool
@@ -215,34 +215,34 @@ pub(all) struct OrderingReorderSetupSources {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  node_order : Map[String, Int32]
   port_edge_nodes : Map[String, Bool]
   vnode_info : EdgeVnodeInfo
   cluster_has_clusters : Bool
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_parents : Map[String, String?]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   rankdir : @rankdir.RankDir
   edge_port_data : OrderingEdgePortData
 }
 
 pub(all) struct OrderingResult {
   live_graph : ConcentrateFastGraph?
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   vnode_info : EdgeVnodeInfo
-  vnode_count : Int
+  vnode_count : Int32
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
-  edge_order : Map[String, Int]
+  edge_order : Map[String, Int32]
   edge_cluster_keys : Map[String, String]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
@@ -254,7 +254,7 @@ pub(all) struct OrderingRuntimeContext {
   edge_cluster_keys : Map[String, String]
   vnode_info : EdgeVnodeInfo
   port_edge_nodes : Map[String, Bool]
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
   rank_same_constraints : Map[String, Bool]
 }
 
@@ -263,7 +263,7 @@ pub(all) struct OrderingRuntimeCore {
   existing_names : Map[String, Bool]
   edge_cluster_keys : Map[String, String]
   port_edge_nodes : Map[String, Bool]
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
 }
 
 // Type aliases

@@ -13,11 +13,11 @@ import {
 // Values
 pub fn layout_dot(@cgraph.Graph, options? : DotLayoutOptions) -> DotLayoutGraph raise DotLayoutError
 
-pub fn layout_dot_noop(@cgraph.Graph, no_op_level? : Int, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_dot_noop(@cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
 pub fn layout_neato(@cgraph.Graph, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
-pub fn layout_neato_noop(@cgraph.Graph, no_op_level? : Int, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_neato_noop(@cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
 // Errors
 pub(all) suberror DotLayoutError {

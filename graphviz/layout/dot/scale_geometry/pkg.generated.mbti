@@ -12,7 +12,7 @@ import {
 // Values
 pub fn ratio_fill_scale_factors(@cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> RatioFillScaleFactors?
 
-pub fn scale_double_map_rounded(Map[Int, Double], Double) -> Map[Int, Double]
+pub fn scale_double_map_rounded(Map[Int32, Double], Double) -> Map[Int32, Double]
 
 pub fn scale_edge_layout_output(Array[@layout_tree.DotLayoutEdge], Double, Double) -> Array[@layout_tree.DotLayoutEdge]
 

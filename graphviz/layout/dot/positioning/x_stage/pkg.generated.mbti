@@ -21,9 +21,9 @@ pub fn build_x_stage_output(XStageInput) -> XStageOutput
 pub(all) struct PositionModeFlagSources {
   has_edge_labels : Bool
   has_port_edges : Bool
-  vnode_count : Int
-  max_xpos_vnodes : Int
-  max_xpos_reorder_vnodes : Int
+  vnode_count : Int32
+  max_xpos_vnodes : Int32
+  max_xpos_reorder_vnodes : Int32
   rankdir : @rankdir.RankDir
 }
 
@@ -44,8 +44,8 @@ pub(all) struct XStageInput {
 
 pub(all) struct XStageOutput {
   use_vnodes_for_xpos : Bool
-  x_groups : Map[Int, Array[String]]
-  flat_label_ranks : Map[String, Int]
+  x_groups : Map[Int32, Array[String]]
+  flat_label_ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
   x_positions : Map[String, Double]
 }

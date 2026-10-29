@@ -18,7 +18,7 @@ pub fn port_is_explicit(@cgraph.Port?) -> Bool
 
 pub fn port_key(@cgraph.Port?) -> String
 
-pub fn unique_virtual_node_name(String, Int, Int, Map[String, Bool]) -> String
+pub fn unique_virtual_node_name(String, Int32, Int32, Map[String, Bool]) -> String
 
 // Errors
 

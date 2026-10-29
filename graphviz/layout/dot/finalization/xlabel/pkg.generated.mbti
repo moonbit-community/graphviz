@@ -60,7 +60,7 @@ pub(all) struct XObject {
   pos : @geom.Point
   width : Double
   height : Double
-  label_index : Int?
+  label_index : Int32?
 }
 
 // Type aliases

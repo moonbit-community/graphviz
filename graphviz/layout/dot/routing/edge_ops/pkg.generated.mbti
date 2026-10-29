@@ -20,7 +20,7 @@ pub fn edge_parallel_group_key(@cgraph.Edge) -> String
 
 pub fn edge_parallel_key(String, String, @cgraph.Port?, @cgraph.Port?) -> String
 
-pub fn edge_swap_ends(String, String, Map[String, Int], Map[String, Int]) -> Bool
+pub fn edge_swap_ends(String, String, Map[String, Int32], Map[String, Int32]) -> Bool
 
 pub fn reverse_spline(@geom.Spline) -> @geom.Spline
 

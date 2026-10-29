@@ -16,7 +16,7 @@ pub fn cluster_left_boundary_name(String) -> String
 
 pub fn cluster_right_boundary_name(String) -> String
 
-pub fn cluster_skeleton_name(String, Int) -> String
+pub fn cluster_skeleton_name(String, Int32) -> String
 
 pub fn is_cluster_boundary_name(String) -> Bool
 

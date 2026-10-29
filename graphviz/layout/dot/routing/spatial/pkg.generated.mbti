@@ -50,7 +50,7 @@ pub struct RoutingSpatialData {
 pub(all) struct RoutingSpatialInput {
   graph : @cgraph.Graph
   prep : @layout_prep.LayoutPrep
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   positions_state : @positioning.PositionResult
 }
 

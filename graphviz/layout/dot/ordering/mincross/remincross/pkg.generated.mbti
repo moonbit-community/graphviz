@@ -11,35 +11,35 @@ import {
 }
 
 // Values
-pub fn build_clustered_finalize_groups(Map[Int, Array[String]], Map[Int, Map[String, Int]], Map[String, String], Map[String, String], Map[String, Int]) -> Map[Int, Array[String]]
+pub fn build_clustered_finalize_groups(Map[Int32, Array[String]], Map[Int32, Map[String, Int32]], Map[String, String], Map[String, String], Map[String, Int32]) -> Map[Int32, Array[String]]
 
-pub fn build_remincross_groups(ReMincrossGroupInputs) -> Map[Int, Array[String]]
+pub fn build_remincross_groups(ReMincrossGroupInputs) -> Map[Int32, Array[String]]
 
 pub fn build_remincross_input_snapshot(RemincrossSnapshotBuildInput) -> RemincrossInputSnapshot
 
-pub fn build_remincross_snapshot_capture_callback((@cgraph.Edge) -> Int) -> (ReMincrossCleanupCaptureInputs) -> Unit
+pub fn build_remincross_snapshot_capture_callback((@cgraph.Edge) -> Int32) -> (ReMincrossCleanupCaptureInputs) -> Unit
 
-pub fn build_remincross_vnode_groups(ReMincrossVnodeGroupInputs) -> Map[Int, Array[String]]
+pub fn build_remincross_vnode_groups(ReMincrossVnodeGroupInputs) -> Map[Int32, Array[String]]
 
-pub fn build_seeded_remincross(Map[Int, Array[String]], Map[Int, Array[String]], Map[String, String]) -> Map[Int, Array[String]]
+pub fn build_seeded_remincross(Map[Int32, Array[String]], Map[Int32, Array[String]], Map[String, String]) -> Map[Int32, Array[String]]
 
-pub fn collect_real_only_rank_groups(Array[Int], Map[Int, Array[String]], Map[String, Bool]) -> Map[Int, Array[String]]
+pub fn collect_real_only_rank_groups(Array[Int32], Map[Int32, Array[String]], Map[String, Bool]) -> Map[Int32, Array[String]]
 
 pub let remincross_input_snapshot : @ref.Ref[RemincrossInputSnapshot?]
 
-pub fn run_clustered_finalize_stage(ClusteredFinalizeStageBuildSources, (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]]) -> ReMincrossPassOutput
+pub fn run_clustered_finalize_stage(ClusteredFinalizeStageBuildSources, (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]]) -> ReMincrossPassOutput
 
-pub fn run_remincross_cleanup(ReMincrossCleanupInputs, (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]]) -> Map[Int, Array[String]]
+pub fn run_remincross_cleanup(ReMincrossCleanupInputs, (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]]) -> Map[Int32, Array[String]]
 
-pub fn run_remincross_cleanup_reorder(ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]]
+pub fn run_remincross_cleanup_reorder(ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]]
 
-pub fn run_remincross_pass(ReMincrossPassBuildContext, Map[Int, Array[String]], (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]]) -> ReMincrossPassOutput
+pub fn run_remincross_pass(ReMincrossPassBuildContext, Map[Int32, Array[String]], (ReMincrossCleanupCaptureInputs) -> Unit, (ReMincrossCleanupReorderInputs) -> Map[Int32, Array[String]]) -> ReMincrossPassOutput
 
 // Errors
 
 // Types and methods
 pub(all) struct ClusteredFinalizeStageBuildSources {
-  cluster_rank_order_replay : (@root.RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int, Map[String, Int]]
+  cluster_rank_order_replay : (@root.RootAndClusterRanksOutput, Map[String, String], Map[String, Bool], Map[String, Bool]) -> Map[Int32, Map[String, Int32]]
   root_cluster_stage : @root.RootAndClusterRanksOutput
   root_tail_order_override : Array[String]?
   pre_root_stage : @pre_root.ClusteredPreRootStageOutput
@@ -53,21 +53,21 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   reorder_setup : @setup.OrderingReorderSetup
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_flat_constraints : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_sizes : Map[String, @node_primitives.NodeSize]
   rank_same_constraints : Map[String, Bool]
@@ -79,8 +79,8 @@ pub(all) struct ClusteredFinalizeStageBuildSources {
 }
 
 pub(all) struct ReMincrossCleanupCaptureInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -92,11 +92,11 @@ pub(all) struct ReMincrossCleanupCaptureInputs {
 }
 
 pub(all) struct ReMincrossCleanupInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   materialized_inputs : ReMincrossCleanupMaterializedInputs
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   nodesep_pt : Double
   has_edge_labels : Bool
   port_order_positions : Map[String, Double]
@@ -106,8 +106,8 @@ pub(all) struct ReMincrossCleanupInputs {
 
 pub(all) struct ReMincrossCleanupMaterializedInputs {
   rem_nodes : Array[String]
-  rem_ranks : Map[String, Int]
-  rem_node_order : Map[String, Int]
+  rem_ranks : Map[String, Int32]
+  rem_node_order : Map[String, Int32]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -121,8 +121,8 @@ pub(all) struct ReMincrossCleanupMaterializedInputs {
 }
 
 pub(all) struct ReMincrossCleanupReorderInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   rem_edges_out : Array[@cgraph.Edge]
   rem_edge_tail_out : Array[String]
   rem_edge_head_out : Array[String]
@@ -133,10 +133,10 @@ pub(all) struct ReMincrossCleanupReorderInputs {
   rem_parents : Map[String, Array[String]]
   rem_children : Map[String, Array[String]]
   rem_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  rem_edge_order : Map[String, Int]
-  rem_node_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
+  rem_edge_order : Map[String, Int32]
+  rem_node_order : Map[String, Int32]
   rem_sizes : Map[String, @node_primitives.NodeSize]
   nodesep_pt : Double
   has_edge_labels : Bool
@@ -149,14 +149,14 @@ pub(all) struct ReMincrossCleanupReorderInputs {
 pub(all) struct ReMincrossGroupInputs {
   ratio : String
   cluster_order : Array[String]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
   cluster_keys : Map[String, String]
   vnode_group_inputs : ReMincrossVnodeGroupInputs
 }
 
 pub(all) struct ReMincrossMaterializationInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
+  rem_rank_keys : Array[Int32]
+  rem_groups : Map[Int32, Array[String]]
   creation_order : Array[String]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
@@ -165,13 +165,13 @@ pub(all) struct ReMincrossMaterializationInputs {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   order_with_vnodes : Bool
   intercluster_keys : Map[String, String]
   cluster_order : Array[String]
   order_with_clusters : Bool
-  edges_by_tail : Map[String, Array[Int]]
+  edges_by_tail : Map[String, Array[Int32]]
   root_tail_order_override : Array[String]?
   root_cluster : String
   cluster_parents : Map[String, String?]
@@ -191,27 +191,27 @@ pub(all) struct ReMincrossPassBuildContext {
   edge_head_port_x : Array[Double]
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   order_with_vnodes : Bool
   creation_order : Array[String]
-  edges_by_tail : Map[String, Array[Int]]
+  edges_by_tail : Map[String, Array[Int32]]
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
-  local_cluster_order : Map[String, Int]
+  local_cluster_order : Map[String, Int32]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   cluster_flat_constraints : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   order_sizes : Map[String, @node_primitives.NodeSize]
   rank_same_constraints : Map[String, Bool]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
   real_nodes : Map[String, Bool]
   root_tail_order_override : Array[String]?
   root_cluster : String
@@ -223,37 +223,37 @@ pub(all) struct ReMincrossPassBuildContext {
 }
 
 pub(all) struct ReMincrossPassOutput {
-  ordered_groups : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_with_vnodes : Map[Int32, Array[String]]
 }
 
 pub(all) struct ReMincrossVnodeGroupInputs {
-  final_groups : Map[Int, Array[String]]
+  final_groups : Map[Int32, Array[String]]
   order_with_vnodes : Bool
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
 }
 
 pub(all) struct RemincrossInputSnapshot {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges : Array[@root.OrderingEdgeSnapshotEntry]
   cluster_keys : Map[String, String]
 }
 
 pub(all) struct RemincrossSnapshotBuildInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   edges_out : Array[@cgraph.Edge]
   edge_tail_out : Array[String]
   edge_head_out : Array[String]
@@ -262,7 +262,7 @@ pub(all) struct RemincrossSnapshotBuildInput {
   edge_tail_port_order : Array[Double]
   edge_head_port_order : Array[Double]
   cluster_keys : Map[String, String]
-  edge_xpenalty_for : (@cgraph.Edge) -> Int
+  edge_xpenalty_for : (@cgraph.Edge) -> Int32
 }
 
 // Type aliases

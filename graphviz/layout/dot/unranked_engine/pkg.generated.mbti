@@ -15,7 +15,7 @@ pub fn build_edges_from_positions(@cgraph.Graph, Map[String, @geom.Point], (@cgr
 
 pub fn build_engine_geometry_context(@cgraph.Graph, Double) -> EngineGeometryContext
 
-pub fn build_neato_edges(@cgraph.Graph, Map[String, Int], Array[Double], Double) -> Array[NeatoEdge]
+pub fn build_neato_edges(@cgraph.Graph, Map[String, Int32], Array[Double], Double) -> Array[NeatoEdge]
 
 pub fn build_neato_initial_node_state(Array[@cgraph.Node], Double) -> NeatoInitialNodeState
 
@@ -35,11 +35,11 @@ pub fn parse_point_attr(String) -> @geom.Point?
 
 pub fn prepare_neato_layout_tree(@cgraph.Graph, Double, Bool) -> Result[@layout_tree.LayoutTree, String]
 
-pub fn prepare_noop_layout_tree(@cgraph.Graph, Int, Double, Bool) -> Result[@layout_tree.LayoutTree, String]
+pub fn prepare_noop_layout_tree(@cgraph.Graph, Int32, Double, Bool) -> Result[@layout_tree.LayoutTree, String]
 
 pub fn project_scaled_nodes_with_sizes(Array[@cgraph.Node], Array[@geom.Point], Double, Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation) -> EngineNodeProjectionWithSizes
 
-pub fn relax_positions(Array[@geom.Point], Array[Bool], Array[Double], Array[NeatoEdge], Double, Double, Int) -> Unit
+pub fn relax_positions(Array[@geom.Point], Array[Bool], Array[Double], Array[NeatoEdge], Double, Double, Int32) -> Unit
 
 pub fn scale_point(@geom.Point, Double) -> @geom.Point
 
@@ -65,8 +65,8 @@ pub(all) struct EngineNodeProjectionWithSizes {
 }
 
 pub struct NeatoEdge {
-  tail : Int
-  head : Int
+  tail : Int32
+  head : Int32
   length_pt : Double
   weight : Double
 }
@@ -78,7 +78,7 @@ pub struct NeatoInitialNodeState {
 
 pub struct NeatoNodeSizing {
   sizes : Map[String, @node_primitives.NodeSize]
-  indices : Map[String, Int]
+  indices : Map[String, Int32]
   radii : Array[Double]
   max_half : Double
 }
