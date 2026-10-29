@@ -14,58 +14,58 @@ pub fn recover_slack_vnodes(@routing.RecoverSlackVnodesInput) -> Unit
 
 pub fn route_edges_pipeline(@routing.RouteEdgesPipelineInput, @routing.RouteEdgesPipelineDeps) -> Array[@layout_tree.DotLayoutEdge]
 
-pub fn sorted_edges_for_routing(Array[@cgraph.Edge], Map[Int, @routing.EdgeRouteBase], Map[String, Int], concentrated_route_order? : Map[Int, Int]) -> Array[@cgraph.Edge]
+pub fn sorted_edges_for_routing(Array[@cgraph.Edge], Map[Int32, @routing.EdgeRouteBase], Map[String, Int32], concentrated_route_order? : Map[Int32, Int32]) -> Array[@cgraph.Edge]
 
 // Errors
 
 // Types and methods
 pub(all) struct FinalizeRoutedEdgesInput {
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  edges_out_by_id : Map[Int, @layout_tree.DotLayoutEdge]
+  ranks : Map[String, Int32]
+  edges_out_by_id : Map[Int32, @layout_tree.DotLayoutEdge]
   edge_port_label_pos_fn : (@routing.EdgePortLabelPosInput) -> @geom.Point?
-  concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
 }
 
 pub(all) struct RegularLayoutsForEdgeInput {
-  edge_id : Int
+  edge_id : Int32
   edge : @cgraph.Edge
   base : @routing.EdgeRouteBase
   input : @routing.RegularPassInput
   path_left_bound : Double
   path_right_bound : Double
-  recover_edge_id_by_key : Map[String, Int]
+  recover_edge_id_by_key : Map[String, Int32]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, @routing.EdgeRouteBase]
+  base_cache : Map[Int32, @routing.EdgeRouteBase]
   recovered_slack_keys : Map[String, Bool]
-  edges_out_by_id : Map[Int, @layout_tree.DotLayoutEdge]
+  edges_out_by_id : Map[Int32, @layout_tree.DotLayoutEdge]
   callbacks : @routing.RoutingCallbacks
 }
 
 pub(all) struct RegularRecoverRoutingPlan {
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  recover_edge_id_for_routing : Map[String, Int]
+  recover_edge_id_for_routing : Map[String, Int32]
 }
 
 pub(all) struct RoutePrepassInput {
   edges : Array[@cgraph.Edge]
-  base_cache : Map[Int, @routing.EdgeRouteBase]
+  base_cache : Map[Int32, @routing.EdgeRouteBase]
   build_flat_adjacent_beziers : Bool
-  ranks : Map[String, Int]
-  order_index : Map[String, Int]
-  path_order_index : Map[String, Int]
-  concentrated_route_order : Map[Int, Int]
+  ranks : Map[String, Int32]
+  order_index : Map[String, Int32]
+  path_order_index : Map[String, Int32]
+  concentrated_route_order : Map[Int32, Int32]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
   sizes : Map[String, @node_primitives.NodeSize]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
 }
 
 pub(all) struct RoutePrepassState {
-  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
+  flat_adjacent_simple_beziers : Map[Int32, Array[@geom.Point]]
   ordered_edges : Array[@cgraph.Edge]
-  recover_edge_id_for_routing : Map[String, Int]
+  recover_edge_id_for_routing : Map[String, Int32]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
   path_left_bound : Double
   path_right_bound : Double

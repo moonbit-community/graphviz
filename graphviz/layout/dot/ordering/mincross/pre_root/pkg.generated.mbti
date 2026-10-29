@@ -14,7 +14,7 @@ pub fn run_clustered_pre_root_stage_from_sources(ClusteredPreRootStageSources) -
 
 // Types and methods
 pub struct ClusteredPreRootStageOutput {
-  order_groups : Map[Int, Array[String]]
+  order_groups : Map[Int32, Array[String]]
   order_sizes_out : Map[String, @node_primitives.NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
@@ -26,18 +26,18 @@ pub(all) struct ClusteredPreRootStageSources {
   reorder_setup : @setup.OrderingReorderSetup
   cluster_keys : Map[String, String]
   cluster_order : Array[String]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
+  cluster_min_rank : Map[String, Int32]
+  cluster_max_rank : Map[String, Int32]
   vnode_clusters : Map[String, String]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnodes_by_rank : Map[Int32, Array[String]]
   order_sizes : Map[String, @node_primitives.NodeSize]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   skeleton_size : @node_primitives.NodeSize
-  node_order : Map[String, Int]
+  node_order : Map[String, Int32]
   real_nodes : Map[String, Bool]
   has_clusters : Bool
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
+  rank_same_groups : Map[String, Int32]
+  rank_same_order : Map[String, Int32]
   port_edge_nodes : Map[String, Bool]
   flat_constraints : Map[String, Bool]
   edge_tail : Array[String]
@@ -67,15 +67,15 @@ pub(all) struct OrderMaterializationData {
 }
 
 pub(all) struct OrderReorderContext {
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
+  order_rank_keys : Array[Int32]
+  order_ranks : Map[String, Int32]
   order_nodes : Array[String]
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
   order_graph_unmapped : @cgraph.Graph
   order_node_map_unmapped : Map[String, @cgraph.Node]
   creation_order : Array[String]
-  order_node_order : Map[String, Int]
+  order_node_order : Map[String, Int32]
 }
 
 // Type aliases

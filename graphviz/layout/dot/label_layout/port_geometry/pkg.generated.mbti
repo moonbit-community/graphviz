@@ -10,23 +10,23 @@ import {
 }
 
 // Values
-pub const PORT_SIDE_ALL : Int = 15
+pub const PORT_SIDE_ALL : Int32 = 15
 
-pub const PORT_SIDE_BOTTOM : Int = 1
+pub const PORT_SIDE_BOTTOM : Int32 = 1
 
-pub const PORT_SIDE_LEFT : Int = 8
+pub const PORT_SIDE_LEFT : Int32 = 8
 
-pub const PORT_SIDE_RIGHT : Int = 2
+pub const PORT_SIDE_RIGHT : Int32 = 2
 
-pub const PORT_SIDE_TOP : Int = 4
+pub const PORT_SIDE_TOP : Int32 = 4
 
-pub fn compass_side_mask(@cgraph.Compass) -> Int
+pub fn compass_side_mask(@cgraph.Compass) -> Int32
 
 pub fn dynamic_port_anchor_for_edge(@cgraph.Port?, String, Map[String, Map[String, @record_geometry.RecordPort]], @geom.Point, @geom.Point, @rankdir.RankDir, Double) -> DynamicPortAnchorForEdge
 
-pub fn invflip_side(Int, @rankdir.RankDir) -> Int
+pub fn invflip_side(Int32, @rankdir.RankDir) -> Int32
 
-pub fn label_port_compass_side(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]]) -> Int?
+pub fn label_port_compass_side(String, @cgraph.Port?, Map[String, Map[String, @record_geometry.RecordPort]]) -> Int32?
 
 pub fn layout_port_offset(@geom.Point, @rankdir.RankDir) -> @geom.Point
 
@@ -38,11 +38,11 @@ pub fn port_is_label_port(String, @cgraph.Port?, Map[String, Map[String, @record
 
 pub fn port_rect_from_geometry(@cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize) -> @geom.Rect?
 
-pub fn port_side_for_edge(@cgraph.Port?, @geom.Rect?, @geom.Point, @node_primitives.NodeSize, @geom.Point?) -> Int
+pub fn port_side_for_edge(@cgraph.Port?, @geom.Rect?, @geom.Point, @node_primitives.NodeSize, @geom.Point?) -> Int32
 
-pub fn port_side_mask_from_anchor(@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int
+pub fn port_side_mask_from_anchor(@geom.Point, @geom.Point, @node_primitives.NodeSize) -> Int32
 
-pub fn port_side_mask_from_rects(@geom.Rect, @geom.Rect) -> Int
+pub fn port_side_mask_from_rects(@geom.Rect, @geom.Rect) -> Int32
 
 pub fn resolve_label_port_name(@cgraph.Port?, Map[String, @record_geometry.RecordPort]) -> String?
 
@@ -51,7 +51,7 @@ pub fn resolve_label_port_name(@cgraph.Port?, Map[String, @record_geometry.Recor
 // Types and methods
 pub(all) struct DynamicPortAnchorForEdge {
   anchor : @geom.Point?
-  side : Int
+  side : Int32
   is_dynamic : Bool
 }
 

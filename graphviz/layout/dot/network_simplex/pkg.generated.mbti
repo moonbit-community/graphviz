@@ -2,27 +2,27 @@
 package "moonbit-community/graphviz/layout/dot/network_simplex"
 
 // Values
-pub fn add_edge(NsGraph, Int, Int, Int, Int) -> Int
+pub fn add_edge(NsGraph, Int32, Int32, Int32, Int32) -> Int32
 
-pub fn add_node(NsGraph, String, kind? : NodeKind) -> Int
+pub fn add_node(NsGraph, String, kind? : NodeKind) -> Int32
 
 pub fn build_feasible_tree(NsGraph) -> Bool
 
-pub fn debug_run_core_only(NsGraph, Int) -> Bool
+pub fn debug_run_core_only(NsGraph, Int32) -> Bool
 
-pub fn network_simplex(NsGraph, Int, BalanceMode) -> Unit
+pub fn network_simplex(NsGraph, Int32, BalanceMode) -> Unit
 
-pub fn network_simplex_pre_balance(NsGraph, Int) -> Bool
+pub fn network_simplex_pre_balance(NsGraph, Int32) -> Bool
 
-pub fn network_simplex_with_root(NsGraph, Int, BalanceMode, Int) -> Unit
+pub fn network_simplex_with_root(NsGraph, Int32, BalanceMode, Int32) -> Unit
 
 pub fn new_graph() -> NsGraph
 
-pub fn node_rank(NsGraph, Int) -> Int
+pub fn node_rank(NsGraph, Int32) -> Int32
 
-pub fn normalize_ranks_for_test(NsGraph) -> Int
+pub fn normalize_ranks_for_test(NsGraph) -> Int32
 
-pub fn set_node_rank(NsGraph, Int, Int) -> Unit
+pub fn set_node_rank(NsGraph, Int32, Int32) -> Unit
 
 // Errors
 
@@ -41,31 +41,31 @@ pub fn NodeKind::equal(Self, Self) -> Bool
 pub fn NodeKind::not_equal(Self, Self) -> Bool
 
 pub(all) struct NsEdge {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
-  mut cutvalue : Int
-  mut tree_index : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
+  mut cutvalue : Int32
+  mut tree_index : Int32
 }
 
 pub(all) struct NsGraph {
   nodes : Array[NsNode]
   edges : Array[NsEdge]
-  tree_edges : Array[Int]
+  tree_edges : Array[Int32]
 }
 
 pub(all) struct NsNode {
   kind : NodeKind
-  mut rank : Int
-  in_edges : Array[Int]
-  out_edges : Array[Int]
-  tree_in : Array[Int]
-  tree_out : Array[Int]
-  mut par_edge : Int
-  mut low : Int
-  mut lim : Int
-  mut priority : Int
+  mut rank : Int32
+  in_edges : Array[Int32]
+  out_edges : Array[Int32]
+  tree_in : Array[Int32]
+  tree_out : Array[Int32]
+  mut par_edge : Int32
+  mut low : Int32
+  mut lim : Int32
+  mut priority : Int32
 }
 
 // Type aliases

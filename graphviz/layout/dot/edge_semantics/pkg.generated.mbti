@@ -25,13 +25,13 @@ pub fn edge_is_constraint(@cgraph.Edge) -> Bool
 
 pub fn edge_is_self(@cgraph.Edge) -> Bool
 
-pub fn edge_minlen(@cgraph.Edge) -> Int
+pub fn edge_minlen(@cgraph.Edge) -> Int32
 
-pub fn edge_rank_span(@cgraph.Edge, Map[String, Int]) -> EdgeRankSpan?
+pub fn edge_rank_span(@cgraph.Edge, Map[String, Int32]) -> EdgeRankSpan?
 
-pub fn edge_weight(@cgraph.Edge) -> Int
+pub fn edge_weight(@cgraph.Edge) -> Int32
 
-pub fn edge_xpenalty(@cgraph.Edge) -> Int
+pub fn edge_xpenalty(@cgraph.Edge) -> Int32
 
 pub fn parse_edge_dir(String) -> EdgeDir?
 
@@ -52,8 +52,8 @@ pub fn EdgeDir::to_string(Self) -> String
 pub impl Show for EdgeDir
 
 pub(all) struct EdgeRankSpan {
-  min_rank : Int
-  max_rank : Int
+  min_rank : Int32
+  max_rank : Int32
 }
 
 // Type aliases

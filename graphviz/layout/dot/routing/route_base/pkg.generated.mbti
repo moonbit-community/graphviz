@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn build_route_base_cache(@routing.RouteEdgesPipelineInput, @routing.RouteBaseDeps) -> Map[Int, @routing.EdgeRouteBase]
+pub fn build_route_base_cache(@routing.RouteEdgesPipelineInput, @routing.RouteBaseDeps) -> Map[Int32, @routing.EdgeRouteBase]
 
 // Errors
 

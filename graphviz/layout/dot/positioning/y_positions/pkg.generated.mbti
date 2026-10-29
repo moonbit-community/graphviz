@@ -9,7 +9,7 @@ import {
 }
 
 // Values
-pub fn build_all_ranks_with_overlays(Array[Int], Array[Int]) -> Array[Int]
+pub fn build_all_ranks_with_overlays(Array[Int32], Array[Int32]) -> Array[Int32]
 
 pub fn build_y_position_pipeline(YPositionPipelineInput) -> YPositionPipelineOutput
 
@@ -23,31 +23,31 @@ pub fn self_edge_label_half_heights(Array[@cgraph.Edge], (@cgraph.Edge) -> Doubl
 
 // Types and methods
 pub(all) struct FillRankPositionsInput {
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  all_ranks : Array[Int]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  all_ranks : Array[Int32]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
 }
 
 pub(all) struct YPositionPipelineInput {
   has_clusters : Bool
   graph : @cgraph.Graph
   rankdir : @rankdir.RankDir
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
-  ranks : Map[String, Int]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   ranksep_pt : Double
-  flat_label_ranks : Map[String, Int]
+  flat_label_ranks : Map[String, Int32]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding
@@ -57,7 +57,7 @@ pub(all) struct YPositionPipelineInput {
 
 pub(all) struct YPositionPipelineOutput {
   y_positions : Map[String, Double]
-  rank_y : Map[Int, Double]
+  rank_y : Map[Int32, Double]
   cluster_bbox_heights : Map[String, @cluster_geometry.ClusterBboxHeightPair]
 }
 

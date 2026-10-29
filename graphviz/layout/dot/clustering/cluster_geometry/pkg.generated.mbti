@@ -42,7 +42,7 @@ pub(all) struct ClusterAlignmentInput {
 
 pub(all) struct ClusterBBoxHeightsInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir
@@ -63,11 +63,11 @@ pub(all) struct ClusterLabelPadding {
 
 pub(all) struct ClusterRankHeightsApplyInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   rankdir : @rankdir.RankDir
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_padding_for : (@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
@@ -76,12 +76,12 @@ pub(all) struct ClusterRankHeightsApplyInput {
 
 pub(all) struct FlipRankHeightsAdjustInput {
   graph : @cgraph.Graph
-  ranks : Map[String, Int]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  ranks : Map[String, Int32]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   cluster_heights : Map[String, ClusterBboxHeightPair]
-  min_root_rank : Int
+  min_root_rank : Int32
   margin_total : Double
   cluster_margin_pt_for : (@cgraph.Graph) -> Double
   cluster_label_width_pt_for : (@cgraph.Graph) -> Double?

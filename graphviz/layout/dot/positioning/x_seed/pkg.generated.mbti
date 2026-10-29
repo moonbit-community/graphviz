@@ -24,24 +24,24 @@ pub struct XPositionSeedData {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   x_cluster_keys : Map[String, String]
 }
 
 pub(all) struct XSeedPipelineSources {
   use_vnodes_for_xpos : Bool
-  ordered_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   intercluster_keys : Map[String, String]
   cluster_parents : Map[String, String?]
   edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
+  vnode_ranks : Map[String, Int32]
+  vnodes_by_rank : Map[Int32, Array[String]]
   has_clusters : Bool
   cluster_keys : Map[String, String]
   vnode_clusters : Map[String, String]

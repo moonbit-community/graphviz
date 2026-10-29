@@ -31,7 +31,7 @@ pub(all) enum DrawOp {
   GradPen(gradient~ : Gradient)
   Font(font~ : Font)
   Style(name~ : String)
-  FontChar(codepoint~ : UInt)
+  FontChar(codepoint~ : UInt32)
 } derive(Eq, @debug.Debug)
 pub fn DrawOp::equal(Self, Self) -> Bool
 pub fn DrawOp::not_equal(Self, Self) -> Bool

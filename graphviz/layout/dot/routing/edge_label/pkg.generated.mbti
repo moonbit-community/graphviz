@@ -27,11 +27,11 @@ pub fn edge_label_pos_from_input(EdgeLabelPosInput, (@cgraph.Edge) -> @routing.R
 
 pub fn edge_label_pos_from_vnode(@geom.Point, Double, Double, @rankdir.RankDir) -> @geom.Point
 
-pub fn edge_label_rank_info(@cgraph.Edge, Map[String, Int], Double) -> EdgeLabelRankInfo?
+pub fn edge_label_rank_info(@cgraph.Edge, Map[String, Int32], Double) -> EdgeLabelRankInfo?
 
-pub fn edge_label_rank_x(@cgraph.Edge, Int, @setup.EdgeVnodeInfo, Map[String, @geom.Point]) -> Double?
+pub fn edge_label_rank_x(@cgraph.Edge, Int32, @setup.EdgeVnodeInfo, Map[String, @geom.Point]) -> Double?
 
-pub fn edge_label_rank_y(@cgraph.Edge, Map[String, Int], Map[Int, Double], Double) -> Double?
+pub fn edge_label_rank_y(@cgraph.Edge, Map[String, Int32], Map[Int32, Double], Double) -> Double?
 
 pub fn edge_midpoint_for_layout(@layout_tree.DotLayoutEdge, Bool) -> @geom.Point?
 
@@ -55,7 +55,7 @@ pub fn port_label_points(@geom.Spline, Bool, Bool) -> PointWithTangent?
 
 pub fn port_label_pos_from_points(@geom.Point, @geom.Point, Double, Double, Double, Double) -> @geom.Point
 
-pub fn sample_spline_points(Array[@geom.Point], Int) -> Array[@geom.Point]
+pub fn sample_spline_points(Array[@geom.Point], Int32) -> Array[@geom.Point]
 
 pub fn spline_label_pos_at_samples(Array[@geom.Point], Double, Bool) -> PointWithTangent?
 
@@ -83,8 +83,8 @@ pub(all) struct EdgeLabelPosInput {
 }
 
 pub struct EdgeLabelRankInfo {
-  label_rank : Int
-  span : Int
+  label_rank : Int32
+  span : Int32
 }
 
 pub(all) struct EdgeLayoutBuildInput {
@@ -97,7 +97,7 @@ pub(all) struct EdgeLayoutBuildInput {
 pub(all) struct ExpandEdgeLabelBboxInput {
   bbox : @geom.Rect
   edges : Array[@layout_tree.DotLayoutEdge]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   flat_label_edge_vnodes : Map[String, String]
   rankdir : @rankdir.RankDir
 }

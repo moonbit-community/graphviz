@@ -67,7 +67,7 @@ pub(all) struct CliJob {
   node_attrs : Array[AttrAssignment]
   edge_attrs : Array[AttrAssignment]
   scale : Double?
-  neato_no_op : Int?
+  neato_no_op : Int32?
   neato_prune : Bool
   verbose : Bool
 } derive(Eq, @debug.Debug)

@@ -24,16 +24,16 @@ pub(all) struct SelfEdgeRightSpaceInput {
   rankdir : @rankdir.RankDir
   self_edge_size_pt : Double
   self_edge_label_width_for : (@cgraph.Edge, @rankdir.RankDir) -> Double
-  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int
+  port_side_mask_for : (@cgraph.Node, @cgraph.Port?) -> Int32
 }
 
 pub(all) struct SelfEdgeRouteLookupInput {
   edge : @cgraph.Edge
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
-  base_cache : Map[Int, @routing.EdgeRouteBase]
+  base_cache : Map[Int32, @routing.EdgeRouteBase]
   nodesep_pt : Double
-  rank_y : Map[Int, Double]
-  self_edge_routes : Map[Int, @routing.SelfEdgeRoute]
+  rank_y : Map[Int32, Double]
+  self_edge_routes : Map[Int32, @routing.SelfEdgeRoute]
   self_edge_label_height_fn : (@cgraph.Edge, @rankdir.RankDir) -> Double
   self_edge_label_width_fn : (@cgraph.Edge, @rankdir.RankDir) -> Double
 }

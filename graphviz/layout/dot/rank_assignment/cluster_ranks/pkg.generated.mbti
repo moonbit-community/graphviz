@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn apply_clustered_rank_postprocessing(@cgraph.Graph, Array[@cgraph.Node], Map[String, Int]) -> Map[String, Int]
+pub fn apply_clustered_rank_postprocessing(@cgraph.Graph, Array[@cgraph.Node], Map[String, Int32]) -> Map[String, Int32]
 
 pub fn build_node_cluster_index(Array[String], Map[String, Map[String, Bool]]) -> Map[String, String]
 
@@ -14,19 +14,19 @@ pub fn collect_cluster_members(Map[String, @cgraph.Graph]) -> Map[String, Map[St
 
 pub fn collect_top_clusters(@cgraph.Graph) -> TopClustersCollected
 
-pub fn compute_clustered_ranks(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int, (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int) -> Map[String, Int]) -> Map[String, Int]
+pub fn compute_clustered_ranks(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int32, (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int32) -> Map[String, Int32]) -> Map[String, Int32]
 
-pub fn compute_local_cluster_ranks_and_leaders(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Map[String, @cgraph.Graph], Map[String, Map[String, Bool]], (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> Map[String, Int]) -> LocalClusterRankResult
+pub fn compute_local_cluster_ranks_and_leaders(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Map[String, @cgraph.Graph], Map[String, Map[String, Bool]], (@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> Map[String, Int32]) -> LocalClusterRankResult
 
-pub fn project_clustered_node_ranks(Array[@cgraph.Node], Map[String, String], Map[String, String], Map[String, Int], Map[String, Int]) -> Map[String, Int]
+pub fn project_clustered_node_ranks(Array[@cgraph.Node], Map[String, String], Map[String, String], Map[String, Int32], Map[String, Int32]) -> Map[String, Int32]
 
-pub fn solve_clustered_leader_ranks(Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, String], Map[String, String], Map[String, Int], Bool, Int, (Array[String], Array[String], Array[String], Array[Bool]) -> (Array[String], Array[String], Array[Bool])) -> Map[String, Int]
+pub fn solve_clustered_leader_ranks(Array[@cgraph.Node], Array[@cgraph.Edge], Map[String, String], Map[String, String], Map[String, Int32], Bool, Int32, (Array[String], Array[String], Array[String], Array[Bool]) -> (Array[String], Array[String], Array[Bool])) -> Map[String, Int32]
 
 // Errors
 
 // Types and methods
 pub struct LocalClusterRankResult {
-  local_ranks : Map[String, Int]
+  local_ranks : Map[String, Int32]
   cluster_leaders : Map[String, String]
 }
 

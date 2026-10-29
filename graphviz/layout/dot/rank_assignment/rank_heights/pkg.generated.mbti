@@ -13,7 +13,7 @@ pub fn compute_rank_heights(RankHeightsInput) -> RankHeights
 
 pub fn make_edge_mid_label_metrics(Double, Double) -> EdgeMidLabelMetrics
 
-pub fn make_rank_heights_input(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int], Map[Int, Array[String]], Array[Int], Array[Int], Map[String, @node_primitives.NodeSize], Map[String, Double], @rankdir.RankDir, Double, Double, Bool, Double, (@cgraph.Edge) -> EdgeMidLabelMetrics?, (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding) -> RankHeightsInput
+pub fn make_rank_heights_input(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int32], Map[Int32, Array[String]], Array[Int32], Array[Int32], Map[String, @node_primitives.NodeSize], Map[String, Double], @rankdir.RankDir, Double, Double, Bool, Double, (@cgraph.Edge) -> EdgeMidLabelMetrics?, (@cgraph.Graph, @rankdir.RankDir) -> @cluster_geometry.ClusterLabelPadding) -> RankHeightsInput
 
 // Errors
 
@@ -24,9 +24,9 @@ pub struct EdgeMidLabelMetrics {
 }
 
 pub struct RankHeights {
-  rank_pht : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_pht : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
   nodesep_pt : Double
   ranksep_pt : Double
 }
@@ -34,10 +34,10 @@ pub struct RankHeights {
 pub struct RankHeightsInput {
   graph : @cgraph.Graph
   edges : Array[@cgraph.Edge]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  rank_keys : Array[Int32]
+  all_ranks : Array[Int32]
   sizes : Map[String, @node_primitives.NodeSize]
   self_edge_labels : Map[String, Double]
   rankdir : @rankdir.RankDir

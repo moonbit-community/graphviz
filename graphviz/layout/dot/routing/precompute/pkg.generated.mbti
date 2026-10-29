@@ -14,27 +14,27 @@ import {
 // Values
 pub fn build_dot_head_port_metrics(Array[@cgraph.Edge], Bool, Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]]) -> HeadPortMetrics
 
-pub fn build_edge_parallel_offsets(ParallelOffsetsBuildInput) -> Map[Int, Double]
+pub fn build_edge_parallel_offsets(ParallelOffsetsBuildInput) -> Map[Int32, Double]
 
 pub fn build_head_port_metrics(Array[@cgraph.Edge], Bool, (@cgraph.Edge) -> (String, Double)?) -> HeadPortMetrics
 
-pub fn build_label_edge_counts(Array[@cgraph.Edge], (@cgraph.Edge) -> Bool) -> Map[String, Int]
+pub fn build_label_edge_counts(Array[@cgraph.Edge], (@cgraph.Edge) -> Bool) -> Map[String, Int32]
 
 pub fn build_routing_precompute_pipeline(RoutingPrecomputePipelineInput, live_graph? : @setup.ConcentrateFastGraph?) -> RoutingPrecomputePipelineOutput
 
-pub fn collect_concentrated_edge_ids(Array[@cgraph.Edge], Map[String, Int], Bool) -> Map[Int, Bool]
+pub fn collect_concentrated_edge_ids(Array[@cgraph.Edge], Map[String, Int32], Bool) -> Map[Int32, Bool]
 
-pub fn collect_parallel_offset_edge_flags(Array[@cgraph.Edge], Array[String], Array[String]) -> (Map[Int, Bool], Map[Int, Bool])
+pub fn collect_parallel_offset_edge_flags(Array[@cgraph.Edge], Array[String], Array[String]) -> (Map[Int32, Bool], Map[Int32, Bool])
 
 pub fn complex_tuning_enabled() -> Bool
 
-pub fn mark_absorbed_concentrated_edge_ids(Array[@cgraph.Edge], Bool, Map[Int, Bool]) -> Unit
+pub fn mark_absorbed_concentrated_edge_ids(Array[@cgraph.Edge], Bool, Map[Int32, Bool]) -> Unit
 
-pub fn mark_concentrated_reverse_representatives(Array[@cgraph.Edge], Map[Int, Bool]) -> Unit
+pub fn mark_concentrated_reverse_representatives(Array[@cgraph.Edge], Map[Int32, Bool]) -> Unit
 
 pub fn prepare_routing_context(PrepareRoutingContextInput, live_graph? : @setup.ConcentrateFastGraph?) -> RoutingContext
 
-pub fn select_path_groups(Map[Int, Array[String]], Map[Int, Array[String]], Map[Int, Array[String]]) -> Map[Int, Array[String]]
+pub fn select_path_groups(Map[Int32, Array[String]], Map[Int32, Array[String]], Map[Int32, Array[String]]) -> Map[Int32, Array[String]]
 
 // Errors
 
@@ -46,29 +46,29 @@ pub(all) struct ConcentratedSegment {
 }
 
 pub(all) struct HeadPortMetrics {
-  head_port_counts : Map[String, Int]
+  head_port_counts : Map[String, Int32]
   head_port_min_dist : Map[String, Double]
   head_port_max_dist : Map[String, Double]
 }
 
 pub(all) struct ParallelOffsetsBuildInput {
   edges : Array[@cgraph.Edge]
-  edge_has_label_by_id : Map[Int, Bool]
-  ranks : Map[String, Int]
+  edge_has_label_by_id : Map[Int32, Bool]
+  ranks : Map[String, Int32]
   nodesep_pt : Double
-  edge_reversed_by_id : Map[Int, Bool]
+  edge_reversed_by_id : Map[Int32, Bool]
   cluster_keys : Map[String, String]
-  concentrated_ignored_edge_ids : Map[Int, Bool]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
 }
 
 pub(all) struct PrepareRoutingContextInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   positions : Map[String, @geom.Point]
-  ordered_groups : Map[Int, Array[String]]
-  x_groups : Map[Int, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   nodesep_pt : Double
   sizes : Map[String, @node_primitives.NodeSize]
   edge_vnodes : Map[String, Array[String]]
@@ -78,7 +78,7 @@ pub(all) struct PrepareRoutingContextInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
-  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
+  initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)]
 }
 
 pub(all) struct RoutePortGeometry {
@@ -87,8 +87,8 @@ pub(all) struct RoutePortGeometry {
 }
 
 pub(all) struct RoutingContext {
-  order_index : Map[String, Int]
-  path_order_index : Map[String, Int]
+  order_index : Map[String, Int32]
+  path_order_index : Map[String, Int32]
   path_adjacency : @routesplines.PathAdjacency
   merged_positions : Map[String, @geom.Point]
   pathplan_route_sizes : Map[String, @node_primitives.NodeSize]
@@ -97,23 +97,23 @@ pub(all) struct RoutingContext {
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
   path_vnode_origin_clusters : Map[String, (String, String)]
-  parallel_offsets : Map[Int, Double]
-  concentrated_ignored_edge_ids : Map[Int, Bool]
-  concentrated_segments : Map[Int, Array[ConcentratedSegment]]
-  concentrated_route_order : Map[Int, Int]
+  parallel_offsets : Map[Int32, Double]
+  concentrated_ignored_edge_ids : Map[Int32, Bool]
+  concentrated_segments : Map[Int32, Array[ConcentratedSegment]]
+  concentrated_route_order : Map[Int32, Int32]
   cluster_bboxes : Map[String, @geom.Rect]
 }
 
 pub(all) struct RoutingPrecomputePipelineInput {
   edges : Array[@cgraph.Edge]
   positions : Map[String, @geom.Point]
-  x_groups : Map[Int, Array[String]]
-  ordered_groups_with_vnodes : Map[Int, Array[String]]
-  ordered_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
+  ordered_groups_with_vnodes : Map[Int32, Array[String]]
+  ordered_groups : Map[Int32, Array[String]]
   head_port_metrics : HeadPortMetrics
   edge_tail : Array[String]
   edge_head : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   nodesep_pt : Double
   sizes : Map[String, @node_primitives.NodeSize]
   edge_vnodes : Map[String, Array[String]]
@@ -123,12 +123,12 @@ pub(all) struct RoutingPrecomputePipelineInput {
   vnode_positions : Map[String, @geom.Point]
   cluster_bboxes : Map[String, @geom.Rect]
   concentrate : Bool
-  initial_port_points : Map[Int, (@geom.Point?, @geom.Point?)]
+  initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)]
 }
 
 pub struct RoutingPrecomputePipelineOutput {
   head_port_metrics : HeadPortMetrics
-  path_groups : Map[Int, Array[String]]
+  path_groups : Map[Int32, Array[String]]
   pathplan_sizes : Map[String, @node_primitives.NodeSize]
   routing_context : RoutingContext
 }

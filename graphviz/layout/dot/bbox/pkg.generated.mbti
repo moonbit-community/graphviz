@@ -25,11 +25,11 @@ pub fn spline_bbox(Array[@geom.Point]) -> @geom.Rect?
 // Types and methods
 pub(all) struct DotBBoxInput {
   nodes_out : Array[@layout_tree.DotLayoutNode]
-  all_ranks : Array[Int]
+  all_ranks : Array[Int32]
   sizes : Map[String, @node_primitives.NodeSize]
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
+  rank_y : Map[Int32, Double]
+  rank_ht1 : Map[Int32, Double]
+  rank_ht2 : Map[Int32, Double]
 }
 
 // Type aliases

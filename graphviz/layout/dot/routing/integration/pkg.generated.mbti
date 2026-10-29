@@ -58,10 +58,10 @@ pub(all) struct RouteEdgesForDotInput {
   routing_label_ports_map : Map[String, Map[String, @record_geometry.RecordPort]]
   routing_label_ports_raw : Map[String, Map[String, @record_geometry.RecordPort]]
   routing_sizes : Map[String, @node_primitives.NodeSize]
-  path_groups : Map[Int, Array[String]]
+  path_groups : Map[Int32, Array[String]]
   routing_context : @precompute.RoutingContext
   has_graph_edge_labels : Bool
-  label_edge_counts : Map[String, Int]
+  label_edge_counts : Map[String, Int32]
   head_port_metrics : @precompute.HeadPortMetrics
   enable_complex_tuning : Bool
 }

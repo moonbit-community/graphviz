@@ -6,15 +6,15 @@ import {
 }
 
 // Values
-pub const CL_BACK : Int = 10
+pub const CL_BACK : Int32 = 10
 
 pub fn compute_rank_data(RankDataInput) -> RankData
 
-pub fn compute_ranks_directed(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Array[String], Array[String], Int) -> Map[String, Int]
+pub fn compute_ranks_directed(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Array[String], Array[String], Int32) -> Map[String, Int32]
 
-pub fn compute_ranks_directed_with_clusters(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int) -> Map[String, Int]
+pub fn compute_ranks_directed_with_clusters(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int32) -> Map[String, Int32]
 
-pub fn make_rank_data_input(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int, (@cgraph.Edge) -> Double) -> RankDataInput
+pub fn make_rank_data_input(@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge], Bool, Int32, (@cgraph.Edge) -> Double) -> RankDataInput
 
 // Errors
 
@@ -23,11 +23,11 @@ pub struct RankData {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  all_ranks : Array[Int]
+  edge_out_order : Map[String, Array[Int32]]
+  ranks : Map[String, Int32]
+  groups : Map[Int32, Array[String]]
+  rank_keys : Array[Int32]
+  all_ranks : Array[Int32]
   self_edge_labels : Map[String, Double]
 }
 
@@ -36,7 +36,7 @@ pub struct RankDataInput {
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   has_edge_labels : Bool
-  back_weight_scale : Int
+  back_weight_scale : Int32
   edge_label_height_pt_for : (@cgraph.Edge) -> Double
 }
 

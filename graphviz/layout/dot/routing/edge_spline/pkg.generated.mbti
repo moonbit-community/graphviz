@@ -19,7 +19,7 @@ pub fn edge_spline_for_bezier_points(@cgraph.Edge, Array[@geom.Point], @geom.Poi
 
 pub fn edge_spline_for_line(@cgraph.Edge, @geom.Point, @geom.Point, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, @rankdir.RankDir, Double, Double, arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, prefer_linear? : Bool, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
 
-pub fn edge_spline_for_points(@cgraph.Edge, Array[@geom.Point], @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, Bool, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, tail_port_side? : Int, head_port_side? : Int, route_barriers? : Array[(@geom.Point, @geom.Point)], arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
+pub fn edge_spline_for_points(@cgraph.Edge, Array[@geom.Point], @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, Bool, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, tail_port_side? : Int32, head_port_side? : Int32, route_barriers? : Array[(@geom.Point, @geom.Point)], arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
 
 pub fn edge_spline_for_polyline(@cgraph.Edge, @geom.Point, @geom.Point, @node_primitives.NodeSize, @node_primitives.NodeSize, @geom.Point, @geom.Point, @rankdir.RankDir, Bool, Bool, Bool, tail_clip_enabled? : Bool, head_clip_enabled? : Bool, arrow_len_override~ : Double?, tail_cluster_bbox~ : @geom.Rect?, head_cluster_bbox~ : @geom.Rect?, parallel_offset? : Double, clip_swapped? : Bool, arrow_swapped? : Bool) -> @geom.Spline
 
@@ -27,7 +27,7 @@ pub fn edge_spline_raw_for_line(@geom.Point, @geom.Point, @geom.Point, @geom.Poi
 
 pub fn edge_spline_raw_for_points(Array[@geom.Point], @geom.Point, @geom.Point, Bool, route_barriers? : Array[(@geom.Point, @geom.Point)]) -> Array[@geom.Point]
 
-pub fn endpoint_slope_for_anchor(@cgraph.Port?, Int, @geom.Point, @geom.Point, @node_primitives.NodeSize, @geom.Point, @rankdir.RankDir, Bool, @geom.Rect?) -> @geom.Point
+pub fn endpoint_slope_for_anchor(@cgraph.Port?, Int32, @geom.Point, @geom.Point, @node_primitives.NodeSize, @geom.Point, @rankdir.RankDir, Bool, @geom.Rect?) -> @geom.Point
 
 pub fn libm_atan2(Double, Double) -> Double
 
@@ -59,7 +59,7 @@ pub fn point_sub(@geom.Point, @geom.Point) -> @geom.Point
 
 pub fn polyline_length(Array[@geom.Point]) -> Double
 
-pub fn port_side_count(@geom.Rect, @geom.Point, @node_primitives.NodeSize) -> Int
+pub fn port_side_count(@geom.Rect, @geom.Point, @node_primitives.NodeSize) -> Int32
 
 pub fn port_side_rect(@geom.Point, @node_primitives.NodeSize) -> @geom.Rect
 

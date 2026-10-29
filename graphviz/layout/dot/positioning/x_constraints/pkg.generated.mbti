@@ -11,21 +11,21 @@ import {
 }
 
 // Values
-pub fn add_constraint_edge_if_present(@network_simplex.NsGraph, Map[String, Int], ConstraintEdge) -> Unit
+pub fn add_constraint_edge_if_present(@network_simplex.NsGraph, Map[String, Int32], ConstraintEdge) -> Unit
 
 pub fn build_x_position_solve_input(XPositionPipelineInput) -> XPositionSolveInput
 
-pub fn compress_width_minlen_pt(@cgraph.Graph, @rankdir.RankDir) -> Int?
+pub fn compress_width_minlen_pt(@cgraph.Graph, @rankdir.RankDir) -> Int32?
 
-pub fn compute_rank_positions(Array[Int], Map[Int, Array[String]], Map[String, @node_primitives.NodeSize], Double, Bool) -> Map[String, Double]
+pub fn compute_rank_positions(Array[Int32], Map[Int32, Array[String]], Map[String, @node_primitives.NodeSize], Double, Bool) -> Map[String, Double]
 
-pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int, (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int, Bool, live_graph? : @setup.ConcentrateFastGraph?) -> Map[String, Double]
+pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int32, (SlackSegment, Map[String, @cgraph.Node]) -> (Int32, Int32), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int32, Bool, live_graph? : @setup.ConcentrateFastGraph?) -> Map[String, Double]
 
 pub fn constraint_node_kind(String) -> @network_simplex.NodeKind
 
-pub fn rank_nodesep_pt(Int, Double, Bool) -> Double
+pub fn rank_nodesep_pt(Int32, Double, Bool) -> Double
 
-pub fn segment_slack_minlen(SlackSegment, (String, @cgraph.Port?) -> Double) -> (Int, Int)
+pub fn segment_slack_minlen(SlackSegment, (String, @cgraph.Port?) -> Double) -> (Int32, Int32)
 
 pub fn should_capture_xpos_snapshot(@cgraph.Graph) -> Bool
 
@@ -44,8 +44,8 @@ pub(all) struct ClusterConstraintBuild {
 pub(all) struct ConstraintEdge {
   tail : String
   head : String
-  minlen : Int
-  weight : Int
+  minlen : Int32
+  weight : Int32
   tail_port : String?
   head_port : String?
 }
@@ -55,11 +55,11 @@ pub(all) struct ConstraintGraphBuildInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
   nodesep_pt : Double
@@ -69,17 +69,17 @@ pub(all) struct ConstraintGraphBuildInput {
   edge_vnodes : Map[String, Array[String]]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
-  segment_minlen : (SlackSegment, Map[String, @cgraph.Node]) -> (Int, Int)
+  compress_width_minlen : Int32?
+  segment_minlen : (SlackSegment, Map[String, @cgraph.Node]) -> (Int32, Int32)
   edge_has_mid_label : (@cgraph.Edge) -> Bool
-  edge_degree_increment : (@cgraph.Edge) -> Int
+  edge_degree_increment : (@cgraph.Edge) -> Int32
   root_margin : Double
-  root_compress_weight : Int
+  root_compress_weight : Int32
 }
 
 pub(all) struct ConstraintGraphBuildOutput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
 }
 
 pub(all) struct ConstraintNodesSetupInput {
@@ -91,14 +91,14 @@ pub(all) struct ConstraintNodesSetupInput {
 }
 
 pub(all) struct ConstraintNodesSetupOutput {
-  index : Map[String, Int]
+  index : Map[String, Int32]
   real_by_name : Map[String, @cgraph.Node]
   late_extra_nodes : Array[ExtraConstraintNode]
 }
 
 pub(all) struct ConstraintReorderInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   nlist_order : Array[String]
 }
 
@@ -106,18 +106,18 @@ pub(all) struct ConstraintSegmentPassInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
-  ranks : Map[String, Int]
+  ranks : Map[String, Int32]
   cluster_keys : Map[String, String]
   edge_vnodes : Map[String, Array[String]]
-  order_in_rank : Map[String, Int]
+  order_in_rank : Map[String, Int32]
   nodesep_pt : Double
   sizes : Map[String, @node_primitives.NodeSize]
   skip_intercluster : Bool
   rank_adj_constraints : Map[String, ConstraintEdge]
   edge_has_mid_label : (@cgraph.Edge) -> Bool
-  edge_degree_increment : (@cgraph.Edge) -> Int
+  edge_degree_increment : (@cgraph.Edge) -> Int32
 }
 
 pub(all) struct ConstraintSegmentPassOutput {
@@ -127,12 +127,12 @@ pub(all) struct ConstraintSegmentPassOutput {
 
 pub(all) struct ExtraConstraintNode {
   name : String
-  rank : Int
+  rank : Int32
 }
 
 pub(all) struct LateConstraintNodesInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
   late_extra_nodes : Array[ExtraConstraintNode]
 }
 
@@ -141,30 +141,30 @@ pub(all) struct PreparedXposConstraintInputs {
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
-  compress_width_minlen : Int?
+  compress_width_minlen : Int32?
 }
 
 pub(all) struct RankConstraintSeed {
   rank_adj_constraints : Map[String, ConstraintEdge]
   rank_adj_order : Array[String]
-  order_in_rank : Map[String, Int]
+  order_in_rank : Map[String, Int32]
 }
 
 pub(all) struct ReorderConstraintGraphInput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
-  order : Array[Int]
+  index : Map[String, Int32]
+  order : Array[Int32]
 }
 
 pub(all) struct ReorderConstraintGraphOutput {
   graph : @network_simplex.NsGraph
-  index : Map[String, Int]
+  index : Map[String, Int32]
 }
 
 pub(all) struct SlackSegment {
   tail : String
   head : String
-  weight : Int
+  weight : Int32
   tail_port : @cgraph.Port?
   head_port : @cgraph.Port?
   concentrated_absorbed : Bool
@@ -173,17 +173,17 @@ pub(all) struct SlackSegment {
 pub(all) struct XPositionPipelineInput {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, @node_primitives.NodeSize]
-  x_groups : Map[Int, Array[String]]
+  x_groups : Map[Int32, Array[String]]
   vnode_sizes : Map[String, @node_primitives.NodeSize]
   vnode_creation_order : Array[String]
-  vnode_ranks : Map[String, Int]
+  vnode_ranks : Map[String, Int32]
   edge_vnodes : Map[String, Array[String]]
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
   cluster_keys : Map[String, String]
@@ -199,12 +199,12 @@ pub(all) struct XPositionSolveInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
-  edge_out_order : Map[String, Array[Int]]
+  edge_out_order : Map[String, Array[Int32]]
   nlist_order : Array[String]
   gdnlist_order : Array[String]
-  ranks : Map[String, Int]
-  rank_keys : Array[Int]
-  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int32]
+  rank_keys : Array[Int32]
+  groups : Map[Int32, Array[String]]
   sizes : Map[String, @node_primitives.NodeSize]
   output_sizes : Map[String, @node_primitives.NodeSize]
   cluster_keys : Map[String, String]
@@ -217,24 +217,24 @@ pub(all) struct XPositionSolveInput {
 
 pub struct XposComputationInput {
   x_sizes : Map[String, @node_primitives.NodeSize]
-  x_rank_keys : Array[Int]
-  x_ranks : Map[String, Int]
+  x_rank_keys : Array[Int32]
+  x_ranks : Map[String, Int32]
   x_extra_nodes : Array[ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
 }
 
 pub(all) struct XposConstraintEdgeSnapshot {
-  tail : Int
-  head : Int
-  minlen : Int
-  weight : Int
+  tail : Int32
+  head : Int32
+  minlen : Int32
+  weight : Int32
 }
 
 pub(all) struct XposConstraintNodeSnapshot {
   name : String?
   kind : @network_simplex.NodeKind
-  rank : Int
-  order : Int
+  rank : Int32
+  order : Int32
   left_pt : Double
   right_pt : Double
   height_pt : Double
