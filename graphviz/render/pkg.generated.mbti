@@ -18,6 +18,7 @@ pub fn spline_with_arrow(Array[@geom.Spline], Bool) -> @geom.Spline?
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum DrawOp {
   Ellipse(filled~ : Bool, rect~ : @geom.Rect)
   Polygon(filled~ : Bool, points~ : Array[@geom.Point])
@@ -32,7 +33,7 @@ pub(all) enum DrawOp {
   Font(font~ : Font)
   Style(name~ : String)
   FontChar(codepoint~ : UInt32)
-} derive(Eq, @debug.Debug)
+}
 pub fn DrawOp::equal(Self, Self) -> Bool
 pub fn DrawOp::not_equal(Self, Self) -> Bool
 pub fn DrawOp::output(Self, &Logger) -> Unit
@@ -40,10 +41,11 @@ pub fn DrawOp::to_repr(Self) -> @debug.Repr
 pub fn DrawOp::to_string(Self) -> String
 pub impl Show for DrawOp
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Font {
   name : String
   size : Double
-} derive(Eq, @debug.Debug)
+}
 pub fn Font::equal(Self, Self) -> Bool
 pub fn Font::not_equal(Self, Self) -> Bool
 pub fn Font::output(Self, &Logger) -> Unit
@@ -51,10 +53,11 @@ pub fn Font::to_repr(Self) -> @debug.Repr
 pub fn Font::to_string(Self) -> String
 pub impl Show for Font
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Gradient {
   Linear(LinearGradient)
   Radial(RadialGradient)
-} derive(Eq, @debug.Debug)
+}
 pub fn Gradient::equal(Self, Self) -> Bool
 pub fn Gradient::not_equal(Self, Self) -> Bool
 pub fn Gradient::output(Self, &Logger) -> Unit
@@ -62,10 +65,11 @@ pub fn Gradient::to_repr(Self) -> @debug.Repr
 pub fn Gradient::to_string(Self) -> String
 pub impl Show for Gradient
 
+#derive(Eq, @debug.Debug)
 pub(all) struct GradientStop {
   offset : Double
   color : String
-} derive(Eq, @debug.Debug)
+}
 pub fn GradientStop::equal(Self, Self) -> Bool
 pub fn GradientStop::not_equal(Self, Self) -> Bool
 pub fn GradientStop::output(Self, &Logger) -> Unit
@@ -73,11 +77,12 @@ pub fn GradientStop::to_repr(Self) -> @debug.Repr
 pub fn GradientStop::to_string(Self) -> String
 pub impl Show for GradientStop
 
+#derive(Eq, @debug.Debug)
 pub(all) struct LinearGradient {
   start : @geom.Point
   end : @geom.Point
   stops : Array[GradientStop]
-} derive(Eq, @debug.Debug)
+}
 pub fn LinearGradient::equal(Self, Self) -> Bool
 pub fn LinearGradient::not_equal(Self, Self) -> Bool
 pub fn LinearGradient::output(Self, &Logger) -> Unit
@@ -85,13 +90,14 @@ pub fn LinearGradient::to_repr(Self) -> @debug.Repr
 pub fn LinearGradient::to_string(Self) -> String
 pub impl Show for LinearGradient
 
+#derive(Eq, @debug.Debug)
 pub(all) struct RadialGradient {
   start_center : @geom.Point
   start_radius : Double
   end_center : @geom.Point
   end_radius : Double
   stops : Array[GradientStop]
-} derive(Eq, @debug.Debug)
+}
 pub fn RadialGradient::equal(Self, Self) -> Bool
 pub fn RadialGradient::not_equal(Self, Self) -> Bool
 pub fn RadialGradient::output(Self, &Logger) -> Unit
@@ -99,11 +105,12 @@ pub fn RadialGradient::to_repr(Self) -> @debug.Repr
 pub fn RadialGradient::to_string(Self) -> String
 pub impl Show for RadialGradient
 
+#derive(Eq, @debug.Debug)
 pub(all) enum TextAlign {
   Left
   Center
   Right
-} derive(Eq, @debug.Debug)
+}
 pub fn TextAlign::equal(Self, Self) -> Bool
 pub fn TextAlign::not_equal(Self, Self) -> Bool
 pub fn TextAlign::output(Self, &Logger) -> Unit

@@ -22,11 +22,12 @@ pub fn strip_html_wrappers(String, html? : Bool?) -> String?
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum HtmlAlign {
   Left
   Center
   Right
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlAlign::equal(Self, Self) -> Bool
 pub fn HtmlAlign::not_equal(Self, Self) -> Bool
 pub fn HtmlAlign::output(Self, &Logger) -> Unit
@@ -34,6 +35,7 @@ pub fn HtmlAlign::to_repr(Self) -> @debug.Repr
 pub fn HtmlAlign::to_string(Self) -> String
 pub impl Show for HtmlAlign
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlCell {
   href : String?
   tooltip : String?
@@ -52,7 +54,7 @@ pub(all) struct HtmlCell {
   vruled : Bool
   min_width_pt : Double?
   min_height_pt : Double?
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlCell::equal(Self, Self) -> Bool
 pub fn HtmlCell::not_equal(Self, Self) -> Bool
 pub fn HtmlCell::output(Self, &Logger) -> Unit
@@ -60,11 +62,12 @@ pub fn HtmlCell::to_repr(Self) -> @debug.Repr
 pub fn HtmlCell::to_string(Self) -> String
 pub impl Show for HtmlCell
 
+#derive(Eq, @debug.Debug)
 pub(all) enum HtmlCellContent {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlCellContent::equal(Self, Self) -> Bool
 pub fn HtmlCellContent::not_equal(Self, Self) -> Bool
 pub fn HtmlCellContent::output(Self, &Logger) -> Unit
@@ -72,13 +75,14 @@ pub fn HtmlCellContent::to_repr(Self) -> @debug.Repr
 pub fn HtmlCellContent::to_string(Self) -> String
 pub impl Show for HtmlCellContent
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
   row : Int32
   col : Int32
   hruled : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlCellLayout::equal(Self, Self) -> Bool
 pub fn HtmlCellLayout::not_equal(Self, Self) -> Bool
 pub fn HtmlCellLayout::output(Self, &Logger) -> Unit
@@ -86,11 +90,12 @@ pub fn HtmlCellLayout::to_repr(Self) -> @debug.Repr
 pub fn HtmlCellLayout::to_string(Self) -> String
 pub impl Show for HtmlCellLayout
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlCellPlacement {
   cell : HtmlCell
   row : Int32
   col : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlCellPlacement::equal(Self, Self) -> Bool
 pub fn HtmlCellPlacement::not_equal(Self, Self) -> Bool
 pub fn HtmlCellPlacement::output(Self, &Logger) -> Unit
@@ -98,11 +103,12 @@ pub fn HtmlCellPlacement::to_repr(Self) -> @debug.Repr
 pub fn HtmlCellPlacement::to_string(Self) -> String
 pub impl Show for HtmlCellPlacement
 
+#derive(Eq, @debug.Debug)
 pub(all) enum HtmlLabel {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlLabel::equal(Self, Self) -> Bool
 pub fn HtmlLabel::not_equal(Self, Self) -> Bool
 pub fn HtmlLabel::output(Self, &Logger) -> Unit
@@ -110,10 +116,11 @@ pub fn HtmlLabel::to_repr(Self) -> @debug.Repr
 pub fn HtmlLabel::to_string(Self) -> String
 pub impl Show for HtmlLabel
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
   ruled : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlRow::equal(Self, Self) -> Bool
 pub fn HtmlRow::not_equal(Self, Self) -> Bool
 pub fn HtmlRow::output(Self, &Logger) -> Unit
@@ -121,6 +128,7 @@ pub fn HtmlRow::to_repr(Self) -> @debug.Repr
 pub fn HtmlRow::to_string(Self) -> String
 pub impl Show for HtmlRow
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlTable {
   port : String?
   href : String?
@@ -137,7 +145,7 @@ pub(all) struct HtmlTable {
   hruled : Bool
   vruled : Bool
   rounded : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlTable::equal(Self, Self) -> Bool
 pub fn HtmlTable::not_equal(Self, Self) -> Bool
 pub fn HtmlTable::output(Self, &Logger) -> Unit
@@ -145,13 +153,14 @@ pub fn HtmlTable::to_repr(Self) -> @debug.Repr
 pub fn HtmlTable::to_string(Self) -> String
 pub impl Show for HtmlTable
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
   row_count : Int32
   col_count : Int32
   scale_x : Double
   scale_y : Double
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlTableLayout::equal(Self, Self) -> Bool
 pub fn HtmlTableLayout::not_equal(Self, Self) -> Bool
 pub fn HtmlTableLayout::output(Self, &Logger) -> Unit
@@ -159,13 +168,14 @@ pub fn HtmlTableLayout::to_repr(Self) -> @debug.Repr
 pub fn HtmlTableLayout::to_string(Self) -> String
 pub impl Show for HtmlTableLayout
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlTableMetrics {
   placements : Array[HtmlCellPlacement]
   col_widths : Array[Double]
   row_heights : Array[Double]
   total_width : Double
   total_height : Double
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlTableMetrics::equal(Self, Self) -> Bool
 pub fn HtmlTableMetrics::not_equal(Self, Self) -> Bool
 pub fn HtmlTableMetrics::output(Self, &Logger) -> Unit
@@ -173,13 +183,14 @@ pub fn HtmlTableMetrics::to_repr(Self) -> @debug.Repr
 pub fn HtmlTableMetrics::to_string(Self) -> String
 pub impl Show for HtmlTableMetrics
 
+#derive(Eq, @debug.Debug)
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
   font_name : String?
   font_size_pt : Double?
   break_alignment : HtmlAlign?
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlTextSpan::equal(Self, Self) -> Bool
 pub fn HtmlTextSpan::not_equal(Self, Self) -> Bool
 pub fn HtmlTextSpan::output(Self, &Logger) -> Unit
@@ -187,11 +198,12 @@ pub fn HtmlTextSpan::to_repr(Self) -> @debug.Repr
 pub fn HtmlTextSpan::to_string(Self) -> String
 pub impl Show for HtmlTextSpan
 
+#derive(Eq, @debug.Debug)
 pub(all) enum HtmlVAlign {
   Top
   Middle
   Bottom
-} derive(Eq, @debug.Debug)
+}
 pub fn HtmlVAlign::equal(Self, Self) -> Bool
 pub fn HtmlVAlign::not_equal(Self, Self) -> Bool
 pub fn HtmlVAlign::output(Self, &Logger) -> Unit

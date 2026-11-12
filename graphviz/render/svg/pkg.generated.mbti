@@ -12,10 +12,11 @@ pub fn render_svg(@dot.DotLayoutGraph, options? : SvgOptions) -> String
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) struct SvgOptions {
   pretty : Bool?
   include_xml_decl : Bool?
-} derive(Eq, @debug.Debug)
+}
 pub fn SvgOptions::default() -> Self
 pub fn SvgOptions::equal(Self, Self) -> Bool
 pub fn SvgOptions::not_equal(Self, Self) -> Bool

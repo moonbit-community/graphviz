@@ -10,11 +10,12 @@ import {
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum AttrKind {
   Graph
   Node
   Edge
-} derive(Eq, @debug.Debug)
+}
 pub fn AttrKind::equal(Self, Self) -> Bool
 pub fn AttrKind::not_equal(Self, Self) -> Bool
 pub fn AttrKind::output(Self, &Logger) -> Unit
@@ -22,15 +23,17 @@ pub fn AttrKind::to_repr(Self) -> @debug.Repr
 pub fn AttrKind::to_string(Self) -> String
 pub impl Show for AttrKind
 
+#derive(Eq, @debug.Debug)
 pub(all) enum AttrValue {
   Text(String)
   Html(String)
-} derive(Eq, @debug.Debug)
+}
 pub fn AttrValue::equal(Self, Self) -> Bool
 pub fn AttrValue::not_equal(Self, Self) -> Bool
 pub fn AttrValue::text(Self) -> String
 pub fn AttrValue::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Compass {
   N
   NE
@@ -41,7 +44,7 @@ pub(all) enum Compass {
   W
   NW
   C
-} derive(Eq, @debug.Debug)
+}
 pub fn Compass::equal(Self, Self) -> Bool
 pub fn Compass::not_equal(Self, Self) -> Bool
 pub fn Compass::output(Self, &Logger) -> Unit
@@ -94,10 +97,11 @@ pub fn Graph::set_default_attr_value(Self, AttrKind, String, AttrValue) -> Unit
 pub fn Graph::subgraph(Self, name? : String) -> Self
 pub fn Graph::subgraphs(Self) -> Array[Self]
 
+#derive(Eq, @debug.Debug)
 pub(all) enum GraphKind {
   Directed
   Undirected
-} derive(Eq, @debug.Debug)
+}
 pub fn GraphKind::equal(Self, Self) -> Bool
 pub fn GraphKind::not_equal(Self, Self) -> Bool
 pub fn GraphKind::output(Self, &Logger) -> Unit
@@ -117,10 +121,11 @@ pub fn Node::name(Self) -> String
 pub fn Node::set_attr(Self, String, String) -> Unit
 pub fn Node::set_attr_value(Self, String, AttrValue) -> Unit
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Port {
   name : String?
   compass : Compass?
-} derive(Eq, @debug.Debug)
+}
 pub fn Port::equal(Self, Self) -> Bool
 pub fn Port::not_equal(Self, Self) -> Bool
 pub fn Port::output(Self, &Logger) -> Unit

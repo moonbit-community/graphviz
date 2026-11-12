@@ -32,11 +32,12 @@ pub(all) enum BalanceMode {
   TB
 }
 
+#derive(Eq)
 pub(all) enum NodeKind {
   Normal
   Virtual
   Slack
-} derive(Eq)
+}
 pub fn NodeKind::equal(Self, Self) -> Bool
 pub fn NodeKind::not_equal(Self, Self) -> Bool
 

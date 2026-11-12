@@ -14,12 +14,13 @@ pub fn parse_rankdir(String) -> RankDir?
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum RankDir {
   TB
   BT
   LR
   RL
-} derive(Eq, @debug.Debug)
+}
 pub fn RankDir::equal(Self, Self) -> Bool
 pub fn RankDir::not_equal(Self, Self) -> Bool
 pub fn RankDir::output(Self, &Logger) -> Unit

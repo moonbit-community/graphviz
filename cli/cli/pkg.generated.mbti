@@ -19,13 +19,14 @@ pub async fn run_cli(Array[String], program? : String) -> String
 pub async fn run_cli_bytes(Array[String], program? : String) -> Bytes
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub(all) suberror CliError {
   UnknownFlag(flag~ : String)
   MissingValue(flag~ : String)
   InvalidAssignment(flag~ : String, value~ : String)
   InvalidNumber(flag~ : String, value~ : String)
   MultipleInputs
-} derive(Eq, @debug.Debug)
+}
 pub fn CliError::equal(Self, Self) -> Bool
 pub fn CliError::not_equal(Self, Self) -> Bool
 pub fn CliError::output(Self, &Logger) -> Unit
@@ -34,10 +35,11 @@ pub fn CliError::to_string(Self) -> String
 pub impl Show for CliError
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) struct AttrAssignment {
   name : String
   value : String
-} derive(Eq, @debug.Debug)
+}
 pub fn AttrAssignment::equal(Self, Self) -> Bool
 pub fn AttrAssignment::not_equal(Self, Self) -> Bool
 pub fn AttrAssignment::output(Self, &Logger) -> Unit
@@ -45,11 +47,12 @@ pub fn AttrAssignment::to_repr(Self) -> @debug.Repr
 pub fn AttrAssignment::to_string(Self) -> String
 pub impl Show for AttrAssignment
 
+#derive(Eq, @debug.Debug)
 pub(all) enum CliAction {
   Render(CliJob)
   ListFormats
   ShowVersion
-} derive(Eq, @debug.Debug)
+}
 pub fn CliAction::equal(Self, Self) -> Bool
 pub fn CliAction::not_equal(Self, Self) -> Bool
 pub fn CliAction::output(Self, &Logger) -> Unit
@@ -57,6 +60,7 @@ pub fn CliAction::to_repr(Self) -> @debug.Repr
 pub fn CliAction::to_string(Self) -> String
 pub impl Show for CliAction
 
+#derive(Eq, @debug.Debug)
 pub(all) struct CliJob {
   input : String?
   output : String?
@@ -70,7 +74,7 @@ pub(all) struct CliJob {
   neato_no_op : Int32?
   neato_prune : Bool
   verbose : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn CliJob::equal(Self, Self) -> Bool
 pub fn CliJob::not_equal(Self, Self) -> Bool
 pub fn CliJob::output(Self, &Logger) -> Unit
@@ -78,10 +82,11 @@ pub fn CliJob::to_repr(Self) -> @debug.Repr
 pub fn CliJob::to_string(Self) -> String
 pub impl Show for CliJob
 
+#derive(Eq, @debug.Debug)
 pub(all) struct FormatSpec {
   format : OutputFormat
   variant : String?
-} derive(Eq, @debug.Debug)
+}
 pub fn FormatSpec::equal(Self, Self) -> Bool
 pub fn FormatSpec::not_equal(Self, Self) -> Bool
 pub fn FormatSpec::output(Self, &Logger) -> Unit
@@ -89,6 +94,7 @@ pub fn FormatSpec::to_repr(Self) -> @debug.Repr
 pub fn FormatSpec::to_string(Self) -> String
 pub impl Show for FormatSpec
 
+#derive(Eq, @debug.Debug)
 pub(all) enum LayoutEngine {
   Dot
   Neato
@@ -100,7 +106,7 @@ pub(all) enum LayoutEngine {
   Patchwork
   Nop
   Other(name~ : String)
-} derive(Eq, @debug.Debug)
+}
 pub fn LayoutEngine::equal(Self, Self) -> Bool
 pub fn LayoutEngine::not_equal(Self, Self) -> Bool
 pub fn LayoutEngine::output(Self, &Logger) -> Unit
@@ -108,12 +114,13 @@ pub fn LayoutEngine::to_repr(Self) -> @debug.Repr
 pub fn LayoutEngine::to_string(Self) -> String
 pub impl Show for LayoutEngine
 
+#derive(Eq, @debug.Debug)
 pub(all) enum OutputFormat {
   Dot
   XDot
   Svg
   Other(name~ : String)
-} derive(Eq, @debug.Debug)
+}
 pub fn OutputFormat::equal(Self, Self) -> Bool
 pub fn OutputFormat::not_equal(Self, Self) -> Bool
 pub fn OutputFormat::output(Self, &Logger) -> Unit

@@ -20,10 +20,11 @@ pub fn layout_neato(@cgraph.Graph, scale? : Double, prune? : Bool) -> DotLayoutG
 pub fn layout_neato_noop(@cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub(all) suberror DotLayoutError {
   UnsupportedFeature(message~ : String)
   InvalidGraph(message~ : String)
-} derive(Eq, @debug.Debug)
+}
 pub fn DotLayoutError::equal(Self, Self) -> Bool
 pub fn DotLayoutError::not_equal(Self, Self) -> Bool
 pub fn DotLayoutError::output(Self, &Logger) -> Unit
@@ -42,12 +43,13 @@ pub(all) struct DotLayoutGraph {
 }
 pub fn DotLayoutGraph::apply(Self) -> Unit
 
+#derive(Eq, @debug.Debug)
 pub(all) struct DotLayoutOptions {
   rankdir : @rankdir.RankDir?
   nodesep : Double?
   ranksep : Double?
   splines : @layout_prep.SplinesMode?
-} derive(Eq, @debug.Debug)
+}
 pub fn DotLayoutOptions::default() -> Self
 pub fn DotLayoutOptions::equal(Self, Self) -> Bool
 pub fn DotLayoutOptions::not_equal(Self, Self) -> Bool
