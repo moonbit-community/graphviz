@@ -4,12 +4,13 @@
 
 ///|
 /// Parsed style flags from the style attribute.
+#derive(Debug, Eq)
 pub(all) struct StyleFlags {
   raw : String
   filled : Bool
   dashed : Bool
   dotted : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend StyleFlags with Debug::{to_repr}

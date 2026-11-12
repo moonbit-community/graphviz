@@ -15,11 +15,12 @@ pub(all) enum BalanceMode {
 }
 
 ///|
+#derive(Eq)
 pub(all) enum NodeKind {
   Normal
   Virtual
   Slack
-} derive(Eq)
+}
 
 ///|
 pub extend NodeKind with Eq::{not_equal, equal}

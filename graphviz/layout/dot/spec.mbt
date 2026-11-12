@@ -12,12 +12,13 @@ pub type SplinesMode = @layout_prep.SplinesMode
 
 ///|
 /// Options for dot layout.
+#derive(Debug, Eq)
 pub(all) struct DotLayoutOptions {
   rankdir : RankDir?
   nodesep : Double?
   ranksep : Double?
   splines : SplinesMode?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DotLayoutOptions with Debug::{to_repr}
@@ -33,10 +34,11 @@ pub fn DotLayoutOptions::default() -> DotLayoutOptions {
 
 ///|
 /// Layout errors from the dot engine.
+#derive(Debug, Eq)
 pub(all) suberror DotLayoutError {
   UnsupportedFeature(message~ : String)
   InvalidGraph(message~ : String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DotLayoutError with Debug::{to_repr}

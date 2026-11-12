@@ -8,12 +8,13 @@
 
 ///|
 /// Edge direction for directed edge endpoint markers and routing behavior.
+#derive(Debug, Eq)
 pub(all) enum EdgeDir {
   Forward
   Back
   Both
   None
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend EdgeDir with Debug::{to_repr}

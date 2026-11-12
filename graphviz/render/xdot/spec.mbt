@@ -4,9 +4,10 @@
 
 ///|
 /// Options for xdot output.
+#derive(Debug, Eq)
 pub(all) struct XDotOptions {
   version : String?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend XDotOptions with Debug::{to_repr}

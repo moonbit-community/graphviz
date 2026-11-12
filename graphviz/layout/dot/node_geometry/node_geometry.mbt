@@ -17,11 +17,12 @@ priv struct SizePt {
 }
 
 ///|
+#derive(Eq)
 priv enum NodeFixedSizeMode {
   None
   True
   Shape
-} derive(Eq)
+}
 
 ///|
 fn node_fixedsize_mode(node : @cgraph.Node) -> NodeFixedSizeMode {

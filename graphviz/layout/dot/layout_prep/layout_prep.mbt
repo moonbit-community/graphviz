@@ -10,13 +10,14 @@ type NodeSize = @node_primitives.NodeSize
 
 ///|
 /// Edge routing mode for dot layouts.
+#derive(Debug, Eq)
 pub(all) enum SplinesMode {
   Spline
   Polyline
   Ortho
   Curved
   None
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend SplinesMode with Debug::{to_repr}

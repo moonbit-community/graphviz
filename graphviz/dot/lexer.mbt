@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: EPL-2.0
 
 ///|
+#derive(Eq)
 priv enum Token {
   Id(String)
   String(String)
@@ -18,7 +19,7 @@ priv enum Token {
   EdgeDirected
   EdgeUndirected
   Eof
-} derive(Eq)
+}
 
 ///|
 priv struct TokenWithPos {

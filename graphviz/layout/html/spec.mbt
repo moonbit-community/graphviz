@@ -4,11 +4,12 @@
 
 ///|
 /// Horizontal alignment for HTML-like labels.
+#derive(Debug, Eq)
 pub(all) enum HtmlAlign {
   Left
   Center
   Right
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlAlign with Debug::{to_repr}
@@ -18,11 +19,12 @@ pub extend HtmlAlign with Eq::{not_equal, equal}
 
 ///|
 /// Vertical alignment for HTML-like labels.
+#derive(Debug, Eq)
 pub(all) enum HtmlVAlign {
   Top
   Middle
   Bottom
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlVAlign with Debug::{to_repr}
@@ -32,13 +34,14 @@ pub extend HtmlVAlign with Eq::{not_equal, equal}
 
 ///|
 /// Text span for HTML-like labels.
+#derive(Debug, Eq)
 pub(all) struct HtmlTextSpan {
   text : String
   color : String?
   font_name : String?
   font_size_pt : Double?
   break_alignment : HtmlAlign?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlTextSpan with Debug::{to_repr}
@@ -48,11 +51,12 @@ pub extend HtmlTextSpan with Eq::{not_equal, equal}
 
 ///|
 /// Cell content for HTML-like labels.
+#derive(Debug, Eq)
 pub(all) enum HtmlCellContent {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlCellContent with Debug::{to_repr}
@@ -62,6 +66,7 @@ pub extend HtmlCellContent with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like table cell.
+#derive(Debug, Eq)
 pub(all) struct HtmlCell {
   href : String?
   tooltip : String?
@@ -80,7 +85,7 @@ pub(all) struct HtmlCell {
   vruled : Bool
   min_width_pt : Double?
   min_height_pt : Double?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlCell with Debug::{to_repr}
@@ -90,10 +95,11 @@ pub extend HtmlCell with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like table row.
+#derive(Debug, Eq)
 pub(all) struct HtmlRow {
   cells : Array[HtmlCell]
   ruled : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlRow with Debug::{to_repr}
@@ -103,6 +109,7 @@ pub extend HtmlRow with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like table.
+#derive(Debug, Eq)
 pub(all) struct HtmlTable {
   port : String?
   href : String?
@@ -119,7 +126,7 @@ pub(all) struct HtmlTable {
   hruled : Bool
   vruled : Bool
   rounded : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlTable with Debug::{to_repr}
@@ -129,11 +136,12 @@ pub extend HtmlTable with Eq::{not_equal, equal}
 
 ///|
 /// HTML-like label.
+#derive(Debug, Eq)
 pub(all) enum HtmlLabel {
   Text(String)
   StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlLabel with Debug::{to_repr}
@@ -143,11 +151,12 @@ pub extend HtmlLabel with Eq::{not_equal, equal}
 
 ///|
 /// Table cell placement in the grid.
+#derive(Debug, Eq)
 pub(all) struct HtmlCellPlacement {
   cell : HtmlCell
   row : Int32
   col : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlCellPlacement with Debug::{to_repr}
@@ -157,13 +166,14 @@ pub extend HtmlCellPlacement with Eq::{not_equal, equal}
 
 ///|
 /// Table metrics for layout.
+#derive(Debug, Eq)
 pub(all) struct HtmlTableMetrics {
   placements : Array[HtmlCellPlacement]
   col_widths : Array[Double]
   row_heights : Array[Double]
   total_width : Double
   total_height : Double
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlTableMetrics with Debug::{to_repr}
@@ -173,13 +183,14 @@ pub extend HtmlTableMetrics with Eq::{not_equal, equal}
 
 ///|
 /// Table cell layout output.
+#derive(Debug, Eq)
 pub(all) struct HtmlCellLayout {
   rect : @geom.Rect
   cell : HtmlCell
   row : Int32
   col : Int32
   hruled : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlCellLayout with Debug::{to_repr}
@@ -189,13 +200,14 @@ pub extend HtmlCellLayout with Eq::{not_equal, equal}
 
 ///|
 /// Table layout output.
+#derive(Debug, Eq)
 pub(all) struct HtmlTableLayout {
   cells : Array[HtmlCellLayout]
   row_count : Int32
   col_count : Int32
   scale_x : Double
   scale_y : Double
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend HtmlTableLayout with Debug::{to_repr}

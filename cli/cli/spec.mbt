@@ -4,12 +4,13 @@
 
 ///|
 /// Output format selector for CLI.
+#derive(Debug, Eq)
 pub(all) enum OutputFormat {
   Dot
   XDot
   Svg
   Other(name~ : String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend OutputFormat with Debug::{to_repr}
@@ -19,10 +20,11 @@ pub extend OutputFormat with Eq::{not_equal, equal}
 
 ///|
 /// Output format + optional variant (e.g. png:cairo).
+#derive(Debug, Eq)
 pub(all) struct FormatSpec {
   format : OutputFormat
   variant : String?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend FormatSpec with Debug::{to_repr}
@@ -32,6 +34,7 @@ pub extend FormatSpec with Eq::{not_equal, equal}
 
 ///|
 /// Layout engine selector.
+#derive(Debug, Eq)
 pub(all) enum LayoutEngine {
   Dot
   Neato
@@ -43,7 +46,7 @@ pub(all) enum LayoutEngine {
   Patchwork
   Nop
   Other(name~ : String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend LayoutEngine with Debug::{to_repr}
@@ -53,10 +56,11 @@ pub extend LayoutEngine with Eq::{not_equal, equal}
 
 ///|
 /// Attribute assignment parsed from -G/-N/-E flags.
+#derive(Debug, Eq)
 pub(all) struct AttrAssignment {
   name : String
   value : String
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend AttrAssignment with Debug::{to_repr}
@@ -66,6 +70,7 @@ pub extend AttrAssignment with Eq::{not_equal, equal}
 
 ///|
 /// Parsed CLI job describing a single render pipeline.
+#derive(Debug, Eq)
 pub(all) struct CliJob {
   input : String?
   output : String?
@@ -79,7 +84,7 @@ pub(all) struct CliJob {
   neato_no_op : Int32?
   neato_prune : Bool
   verbose : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend CliJob with Debug::{to_repr}
@@ -89,11 +94,12 @@ pub extend CliJob with Eq::{not_equal, equal}
 
 ///|
 /// CLI actions supported by the dot/neato frontends.
+#derive(Debug, Eq)
 pub(all) enum CliAction {
   Render(CliJob)
   ListFormats
   ShowVersion
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend CliAction with Debug::{to_repr}
@@ -103,13 +109,14 @@ pub extend CliAction with Eq::{not_equal, equal}
 
 ///|
 /// Errors reported while parsing CLI flags.
+#derive(Debug, Eq)
 pub(all) suberror CliError {
   UnknownFlag(flag~ : String)
   MissingValue(flag~ : String)
   InvalidAssignment(flag~ : String, value~ : String)
   InvalidNumber(flag~ : String, value~ : String)
   MultipleInputs
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend CliError with Debug::{to_repr}

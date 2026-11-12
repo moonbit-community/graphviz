@@ -4,11 +4,12 @@
 
 ///|
 /// Text alignment for draw operations.
+#derive(Debug, Eq)
 pub(all) enum TextAlign {
   Left
   Center
   Right
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend TextAlign with Debug::{to_repr}
@@ -18,10 +19,11 @@ pub extend TextAlign with Eq::{not_equal, equal}
 
 ///|
 /// Font description (size in points).
+#derive(Debug, Eq)
 pub(all) struct Font {
   name : String
   size : Double
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Font with Debug::{to_repr}
@@ -31,10 +33,11 @@ pub extend Font with Eq::{not_equal, equal}
 
 ///|
 /// Gradient stop for linear/radial gradients.
+#derive(Debug, Eq)
 pub(all) struct GradientStop {
   offset : Double
   color : String
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend GradientStop with Debug::{to_repr}
@@ -44,11 +47,12 @@ pub extend GradientStop with Eq::{not_equal, equal}
 
 ///|
 /// Linear gradient definition.
+#derive(Debug, Eq)
 pub(all) struct LinearGradient {
   start : @geom.Point
   end : @geom.Point
   stops : Array[GradientStop]
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend LinearGradient with Debug::{to_repr}
@@ -58,13 +62,14 @@ pub extend LinearGradient with Eq::{not_equal, equal}
 
 ///|
 /// Radial gradient definition.
+#derive(Debug, Eq)
 pub(all) struct RadialGradient {
   start_center : @geom.Point
   start_radius : Double
   end_center : @geom.Point
   end_radius : Double
   stops : Array[GradientStop]
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend RadialGradient with Debug::{to_repr}
@@ -74,10 +79,11 @@ pub extend RadialGradient with Eq::{not_equal, equal}
 
 ///|
 /// Gradient color specification.
+#derive(Debug, Eq)
 pub(all) enum Gradient {
   Linear(LinearGradient)
   Radial(RadialGradient)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Gradient with Debug::{to_repr}
@@ -87,6 +93,7 @@ pub extend Gradient with Eq::{not_equal, equal}
 
 ///|
 /// Drawing primitive operations (points in points).
+#derive(Debug, Eq)
 pub(all) enum DrawOp {
   Ellipse(filled~ : Bool, rect~ : @geom.Rect)
   Polygon(filled~ : Bool, points~ : Array[@geom.Point])
@@ -101,7 +108,7 @@ pub(all) enum DrawOp {
   Font(font~ : Font)
   Style(name~ : String)
   FontChar(codepoint~ : UInt32)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DrawOp with Debug::{to_repr}

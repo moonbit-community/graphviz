@@ -4,10 +4,11 @@
 
 ///|
 /// Options for SVG output.
+#derive(Debug, Eq)
 pub(all) struct SvgOptions {
   pretty : Bool?
   include_xml_decl : Bool?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend SvgOptions with Debug::{to_repr}

@@ -58,10 +58,11 @@ fn recover_regular_selection(
 }
 
 ///|
+#derive(Eq, Hash)
 priv enum RegularParallelClass {
   Direct(String)
   Chain(String, Array[String])
-} derive(Eq, Hash)
+}
 
 ///|
 fn collect_parallel_groups(

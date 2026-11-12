@@ -4,11 +4,12 @@
 
 ///|
 /// Source position for parse errors.
+#derive(Debug, Eq)
 pub(all) struct Position {
   line : Int32
   column : Int32
   offset : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Position with Debug::{to_repr}
@@ -18,11 +19,12 @@ pub extend Position with Eq::{not_equal, equal}
 
 ///|
 /// DOT parse errors with position info.
+#derive(Debug, Eq)
 pub(all) suberror DotParseError {
   UnexpectedEof(pos~ : Position)
   InvalidToken(pos~ : Position, token~ : String)
   InvalidSyntax(pos~ : Position, message~ : String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DotParseError with Debug::{to_repr}

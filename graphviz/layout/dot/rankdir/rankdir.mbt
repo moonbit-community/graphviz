@@ -4,12 +4,13 @@
 
 ///|
 /// Rank direction for dot layout.
+#derive(Debug, Eq)
 pub(all) enum RankDir {
   TB
   BT
   LR
   RL
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend RankDir with Debug::{to_repr}

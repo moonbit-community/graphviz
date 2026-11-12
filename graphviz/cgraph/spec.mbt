@@ -4,10 +4,11 @@
 
 ///|
 /// Core graph kinds supported by DOT.
+#derive(Debug, Eq)
 pub(all) enum GraphKind {
   Directed
   Undirected
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend GraphKind with Debug::{to_repr}
@@ -17,11 +18,12 @@ pub extend GraphKind with Eq::{not_equal, equal}
 
 ///|
 /// Attribute scope kinds.
+#derive(Debug, Eq)
 pub(all) enum AttrKind {
   Graph
   Node
   Edge
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend AttrKind with Debug::{to_repr}
@@ -31,6 +33,7 @@ pub extend AttrKind with Eq::{not_equal, equal}
 
 ///|
 /// Compass ports used in node:port:compass syntax.
+#derive(Debug, Eq)
 pub(all) enum Compass {
   N
   NE
@@ -41,7 +44,7 @@ pub(all) enum Compass {
   W
   NW
   C
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Compass with Debug::{to_repr}
@@ -51,10 +54,11 @@ pub extend Compass with Eq::{not_equal, equal}
 
 ///|
 /// Optional port name and compass reference.
+#derive(Debug, Eq)
 pub(all) struct Port {
   name : String?
   compass : Compass?
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Port with Debug::{to_repr}

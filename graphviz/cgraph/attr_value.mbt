@@ -1,10 +1,11 @@
 ///|
 /// DOT attribute syntax is independent of its text. HTML values retain their
 /// outer delimiters, matching the existing string attribute API.
+#derive(Eq, Debug)
 pub(all) enum AttrValue {
   Text(String)
   Html(String)
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend AttrValue with Eq::{not_equal, equal}
