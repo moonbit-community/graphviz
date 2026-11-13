@@ -16,7 +16,11 @@ test "node_size keeps fixedsize=true circle dimensions" {
     "digraph { node [margin=0 fontsize=32 width=0.5 shape=circle style=filled]; b [fixedsize=true label=\"a very long label\"]; }",
   )
   let node = graph.node("b")
-  let size = node_size(node, @layout_prep.RecordOrientation::Horizontal)
+  let size = node_size(
+    text_context=@heuristic.context(),
+    node,
+    @layout_prep.RecordOrientation::Horizontal,
+  )
 
   assert_close(size.width_in, 0.5, 0.0001)
   assert_close(size.height_in, 0.5, 0.0001)
@@ -28,7 +32,11 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
     "digraph { node [margin=0 fontsize=32 width=0.5 shape=circle style=filled]; d [fixedsize=shape label=\"an even longer label\"]; }",
   )
   let node = graph.node("d")
-  let size = node_size(node, @layout_prep.RecordOrientation::Horizontal)
+  let size = node_size(
+    text_context=@heuristic.context(),
+    node,
+    @layout_prep.RecordOrientation::Horizontal,
+  )
 
   assert_close(size.width_in, 3.5833, 0.001)
   assert_close(size.height_in, 0.51042, 0.001)
@@ -38,6 +46,7 @@ test "node_size keeps fixedsize=shape label bbox without circle inflation" {
 test "node_size gives square nodes their regular half-inch default" {
   let graph = @dot_parser.parse_dot("digraph { a [shape=square]; }")
   let size = node_size(
+    text_context=@heuristic.context(),
     graph.node("a"),
     @layout_prep.RecordOrientation::Horizontal,
   )
@@ -54,6 +63,7 @@ test "regular empty nodes use supplied dimensions without the other default" {
   for entry in [("a", 0.2), ("b", 0.2), ("c", 0.3), ("d", 0.2)] {
     let (name, expected) = entry
     let size = node_size(
+      text_context=@heuristic.context(),
       graph.node(name),
       @layout_prep.RecordOrientation::Horizontal,
     )

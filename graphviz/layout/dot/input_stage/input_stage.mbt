@@ -98,7 +98,10 @@ fn scan_edge_flags(edges : Array[@cgraph.Edge]) -> EdgeFlags {
 /// size-map derivation, and port-order metadata collection in the same order as
 /// the original root-stage pipeline.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(input : InputStageInput) -> LayoutPrep {
+fn prepare_layout_inputs(
+  text_context~ : @text_layout.Context,
+  input : InputStageInput,
+) -> LayoutPrep {
   let graph = input.graph
   let nodes = graph.nodes()
   let edges = graph.edges()
@@ -106,8 +109,13 @@ fn prepare_layout_inputs(input : InputStageInput) -> LayoutPrep {
   let has_edge_labels = @edge_label_metrics.graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, input.rankdir)
   let record_orientation = @layout_prep.record_layout_orientation(input.rankdir)
-  let size_maps = build_size_maps(nodes, input.rankdir, record_orientation)
-  let port_order_metadata = build_port_order_metadata({
+  let size_maps = build_size_maps(
+    text_context~,
+    nodes,
+    input.rankdir,
+    record_orientation,
+  )
+  let port_order_metadata = build_port_order_metadata(text_context~, {
     rankdir: input.rankdir,
     has_port_edges: edge_flags.has_port_edges,
     nodes,
@@ -162,6 +170,7 @@ fn build_node_order(
 /// per node, with LR/RL swapping only applied to layout-time sizes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_size_maps(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
@@ -170,7 +179,7 @@ fn build_size_maps(
   let order_sizes : Map[String, NodeSize] = Map([])
   let sizes : Map[String, NodeSize] = Map([])
   for node in nodes {
-    let size = @node_geometry.node_size(node, record_orientation)
+    let size = @node_geometry.node_size(text_context~, node, record_orientation)
     output_sizes[node.name()] = size
     order_sizes[node.name()] = size
     sizes[node.name()] = if rankdir == RankDir::LR || rankdir == RankDir::RL {
@@ -184,12 +193,14 @@ fn build_size_maps(
 
 ///|
 fn build_node_port_order(
+  text_context~ : @text_layout.Context,
   node : @cgraph.Node,
   size : NodeSize,
   rankdir : RankDir,
   record_orientation : RecordOrientation,
 ) -> Map[String, Double] {
   let raw_ports = @label_layout.raw_label_ports_for_node(
+    text_context~,
     node,
     { x: 0.0, y: 0.0, },
     size,
@@ -208,6 +219,7 @@ fn build_node_port_order(
 /// (layout_port_offset.x) used by later opposite-endpoint averaging.
 /// Do not change behavior without updating fixtures/tests.
 fn build_record_port_order_map(
+  text_context~ : @text_layout.Context,
   input : RecordPortOrderInput,
 ) -> Map[String, Map[String, Double]] {
   let record_port_order : Map[String, Map[String, Double]] = Map([])
@@ -217,11 +229,13 @@ fn build_record_port_order_map(
     if has_html || @record_geometry.is_record_shape(node) {
       let name = node.name()
       let size = @node_geometry.resolve_node_output_size(
+        text_context~,
         input.output_sizes,
         node,
         input.record_orientation,
       )
       let order_map = build_node_port_order(
+        text_context~,
         node,
         size,
         input.rankdir,
@@ -300,10 +314,11 @@ fn accumulate_port_order_contrib(
 /// opposite-endpoint contributions and averaging per-target totals.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_port_order_positions(
+  text_context~ : @text_layout.Context,
   input : PortOrderMetadataInput,
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Double] {
-  let record_port_order = build_record_port_order_map({
+  let record_port_order = build_record_port_order_map(text_context~, {
     nodes: input.nodes,
     output_sizes: input.output_sizes,
     rankdir: input.rankdir,
@@ -328,6 +343,7 @@ fn compute_port_order_positions(
 /// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
 fn build_port_order_metadata(
+  text_context~ : @text_layout.Context,
   input : PortOrderMetadataInput,
 ) -> PortOrderMetadata {
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map([])
@@ -335,7 +351,7 @@ fn build_port_order_metadata(
       input.rankdir == RankDir::LR || input.rankdir == RankDir::RL
     ) &&
     input.has_port_edges {
-    compute_port_order_positions(input, port_order_contrib)
+    compute_port_order_positions(text_context~, input, port_order_contrib)
   } else {
     Map([])
   }

@@ -56,6 +56,7 @@ pub(all) struct RoutingSpatialInput {
 /// Graphviz parity: node layout assembly aligned to refs/graphviz/lib/dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_layout_nodes(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   positions : Map[String, @geom.Point],
   output_sizes : Map[String, NodeSize],
@@ -69,7 +70,10 @@ fn build_routing_layout_nodes(
       None => { x: 0.0, y: 0.0, }
     }
     let size = @node_geometry.resolve_node_output_size(
-      output_sizes, node, record_orientation,
+      text_context~,
+      output_sizes,
+      node,
+      record_orientation,
     )
     nodes_out.push({
       node,
@@ -87,6 +91,7 @@ fn build_routing_layout_nodes(
 /// Graphviz parity: port layout maps aligned to refs/graphviz/lib/common/shapes.c (record/html ports).
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_port_layout_maps(
+  text_context~ : @text_layout.Context,
   nodes_out : Array[DotLayoutNode],
   output_sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
@@ -98,12 +103,14 @@ fn build_routing_port_layout_maps(
   if has_port_edges {
     for node_layout in nodes_out {
       let final_size = @node_geometry.resolve_node_output_size(
+        text_context~,
         output_sizes,
         node_layout.node,
         record_orientation,
       )
       let name = node_layout.node.name()
       let raw_ports = @label_layout.raw_label_ports_for_node(
+        text_context~,
         node_layout.node,
         { x: 0.0, y: 0.0, },
         final_size,
@@ -128,17 +135,20 @@ fn build_routing_port_layout_maps(
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_routing_spatial_data(
+  text_context~ : @text_layout.Context,
   input : RoutingSpatialInput,
 ) -> RoutingSpatialData {
   let prep = input.prep
   let positions_state = input.positions_state
   let nodes_out = build_routing_layout_nodes(
+    text_context~,
     prep.nodes,
     positions_state.positions,
     prep.output_sizes,
     prep.record_orientation,
   )
   let port_layout_maps = build_routing_port_layout_maps(
+    text_context~,
     nodes_out,
     prep.output_sizes,
     prep.record_orientation,
@@ -146,6 +156,7 @@ pub fn build_routing_spatial_data(
     prep.has_port_edges,
   )
   let cluster_bboxes = @subgraph_layout.compute_cluster_route_bboxes(
+    text_context~,
     input.graph,
     nodes_out,
     positions_state.cluster_ln_x,

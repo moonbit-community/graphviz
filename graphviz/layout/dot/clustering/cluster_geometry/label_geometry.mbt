@@ -12,6 +12,7 @@ pub const CLUSTER_LABEL_PAD_PT : Double = 8.0
 
 ///|
 pub fn cluster_label_padding_for_layout(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   rankdir : RankDir,
 ) -> ClusterLabelPadding {
@@ -19,7 +20,7 @@ pub fn cluster_label_padding_for_layout(
   if flip {
     return { top: 0.0, bottom: 0.0, }
   }
-  match @label_metrics.graph_label_metrics(graph) {
+  match @label_metrics.graph_label_metrics(text_context~, graph) {
     Some(metrics) => {
       let pad = CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
@@ -35,9 +36,10 @@ pub fn cluster_label_padding_for_layout(
 
 ///|
 pub fn cluster_label_width_with_pad_for_layout(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
 ) -> Double? {
-  match @label_metrics.graph_label_metrics(graph) {
+  match @label_metrics.graph_label_metrics(text_context~, graph) {
     Some(metrics) => Some(metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0)
     None => None
   }
@@ -45,6 +47,7 @@ pub fn cluster_label_width_with_pad_for_layout(
 
 ///|
 pub fn cluster_label_borders_for_xpos_constraints(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   rankdir : RankDir,
 ) -> (Double, Double) {
@@ -52,7 +55,7 @@ pub fn cluster_label_borders_for_xpos_constraints(
   if !flip {
     return (0.0, 0.0)
   }
-  match @label_metrics.graph_label_metrics(graph) {
+  match @label_metrics.graph_label_metrics(text_context~, graph) {
     Some(metrics) => {
       let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
       match @graph_label.graph_label_loc(graph) {
@@ -66,10 +69,11 @@ pub fn cluster_label_borders_for_xpos_constraints(
 
 ///|
 pub fn expand_cluster_label_bbox_for_position_stage(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
 ) -> @geom.Rect {
-  match @label_metrics.graph_label_metrics(graph) {
+  match @label_metrics.graph_label_metrics(text_context~, graph) {
     Some(metrics) =>
       @graph_label.expand_bbox_for_label(
         bbox,

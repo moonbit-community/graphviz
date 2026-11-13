@@ -198,10 +198,12 @@ fn build_ordering_runtime_core_from_sources(
 /// pipeline, using the owner-side source payload directly.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_runtime_context_from_sources(
+  text_context~ : @text_layout.Context,
   sources : BuildOrderingRuntimeContextSources,
 ) -> OrderingRuntimeContext {
   let runtime_core = build_ordering_runtime_core_from_sources(sources)
   let vnode_info = build_edge_vnodes(
+    text_context~,
     sources.nodes,
     sources.edges,
     sources.edge_tail,

@@ -11,10 +11,12 @@ import {
   "moonbit-community/graphviz/layout/dot/edge_identity",
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot" @dot_layout,
   "moonbit-community/graphviz/layout/dot/numeric",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

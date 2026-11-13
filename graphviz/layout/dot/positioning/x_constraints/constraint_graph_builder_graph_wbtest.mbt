@@ -37,7 +37,7 @@ test "build_constraint_graph assembles seed flat segment boundary and extra edge
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(long_edge)] = [vnode]
 
-  let build = build_constraint_graph({
+  let build = build_constraint_graph(text_context=@heuristic.context(), {
     nodes: [a, b, c],
     edges: [flat_edge, long_edge],
     edge_tail: [],

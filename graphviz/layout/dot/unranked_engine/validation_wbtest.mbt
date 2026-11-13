@@ -8,7 +8,13 @@ fn assert_prepare_neato_layout_tree_error(
   needle : String,
 ) -> Unit raise {
   let graph = @dot_parser.parse_dot(source)
-  match prepare_neato_layout_tree(graph, 72.0, false) {
+  match
+    prepare_neato_layout_tree(
+      text_context=@heuristic.context(),
+      graph,
+      72.0,
+      false,
+    ) {
     Ok(_) => fail("expected neato prep error containing \{needle}")
     Err(message) =>
       if !message.contains(needle) {

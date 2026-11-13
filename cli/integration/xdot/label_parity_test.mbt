@@ -93,7 +93,10 @@ async test "render_xdot matches graphviz edge label positions" {
   for entry in cases {
     let (input_path, reference_path, labels) = entry
     let graph = @dot_fs.parse_dot_file(input_path)
-    let layout = @layout_dot.layout_dot(graph)
+    let layout = @layout_dot.layout_dot(
+      graph,
+      text_context=@heuristic.context(),
+    )
     let output = @xdot_renderer.render_xdot(layout)
     let output_graph = @dot.parse_dot(output)
     let reference = @dot_fs.parse_dot_file(reference_path)

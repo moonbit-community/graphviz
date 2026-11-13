@@ -1,0 +1,9 @@
+import {
+  "moonbit-community/graphviz/text",
+}
+
+import {
+  "moonbitlang/core/test",
+} for "wbtest"
+
+supported_targets = "js"

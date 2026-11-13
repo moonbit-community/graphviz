@@ -11,4 +11,9 @@ import {
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/edge_label_metrics",
   "moonbit-community/graphviz/layout/dot/node_geometry",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
+
+import {
+  "moonbit-community/graphviz/text/heuristic",
+} for "wbtest"

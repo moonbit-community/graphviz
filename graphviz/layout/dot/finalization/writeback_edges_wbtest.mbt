@@ -36,9 +36,10 @@ test "apply_layout_tree_writeback writes graph label metrics star node rounding 
     edges=[edge_layout],
   )
 
-  apply_layout_tree_writeback(layout)
+  apply_layout_tree_writeback(text_context=@heuristic.context(), layout)
 
-  let graph_metrics = match @label_metrics.graph_label_metrics(graph) {
+  let graph_metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), graph) {
     Some(value) => value
     None => fail("expected root graph label metrics")
   }
@@ -94,7 +95,7 @@ test "apply_layout_tree_writeback omits disabled arrow markers independently" {
     ],
   )
 
-  apply_layout_tree_writeback(layout)
+  apply_layout_tree_writeback(text_context=@heuristic.context(), layout)
 
   assert_eq(tail_disabled.get_attr("pos"), Some("e,12,13 0,0 2,1 4,2 6,3"))
   assert_eq(head_disabled.get_attr("pos"), Some("s,-3,-4 1,0 3,1 5,2 7,3"))

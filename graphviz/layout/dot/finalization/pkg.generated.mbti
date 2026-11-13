@@ -11,18 +11,19 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/routing/integration",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn apply_layout_tree_writeback(@layout_tree.LayoutTree) -> Unit
+pub fn apply_layout_tree_writeback(text_context~ : @text.Context, @layout_tree.LayoutTree) -> Unit
 
-pub fn apply_root_label_bbox(@cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> RootLabelBBoxOutput
+pub fn apply_root_label_bbox(text_context~ : @text.Context, @cgraph.Graph, @geom.Rect, @rankdir.RankDir) -> RootLabelBBoxOutput
 
 pub fn apply_root_margin_x(@cgraph.Graph, @geom.Rect) -> @geom.Rect
 
 pub fn compute_root_cluster_padding(@cgraph.Graph, @geom.Rect, Array[@layout_tree.LayoutTree]) -> RootClusterPadding
 
-pub fn finalize_layout_from_sources(FinalizeLayoutBuildSources) -> @layout_tree.LayoutTree
+pub fn finalize_layout_from_sources(text_context~ : @text.Context, FinalizeLayoutBuildSources) -> @layout_tree.LayoutTree
 
 pub fn format_dim(Double) -> String
 
@@ -38,7 +39,7 @@ pub fn format_rect(@geom.Rect) -> String
 
 pub fn format_rects(Array[@geom.Rect]) -> String
 
-pub fn root_label_pos_for_bbox(@cgraph.Graph, @geom.Rect) -> @geom.Point?
+pub fn root_label_pos_for_bbox(text_context~ : @text.Context, @cgraph.Graph, @geom.Rect) -> @geom.Point?
 
 pub fn round_to(Double, Int32) -> Double
 

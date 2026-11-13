@@ -7,7 +7,10 @@ test "layout_dot accepts non-spline modes" {
   let modes : Array[String] = ["none", "polyline", "ortho"]
   for mode in modes {
     let graph = @dot_parser.parse_dot("digraph { splines=\{mode}; a -> b; }")
-    let layout = @dot_layout.layout_dot(graph)
+    let layout = @dot_layout.layout_dot(
+      text_context=@heuristic.context(),
+      graph,
+    )
     layout.apply()
     let edges = graph.edges()
     assert_eq(edges.length(), 1)
@@ -23,9 +26,10 @@ test "layout_dot retains right self-edge reservation in graph bbox" {
   let graph = @dot_parser.parse_dot(
     "digraph { a [shape=box]; a -> a [label=wide tailport=se headport=ne]; a -> a [label=wide tailport=se headport=ne]; }",
   )
-  let layout = @dot_layout.layout_dot(graph)
+  let layout = @dot_layout.layout_dot(text_context=@heuristic.context(), graph)
   let node = layout.nodes[0]
   let label_width = @edge_label_metrics.edge_mid_label_width_pt(
+    text_context=@heuristic.context(),
     graph.edges()[0],
   )
   let expected_right = node.pos.x +
@@ -81,7 +85,10 @@ test "layout_dot ortho adds more control points than polyline" {
   let graph_poly = @dot_parser.parse_dot(
     "digraph { splines=polyline; \{source} }",
   )
-  let layout_poly = @dot_layout.layout_dot(graph_poly)
+  let layout_poly = @dot_layout.layout_dot(
+    text_context=@heuristic.context(),
+    graph_poly,
+  )
   layout_poly.apply()
   let poly_edge = match find_edge(graph_poly, "a", "c") {
     Some(edge) => edge
@@ -92,7 +99,10 @@ test "layout_dot ortho adds more control points than polyline" {
   let graph_ortho = @dot_parser.parse_dot(
     "digraph { splines=ortho; \{source} }",
   )
-  let layout_ortho = @dot_layout.layout_dot(graph_ortho)
+  let layout_ortho = @dot_layout.layout_dot(
+    text_context=@heuristic.context(),
+    graph_ortho,
+  )
   layout_ortho.apply()
   let ortho_edge = match find_edge(graph_ortho, "a", "c") {
     Some(edge) => edge
@@ -114,7 +124,7 @@ test "layout_dot ortho routes multi-input edge heads on cardinal sides" {
   let graph = @dot_parser.parse_dot(
     "digraph { graph [nodesep=1.0, splines=ortho]; x -> y [radius=8]; z -> y; }",
   )
-  let layout = @dot_layout.layout_dot(graph)
+  let layout = @dot_layout.layout_dot(text_context=@heuristic.context(), graph)
   layout.apply()
   let xy = match find_edge(graph, "x", "y") {
     Some(edge) => edge

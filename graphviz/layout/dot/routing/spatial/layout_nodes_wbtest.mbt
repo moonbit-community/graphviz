@@ -14,6 +14,7 @@ test "build_routing_layout_nodes uses provided positions and defaults missing no
   }
 
   let nodes_out = build_routing_layout_nodes(
+    text_context=@heuristic.context(),
     [a, b],
     positions,
     output_sizes,

@@ -29,8 +29,10 @@ import {
   "moonbit-community/graphviz/layout/html" @html_label,
   "moonbit-community/graphviz/layout/dot/runtime_flags",
   "moonbit-community/graphviz/layout/dot/finalization/xlabel",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

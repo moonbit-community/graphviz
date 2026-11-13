@@ -15,9 +15,11 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/input_stage",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot" @dot_layout,
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

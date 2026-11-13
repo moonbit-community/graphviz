@@ -14,4 +14,5 @@ import {
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/label_layout/record_layout",
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

@@ -19,6 +19,7 @@ test "build_routing_ratio_adjusted_data keeps geometry unchanged when ratio fill
     { 0: 5.0 },
   )
   let nodes_out = build_routing_layout_nodes(
+    text_context=@heuristic.context(),
     [node],
     positions,
     output_sizes,
@@ -92,6 +93,7 @@ test "build_routing_ratio_adjusted_data scales positions cluster boxes and port 
     { 0: 5.0 },
   )
   let nodes_out = build_routing_layout_nodes(
+    text_context=@heuristic.context(),
     [node],
     positions,
     output_sizes,

@@ -86,7 +86,11 @@ test "apply_edge_label_updates recurses into nested subgraphs and preserves non-
     [{ llx: 25.0, lly: 35.0, urx: 35.0, ury: 45.0, }],
     2.0,
     edge => {
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      match
+        @edge_label_metrics.edge_mid_label_metrics(
+          text_context=@heuristic.context(),
+          edge,
+        ) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }

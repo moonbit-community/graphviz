@@ -110,12 +110,19 @@ test "finalize_xlabels writes update maps into root and subgraph layouts and exp
     },
   ]
 
-  let updated = finalize_xlabels(layout, labels, false)
-  let node_metrics = match xlabel_metrics_for_node(a) {
+  let updated = finalize_xlabels(
+    text_context=@heuristic.context(),
+    layout,
+    labels,
+    false,
+  )
+  let node_metrics = match
+    xlabel_metrics_for_node(text_context=@heuristic.context(), a) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }
-  let edge_metrics = match xlabel_metrics_for_edge(edge) {
+  let edge_metrics = match
+    xlabel_metrics_for_edge(text_context=@heuristic.context(), edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }
@@ -195,12 +202,19 @@ test "finalize_xlabels flips existing xlabel metrics when expanding bbox" {
     ],
   )
 
-  let updated = finalize_xlabels(layout, [], true)
-  let node_metrics = match xlabel_metrics_for_node(a) {
+  let updated = finalize_xlabels(
+    text_context=@heuristic.context(),
+    layout,
+    [],
+    true,
+  )
+  let node_metrics = match
+    xlabel_metrics_for_node(text_context=@heuristic.context(), a) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }
-  let edge_metrics = match xlabel_metrics_for_edge(edge) {
+  let edge_metrics = match
+    xlabel_metrics_for_edge(text_context=@heuristic.context(), edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }

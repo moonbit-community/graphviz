@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/layout/text"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Calibration {
+  span : (@moonbit-community/graphviz/text.Font, String) -> (Double, Double, Double, Double)?
+  offsets : (@moonbit-community/graphviz/text.Font) -> (Double, Double)?
+  centered_x : (String) -> Double
+}
+
+pub struct Context {
+  measurer : &@moonbit-community/graphviz/text.Measurer
+  calibration : Calibration?
+}
+pub fn Context::calibrated_span(Self, @moonbit-community/graphviz/text.Font, String) -> (Double, Double, Double, Double)?
+pub fn Context::centered_text_x(Self, Double, String) -> Double
+pub fn Context::measure(Self, @moonbit-community/graphviz/text.Font, String) -> @moonbit-community/graphviz/text.Metrics
+pub fn Context::new(&@moonbit-community/graphviz/text.Measurer, calibration? : Calibration?) -> Self
+pub fn Context::text_offsets(Self, @moonbit-community/graphviz/text.Font) -> (Double, Double)
+
+// Type aliases
+
+// Traits

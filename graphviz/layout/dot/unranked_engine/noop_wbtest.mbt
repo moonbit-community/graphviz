@@ -22,7 +22,14 @@ test "prepare_noop_layout_tree reuses edge pos when no_op_level > 1" {
   let graph = @dot_parser.parse_dot(
     "graph { node [shape=box,width=1,height=1,label=\"\"]; a [pos=\"0,0\"]; b [pos=\"100,0\"]; a -- b [pos=\"s,0,0 10,0 30,0 60,0 90,0 e,100,0\"]; }",
   )
-  let layout_tree = match prepare_noop_layout_tree(graph, 2, 72.0, false) {
+  let layout_tree = match
+    prepare_noop_layout_tree(
+      text_context=@heuristic.context(),
+      graph,
+      2,
+      72.0,
+      false,
+    ) {
     Ok(value) => value
     Err(message) => fail(message)
   }

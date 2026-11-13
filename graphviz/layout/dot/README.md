@@ -1,13 +1,15 @@
-This package uses pre-generated assets to avoid expensive MoonBit pre-build steps.
+This package requires an explicit text measurement context. The optional
+`text/heuristic` provider owns the pre-generated font assets; the layout itself
+does not depend on them. See [text measurement](../../text/README.md).
 
 Detailed algorithm documentation:
 - `graphviz/layout/dot/DOT_LAYOUT_ALGORITHM.md` (end-to-end DOT layout pipeline, ordering/remincross details, routing/postprocess flow).
 
 Manual regeneration:
-- `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_font_metrics.sh` (updates `graphviz/layout/dot/font_metrics/font_metrics.generated.mbt` with text widths + kerning; requires Graphviz build + `python3`).
-- `bash scripts/generate_textspan_fixtures_from_xdot.sh` (updates `graphviz/layout/dot/font_metrics/textspan_overrides.jsonl` from xdot snapshots; requires `python3`).
+- `DOT_BIN=/path/to/patched-graphviz-14.1.1/dot bash scripts/generate_font_metrics.sh` (updates `graphviz/text/heuristic/font_metrics/font_metrics.generated.mbt` with text widths + kerning; requires the textspan capture patch and `python3`).
+- `bash scripts/generate_textspan_fixtures_from_xdot.sh` (updates `graphviz/text/heuristic/font_metrics/textspan_overrides.jsonl` from xdot snapshots; requires `python3`).
 - `bash scripts/generate_textspan_fixtures_from_xdot.sh --capture-jsonl /path/to/graphviz-14.1.1-textspan.jsonl` (merges exact textspan metrics captured from the external 14.1.1 reference; captured keys supersede older values).
-- `bash scripts/generate_textspan_overrides.sh` (updates `graphviz/layout/dot/font_metrics/textspan_overrides.generated.mbt` from `graphviz/layout/dot/font_metrics/textspan_overrides.jsonl`).
+- `bash scripts/generate_textspan_overrides.sh` (updates `graphviz/text/heuristic/font_metrics/textspan_overrides.generated.mbt` from `graphviz/text/heuristic/font_metrics/textspan_overrides.jsonl`).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_dot_snapshots.sh` (refreshes `tests/layout/dot/*.gv.dot`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_xdot_snapshots.sh` (refreshes `tests/render/xdot/*.xdot` from `tests/render/xdot/cases.txt`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_svg_snapshots.sh` (refreshes `tests/render/svg/*.svg` from `tests/render/svg/cases.txt`; requires Graphviz build or `dot` on PATH).
@@ -26,7 +28,7 @@ Graphviz source map (layout/dot parity)
   - MoonBit: `graphviz/layout/dot/routing/integration/*`, `graphviz/layout/dot/clustering/subgraph_layout.mbt`, `graphviz/layout/dot/routing/*`, `graphviz/layout/dot/routing/pathplan/*`, `graphviz/layout/dot/routing/routesplines/*`, `graphviz/layout/dot/routing/edge_spline/*`, `graphviz/layout/dot/routing/edge_ops/*`
   - Graphviz: `refs/graphviz/lib/pathplan/route.c`, `refs/graphviz/lib/pathplan/shortest.c`, `refs/graphviz/lib/pathplan/visibility.c`, `refs/graphviz/lib/common/routespl.c`, `refs/graphviz/lib/common/splines.c`, `refs/graphviz/lib/dotgen/dotsplines.c`
 - Label placement + text metrics
-  - MoonBit: `graphviz/layout/dot/font_metrics/*`, `graphviz/layout/dot/label_metrics/*`, `graphviz/layout/dot/label_layout/*`, `graphviz/layout/dot/finalization/*`
+  - MoonBit: `graphviz/text/*`, `graphviz/layout/text/*`, `graphviz/layout/dot/label_metrics/*`, `graphviz/layout/dot/label_layout/*`, `graphviz/layout/dot/finalization/*`
   - Graphviz: `refs/graphviz/lib/common/textspan.c`, `refs/graphviz/lib/common/labels.c`, `refs/graphviz/lib/label/xlabels.c`
 - Record shape layout / ports
   - MoonBit: `graphviz/layout/dot/node_geometry/*`, `graphviz/layout/dot/label_layout/record_layout/*`, `graphviz/layout/dot/label_layout/html_layout/*`, `graphviz/layout/dot/label_layout/port_geometry/*`

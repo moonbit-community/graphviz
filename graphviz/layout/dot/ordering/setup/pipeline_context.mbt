@@ -440,22 +440,26 @@ pub(all) struct OrderingResult {
 /// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_ordering_pipeline_context_from_sources(
+  text_context~ : @text_layout.Context,
   sources : BuildOrderingPipelineContextSources,
   build_port_sample_bundle : (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle,
 ) -> OrderingPipelineContext {
-  let runtime_context = build_ordering_runtime_context_from_sources({
-    graph: sources.graph,
-    nodes: sources.nodes,
-    edges: sources.edges,
-    edge_tail: sources.edge_tail,
-    edge_head: sources.edge_head,
-    edge_out_order: sources.edge_out_order,
-    ranks: sources.ranks,
-    node_order: sources.node_order,
-    nodesep_pt: sources.nodesep_pt,
-    rankdir: sources.rankdir,
-    cluster_meta: sources.cluster_meta,
-  })
+  let runtime_context = build_ordering_runtime_context_from_sources(
+    text_context~,
+    {
+      graph: sources.graph,
+      nodes: sources.nodes,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      edge_out_order: sources.edge_out_order,
+      ranks: sources.ranks,
+      node_order: sources.node_order,
+      nodesep_pt: sources.nodesep_pt,
+      rankdir: sources.rankdir,
+      cluster_meta: sources.cluster_meta,
+    },
+  )
   let edge_port_data = build_ordering_edge_port_data_from_sources(
     {
       edges: sources.edges,

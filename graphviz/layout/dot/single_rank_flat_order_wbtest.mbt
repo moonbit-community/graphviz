@@ -12,7 +12,7 @@ test "single rank honors flat edge order independently of node declaration order
     ignore(same.node("b"))
     ignore(same.node("a"))
     graph.edge(graph.node("b"), graph.node("a")).set_attr("dir", "back")
-    let layout = layout_dot(graph)
+    let layout = layout_dot(text_context=@heuristic.context(), graph)
     let a = layout.nodes.filter(node => node.node.name() == "a")[0]
     let b = layout.nodes.filter(node => node.node.name() == "b")[0]
     @test.assert_eq(b.pos.x < a.pos.x, true)

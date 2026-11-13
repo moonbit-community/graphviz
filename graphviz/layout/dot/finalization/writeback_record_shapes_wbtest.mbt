@@ -39,11 +39,12 @@ test "apply_layout_tree_writeback writes rects only for non-html non-mrecord rec
     nodes=[record_layout, mrecord_layout, html_record_layout],
   )
 
-  apply_layout_tree_writeback(layout)
+  apply_layout_tree_writeback(text_context=@heuristic.context(), layout)
 
   let size = @node_primitives.node_size_from_points(2.0 * 72.0, 1.0 * 72.0)
   let expected_rects = format_rects(
     @record_layout.record_rects(
+      text_context=@heuristic.context(),
       record,
       record_layout.pos,
       size,

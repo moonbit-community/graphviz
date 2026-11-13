@@ -21,7 +21,11 @@ test "build_edge_vnodes places the LR label vnode at midpoint rank and swaps lab
     @rankdir.RankDir::LR,
   )
   let chain = edge_vnode_chain_for_test(vnode_info, edge)
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
@@ -61,7 +65,11 @@ test "build_edge_vnodes places the TB label vnode at midpoint rank with unflippe
     @rankdir.RankDir::TB,
   )
   let chain = edge_vnode_chain_for_test(vnode_info, edge)
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }

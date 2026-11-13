@@ -14,12 +14,15 @@ import {
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/math",
   "moonbitlang/core/string",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbit-community/graphviz/cgraph",
+  "moonbit-community/graphviz/text/heuristic",
 } for "test"
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

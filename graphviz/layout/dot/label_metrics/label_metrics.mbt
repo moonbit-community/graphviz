@@ -8,12 +8,16 @@
 
 ///|
 pub fn label_text_dimensions(
+  text_context~ : @text_layout.Context,
   label : String,
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
   let (width, height, _yoffset_layout, _yoffset_centerline) = label_text_metrics(
-    label, font_name, font_size_pt,
+    text_context~,
+    label,
+    font_name,
+    font_size_pt,
   )
   (width, height)
 }
@@ -21,6 +25,7 @@ pub fn label_text_dimensions(
 ///|
 /// Graph and cluster labels preserve HTML syntax and inherited font attributes.
 pub fn graph_label_metrics(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
 ) -> @graph_label.GraphLabelMetrics? {
   let html = graph
@@ -28,9 +33,9 @@ pub fn graph_label_metrics(
     .map(value => value is @cgraph.AttrValue::Html(_))
   @graph_label.graph_label_metrics_with(graph, (text, font, size) => {
     guard parse_html_label_cached(text, html~) is Some(label) else {
-      return label_text_dimensions(text, font, size)
+      return label_text_dimensions(text_context~, text, font, size)
     }
-    let dimensions = html_label_size(label, font, size)
+    let dimensions = html_label_size(text_context~, label, font, size)
     (dimensions.width_pt, dimensions.height_pt)
   })
 }

@@ -13,4 +13,5 @@ import {
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/layout/dot" @dot_layout,
   "moonbit-community/graphviz/layout/dot/edge_label_metrics",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

@@ -56,7 +56,11 @@ test "adjust_labels_for_overlaps recurses into subgraphs and propagates overlap 
     10.0,
     @rankdir.RankDir::TB,
     edge => {
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      match
+        @edge_label_metrics.edge_mid_label_metrics(
+          text_context=@heuristic.context(),
+          edge,
+        ) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
@@ -65,6 +69,7 @@ test "adjust_labels_for_overlaps recurses into subgraphs and propagates overlap 
   )
 
   let adjusted = adjust_labels_for_overlaps(
+    text_context=@heuristic.context(),
     root_layout,
     10.0,
     @rankdir.RankDir::TB,

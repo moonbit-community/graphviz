@@ -72,7 +72,9 @@ Current CLI coverage includes:
 
 ## Library usage
 
-Depend on `moonbit-community/graphviz` for in-memory parsing, layout, and rendering. Its package names under `cgraph`, `dot`, `layout`, and `render` are unchanged. The former `graphviz/cli` and `graphviz/dot/fs` packages now live under `moonbit-community/graphviz-cli`; library consumers supply their own I/O.
+Depend on `moonbit-community/graphviz` for in-memory parsing, layout, and rendering. DOT parsing needs no font service. Layout requires an explicit measurement context: choose `text/heuristic` for native use or `text/canvas` for the web, or implement the independent `text.Measurer` contract. The layout output retains the context for rendering. Both providers are optional packages in the same module; the core does not depend on either. See [text measurement](graphviz/text/README.md).
+
+The former `graphviz/cli` and `graphviz/dot/fs` packages now live under `moonbit-community/graphviz-cli`; library consumers supply their own I/O.
 
 ## Development
 

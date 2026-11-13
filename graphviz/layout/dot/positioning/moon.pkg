@@ -10,4 +10,5 @@ import {
   "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }

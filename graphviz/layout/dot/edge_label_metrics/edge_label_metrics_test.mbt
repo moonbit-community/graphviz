@@ -21,16 +21,36 @@ test "edge mid label helpers treat missing and empty labels as absent" {
   let edge = graph.edge(a, b)
 
   assert_eq(@edge_label_metrics.edge_mid_label_text(edge), None)
-  match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     None => ()
     Some(_) => fail("expected no mid label metrics")
   }
-  assert_eq(@edge_label_metrics.edge_mid_label_width_pt(edge), 0.0)
-  assert_eq(@edge_label_metrics.edge_label_height_pt(edge), 0.0)
+  assert_eq(
+    @edge_label_metrics.edge_mid_label_width_pt(
+      text_context=@heuristic.context(),
+      edge,
+    ),
+    0.0,
+  )
+  assert_eq(
+    @edge_label_metrics.edge_label_height_pt(
+      text_context=@heuristic.context(),
+      edge,
+    ),
+    0.0,
+  )
 
   edge.set_attr("label", "")
   assert_eq(@edge_label_metrics.edge_mid_label_text(edge), None)
-  match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     None => ()
     Some(_) => fail("expected empty label to stay absent")
   }
@@ -67,17 +87,32 @@ test "edge_label_height_pt takes the maximum height across mid head and tail lab
   edge.set_attr("taillabel", "tail tail")
 
   let mid = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "label", false) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "label",
+      false,
+    ) {
     Some(value) => value
     None => fail("expected mid label metrics")
   }
   let head = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "headlabel",
+      true,
+    ) {
     Some(value) => value
     None => fail("expected head label metrics")
   }
   let tail = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "taillabel", true) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "taillabel",
+      true,
+    ) {
     Some(value) => value
     None => fail("expected tail label metrics")
   }
@@ -93,7 +128,13 @@ test "edge_label_height_pt takes the maximum height across mid head and tail lab
     tail.height
   }
 
-  assert_close(@edge_label_metrics.edge_label_height_pt(edge), expected)
+  assert_close(
+    @edge_label_metrics.edge_label_height_pt(
+      text_context=@heuristic.context(),
+      edge,
+    ),
+    expected,
+  )
 }
 
 ///|
@@ -103,24 +144,44 @@ test "self edge label width and height swap across rank directions" {
   let edge = graph.edge(node, node)
   edge.set_attr("label", "wide self label")
 
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected self-edge metrics")
   }
   assert_close(
-    @edge_label_metrics.self_edge_label_width_pt(edge, @rankdir.RankDir::TB),
+    @edge_label_metrics.self_edge_label_width_pt(
+      text_context=@heuristic.context(),
+      edge,
+      @rankdir.RankDir::TB,
+    ),
     metrics.width,
   )
   assert_close(
-    @edge_label_metrics.self_edge_label_height_pt(edge, @rankdir.RankDir::TB),
+    @edge_label_metrics.self_edge_label_height_pt(
+      text_context=@heuristic.context(),
+      edge,
+      @rankdir.RankDir::TB,
+    ),
     metrics.height,
   )
   assert_close(
-    @edge_label_metrics.self_edge_label_width_pt(edge, @rankdir.RankDir::LR),
+    @edge_label_metrics.self_edge_label_width_pt(
+      text_context=@heuristic.context(),
+      edge,
+      @rankdir.RankDir::LR,
+    ),
     metrics.height,
   )
   assert_close(
-    @edge_label_metrics.self_edge_label_height_pt(edge, @rankdir.RankDir::LR),
+    @edge_label_metrics.self_edge_label_height_pt(
+      text_context=@heuristic.context(),
+      edge,
+      @rankdir.RankDir::LR,
+    ),
     metrics.width,
   )
 }

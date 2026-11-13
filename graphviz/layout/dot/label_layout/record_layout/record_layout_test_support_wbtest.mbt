@@ -41,7 +41,11 @@ fn record_layout_for_node(
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node(node_name)
-  let size = @node_geometry.node_size(node, orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    orientation,
+  )
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
   let padding = @label_attrs.node_padding(node)
@@ -52,6 +56,7 @@ fn record_layout_for_node(
     ury: size.height_pt / 2.0 - @record_geometry.RECORD_BORDER_PT,
   }
   let layout = layout_record_tree(
+    text_context=@heuristic.context(),
     record_nodes(@label_attrs.label_text(node)),
     inner_rect,
     orientation,

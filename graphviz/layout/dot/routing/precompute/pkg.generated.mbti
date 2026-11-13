@@ -9,10 +9,11 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/routing/routesplines",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn build_dot_head_port_metrics(Array[@cgraph.Edge], Bool, Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]]) -> HeadPortMetrics
+pub fn build_dot_head_port_metrics(text_context~ : @text.Context, Array[@cgraph.Edge], Bool, Map[String, @geom.Point], Map[String, @node_primitives.NodeSize], @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]]) -> HeadPortMetrics
 
 pub fn build_edge_parallel_offsets(ParallelOffsetsBuildInput) -> Map[Int32, Double]
 

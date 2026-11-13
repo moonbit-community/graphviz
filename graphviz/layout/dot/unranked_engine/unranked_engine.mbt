@@ -112,13 +112,14 @@ fn line_spline(
 
 ///|
 pub fn node_size_with_fallback(
+  text_context~ : @text_layout.Context,
   sizes : Map[String, NodeSize],
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
 ) -> NodeSize {
   match sizes.get(node.name()) {
     Some(value) => value
-    None => @node_geometry.node_size(node, record_orientation)
+    None => @node_geometry.node_size(text_context~, node, record_orientation)
   }
 }
 

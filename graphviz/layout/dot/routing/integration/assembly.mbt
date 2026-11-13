@@ -12,6 +12,7 @@
 /// Stage E.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_route_base_deps(
+  text_context~ : @text_layout.Context,
   rankdir : @rankdir.RankDir,
   record_orientation : @layout_prep.RecordOrientation,
   routing_label_ports_map : Map[
@@ -26,7 +27,7 @@ pub fn build_dot_route_base_deps(
   let route_mid_label_metrics : (@cgraph.Edge) -> @routing.RouteLabelMetrics? = (
     edge : @cgraph.Edge,
   ) => {
-    match @edge_label_metrics.edge_mid_label_metrics(edge) {
+    match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
       Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
       None => None
     }
@@ -69,10 +70,19 @@ pub fn build_dot_route_base_deps(
   }
   {
     node_size_for_missing: node => {
-      @node_geometry.node_size(node, record_orientation)
+      @node_geometry.node_size(text_context~, node, record_orientation)
     },
     edge_mid_label_metrics: route_mid_label_metrics,
-    record_port_path_box: @record_layout.record_port_path_box,
+    record_port_path_box: (node, port, pos, size, rankdir) => {
+      @record_layout.record_port_path_box(
+        node,
+        port,
+        pos,
+        size,
+        rankdir,
+        text_context~,
+      )
+    },
     port_geometry: route_port_geometry,
     port_rect_from_geometry: @port_geometry.port_rect_from_geometry,
     port_is_label_port: (node_name, port) => {
@@ -120,20 +130,29 @@ pub fn build_dot_route_base_deps(
 /// layout, and port-label placement aligned with Stage E edge-routing rules.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_routing_callbacks(
+  text_context~ : @text_layout.Context,
   edge_layout_input : @routing.EdgeLayoutInput,
 ) -> @routing.RoutingCallbacks {
   {
     recover_slack_vnodes_fn: input => @execution.recover_slack_vnodes(input),
     build_edge_layout_fn: input => {
-      @edge_label.build_edge_layout({
+      @edge_label.build_edge_layout(text_context~, {
         base: input.base,
         spline: input.spline,
         spline_result: input.spline_result,
         edge_layout_input,
       })
     },
-    self_edge_label_height_fn: @edge_label_metrics.self_edge_label_height_pt,
-    self_edge_label_width_fn: @edge_label_metrics.self_edge_label_width_pt,
+    self_edge_label_height_fn: (edge, rankdir) => {
+      @edge_label_metrics.self_edge_label_height_pt(
+        edge,
+        rankdir,
+        text_context~,
+      )
+    },
+    self_edge_label_width_fn: (edge, rankdir) => {
+      @edge_label_metrics.self_edge_label_width_pt(edge, rankdir, text_context~)
+    },
     edge_port_label_pos_fn: @edge_label.edge_port_label_pos_for_dot,
   }
 }

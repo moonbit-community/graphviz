@@ -1,9 +1,9 @@
 name = "moonbit-community/graphviz-cli"
 
-version = "0.1.10"
+version = "0.1.11"
 
 import {
-  "moonbit-community/graphviz@0.1.10",
+  "moonbit-community/graphviz@0.1.11",
   "moonbitlang/async@0.22.1",
 }
 

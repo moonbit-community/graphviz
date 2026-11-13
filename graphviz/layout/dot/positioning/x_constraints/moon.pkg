@@ -17,8 +17,10 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/clustering/cluster_identity",
   "moonbit-community/graphviz/layout/dot/numeric",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

@@ -124,7 +124,10 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   let single_cluster = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
   )
-  let single_cluster_layout = @dot_layout.layout_dot(single_cluster)
+  let single_cluster_layout = @dot_layout.layout_dot(
+    text_context=@heuristic.context(),
+    single_cluster,
+  )
   single_cluster_layout.apply()
   let cluster = spacing_cluster(single_cluster)
   let bb_text = match cluster.get_attr("bb") {
@@ -135,7 +138,11 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   let pos = spacing_node_pos(single_cluster, "a")
   let (width_pt, height_pt) = spacing_node_size_pt(single_cluster, "a")
   let margin = @clustering.cluster_margin_pt(cluster)
-  let label_height = match @label_metrics.graph_label_metrics(cluster) {
+  let label_height = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      cluster,
+    ) {
     Some(metrics) => metrics.height_pt
     None => 0.0
   }
@@ -163,7 +170,10 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   let nested_graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_outer { label=\"Outer\"; subgraph cluster_inner { label=\"Inner\"; a; } } }",
   )
-  let nested_layout = @dot_layout.layout_dot(nested_graph)
+  let nested_layout = @dot_layout.layout_dot(
+    text_context=@heuristic.context(),
+    nested_graph,
+  )
   nested_layout.apply()
   let outer = spacing_find_subgraph(nested_graph, "cluster_outer")
   let inner = spacing_find_subgraph(outer, "cluster_inner")
@@ -200,7 +210,10 @@ test "cluster spacing honors bbox margin, nesting, and empty cluster suppression
   let empty_graph = @dot_parser.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
   )
-  let empty_layout = @dot_layout.layout_dot(empty_graph)
+  let empty_layout = @dot_layout.layout_dot(
+    text_context=@heuristic.context(),
+    empty_graph,
+  )
   empty_layout.apply()
   let empty = spacing_find_subgraph(empty_graph, "cluster_empty")
   let full = spacing_find_subgraph(empty_graph, "cluster_full")

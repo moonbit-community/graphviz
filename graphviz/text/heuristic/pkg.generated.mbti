@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/text/heuristic"
+
+// Values
+pub fn context() -> @moonbit-community/graphviz/layout/text.Context
+
+// Errors
+
+// Types and methods
+pub enum Heuristic {
+  Builtin
+}
+pub fn Heuristic::measure(Self, @moonbit-community/graphviz/text.Font, String) -> @moonbit-community/graphviz/text.Metrics
+pub fn Heuristic::new() -> Self
+pub impl @moonbit-community/graphviz/text.Measurer for Heuristic
+
+// Type aliases
+
+// Traits

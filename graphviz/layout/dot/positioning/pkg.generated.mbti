@@ -9,10 +9,11 @@ import {
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn compute_positions(PositionPipelineInput) -> PositionResult
+pub fn compute_positions(text_context~ : @text.Context, PositionPipelineInput) -> PositionResult
 
 // Errors
 

@@ -1,6 +1,11 @@
 ///|
 test "plain label blank lines use integer truncated line spacing" {
-  let (lines, _, height) = label_metrics("first\\n\\nlast", "Arial", 9.0)
+  let (lines, _, height) = label_metrics(
+    text_context=@heuristic.context(),
+    "first\\n\\nlast",
+    "Arial",
+    9.0,
+  )
   @test.assert_eq(lines.length(), 3)
   @test.assert_eq(lines[1].width_pt, 0.0)
   @test.assert_eq(lines[1].height_pt, 10.0)

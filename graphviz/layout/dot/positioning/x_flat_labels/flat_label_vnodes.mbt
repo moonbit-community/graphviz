@@ -220,6 +220,7 @@ fn flat_limits(
 
 ///|
 fn add_flat_label_vnodes(
+  text_context~ : @text_layout.Context,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -294,7 +295,7 @@ fn add_flat_label_vnodes(
       continue
     }
     let (metric_width, metric_height) = match
-      @edge_label_metrics.edge_mid_label_metrics(edge) {
+      @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
       Some(value) => (value.width, value.height)
       None => continue
     }
@@ -444,6 +445,7 @@ priv struct FlatLabelVnodeResult {
 
 ///|
 fn build_flat_label_vnodes_for_positioning(
+  text_context~ : @text_layout.Context,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -459,8 +461,20 @@ fn build_flat_label_vnodes_for_positioning(
   x_groups : Map[Int32, Array[String]],
 ) -> FlatLabelVnodeBuildOutput {
   let flat_label_vnodes = add_flat_label_vnodes(
-    edges, edge_tail, edge_head, ranks, ordered_groups, nodesep_pt, rankdir, x_base_sizes,
-    edge_cluster_keys, cluster_parents, existing_names, vnode_info, x_groups,
+    text_context~,
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    ordered_groups,
+    nodesep_pt,
+    rankdir,
+    x_base_sizes,
+    edge_cluster_keys,
+    cluster_parents,
+    existing_names,
+    vnode_info,
+    x_groups,
   )
   let flat_label_ranks : Map[String, Int32] = Map([])
   for name, info in flat_label_vnodes.flat_label_nodes {

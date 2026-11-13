@@ -12,10 +12,26 @@ test "record_ports resolves repeated names to the first depth-first field" {
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("repeated")
-  let size = @node_geometry.node_size(node, orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    orientation,
+  )
   let position = @geom.Point::{ x: 0.0, y: 0.0, }
-  let rects = record_rects(node, position, size, orientation)
-  let ports = record_ports(node, position, size, orientation)
+  let rects = record_rects(
+    text_context=@heuristic.context(),
+    node,
+    position,
+    size,
+    orientation,
+  )
+  let ports = record_ports(
+    text_context=@heuristic.context(),
+    node,
+    position,
+    size,
+    orientation,
+  )
   guard ports.get("same") is Some(port) else {
     @test.fail("missing repeated port")
   }
@@ -33,8 +49,13 @@ test "record_ports include nested port names" {
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("nested_record")
-  let size = @node_geometry.node_size(node, record_orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    record_orientation,
+  )
   let ports = record_ports(
+    text_context=@heuristic.context(),
     node,
     @geom.Point::{ x: 0.0, y: 0.0, },
     size,
@@ -61,8 +82,13 @@ test "record_ports honor rankdir LR field order" {
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("ordered_record")
-  let size = @node_geometry.node_size(node, record_orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    record_orientation,
+  )
   let ports = record_ports(
+    text_context=@heuristic.context(),
     node,
     @geom.Point::{ x: 0.0, y: 0.0, },
     size,
@@ -83,8 +109,18 @@ test "record_port_path_box expands an explicit field port to the full field lane
   let rankdir = @rankdir.graph_rankdir(graph)
   let orientation = @layout_prep.record_layout_orientation(rankdir)
   let node = graph.node("path_box_record")
-  let size = @node_geometry.node_size(node, orientation)
-  let ports = record_ports(node, { x: 0.0, y: 0.0, }, size, orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    orientation,
+  )
+  let ports = record_ports(
+    text_context=@heuristic.context(),
+    node,
+    { x: 0.0, y: 0.0, },
+    size,
+    orientation,
+  )
   let left_port = match ports.get("left") {
     Some(value) => value
     None => fail("missing left port")
@@ -96,6 +132,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
   let edges = graph.edges()
   let left_box = match
     record_port_path_box(
+      text_context=@heuristic.context(),
       node,
       edges[0].tail_port(),
       { x: 0.0, y: 0.0, },
@@ -107,6 +144,7 @@ test "record_port_path_box expands an explicit field port to the full field lane
   }
   let right_box = match
     record_port_path_box(
+      text_context=@heuristic.context(),
       node,
       edges[1].tail_port(),
       { x: 0.0, y: 0.0, },

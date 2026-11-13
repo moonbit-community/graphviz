@@ -34,6 +34,7 @@ pub fn parse_html_label_cached(
 
 ///|
 fn html_cell_content_size(
+  text_context~ : @text_layout.Context,
   content : @html_label.HtmlCellContent,
   font_name : String,
   font_size_pt : Double,
@@ -41,16 +42,25 @@ fn html_cell_content_size(
   match content {
     @html_label.HtmlCellContent::Text(text) => {
       let (width_pt, height_pt) = label_text_dimensions(
-        text, font_name, font_size_pt,
+        text_context~,
+        text,
+        font_name,
+        font_size_pt,
       )
       { width_pt, height_pt, }
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
-      let metrics = html_styled_text_metrics(spans, "", font_name, font_size_pt)
+      let metrics = html_styled_text_metrics(
+        text_context~,
+        spans,
+        "",
+        font_name,
+        font_size_pt,
+      )
       { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
     }
     @html_label.HtmlCellContent::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
+      html_table_size(text_context~, table, font_name, font_size_pt)
   }
 }
 
@@ -76,12 +86,14 @@ pub fn html_cell_border_pt(
 
 ///|
 pub fn html_cell_size(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
   font_name : String,
   font_size_pt : Double,
 ) -> SizePt {
   let content_size = html_cell_content_size(
+    text_context~,
     cell.content,
     font_name,
     font_size_pt,
@@ -101,12 +113,19 @@ pub fn html_cell_size(
 
 ///|
 pub fn html_table_size(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   font_name : String,
   font_size_pt : Double,
 ) -> SizePt {
   let (width_pt, height_pt) = @html_label.html_table_size(table, cell => {
-    let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
+    let cell_size = html_cell_size(
+      text_context~,
+      table,
+      cell,
+      font_name,
+      font_size_pt,
+    )
     (cell_size.width_pt, cell_size.height_pt)
   })
   { width_pt, height_pt, }
@@ -114,22 +133,32 @@ pub fn html_table_size(
 
 ///|
 pub fn html_label_size(
+  text_context~ : @text_layout.Context,
   label : @html_label.HtmlLabel,
   font_name : String,
   font_size_pt : Double,
 ) -> SizePt {
   match label {
     @html_label.HtmlLabel::StyledText(spans) => {
-      let metrics = html_styled_text_metrics(spans, "", font_name, font_size_pt)
+      let metrics = html_styled_text_metrics(
+        text_context~,
+        spans,
+        "",
+        font_name,
+        font_size_pt,
+      )
       { width_pt: metrics.width_pt, height_pt: metrics.height_pt, }
     }
     @html_label.HtmlLabel::Text(text) => {
       let (width_pt, height_pt) = label_text_dimensions(
-        text, font_name, font_size_pt,
+        text_context~,
+        text,
+        font_name,
+        font_size_pt,
       )
       { width_pt, height_pt, }
     }
     @html_label.HtmlLabel::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
+      html_table_size(text_context~, table, font_name, font_size_pt)
   }
 }

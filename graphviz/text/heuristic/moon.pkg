@@ -1,0 +1,5 @@
+import {
+  "moonbit-community/graphviz/text",
+  "moonbit-community/graphviz/layout/text" @text_layout,
+  "moonbit-community/graphviz/text/heuristic/font_metrics",
+}

@@ -247,6 +247,7 @@ fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Result[Unit, String] {
 /// validation, len validation, and default nodesep resolution with the owning
 /// unranked engine package so the root API boundary stays thin.
 pub fn prepare_neato_layout_tree(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   scale : Double,
   prune : Bool,
@@ -261,7 +262,12 @@ pub fn prepare_neato_layout_tree(
     Err(message) => return Err(message)
   }
   Ok(
-    build_neato_layout_tree(active_graph, scale, neato_nodesep_pt(active_graph)),
+    build_neato_layout_tree(
+      text_context~,
+      active_graph,
+      scale,
+      neato_nodesep_pt(active_graph),
+    ),
   )
 }
 
@@ -269,11 +275,12 @@ pub fn prepare_neato_layout_tree(
 /// Graphviz parity: noop entry prep keeps prune handling with the owning
 /// unranked engine package before fixed-position layout-tree assembly.
 pub fn prepare_noop_layout_tree(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   no_op_level : Int32,
   scale : Double,
   prune : Bool,
 ) -> Result[LayoutTree, String] {
   let active_graph = active_graph_for_prune(graph, prune)
-  build_noop_layout_tree(active_graph, no_op_level, scale)
+  build_noop_layout_tree(text_context~, active_graph, no_op_level, scale)
 }

@@ -7,4 +7,9 @@ import {
   "moonbit-community/graphviz/geom",
   "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
+
+import {
+  "moonbit-community/graphviz/text/heuristic",
+} for "wbtest"

@@ -1,6 +1,6 @@
 name = "moonbit-community/graphviz"
 
-version = "0.1.10"
+version = "0.1.11"
 
 repository = "https://github.com/moonbit-community/graphviz"
 

@@ -59,6 +59,7 @@ pub fn build_projected_nodes_from_positions(
 
 ///|
 pub fn project_scaled_nodes_with_sizes(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   positions : Array[@geom.Point],
   scale_factor : Double,
@@ -71,7 +72,7 @@ pub fn project_scaled_nodes_with_sizes(
     positions_map[node.name()] = scale_point(positions[i], scale_factor)
   }
   let nodes_out = build_projected_nodes_from_positions(nodes, positions_map, node => {
-    node_size_with_fallback(sizes, node, record_orientation)
+    node_size_with_fallback(text_context~, sizes, node, record_orientation)
   })
   { projection: { positions: positions_map, nodes_out, }, sizes, }
 }
@@ -119,6 +120,7 @@ pub fn build_edges_from_positions(
 /// Graphviz parity: noop/neato output assembly mirrors dot postprocess shape:
 /// cluster subgraph recursion + bbox expansion + root label placement.
 pub fn finalize_unranked_layout_tree(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   rankdir : RankDir,
   nodes_out : Array[DotLayoutNode],
@@ -132,7 +134,7 @@ pub fn finalize_unranked_layout_tree(
   let empty_rank_y : Map[Int32, Double] = Map([])
   let empty_rank_ht1 : Map[Int32, Double] = Map([])
   let empty_rank_ht2 : Map[Int32, Double] = Map([])
-  let subgraphs = @subgraph_layout.layout_subgraphs({
+  let subgraphs = @subgraph_layout.layout_subgraphs(text_context~, {
     graph,
     nodes_out,
     edges_out,
@@ -152,7 +154,7 @@ pub fn finalize_unranked_layout_tree(
   }
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
-    match @label_metrics.graph_label_metrics(graph) {
+    match @label_metrics.graph_label_metrics(text_context~, graph) {
       Some(metrics) => {
         let loc = @graph_label.graph_label_loc(graph)
         let just = @graph_label.graph_label_just(graph)

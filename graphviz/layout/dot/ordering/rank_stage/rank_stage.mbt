@@ -40,9 +40,10 @@ pub(all) struct RankStageOutput {
 /// Graphviz parity: stage-B rank height computation uses the same edge label
 /// width/height inputs as node geometry to preserve midpoint label spacing.
 fn edge_mid_label_metrics_for_rank_heights(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
 ) -> @rank_heights.EdgeMidLabelMetrics? {
-  match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
     Some(metrics) =>
       Some(
         @rank_heights.make_edge_mid_label_metrics(metrics.width, metrics.height),
@@ -55,7 +56,10 @@ fn edge_mid_label_metrics_for_rank_heights(
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
-pub fn compute_dot_rank_stage(input : RankStageInput) -> RankStageOutput {
+pub fn compute_dot_rank_stage(
+  text_context~ : @text_layout.Context,
+  input : RankStageInput,
+) -> RankStageOutput {
   let graph = input.graph
   let prep = input.prep
   let rank_data = @rank_data.compute_rank_data(
@@ -65,7 +69,7 @@ pub fn compute_dot_rank_stage(input : RankStageInput) -> RankStageOutput {
       prep.edges,
       prep.has_edge_labels,
       @rank_data.CL_BACK,
-      @edge_label_metrics.edge_label_height_pt,
+      edge => @edge_label_metrics.edge_label_height_pt(edge, text_context~),
     ),
   )
   let rank_heights = @rank_heights.compute_rank_heights(
@@ -83,11 +87,17 @@ pub fn compute_dot_rank_stage(input : RankStageInput) -> RankStageOutput {
       prep.ranksep_in,
       prep.has_edge_labels,
       @node_primitives.VNODE_HEIGHT_PT,
-      edge_mid_label_metrics_for_rank_heights,
-      @cluster_geometry.cluster_label_padding_for_layout,
+      edge => edge_mid_label_metrics_for_rank_heights(edge, text_context~),
+      (graph, rankdir) => {
+        @cluster_geometry.cluster_label_padding_for_layout(
+          graph,
+          rankdir,
+          text_context~,
+        )
+      },
     ),
   )
-  let ordering_pipeline_output = compute_ordering_pipeline({
+  let ordering_pipeline_output = compute_ordering_pipeline(text_context~, {
     graph,
     nodes: prep.nodes,
     edges: prep.edges,

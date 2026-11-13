@@ -24,7 +24,7 @@ fn assert_prepare_layout_prep_error(
   needle : String,
 ) -> Unit raise {
   let graph = @dot_parser.parse_dot(source)
-  match prepare_layout_prep(graph, options) {
+  match prepare_layout_prep(text_context=@heuristic.context(), graph, options) {
     Ok(_) => fail("expected layout prep error containing \{needle}")
     Err(message) =>
       if !message.contains(needle) {

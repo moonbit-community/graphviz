@@ -18,6 +18,7 @@ test "build_dot_route_base_deps applies record border adjust only to non-html re
   plain_box.set_attr("label", "plain")
 
   let deps = build_dot_route_base_deps(
+    text_context=@heuristic.context(),
     @rankdir.RankDir::TB,
     @layout_prep.RecordOrientation::Horizontal,
     Map([]),
@@ -42,6 +43,7 @@ test "build_dot_route_base_deps converts edge mid label metrics into routing met
   let unlabeled = graph.edge(b, a)
 
   let deps = build_dot_route_base_deps(
+    text_context=@heuristic.context(),
     @rankdir.RankDir::TB,
     @layout_prep.RecordOrientation::Horizontal,
     Map([]),
@@ -53,7 +55,11 @@ test "build_dot_route_base_deps converts edge mid label metrics into routing met
     Some(_) => fail("expected unlabeled edge to have no routing metrics")
   }
 
-  let expected = match @edge_label_metrics.edge_mid_label_metrics(labeled) {
+  let expected = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      labeled,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }

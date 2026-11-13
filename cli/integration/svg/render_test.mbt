@@ -28,7 +28,7 @@ async test "render_svg keeps trapeziumlr node families as polygons" {
   let graph = @dot_fs.parse_dot_file(
     "../refs/graphviz/graphs/directed/trapeziumlr.gv",
   )
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph, text_context=@heuristic.context())
   let svg = @svg_renderer.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
@@ -45,7 +45,7 @@ async test "render_svg emits cluster labels" {
   let graph = @dot_fs.parse_dot_file(
     "../refs/graphviz/graphs/directed/clust.gv",
   )
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph, text_context=@heuristic.context())
   let svg = @svg_renderer.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),
@@ -187,7 +187,7 @@ fn size_scale_for_test(
 ///|
 async test "render_svg honors size attribute" {
   let graph = @dot_fs.parse_dot_file("../refs/graphviz/graphs/directed/fig6.gv")
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph, text_context=@heuristic.context())
   let svg = @svg_renderer.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),

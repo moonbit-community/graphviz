@@ -12,6 +12,7 @@
 /// scaling, edge projection, and final layout-tree postprocess in one package
 /// entry so the root API boundary stays thin.
 fn build_neato_layout_tree(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   scale : Double,
   nodesep_pt : Double,
@@ -19,7 +20,11 @@ fn build_neato_layout_tree(
   let geometry = build_engine_geometry_context(graph, scale)
   let nodes = graph.nodes()
   let node_count = nodes.length()
-  let sizing = build_neato_node_sizing(nodes, geometry.record_orientation)
+  let sizing = build_neato_node_sizing(
+    text_context~,
+    nodes,
+    geometry.record_orientation,
+  )
   let base_spacing = sizing.max_half * 2.0 + nodesep_pt
   let spacing = if base_spacing <= 1.0 { 1.0 } else { base_spacing }
   let node_state = build_neato_initial_node_state(nodes, spacing)
@@ -38,6 +43,7 @@ fn build_neato_layout_tree(
     )
   }
   let node_data = project_scaled_nodes_with_sizes(
+    text_context~,
     nodes,
     positions,
     geometry.scale_factor,
@@ -45,7 +51,12 @@ fn build_neato_layout_tree(
     geometry.record_orientation,
   )
   let node_size_for = (node : @cgraph.Node) => {
-    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
+    node_size_with_fallback(
+      text_context~,
+      node_data.sizes,
+      node,
+      geometry.record_orientation,
+    )
   }
   let edges_out = build_edges_from_positions(
     graph,
@@ -54,6 +65,7 @@ fn build_neato_layout_tree(
     straight_line_edge_splines,
   )
   finalize_unranked_layout_tree(
+    text_context~,
     graph,
     geometry.rankdir,
     node_data.projection.nodes_out,
@@ -121,6 +133,7 @@ pub struct NeatoNodeSizing {
 
 ///|
 pub fn build_neato_node_sizing(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   record_orientation : RecordOrientation,
 ) -> NeatoNodeSizing {
@@ -130,7 +143,7 @@ pub fn build_neato_node_sizing(
   let mut max_half = 0.0
   for i in 0..<nodes.length() {
     let node = nodes[i]
-    let size = @node_geometry.node_size(node, record_orientation)
+    let size = @node_geometry.node_size(text_context~, node, record_orientation)
     sizes[node.name()] = size
     indices[node.name()] = i
     let half = if size.width_pt > size.height_pt {

@@ -9,22 +9,23 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
 pub fn parse_record_nodes(RecordParser) -> Array[RecordNode]
 
-pub fn record_group_size(Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> @numeric.GraphSizePt
+pub fn record_group_size(text_context~ : @text.Context, Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> @numeric.GraphSizePt
 
 pub fn record_nodes(String) -> Array[RecordNode]
 
-pub fn record_nodes_sizes(Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> Array[@numeric.GraphSizePt]
+pub fn record_nodes_sizes(text_context~ : @text.Context, Array[RecordNode], @layout_prep.RecordOrientation, String, Double, Double, Double) -> Array[@numeric.GraphSizePt]
 
-pub fn record_port_path_box(@cgraph.Node, @cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @rankdir.RankDir) -> @geom.Rect?
+pub fn record_port_path_box(text_context~ : @text.Context, @cgraph.Node, @cgraph.Port?, @geom.Point, @node_primitives.NodeSize, @rankdir.RankDir) -> @geom.Rect?
 
-pub fn record_ports(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
+pub fn record_ports(text_context~ : @text.Context, @cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
 
-pub fn record_rects(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Array[@geom.Rect]
+pub fn record_rects(text_context~ : @text.Context, @cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Array[@geom.Rect]
 
 pub fn reset_record_layout_caches() -> Unit
 

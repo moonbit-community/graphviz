@@ -11,7 +11,7 @@ from pathlib import Path
 
 repo_root = Path(__file__).resolve().parents[1]
 xdot_dir = repo_root / "tests" / "render" / "xdot"
-overrides_output_path = repo_root / "src" / "layout" / "dot" / "font_metrics" / "textspan_overrides.jsonl"
+overrides_output_path = repo_root / "graphviz" / "text" / "heuristic" / "font_metrics" / "textspan_overrides.jsonl"
 # Full override data stays with the runtime owner package.
 
 draw_attr_re = re.compile(r'_(?:l|h|t)?draw_="')

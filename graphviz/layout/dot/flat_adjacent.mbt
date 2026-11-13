@@ -35,6 +35,7 @@ fn clone_flat_edge(
 // dotsplines.c make_flat_adj_edges: solve an orthogonal auxiliary graph,
 // reposition its ranks to the original horizontal span, then route it.
 fn route_flat_adjacent_group(
+  text_context~ : @text_layout.Context,
   parent : @integration.DotRoutingStageInput,
   left : @cgraph.Node,
   right : @cgraph.Node,
@@ -96,7 +97,7 @@ fn route_flat_adjacent_group(
   heavy.set_attr("weight", "10000")
   @label_layout.reset_label_caches()
   let prep = match
-    @input_stage.prepare_layout_prep(aux, {
+    @input_stage.prepare_layout_prep(text_context~, aux, {
       rankdir: Some(aux_rankdir),
       nodesep: Some(parent.prep.nodesep_in),
       ranksep: Some(parent.prep.ranksep_in),
@@ -105,8 +106,11 @@ fn route_flat_adjacent_group(
     Ok(prep) => prep
     Err(message) => raise DotLayoutError::InvalidGraph(message~)
   }
-  let stage = @rank_stage.compute_dot_rank_stage({ graph: aux, prep, })
-  let positioned = @positioning.compute_positions({
+  let stage = @rank_stage.compute_dot_rank_stage(text_context~, {
+    graph: aux,
+    prep,
+  })
+  let positioned = @positioning.compute_positions(text_context~, {
     graph: aux,
     prep,
     rank_data: stage.rank_data,
@@ -142,7 +146,7 @@ fn route_flat_adjacent_group(
   }
   rank_y[stage.rank_data.ranks[first.name()]] = right_pos.x
   rank_y[stage.rank_data.ranks[second.name()]] = left_pos.x
-  let routing = @integration.compute_dot_routing_stage({
+  let routing = @integration.compute_dot_routing_stage(text_context~, {
     graph: aux,
     prep,
     rank_data: stage.rank_data,
@@ -180,6 +184,7 @@ fn route_flat_adjacent_group(
 
 ///|
 fn route_flat_adjacent_ports(
+  text_context~ : @text_layout.Context,
   input : @integration.DotRoutingStageInput,
   output : @integration.DotRoutingStageOutput,
 ) -> @integration.DotRoutingStageOutput raise DotLayoutError {
@@ -189,6 +194,7 @@ fn route_flat_adjacent_ports(
     return output
   }
   let ports_equal = @position_ports.build_initial_node_port_comparator(
+    text_context~,
     input.prep.nodes,
     input.prep.output_sizes,
   )
@@ -231,6 +237,7 @@ fn route_flat_adjacent_ports(
   for (left, right), edges in groups {
     guard edges.any(has_defined_ports) else { continue }
     let routed = route_flat_adjacent_group(
+      text_context~,
       input,
       input.graph.node(left),
       input.graph.node(right),

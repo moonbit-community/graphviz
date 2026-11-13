@@ -7,10 +7,11 @@ import {
   "moonbit-community/graphviz/layout/dot/label_layout/record_geometry",
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn raw_label_ports_for_node(@cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
+pub fn raw_label_ports_for_node(text_context~ : @text.Context, @cgraph.Node, @geom.Point, @node_primitives.NodeSize, @layout_prep.RecordOrientation) -> Map[String, @record_geometry.RecordPort]
 
 pub fn reset_label_caches() -> Unit
 

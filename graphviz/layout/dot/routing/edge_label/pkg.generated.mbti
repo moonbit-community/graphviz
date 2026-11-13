@@ -8,6 +8,7 @@ import {
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/routing",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
@@ -19,7 +20,7 @@ pub fn apply_label_updates_to_edges(Array[@layout_tree.DotLayoutEdge], Map[Strin
 
 pub fn bezier_point_fma(@geom.Point, @geom.Point, @geom.Point, @geom.Point, Double) -> @geom.Point
 
-pub fn build_edge_layout(EdgeLayoutBuildInput) -> @layout_tree.DotLayoutEdge
+pub fn build_edge_layout(text_context~ : @text.Context, EdgeLayoutBuildInput) -> @layout_tree.DotLayoutEdge
 
 pub fn edge_head_point_for_layout(@layout_tree.DotLayoutEdge) -> @geom.Point?
 
@@ -41,7 +42,7 @@ pub fn edge_port_label_pos_for_dot(@routing.EdgePortLabelPosInput) -> @geom.Poin
 
 pub fn edge_tail_point_for_layout(@layout_tree.DotLayoutEdge) -> @geom.Point?
 
-pub fn expand_bbox_for_edge_labels(ExpandEdgeLabelBboxInput) -> @geom.Rect
+pub fn expand_bbox_for_edge_labels(text_context~ : @text.Context, ExpandEdgeLabelBboxInput) -> @geom.Rect
 
 pub fn expand_bbox_for_label_pos(@geom.Rect, @geom.Point?, LabelExtent?) -> @geom.Rect
 

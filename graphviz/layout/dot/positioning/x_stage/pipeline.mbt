@@ -135,6 +135,7 @@ fn build_position_edge_out_order(
 /// and solver invocation as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_layout_x_positions(
+  text_context~ : @text_layout.Context,
   pipeline : XStageInput,
   x_data : XWithFlatLabelData,
 ) -> Map[String, Double] {
@@ -166,6 +167,7 @@ fn compute_layout_x_positions(
     flat_label_edges: x_data.flat_label_edges,
   })
   compute_x_positions_for_stage(
+    text_context~,
     solve_input,
     pipeline.prep.has_port_edges,
     pipeline.ordering.live_graph,
@@ -177,7 +179,10 @@ fn compute_layout_x_positions(
 /// reorder/transpose, and flat-label augmentation in Graphviz-aligned order
 /// and wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
+fn build_x_with_flat_labels(
+  text_context~ : @text_layout.Context,
+  pipeline : XStageInput,
+) -> XWithFlatLabelData {
   let mode_flags = build_position_mode_flags({
     has_edge_labels: pipeline.prep.has_edge_labels,
     has_port_edges: pipeline.prep.has_port_edges,
@@ -188,6 +193,7 @@ fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
   })
   let build_x_base_sizes : () -> Map[String, NodeSize] = () => {
     @ports.apply_self_edge_right_space(
+      text_context~,
       pipeline.prep.nodes,
       pipeline.prep.edges,
       pipeline.prep.sizes,
@@ -200,6 +206,7 @@ fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
   ) => {
     let build_port_sample_bundle = (edges, edge_tail, edge_head) => {
       @ports.build_edge_port_sample_bundle(
+        text_context~,
         pipeline.prep.nodes,
         edges,
         edge_tail,
@@ -251,7 +258,9 @@ fn build_x_with_flat_labels(pipeline : XStageInput) -> XWithFlatLabelData {
     build_x_base_sizes,
     build_x_port_samples,
   )
-  let flat_label_augmentation = @x_flat_labels.build_positioning_x_flat_label_pipeline({
+  let flat_label_augmentation = @x_flat_labels.build_positioning_x_flat_label_pipeline(
+    text_context~,
+    {
       xpos_reorder_enabled: false,
       use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
       allow_xpos_reorder: mode_flags.allow_xpos_reorder,
@@ -345,17 +354,23 @@ fn resolve_x_simplex_root_context(
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/position.c + cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_x_positions_for_stage(
+  text_context~ : @text_layout.Context,
   input : @x_constraints.XPositionSolveInput,
   has_port_edges : Bool,
   live_graph : @setup.ConcentrateFastGraph?,
 ) -> Map[String, Double] {
   let port_offsets = if has_port_edges {
-    @ports.port_offsets_for_nodes(input.nodes, input.output_sizes)
+    @ports.port_offsets_for_nodes(
+      text_context~,
+      input.nodes,
+      input.output_sizes,
+    )
   } else {
     Map([])
   }
   let (rankdir, root_margin) = resolve_x_simplex_root_context(input.nodes)
   @x_constraints.compute_x_positions_with_prepared_constraints(
+    text_context~,
     input,
     root_margin,
     ROOT_COMPRESS_WEIGHT,
@@ -371,7 +386,9 @@ fn compute_x_positions_for_stage(
         )
       })
     },
-    edge => @edge_label_metrics.edge_mid_label_metrics(edge) is Some(_),
+    edge => {
+      @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) is Some(_)
+    },
     _ => 1,
     @x_constraints.should_capture_xpos_snapshot(input.graph),
     live_graph~,
@@ -382,9 +399,12 @@ fn compute_x_positions_for_stage(
 /// Graphviz parity: X-stage owner keeps mode gating, x-seed, flat-label
 /// augmentation, and xpos simplex invocation in one cohesive entry.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_x_stage_output(input : XStageInput) -> XStageOutput {
-  let x_data = build_x_with_flat_labels(input)
-  let x_positions = compute_layout_x_positions(input, x_data)
+pub fn build_x_stage_output(
+  text_context~ : @text_layout.Context,
+  input : XStageInput,
+) -> XStageOutput {
+  let x_data = build_x_with_flat_labels(text_context~, input)
+  let x_positions = compute_layout_x_positions(text_context~, input, x_data)
   {
     use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
     x_groups: x_data.x_groups,

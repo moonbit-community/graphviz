@@ -103,12 +103,17 @@ test "adjacent flat edge adds one direct constraint without injecting a vnode" {
   x_groups[0] = ["a", "b"]
   let sizes = make_sizes(["a", "b"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],
@@ -152,12 +157,17 @@ test "adjacent flat edge keeps base minlen when it already exceeds label spacing
   x_groups[0] = ["a", "b"]
   let sizes = make_sizes(["a", "b"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],

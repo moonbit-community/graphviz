@@ -112,23 +112,26 @@ test "flat parallel constraints accumulate weight before X construction" {
   let first = graph.edge(a, b)
   let second = graph.edge(a, b)
   second.set_attr("weight", "3")
-  let output = build_constraint_segment_pass({
-    edges: [first, second],
-    edge_tail: ["a", "a"],
-    edge_head: ["b", "b"],
-    edge_out_order: { "a": [0, 1] },
-    nlist_order: ["a", "b"],
-    ranks: { "a": 0, "b": 0 },
-    cluster_keys: {},
-    edge_vnodes: {},
-    order_in_rank: { "a": 0, "b": 1 },
-    nodesep_pt: 18.0,
-    sizes: {},
-    skip_intercluster: false,
-    rank_adj_constraints: {},
-    edge_has_mid_label: _ => false,
-    edge_degree_increment: _ => 1,
-  })
+  let output = build_constraint_segment_pass(
+    text_context=@heuristic.context(),
+    {
+      edges: [first, second],
+      edge_tail: ["a", "a"],
+      edge_head: ["b", "b"],
+      edge_out_order: { "a": [0, 1] },
+      nlist_order: ["a", "b"],
+      ranks: { "a": 0, "b": 0 },
+      cluster_keys: {},
+      edge_vnodes: {},
+      order_in_rank: { "a": 0, "b": 1 },
+      nodesep_pt: 18.0,
+      sizes: {},
+      skip_intercluster: false,
+      rank_adj_constraints: {},
+      edge_has_mid_label: _ => false,
+      edge_degree_increment: _ => 1,
+    },
+  )
   @test.assert_eq(output.flat_minlen_constraints["a|b"].weight, 4)
 }
 
@@ -165,6 +168,7 @@ test "X segments retain transferred weights and live adjacency order" {
     incoming: { "b": [0, 1] },
   }
   let output = build_constraint_segment_pass(
+    text_context=@heuristic.context(),
     {
       edges: [original],
       edge_tail: ["a"],

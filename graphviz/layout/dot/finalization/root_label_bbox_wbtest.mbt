@@ -26,7 +26,8 @@ test "apply_root_label_bbox expands the root bbox and places the requested label
   root.set_attr("labelloc", "t")
   root.set_attr("labeljust", "l")
   let bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
-  let metrics = match @label_metrics.graph_label_metrics(root) {
+  let metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), root) {
     Some(value) => value
     None => fail("expected root label metrics")
   }
@@ -49,15 +50,32 @@ test "apply_root_label_bbox expands the root bbox and places the requested label
     y: expected_bbox.ury - padded_height / 2.0,
   }
 
-  let output = apply_root_label_bbox(root, bbox, RankDir::TB)
+  let output = apply_root_label_bbox(
+    text_context=@heuristic.context(),
+    root,
+    bbox,
+    RankDir::TB,
+  )
 
   assert_eq(output.bbox, expected_bbox)
   assert_eq(output.label_pos, Some(expected_pos))
-  assert_eq(root_label_pos_for_bbox(root, expected_bbox), Some(expected_pos))
+  assert_eq(
+    root_label_pos_for_bbox(
+      text_context=@heuristic.context(),
+      root,
+      expected_bbox,
+    ),
+    Some(expected_pos),
+  )
 
   let cluster = root.subgraph(name="cluster_0")
   cluster.set_attr("label", "Child Label")
-  let cluster_output = apply_root_label_bbox(cluster, bbox, RankDir::TB)
+  let cluster_output = apply_root_label_bbox(
+    text_context=@heuristic.context(),
+    cluster,
+    bbox,
+    RankDir::TB,
+  )
   assert_eq(cluster_output.bbox, bbox)
   assert_eq(cluster_output.label_pos, None)
 }

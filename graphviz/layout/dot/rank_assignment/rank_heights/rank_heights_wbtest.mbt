@@ -152,7 +152,10 @@ test "edge labels expand rank spacing" {
   let with_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",
   )
-  let layout_label = @layout_dot.layout_dot(with_label)
+  let layout_label = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    with_label,
+  )
   layout_label.apply()
   let pos_a = rank_layout_node_pos(with_label, "a")
   let pos_b = rank_layout_node_pos(with_label, "b")
@@ -161,7 +164,10 @@ test "edge labels expand rank spacing" {
   let without_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
   )
-  let layout_plain = @layout_dot.layout_dot(without_label)
+  let layout_plain = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    without_label,
+  )
   layout_plain.apply()
   let pos_plain_a = rank_layout_node_pos(without_label, "a")
   let pos_plain_b = rank_layout_node_pos(without_label, "b")

@@ -34,12 +34,18 @@ test "apply_xlabels preserves existing xlabels and expands bbox for node and edg
     ],
   )
 
-  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
-  let node_metrics = match xlabel_metrics_for_node(a) {
+  let updated = apply_xlabels(
+    text_context=@heuristic.context(),
+    layout,
+    @layout_prep.SplinesMode::Spline,
+  )
+  let node_metrics = match
+    xlabel_metrics_for_node(text_context=@heuristic.context(), a) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }
-  let edge_metrics = match xlabel_metrics_for_edge(edge) {
+  let edge_metrics = match
+    xlabel_metrics_for_edge(text_context=@heuristic.context(), edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }
@@ -72,8 +78,13 @@ test "apply_xlabels places unresolved node xlabels and expands bbox" {
     ],
   )
 
-  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
-  let metrics = match xlabel_metrics_for_node(node) {
+  let updated = apply_xlabels(
+    text_context=@heuristic.context(),
+    layout,
+    @layout_prep.SplinesMode::Spline,
+  )
+  let metrics = match
+    xlabel_metrics_for_node(text_context=@heuristic.context(), node) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }
@@ -109,8 +120,13 @@ test "apply_xlabels writes unresolved edge xlabels back through the edge update 
     edges=[xlabel_make_edge_layout(edge, straight_spline())],
   )
 
-  let updated = apply_xlabels(layout, @layout_prep.SplinesMode::Spline)
-  let metrics = match xlabel_metrics_for_edge(edge) {
+  let updated = apply_xlabels(
+    text_context=@heuristic.context(),
+    layout,
+    @layout_prep.SplinesMode::Spline,
+  )
+  let metrics = match
+    xlabel_metrics_for_edge(text_context=@heuristic.context(), edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }

@@ -11,7 +11,7 @@ test "adjacent flat labels tighten one horizontal edge without slack nodes" {
   let second = graph.edge(a, b)
   first.set_attr("label", "short")
   second.set_attr("label", "longer")
-  let build = build_constraint_graph({
+  let build = build_constraint_graph(text_context=@heuristic.context(), {
     nodes: [a, b],
     edges: [first, second],
     edge_tail: [],

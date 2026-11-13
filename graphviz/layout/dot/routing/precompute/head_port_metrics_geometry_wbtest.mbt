@@ -149,6 +149,7 @@ test "build_dot_head_port_metrics uses explicit label-port geometry and record f
   }
 
   let metrics = build_dot_head_port_metrics(
+    text_context=@heuristic.context(),
     [explicit, fallback],
     true,
     positions,

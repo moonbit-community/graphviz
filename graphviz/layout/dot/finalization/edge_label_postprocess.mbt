@@ -25,6 +25,7 @@ fn rect_from_center(
 
 ///|
 fn collect_cluster_label_rects(
+  text_context~ : @text_layout.Context,
   graphs : Array[LayoutTree],
   pad : Double,
 ) -> Array[@geom.Rect] {
@@ -32,7 +33,8 @@ fn collect_cluster_label_rects(
   for subgraph in graphs {
     match subgraph.label_pos {
       Some(pos) =>
-        match @label_metrics.graph_label_metrics(subgraph.graph) {
+        match
+          @label_metrics.graph_label_metrics(text_context~, subgraph.graph) {
           Some(metrics) =>
             rects.push(
               rect_from_center(pos, metrics.width_pt, metrics.height_pt, pad),
@@ -41,7 +43,11 @@ fn collect_cluster_label_rects(
         }
       None => ()
     }
-    let nested = collect_cluster_label_rects(subgraph.subgraphs, pad)
+    let nested = collect_cluster_label_rects(
+      text_context~,
+      subgraph.subgraphs,
+      pad,
+    )
     for rect in nested {
       rects.push(rect)
     }
@@ -100,6 +106,7 @@ fn rebuild_layout_edges_subgraphs(
 
 ///|
 fn adjust_labels_for_clusters(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   nodesep_pt : Double,
 ) -> LayoutTree {
@@ -107,7 +114,7 @@ fn adjust_labels_for_clusters(
   let label_rects : Array[@geom.Rect] = []
   match layout.label_pos {
     Some(pos) =>
-      match @label_metrics.graph_label_metrics(layout.graph) {
+      match @label_metrics.graph_label_metrics(text_context~, layout.graph) {
         Some(metrics) =>
           label_rects.push(
             rect_from_center(pos, metrics.width_pt, metrics.height_pt, pad),
@@ -116,13 +123,17 @@ fn adjust_labels_for_clusters(
       }
     None => ()
   }
-  let subgraph_rects = collect_cluster_label_rects(layout.subgraphs, pad)
+  let subgraph_rects = collect_cluster_label_rects(
+    text_context~,
+    layout.subgraphs,
+    pad,
+  )
   for rect in subgraph_rects {
     label_rects.push(rect)
   }
   if label_rects.length() == 0 {
     let subgraphs = map_layout_subgraphs(layout.subgraphs, subgraph => {
-      adjust_labels_for_clusters(subgraph, nodesep_pt)
+      adjust_labels_for_clusters(text_context~, subgraph, nodesep_pt)
     })
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
@@ -131,7 +142,7 @@ fn adjust_labels_for_clusters(
       label_rects,
       pad,
       edge => {
-        match @edge_label_metrics.edge_mid_label_metrics(edge) {
+        match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
           Some(metrics) =>
             Some({ width: metrics.width, height: metrics.height, })
           None => None
@@ -143,7 +154,7 @@ fn adjust_labels_for_clusters(
       adjusted_labels.updates,
     )
     let subgraphs = map_layout_subgraphs(updated_subgraphs, subgraph => {
-      adjust_labels_for_clusters(subgraph, nodesep_pt)
+      adjust_labels_for_clusters(text_context~, subgraph, nodesep_pt)
     })
     rebuild_layout_edges_subgraphs(layout, adjusted_labels.edges, subgraphs)
   }
@@ -151,6 +162,7 @@ fn adjust_labels_for_clusters(
 
 ///|
 fn adjust_labels_for_overlaps(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   nodesep_pt : Double,
   rankdir : RankDir,
@@ -160,7 +172,7 @@ fn adjust_labels_for_overlaps(
     nodesep_pt,
     rankdir,
     edge => {
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
@@ -169,7 +181,7 @@ fn adjust_labels_for_overlaps(
   )
   if adjusted.updates.length() == 0 {
     let subgraphs = map_layout_subgraphs(layout.subgraphs, subgraph => {
-      adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir)
+      adjust_labels_for_overlaps(text_context~, subgraph, nodesep_pt, rankdir)
     })
     rebuild_layout_edges_subgraphs(layout, layout.edges, subgraphs)
   } else {
@@ -178,7 +190,7 @@ fn adjust_labels_for_overlaps(
       adjusted.updates,
     )
     let subgraphs = map_layout_subgraphs(updated_subgraphs, subgraph => {
-      adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir)
+      adjust_labels_for_overlaps(text_context~, subgraph, nodesep_pt, rankdir)
     })
     rebuild_layout_edges_subgraphs(layout, adjusted.edges, subgraphs)
   }
@@ -199,6 +211,7 @@ fn edge_label_adjust_enabled() -> Bool {
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
 fn expand_layout_tree_bbox_for_edge_labels(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   ranks : Map[String, Int32],
   flat_label_edge_vnodes : Map[String, String],
@@ -206,7 +219,7 @@ fn expand_layout_tree_bbox_for_edge_labels(
   if !layout.graph.is_root() {
     return layout
   }
-  let bbox = @edge_label.expand_bbox_for_edge_labels({
+  let bbox = @edge_label.expand_bbox_for_edge_labels(text_context~, {
     bbox: layout.bbox,
     edges: layout.edges,
     ranks,
@@ -230,13 +243,23 @@ fn expand_layout_tree_bbox_for_edge_labels(
 ///|
 /// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
 fn adjust_edge_labels_if_enabled(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   nodesep_pt : Double,
   rankdir : RankDir,
 ) -> LayoutTree {
   if edge_label_adjust_enabled() {
-    let adjusted_for_clusters = adjust_labels_for_clusters(layout, nodesep_pt)
-    adjust_labels_for_overlaps(adjusted_for_clusters, nodesep_pt, rankdir)
+    let adjusted_for_clusters = adjust_labels_for_clusters(
+      text_context~,
+      layout,
+      nodesep_pt,
+    )
+    adjust_labels_for_overlaps(
+      text_context~,
+      adjusted_for_clusters,
+      nodesep_pt,
+      rankdir,
+    )
   } else {
     layout
   }
