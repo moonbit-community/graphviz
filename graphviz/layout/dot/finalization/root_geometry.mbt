@@ -57,9 +57,10 @@ pub fn compute_root_cluster_padding(
 
 ///|
 fn root_graph_label_metrics(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
 ) -> @graph_label.GraphLabelMetrics? {
-  @label_metrics.graph_label_metrics(graph)
+  @label_metrics.graph_label_metrics(text_context~, graph)
 }
 
 ///|
@@ -137,11 +138,14 @@ priv struct RootLabelPlacementSpec {
 ///|
 /// Graphviz parity: root-label placement spec reads graph label metrics + attrs
 /// once per call path before bbox/position emission.
-fn root_label_placement_spec(graph : @cgraph.Graph) -> RootLabelPlacementSpec? {
+fn root_label_placement_spec(
+  text_context~ : @text_layout.Context,
+  graph : @cgraph.Graph,
+) -> RootLabelPlacementSpec? {
   if !graph.is_root() {
     return None
   }
-  match root_graph_label_metrics(graph) {
+  match root_graph_label_metrics(text_context~, graph) {
     Some(metrics) => {
       let pad = @cluster_geometry.CLUSTER_LABEL_PAD_PT
       Some({
@@ -160,13 +164,14 @@ fn root_label_placement_spec(graph : @cgraph.Graph) -> RootLabelPlacementSpec? {
 /// (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
 pub fn apply_root_label_bbox(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
   rankdir : RankDir,
 ) -> RootLabelBBoxOutput {
   let mut bbox = bbox
   let mut label_pos : @geom.Point? = None
-  match root_label_placement_spec(graph) {
+  match root_label_placement_spec(text_context~, graph) {
     Some(spec) => {
       bbox = expand_root_bbox_for_label(
         bbox,
@@ -195,10 +200,11 @@ pub fn apply_root_label_bbox(
 /// (place_root_label).
 /// Do not change behavior without updating fixtures/tests.
 pub fn root_label_pos_for_bbox(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
 ) -> @geom.Point? {
-  match root_label_placement_spec(graph) {
+  match root_label_placement_spec(text_context~, graph) {
     Some(spec) =>
       Some(
         @graph_label.graph_label_pos(

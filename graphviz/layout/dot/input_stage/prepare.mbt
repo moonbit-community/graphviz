@@ -277,6 +277,7 @@ fn resolve_splines(
 /// assembles the canonical input snapshot/geometry payload for later stages.
 /// Do not change behavior without updating fixtures/tests.
 pub fn prepare_layout_prep(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   options : LayoutInputOptions,
 ) -> Result[LayoutPrep, String] {
@@ -291,7 +292,7 @@ pub fn prepare_layout_prep(
   }
   let splines = resolve_splines(graph, options.splines)
   Ok(
-    prepare_layout_inputs({
+    prepare_layout_inputs(text_context~, {
       graph,
       rankdir,
       nodesep_in: spacing.nodesep_in,

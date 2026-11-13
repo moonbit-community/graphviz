@@ -124,12 +124,13 @@ fn rotate_final_layout(
 /// (gv_postprocess) + dotgen/position.c (cluster/label spacing).
 /// Do not change behavior without updating fixtures/tests.
 pub fn finalize_layout_from_sources(
+  text_context~ : @text_layout.Context,
   sources : FinalizeLayoutBuildSources,
 ) -> LayoutTree {
   let input = build_finalize_layout_input_from_sources(sources)
   let rotated = rotate_final_layout(
     input.rankdir,
-    build_pre_rotation_layout_data(input),
+    build_pre_rotation_layout_data(text_context~, input),
   )
-  finalize_root_coordinates(rotated)
+  finalize_root_coordinates(text_context~, rotated)
 }

@@ -106,19 +106,22 @@ test "build_ordering_runtime_context_from_sources seeds runtime maps and vnode i
   let node_order : Map[String, Int32] = { "a": 0, "c": 1 }
   let edge_out_order : Map[String, Array[Int32]] = { "a": [0] }
 
-  let runtime_context = build_ordering_runtime_context_from_sources({
-    graph,
-    nodes: [a, c],
-    edges,
-    edge_tail: ["a"],
-    edge_head: ["c"],
-    edge_out_order,
-    ranks,
-    node_order,
-    nodesep_pt: 20.0,
-    rankdir: @rankdir.RankDir::TB,
-    cluster_meta: empty_cluster_meta(),
-  })
+  let runtime_context = build_ordering_runtime_context_from_sources(
+    text_context=@heuristic.context(),
+    {
+      graph,
+      nodes: [a, c],
+      edges,
+      edge_tail: ["a"],
+      edge_head: ["c"],
+      edge_out_order,
+      ranks,
+      node_order,
+      nodesep_pt: 20.0,
+      rankdir: @rankdir.RankDir::TB,
+      cluster_meta: empty_cluster_meta(),
+    },
+  )
 
   assert_eq(runtime_context.real_nodes.get("a"), Some(true))
   assert_eq(runtime_context.real_nodes.get("c"), Some(true))

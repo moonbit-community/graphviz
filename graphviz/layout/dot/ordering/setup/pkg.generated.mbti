@@ -5,6 +5,7 @@ import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
@@ -12,17 +13,17 @@ pub fn build_dot_cluster_metadata_from_sources(DotClusterMetadataSources) -> Dot
 
 pub fn build_edge_port_sample_bundle(Array[@cgraph.Edge], Array[String], Array[String], (String, @cgraph.Port?) -> Double, (String, @cgraph.Port?) -> Double) -> EdgePortSampleBundle
 
-pub fn build_edge_vnodes(Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Array[Int32]], Map[String, Int32], Double, @rankdir.RankDir, Map[String, Bool], Map[String, String], Map[String, String?]) -> EdgeVnodeInfo
+pub fn build_edge_vnodes(text_context~ : @text.Context, Array[@cgraph.Node], Array[@cgraph.Edge], Array[String], Array[String], Map[String, Array[Int32]], Map[String, Int32], Double, @rankdir.RankDir, Map[String, Bool], Map[String, String], Map[String, String?]) -> EdgeVnodeInfo
 
 pub fn build_ordering_edge_port_data_from_sources(OrderingEdgePortDataSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingEdgePortData
 
-pub fn build_ordering_pipeline_context_from_sources(BuildOrderingPipelineContextSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingPipelineContext
+pub fn build_ordering_pipeline_context_from_sources(text_context~ : @text.Context, BuildOrderingPipelineContextSources, (Array[@cgraph.Edge], Array[String], Array[String]) -> EdgePortSampleBundle) -> OrderingPipelineContext
 
 pub fn build_ordering_reorder_setup_from_sources(OrderingReorderSetupSources) -> OrderingReorderSetup
 
 pub fn build_ordering_result_from_pipeline_context(OrderingPipelineContext, Map[Int32, Array[String]], Map[Int32, Array[String]]) -> OrderingResult
 
-pub fn build_ordering_runtime_context_from_sources(BuildOrderingRuntimeContextSources) -> OrderingRuntimeContext
+pub fn build_ordering_runtime_context_from_sources(text_context~ : @text.Context, BuildOrderingRuntimeContextSources) -> OrderingRuntimeContext
 
 pub fn concentrate_ordering_result(@cgraph.Graph, Array[@cgraph.Edge], Map[String, Int32], OrderingResult, edge_ports_equal? : (@cgraph.Edge, @cgraph.Edge) -> Bool, node_ports_equal? : (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool) -> OrderingResult
 

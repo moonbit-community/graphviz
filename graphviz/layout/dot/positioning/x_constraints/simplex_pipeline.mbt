@@ -269,6 +269,7 @@ pub(all) struct PreparedXposConstraintInputs {
 
 ///|
 fn prepare_xpos_constraint_inputs(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -285,6 +286,7 @@ fn prepare_xpos_constraint_inputs(
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> PreparedXposConstraintInputs {
   let cluster_constraints = build_cluster_constraints(
+    text_context~,
     graph,
     nodes,
     edges,
@@ -542,10 +544,12 @@ priv struct XposSimplexSolveInput {
 /// network_simplex exactly once before reading node ranks.
 /// Do not change behavior without updating fixtures/tests.
 fn solve_xpos_with_simplex(
+  text_context~ : @text_layout.Context,
   input : XposSimplexSolveInput,
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let constraint_graph = build_constraint_graph(
+    text_context~,
     {
       nodes: input.nodes,
       edges: input.edges,
@@ -644,6 +648,7 @@ priv struct XSimplexInput {
 
 ///|
 fn x_positions_from_simplex(
+  text_context~ : @text_layout.Context,
   input : XSimplexInput,
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
@@ -652,6 +657,7 @@ fn x_positions_from_simplex(
     gdnlist_order: input.gdnlist_order,
   })
   solve_xpos_with_simplex(
+    text_context~,
     {
       nodes: input.nodes,
       edges: input.edges,
@@ -699,6 +705,7 @@ fn x_positions_from_simplex(
 /// simplex-input assembly, and snapshot/order wiring in one boundary helper.
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_x_positions_with_prepared_constraints(
+  text_context~ : @text_layout.Context,
   solve_input : XPositionSolveInput,
   root_margin : Double,
   root_compress_weight : Int32,
@@ -712,6 +719,7 @@ pub fn compute_x_positions_with_prepared_constraints(
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> Map[String, Double] {
   let prepared = prepare_xpos_constraint_inputs(
+    text_context~,
     solve_input.graph,
     solve_input.nodes,
     solve_input.edges,
@@ -729,6 +737,7 @@ pub fn compute_x_positions_with_prepared_constraints(
   )
   let order_index = @rank_groups.build_order_index(solve_input.groups)
   x_positions_from_simplex(
+    text_context~,
     {
       nodes: solve_input.nodes,
       edges: solve_input.edges,

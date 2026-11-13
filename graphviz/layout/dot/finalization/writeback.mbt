@@ -39,6 +39,7 @@ fn set_edge_label_pos_if_present(
 
 ///|
 fn apply_graph_output_attrs(
+  text_context~ : @text_layout.Context,
   layout : @layout_tree.LayoutTree,
 ) -> @layout_prep.RecordOrientation {
   let graph = layout.graph
@@ -50,7 +51,7 @@ fn apply_graph_output_attrs(
     graph.set_attr("bb", format_rect(layout.bbox))
   }
   if write_bb {
-    match @label_metrics.graph_label_metrics(graph) {
+    match @label_metrics.graph_label_metrics(text_context~, graph) {
       Some(metrics) => {
         graph.set_attr("lwidth", format_fixed(metrics.width_pt / 72.0, 2))
         graph.set_attr("lheight", format_fixed(metrics.height_pt / 72.0, 2))
@@ -67,6 +68,7 @@ fn apply_graph_output_attrs(
 
 ///|
 fn apply_node_output_attrs(
+  text_context~ : @text_layout.Context,
   nodes : Array[@layout_tree.DotLayoutNode],
   record_orientation : @layout_prep.RecordOrientation,
 ) -> Unit {
@@ -93,6 +95,7 @@ fn apply_node_output_attrs(
         node_layout.height_in * 72.0,
       )
       let rects = @record_layout.record_rects(
+        text_context~,
         node,
         node_layout.pos,
         size,
@@ -165,11 +168,14 @@ fn apply_edge_output_attrs(
 /// Graphviz parity: final writeback preserves Graphviz attribute emission order
 /// for graph/node/edge geometry and label positions.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_layout_tree_writeback(layout : @layout_tree.LayoutTree) -> Unit {
-  let record_orientation = apply_graph_output_attrs(layout)
-  apply_node_output_attrs(layout.nodes, record_orientation)
+pub fn apply_layout_tree_writeback(
+  text_context~ : @text_layout.Context,
+  layout : @layout_tree.LayoutTree,
+) -> Unit {
+  let record_orientation = apply_graph_output_attrs(text_context~, layout)
+  apply_node_output_attrs(text_context~, layout.nodes, record_orientation)
   apply_edge_output_attrs(layout.graph, layout.edges)
   for subgraph in layout.subgraphs {
-    apply_layout_tree_writeback(subgraph)
+    apply_layout_tree_writeback(text_context~, subgraph)
   }
 }

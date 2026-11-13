@@ -8,12 +8,13 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
 pub fn build_position_mode_flags(PositionModeFlagSources) -> PositionModeFlags
 
-pub fn build_x_stage_output(XStageInput) -> XStageOutput
+pub fn build_x_stage_output(text_context~ : @text.Context, XStageInput) -> XStageOutput
 
 // Errors
 

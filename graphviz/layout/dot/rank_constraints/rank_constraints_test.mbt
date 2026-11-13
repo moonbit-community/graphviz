@@ -47,7 +47,10 @@ test "rank keywords keep expected vertical extremes" {
   let min_graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=min; a; b; } c; a -> c; b -> c; }",
   )
-  let min_layout = @layout_dot.layout_dot(min_graph)
+  let min_layout = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    min_graph,
+  )
   min_layout.apply()
   let min_a = match rank_node_pos(min_graph, "a") {
     Some(value) => value
@@ -67,7 +70,10 @@ test "rank keywords keep expected vertical extremes" {
   let max_graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=max; a; b; } c; c -> a; c -> b; }",
   )
-  let max_layout = @layout_dot.layout_dot(max_graph)
+  let max_layout = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    max_graph,
+  )
   max_layout.apply()
   let max_a = match rank_node_pos(max_graph, "a") {
     Some(value) => value
@@ -87,7 +93,10 @@ test "rank keywords keep expected vertical extremes" {
   let extremes_graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=source; s1; s2; } subgraph { rank=sink; t1; t2; } s1 -> t1; s2 -> t2; }",
   )
-  let extremes_layout = @layout_dot.layout_dot(extremes_graph)
+  let extremes_layout = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    extremes_graph,
+  )
   extremes_layout.apply()
   let s1_pos = match rank_node_pos(extremes_graph, "s1") {
     Some(value) => value
@@ -115,7 +124,10 @@ test "constraint=false keeps same rank while default separates ranks" {
   let unconstrained = @dot_parser.parse_dot(
     "digraph { a -> b [constraint=false]; }",
   )
-  let unconstrained_layout = @layout_dot.layout_dot(unconstrained)
+  let unconstrained_layout = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    unconstrained,
+  )
   unconstrained_layout.apply()
   let unconstrained_a = match rank_node_pos(unconstrained, "a") {
     Some(value) => value
@@ -134,7 +146,10 @@ test "constraint=false keeps same rank while default separates ranks" {
   )
 
   let constrained = @dot_parser.parse_dot("digraph { a -> b; }")
-  let constrained_layout = @layout_dot.layout_dot(constrained)
+  let constrained_layout = @layout_dot.layout_dot(
+    text_context=@heuristic.context(),
+    constrained,
+  )
   constrained_layout.apply()
   let constrained_a = match rank_node_pos(constrained, "a") {
     Some(value) => value

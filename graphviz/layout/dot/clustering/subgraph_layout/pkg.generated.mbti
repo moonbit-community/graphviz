@@ -7,16 +7,17 @@ import {
   "moonbit-community/graphviz/layout/dot/clustering/cluster_geometry",
   "moonbit-community/graphviz/layout/dot/layout_tree",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn compute_cluster_route_bboxes(@cgraph.Graph, Array[@layout_tree.DotLayoutNode], Map[String, Double], Map[String, Double], Map[String, @cluster_geometry.ClusterBboxHeightPair], @rankdir.RankDir, Map[String, Int32], Map[Int32, Double], Map[Int32, Double], Map[Int32, Double]) -> Map[String, @geom.Rect]
+pub fn compute_cluster_route_bboxes(text_context~ : @text.Context, @cgraph.Graph, Array[@layout_tree.DotLayoutNode], Map[String, Double], Map[String, Double], Map[String, @cluster_geometry.ClusterBboxHeightPair], @rankdir.RankDir, Map[String, Int32], Map[Int32, Double], Map[Int32, Double], Map[Int32, Double]) -> Map[String, @geom.Rect]
 
 pub fn expand_bbox_with_clusters(@geom.Rect, Array[@layout_tree.LayoutTree]) -> @geom.Rect
 
 pub fn expand_bbox_with_subgraphs(@geom.Rect, Array[@layout_tree.LayoutTree]) -> @geom.Rect
 
-pub fn layout_subgraphs(LayoutSubgraphsInput) -> Array[@layout_tree.LayoutTree]
+pub fn layout_subgraphs(text_context~ : @text.Context, LayoutSubgraphsInput) -> Array[@layout_tree.LayoutTree]
 
 // Errors
 

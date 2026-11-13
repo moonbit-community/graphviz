@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/text/canvas"
+
+import {
+  "moonbit-community/graphviz/text",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Canvas {
+  context : Context2D
+  cache : Map[(String, Double, String), @text.Metrics]
+}
+pub fn Canvas::clear_cache(Self) -> Unit
+pub fn Canvas::measure(Self, @text.Font, String) -> @text.Metrics
+pub fn Canvas::new(Context2D) -> Self
+pub impl @text.Measurer for Canvas
+
+#external
+pub type Context2D
+
+// Type aliases
+
+// Traits

@@ -5,7 +5,12 @@
 ///|
 test "generated override metrics flow through label text measurement" {
   assert_eq(
-    label_text_metrics("arch", "Helvetica", 4.0),
+    label_text_metrics(
+      text_context=@heuristic.context(),
+      "arch",
+      "Helvetica",
+      4.0,
+    ),
     (8.25, 5.25, 3.75, 0.2),
   )
 }
@@ -14,7 +19,10 @@ test "generated override metrics flow through label text measurement" {
 test "multiline overrides use widest line total height and font offsets" {
   assert_eq(
     label_text_metrics(
-      "Edge Label A\\nEdge Label B Longer", "Times-Roman", 14.0,
+      text_context=@heuristic.context(),
+      "Edge Label A\\nEdge Label B Longer",
+      "Times-Roman",
+      14.0,
     ),
     (117.75, 33.0, 12.75, 0.7000000000000001),
   )
@@ -23,7 +31,12 @@ test "multiline overrides use widest line total height and font offsets" {
 ///|
 test "regular labels trim a trailing break line" {
   assert_eq(
-    label_text_metrics("a\\n", "Times-Roman", 14.0),
+    label_text_metrics(
+      text_context=@heuristic.context(),
+      "a\\n",
+      "Times-Roman",
+      14.0,
+    ),
     (6.0, 16.5, 12.75, 0.7000000000000001),
   )
 }
@@ -31,7 +44,12 @@ test "regular labels trim a trailing break line" {
 ///|
 test "record labels trim a trailing break line" {
   assert_eq(
-    record_label_text_dimensions("a\\n", "Times-Roman", 14.0),
+    record_label_text_dimensions(
+      text_context=@heuristic.context(),
+      "a\\n",
+      "Times-Roman",
+      14.0,
+    ),
     (6.0, 16.5),
   )
 }
@@ -40,8 +58,10 @@ test "record labels trim a trailing break line" {
 test "record measurement collapses trailing whitespace runs to one space" {
   assert_eq(
     record_label_text_dimensions(
+      text_context=@heuristic.context(),
       "flowering plants and the incredible changes                    \\nAugust.",
-      "Times-Roman", 14.0,
+      "Times-Roman",
+      14.0,
     ),
     (240.75, 33.0),
   )
@@ -49,9 +69,24 @@ test "record measurement collapses trailing whitespace runs to one space" {
 
 ///|
 test "monospace measurement depends on column counts not glyph shapes" {
-  let wide = label_text_dimensions("WW\\nii", "monospace", 10.0)
-  let same_columns = label_text_dimensions("ab\\ncd", "monospace", 10.0)
-  let wider_columns = label_text_dimensions("abc\\nde", "monospace", 10.0)
+  let wide = label_text_dimensions(
+    text_context=@heuristic.context(),
+    "WW\\nii",
+    "monospace",
+    10.0,
+  )
+  let same_columns = label_text_dimensions(
+    text_context=@heuristic.context(),
+    "ab\\ncd",
+    "monospace",
+    10.0,
+  )
+  let wider_columns = label_text_dimensions(
+    text_context=@heuristic.context(),
+    "abc\\nde",
+    "monospace",
+    10.0,
+  )
   assert_eq(wide, same_columns)
   assert_true(wider_columns.0 > wide.0)
   assert_eq(wider_columns.1, wide.1)
@@ -61,7 +96,9 @@ test "monospace measurement depends on column counts not glyph shapes" {
 test "Helvetica HTML table span retains its reference-side rounding" {
   @test.assert_eq(
     label_text_dimensions(
-      "\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\"", "Helvetica",
+      text_context=@heuristic.context(),
+      "\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\\nabcdefghijlklmnopqrstuvwxyz\"",
+      "Helvetica",
       14.0,
     ),
     (446.25000000000006, 15.0),
@@ -71,7 +108,10 @@ test "Helvetica HTML table span retains its reference-side rounding" {
 ///|
 test "fallback offsets apply when font has no captured offsets" {
   let (width, height, yoffset_layout, yoffset_centerline) = label_text_metrics(
-    "A", "UnknownFont", 10.0,
+    text_context=@heuristic.context(),
+    "A",
+    "UnknownFont",
+    10.0,
   )
   assert_true(width > 0.0)
   assert_eq(height, 12.0)

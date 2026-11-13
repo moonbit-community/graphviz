@@ -21,7 +21,10 @@ pub struct LabelDims {
 }
 
 ///|
-pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
+pub fn xlabel_metrics_for_node(
+  text_context~ : @text_layout.Context,
+  node : @cgraph.Node,
+) -> XLabelMetrics? {
   match node.get_attr("xlabel") {
     Some(text) =>
       if text == "" {
@@ -30,7 +33,10 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
         let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
         let font = @attrs.font_name(node.get_attr("fontname"))
         let (width, height) = @label_metrics.label_text_dimensions(
-          text, font, font_size_pt,
+          text_context~,
+          text,
+          font,
+          font_size_pt,
         )
         Some({ width, height, })
       }
@@ -39,8 +45,17 @@ pub fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
 }
 
 ///|
-pub fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match @edge_label_metrics.edge_label_metrics_for_attr(edge, "xlabel", false) {
+pub fn xlabel_metrics_for_edge(
+  text_context~ : @text_layout.Context,
+  edge : @cgraph.Edge,
+) -> XLabelMetrics? {
+  match
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context~,
+      edge,
+      "xlabel",
+      false,
+    ) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
@@ -79,8 +94,11 @@ pub fn build_edges_by_tail(
 }
 
 ///|
-fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
-  match @edge_label_metrics.edge_mid_label_metrics(edge) {
+fn edge_mid_metrics_for_xlabel(
+  text_context~ : @text_layout.Context,
+  edge : @cgraph.Edge,
+) -> XLabelMetrics? {
+  match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
@@ -88,10 +106,17 @@ fn edge_mid_metrics_for_xlabel(edge : @cgraph.Edge) -> XLabelMetrics? {
 
 ///|
 fn edge_attr_metrics_for_xlabel(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
   key : String,
 ) -> XLabelMetrics? {
-  match @edge_label_metrics.edge_label_metrics_for_attr(edge, key, true) {
+  match
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context~,
+      edge,
+      key,
+      true,
+    ) {
     Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
     None => None
   }
@@ -189,6 +214,7 @@ priv struct EdgeLabelAnchors {
 
 ///|
 pub fn build_node_obstacle_with_xlabel_slot(
+  text_context~ : @text_layout.Context,
   node_layout : DotLayoutNode,
   flip : Bool,
   labels : Array[XLabel],
@@ -201,7 +227,7 @@ pub fn build_node_obstacle_with_xlabel_slot(
   let llx = node_layout.pos.x - obj_dims.width / 2.0
   let lly = node_layout.pos.y - obj_dims.height / 2.0
   let mut label_index : Int32? = None
-  match xlabel_metrics_for_node(node) {
+  match xlabel_metrics_for_node(text_context~, node) {
     Some(metrics) =>
       match node_layout.xlabel_pos {
         Some(pos) => push_existing_label_object(pos, metrics, flip, objects)
@@ -253,6 +279,7 @@ fn collect_edge_label_anchors(
 
 ///|
 pub fn collect_edge_xlabel_candidates(
+  text_context~ : @text_layout.Context,
   edge_layout : DotLayoutEdge,
   splines : SplinesMode,
   flip : Bool,
@@ -265,7 +292,7 @@ pub fn collect_edge_xlabel_candidates(
   collect_edge_label_candidate(
     XLabelTarget::EdgeMid(edge_key),
     edge_layout.label_pos,
-    edge_mid_metrics_for_xlabel(edge),
+    edge_mid_metrics_for_xlabel(text_context~, edge),
     anchors.mid_anchor,
     anchors.has_geometry,
     flip,
@@ -275,7 +302,7 @@ pub fn collect_edge_xlabel_candidates(
   collect_edge_label_candidate(
     XLabelTarget::EdgeTail(edge_key),
     edge_layout.tail_label_pos,
-    edge_attr_metrics_for_xlabel(edge, "taillabel"),
+    edge_attr_metrics_for_xlabel(text_context~, edge, "taillabel"),
     anchors.tail_anchor,
     anchors.has_geometry,
     flip,
@@ -285,7 +312,7 @@ pub fn collect_edge_xlabel_candidates(
   collect_edge_label_candidate(
     XLabelTarget::EdgeHead(edge_key),
     edge_layout.head_label_pos,
-    edge_attr_metrics_for_xlabel(edge, "headlabel"),
+    edge_attr_metrics_for_xlabel(text_context~, edge, "headlabel"),
     anchors.head_anchor,
     anchors.has_geometry,
     flip,
@@ -295,7 +322,7 @@ pub fn collect_edge_xlabel_candidates(
   collect_edge_label_candidate(
     XLabelTarget::EdgeXlabel(edge_key),
     edge_layout.xlabel_pos,
-    xlabel_metrics_for_edge(edge),
+    xlabel_metrics_for_edge(text_context~, edge),
     anchors.mid_anchor,
     anchors.has_geometry,
     flip,

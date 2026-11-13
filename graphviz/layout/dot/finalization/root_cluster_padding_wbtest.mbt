@@ -27,7 +27,7 @@ test "apply_root_cluster_padding shifts content by bottom pad and refreshes the 
       }),
     ],
   )
-  let padded = apply_root_cluster_padding({
+  let padded = apply_root_cluster_padding(text_context=@heuristic.context(), {
     layout,
     root_cluster_pad_top: 2.0,
     root_cluster_pad_bottom: 3.0,
@@ -38,5 +38,12 @@ test "apply_root_cluster_padding shifts content by bottom pad and refreshes the 
   assert_eq(padded.nodes[0].pos, { x: 10.0, y: 8.0, })
   assert_eq(padded.edges[0].splines[0].start, Some({ x: 1.0, y: 5.0, }))
   assert_eq(padded.edges[0].splines[0].end, Some({ x: 19.0, y: 21.0, }))
-  assert_eq(padded.label_pos, root_label_pos_for_bbox(root, expected_bbox))
+  assert_eq(
+    padded.label_pos,
+    root_label_pos_for_bbox(
+      text_context=@heuristic.context(),
+      root,
+      expected_bbox,
+    ),
+  )
 }

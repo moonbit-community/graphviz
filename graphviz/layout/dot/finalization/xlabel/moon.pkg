@@ -10,4 +10,9 @@ import {
   "moonbit-community/graphviz/attrs",
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
+
+import {
+  "moonbit-community/graphviz/text/heuristic",
+} for "wbtest"

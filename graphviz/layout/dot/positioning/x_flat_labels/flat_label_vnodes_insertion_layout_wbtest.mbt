@@ -23,12 +23,17 @@ test "non-adjacent flat edge injects a label vnode and splits constraints" {
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],
@@ -103,12 +108,17 @@ test "non-adjacent LR flat edge swaps label width and height for vnode sizing" {
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],
@@ -159,12 +169,17 @@ test "non-adjacent flat edge uses half-scale minlen when graph ordering is unset
   x_groups[0] = ["a", "c", "b"]
   let sizes = make_sizes(["a", "b", "c"], 10.0, 10.0)
   let vnode_info = empty_vnode_info()
-  let metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge label metrics")
   }
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],

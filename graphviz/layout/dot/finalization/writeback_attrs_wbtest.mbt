@@ -62,7 +62,7 @@ test "apply_layout_tree_writeback writes bbox by graph role and edge label attrs
     ],
   )
 
-  apply_layout_tree_writeback(layout)
+  apply_layout_tree_writeback(text_context=@heuristic.context(), layout)
 
   assert_eq(graph.get_attr("bb"), Some(format_rect(layout.bbox)))
   assert_eq(cluster.get_attr("bb"), Some("1,1,2,2"))
@@ -100,13 +100,18 @@ test "apply_layout_tree_writeback writes root and cluster label attrs recursivel
     ],
   )
 
-  apply_layout_tree_writeback(layout)
+  apply_layout_tree_writeback(text_context=@heuristic.context(), layout)
 
-  let root_metrics = match @label_metrics.graph_label_metrics(graph) {
+  let root_metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), graph) {
     Some(value) => value
     None => fail("expected root graph label metrics")
   }
-  let cluster_metrics = match @label_metrics.graph_label_metrics(cluster) {
+  let cluster_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      cluster,
+    ) {
     Some(value) => value
     None => fail("expected cluster label metrics")
   }

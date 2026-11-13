@@ -12,8 +12,13 @@ test "layout_ports_from_final rotates record ports into LR layout coordinates" {
     @rankdir.graph_rankdir(graph),
   )
   let node = graph.node("rotated_record")
-  let size = @node_geometry.node_size(node, record_orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    record_orientation,
+  )
   let ports = @record_layout.record_ports(
+    text_context=@heuristic.context(),
     node,
     @geom.Point::{ x: 0.0, y: 0.0, },
     size,

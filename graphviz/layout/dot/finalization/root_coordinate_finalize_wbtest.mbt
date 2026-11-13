@@ -25,7 +25,10 @@ test "finalize_root_coordinates applies root margin then shifts to origin and re
     ],
   )
 
-  let finalized = finalize_root_coordinates(layout)
+  let finalized = finalize_root_coordinates(
+    text_context=@heuristic.context(),
+    layout,
+  )
   let expected_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 92.0, ury: 20.0, }
 
   assert_eq(finalized.bbox, expected_bbox)
@@ -37,7 +40,14 @@ test "finalize_root_coordinates applies root margin then shifts to origin and re
     ury: 4.0,
   })
   assert_eq(finalized.subgraphs[0].label_pos, Some({ x: 38.0, y: 2.0, }))
-  assert_eq(finalized.label_pos, root_label_pos_for_bbox(root, expected_bbox))
+  assert_eq(
+    finalized.label_pos,
+    root_label_pos_for_bbox(
+      text_context=@heuristic.context(),
+      root,
+      expected_bbox,
+    ),
+  )
 }
 
 ///|
@@ -50,7 +60,10 @@ test "finalize_root_coordinates shifts root bbox to origin and refreshes root la
     label_pos=Some({ x: -1.0, y: -1.0, }),
   )
 
-  let finalized = finalize_root_coordinates(layout)
+  let finalized = finalize_root_coordinates(
+    text_context=@heuristic.context(),
+    layout,
+  )
   let expected_bbox : @geom.Rect = {
     llx: 0.0,
     lly: 0.0,
@@ -59,5 +72,12 @@ test "finalize_root_coordinates shifts root bbox to origin and refreshes root la
   }
 
   assert_eq(finalized.bbox, expected_bbox)
-  assert_eq(finalized.label_pos, root_label_pos_for_bbox(graph, expected_bbox))
+  assert_eq(
+    finalized.label_pos,
+    root_label_pos_for_bbox(
+      text_context=@heuristic.context(),
+      graph,
+      expected_bbox,
+    ),
+  )
 }

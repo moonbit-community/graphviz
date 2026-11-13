@@ -77,6 +77,7 @@ fn unsupported_record_flat_edge(base : EdgeRouteBase) -> Bool {
 
 ///|
 fn route_ordered_edge(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
@@ -111,7 +112,9 @@ fn route_ordered_edge(
     state,
     callbacks,
   }
-  guard !maybe_build_flat_labeled_group(layout_attempt) else { return () }
+  guard !maybe_build_flat_labeled_group(text_context~, layout_attempt) else {
+    return ()
+  }
   if maybe_build_flat_adjacent_layout(layout_attempt) {
     return ()
   }
@@ -139,6 +142,7 @@ fn route_ordered_edge(
 /// recover-slack state shared across edges in pass order.
 /// Do not change behavior without updating fixtures/tests.
 fn route_ordered_edges(
+  text_context~ : @text_layout.Context,
   input : OrderedRoutingInput,
   edges_out_by_id : Map[Int32, DotLayoutEdge],
   callbacks : RoutingCallbacks,
@@ -149,6 +153,6 @@ fn route_ordered_edges(
     edges_out_by_id,
   }
   for edge in input.ordered_edges {
-    route_ordered_edge(edge, input, state, callbacks)
+    route_ordered_edge(text_context~, edge, input, state, callbacks)
   }
 }

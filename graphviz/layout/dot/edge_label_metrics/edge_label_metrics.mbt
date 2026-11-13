@@ -22,16 +22,22 @@ pub struct EdgeLabelMetrics {
 }
 
 ///|
-pub fn edge_mid_label_width_pt(edge : @cgraph.Edge) -> Double {
-  match edge_label_metrics_for_attr(edge, "label", false) {
+pub fn edge_mid_label_width_pt(
+  text_context~ : @text_layout.Context,
+  edge : @cgraph.Edge,
+) -> Double {
+  match edge_label_metrics_for_attr(text_context~, edge, "label", false) {
     Some(metrics) => metrics.width
     None => 0.0
   }
 }
 
 ///|
-pub fn edge_mid_label_metrics(edge : @cgraph.Edge) -> EdgeLabelMetrics? {
-  edge_label_metrics_for_attr(edge, "label", false)
+pub fn edge_mid_label_metrics(
+  text_context~ : @text_layout.Context,
+  edge : @cgraph.Edge,
+) -> EdgeLabelMetrics? {
+  edge_label_metrics_for_attr(text_context~, edge, "label", false)
 }
 
 ///|
@@ -39,6 +45,7 @@ pub fn edge_mid_label_metrics(edge : @cgraph.Edge) -> EdgeLabelMetrics? {
 /// (initFontEdgeAttr/initFontLabelEdgeAttr).
 /// Do not change behavior without updating fixtures/tests.
 pub fn edge_label_metrics_for_attr(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
   attr_name : String,
   use_label_font : Bool,
@@ -68,13 +75,19 @@ pub fn edge_label_metrics_for_attr(
         ).map_or_else(
           () => {
             @label_metrics.label_text_dimensions(
+              text_context~,
               @attrs.decode_label_entities(text),
               font,
               font_size_pt,
             )
           },
           label => {
-            let size = @html_layout.html_label_size(label, font, font_size_pt)
+            let size = @html_layout.html_label_size(
+              text_context~,
+              label,
+              font,
+              font_size_pt,
+            )
             (size.width_pt, size.height_pt)
           },
         )
@@ -85,23 +98,26 @@ pub fn edge_label_metrics_for_attr(
 }
 
 ///|
-pub fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
+pub fn edge_label_height_pt(
+  text_context~ : @text_layout.Context,
+  edge : @cgraph.Edge,
+) -> Double {
   let mut max_height = 0.0
-  match edge_label_metrics_for_attr(edge, "label", false) {
+  match edge_label_metrics_for_attr(text_context~, edge, "label", false) {
     Some(metrics) =>
       if metrics.height > max_height {
         max_height = metrics.height
       }
     None => ()
   }
-  match edge_label_metrics_for_attr(edge, "headlabel", true) {
+  match edge_label_metrics_for_attr(text_context~, edge, "headlabel", true) {
     Some(metrics) =>
       if metrics.height > max_height {
         max_height = metrics.height
       }
     None => ()
   }
-  match edge_label_metrics_for_attr(edge, "taillabel", true) {
+  match edge_label_metrics_for_attr(text_context~, edge, "taillabel", true) {
     Some(metrics) =>
       if metrics.height > max_height {
         max_height = metrics.height
@@ -123,10 +139,11 @@ pub fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
 
 ///|
 pub fn self_edge_label_width_pt(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
   rankdir : RankDir,
 ) -> Double {
-  match edge_mid_label_metrics(edge) {
+  match edge_mid_label_metrics(text_context~, edge) {
     Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
         metrics.height
@@ -139,10 +156,11 @@ pub fn self_edge_label_width_pt(
 
 ///|
 pub fn self_edge_label_height_pt(
+  text_context~ : @text_layout.Context,
   edge : @cgraph.Edge,
   rankdir : RankDir,
 ) -> Double {
-  match edge_mid_label_metrics(edge) {
+  match edge_mid_label_metrics(text_context~, edge) {
     Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
         metrics.width

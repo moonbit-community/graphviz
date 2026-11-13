@@ -7,4 +7,5 @@ import {
   "moonbitlang/core/string",
   "moonbit-community/graphviz/dot" @dot_parser,
   "moonbit-community/graphviz/geom",
+  "moonbit-community/graphviz/text/heuristic",
 } for "test"

@@ -34,6 +34,7 @@ test "non-adjacent flat edge appends label vnode after existing edge vnodes and 
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "cluster_edge"
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],
@@ -94,6 +95,7 @@ test "non-adjacent flat edge prefers endpoint cluster membership over edge clust
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "wrong_cluster"
 
   let result = build_flat_label_vnodes_for_positioning(
+    text_context=@heuristic.context(),
     [edge],
     ["a"],
     ["b"],

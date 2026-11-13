@@ -106,6 +106,7 @@ test "build_edge_vnodes applies edge cluster key when endpoints stay at root" {
   edge_cluster_keys[@edge_identity.edge_key(edge)] = "cluster_edge_owner"
 
   let vnode_info = build_edge_vnodes(
+    text_context=@heuristic.context(),
     [a, b],
     [edge],
     [],

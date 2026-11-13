@@ -128,7 +128,11 @@ test "reverse merge keeps same-named ports with different initial coordinates" {
     edge_tail: ["record_a", "record_a"],
     edge_head: ["record_b", "record_b"],
     edge_excluded_from_reverse_merge: _ => false,
-    edge_ports_equal: @ports.build_initial_edge_port_comparator([a, b], Map([])),
+    edge_ports_equal: @ports.build_initial_edge_port_comparator(
+      text_context=@heuristic.context(),
+      [a, b],
+      Map([]),
+    ),
   })
   assert_eq(metadata.merged_edge_skip.length(), 0)
   assert_eq(metadata.merged_edge_weight_bonus.length(), 0)
@@ -149,7 +153,11 @@ test "build_reverse_merge_metadata folds reversed duplicates into forward reps" 
     edge_tail: ["a", "a"],
     edge_head: ["b", "b"],
     edge_excluded_from_reverse_merge: _edge => false,
-    edge_ports_equal: @ports.build_initial_edge_port_comparator([a, b], Map([])),
+    edge_ports_equal: @ports.build_initial_edge_port_comparator(
+      text_context=@heuristic.context(),
+      [a, b],
+      Map([]),
+    ),
   })
 
   assert_eq(metadata.merged_edge_weight_bonus.get(0), Some(3))

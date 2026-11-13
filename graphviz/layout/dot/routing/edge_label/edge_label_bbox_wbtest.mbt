@@ -9,7 +9,7 @@ test "expand_bbox_for_edge_labels skips flat non-self mid labels without flat-la
   edge.set_attr("label", "mid")
   let base_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
 
-  let output = expand_bbox_for_edge_labels({
+  let output = expand_bbox_for_edge_labels(text_context=@heuristic.context(), {
     bbox: base_bbox,
     edges: [
       layout_edge(
@@ -35,12 +35,15 @@ test "expand_bbox_for_edge_labels keeps self-edge mid labels even on the same ra
   let base_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
   let label_pos = Some(@edge_spline.point(25.0, 25.0))
   let metrics : LabelExtent? = match
-    @edge_label_metrics.edge_mid_label_metrics(edge) {
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => Some({ width: value.width, height: value.height, })
     None => fail("expected mid label metrics")
   }
 
-  let output = expand_bbox_for_edge_labels({
+  let output = expand_bbox_for_edge_labels(text_context=@heuristic.context(), {
     bbox: base_bbox,
     edges: [layout_edge(edge, straight_spline(), label_pos~)],
     ranks: { "n": 0 },
@@ -64,9 +67,14 @@ test "expand_bbox_for_edge_labels raises top for flat-label vnode edges in TB" {
   let flags = classify_flat_edge_label(edge, ranks, flat_label_edge_vnodes)
   let base_bbox : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 10.0, ury: 10.0, }
   let mid_bbox = expand_bbox_for_edge_mid_label(
-    base_bbox, edge_layout, flags, false,
+    text_context=@heuristic.context(),
+    base_bbox,
+    edge_layout,
+    flags,
+    false,
   )
   let expected = maybe_raise_flat_edge_vnode_bbox_top(
+    text_context=@heuristic.context(),
     mid_bbox,
     edge_layout,
     flags,
@@ -74,7 +82,7 @@ test "expand_bbox_for_edge_labels raises top for flat-label vnode edges in TB" {
     false,
   )
 
-  let output = expand_bbox_for_edge_labels({
+  let output = expand_bbox_for_edge_labels(text_context=@heuristic.context(), {
     bbox: base_bbox,
     edges: [edge_layout],
     ranks,
@@ -95,25 +103,36 @@ test "expand_bbox_for_edge_labels flips endpoint label extent in LR" {
   let head_label_pos = Some(@edge_spline.point(25.0, 25.0))
   let edge_layout = layout_edge(edge, straight_spline(), head_label_pos~)
   let metrics : LabelExtent? = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "headlabel",
+      true,
+    ) {
     Some(value) => Some({ width: value.width, height: value.height, })
     None => fail("expected head label metrics")
   }
 
-  let tb_output = expand_bbox_for_edge_labels({
-    bbox: base_bbox,
-    edges: [edge_layout],
-    ranks: { "a": 0, "b": 1 },
-    flat_label_edge_vnodes: Map([]),
-    rankdir: @rankdir.RankDir::TB,
-  })
-  let lr_output = expand_bbox_for_edge_labels({
-    bbox: base_bbox,
-    edges: [edge_layout],
-    ranks: { "a": 0, "b": 1 },
-    flat_label_edge_vnodes: Map([]),
-    rankdir: @rankdir.RankDir::LR,
-  })
+  let tb_output = expand_bbox_for_edge_labels(
+    text_context=@heuristic.context(),
+    {
+      bbox: base_bbox,
+      edges: [edge_layout],
+      ranks: { "a": 0, "b": 1 },
+      flat_label_edge_vnodes: Map([]),
+      rankdir: @rankdir.RankDir::TB,
+    },
+  )
+  let lr_output = expand_bbox_for_edge_labels(
+    text_context=@heuristic.context(),
+    {
+      bbox: base_bbox,
+      edges: [edge_layout],
+      ranks: { "a": 0, "b": 1 },
+      flat_label_edge_vnodes: Map([]),
+      rankdir: @rankdir.RankDir::LR,
+    },
+  )
 
   assert_eq(
     tb_output,

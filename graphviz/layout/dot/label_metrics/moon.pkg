@@ -1,11 +1,13 @@
 import {
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/html" @html_label,
-  "moonbit-community/graphviz/layout/dot/font_metrics",
+  "moonbit-community/graphviz/text",
+  "moonbit-community/graphviz/layout/text" @text_layout,
   "moonbit-community/graphviz/layout/dot/graph_label",
   "moonbit-community/graphviz/cgraph",
 }
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

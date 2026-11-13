@@ -7,10 +7,11 @@ import {
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/positioning/x_constraints",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn build_positioning_x_flat_label_pipeline(XFlatLabelPositioningPipelineSources) -> XFlatLabelAugmentationOutput
+pub fn build_positioning_x_flat_label_pipeline(text_context~ : @text.Context, XFlatLabelPositioningPipelineSources) -> XFlatLabelAugmentationOutput
 
 pub fn flat_label_adjacent(Int32, String, String, Map[Int32, Array[String]]) -> Bool
 

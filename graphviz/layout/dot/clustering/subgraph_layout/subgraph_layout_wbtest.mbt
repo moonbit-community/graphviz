@@ -90,7 +90,7 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   let cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map([])
   cluster_bbox_heights["cluster_0"] = { ht1: 9.0, ht2: 11.0, }
 
-  let layouts = layout_subgraphs({
+  let layouts = layout_subgraphs(text_context=@heuristic.context(), {
     graph: root,
     nodes_out,
     edges_out: [],
@@ -108,7 +108,11 @@ test "layout_subgraphs omits empty clusters and uses rank plus x constraints for
   assert_eq(layouts[0].graph.name(), Some("cluster_0"))
   assert_eq(layouts[0].bbox, { llx: 2.0, lly: 91.0, urx: 18.0, ury: 111.0, })
 
-  let metrics = match @label_metrics.graph_label_metrics(cluster) {
+  let metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      cluster,
+    ) {
     Some(value) => value
     None => fail("expected cluster label metrics")
   }
@@ -154,6 +158,7 @@ test "compute_cluster_route_bboxes collects nested cluster bounds from layout_su
   }
 
   let cluster_bboxes = compute_cluster_route_bboxes(
+    text_context=@heuristic.context(),
     root,
     nodes_out,
     cluster_ln_x,

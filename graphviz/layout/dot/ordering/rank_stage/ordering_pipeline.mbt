@@ -286,6 +286,7 @@ fn run_ordering_dispatch(
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_ordering_pipeline(
+  text_context~ : @text_layout.Context,
   input : OrderingPipelineInput,
 ) -> OrderingPipelineOutput {
   let cluster_meta = @setup.build_dot_cluster_metadata_from_sources({
@@ -301,6 +302,7 @@ pub fn compute_ordering_pipeline(
   })
   let build_port_sample_bundle = (edges, edge_tail, edge_head) => {
     @ports.build_edge_port_sample_bundle(
+      text_context~,
       input.nodes,
       edges,
       edge_tail,
@@ -309,6 +311,7 @@ pub fn compute_ordering_pipeline(
     )
   }
   let pipeline_context = @setup.build_ordering_pipeline_context_from_sources(
+    text_context~,
     {
       graph: input.graph,
       nodes: input.nodes,
@@ -344,10 +347,12 @@ pub fn compute_ordering_pipeline(
       input.ranks,
       ordering,
       edge_ports_equal=@ports.build_initial_edge_port_comparator(
+        text_context~,
         input.nodes,
         Map([]),
       ),
       node_ports_equal=@ports.build_initial_node_port_comparator(
+        text_context~,
         input.nodes,
         Map([]),
       ),

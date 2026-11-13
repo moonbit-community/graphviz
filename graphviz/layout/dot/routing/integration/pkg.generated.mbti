@@ -15,18 +15,19 @@ import {
   "moonbit-community/graphviz/layout/dot/rankdir",
   "moonbit-community/graphviz/layout/dot/routing",
   "moonbit-community/graphviz/layout/dot/routing/precompute",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn build_dot_route_base_deps(@rankdir.RankDir, @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, Map[String, @record_geometry.RecordPort]]) -> @routing.RouteBaseDeps
+pub fn build_dot_route_base_deps(text_context~ : @text.Context, @rankdir.RankDir, @layout_prep.RecordOrientation, Map[String, Map[String, @record_geometry.RecordPort]], Map[String, Map[String, @record_geometry.RecordPort]]) -> @routing.RouteBaseDeps
 
-pub fn build_dot_routing_callbacks(@routing.EdgeLayoutInput) -> @routing.RoutingCallbacks
+pub fn build_dot_routing_callbacks(text_context~ : @text.Context, @routing.EdgeLayoutInput) -> @routing.RoutingCallbacks
 
-pub fn build_routing_precompute_data(RoutingPrecomputeInput) -> @precompute.RoutingPrecomputePipelineOutput
+pub fn build_routing_precompute_data(text_context~ : @text.Context, RoutingPrecomputeInput) -> @precompute.RoutingPrecomputePipelineOutput
 
-pub fn compute_dot_routing_stage(DotRoutingStageInput) -> DotRoutingStageOutput
+pub fn compute_dot_routing_stage(text_context~ : @text.Context, DotRoutingStageInput) -> DotRoutingStageOutput
 
-pub fn route_edges_for_dot(RouteEdgesForDotInput) -> Array[@layout_tree.DotLayoutEdge]
+pub fn route_edges_for_dot(text_context~ : @text.Context, RouteEdgesForDotInput) -> Array[@layout_tree.DotLayoutEdge]
 
 // Errors
 

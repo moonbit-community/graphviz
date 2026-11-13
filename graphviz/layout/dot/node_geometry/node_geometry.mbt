@@ -60,29 +60,37 @@ fn apply_label_padding_for_shape(
 
 ///|
 pub fn node_size(
+  text_context~ : @text_layout.Context,
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
 ) -> NodeSize {
-  node_size_and_label_space(node, record_orientation).0
+  node_size_and_label_space(text_context~, node, record_orientation).0
 }
 
 ///|
 /// Horizontal justification space computed before polygon outline expansion.
 /// Record and HTML labels have their own field/cell layout and return None.
-pub fn node_label_space(node : @cgraph.Node) -> Double? {
-  node_size_and_label_space(node, RecordOrientation::Horizontal).1
+pub fn node_label_space(
+  text_context~ : @text_layout.Context,
+  node : @cgraph.Node,
+) -> Double? {
+  node_size_and_label_space(text_context~, node, RecordOrientation::Horizontal).1
 }
 
 ///|
 /// Vertical displacement for top/bottom plain labels, before outline expansion.
-pub fn node_label_y_offset(node : @cgraph.Node) -> Double {
+pub fn node_label_y_offset(
+  text_context~ : @text_layout.Context,
+  node : @cgraph.Node,
+) -> Double {
   let location = node.get_attr("labelloc").unwrap_or_default()
   guard location.has_prefix("t") || location.has_prefix("b") else { return 0.0 }
-  node_size_and_label_space(node, RecordOrientation::Horizontal).2
+  node_size_and_label_space(text_context~, node, RecordOrientation::Horizontal).2
 }
 
 ///|
 fn node_size_and_label_space(
+  text_context~ : @text_layout.Context,
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
 ) -> (NodeSize, Double?, Double) {
@@ -190,7 +198,10 @@ fn node_size_and_label_space(
     match @html_layout.parse_html_label_cached(label, html~) {
       Some(html_label) => {
         let html_dims = @html_layout.html_label_size(
-          html_label, font, font_size_pt,
+          text_context~,
+          html_label,
+          font,
+          font_size_pt,
         )
         let padded_dims = apply_label_padding_for_shape(
           shape,
@@ -256,6 +267,7 @@ fn node_size_and_label_space(
   if @record_geometry.is_record_shape(node) {
     let nodes = @record_layout.record_nodes(label)
     let record_size = @record_layout.record_group_size(
+      text_context~,
       nodes,
       record_orientation,
       font,
@@ -301,7 +313,10 @@ fn node_size_and_label_space(
   }
   let simple_label = @label_attrs.simple_label_text(node)
   let (text_width_pt, text_height_pt) = @label_metrics.label_text_dimensions(
-    simple_label, font, font_size_pt,
+    text_context~,
+    simple_label,
+    font,
+    font_size_pt,
   )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
   let label_dims = if has_label {
@@ -614,6 +629,7 @@ fn node_size_and_label_space(
 /// Graphviz parity: output-size lookup prefers precomputed output sizes and
 /// falls back to node geometry calculation when a node is not present.
 pub fn resolve_node_output_size(
+  text_context~ : @text_layout.Context,
   output_sizes : Map[String, NodeSize],
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
@@ -621,7 +637,7 @@ pub fn resolve_node_output_size(
   let name = node.name()
   match output_sizes.get(name) {
     Some(value) => value
-    None => node_size(node, record_orientation)
+    None => node_size(text_context~, node, record_orientation)
   }
 }
 

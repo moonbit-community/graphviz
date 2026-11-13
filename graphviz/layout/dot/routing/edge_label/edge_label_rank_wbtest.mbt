@@ -7,7 +7,10 @@ test "edge_label_rank_info uses the midpoint rank for long labeled edges" {
   let graph = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let edge = graph.edge(graph.node("a"), graph.node("b"))
   edge.set_attr("label", "mid")
-  let label_width = @edge_label_metrics.edge_mid_label_width_pt(edge)
+  let label_width = @edge_label_metrics.edge_mid_label_width_pt(
+    text_context=@heuristic.context(),
+    edge,
+  )
 
   let ranks : Map[String, Int32] = Map([])
   ranks["a"] = 1
@@ -39,7 +42,10 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
     edge_label_rank_info(
       short_edge,
       ranks,
-      @edge_label_metrics.edge_mid_label_width_pt(short_edge),
+      @edge_label_metrics.edge_mid_label_width_pt(
+        text_context=@heuristic.context(),
+        short_edge,
+      ),
     ) {
     Some(value) => value
     None => fail("expected odd-span label rank info")
@@ -54,7 +60,10 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
     edge_label_rank_info(
       short_edge,
       short_span_ranks,
-      @edge_label_metrics.edge_mid_label_width_pt(short_edge),
+      @edge_label_metrics.edge_mid_label_width_pt(
+        text_context=@heuristic.context(),
+        short_edge,
+      ),
     )
     is None,
     true,
@@ -66,7 +75,10 @@ test "edge_label_rank_info handles odd spans and ignores unlabeled one-rank-span
     edge_label_rank_info(
       short_edge,
       incomplete_ranks,
-      @edge_label_metrics.edge_mid_label_width_pt(short_edge),
+      @edge_label_metrics.edge_mid_label_width_pt(
+        text_context=@heuristic.context(),
+        short_edge,
+      ),
     )
     is None,
     true,

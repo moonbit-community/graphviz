@@ -39,7 +39,7 @@ test "adjacent outward compass ports route outside both nodes without mutating t
     tail_port={ name: None, compass: Some(@cgraph.Compass::W), },
     head_port={ name: None, compass: Some(@cgraph.Compass::E), },
   )
-  let layout = layout_dot(graph)
+  let layout = layout_dot(text_context=@heuristic.context(), graph)
   @test.assert_eq(layout.edges.length(), 1)
   let spline = layout.edges[0].splines[0]
   let left = layout.nodes[0]
@@ -66,7 +66,7 @@ test "adjacent parallel labels put the widest above and route the narrower below
   narrow.set_attr("label", "short")
   let wide = graph.edge(a, b)
   wide.set_attr("label", "a much wider label")
-  let layout = layout_dot(graph)
+  let layout = layout_dot(text_context=@heuristic.context(), graph)
   @test.assert_eq(layout.edges.length(), 2)
   let node_y = layout.nodes[0].pos.y
   for edge in layout.edges {

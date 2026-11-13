@@ -24,6 +24,7 @@ pub fn reset_label_caches() -> Unit {
 /// shape ports, and returns empty for other node kinds.
 /// Do not change behavior without updating fixtures/tests.
 pub fn raw_label_ports_for_node(
+  text_context~ : @text_layout.Context,
   node : @cgraph.Node,
   origin : @geom.Point,
   base_size : NodeSize,
@@ -31,9 +32,15 @@ pub fn raw_label_ports_for_node(
 ) -> Map[String, RecordPort] {
   let label = @label_attrs.label_text(node)
   if node.get_attr_value("label") is Some(@cgraph.AttrValue::Html(_)) {
-    @html_layout.html_ports(node, label, origin, base_size)
+    @html_layout.html_ports(text_context~, node, label, origin, base_size)
   } else if @record_geometry.is_record_shape(node) {
-    @record_layout.record_ports(node, origin, base_size, record_orientation)
+    @record_layout.record_ports(
+      text_context~,
+      node,
+      origin,
+      base_size,
+      record_orientation,
+    )
   } else {
     Map([])
   }

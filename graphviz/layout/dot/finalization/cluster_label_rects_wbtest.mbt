@@ -29,13 +29,25 @@ test "collect_cluster_label_rects recurses and skips unlabeled subgraphs" {
     label_pos=Some({ x: 60.0, y: 70.0, }),
   )
 
-  let rects = collect_cluster_label_rects([cluster_layout, plain_layout], 3.0)
+  let rects = collect_cluster_label_rects(
+    text_context=@heuristic.context(),
+    [cluster_layout, plain_layout],
+    3.0,
+  )
 
-  let cluster_metrics = match @label_metrics.graph_label_metrics(cluster) {
+  let cluster_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      cluster,
+    ) {
     Some(value) => value
     None => fail("expected cluster label metrics")
   }
-  let nested_metrics = match @label_metrics.graph_label_metrics(nested) {
+  let nested_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      nested,
+    ) {
     Some(value) => value
     None => fail("expected nested label metrics")
   }

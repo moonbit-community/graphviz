@@ -7,17 +7,18 @@ import {
   "moonbit-community/graphviz/layout/dot/layout_prep",
   "moonbit-community/graphviz/layout/dot/layout_tree",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
   "moonbitlang/core/debug",
 }
 
 // Values
-pub fn layout_dot(@cgraph.Graph, options? : DotLayoutOptions) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_dot(text_context~ : @text.Context, @cgraph.Graph, options? : DotLayoutOptions) -> DotLayoutGraph raise DotLayoutError
 
-pub fn layout_dot_noop(@cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_dot_noop(text_context~ : @text.Context, @cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
-pub fn layout_neato(@cgraph.Graph, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_neato(text_context~ : @text.Context, @cgraph.Graph, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
-pub fn layout_neato_noop(@cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
+pub fn layout_neato_noop(text_context~ : @text.Context, @cgraph.Graph, no_op_level? : Int32, scale? : Double, prune? : Bool) -> DotLayoutGraph raise DotLayoutError
 
 // Errors
 #derive(Eq, @debug.Debug)
@@ -34,6 +35,7 @@ pub impl Show for DotLayoutError
 
 // Types and methods
 pub(all) struct DotLayoutGraph {
+  text_context : @text.Context
   graph : @cgraph.Graph
   bbox : @geom.Rect
   label_pos : @geom.Point?

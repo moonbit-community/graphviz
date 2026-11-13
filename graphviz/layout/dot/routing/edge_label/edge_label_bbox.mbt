@@ -111,6 +111,7 @@ fn classify_flat_edge_label(
 
 ///|
 fn expand_bbox_for_edge_mid_label(
+  text_context~ : @text_layout.Context,
   bbox : @geom.Rect,
   edge_layout : DotLayoutEdge,
   flags : FlatEdgeLabelFlags,
@@ -127,7 +128,11 @@ fn expand_bbox_for_edge_mid_label(
       None
     } else {
       edge_label_extent_for_rankdir(
-        match @edge_label_metrics.edge_mid_label_metrics(edge_layout.edge) {
+        match
+          @edge_label_metrics.edge_mid_label_metrics(
+            text_context~,
+            edge_layout.edge,
+          ) {
           Some(metrics) =>
             Some({ width: metrics.width, height: metrics.height, })
           None => None
@@ -140,6 +145,7 @@ fn expand_bbox_for_edge_mid_label(
 
 ///|
 fn maybe_raise_flat_edge_vnode_bbox_top(
+  text_context~ : @text_layout.Context,
   bbox : @geom.Rect,
   edge_layout : DotLayoutEdge,
   flags : FlatEdgeLabelFlags,
@@ -155,9 +161,17 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
   match edge_layout.label_pos {
     Some(center) => {
       let orientation = @layout_prep.record_layout_orientation(rankdir)
-      let tail_half = @node_geometry.node_size(edge.tail(), orientation).height_pt /
+      let tail_half = @node_geometry.node_size(
+          text_context~,
+          edge.tail(),
+          orientation,
+        ).height_pt /
         2.0
-      let head_half = @node_geometry.node_size(edge.head(), orientation).height_pt /
+      let head_half = @node_geometry.node_size(
+          text_context~,
+          edge.head(),
+          orientation,
+        ).height_pt /
         2.0
       let half_height = if tail_half > head_half {
         tail_half
@@ -177,6 +191,7 @@ fn maybe_raise_flat_edge_vnode_bbox_top(
 
 ///|
 fn expand_bbox_for_edge_endpoint_label(
+  text_context~ : @text_layout.Context,
   bbox : @geom.Rect,
   edge_layout : DotLayoutEdge,
   label_pos : @geom.Point?,
@@ -189,6 +204,7 @@ fn expand_bbox_for_edge_endpoint_label(
     edge_label_extent_for_rankdir(
       match
         @edge_label_metrics.edge_label_metrics_for_attr(
+          text_context~,
           edge_layout.edge,
           label_attr,
           true,
@@ -206,6 +222,7 @@ fn expand_bbox_for_edge_endpoint_label(
 /// (addLabelBB/compute_bb) + dotgen/dotsplines.c (updateBB for edge labels).
 /// Do not change behavior without updating fixtures/tests.
 pub fn expand_bbox_for_edge_labels(
+  text_context~ : @text_layout.Context,
   input : ExpandEdgeLabelBboxInput,
 ) -> @geom.Rect {
   // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
@@ -219,8 +236,15 @@ pub fn expand_bbox_for_edge_labels(
       input.ranks,
       input.flat_label_edge_vnodes,
     )
-    bbox = expand_bbox_for_edge_mid_label(bbox, edge_layout, flags, flip)
+    bbox = expand_bbox_for_edge_mid_label(
+      text_context~,
+      bbox,
+      edge_layout,
+      flags,
+      flip,
+    )
     bbox = maybe_raise_flat_edge_vnode_bbox_top(
+      text_context~,
       bbox,
       edge_layout,
       flags,
@@ -228,6 +252,7 @@ pub fn expand_bbox_for_edge_labels(
       flip,
     )
     bbox = expand_bbox_for_edge_endpoint_label(
+      text_context~,
       bbox,
       edge_layout,
       edge_layout.head_label_pos,
@@ -235,6 +260,7 @@ pub fn expand_bbox_for_edge_labels(
       flip,
     )
     bbox = expand_bbox_for_edge_endpoint_label(
+      text_context~,
       bbox,
       edge_layout,
       edge_layout.tail_label_pos,

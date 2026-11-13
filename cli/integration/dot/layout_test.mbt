@@ -7,6 +7,6 @@ async test "biglabel interior record port does not enlarge the root bbox" {
   let graph = @dot_fs.parse_dot_file(
     "../refs/graphviz/tests/graphs/biglabel.gv",
   )
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph, text_context=@heuristic.context())
   assert_eq(layout.bbox.ury, 1429.5)
 }

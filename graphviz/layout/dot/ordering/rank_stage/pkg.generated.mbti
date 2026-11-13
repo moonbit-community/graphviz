@@ -9,12 +9,13 @@ import {
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_data",
   "moonbit-community/graphviz/layout/dot/rank_assignment/rank_heights",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn compute_dot_rank_stage(RankStageInput) -> RankStageOutput
+pub fn compute_dot_rank_stage(text_context~ : @text.Context, RankStageInput) -> RankStageOutput
 
-pub fn compute_ordering_pipeline(OrderingPipelineInput) -> OrderingPipelineOutput
+pub fn compute_ordering_pipeline(text_context~ : @text.Context, OrderingPipelineInput) -> OrderingPipelineOutput
 
 // Errors
 

@@ -10,6 +10,7 @@ import {
   "moonbitlang/core/string",
   "moonbitlang/async/fs",
   "moonbitlang/core/env",
+  "moonbit-community/graphviz/text/heuristic",
 }
 
 import {

@@ -8,12 +8,13 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/numeric",
   "moonbit-community/graphviz/layout/html",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
-pub fn html_label_size(@html.HtmlLabel, String, Double) -> @numeric.GraphSizePt
+pub fn html_label_size(text_context~ : @text.Context, @html.HtmlLabel, String, Double) -> @numeric.GraphSizePt
 
-pub fn html_ports(@cgraph.Node, String, @geom.Point, @node_primitives.NodeSize) -> Map[String, @record_geometry.RecordPort]
+pub fn html_ports(text_context~ : @text.Context, @cgraph.Node, String, @geom.Point, @node_primitives.NodeSize) -> Map[String, @record_geometry.RecordPort]
 
 pub fn parse_html_label_cached(String, html? : Bool?) -> @html.HtmlLabel?
 

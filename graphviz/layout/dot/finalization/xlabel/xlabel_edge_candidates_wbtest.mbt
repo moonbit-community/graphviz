@@ -14,6 +14,7 @@ test "collect_edge_xlabel_candidates uses anchors for unresolved edge labels and
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   collect_edge_xlabel_candidates(
+    text_context=@heuristic.context(),
     xlabel_make_edge_layout(
       edge,
       straight_spline(),
@@ -73,6 +74,7 @@ test "collect_edge_xlabel_candidates flips dimensions for existing and deferred 
   let objects : Array[XObject] = []
   let resolved_mid = @edge_spline.point(20.0, 30.0)
   collect_edge_xlabel_candidates(
+    text_context=@heuristic.context(),
     xlabel_make_edge_layout(
       edge,
       straight_spline(),
@@ -84,21 +86,36 @@ test "collect_edge_xlabel_candidates flips dimensions for existing and deferred 
     objects,
   )
 
-  let mid_metrics = match @edge_label_metrics.edge_mid_label_metrics(edge) {
+  let mid_metrics = match
+    @edge_label_metrics.edge_mid_label_metrics(
+      text_context=@heuristic.context(),
+      edge,
+    ) {
     Some(value) => value
     None => fail("expected edge mid metrics")
   }
   let tail_metrics = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "taillabel", true) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "taillabel",
+      true,
+    ) {
     Some(value) => value
     None => fail("expected edge tail metrics")
   }
   let head_metrics = match
-    @edge_label_metrics.edge_label_metrics_for_attr(edge, "headlabel", true) {
+    @edge_label_metrics.edge_label_metrics_for_attr(
+      text_context=@heuristic.context(),
+      edge,
+      "headlabel",
+      true,
+    ) {
     Some(value) => value
     None => fail("expected edge head metrics")
   }
-  let edge_metrics = match xlabel_metrics_for_edge(edge) {
+  let edge_metrics = match
+    xlabel_metrics_for_edge(text_context=@heuristic.context(), edge) {
     Some(value) => value
     None => fail("expected edge xlabel metrics")
   }
@@ -168,6 +185,7 @@ test "collect_edge_xlabel_candidates skips deferred labels when spline geometry 
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   collect_edge_xlabel_candidates(
+    text_context=@heuristic.context(),
     {
       edge,
       splines: [],

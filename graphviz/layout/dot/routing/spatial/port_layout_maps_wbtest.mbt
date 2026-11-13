@@ -10,7 +10,11 @@ test "build_routing_port_layout_maps gates on port edges and rotates record port
   node.set_attr("label", "<left>l|<right>r")
   let rankdir = RankDir::LR
   let orientation = @layout_prep.record_layout_orientation(rankdir)
-  let size = @node_geometry.node_size(node, orientation)
+  let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
+    node,
+    orientation,
+  )
   let nodes_out : Array[DotLayoutNode] = [
     {
       node,
@@ -24,13 +28,23 @@ test "build_routing_port_layout_maps gates on port edges and rotates record port
   let output_sizes : Map[String, NodeSize] = { "record": size }
 
   let disabled = build_routing_port_layout_maps(
-    nodes_out, output_sizes, orientation, rankdir, false,
+    text_context=@heuristic.context(),
+    nodes_out,
+    output_sizes,
+    orientation,
+    rankdir,
+    false,
   )
   assert_eq(disabled.label_ports_map.length(), 0)
   assert_eq(disabled.label_ports_raw.length(), 0)
 
   let enabled = build_routing_port_layout_maps(
-    nodes_out, output_sizes, orientation, rankdir, true,
+    text_context=@heuristic.context(),
+    nodes_out,
+    output_sizes,
+    orientation,
+    rankdir,
+    true,
   )
   let raw_ports = require_map_value(
     enabled.label_ports_raw,

@@ -14,13 +14,21 @@ import {
   "moonbit-community/graphviz/cgraph",
   "moonbit-community/graphviz/geom",
   "moonbitlang/core/debug",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbit-community/graphviz/dot" @dot_parser,
+  "moonbit-community/graphviz/text",
+  "moonbit-community/graphviz/layout/dot/label_metrics",
+  "moonbit-community/graphviz/render/svg",
+  "moonbit-community/graphviz/render/xdot",
+  "moonbitlang/core/test",
   "moonbitlang/core/string",
+  "moonbit-community/graphviz/text/heuristic",
 } for "test"
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

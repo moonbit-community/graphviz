@@ -17,6 +17,7 @@ pub(all) struct EdgeVnodeInfo {
 /// Graphviz parity: class2 virtual node creation order + sizing.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_edge_vnodes(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -149,7 +150,7 @@ pub fn build_edge_vnodes(
       continue
     }
     let (label_width, label_height) = match
-      @edge_label_metrics.edge_mid_label_metrics(edge) {
+      @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
       Some(value) =>
         if rankdir == @rankdir.RankDir::LR || rankdir == @rankdir.RankDir::RL {
           (value.height, value.width)

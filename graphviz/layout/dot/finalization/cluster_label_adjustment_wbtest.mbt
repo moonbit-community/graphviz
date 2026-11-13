@@ -37,7 +37,11 @@ test "adjust_labels_for_clusters recurses into labeled subgraphs and nudges over
     subgraphs=[cluster_layout],
   )
   let pad = 2.0
-  let cluster_metrics = match @label_metrics.graph_label_metrics(cluster) {
+  let cluster_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      cluster,
+    ) {
     Some(value) => value
     None => fail("expected cluster label metrics")
   }
@@ -53,14 +57,22 @@ test "adjust_labels_for_clusters recurses into labeled subgraphs and nudges over
     ],
     pad,
     edge => {
-      match @edge_label_metrics.edge_mid_label_metrics(edge) {
+      match
+        @edge_label_metrics.edge_mid_label_metrics(
+          text_context=@heuristic.context(),
+          edge,
+        ) {
         Some(metrics) => Some({ width: metrics.width, height: metrics.height, })
         None => None
       }
     },
   )
 
-  let adjusted = adjust_labels_for_clusters(root_layout, 10.0)
+  let adjusted = adjust_labels_for_clusters(
+    text_context=@heuristic.context(),
+    root_layout,
+    10.0,
+  )
 
   assert_eq(adjusted.edges.length(), 0)
   assert_eq(adjusted.subgraphs.length(), 1)

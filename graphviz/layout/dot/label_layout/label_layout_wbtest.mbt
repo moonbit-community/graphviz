@@ -55,12 +55,14 @@ test "raw_label_ports_for_node prefers html ports even on record-shaped nodes" {
   let base_size = sample_node_size(96.0, 48.0)
 
   let actual = raw_label_ports_for_node(
+    text_context=@heuristic.context(),
     node,
     origin,
     base_size,
     RecordOrientation::Horizontal,
   )
   let expected = @html_layout.html_ports(
+    text_context=@heuristic.context(),
     node,
     @label_attrs.label_text(node),
     origin,
@@ -84,12 +86,14 @@ test "raw_label_ports_for_node uses record ports for record-shaped non-html labe
   let base_size = sample_node_size(120.0, 54.0)
 
   let actual = raw_label_ports_for_node(
+    text_context=@heuristic.context(),
     node,
     origin,
     base_size,
     RecordOrientation::Horizontal,
   )
   let expected = @record_layout.record_ports(
+    text_context=@heuristic.context(),
     node,
     origin,
     base_size,
@@ -114,6 +118,7 @@ test "raw_label_ports_for_node returns empty for non-html non-record nodes" {
   node.set_attr("label", "plain text")
 
   let ports = raw_label_ports_for_node(
+    text_context=@heuristic.context(),
     node,
     @geom.Point::{ x: 0.0, y: 0.0, },
     sample_node_size(72.0, 36.0),

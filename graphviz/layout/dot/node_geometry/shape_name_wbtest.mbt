@@ -4,8 +4,13 @@ test "unknown shapes use box dimensions without changing the source attribute" {
     "digraph { a [shape=sdl_task label=\"sdl_task\"]; b [shape=box label=\"sdl_task\"]; }",
   )
   let a = graph.node("a")
-  let first = node_size(a, @layout_prep.RecordOrientation::Horizontal)
+  let first = node_size(
+    text_context=@heuristic.context(),
+    a,
+    @layout_prep.RecordOrientation::Horizontal,
+  )
   let second = node_size(
+    text_context=@heuristic.context(),
     graph.node("b"),
     @layout_prep.RecordOrientation::Horizontal,
   )

@@ -50,7 +50,11 @@ test "initial ports compare coordinates rather than matching field names" {
   let q : @cgraph.Port = { name: Some("q"), compass: None, }
   let forward = graph.edge(a, b, tail_port=p, head_port=q)
   let backward = graph.edge(b, a, tail_port=p, head_port=q)
-  let ports_equal = build_initial_edge_port_comparator([a, b], Map([]))
+  let ports_equal = build_initial_edge_port_comparator(
+    text_context=@heuristic.context(),
+    [a, b],
+    Map([]),
+  )
   assert_false(ports_equal(backward, forward))
 }
 
@@ -72,7 +76,11 @@ test "initial ports with different field names can have equal coordinates" {
     name: Some("y"),
     compass: None,
   })
-  let ports_equal = build_initial_edge_port_comparator([a, b], Map([]))
+  let ports_equal = build_initial_edge_port_comparator(
+    text_context=@heuristic.context(),
+    [a, b],
+    Map([]),
+  )
   assert_true(ports_equal(first, second))
 }
 
@@ -95,7 +103,11 @@ test "initial ports preserve head definedness and asymmetric tail comparison" {
     name: Some("p"),
     compass: None,
   })
-  let ports_equal = build_initial_edge_port_comparator([a, b], Map([]))
+  let ports_equal = build_initial_edge_port_comparator(
+    text_context=@heuristic.context(),
+    [a, b],
+    Map([]),
+  )
   assert_false(ports_equal(plain, defined_head))
   assert_true(ports_equal(plain, defined_tail))
   assert_false(ports_equal(defined_tail, plain))

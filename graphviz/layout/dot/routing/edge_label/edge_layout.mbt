@@ -57,7 +57,10 @@ pub(all) struct EdgeLayoutBuildInput {
 }
 
 ///|
-pub fn build_edge_layout(input : EdgeLayoutBuildInput) -> DotLayoutEdge {
+pub fn build_edge_layout(
+  text_context~ : @text_layout.Context,
+  input : EdgeLayoutBuildInput,
+) -> DotLayoutEdge {
   let base = input.base
   let spline = input.spline
   let spline_result = input.spline_result
@@ -77,7 +80,7 @@ pub fn build_edge_layout(input : EdgeLayoutBuildInput) -> DotLayoutEdge {
     edge,
     edge_layout_input.ranks,
     edge_layout_input.rank_y,
-    @edge_label_metrics.edge_mid_label_width_pt(edge),
+    @edge_label_metrics.edge_mid_label_width_pt(text_context~, edge),
   )
   let mid_label_metrics : EdgeLabelMetrics? = if base.mid_label_width_pt > 0.0 {
     Some({ width: base.mid_label_width_pt, height: base.mid_label_height_pt, })
@@ -114,7 +117,7 @@ pub fn build_edge_layout(input : EdgeLayoutBuildInput) -> DotLayoutEdge {
         label_pad_boost: spline_result.label_pad_boost,
       },
       edge => {
-        match @edge_label_metrics.edge_mid_label_metrics(edge) {
+        match @edge_label_metrics.edge_mid_label_metrics(text_context~, edge) {
           Some(metrics) =>
             Some({ width: metrics.width, height: metrics.height, })
           None => None

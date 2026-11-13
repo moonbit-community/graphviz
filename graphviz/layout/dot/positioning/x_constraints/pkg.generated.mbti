@@ -7,6 +7,7 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/ordering/setup",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
   "moonbitlang/core/ref",
 }
 
@@ -19,7 +20,7 @@ pub fn compress_width_minlen_pt(@cgraph.Graph, @rankdir.RankDir) -> Int32?
 
 pub fn compute_rank_positions(Array[Int32], Map[Int32, Array[String]], Map[String, @node_primitives.NodeSize], Double, Bool) -> Map[String, Double]
 
-pub fn compute_x_positions_with_prepared_constraints(XPositionSolveInput, Double, Int32, (SlackSegment, Map[String, @cgraph.Node]) -> (Int32, Int32), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int32, Bool, live_graph? : @setup.ConcentrateFastGraph?) -> Map[String, Double]
+pub fn compute_x_positions_with_prepared_constraints(text_context~ : @text.Context, XPositionSolveInput, Double, Int32, (SlackSegment, Map[String, @cgraph.Node]) -> (Int32, Int32), (@cgraph.Edge) -> Bool, (@cgraph.Edge) -> Int32, Bool, live_graph? : @setup.ConcentrateFastGraph?) -> Map[String, Double]
 
 pub fn constraint_node_kind(String) -> @network_simplex.NodeKind
 

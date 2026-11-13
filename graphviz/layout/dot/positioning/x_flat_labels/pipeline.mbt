@@ -211,6 +211,7 @@ fn build_positioning_x_flat_label_reorder_sources(
 /// edge/cluster ordering inputs as before.
 /// Do not change behavior without updating fixtures/tests.
 fn build_positioning_x_flat_label_augmentation(
+  text_context~ : @text_layout.Context,
   sources : XFlatLabelPositioningPipelineSources,
   x_groups : Map[Int32, Array[String]],
 ) -> XFlatLabelAugmentationOutput {
@@ -223,6 +224,7 @@ fn build_positioning_x_flat_label_augmentation(
     vnode_clusters: sources.vnode_clusters,
     build_flat_label_vnodes_fn: (existing_names, x_groups) => {
       build_flat_label_vnodes_for_positioning(
+        text_context~,
         sources.edges,
         sources.edge_tail,
         sources.edge_head,
@@ -259,13 +261,18 @@ fn build_x_flat_label_pipeline(
 /// Stage D only provides stage snapshots.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_positioning_x_flat_label_pipeline(
+  text_context~ : @text_layout.Context,
   sources : XFlatLabelPositioningPipelineSources,
 ) -> XFlatLabelAugmentationOutput {
   let reorder_sources = build_positioning_x_flat_label_reorder_sources(sources)
   build_x_flat_label_pipeline({
     reorder_sources,
     augment_from_groups_fn: x_groups => {
-      build_positioning_x_flat_label_augmentation(sources, x_groups)
+      build_positioning_x_flat_label_augmentation(
+        text_context~,
+        sources,
+        x_groups,
+      )
     },
   })
 }

@@ -39,23 +39,26 @@ test "build_constraint_segment_pass updates same-rank invis ordering constraints
     },
   }
 
-  let output = build_constraint_segment_pass({
-    edges: [inside, cross],
-    edge_tail: [],
-    edge_head: [],
-    edge_out_order,
-    nlist_order: ["b", "a", "c"],
-    ranks,
-    cluster_keys,
-    edge_vnodes: Map([]),
-    order_in_rank,
-    nodesep_pt: 10.0,
-    sizes: build_constraint_builder_test_sizes(),
-    skip_intercluster: true,
-    rank_adj_constraints,
-    edge_has_mid_label: _ => false,
-    edge_degree_increment: _ => 1,
-  })
+  let output = build_constraint_segment_pass(
+    text_context=@heuristic.context(),
+    {
+      edges: [inside, cross],
+      edge_tail: [],
+      edge_head: [],
+      edge_out_order,
+      nlist_order: ["b", "a", "c"],
+      ranks,
+      cluster_keys,
+      edge_vnodes: Map([]),
+      order_in_rank,
+      nodesep_pt: 10.0,
+      sizes: build_constraint_builder_test_sizes(),
+      skip_intercluster: true,
+      rank_adj_constraints,
+      edge_has_mid_label: _ => false,
+      edge_degree_increment: _ => 1,
+    },
+  )
 
   let merged = match rank_adj_constraints.get("a|b") {
     Some(value) => value
@@ -90,23 +93,26 @@ test "build_constraint_segment_pass adds synthetic ordering ports on same-rank l
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode]
 
-  let output = build_constraint_segment_pass({
-    edges: [edge],
-    edge_tail: [],
-    edge_head: [],
-    edge_out_order,
-    nlist_order: ["a", vnode, "b"],
-    ranks,
-    cluster_keys: Map([]),
-    edge_vnodes,
-    order_in_rank,
-    nodesep_pt: 10.0,
-    sizes: build_constraint_builder_test_sizes(),
-    skip_intercluster: false,
-    rank_adj_constraints: Map([]),
-    edge_has_mid_label: _ => true,
-    edge_degree_increment: _ => 1,
-  })
+  let output = build_constraint_segment_pass(
+    text_context=@heuristic.context(),
+    {
+      edges: [edge],
+      edge_tail: [],
+      edge_head: [],
+      edge_out_order,
+      nlist_order: ["a", vnode, "b"],
+      ranks,
+      cluster_keys: Map([]),
+      edge_vnodes,
+      order_in_rank,
+      nodesep_pt: 10.0,
+      sizes: build_constraint_builder_test_sizes(),
+      skip_intercluster: false,
+      rank_adj_constraints: Map([]),
+      edge_has_mid_label: _ => true,
+      edge_degree_increment: _ => 1,
+    },
+  )
 
   let head_segments = match output.segments_by_tail.get("a") {
     Some(value) => value
@@ -153,23 +159,26 @@ test "descending chains use forward fast-edge tails and scale sparse weights" {
   let edge_vnodes : Map[String, Array[String]] = Map([])
   edge_vnodes[@edge_identity.edge_vnode_key(edge)] = [vnode0, vnode1]
 
-  let output = build_constraint_segment_pass({
-    edges: [edge],
-    edge_tail: [],
-    edge_head: [],
-    edge_out_order,
-    nlist_order: ["a", vnode0, vnode1, "b"],
-    ranks,
-    cluster_keys: Map([]),
-    edge_vnodes,
-    order_in_rank: Map([]),
-    nodesep_pt: 10.0,
-    sizes: build_constraint_builder_test_sizes(),
-    skip_intercluster: false,
-    rank_adj_constraints: Map([]),
-    edge_has_mid_label: _ => false,
-    edge_degree_increment: _ => 1,
-  })
+  let output = build_constraint_segment_pass(
+    text_context=@heuristic.context(),
+    {
+      edges: [edge],
+      edge_tail: [],
+      edge_head: [],
+      edge_out_order,
+      nlist_order: ["a", vnode0, vnode1, "b"],
+      ranks,
+      cluster_keys: Map([]),
+      edge_vnodes,
+      order_in_rank: Map([]),
+      nodesep_pt: 10.0,
+      sizes: build_constraint_builder_test_sizes(),
+      skip_intercluster: false,
+      rank_adj_constraints: Map([]),
+      edge_has_mid_label: _ => false,
+      edge_degree_increment: _ => 1,
+    },
+  )
 
   guard output.segments_by_tail.get(vnode1) is Some(first_segments) else {
     @test.fail("missing first forward segment")

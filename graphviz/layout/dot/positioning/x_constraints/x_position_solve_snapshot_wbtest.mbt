@@ -10,6 +10,7 @@ test "compute_x_positions_with_prepared_constraints solves minimal input and cap
 
   xpos_constraint_snapshot.val = None
   let without_snapshot = compute_x_positions_with_prepared_constraints(
+    text_context=@heuristic.context(),
     solve_input,
     0.0,
     1000,
@@ -22,6 +23,7 @@ test "compute_x_positions_with_prepared_constraints solves minimal input and cap
 
   xpos_constraint_snapshot.val = None
   let with_snapshot = compute_x_positions_with_prepared_constraints(
+    text_context=@heuristic.context(),
     solve_input,
     0.0,
     1000,

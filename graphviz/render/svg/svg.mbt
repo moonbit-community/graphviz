@@ -17,15 +17,12 @@ fn parse_int(value : String, fallback : Int32) -> Int32 {
 }
 
 ///|
-fn centered_html_text_x(value : Double, font_name : String) -> Double {
-  let lower = font_name.to_lower()
-  if lower.contains("avantgarde") || lower.contains("palatino") {
-    // Graphviz's PostScript text metrics retain enough sub-point precision to
-    // place these centered labels just above the two-decimal tie.
-    value + 0.0000001
-  } else {
-    value
-  }
+fn centered_html_text_x(
+  value : Double,
+  font_name : String,
+  text_context~ : @text_layout.Context,
+) -> Double {
+  text_context.centered_text_x(value, font_name)
 }
 
 ///|
@@ -790,107 +787,8 @@ fn edge_color(edge : @cgraph.Edge, name : String, default : String) -> String {
 }
 
 ///|
-priv struct SvgFontAttrs {
-  family : String
-  weight : String?
-  stretch : String?
-  style : String?
-}
-
-///|
-fn mapped_svg_font_family(base_lower : String) -> String? {
-  match base_lower {
-    "times" => Some("Times,serif")
-    "palatino" => Some("Palatino Linotype,serif")
-    "newcenturyschlbk" => Some("Century Schoolbook L,serif")
-    "helvetica" => Some("Helvetica,sans-Serif")
-    "courier" => Some("Courier,monospace")
-    "bookman" => Some("URW Bookman L,serif")
-    "avantgarde" => Some("URW Gothic L,sans-Serif")
-    "zapfchancery" => Some("URW Chancery L,serif")
-    "zapfdingbats" => Some("Dingbats,fantasy")
-    "symbol" => Some("Symbol,fantasy")
-    _ => None
-  }
-}
-
-///|
-fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
-  let parts : Array[String] = []
-  for part in font_name.split("-") {
-    parts.push(part.to_owned())
-  }
-  if parts.length() == 0 {
-    return { family: font_name, weight: None, stretch: None, style: None, }
-  }
-  let base_lower = parts[0].to_lower()
-  let family = match mapped_svg_font_family(base_lower) {
-    Some(mapped) => mapped
-    None => {
-      let lower = font_name.to_lower()
-      if lower == "times-roman" || lower == "times" {
-        "Times,serif"
-      } else {
-        return { family: font_name, weight: None, stretch: None, style: None, }
-      }
-    }
-  }
-  let mut weight : String? = None
-  let mut stretch : String? = None
-  let mut style : String? = None
-  let mut has_unknown = false
-  for i in 1..<parts.length() {
-    let token = parts[i].to_lower()
-    match token {
-      "bold" => weight = Some("bold")
-      "demi" => weight = Some("demi")
-      "light" => weight = Some("light")
-      "book" => weight = Some("book")
-      "medium" => weight = Some("medium")
-      "roman" => if base_lower != "times" { weight = Some("roman") }
-      "italic" => style = Some("italic")
-      "oblique" => style = Some("oblique")
-      "narrow" => stretch = Some("condensed")
-      "bolditalic" => {
-        weight = Some("bold")
-        style = Some("italic")
-      }
-      "boldoblique" => {
-        weight = Some("bold")
-        style = Some("oblique")
-      }
-      "lightitalic" => {
-        weight = Some("light")
-        style = Some("italic")
-      }
-      "bookoblique" => {
-        weight = Some("book")
-        style = Some("oblique")
-      }
-      "demiitalic" => {
-        weight = Some("demi")
-        style = Some("italic")
-      }
-      "demioblique" => {
-        weight = Some("demi")
-        style = Some("oblique")
-      }
-      "mediumitalic" => {
-        weight = Some("medium")
-        style = Some("italic")
-      }
-      _ => has_unknown = true
-    }
-  }
-  if has_unknown {
-    return { family: font_name, weight: None, stretch: None, style: None, }
-  }
-  { family, weight, stretch, style, }
-}
-
-///|
 fn svg_text_font_attrs(font_name : String) -> String {
-  let attrs = svg_font_attrs(font_name)
+  let attrs = @text.resolve_font(font_name)
   let sb = StringBuilder()
   sb.write_string(" font-family=\"")
   sb.write_string(attrs.family)
@@ -1200,6 +1098,7 @@ fn label_lines(label : String) -> Array[RawLabelLine] {
 
 ///|
 fn label_metrics(
+  text_context~ : @text_layout.Context,
   label : String,
   font_name : String,
   font_size_pt : Double,
@@ -1211,7 +1110,10 @@ fn label_metrics(
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
-      metrics_text, font_name, font_size_pt,
+      text_context~,
+      metrics_text,
+      font_name,
+      font_size_pt,
     )
     let height_pt = if line.text == "" {
       (font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE).trunc()
@@ -1300,6 +1202,7 @@ fn record_label_lines(label : String) -> Array[RawLabelLine] {
 
 ///|
 fn record_label_metrics(
+  text_context~ : @text_layout.Context,
   label : String,
   font_name : String,
   font_size_pt : Double,
@@ -1312,10 +1215,16 @@ fn record_label_metrics(
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
     let (width_pt, base_height_pt) = @label_metrics.record_label_text_dimensions(
-      metrics_text, font_name, font_size_pt,
+      text_context~,
+      metrics_text,
+      font_name,
+      font_size_pt,
     )
     let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
-      metrics_text, font_name, font_size_pt,
+      text_context~,
+      metrics_text,
+      font_name,
+      font_size_pt,
     )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     let height_pt = if line.text == "" {
@@ -1542,12 +1451,20 @@ fn graph_label_text(graph : @cgraph.Graph) -> String? {
 }
 
 ///|
-fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
+fn graph_label_metrics(
+  text_context~ : @text_layout.Context,
+  graph : @cgraph.Graph,
+) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
       let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
       let name = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
-      let (_, width_pt, height_pt) = label_metrics(text, name, size)
+      let (_, width_pt, height_pt) = label_metrics(
+        text_context~,
+        text,
+        name,
+        size,
+      )
       Some((text, width_pt, height_pt))
     }
     None => None
@@ -3607,6 +3524,7 @@ priv struct RecordNodeSize {
 
 ///|
 fn record_nodes_sizes(
+  text_context~ : @text_layout.Context,
   nodes : Array[RecordNode],
   orientation : RecordOrientation,
   name : String,
@@ -3621,7 +3539,10 @@ fn record_nodes_sizes(
       RecordNode::Field(field) => {
         let text = resolve_label(field.text, name)
         let (_, text_width_pt, text_height_pt) = record_label_metrics(
-          text, font_name, font_size_pt,
+          text_context~,
+          text,
+          font_name,
+          font_size_pt,
         )
         sizes.push({
           width_pt: text_width_pt + pad_x_pt,
@@ -3630,6 +3551,7 @@ fn record_nodes_sizes(
       }
       RecordNode::Group(children) => {
         let size = record_group_size(
+          text_context~,
           children,
           toggle_record_orientation(orientation),
           name,
@@ -3647,6 +3569,7 @@ fn record_nodes_sizes(
 
 ///|
 fn record_group_size(
+  text_context~ : @text_layout.Context,
   nodes : Array[RecordNode],
   orientation : RecordOrientation,
   name : String,
@@ -3656,7 +3579,14 @@ fn record_group_size(
   pad_y_pt : Double,
 ) -> RecordNodeSize {
   let sizes = record_nodes_sizes(
-    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
+    text_context~,
+    nodes,
+    orientation,
+    name,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
   )
   if sizes.length() == 0 {
     return { width_pt: 0.0, height_pt: 0.0, }
@@ -3691,6 +3621,7 @@ priv struct RecordLayout {
 
 ///|
 fn record_layout_nodes(
+  text_context~ : @text_layout.Context,
   nodes : Array[RecordNode],
   rect : @geom.Rect,
   orientation : RecordOrientation,
@@ -3704,7 +3635,14 @@ fn record_layout_nodes(
     return []
   }
   let sizes = record_nodes_sizes(
-    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
+    text_context~,
+    nodes,
+    orientation,
+    name,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
   )
   let axis_sizes : Array[Double] = []
   let mut axis_sum = 0.0
@@ -3769,6 +3707,7 @@ fn record_layout_nodes(
         layouts.push({ rect: child_rect, node: nodes[i], children: [], })
       RecordNode::Group(children) => {
         let child_layouts = record_layout_nodes(
+          text_context~,
           children,
           child_rect,
           toggle_record_orientation(orientation),
@@ -3791,6 +3730,7 @@ fn record_layout_nodes(
 
 ///|
 fn write_record_field_lines(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   text : String,
   field_rect : @geom.Rect,
@@ -3807,7 +3747,12 @@ fn write_record_field_lines(
     return ()
   }
   let font_attrs = svg_text_font_attrs(font)
-  let (lines, max_width, total_height) = record_label_metrics(text, font, size)
+  let (lines, max_width, total_height) = record_label_metrics(
+    text_context~,
+    text,
+    font,
+    size,
+  )
   let center_x = (field_rect.llx + field_rect.urx) / 2.0
   let center_y = (field_rect.lly + field_rect.ury) / 2.0
   let left_x = if nojustify {
@@ -3857,6 +3802,7 @@ fn write_record_field_lines(
 
 ///|
 fn write_record_contents(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   layouts : Array[RecordLayout],
   orientation : RecordOrientation,
@@ -3880,6 +3826,7 @@ fn write_record_contents(
         let text = resolve_label(field.text, name)
         if text != "" {
           write_record_field_lines(
+            text_context~,
             sb,
             text,
             layout.rect,
@@ -3896,6 +3843,7 @@ fn write_record_contents(
       }
       RecordNode::Group(_) =>
         write_record_contents(
+          text_context~,
           sb,
           layout.children,
           toggle_record_orientation(orientation),
@@ -3944,6 +3892,7 @@ fn write_record_contents(
 
 ///|
 fn write_record_node(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   layout : @layout_dot.DotLayoutNode,
   rect : @geom.Rect,
@@ -4001,6 +3950,7 @@ fn write_record_node(
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let orientation = record_layout_orientation(node.graph())
   let layouts = record_layout_nodes(
+    text_context~,
     nodes,
     inner_rect,
     orientation,
@@ -4011,6 +3961,7 @@ fn write_record_node(
     pad_y_pt,
   )
   write_record_contents(
+    text_context~,
     sb,
     layouts,
     orientation,
@@ -4031,6 +3982,7 @@ fn write_record_node(
 
 ///|
 fn html_text_metrics(
+  text_context~ : @text_layout.Context,
   text : String,
   name : String,
   font_name : String,
@@ -4047,7 +3999,10 @@ fn html_text_metrics(
     let line = current.to_string()
     let metrics_text = if line == "" { " " } else { line }
     let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) = @label_metrics.label_text_metrics(
-      metrics_text, font_name, font_size_pt,
+      text_context~,
+      metrics_text,
+      font_name,
+      font_size_pt,
     )
     let height_pt = if line == "" {
       font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
@@ -4081,6 +4036,7 @@ fn html_text_metrics(
 
 ///|
 fn html_cell_content_size(
+  text_context~ : @text_layout.Context,
   content : @html_label.HtmlCellContent,
   name : String,
   font_name : String,
@@ -4089,18 +4045,26 @@ fn html_cell_content_size(
   match content {
     @html_label.HtmlCellContent::Text(text) => {
       let (_lines, width_pt, height_pt) = html_text_metrics(
-        text, name, font_name, font_size_pt,
+        text_context~,
+        text,
+        name,
+        font_name,
+        font_size_pt,
       )
       (width_pt, height_pt)
     }
     @html_label.HtmlCellContent::StyledText(spans) => {
       let metrics = @label_metrics.html_styled_text_metrics(
-        spans, name, font_name, font_size_pt,
+        text_context~,
+        spans,
+        name,
+        font_name,
+        font_size_pt,
       )
       (metrics.width_pt, metrics.height_pt)
     }
     @html_label.HtmlCellContent::Table(table) =>
-      html_table_size(table, name, font_name, font_size_pt)
+      html_table_size(text_context~, table, name, font_name, font_size_pt)
   }
 }
 
@@ -4362,6 +4326,7 @@ fn write_html_table_rules(
 
 ///|
 fn html_cell_size(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
   name : String,
@@ -4369,6 +4334,7 @@ fn html_cell_size(
   font_size_pt : Double,
 ) -> (Double, Double) {
   let (content_width, content_height) = html_cell_content_size(
+    text_context~,
     cell.content,
     name,
     font_name,
@@ -4394,18 +4360,20 @@ fn html_cell_size(
 
 ///|
 fn html_table_size(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   name : String,
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
   @html_label.html_table_size(table, cell => {
-    html_cell_size(table, cell, name, font_name, font_size_pt)
+    html_cell_size(text_context~, table, cell, name, font_name, font_size_pt)
   })
 }
 
 ///|
 fn html_table_layout(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
   name : String,
@@ -4413,12 +4381,13 @@ fn html_table_layout(
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
   @html_label.html_table_layout(table, rect, cell => {
-    html_cell_size(table, cell, name, font_name, font_size_pt)
+    html_cell_size(text_context~, table, cell, name, font_name, font_size_pt)
   })
 }
 
 ///|
 fn centered_html_table_rect(
+  text_context~ : @text_layout.Context,
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
   name : String,
@@ -4426,7 +4395,11 @@ fn centered_html_table_rect(
   font_size_pt : Double,
 ) -> @geom.Rect {
   let (width_pt, height_pt) = html_table_size(
-    table, name, font_name, font_size_pt,
+    text_context~,
+    table,
+    name,
+    font_name,
+    font_size_pt,
   )
   let center_x = (rect.llx + rect.urx) / 2.0
   let center_y = (rect.lly + rect.ury) / 2.0
@@ -4440,6 +4413,7 @@ fn centered_html_table_rect(
 
 ///|
 fn write_html_text_lines(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   text : String,
   align : @html_label.HtmlAlign,
@@ -4454,7 +4428,11 @@ fn write_html_text_lines(
   pretty : Bool,
 ) -> Unit {
   let (lines, _max_width, total_height) = html_text_metrics(
-    text, name, font, size,
+    text_context~,
+    text,
+    name,
+    font,
+    size,
   )
   if lines.length() == 0 {
     return ()
@@ -4471,7 +4449,11 @@ fn write_html_text_lines(
       @html_label.HtmlAlign::Left => rect.llx
       @html_label.HtmlAlign::Right => rect.urx - line.width_pt
       @html_label.HtmlAlign::Center =>
-        centered_html_text_x((rect.llx + rect.urx - line.width_pt) / 2.0, font)
+        centered_html_text_x(
+          text_context~,
+          (rect.llx + rect.urx - line.width_pt) / 2.0,
+          font,
+        )
     }
     let line_y = baseline + line.yoffset_centerline
     if line.text != "" {
@@ -4495,6 +4477,7 @@ fn write_html_text_lines(
 
 ///|
 fn write_html_styled_text_lines(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   spans : Array[@html_label.HtmlTextSpan],
   align : @html_label.HtmlAlign,
@@ -4508,7 +4491,13 @@ fn write_html_styled_text_lines(
   indent : String,
   pretty : Bool,
 ) -> Unit {
-  let metrics = @label_metrics.html_styled_text_metrics(spans, name, font, size)
+  let metrics = @label_metrics.html_styled_text_metrics(
+    text_context~,
+    spans,
+    name,
+    font,
+    size,
+  )
   let top = match valign {
     @html_label.HtmlVAlign::Top => rect.ury
     @html_label.HtmlVAlign::Bottom => rect.lly + metrics.height_pt
@@ -4531,6 +4520,7 @@ fn write_html_styled_text_lines(
         block_left + metrics.width_pt - line.width_pt
       @html_label.HtmlAlign::Center =>
         centered_html_text_x(
+          text_context~,
           block_left + (metrics.width_pt - line.width_pt) / 2.0,
           line.runs[0].font_name,
         )
@@ -4600,6 +4590,7 @@ fn write_html_gradient_fill(
 
 ///|
 fn write_html_table(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
@@ -4635,8 +4626,15 @@ fn write_html_table(
   if opened {
     link_index.val = link_index.val + 1
   }
-  let rect = centered_html_table_rect(table, rect, name, font, size)
-  let layout = html_table_layout(table, rect, name, font, size)
+  let rect = centered_html_table_rect(
+    text_context~,
+    table,
+    rect,
+    name,
+    font,
+    size,
+  )
+  let layout = html_table_layout(text_context~, table, rect, name, font, size)
   let border_pt = html_table_border_pt(table)
   let background_rect = border_rect(rect, border_pt)
   match table.bg_color {
@@ -4761,13 +4759,28 @@ fn write_html_table(
     match cell_layout.cell.content {
       @html_label.HtmlCellContent::Table(nested) =>
         write_html_table(
-          sb, nested, content_rect, name, font, size, text_color, stroke, stroke_dash,
-          bbox, indent, linear_gradient_index, radial_gradient_index, pretty, link_id_prefix,
+          text_context~,
+          sb,
+          nested,
+          content_rect,
+          name,
+          font,
+          size,
+          text_color,
+          stroke,
+          stroke_dash,
+          bbox,
+          indent,
+          linear_gradient_index,
+          radial_gradient_index,
+          pretty,
+          link_id_prefix,
           link_index,
         )
       @html_label.HtmlCellContent::StyledText(spans) =>
         if spans.length() > 0 {
           write_html_styled_text_lines(
+            text_context~,
             sb,
             spans,
             cell_layout.cell.align,
@@ -4785,6 +4798,7 @@ fn write_html_table(
       @html_label.HtmlCellContent::Text(text) =>
         if text != "" {
           write_html_text_lines(
+            text_context~,
             sb,
             text,
             cell_layout.cell.align,
@@ -5212,6 +5226,7 @@ fn write_line(
 
 ///|
 fn write_label_lines(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   text : String,
   font : String,
@@ -5227,7 +5242,12 @@ fn write_label_lines(
     return ()
   }
   let font_attrs = svg_text_font_attrs(font)
-  let (lines, max_width, total_height) = label_metrics(text, font, size)
+  let (lines, max_width, total_height) = label_metrics(
+    text_context~,
+    text,
+    font,
+    size,
+  )
   let max_width = justification_width.unwrap_or(max_width)
   let mut baseline = pos.y + total_height / 2.0 - size
   for line in lines {
@@ -5300,6 +5320,7 @@ fn advance_cluster_graph_ids(
 
 ///|
 fn write_cluster_graphs(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   layout : @layout_dot.DotLayoutGraph,
   bbox : @geom.Rect,
@@ -5463,7 +5484,7 @@ fn write_cluster_graphs(
               pretty,
             )
           }
-          match graph_label_metrics(graph) {
+          match graph_label_metrics(text_context~, graph) {
             Some((text, _width_pt, height_pt)) => {
               let font = @attrs.font_name(
                 inherited_graph_attr(graph, "fontname"),
@@ -5477,7 +5498,16 @@ fn write_cluster_graphs(
                 None => graph_label_pos(rect, height_pt)
               }
               write_label_lines(
-                sb, text, font, size, color, pos, bbox, indent, pretty,
+                text_context~,
+                sb,
+                text,
+                font,
+                size,
+                color,
+                pos,
+                bbox,
+                indent,
+                pretty,
               )
             }
             None => ()
@@ -5486,6 +5516,7 @@ fn write_cluster_graphs(
           write_line(sb, "</g>", indent, pretty)
         }
         cluster_id = write_cluster_graphs(
+          text_context~,
           sb,
           subgraph,
           bbox,
@@ -5892,6 +5923,7 @@ fn edge_multicolor_spline_points(
 
 ///|
 fn write_svg_edge_group(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   edge_layout : @layout_dot.DotLayoutEdge,
   kind : @cgraph.GraphKind,
@@ -6142,7 +6174,18 @@ fn write_svg_edge_group(
           .map(value => value is @cgraph.AttrValue::Html(_)),
       )
       is Some(label) else {
-      write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
+      write_label_lines(
+        text_context~,
+        sb,
+        text,
+        font,
+        size,
+        color,
+        pos,
+        bbox,
+        "",
+        pretty,
+      )
       return
     }
     let content = match label {
@@ -6153,7 +6196,13 @@ fn write_svg_edge_group(
       @html_label.HtmlLabel::StyledText(spans) =>
         @html_label.HtmlCellContent::StyledText(spans)
     }
-    let (width, height) = html_cell_content_size(content, "", font, size)
+    let (width, height) = html_cell_content_size(
+      text_context~,
+      content,
+      "",
+      font,
+      size,
+    )
     let rect : @geom.Rect = {
       llx: pos.x - width / 2.0,
       lly: pos.y - height / 2.0,
@@ -6163,11 +6212,27 @@ fn write_svg_edge_group(
     match label {
       @html_label.HtmlLabel::Table(table) =>
         write_html_table(
-          sb, table, rect, "", font, size, color, color, "", bbox, "", linear_gradient_index,
-          radial_gradient_index, pretty, edge_id, html_link_index,
+          text_context~,
+          sb,
+          table,
+          rect,
+          "",
+          font,
+          size,
+          color,
+          color,
+          "",
+          bbox,
+          "",
+          linear_gradient_index,
+          radial_gradient_index,
+          pretty,
+          edge_id,
+          html_link_index,
         )
       @html_label.HtmlLabel::Text(value) =>
         write_html_text_lines(
+          text_context~,
           sb,
           value,
           @html_label.HtmlAlign::Center,
@@ -6183,6 +6248,7 @@ fn write_svg_edge_group(
         )
       @html_label.HtmlLabel::StyledText(spans) =>
         write_html_styled_text_lines(
+          text_context~,
           sb,
           spans,
           @html_label.HtmlAlign::Center,
@@ -6206,7 +6272,7 @@ fn write_svg_edge_group(
     color : String,
   ) => {
     guard @attrs.graphviz_bool(edge_attr(edge, "decorate")) else { return }
-    let (_, width, height) = label_metrics(text, font, size)
+    let (_, width, height) = label_metrics(text_context~, text, font, size)
     let points = @render.label_attachment(
       text,
       pos,
@@ -6337,6 +6403,7 @@ fn write_svg_edge_group(
 
 ///|
 fn write_svg_node_group(
+  text_context~ : @text_layout.Context,
   sb : StringBuilder,
   node_layout : @layout_dot.DotLayoutNode,
   fixedshape_draw_sizes : Map[String, (Double, Double)],
@@ -6498,7 +6565,16 @@ fn write_svg_node_group(
   }
   if kind == "record" {
     write_record_node(
-      sb, node_layout, rect, stroke, fill, dash, bbox, "", pretty,
+      text_context~,
+      sb,
+      node_layout,
+      rect,
+      stroke,
+      fill,
+      dash,
+      bbox,
+      "",
+      pretty,
     )
     if has_link {
       write_line(sb, "</a>", "", pretty)
@@ -7546,7 +7622,16 @@ fn write_svg_node_group(
       match node_layout.xlabel_pos {
         Some(pos) =>
           write_label_lines(
-            sb, xlabel, font, size, color, pos, bbox, "", pretty,
+            text_context~,
+            sb,
+            xlabel,
+            font,
+            size,
+            color,
+            pos,
+            bbox,
+            "",
+            pretty,
           )
         None => ()
       }
@@ -7578,6 +7663,7 @@ fn write_svg_node_group(
   match @html_label.parse_html_label(text, html~) {
     Some(@html_label.HtmlLabel::StyledText(spans)) =>
       write_html_styled_text_lines(
+        text_context~,
         sb,
         spans,
         @html_label.HtmlAlign::Center,
@@ -7593,6 +7679,7 @@ fn write_svg_node_group(
       )
     Some(@html_label.HtmlLabel::Table(table)) =>
       write_html_table(
+        text_context~,
         sb,
         table,
         label_rect,
@@ -7613,6 +7700,7 @@ fn write_svg_node_group(
     Some(@html_label.HtmlLabel::Text(html_text)) =>
       if html_text != "" {
         write_html_text_lines(
+          text_context~,
           sb,
           html_text,
           @html_label.HtmlAlign::Center,
@@ -7635,9 +7723,10 @@ fn write_svg_node_group(
         }
         let pos = {
           ..pos,
-          y: pos.y + @node_geometry.node_label_y_offset(node),
+          y: pos.y + @node_geometry.node_label_y_offset(text_context~, node),
         }
         write_label_lines(
+          text_context~,
           sb,
           text,
           font,
@@ -7647,7 +7736,10 @@ fn write_svg_node_group(
           bbox,
           "",
           pretty,
-          justification_width=@node_geometry.node_label_space(node),
+          justification_width=@node_geometry.node_label_space(
+            text_context~,
+            node,
+          ),
         )
       }
   }
@@ -7658,7 +7750,18 @@ fn write_svg_node_group(
   if xlabel != "" {
     match node_layout.xlabel_pos {
       Some(pos) =>
-        write_label_lines(sb, xlabel, font, size, color, pos, bbox, "", pretty)
+        write_label_lines(
+          text_context~,
+          sb,
+          xlabel,
+          font,
+          size,
+          color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
       None => ()
     }
   }
@@ -7679,6 +7782,7 @@ pub fn render_svg(
   layout : @layout_dot.DotLayoutGraph,
   options~ : SvgOptions = SvgOptions::default(),
 ) -> String {
+  let text_context = layout.text_context
   let fixedshape_draw_sizes = capture_fixedshape_draw_sizes(layout.nodes)
   layout.apply()
   let opts = options
@@ -7878,7 +7982,7 @@ pub fn render_svg(
         pretty,
       )
     }
-    match graph_label_metrics(layout.graph) {
+    match graph_label_metrics(text_context~, layout.graph) {
       Some((text, _width_pt, height_pt)) => {
         let graph = layout.graph
         let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
@@ -7888,13 +7992,25 @@ pub fn render_svg(
           Some(value) => value
           None => graph_label_pos(bbox, height_pt)
         }
-        write_label_lines(sb, text, font, size, color, pos, bbox, "", pretty)
+        write_label_lines(
+          text_context~,
+          sb,
+          text,
+          font,
+          size,
+          color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
       }
       None => ()
     }
     let cluster_indent = ""
     write_svg_link_end(sb, graph_link_open, "", pretty)
     let _ = write_cluster_graphs(
+      text_context~,
       sb,
       layout,
       bbox,
@@ -7939,6 +8055,7 @@ pub fn render_svg(
               None => 1
             }
             write_svg_node_group(
+              text_context~,
               sb,
               node_layout,
               fixedshape_draw_sizes,
@@ -7980,6 +8097,7 @@ pub fn render_svg(
                 None => 1
               }
               write_svg_node_group(
+                text_context~,
                 sb,
                 node_layout,
                 fixedshape_draw_sizes,
@@ -8017,6 +8135,7 @@ pub fn render_svg(
                   }
               }
               write_svg_edge_group(
+                text_context~,
                 sb,
                 edge_layout,
                 kind,

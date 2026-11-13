@@ -100,10 +100,12 @@ pub type RoutingPrecomputeData = @precompute.RoutingPrecomputePipelineOutput
 /// derivation in fixed order from typed edge/geometry inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_routing_precompute_data(
+  text_context~ : @text_layout.Context,
   input : RoutingPrecomputeInput,
 ) -> RoutingPrecomputeData {
   let prep = input.prep
   let head_port_metrics = @precompute.build_dot_head_port_metrics(
+    text_context~,
     prep.edges,
     input.enable_complex_tuning,
     input.positions_state.positions,
@@ -112,6 +114,7 @@ pub fn build_routing_precompute_data(
     input.label_ports_map,
   )
   let pathplan_sizes = @ports.apply_self_edge_right_space(
+    text_context~,
     prep.nodes,
     prep.edges,
     input.sizes,
@@ -120,7 +123,11 @@ pub fn build_routing_precompute_data(
   )
   let initial_port_points : Map[Int32, (@geom.Point?, @geom.Point?)] = Map([])
   if input.ordering.live_graph is Some(_) {
-    let sample = @ports.build_initial_port_sampler(prep.nodes, input.sizes)
+    let sample = @ports.build_initial_port_sampler(
+      text_context~,
+      prep.nodes,
+      input.sizes,
+    )
     for edge in prep.edges {
       initial_port_points[edge.id()] = (
         sample(edge.tail(), edge.tail_port()),
@@ -178,6 +185,7 @@ pub(all) struct RouteEdgesForDotInput {
 
 ///|
 pub fn route_edges_for_dot(
+  text_context~ : @text_layout.Context,
   input : RouteEdgesForDotInput,
 ) -> Array[DotLayoutEdge] {
   let edge_layout_input : @routing.EdgeLayoutInput = {
@@ -191,12 +199,13 @@ pub fn route_edges_for_dot(
   }
   let pipeline_deps : @routing.RouteEdgesPipelineDeps = {
     route_base_deps: build_dot_route_base_deps(
+      text_context~,
       input.prep.rankdir,
       input.prep.record_orientation,
       input.routing_label_ports_map,
       input.routing_label_ports_raw,
     ),
-    callbacks: build_dot_routing_callbacks(edge_layout_input),
+    callbacks: build_dot_routing_callbacks(text_context~, edge_layout_input),
   }
   let pipeline_input : @routing.RouteEdgesPipelineInput = {
     graph_kind: input.graph.kind(),
@@ -227,7 +236,7 @@ pub fn route_edges_for_dot(
       _ => 2
     },
   }
-  @execution.route_edges_pipeline(pipeline_input, pipeline_deps)
+  @execution.route_edges_pipeline(text_context~, pipeline_input, pipeline_deps)
 }
 
 ///|
@@ -255,6 +264,7 @@ pub(all) struct DotRoutingStageOutput {
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures), with typed stage payload.
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_dot_routing_stage(
+  text_context~ : @text_layout.Context,
   input : DotRoutingStageInput,
 ) -> DotRoutingStageOutput {
   let graph = input.graph
@@ -264,7 +274,7 @@ pub fn compute_dot_routing_stage(
   let cluster_meta = input.cluster_meta
   let ordering = input.ordering
   let positions_state = input.positions_state
-  let spatial_data = @spatial.build_routing_spatial_data({
+  let spatial_data = @spatial.build_routing_spatial_data(text_context~, {
     graph,
     prep,
     ranks: rank_data.ranks,
@@ -293,7 +303,7 @@ pub fn compute_dot_routing_stage(
     prep.edges,
   )
   let enable_complex_tuning = @precompute.complex_tuning_enabled()
-  let precompute_data = build_routing_precompute_data({
+  let precompute_data = build_routing_precompute_data(text_context~, {
     prep,
     rank_data,
     rank_heights,
@@ -310,7 +320,7 @@ pub fn compute_dot_routing_stage(
   let path_groups = precompute_data.path_groups
   let bbox_sizes = precompute_data.pathplan_sizes
   let routing_context = precompute_data.routing_context
-  let edges_routed = route_edges_for_dot({
+  let edges_routed = route_edges_for_dot(text_context~, {
     graph,
     prep,
     rank_data,

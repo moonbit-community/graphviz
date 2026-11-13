@@ -6,6 +6,7 @@ import {
   "moonbit-community/graphviz/geom",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/rankdir",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
@@ -17,15 +18,15 @@ pub fn adjust_flip_rank_heights(FlipRankHeightsAdjustInput) -> Bool
 
 pub fn apply_cluster_rank_heights(ClusterRankHeightsApplyInput) -> Unit
 
-pub fn cluster_label_borders_for_xpos_constraints(@cgraph.Graph, @rankdir.RankDir) -> (Double, Double)
+pub fn cluster_label_borders_for_xpos_constraints(text_context~ : @text.Context, @cgraph.Graph, @rankdir.RankDir) -> (Double, Double)
 
-pub fn cluster_label_padding_for_layout(@cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
+pub fn cluster_label_padding_for_layout(text_context~ : @text.Context, @cgraph.Graph, @rankdir.RankDir) -> ClusterLabelPadding
 
-pub fn cluster_label_width_with_pad_for_layout(@cgraph.Graph) -> Double?
+pub fn cluster_label_width_with_pad_for_layout(text_context~ : @text.Context, @cgraph.Graph) -> Double?
 
 pub fn compute_cluster_bbox_heights(ClusterBBoxHeightsInput) -> Map[String, ClusterBboxHeightPair]
 
-pub fn expand_cluster_label_bbox_for_position_stage(@cgraph.Graph, @geom.Rect) -> @geom.Rect
+pub fn expand_cluster_label_bbox_for_position_stage(text_context~ : @text.Context, @cgraph.Graph, @geom.Rect) -> @geom.Rect
 
 // Errors
 

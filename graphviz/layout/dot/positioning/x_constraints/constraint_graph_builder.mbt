@@ -750,6 +750,7 @@ fn same_rank_constraint_minlen(
 /// Graphviz parity: build make_edge_pairs-style segment constraints in
 /// ND_out/ND_nlist order, including reverse-merge handling and same-rank flats.
 fn build_constraint_segment_pass(
+  text_context~ : @text_layout.Context,
   input : ConstraintSegmentPassInput,
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintSegmentPassOutput {
@@ -768,6 +769,7 @@ fn build_constraint_segment_pass(
     }
   }
   let edge_ports_equal = @ports.build_initial_edge_port_comparator(
+    text_context~,
     port_nodes,
     Map([]),
   )
@@ -1269,6 +1271,7 @@ pub(all) struct ConstraintGraphBuildOutput {
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
 fn build_constraint_graph(
+  text_context~ : @text_layout.Context,
   input : ConstraintGraphBuildInput,
   live_graph~ : @setup.ConcentrateFastGraph? = None,
 ) -> ConstraintGraphBuildOutput {
@@ -1300,6 +1303,7 @@ fn build_constraint_graph(
   let rank_adj_constraints = rank_constraint_seed.rank_adj_constraints
   let rank_adj_order = rank_constraint_seed.rank_adj_order
   let segment_pass = build_constraint_segment_pass(
+    text_context~,
     {
       edges: input.edges,
       edge_tail: input.edge_tail,

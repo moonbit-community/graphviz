@@ -55,7 +55,10 @@ pub(all) struct LayoutSubgraphsInput {
 /// Graphviz parity: cluster bbox + label placement aligned to refs/graphviz/lib/common/postproc.c
 /// (place_graph_label) + lib/common/input.c (cluster label borders) + dotgen/position.c (cluster margins).
 /// Do not change behavior without updating fixtures/tests.
-pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
+pub fn layout_subgraphs(
+  text_context~ : @text_layout.Context,
+  input : LayoutSubgraphsInput,
+) -> Array[LayoutTree] {
   let graph = input.graph
   let nodes_out = input.nodes_out
   let edges_out = input.edges_out
@@ -100,7 +103,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
     let mut bbox = @bbox.compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
     let mut label_info : ClusterLabelPlacementInfo? = None
-    let sub_subgraphs = layout_subgraphs({
+    let sub_subgraphs = layout_subgraphs(text_context~, {
       graph: subgraph,
       nodes_out,
       edges_out,
@@ -225,7 +228,7 @@ pub fn layout_subgraphs(input : LayoutSubgraphsInput) -> Array[LayoutTree] {
       let urx = bbox.urx + pad_right
       let ury = bbox.ury + pad_y
       bbox = { llx, lly, urx, ury, }
-      match @label_metrics.graph_label_metrics(subgraph) {
+      match @label_metrics.graph_label_metrics(text_context~, subgraph) {
         Some(metrics) => {
           let loc = @graph_label.graph_label_loc(subgraph)
           let just = @graph_label.graph_label_just(subgraph)
@@ -381,6 +384,7 @@ fn collect_cluster_route_bboxes(
 /// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
 pub fn compute_cluster_route_bboxes(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
   cluster_ln_x : Map[String, Double],
@@ -394,7 +398,7 @@ pub fn compute_cluster_route_bboxes(
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map([])
   if @cluster_graph.graph_has_cluster(graph) {
-    let cluster_layouts = layout_subgraphs({
+    let cluster_layouts = layout_subgraphs(text_context~, {
       graph,
       nodes_out,
       edges_out: [],

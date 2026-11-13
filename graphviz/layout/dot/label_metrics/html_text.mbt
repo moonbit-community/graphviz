@@ -31,6 +31,7 @@ pub struct HtmlTextMetrics {
 ///|
 /// Measures each HTML run in its own font, retaining explicit line breaks.
 pub fn html_styled_text_metrics(
+  text_context~ : @text_layout.Context,
   spans : Array[@html_label.HtmlTextSpan],
   name : String,
   font_name : String,
@@ -52,7 +53,10 @@ pub fn html_styled_text_metrics(
       let text = part.to_owned()
       guard text != "" else { continue }
       let (width_pt, height_pt, _, yoffset_centerline) = label_text_metrics(
-        text, font, size,
+        text_context~,
+        text,
+        font,
+        size,
       )
       rows[rows.length() - 1].push({
         text,
@@ -73,7 +77,10 @@ pub fn html_styled_text_metrics(
   for row in rows {
     if row.length() == 0 {
       let (_, height_pt, _, yoffset_centerline) = label_text_metrics(
-        " ", font_name, font_size_pt,
+        text_context~,
+        " ",
+        font_name,
+        font_size_pt,
       )
       row.push({
         text: "",

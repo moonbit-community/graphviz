@@ -7,27 +7,43 @@ test "cluster_label_padding_for_layout and width follow label metrics on vertica
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let top = root.subgraph(name="cluster_top")
   top.set_attr("label", "Top Label")
-  let top_metrics = match @label_metrics.graph_label_metrics(top) {
+  let top_metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), top) {
     Some(value) => value
     None => fail("expected top cluster label metrics")
   }
 
-  let top_padding = cluster_label_padding_for_layout(top, RankDir::TB)
+  let top_padding = cluster_label_padding_for_layout(
+    text_context=@heuristic.context(),
+    top,
+    RankDir::TB,
+  )
   assert_eq(top_padding.top, top_metrics.height_pt + CLUSTER_LABEL_PAD_PT)
   assert_eq(top_padding.bottom, 0.0)
   assert_eq(
-    cluster_label_width_with_pad_for_layout(top),
+    cluster_label_width_with_pad_for_layout(
+      text_context=@heuristic.context(),
+      top,
+    ),
     Some(top_metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0),
   )
 
   let bottom = root.subgraph(name="cluster_bottom")
   bottom.set_attr("label", "Bottom Label")
   bottom.set_attr("labelloc", "b")
-  let bottom_metrics = match @label_metrics.graph_label_metrics(bottom) {
+  let bottom_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      bottom,
+    ) {
     Some(value) => value
     None => fail("expected bottom cluster label metrics")
   }
-  let bottom_padding = cluster_label_padding_for_layout(bottom, RankDir::BT)
+  let bottom_padding = cluster_label_padding_for_layout(
+    text_context=@heuristic.context(),
+    bottom,
+    RankDir::BT,
+  )
   assert_eq(bottom_padding.top, 0.0)
   assert_eq(
     bottom_padding.bottom,
@@ -35,10 +51,20 @@ test "cluster_label_padding_for_layout and width follow label metrics on vertica
   )
 
   let unlabeled = root.subgraph(name="cluster_empty")
-  let empty_padding = cluster_label_padding_for_layout(unlabeled, RankDir::TB)
+  let empty_padding = cluster_label_padding_for_layout(
+    text_context=@heuristic.context(),
+    unlabeled,
+    RankDir::TB,
+  )
   assert_eq(empty_padding.top, 0.0)
   assert_eq(empty_padding.bottom, 0.0)
-  assert_eq(cluster_label_width_with_pad_for_layout(unlabeled), None)
+  assert_eq(
+    cluster_label_width_with_pad_for_layout(
+      text_context=@heuristic.context(),
+      unlabeled,
+    ),
+    None,
+  )
 }
 
 ///|
@@ -46,37 +72,58 @@ test "cluster_label_borders_for_xpos_constraints only apply on flipped layouts" 
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let top = root.subgraph(name="cluster_top")
   top.set_attr("label", "Top Label")
-  let top_metrics = match @label_metrics.graph_label_metrics(top) {
+  let top_metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), top) {
     Some(value) => value
     None => fail("expected top cluster label metrics")
   }
   let top_border = top_metrics.height_pt + CLUSTER_LABEL_PAD_PT
 
   assert_eq(
-    cluster_label_borders_for_xpos_constraints(top, RankDir::TB),
+    cluster_label_borders_for_xpos_constraints(
+      text_context=@heuristic.context(),
+      top,
+      RankDir::TB,
+    ),
     (0.0, 0.0),
   )
   assert_eq(
-    cluster_label_borders_for_xpos_constraints(top, RankDir::LR),
+    cluster_label_borders_for_xpos_constraints(
+      text_context=@heuristic.context(),
+      top,
+      RankDir::LR,
+    ),
     (0.0, top_border),
   )
 
   let bottom = root.subgraph(name="cluster_bottom")
   bottom.set_attr("label", "Bottom Label")
   bottom.set_attr("labelloc", "bottom")
-  let bottom_metrics = match @label_metrics.graph_label_metrics(bottom) {
+  let bottom_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      bottom,
+    ) {
     Some(value) => value
     None => fail("expected bottom cluster label metrics")
   }
   let bottom_border = bottom_metrics.height_pt + CLUSTER_LABEL_PAD_PT
   assert_eq(
-    cluster_label_borders_for_xpos_constraints(bottom, RankDir::RL),
+    cluster_label_borders_for_xpos_constraints(
+      text_context=@heuristic.context(),
+      bottom,
+      RankDir::RL,
+    ),
     (bottom_border, 0.0),
   )
 
   let unlabeled = root.subgraph(name="cluster_empty")
   assert_eq(
-    cluster_label_borders_for_xpos_constraints(unlabeled, RankDir::LR),
+    cluster_label_borders_for_xpos_constraints(
+      text_context=@heuristic.context(),
+      unlabeled,
+      RankDir::LR,
+    ),
     (0.0, 0.0),
   )
 }
@@ -86,7 +133,8 @@ test "expand_cluster_label_bbox_for_position_stage grows the label side and widt
   let root = @cgraph.Graph::new(@cgraph.GraphKind::Directed, strict=false)
   let top = root.subgraph(name="cluster_top")
   top.set_attr("label", "Top Label")
-  let top_metrics = match @label_metrics.graph_label_metrics(top) {
+  let top_metrics = match
+    @label_metrics.graph_label_metrics(text_context=@heuristic.context(), top) {
     Some(value) => value
     None => fail("expected top cluster label metrics")
   }
@@ -100,14 +148,22 @@ test "expand_cluster_label_bbox_for_position_stage grows the label side and widt
     ury: 20.0 + top_metrics.height_pt + CLUSTER_LABEL_PAD_PT,
   }
   assert_eq(
-    expand_cluster_label_bbox_for_position_stage(top, bbox),
+    expand_cluster_label_bbox_for_position_stage(
+      text_context=@heuristic.context(),
+      top,
+      bbox,
+    ),
     top_expected,
   )
 
   let bottom = root.subgraph(name="cluster_bottom")
   bottom.set_attr("label", "Bottom Label")
   bottom.set_attr("labelloc", "b")
-  let bottom_metrics = match @label_metrics.graph_label_metrics(bottom) {
+  let bottom_metrics = match
+    @label_metrics.graph_label_metrics(
+      text_context=@heuristic.context(),
+      bottom,
+    ) {
     Some(value) => value
     None => fail("expected bottom cluster label metrics")
   }
@@ -124,10 +180,21 @@ test "expand_cluster_label_bbox_for_position_stage grows the label side and widt
     ury: 20.0,
   }
   assert_eq(
-    expand_cluster_label_bbox_for_position_stage(bottom, bbox),
+    expand_cluster_label_bbox_for_position_stage(
+      text_context=@heuristic.context(),
+      bottom,
+      bbox,
+    ),
     bottom_expected,
   )
 
   let unlabeled = root.subgraph(name="cluster_empty")
-  assert_eq(expand_cluster_label_bbox_for_position_stage(unlabeled, bbox), bbox)
+  assert_eq(
+    expand_cluster_label_bbox_for_position_stage(
+      text_context=@heuristic.context(),
+      unlabeled,
+      bbox,
+    ),
+    bbox,
+  )
 }

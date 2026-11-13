@@ -34,7 +34,7 @@ Notes:
 ### Text metrics + label sizing
 
 MoonBit:
-- `graphviz/layout/dot/font_metrics/font_metrics.generated.mbt` (font widths, kerning)
+- `graphviz/text/heuristic/font_metrics/font_metrics.generated.mbt` (optional heuristic font widths, kerning)
 - `graphviz/layout/dot/textspan.mbt` (label size helpers: `record_label_text_dimensions`,
   label size calculations used by node/edge/cluster sizing)
 - `graphviz/layout/dot/label_layout.mbt` (graph/edge/port label placement + overlap nudges)

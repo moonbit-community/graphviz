@@ -2,6 +2,7 @@ import {
   "moonbit-community/graphviz/layout/dot/node_geometry",
   "moonbit-community/graphviz/layout/dot" @layout_dot,
   "moonbit-community/graphviz/layout/dot/label_metrics",
+  "moonbit-community/graphviz/text",
   "moonbit-community/graphviz/layout/dot/routing/edge_spline",
   "moonbit-community/graphviz/layout/html" @html_label,
   "moonbit-community/graphviz/attrs",
@@ -12,12 +13,15 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/math",
   "moonbitlang/core/string",
+  "moonbit-community/graphviz/layout/text" @text_layout,
 }
 
 import {
   "moonbit-community/graphviz/dot",
+  "moonbit-community/graphviz/text/heuristic",
 } for "test"
 
 import {
   "moonbitlang/core/test",
+  "moonbit-community/graphviz/text/heuristic",
 } for "wbtest"

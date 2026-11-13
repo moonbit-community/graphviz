@@ -364,6 +364,7 @@ fn layout_for_job(
   job : CliJob,
   graph : @cgraph.Graph,
 ) -> @layout_dot.DotLayoutGraph raise {
+  let text_context = @heuristic.context()
   let engine = if job.engine_explicit {
     job.engine
   } else {
@@ -384,7 +385,7 @@ fn layout_for_job(
     }
   }
   match engine {
-    LayoutEngine::Dot => @layout_dot.layout_dot(graph)
+    LayoutEngine::Dot => @layout_dot.layout_dot(text_context~, graph)
     LayoutEngine::Neato => {
       let scale = match job.scale {
         Some(value) => value
@@ -393,12 +394,19 @@ fn layout_for_job(
       match job.neato_no_op {
         Some(level) =>
           @layout_dot.layout_neato_noop(
+            text_context~,
             graph,
             no_op_level=level,
             scale~,
             prune=job.neato_prune,
           )
-        None => @layout_dot.layout_neato(graph, scale~, prune=job.neato_prune)
+        None =>
+          @layout_dot.layout_neato(
+            text_context~,
+            graph,
+            scale~,
+            prune=job.neato_prune,
+          )
       }
     }
     LayoutEngine::Fdp

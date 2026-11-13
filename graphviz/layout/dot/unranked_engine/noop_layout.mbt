@@ -140,6 +140,7 @@ fn required_scaled_noop_node_pos(
 
 ///|
 fn collect_noop_nodes_with_sizes(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   scale_factor : Double,
   record_orientation : @layout_prep.RecordOrientation,
@@ -153,10 +154,14 @@ fn collect_noop_nodes_with_sizes(
       Err(message) => return Err(message)
     }
     positions[node.name()] = pos
-    sizes[node.name()] = @node_geometry.node_size(node, record_orientation)
+    sizes[node.name()] = @node_geometry.node_size(
+      text_context~,
+      node,
+      record_orientation,
+    )
   }
   let nodes_out = build_projected_nodes_from_positions(nodes, positions, node => {
-    node_size_with_fallback(sizes, node, record_orientation)
+    node_size_with_fallback(text_context~, sizes, node, record_orientation)
   })
   Ok({ projection: { positions, nodes_out, }, sizes, })
 }
@@ -166,6 +171,7 @@ fn collect_noop_nodes_with_sizes(
 /// optional edge-pos reuse, and final layout-tree writeback together inside the
 /// unranked_engine package so the root API boundary stays thin.
 fn build_noop_layout_tree(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   no_op_level : Int32,
   scale : Double,
@@ -173,6 +179,7 @@ fn build_noop_layout_tree(
   let geometry = build_engine_geometry_context(graph, scale)
   let node_data = match
     collect_noop_nodes_with_sizes(
+      text_context~,
       graph,
       geometry.scale_factor,
       geometry.record_orientation,
@@ -182,7 +189,12 @@ fn build_noop_layout_tree(
   }
   let use_edge_pos = no_op_level > 1
   let node_size_for = (node : @cgraph.Node) => {
-    node_size_with_fallback(node_data.sizes, node, geometry.record_orientation)
+    node_size_with_fallback(
+      text_context~,
+      node_data.sizes,
+      node,
+      geometry.record_orientation,
+    )
   }
   let edges_out = build_edges_from_positions(
     graph,
@@ -202,6 +214,7 @@ fn build_noop_layout_tree(
   )
   Ok(
     finalize_unranked_layout_tree(
+      text_context~,
       graph,
       geometry.rankdir,
       node_data.projection.nodes_out,

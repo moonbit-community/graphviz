@@ -37,6 +37,7 @@ test "build_cluster_constraints adds boundary nodes containment and keepout edge
   }
 
   let build = build_cluster_constraints(
+    text_context=@heuristic.context(),
     graph,
     [a, b, c],
     [],
@@ -117,6 +118,7 @@ test "build_cluster_constraints stops containment at an outside normal rank peer
   }
 
   let build = build_cluster_constraints(
+    text_context=@heuristic.context(),
     graph,
     [a, b, outside],
     [],

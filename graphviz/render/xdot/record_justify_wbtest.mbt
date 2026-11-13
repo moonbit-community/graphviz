@@ -2,7 +2,12 @@
 test "record nojustify uses field text width for left and right alignment" {
   let text = "bbbbbb\\nddd\\lddd\\r"
   let font : @render.Font = { name: "Times-Roman", size: 14.0, }
-  let (_, text_width, _) = record_label_metrics(text, font.name, font.size)
+  let (_, text_width, _) = record_label_metrics(
+    text_context=@heuristic.context(),
+    text,
+    font.name,
+    font.size,
+  )
   let layouts : Array[RecordLayout] = [
     {
       rect: { llx: 0.0, lly: 0.0, urx: 100.0, ury: 100.0, },
@@ -13,7 +18,14 @@ test "record nojustify uses field text width for left and right alignment" {
   for nojustify in [false, true] {
     let ops : Array[@render.DrawOp] = []
     record_label_ops_from_layout(
-      ops, layouts, "n", font, "black", 16.0, nojustify,
+      text_context=@heuristic.context(),
+      ops,
+      layouts,
+      "n",
+      font,
+      "black",
+      16.0,
+      nojustify,
     )
     let half_space = if nojustify { text_width / 2.0 } else { 42.0 }
     let mut aligned_lines = 0

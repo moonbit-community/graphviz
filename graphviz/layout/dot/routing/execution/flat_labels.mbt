@@ -10,6 +10,7 @@ priv struct FlatLabelEdge {
 // dotsplines.c makeSimpleFlatLabels: widest label first, then alternate
 // below and above the preceding labels in a shared routing polygon.
 fn maybe_build_flat_labeled_group(
+  text_context~ : @text_layout.Context,
   input : OrderedEdgeLayoutAttemptInput,
 ) -> Bool {
   guard input.base.is_flat_adjacent &&
@@ -27,7 +28,10 @@ fn maybe_build_flat_labeled_group(
       !@edge_ops.edge_has_sameport_mark(edge) else {
       return false
     }
-    let metrics = @edge_label_metrics.edge_mid_label_metrics(edge)
+    let metrics = @edge_label_metrics.edge_mid_label_metrics(
+      text_context~,
+      edge,
+    )
     group.push({
       base,
       width: metrics.map_or(0.0, value => value.width),

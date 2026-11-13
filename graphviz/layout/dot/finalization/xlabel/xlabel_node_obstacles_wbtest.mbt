@@ -11,6 +11,7 @@ test "build_node_obstacle_with_xlabel_slot creates a deferred slot for unresolve
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   let obstacle = build_node_obstacle_with_xlabel_slot(
+    text_context=@heuristic.context(),
     xlabel_make_node_layout(node, @edge_spline.point(50.0, 60.0), 1.0, 0.5),
     false,
     labels,
@@ -42,6 +43,7 @@ test "build_node_obstacle_with_xlabel_slot keeps resolved xlabels as fixed obsta
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
   let obstacle = build_node_obstacle_with_xlabel_slot(
+    text_context=@heuristic.context(),
     xlabel_make_node_layout(
       node,
       @edge_spline.point(40.0, 50.0),
@@ -54,7 +56,8 @@ test "build_node_obstacle_with_xlabel_slot keeps resolved xlabels as fixed obsta
     objects,
   )
 
-  let metrics = match xlabel_metrics_for_node(node) {
+  let metrics = match
+    xlabel_metrics_for_node(text_context=@heuristic.context(), node) {
     Some(value) => value
     None => fail("expected node xlabel metrics")
   }

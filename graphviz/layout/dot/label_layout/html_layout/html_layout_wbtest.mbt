@@ -10,10 +10,12 @@ test "html_ports include td port names" {
   )
   let node = graph.node("html_ports_node")
   let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
     node,
     @layout_prep.RecordOrientation::Horizontal,
   )
   let ports = html_ports(
+    text_context=@heuristic.context(),
     node,
     @label_attrs.label_text(node),
     @geom.Point::{ x: 0.0, y: 0.0, },
@@ -38,10 +40,12 @@ test "html_ports recurse into nested tables and preserve nested cell geometry" {
   )
   let node = graph.node("nested_html_node")
   let size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
     node,
     @layout_prep.RecordOrientation::Horizontal,
   )
   let ports = html_ports(
+    text_context=@heuristic.context(),
     node,
     @label_attrs.label_text(node),
     @geom.Point::{ x: 0.0, y: 0.0, },
@@ -67,6 +71,7 @@ test "HTML ports use natural table size and inherited boundary sides" {
   let node = graph.node("a")
   let label = @label_attrs.label_text(node)
   let ports = html_ports(
+    text_context=@heuristic.context(),
     node,
     label,
     { x: 10.0, y: 20.0, },
@@ -95,12 +100,18 @@ test "html table sizing honors cell borders" {
     Some(value) => value
     None => fail("missing HTML label")
   }
-  let size = html_label_size(parsed, "Times-Roman", 14.0)
+  let size = html_label_size(
+    text_context=@heuristic.context(),
+    parsed,
+    "Times-Roman",
+    14.0,
+  )
   inspect(size.width_pt, content="79.5")
   let graph = @dot_parser.parse_dot(
     "digraph { a [shape=circle label=<<TABLE border=\"10\" cellspacing=\"10\" cellpadding=\"10\"><TR><TD border=\"3\">00</TD></TR></TABLE>>]; }",
   )
   let node_size = @node_geometry.node_size(
+    text_context=@heuristic.context(),
     graph.node("a"),
     @layout_prep.RecordOrientation::Horizontal,
   )

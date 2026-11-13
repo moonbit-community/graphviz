@@ -80,6 +80,7 @@ test "build_edge_vnodes respects explicit out-order when reverse duplicate creat
   edge_out_order["a"] = [0]
 
   let vnode_info = build_edge_vnodes(
+    text_context=@heuristic.context(),
     [b, a],
     [forward, reverse],
     [],

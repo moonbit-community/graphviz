@@ -68,6 +68,7 @@ priv struct PositionPipelineContext {
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
 fn build_projection_result(
+  text_context~ : @text_layout.Context,
   pipeline : PositionPipelineContext,
   x_stage_output : @x_stage.XStageOutput,
 ) -> PositionResult {
@@ -87,9 +88,20 @@ fn build_projection_result(
     flat_label_ranks: x_stage_output.flat_label_ranks,
     vnode_sizes: pipeline.ordering.vnode_info.vnode_sizes,
     cluster_margin_pt_for: @clustering.cluster_margin_pt,
-    cluster_label_padding_for: @cluster_geometry.cluster_label_padding_for_layout,
+    cluster_label_padding_for: (graph, rankdir) => {
+      @cluster_geometry.cluster_label_padding_for_layout(
+        graph,
+        rankdir,
+        text_context~,
+      )
+    },
     node_half_height_pt_for: @y_positions.node_half_height_pt,
-    cluster_label_width_pt_for: @cluster_geometry.cluster_label_width_with_pad_for_layout,
+    cluster_label_width_pt_for: graph => {
+      @cluster_geometry.cluster_label_width_with_pad_for_layout(
+        graph,
+        text_context~,
+      )
+    },
   })
   let position_output_maps = @output_maps.build_position_output_pipeline({
     has_clusters: pipeline.cluster_meta.has_clusters,
@@ -112,7 +124,13 @@ fn build_projection_result(
     vnode_clusters: pipeline.ordering.vnode_info.vnode_clusters,
     sizes: pipeline.prep.sizes,
     cluster_margin_pt_for: @clustering.cluster_margin_pt,
-    expand_cluster_label_bbox: @cluster_geometry.expand_cluster_label_bbox_for_position_stage,
+    expand_cluster_label_bbox: (graph, bbox) => {
+      @cluster_geometry.expand_cluster_label_bbox_for_position_stage(
+        graph,
+        bbox,
+        text_context~,
+      )
+    },
   })
   {
     x_groups: x_stage_output.x_groups,
@@ -133,7 +151,10 @@ fn build_projection_result(
 /// + dotgen/cluster.c (fixtures), with the Stage D owner package exposing the
 /// direct entry used by the root layout pipeline.
 /// Do not change behavior without updating fixtures/tests.
-pub fn compute_positions(input : PositionPipelineInput) -> PositionResult {
+pub fn compute_positions(
+  text_context~ : @text_layout.Context,
+  input : PositionPipelineInput,
+) -> PositionResult {
   let pipeline : PositionPipelineContext = {
     graph: input.graph,
     prep: input.prep,
@@ -142,7 +163,7 @@ pub fn compute_positions(input : PositionPipelineInput) -> PositionResult {
     cluster_meta: input.cluster_meta,
     ordering: input.ordering,
   }
-  let x_stage_output = @x_stage.build_x_stage_output({
+  let x_stage_output = @x_stage.build_x_stage_output(text_context~, {
     graph: pipeline.graph,
     prep: pipeline.prep,
     rank_data: pipeline.rank_data,
@@ -150,5 +171,5 @@ pub fn compute_positions(input : PositionPipelineInput) -> PositionResult {
     cluster_meta: pipeline.cluster_meta,
     ordering: pipeline.ordering,
   })
-  build_projection_result(pipeline, x_stage_output)
+  build_projection_result(text_context~, pipeline, x_stage_output)
 }

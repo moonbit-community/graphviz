@@ -45,6 +45,7 @@ fn collect_cluster_preorder(
 /// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_constraints(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -182,7 +183,9 @@ fn build_cluster_constraints(
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = @clustering.cluster_margin_pt(cluster_graph)
     let (left_border, right_border) = @cluster_geometry.cluster_label_borders_for_xpos_constraints(
-      cluster_graph, rankdir,
+      text_context~,
+      cluster_graph,
+      rankdir,
     )
     cluster_border_left[name] = left_border
     cluster_border_right[name] = right_border
@@ -285,6 +288,7 @@ fn build_cluster_constraints(
         Some(cluster_graph) =>
           match
             @cluster_geometry.cluster_label_width_with_pad_for_layout(
+              text_context~,
               cluster_graph,
             ) {
             Some(label_width) => {

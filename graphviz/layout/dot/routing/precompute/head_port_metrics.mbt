@@ -154,6 +154,7 @@ type RecordPort = @record_geometry.RecordPort
 /// record-shape distance sampling aligned with Stage E complex-tuning rules.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_dot_head_port_metrics(
+  text_context~ : @text_layout.Context,
   edges : Array[@cgraph.Edge],
   enable_complex_tuning : Bool,
   positions : Map[String, @geom.Point],
@@ -167,7 +168,7 @@ pub fn build_dot_head_port_metrics(
     positions,
     sizes,
     @record_geometry.is_record_shape,
-    node => @node_geometry.node_size(node, record_orientation),
+    node => @node_geometry.node_size(text_context~, node, record_orientation),
     (node_name, port, node_pos, node_size) => {
       let geometry = @port_geometry.port_geometry(
         node_name, port, label_ports_map, node_pos, node_size,

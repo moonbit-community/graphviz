@@ -89,6 +89,7 @@ fn expand_bbox_for_existing_xlabel(
 
 ///|
 fn expand_bbox_for_existing_node_xlabels(
+  text_context~ : @text_layout.Context,
   bbox : @geom.Rect,
   nodes : Array[DotLayoutNode],
   flip : Bool,
@@ -98,7 +99,7 @@ fn expand_bbox_for_existing_node_xlabels(
     expanded = expand_bbox_for_existing_xlabel(
       expanded,
       node_layout.xlabel_pos,
-      xlabel_metrics_for_node(node_layout.node),
+      xlabel_metrics_for_node(text_context~, node_layout.node),
       flip,
     )
   }
@@ -107,6 +108,7 @@ fn expand_bbox_for_existing_node_xlabels(
 
 ///|
 fn expand_bbox_for_existing_edge_xlabels(
+  text_context~ : @text_layout.Context,
   bbox : @geom.Rect,
   edges : Array[DotLayoutEdge],
   flip : Bool,
@@ -116,7 +118,7 @@ fn expand_bbox_for_existing_edge_xlabels(
     expanded = expand_bbox_for_existing_xlabel(
       expanded,
       edge_layout.xlabel_pos,
-      xlabel_metrics_for_edge(edge_layout.edge),
+      xlabel_metrics_for_edge(text_context~, edge_layout.edge),
       flip,
     )
   }
@@ -124,35 +126,53 @@ fn expand_bbox_for_existing_edge_xlabels(
 }
 
 ///|
-pub fn apply_xlabels(layout : LayoutTree, splines : SplinesMode) -> LayoutTree {
+pub fn apply_xlabels(
+  text_context~ : @text_layout.Context,
+  layout : LayoutTree,
+  splines : SplinesMode,
+) -> LayoutTree {
   let rankdir = @rankdir.graph_rankdir(layout.graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let labels : Array[XLabel] = []
   let objects : Array[XObject] = []
-  collect_xlabel_candidates(layout, splines, flip, labels, objects)
-  collect_cluster_label_objects(layout, objects, flip)
+  collect_xlabel_candidates(
+    text_context~,
+    layout,
+    splines,
+    flip,
+    labels,
+    objects,
+  )
+  collect_cluster_label_objects(text_context~, layout, objects, flip)
   if labels.length() > 0 {
     let force = parse_forcelabels(layout.graph)
     place_labels(objects, labels, force)
   }
-  finalize_xlabels(layout, labels, flip)
+  finalize_xlabels(text_context~, layout, labels, flip)
 }
 
 ///|
 /// Xlabel finalization: merge existing/new xlabel positions into layout output
 /// and expand the graph bbox accordingly.
 fn finalize_xlabels(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   labels : Array[XLabel],
   flip : Bool,
 ) -> LayoutTree {
   let updates = make_xlabel_update_maps()
   let mut bbox = expand_bbox_for_existing_node_xlabels(
+    text_context~,
     layout.bbox,
     layout.nodes,
     flip,
   )
-  bbox = expand_bbox_for_existing_edge_xlabels(bbox, layout.edges, flip)
+  bbox = expand_bbox_for_existing_edge_xlabels(
+    text_context~,
+    bbox,
+    layout.edges,
+    flip,
+  )
   for label in labels {
     if !label.set {
       continue
@@ -309,6 +329,7 @@ fn apply_xlabel_updates(
 
 ///|
 fn collect_cluster_label_objects(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   objects : Array[XObject],
   flip : Bool,
@@ -316,7 +337,8 @@ fn collect_cluster_label_objects(
   for subgraph in layout.subgraphs {
     match subgraph.label_pos {
       Some(pos) =>
-        match @label_metrics.graph_label_metrics(subgraph.graph) {
+        match
+          @label_metrics.graph_label_metrics(text_context~, subgraph.graph) {
           Some(metrics) => {
             let dims = maybe_flip_dims(
               metrics.width_pt,
@@ -336,12 +358,13 @@ fn collect_cluster_label_objects(
         }
       None => ()
     }
-    collect_cluster_label_objects(subgraph, objects, flip)
+    collect_cluster_label_objects(text_context~, subgraph, objects, flip)
   }
 }
 
 ///|
 fn collect_xlabel_candidates(
+  text_context~ : @text_layout.Context,
   layout : LayoutTree,
   splines : SplinesMode,
   flip : Bool,
@@ -351,7 +374,13 @@ fn collect_xlabel_candidates(
   let edges_by_tail = build_edges_by_tail(layout.edges)
   for node_layout in layout.nodes {
     objects.push(
-      build_node_obstacle_with_xlabel_slot(node_layout, flip, labels, objects),
+      build_node_obstacle_with_xlabel_slot(
+        text_context~,
+        node_layout,
+        flip,
+        labels,
+        objects,
+      ),
     )
 
     let edges_for_node = match edges_by_tail.get(node_layout.node.name()) {
@@ -360,7 +389,12 @@ fn collect_xlabel_candidates(
     }
     for edge_layout in edges_for_node {
       collect_edge_xlabel_candidates(
-        edge_layout, splines, flip, labels, objects,
+        text_context~,
+        edge_layout,
+        splines,
+        flip,
+        labels,
+        objects,
       )
     }
   }

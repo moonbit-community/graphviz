@@ -39,7 +39,7 @@ test "encode xdot ops rounds doubles" {
 ///|
 test "render_xdot attaches draw ops" {
   let graph = @dot.parse_dot("digraph { a -> b; }")
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(text_context=@heuristic.context(), graph)
   let output = @xdot.render_xdot(layout)
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
@@ -64,7 +64,9 @@ test "render_xdot attaches draw ops" {
 ///|
 test "render_xdot decodes plain-label entities in edge draw ops" {
   let graph = @dot.parse_dot("digraph { a -> b [label=\"&lt;x&gt;\"]; }")
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
 
   assert_true(output.contains("3 -<x>"))
   assert_true(!output.contains("&amp;lt;x"))
@@ -100,7 +102,7 @@ fn find_subgraph(graph : @cgraph.Graph, name : String) -> @cgraph.Graph raise {
 ///|
 test "render_xdot attaches graph label attrs" {
   let graph = @dot.parse_dot("digraph { label=\"Hello\"; a -> b; }")
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(text_context=@heuristic.context(), graph)
   let output = @xdot.render_xdot(layout)
   let output_graph = @dot.parse_dot(output)
   guard output_graph.get_attr("_ldraw_") is Some(_) else {
@@ -125,7 +127,9 @@ test "render_xdot fills cluster background" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let cluster = find_subgraph(output_graph, "cluster_0")
   let draw = match cluster.get_attr("_draw_") {
@@ -142,7 +146,9 @@ test "render_xdot hides cluster outlines with zero peripheries" {
     "digraph { subgraph cluster_0 { style=filled; peripheries=0; a; } }",
   )
   let output_graph = @dot.parse_dot(
-    @xdot.render_xdot(@layout_dot.layout_dot(graph)),
+    @xdot.render_xdot(
+      @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+    ),
   )
   let cluster = find_subgraph(output_graph, "cluster_0")
   let draw = match cluster.get_attr("_draw_") {
@@ -157,7 +163,9 @@ test "render_xdot skips empty cluster draw ops" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   guard !output.contains("subgraph cluster_empty {\n\t\tgraph [_draw_=") else {
     fail("empty cluster should not have _draw_")
   }
@@ -171,7 +179,9 @@ test "render_xdot encodes dashed and dotted styles" {
   let graph = @dot.parse_dot(
     "digraph { node [style=dashed]; a; b; a -> b [style=dotted]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -195,7 +205,9 @@ test "render_xdot encodes dashed and dotted styles" {
 ///|
 test "render_xdot omits redundant solid edge style for color-only edges" {
   let graph = @dot.parse_dot("digraph { a -> b [color=blue]; }")
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let edges = output_graph.edges()
   guard edges.length() > 0 else { fail("missing edge") }
@@ -210,7 +222,9 @@ test "render_xdot omits redundant solid edge style for color-only edges" {
 ///|
 test "render_xdot keeps explicit solid edge style for non-default colors" {
   let graph = @dot.parse_dot("digraph { a -> b [color=blue style=solid]; }")
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let edges = output_graph.edges()
   guard edges.length() > 0 else { fail("missing edge") }
@@ -227,7 +241,9 @@ test "render_xdot emits linear gradients for multicolor node fills" {
   let graph = @dot.parse_dot(
     "digraph { a [style=filled fillcolor=\"red:blue\"]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -248,7 +264,9 @@ test "render_xdot fills HTML table gradients" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=plain label=<<TABLE style=\"rounded\" bgcolor=\"red:blue\"><TR><TD bgcolor=\"green:yellow\">x</TD></TR></TABLE>>]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -268,7 +286,9 @@ test "render_xdot respects radial fill gradients and gradient angles" {
   let graph = @dot.parse_dot(
     "digraph { a [style=radial fillcolor=\"red:blue\" gradientangle=90]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -289,7 +309,9 @@ test "render_xdot applies radial gradients to graph and cluster backgrounds" {
   let graph = @dot.parse_dot(
     "digraph { style=radial bgcolor=\"red:blue\"; subgraph cluster_0 { style=radial fillcolor=\"green:yellow\"; a; } }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let graph_draw = match output_graph.get_attr("_draw_") {
     Some(value) => value
@@ -311,7 +333,9 @@ test "render_xdot omits redundant solid edge styles" {
   let graph = @dot.parse_dot(
     "digraph { a -> b [style=solid]; a -> c [style=bold]; a -> d [style=\"setlinewidth(3)\"]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let edges = output_graph.edges()
   assert_eq(edges.length(), 3)
@@ -329,7 +353,9 @@ test "render_xdot draws polygon node shapes" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=diamond]; b [shape=triangle]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -356,7 +382,9 @@ test "render_xdot draws polygon node shapes" {
 ///|
 test "render_xdot falls back unknown node shapes to box draw ops" {
   let graph = @dot.parse_dot("digraph { a [style=filled shape=DFDbox]; }")
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -375,7 +403,9 @@ test "render_xdot draws shapefile nodes with a box outline" {
   let graph = @dot.parse_dot(
     "digraph { a [label=\"\" shapefile=\"shape.gif\"]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -392,7 +422,9 @@ test "render_xdot draws shapefile nodes with a box outline" {
 ///|
 test "render_xdot resolves forestgreen label color" {
   let graph = @dot.parse_dot("digraph { a [fontcolor=forestgreen]; }")
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -410,7 +442,9 @@ test "render_xdot renders nested record labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -432,7 +466,9 @@ test "render_xdot renders html-like labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\"><TR><TD>left</TD><TD>right</TD></TR></TABLE>>]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -451,7 +487,9 @@ test "render_xdot renders html label colors and nested tables" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
   )
-  let output = @xdot.render_xdot(@layout_dot.layout_dot(graph))
+  let output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), graph),
+  )
   let output_graph = @dot.parse_dot(output)
   let node_a = match output_graph.find_node("a") {
     Some(node) => node
@@ -482,8 +520,12 @@ test "graph labelloc affects label position" {
   let bottom_graph = @dot.parse_dot(
     "digraph { label=\"Hello\"; labelloc=b; a -> b; }",
   )
-  let top_output = @xdot.render_xdot(@layout_dot.layout_dot(top_graph))
-  let bottom_output = @xdot.render_xdot(@layout_dot.layout_dot(bottom_graph))
+  let top_output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), top_graph),
+  )
+  let bottom_output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), bottom_graph),
+  )
   let top_lp = match @dot.parse_dot(top_output).get_attr("lp") {
     Some(value) => parse_point_attr(value)
     None => fail("missing top graph lp")
@@ -503,8 +545,12 @@ test "graph labeljust affects label position" {
   let right_graph = @dot.parse_dot(
     "digraph { label=\"Hello\"; labeljust=r; a -> b; }",
   )
-  let left_output = @xdot.render_xdot(@layout_dot.layout_dot(left_graph))
-  let right_output = @xdot.render_xdot(@layout_dot.layout_dot(right_graph))
+  let left_output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), left_graph),
+  )
+  let right_output = @xdot.render_xdot(
+    @layout_dot.layout_dot(text_context=@heuristic.context(), right_graph),
+  )
   let left_lp = match @dot.parse_dot(left_output).get_attr("lp") {
     Some(value) => parse_point_attr(value)
     None => fail("missing left graph lp")
@@ -537,7 +583,7 @@ test "render_xdot passes css variables through as paints" {
   let graph = @dot.parse_dot(
     "digraph { bgcolor=\"var(--uml-canvas)\"; a [style=filled, fillcolor=\"var(--uml-node)\", color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; b [color=\"var(--uml-line)\", fontcolor=\"var(--uml-text)\"]; a -> b [color=\"var(--uml-line)\", label=\"edge\", fontcolor=\"var(--uml-text)\"]; }",
   )
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(text_context=@heuristic.context(), graph)
   let output = @xdot.render_xdot(layout)
   assert_true(output.contains("var(--uml-canvas)"))
   assert_true(output.contains("var(--uml-node)"))

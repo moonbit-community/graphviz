@@ -19,6 +19,7 @@ fn build_edge_vnodes_for_test(
   @membership.collect_edge_cluster_keys(graph, edge_cluster_keys)
   let cluster_maps = @cluster_graph.collect_cluster_graph_maps(graph)
   build_edge_vnodes(
+    text_context=@heuristic.context(),
     nodes,
     edges,
     [],

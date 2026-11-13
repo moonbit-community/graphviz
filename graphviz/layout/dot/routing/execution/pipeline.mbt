@@ -37,6 +37,7 @@ fn build_route_edges_input(
 /// + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn route_edges_pipeline(
+  text_context~ : @text_layout.Context,
   input : RouteEdgesPipelineInput,
   deps : RouteEdgesPipelineDeps,
 ) -> Array[DotLayoutEdge] {
@@ -45,5 +46,5 @@ pub fn route_edges_pipeline(
     deps.route_base_deps,
   )
   let route_input = build_route_edges_input(input, base_cache)
-  route_edges(route_input, deps.callbacks)
+  route_edges(text_context~, route_input, deps.callbacks)
 }

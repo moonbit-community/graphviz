@@ -7,12 +7,13 @@ import {
   "moonbit-community/graphviz/layout/dot/layout_tree",
   "moonbit-community/graphviz/layout/dot/node_geometry/node_primitives",
   "moonbit-community/graphviz/layout/dot/routing",
+  "moonbit-community/graphviz/layout/text",
 }
 
 // Values
 pub fn recover_slack_vnodes(@routing.RecoverSlackVnodesInput) -> Unit
 
-pub fn route_edges_pipeline(@routing.RouteEdgesPipelineInput, @routing.RouteEdgesPipelineDeps) -> Array[@layout_tree.DotLayoutEdge]
+pub fn route_edges_pipeline(text_context~ : @text.Context, @routing.RouteEdgesPipelineInput, @routing.RouteEdgesPipelineDeps) -> Array[@layout_tree.DotLayoutEdge]
 
 pub fn sorted_edges_for_routing(Array[@cgraph.Edge], Map[Int32, @routing.EdgeRouteBase], Map[String, Int32], concentrated_route_order? : Map[Int32, Int32]) -> Array[@cgraph.Edge]
 

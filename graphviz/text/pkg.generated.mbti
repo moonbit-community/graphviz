@@ -1,0 +1,58 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/graphviz/text"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn resolve_font(String) -> ResolvedFont
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub(all) struct Font {
+  name : String
+  size_pt : Double
+}
+pub fn Font::equal(Self, Self) -> Bool
+pub fn Font::not_equal(Self, Self) -> Bool
+pub fn Font::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct InkBounds {
+  left_pt : Double
+  right_pt : Double
+  ascent_pt : Double
+  descent_pt : Double
+}
+pub fn InkBounds::equal(Self, Self) -> Bool
+pub fn InkBounds::not_equal(Self, Self) -> Bool
+pub fn InkBounds::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) struct Metrics {
+  width_pt : Double
+  height_pt : Double
+  ascent_pt : Double
+  descent_pt : Double
+  ink : InkBounds?
+}
+pub fn Metrics::equal(Self, Self) -> Bool
+pub fn Metrics::not_equal(Self, Self) -> Bool
+pub fn Metrics::to_repr(Self) -> @debug.Repr
+
+pub struct ResolvedFont {
+  family : String
+  weight : String?
+  stretch : String?
+  style : String?
+}
+
+// Type aliases
+
+// Traits
+pub(open) trait Measurer {
+  fn measure(Self, Font, String) -> Metrics
+}

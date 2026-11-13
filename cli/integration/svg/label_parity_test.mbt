@@ -63,7 +63,10 @@ fn extract_label_entries(svg : String, label : String) -> Array[SvgLabelEntry] {
                 let line_y = -y
                 // These parity cases use simple, single-line labels.
                 let (width, height, _layout_offset, yoffset) = @label_metrics.label_text_metrics(
-                  label, font, size,
+                  label,
+                  font,
+                  size,
+                  text_context=@heuristic.context(),
                 )
                 let anchor = match parse_attr_string(tag, "text-anchor") {
                   Some(value) => value
@@ -246,7 +249,7 @@ fn assert_point_close(
 ///|
 async fn render_svg_file(graph_path : String) -> String {
   let graph = @dot_fs.parse_dot_file(graph_path)
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = @layout_dot.layout_dot(graph, text_context=@heuristic.context())
   let svg = @svg_renderer.render_svg(layout, options={
     pretty: Some(false),
     include_xml_decl: Some(false),

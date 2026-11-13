@@ -63,6 +63,7 @@ pub type DotLayoutEdge = @layout_tree.DotLayoutEdge
 /// Graph layout output.
 /// bbox encloses all nodes, edges, and labels in points.
 pub(all) struct DotLayoutGraph {
+  text_context : @text_layout.Context
   graph : @cgraph.Graph
   bbox : @geom.Rect
   label_pos : @geom.Point?
@@ -79,6 +80,7 @@ pub(all) struct DotLayoutGraph {
 /// - edge splines have 3n+1 control points.
 #declaration_only
 pub fn layout_dot(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   options~ : DotLayoutOptions = DotLayoutOptions::default(),
 ) -> DotLayoutGraph raise DotLayoutError {
@@ -91,6 +93,7 @@ pub fn layout_dot(
 /// no_op_level > 1 reuses edge pos attributes when present.
 #declaration_only
 pub fn layout_neato_noop(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   no_op_level~ : Int32 = 1,
   scale~ : Double = 72.0,
@@ -105,6 +108,7 @@ pub fn layout_neato_noop(
 /// no_op_level > 1 reuses edge pos attributes when present.
 #declaration_only
 pub fn layout_dot_noop(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   no_op_level~ : Int32 = 1,
   scale~ : Double = 72.0,
@@ -118,6 +122,7 @@ pub fn layout_dot_noop(
 /// scale controls the output coordinate scale (points per inch).
 #declaration_only
 pub fn layout_neato(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   scale~ : Double = 72.0,
   prune~ : Bool = false,

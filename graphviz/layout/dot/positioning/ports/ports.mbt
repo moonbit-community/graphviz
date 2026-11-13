@@ -21,6 +21,7 @@ type RecordPort = @record_geometry.RecordPort
 /// including record/html port handling and rankdir-aware shape transforms.
 /// Do not change behavior without updating fixtures/tests.
 pub fn port_offsets_for_nodes(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
@@ -29,12 +30,16 @@ pub fn port_offsets_for_nodes(
     output_sizes,
     (node, rankdir) => {
       let record_orientation = @layout_prep.record_layout_orientation(rankdir)
-      @node_geometry.node_size(node, record_orientation)
+      @node_geometry.node_size(text_context~, node, record_orientation)
     },
     (node, origin, base_size, rankdir) => {
       let record_orientation = @layout_prep.record_layout_orientation(rankdir)
       @label_layout.raw_label_ports_for_node(
-        node, origin, base_size, record_orientation,
+        text_context~,
+        node,
+        origin,
+        base_size,
+        record_orientation,
       )
     },
     @port_geometry.layout_port_offset,
@@ -128,10 +133,11 @@ fn initial_port_point(
 
 ///|
 pub fn build_initial_port_sampler(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> (@cgraph.Node, @cgraph.Port?) -> @geom.Point? {
-  let offsets = port_offsets_for_nodes(nodes, output_sizes)
+  let offsets = port_offsets_for_nodes(text_context~, nodes, output_sizes)
   let rankdir = if nodes.length() > 0 {
     @rankdir.graph_rankdir(nodes[0].graph())
   } else {
@@ -143,6 +149,7 @@ pub fn build_initial_port_sampler(
       .get(node.name())
       .unwrap_or_else(() => {
         @node_geometry.node_size(
+          text_context~,
           node,
           @layout_prep.record_layout_orientation(rankdir),
         )
@@ -160,10 +167,11 @@ pub fn build_initial_port_sampler(
 ///|
 /// Compare a node's initial ports by definedness and coordinates (portcmp).
 pub fn build_initial_node_port_comparator(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> (@cgraph.Node, @cgraph.Port?, @cgraph.Port?) -> Bool {
-  let sample = build_initial_port_sampler(nodes, output_sizes)
+  let sample = build_initial_port_sampler(text_context~, nodes, output_sizes)
   (node, first, second) => sample(node, first) == sample(node, second)
 }
 
@@ -171,10 +179,11 @@ pub fn build_initial_node_port_comparator(
 /// Compare initial edge ports using upstream's asymmetric ports_eq predicate.
 /// An undefined first tail ignores tail position. Endpoint ports are not swapped.
 pub fn build_initial_edge_port_comparator(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
 ) -> (@cgraph.Edge, @cgraph.Edge) -> Bool {
-  let sample = build_initial_port_sampler(nodes, output_sizes)
+  let sample = build_initial_port_sampler(text_context~, nodes, output_sizes)
   (first, second) => {
     let first_head = sample(first.head(), first.head_port())
     let second_head = sample(second.head(), second.head_port())
@@ -252,6 +261,7 @@ pub fn edge_port_order(
 /// preprocessing.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_edge_port_sample_bundle(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -259,13 +269,22 @@ pub fn build_edge_port_sample_bundle(
   sizes : Map[String, NodeSize],
 ) -> @setup.EdgePortSampleBundle {
   build_edge_port_samples_with_callbacks(
-    nodes, edges, edge_tail, edge_head, sizes, port_offsets_for_nodes, edge_port_offset,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    sizes,
+    (nodes, output_sizes) => {
+      port_offsets_for_nodes(nodes, output_sizes, text_context~)
+    },
+    edge_port_offset,
     edge_port_order,
   )
 }
 
 ///|
 fn build_port_maps_for_nodes(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
@@ -275,10 +294,17 @@ fn build_port_maps_for_nodes(
   for node in nodes {
     let name = node.name()
     let size = @node_geometry.resolve_node_output_size(
-      sizes, node, record_orientation,
+      text_context~,
+      sizes,
+      node,
+      record_orientation,
     )
     let ports = @label_layout.raw_label_ports_for_node(
-      node, origin, size, record_orientation,
+      text_context~,
+      node,
+      origin,
+      size,
+      record_orientation,
     )
     if ports.length() > 0 {
       port_maps[name] = ports
@@ -320,19 +346,27 @@ fn port_side_mask_for_self_edge(
 /// refs/graphviz/lib/dotgen/position.c (self-edge width padding).
 /// Do not change behavior without updating fixtures/tests.
 pub fn apply_self_edge_right_space(
+  text_context~ : @text_layout.Context,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
 ) -> Map[String, NodeSize] {
-  let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
+  let port_maps = build_port_maps_for_nodes(
+    text_context~,
+    nodes,
+    sizes,
+    record_orientation,
+  )
   @self_edge.apply_self_edge_right_space({
     edges,
     sizes,
     rankdir,
     self_edge_size_pt: @node_geometry.SELF_EDGE_SIZE_PT,
-    self_edge_label_width_for: @edge_label_metrics.self_edge_label_width_pt,
+    self_edge_label_width_for: (edge, rankdir) => {
+      @edge_label_metrics.self_edge_label_width_pt(edge, rankdir, text_context~)
+    },
     port_side_mask_for: (node, port) => {
       port_side_mask_for_self_edge(node, port, port_maps)
     },

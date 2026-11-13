@@ -16,13 +16,14 @@ pub fn DotLayoutOptions::default() -> DotLayoutOptions {
 /// (dot_layout/doDot) + lib/common/postproc.c (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
 pub fn layout_dot(
+  text_context~ : @text_layout.Context,
   graph : @cgraph.Graph,
   options~ : DotLayoutOptions = DotLayoutOptions::default(),
 ) -> DotLayoutGraph raise DotLayoutError {
   let opts = options
   @label_layout.reset_label_caches()
   let prep = match
-    @input_stage.prepare_layout_prep(graph, {
+    @input_stage.prepare_layout_prep(text_context~, graph, {
       rankdir: opts.rankdir,
       nodesep: opts.nodesep,
       ranksep: opts.ranksep,
@@ -31,12 +32,15 @@ pub fn layout_dot(
     Ok(value) => value
     Err(message) => raise DotLayoutError::InvalidGraph(message~)
   }
-  let rank_stage_output = @rank_stage.compute_dot_rank_stage({ graph, prep, })
+  let rank_stage_output = @rank_stage.compute_dot_rank_stage(text_context~, {
+    graph,
+    prep,
+  })
   let rank_data = rank_stage_output.rank_data
   let rank_heights = rank_stage_output.rank_heights
   let cluster_meta = rank_stage_output.cluster_meta
   let ordering = rank_stage_output.ordering
-  let positions_state = @positioning.compute_positions({
+  let positions_state = @positioning.compute_positions(text_context~, {
     graph,
     prep,
     rank_data,
@@ -54,11 +58,13 @@ pub fn layout_dot(
     positions_state,
   }
   let routing_stage_output = route_flat_adjacent_ports(
+    text_context~,
     routing_input,
-    @integration.compute_dot_routing_stage(routing_input),
+    @integration.compute_dot_routing_stage(text_context~, routing_input),
   )
   dot_layout_graph_from_layout_tree(
-    @finalization.finalize_layout_from_sources({
+    text_context~,
+    @finalization.finalize_layout_from_sources(text_context~, {
       graph,
       prep,
       rank_data,
@@ -75,12 +81,16 @@ pub fn layout_dot(
 type LayoutTree = @layout_tree.LayoutTree
 
 ///|
-fn dot_layout_graph_from_layout_tree(layout : LayoutTree) -> DotLayoutGraph {
+fn dot_layout_graph_from_layout_tree(
+  text_context~ : @text_layout.Context,
+  layout : LayoutTree,
+) -> DotLayoutGraph {
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(dot_layout_graph_from_layout_tree(subgraph))
+    subgraphs.push(dot_layout_graph_from_layout_tree(text_context~, subgraph))
   }
   {
+    text_context,
     graph: layout.graph,
     bbox: layout.bbox,
     label_pos: layout.label_pos,
@@ -111,7 +121,9 @@ fn layout_tree_from_dot_layout_graph(layout : DotLayoutGraph) -> LayoutTree {
 /// for graph/node/edge geometry and label positions.
 /// Do not change behavior without updating fixtures/tests.
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
+  let text_context = self.text_context
   @finalization.apply_layout_tree_writeback(
+    text_context~,
     layout_tree_from_dot_layout_graph(self),
   )
 }

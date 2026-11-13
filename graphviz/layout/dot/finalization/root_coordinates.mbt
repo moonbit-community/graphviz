@@ -88,9 +88,13 @@ fn shift_layout_to_origin(layout : LayoutTree) -> LayoutTree {
 }
 
 ///|
-fn refresh_root_label_position(layout : LayoutTree) -> LayoutTree {
+fn refresh_root_label_position(
+  text_context~ : @text_layout.Context,
+  layout : LayoutTree,
+) -> LayoutTree {
   if layout.graph.is_root() {
-    let label_pos = match root_label_pos_for_bbox(layout.graph, layout.bbox) {
+    let label_pos = match
+      root_label_pos_for_bbox(text_context~, layout.graph, layout.bbox) {
       Some(pos) => Some(pos)
       None => layout.label_pos
     }
@@ -112,6 +116,7 @@ fn refresh_root_label_position(layout : LayoutTree) -> LayoutTree {
 /// (clust_ht/adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
 fn apply_root_cluster_padding(
+  text_context~ : @text_layout.Context,
   input : RootClusterPaddingApplyInput,
 ) -> LayoutTree {
   let layout = input.layout
@@ -126,7 +131,8 @@ fn apply_root_cluster_padding(
       input.root_cluster_pad_bottom +
       input.root_cluster_pad_top,
     }
-    let label_pos = match root_label_pos_for_bbox(layout.graph, padded_bbox) {
+    let label_pos = match
+      root_label_pos_for_bbox(text_context~, layout.graph, padded_bbox) {
       Some(pos) => Some(pos)
       None => padded.label_pos
     }
@@ -175,7 +181,10 @@ fn apply_ratio_fill_scale(
 /// Graphviz parity: final root-coordinate frame applies margin, then origin
 /// translation, then root label refresh.
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
+fn finalize_root_coordinates(
+  text_context~ : @text_layout.Context,
+  layout : LayoutTree,
+) -> LayoutTree {
   let with_margin : LayoutTree = {
     graph: layout.graph,
     bbox: apply_root_margin_x(layout.graph, layout.bbox),
@@ -184,5 +193,8 @@ fn finalize_root_coordinates(layout : LayoutTree) -> LayoutTree {
     edges: layout.edges,
     subgraphs: layout.subgraphs,
   }
-  refresh_root_label_position(shift_layout_to_origin(with_margin))
+  refresh_root_label_position(
+    text_context~,
+    shift_layout_to_origin(with_margin),
+  )
 }

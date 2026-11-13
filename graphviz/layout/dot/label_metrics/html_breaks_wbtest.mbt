@@ -7,7 +7,13 @@ test "HTML breaks justify the preceding line without adding a trailing line" {
     is Some(@html_label.HtmlLabel::StyledText(spans)) else {
     fail("expected HTML text")
   }
-  let metrics = html_styled_text_metrics(spans, "", "Times-Roman", 14.0)
+  let metrics = html_styled_text_metrics(
+    text_context=@heuristic.context(),
+    spans,
+    "",
+    "Times-Roman",
+    14.0,
+  )
   @test.assert_eq(metrics.lines.length(), 3)
   @test.assert_eq(metrics.lines.map(line => line.alignment), [
     Some(@html_label.HtmlAlign::Center),

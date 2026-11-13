@@ -74,8 +74,11 @@ priv struct RootPaddedLayoutData {
 /// Graphviz parity: Stage F subgraph+bbox assembly delegates recursive cluster
 /// layout to layout_subgraphs, then applies root cluster-bbox expansion.
 /// Do not change behavior without updating fixtures/tests.
-fn build_subgraphs_and_bbox(input : SubgraphsAndBBoxInput) -> SubgraphsAndBBox {
-  let subgraphs = @subgraph_layout.layout_subgraphs({
+fn build_subgraphs_and_bbox(
+  text_context~ : @text_layout.Context,
+  input : SubgraphsAndBBoxInput,
+) -> SubgraphsAndBBox {
+  let subgraphs = @subgraph_layout.layout_subgraphs(text_context~, {
     graph: input.graph,
     nodes_out: input.nodes,
     edges_out: input.edges,
@@ -123,6 +126,7 @@ fn build_final_layout_geometry(
 /// pre-rotation dot coordinates before ratio/label postprocessing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_padded_layout_data(
+  text_context~ : @text_layout.Context,
   input : FinalizeLayoutInput,
   final_geometry : FinalLayoutGeometry,
   subgraphs_and_bbox : SubgraphsAndBBox,
@@ -134,7 +138,7 @@ fn build_root_padded_layout_data(
     bbox,
     subgraphs_and_bbox.subgraphs,
   )
-  let layout_with_root_pad = apply_root_cluster_padding({
+  let layout_with_root_pad = apply_root_cluster_padding(text_context~, {
     layout: {
       graph,
       bbox,
@@ -158,6 +162,7 @@ fn build_root_padded_layout_data(
 /// in fixed Graphviz-equivalent order.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_pre_rotation_layout_postprocess(
+  text_context~ : @text_layout.Context,
   input : FinalizeLayoutInput,
   root_padded : RootPaddedLayoutData,
 ) -> LayoutTree {
@@ -184,17 +189,28 @@ fn apply_pre_rotation_layout_postprocess(
     input.all_ranks.length() > 1,
   )
   let adjusted = adjust_edge_labels_if_enabled(
+    text_context~,
     layout,
     input.nodesep_pt,
     rankdir,
   )
   let labeled = expand_layout_tree_bbox_for_edge_labels(
+    text_context~,
     adjusted,
     input.ranks,
     input.flat_label_edge_vnodes,
   )
-  let with_xlabels = @xlabel.apply_xlabels(labeled, input.splines)
-  let root_label_bbox = apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
+  let with_xlabels = @xlabel.apply_xlabels(
+    text_context~,
+    labeled,
+    input.splines,
+  )
+  let root_label_bbox = apply_root_label_bbox(
+    text_context~,
+    graph,
+    with_xlabels.bbox,
+    rankdir,
+  )
   {
     graph: with_xlabels.graph,
     bbox: root_label_bbox.bbox,
@@ -210,6 +226,7 @@ fn apply_pre_rotation_layout_postprocess(
 /// before rankdir transforms and cluster mirror policy.
 /// Do not change behavior without updating fixtures/tests.
 fn build_pre_rotation_layout_data(
+  text_context~ : @text_layout.Context,
   input : FinalizeLayoutInput,
 ) -> PreRotationLayoutData {
   let graph = input.graph
@@ -223,7 +240,7 @@ fn build_pre_rotation_layout_data(
     rank_ht1: input.rank_ht1,
     rank_ht2: input.rank_ht2,
   })
-  let subgraphs_and_bbox = build_subgraphs_and_bbox({
+  let subgraphs_and_bbox = build_subgraphs_and_bbox(text_context~, {
     graph,
     nodes: final_geometry.final_nodes,
     edges: final_geometry.final_edges,
@@ -238,7 +255,16 @@ fn build_pre_rotation_layout_data(
     rank_ht2: input.rank_ht2,
   })
   let root_padded = build_root_padded_layout_data(
-    input, final_geometry, subgraphs_and_bbox,
+    text_context~,
+    input,
+    final_geometry,
+    subgraphs_and_bbox,
   )
-  { layout: apply_pre_rotation_layout_postprocess(input, root_padded), }
+  {
+    layout: apply_pre_rotation_layout_postprocess(
+      text_context~,
+      input,
+      root_padded,
+    ),
+  }
 }

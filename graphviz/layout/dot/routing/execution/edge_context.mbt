@@ -62,12 +62,18 @@ fn build_ordered_routing_input(input : RouteEdgesInput) -> OrderedRoutingInput {
 /// + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
+  text_context~ : @text_layout.Context,
   input : RouteEdgesInput,
   callbacks : RoutingCallbacks,
 ) -> Array[DotLayoutEdge] {
   let ordered_routing_input = build_ordered_routing_input(input)
   let edges_out_by_id : Map[Int32, DotLayoutEdge] = Map([])
-  route_ordered_edges(ordered_routing_input, edges_out_by_id, callbacks)
+  route_ordered_edges(
+    text_context~,
+    ordered_routing_input,
+    edges_out_by_id,
+    callbacks,
+  )
   finalize_routed_edges({
     edges: input.edges,
     ranks: input.ranks,
